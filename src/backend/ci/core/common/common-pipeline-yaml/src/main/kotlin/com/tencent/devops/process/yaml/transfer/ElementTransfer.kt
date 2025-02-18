@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.CharsetType
@@ -63,6 +64,8 @@ import com.tencent.devops.process.yaml.transfer.pojo.CheckoutAtomParam
 import com.tencent.devops.process.yaml.transfer.pojo.WebHookTriggerElementChanger
 import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.utils.ModelCreateUtil
+import com.tencent.devops.process.yaml.v3.models.IfField
+import com.tencent.devops.process.yaml.v3.models.IfField.Mode
 import com.tencent.devops.process.yaml.v3.models.TriggerType
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
@@ -124,7 +127,7 @@ class ElementTransfer @Autowired(required = false) constructor(
             if (element is ManualTriggerElement) {
                 triggerOn.value.manual = ManualRule(
                     name = element.name,
-                    enable = element.isElementEnable().nullIfDefault(true),
+                    enable = element.elementEnabled().nullIfDefault(true),
                     canElementSkip = element.canElementSkip.nullIfDefault(false),
                     useLatestParameters = element.useLatestParameters.nullIfDefault(false)
                 )
@@ -152,10 +155,18 @@ class ElementTransfer @Autowired(required = false) constructor(
                             else -> return@m ""
                         }
                     }
-                val (repoHashId, repoName) = if (element.repositoryType == TriggerRepositoryType.SELF) {
-                    Pair(null, null)
-                } else {
-                    Pair(element.repoHashId, element.repoName)
+                // ui->code,repositoryType为null时,repoType才需要在code模式下展示
+                val (repoType, repoHashId, repoName) = when {
+                    element.repositoryType == TriggerRepositoryType.ID && !element.repoHashId.isNullOrBlank() ->
+                        Triple(null, element.repoHashId, null)
+
+                    element.repositoryType == TriggerRepositoryType.NAME && !element.repoName.isNullOrBlank() ->
+                        Triple(null, null, element.repoName)
+
+                    element.repositoryType == TriggerRepositoryType.SELF ->
+                        Triple(null, null, null)
+
+                    else -> Triple(TriggerRepositoryType.NONE.name, null, null)
                 }
                 schedules.add(
                     SchedulesRule(
@@ -166,17 +177,18 @@ class ElementTransfer @Autowired(required = false) constructor(
                         } else {
                             element.advanceExpression
                         },
+                        repoType = repoType,
                         repoId = repoHashId,
                         repoName = repoName,
                         branches = element.branches,
                         always = (element.noScm != true).nullIfDefault(false),
-                        enable = element.isElementEnable().nullIfDefault(true)
+                        enable = element.elementEnabled().nullIfDefault(true)
                     )
                 )
                 return@forEach
             }
             if (element is RemoteTriggerElement) {
-                triggerOn.value.remote = if (element.isElementEnable()) {
+                triggerOn.value.remote = if (element.elementEnabled()) {
                     RemoteRule(element.name, EnableType.TRUE.value)
                 } else {
                     RemoteRule(element.name, EnableType.FALSE.value)
@@ -213,7 +225,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 elements = gitElement,
                 projectId = projectId,
                 aspectWrapper = aspectWrapper,
-                defaultName = "Git事件触发"
+                defaultName = "Git"
             )
             res.putAll(gitTrigger.groupBy { ScmType.CODE_GIT })
         }
@@ -227,7 +239,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 elements = tGitElement,
                 projectId = projectId,
                 aspectWrapper = aspectWrapper,
-                defaultName = "TGit事件触发"
+                defaultName = "TGit"
             )
             res.putAll(gitTrigger.groupBy { ScmType.CODE_TGIT })
         }
@@ -241,7 +253,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 elements = githubElement,
                 projectId = projectId,
                 aspectWrapper = aspectWrapper,
-                defaultName = "GitHub事件触发"
+                defaultName = "GitHub"
             )
             res.putAll(gitTrigger.groupBy { ScmType.GITHUB })
         }
@@ -255,7 +267,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 elements = svnElement,
                 projectId = projectId,
                 aspectWrapper = aspectWrapper,
-                defaultName = "SVN事件触发"
+                defaultName = "SVN"
             )
             res.putAll(gitTrigger.groupBy { ScmType.CODE_SVN })
         }
@@ -269,7 +281,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 elements = p4Element,
                 projectId = projectId,
                 aspectWrapper = aspectWrapper,
-                defaultName = "P4事件触发"
+                defaultName = "P4"
             )
             res.putAll(gitTrigger.groupBy { ScmType.CODE_P4 })
         }
@@ -283,7 +295,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 elements = gitlabElement,
                 projectId = projectId,
                 aspectWrapper = aspectWrapper,
-                defaultName = "Gitlab变更触发"
+                defaultName = "Gitlab"
             )
             res.putAll(gitTrigger.groupBy { ScmType.CODE_GITLAB })
         }
@@ -323,19 +335,22 @@ class ElementTransfer @Autowired(required = false) constructor(
         jobRunsOnType: JobRunsOnType? = null
     ): Element {
         val runCondition = when {
-            step.ifFiled.isNullOrBlank() -> RunCondition.PRE_TASK_SUCCESS
-            IfType.ALWAYS_UNLESS_CANCELLED.name == (step.ifFiled) ->
+            step.ifField == null -> RunCondition.PRE_TASK_SUCCESS
+            IfType.ALWAYS_UNLESS_CANCELLED.name == (step.ifField.expression) ->
                 RunCondition.PRE_TASK_FAILED_BUT_CANCEL
 
-            IfType.ALWAYS.name == (step.ifFiled) ->
+            IfType.ALWAYS.name == (step.ifField.expression) ->
                 RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
 
-            IfType.FAILURE.name == (step.ifFiled) ->
+            IfType.FAILURE.name == (step.ifField.expression) ->
                 RunCondition.PRE_TASK_FAILED_ONLY
 
-            else -> {
-                RunCondition.CUSTOM_CONDITION_MATCH
-            }
+            !step.ifField.expression.isNullOrBlank() -> RunCondition.CUSTOM_CONDITION_MATCH
+
+            step.ifField.mode == Mode.RUN_WHEN_ALL_PARAMS_MATCH -> RunCondition.CUSTOM_VARIABLE_MATCH
+            step.ifField.mode == Mode.NOT_RUN_WHEN_ALL_PARAMS_MATCH -> RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
+
+            else -> RunCondition.PRE_TASK_SUCCESS
         }
         val continueOnError = Step.ContinueOnErrorType.parse(step.continueOnError)
         val additionalOptions = ElementAdditionalOptions(
@@ -347,7 +362,18 @@ class ElementTransfer @Autowired(required = false) constructor(
             retryWhenFailed = step.retryTimes != null && step.retryTimes > 0,
             retryCount = step.retryTimes ?: VariableDefault.DEFAULT_RETRY_COUNT,
             runCondition = runCondition,
-            customCondition = if (runCondition == RunCondition.CUSTOM_CONDITION_MATCH) step.ifFiled else null,
+            customCondition = if (runCondition == RunCondition.CUSTOM_CONDITION_MATCH) {
+                step.ifField?.expression
+            } else {
+                null
+            },
+            customVariables = if (runCondition == RunCondition.CUSTOM_VARIABLE_MATCH ||
+                runCondition == RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
+            ) {
+                step.ifField?.params?.map { NameAndValue(it.key, it.value) }
+            } else {
+                null
+            },
             manualRetry = step.manualRetry ?: false,
             subscriptionPauseUser = userId
         )
@@ -519,8 +545,6 @@ class ElementTransfer @Autowired(required = false) constructor(
                 PreStep(
                     name = element.name,
                     id = element.stepId,
-                    // 插件上的
-                    ifFiled = TransferUtil.parseStepIfFiled(element),
                     uses = null,
                     with = TransferUtil.simplifyParams(transferCache.getAtomDefaultValue(uses), input).apply {
                         this.remove(CheckoutAtomParam::repositoryType.name)
@@ -537,8 +561,6 @@ class ElementTransfer @Autowired(required = false) constructor(
                 PreStep(
                     name = element.name,
                     id = element.stepId,
-                    // 插件上的
-                    ifFiled = TransferUtil.parseStepIfFiled(element),
                     uses = null,
                     with = TransferUtil.simplifyParams(
                         transferCache.getAtomDefaultValue(uses),
@@ -553,10 +575,12 @@ class ElementTransfer @Autowired(required = false) constructor(
 
             else -> element.transferYaml(transferCache.getAtomDefaultValue(uses))
         }?.apply {
-            this.enable = element.isElementEnable().nullIfDefault(true)
-            this.timeoutMinutes = element.additionalOptions?.timeoutVar.nullIfDefault(
-                VariableDefault.DEFAULT_TASK_TIME_OUT.toString()
-            ) ?: element.additionalOptions?.timeout.nullIfDefault(VariableDefault.DEFAULT_TASK_TIME_OUT)?.toString()
+            this.ifField = parseStepIfFiled(element)
+            this.enable = element.elementEnabled().nullIfDefault(true)
+            this.timeoutMinutes =
+                (element.additionalOptions?.timeoutVar ?: element.additionalOptions?.timeout?.toString()).nullIfDefault(
+                    VariableDefault.DEFAULT_TASK_TIME_OUT.toString()
+                )
 
             this.continueOnError = when {
                 element.additionalOptions?.manualSkip == true -> Step.ContinueOnErrorType.MANUAL_SKIP.alis
@@ -570,6 +594,34 @@ class ElementTransfer @Autowired(required = false) constructor(
             this.env = element.customEnv?.associateBy({ it.key ?: "" }) {
                 it.value
             }?.ifEmpty { null }
+        }
+    }
+
+    private fun parseStepIfFiled(
+        step: Element
+    ): Any? {
+        return when (step.additionalOptions?.runCondition) {
+            RunCondition.CUSTOM_CONDITION_MATCH -> step.additionalOptions?.customCondition
+            RunCondition.CUSTOM_VARIABLE_MATCH -> IfField(
+                mode = IfField.Mode.RUN_WHEN_ALL_PARAMS_MATCH,
+                params = step.additionalOptions?.customVariables?.associateBy({ it.key ?: "" }, { it.value ?: "" })
+            )
+
+            RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> IfField(
+                mode = IfField.Mode.NOT_RUN_WHEN_ALL_PARAMS_MATCH,
+                params = step.additionalOptions?.customVariables?.associateBy({ it.key ?: "" }, { it.value ?: "" })
+            )
+
+            RunCondition.PRE_TASK_FAILED_BUT_CANCEL ->
+                IfType.ALWAYS_UNLESS_CANCELLED.name
+
+            RunCondition.PRE_TASK_FAILED_EVEN_CANCEL ->
+                IfType.ALWAYS.name
+
+            RunCondition.PRE_TASK_FAILED_ONLY ->
+                IfType.FAILURE.name
+
+            else -> null
         }
     }
 

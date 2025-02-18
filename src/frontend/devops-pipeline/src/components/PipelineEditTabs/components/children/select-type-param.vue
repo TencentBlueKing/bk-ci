@@ -1,18 +1,54 @@
 <template>
     <div class="selector-type-param">
         <div class="option-type">
-            <div class="type-select" :class="{ 'is-active': payloadValue.type === 'options' }" @click="handleParamTypeChange('type', 'options')">{{$t('newui.pipelineParam.optionsList')}}</div>
-            <div class="type-select" :class="{ 'is-active': payloadValue.type === 'remote' }" @click="handleParamTypeChange('type', 'remote')">{{$t('newui.pipelineParam.optionsFromApi')}}</div>
+            <div
+                class="type-select"
+                :class="{ 'is-active': payloadValue.type === 'options' }"
+                @click="handleParamTypeChange('type', 'options')"
+            >
+                {{ $t('newui.pipelineParam.optionsList') }}
+            </div>
+            <div
+                class="type-select"
+                :class="{ 'is-active': payloadValue.type === 'remote' }"
+                @click="handleParamTypeChange('type', 'remote')"
+            >
+                {{ $t('newui.pipelineParam.optionsFromApi') }}
+            </div>
         </div>
         <div class="option-items">
             <section v-if="payloadValue.type !== 'remote'">
-                <key-options :options="param.options" :handle-change-options="updateOptions" />
+                <key-options
+                    :options="param.options"
+                    :handle-change-options="updateOptions"
+                />
             </section>
             <section v-else>
-                <bk-form form-type="vertical" class="new-ui-form" :label-width="300">
+                <bk-form
+                    form-type="vertical"
+                    class="new-ui-form"
+                    :label-width="300"
+                >
                     <template v-for="obj in remoteTypeOptions">
-                        <form-field :hide-colon="true" :key="obj.key" :desc="obj.tips" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                            <component :is="'vuex-input'" :disabled="disabled" :name="obj.key" v-validate.initial="Object.assign({}, { required: !!obj.required })" :handle-change="handleRemoteParamChange" :value="payloadValue[obj.key]" v-bind="obj" :placeholder="obj.placeholder"></component>
+                        <form-field
+                            :hide-colon="true"
+                            :key="obj.key"
+                            :desc="obj.tips"
+                            :required="obj.required"
+                            :label="obj.label"
+                            :is-error="errors.has(key)"
+                            :error-msg="errors.first(key)"
+                        >
+                            <component
+                                :is="'vuex-input'"
+                                :disabled="disabled"
+                                :name="obj.key"
+                                v-validate.initial="Object.assign({}, { required: !!obj.required })"
+                                :handle-change="handleRemoteParamChange"
+                                :value="payloadValue[obj.key]"
+                                v-bind="obj"
+                                :placeholder="obj.placeholder"
+                            ></component>
                         </form-field>
                     </template>
                 </bk-form>
@@ -118,13 +154,13 @@
             .type-select {
                 flex: 1;
                 font-size: 14px;
-                line-height: 22px;
+                height: 42px;
+                line-height: 42px;
                 color: #63656E;
                 text-align: center;
             }
             .is-active {
                 color: #3A84FF;
-                padding: 9px 6px;
                 border-bottom: 2px solid #3A84FF;
             }
         }

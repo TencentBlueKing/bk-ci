@@ -1,7 +1,11 @@
 import { showLoginPopup } from '@/utils/util'
-import axios, { AxiosError, AxiosResponse } from 'axios'
+import axios, { AxiosError, AxiosResponse, CreateAxiosDefaults } from 'axios'
 import Vue from 'vue'
-
+declare module 'axios' {
+    export interface AxiosRequestConfig {
+      originalResponse?: boolean;
+    }
+}
 const request = axios.create({
     baseURL: API_URL_PREFIX,
     maxRedirects: 0,
@@ -14,7 +18,7 @@ const request = axios.create({
     withCredentials: true,
     xsrfCookieName: 'backend_csrftoken', // 注入csrfToken
     xsrfHeaderName: 'X-CSRFToken' // 注入csrfToken
-})
+} as CreateAxiosDefaults)
 
 function errorHandler (error: AxiosError) {
     if (typeof error.response.data === 'undefined') {
@@ -25,6 +29,7 @@ function errorHandler (error: AxiosError) {
 }
 
 request.interceptors.response.use((response: AxiosResponse) => {
+    const originalResponse = response.config.originalResponse || false
     const { data: { code, data, message, status }, status: httpStatus } = response
 
     if (httpStatus === 401) {
@@ -50,7 +55,7 @@ request.interceptors.response.use((response: AxiosResponse) => {
         return Promise.reject(errorMsg)
     }
 
-    return data
+    return originalResponse ? response.data : data
 }, errorHandler)
 
 Vue.prototype.$ajax = request

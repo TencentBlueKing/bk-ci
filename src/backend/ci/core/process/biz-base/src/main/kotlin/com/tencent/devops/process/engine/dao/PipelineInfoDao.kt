@@ -65,7 +65,8 @@ class PipelineInfoDao {
         canElementSkip: Boolean,
         taskCount: Int,
         id: Long? = null,
-        latestVersionStatus: VersionStatus? = VersionStatus.RELEASED
+        latestVersionStatus: VersionStatus? = VersionStatus.RELEASED,
+        pipelineDisable: Boolean? = null
     ): Int {
         val count = with(T_PIPELINE_INFO) {
             dslContext.insertInto(
@@ -84,7 +85,8 @@ class PipelineInfoDao {
                 ELEMENT_SKIP,
                 TASK_COUNT,
                 ID,
-                LATEST_VERSION_STATUS
+                LATEST_VERSION_STATUS,
+                LOCKED
             )
                 .values(
                     pipelineId,
@@ -99,7 +101,8 @@ class PipelineInfoDao {
                     if (canElementSkip) 1 else 0,
                     taskCount,
                     id,
-                    latestVersionStatus?.name
+                    latestVersionStatus?.name,
+                    pipelineDisable ?: false
                 )
                 .execute()
         }
@@ -121,7 +124,8 @@ class PipelineInfoDao {
         taskCount: Int = 0,
         latestVersion: Int = 0,
         updateLastModifyUser: Boolean? = true,
-        latestVersionStatus: VersionStatus? = null
+        latestVersionStatus: VersionStatus? = null,
+        locked: Boolean? = null
     ): Boolean {
         return with(T_PIPELINE_INFO) {
             val update = dslContext.update(this)
@@ -142,6 +146,9 @@ class PipelineInfoDao {
             }
             if (taskCount > 0) {
                 update.set(TASK_COUNT, taskCount)
+            }
+            if (locked != null) {
+                update.set(LOCKED, locked)
             }
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
@@ -632,7 +639,8 @@ class PipelineInfoDao {
                     id = id,
                     latestVersionStatus = latestVersionStatus?.let {
                         VersionStatus.valueOf(it)
-                    } ?: VersionStatus.RELEASED
+                    } ?: VersionStatus.RELEASED,
+                    locked = t.locked
                 )
             }
         } else {
@@ -724,7 +732,8 @@ class PipelineInfoDao {
         projectId: String,
         excludePipelineIds: List<String>,
         channelCode: ChannelCode? = null,
-        includeDelete: Boolean = false
+        includeDelete: Boolean = false,
+        filterPipelineIds: List<String>? = null
     ): Int {
         with(T_PIPELINE_INFO) {
             return dslContext.selectCount()
@@ -733,6 +742,7 @@ class PipelineInfoDao {
                 .and(PIPELINE_ID.notIn(excludePipelineIds))
                 .let { if (channelCode == null) it else it.and(CHANNEL.eq(channelCode.name)) }
                 .let { if (includeDelete) it else it.and(DELETE.eq(false)) }
+                .let { if (filterPipelineIds != null) it.and(PIPELINE_ID.`in`(filterPipelineIds)) else it }
                 .fetchOne()?.value1() ?: 0
         }
     }

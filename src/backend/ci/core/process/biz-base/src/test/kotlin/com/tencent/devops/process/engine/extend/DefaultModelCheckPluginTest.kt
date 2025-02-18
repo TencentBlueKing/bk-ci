@@ -71,7 +71,8 @@ class DefaultModelCheckPluginTest : TestBase() {
         pipelineCommonSettingConfig = pipelineCommonSettingConfig,
         stageCommonSettingConfig = stageCommonSettingConfig,
         jobCommonSettingConfig = jobCommonSettingConfig,
-        taskCommonSettingConfig = taskCommonSettingConfig
+        taskCommonSettingConfig = taskCommonSettingConfig,
+        elementBizPluginServices = listOf()
     )
     private val serviceMarketAtomResource: ServiceMarketAtomResource = mockk()
     private val serviceAtomResource: ServiceAtomResource = mockk()
@@ -199,7 +200,7 @@ class DefaultModelCheckPluginTest : TestBase() {
     fun checkTriggerContainer() {
         // trigger
         val triggerStage = genStages(1, 1, 1)
-        checkPlugin.checkTriggerContainer(triggerStage[0])
+        checkPlugin.checkTriggerContainer(triggerStage[0], false)
     }
 
     @Test

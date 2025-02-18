@@ -28,6 +28,7 @@
 package com.tencent.devops.project.pojo
 
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.project.pojo.enums.PluginDetailsDisplayOrder
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "项目其他配置")
@@ -47,5 +48,37 @@ data class ProjectProperties(
     @get:Schema(title = "数据标签，创建项目时会为该项目分配指定标签的db")
     val dataTag: String? = null,
     @get:Schema(title = "当项目不活跃时，是否禁用")
-    var disableWhenInactive: Boolean? = null
-)
+    var disableWhenInactive: Boolean? = null,
+    @get:Schema(title = "该项目是否开启流水线可观测数据", required = false)
+    val buildMetrics: Boolean? = null,
+    @get:Schema(title = "是否控制流水线列表权限", required = false)
+    var pipelineListPermissionControl: Boolean? = null,
+    @get:Schema(title = "插件详情展示顺序", required = false)
+    var pluginDetailsDisplayOrder: List<PluginDetailsDisplayOrder>? = listOf(
+        PluginDetailsDisplayOrder.LOG,
+        PluginDetailsDisplayOrder.ARTIFACT,
+        PluginDetailsDisplayOrder.CONFIG
+    ),
+    @get:Schema(title = "流水线语法风格")
+    var pipelineDialect: String? = "CLASSIC",
+    @get:Schema(title = "是否开启流水线命名提示")
+    var enablePipelineNameTips: Boolean? = false,
+    @get:Schema(title = "流水线命名格式")
+    var pipelineNameFormat: String? = null,
+    @get:Schema(title = "构建日志归档阈值(单位:万)")
+    var loggingLineLimit: Int? = null
+) {
+    /**
+     * 接受前端请求时,只复制前端展示修改的值,由op控制的值不能修改
+     */
+    fun userCopy(updateProperties: ProjectProperties): ProjectProperties {
+        with(updateProperties) {
+            return this@ProjectProperties.copy(
+                pipelineDialect = pipelineDialect,
+                enablePipelineNameTips = enablePipelineNameTips,
+                pipelineNameFormat = pipelineNameFormat,
+                loggingLineLimit = loggingLineLimit
+            )
+        }
+    }
+}

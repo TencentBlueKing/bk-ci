@@ -1,14 +1,18 @@
 <template>
-    <div v-if="execDetail" class="pipeline-detail-header">
-        <pipeline-bread-crumb :show-record-entry="isDebugExec" :pipeline-name="execDetail?.pipelineName">
-            <span class="build-num-switcher-wrapper">
-                {{ $t(isDebugExec ? 'draftExecDetail' : 'pipelinesDetail') }}
-                <build-num-switcher v-bind="buildNumConf" />
-            </span>
-        </pipeline-bread-crumb>
-        <aside :class="['pipeline-detail-right-aside', {
-            'is-debug-exec-detail': isDebugExec
-        }]">
+    <div
+        v-if="execDetail"
+        class="pipeline-detail-header"
+    >
+        <pipeline-bread-crumb
+            :show-record-entry="isDebugExec"
+            show-build-num-switch
+            :pipeline-name="pipelineInfo?.pipelineName"
+        />
+        <aside
+            :class="['pipeline-detail-right-aside', {
+                'is-debug-exec-detail': isDebugExec
+            }]"
+        >
             <bk-button
                 v-if="isRunning"
                 :disabled="loading"
@@ -21,7 +25,7 @@
             </bk-button>
             <template v-else-if="!isDebugExec">
                 <bk-button
-                    :disabled="loading || isCurPipelineLocked || !canManualStartup"
+                    :disabled="loading || isCurPipelineLocked"
                     :icon="loading ? 'loading' : ''"
                     outline
                     v-perm="{
@@ -56,22 +60,30 @@
             >
                 {{ $t("edit") }}
             </bk-button>
-            <bk-button
-                :loading="executeStatus"
-                v-perm="{
-                    hasPermission: canExecute,
-                    disablePermissionApi: true,
-                    permissionData: {
-                        projectId,
-                        resourceType: 'pipeline',
-                        resourceCode: pipelineId,
-                        action: RESOURCE_ACTION.EXECUTE
-                    }
+            <span
+                v-bk-tooltips="{
+                    disabled: canManualStartup,
+                    content: $t('pipelineManualDisable')
                 }"
-                @click="goExecPreview"
             >
-                {{ $t(isDebugExec ? "debug" : "exec") }}
-            </bk-button>
+                <bk-button
+                    :loading="executeStatus"
+                    :disabled="!canManualStartup"
+                    v-perm="{
+                        hasPermission: canExecute,
+                        disablePermissionApi: true,
+                        permissionData: {
+                            projectId,
+                            resourceType: 'pipeline',
+                            resourceCode: pipelineId,
+                            action: RESOURCE_ACTION.EXECUTE
+                        }
+                    }"
+                    @click="goExecPreview"
+                >
+                    {{ $t(isDebugExec ? "debug" : "exec") }}
+                </bk-button>
+            </span>
             <release-button
                 v-if="isDebugExec"
                 :can-release="canRelease"
@@ -80,7 +92,11 @@
             />
         </aside>
     </div>
-    <i v-else class="devops-icon icon-circle-2-1 spin-icon" style="margin-left: 20px;"></i>
+    <i
+        v-else
+        class="devops-icon icon-circle-2-1 spin-icon"
+        style="margin-left: 20px;"
+    ></i>
 </template>
 
 <script>
@@ -88,14 +104,12 @@
         RESOURCE_ACTION
     } from '@/utils/permission'
     import { mapActions, mapGetters, mapState } from 'vuex'
-    import BuildNumSwitcher from './BuildNumSwitcher'
     import PipelineBreadCrumb from './PipelineBreadCrumb'
     import ReleaseButton from './ReleaseButton'
 
     export default {
         components: {
             PipelineBreadCrumb,
-            BuildNumSwitcher,
             ReleaseButton
         },
         data () {
@@ -131,14 +145,7 @@
                 return (this.pipelineInfo?.canRelease ?? false) && !this.saveStatus && !this.isRunning
             },
             canManualStartup () {
-                return this.pipelineInfo?.canManualStartup ?? false
-            },
-            buildNumConf () {
-                return {
-                    latestBuildNum: this.execDetail?.latestBuildNum ?? 1,
-                    currentBuildNum: this.execDetail?.buildNum ?? 1,
-                    version: this.pipelineInfo?.[this.isDebugExec ? 'version' : 'releaseVersion']
-                }
+                return this.pipelineInfo?.canManualStartup ?? true
             },
             isDebugExec () {
                 return this.execDetail?.debug ?? false
@@ -259,11 +266,6 @@
     height: 32px;
     width: 1px;
     background: #d8d8d8;
-  }
-  .build-num-switcher-wrapper {
-    display: grid;
-    grid-auto-flow: column;
-    grid-gap: 6px;
   }
   .pipeline-detail-right-aside {
     display: grid;

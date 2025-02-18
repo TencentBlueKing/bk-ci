@@ -111,7 +111,9 @@ class CallBackControlTest : TestBase() {
         initBuildStartEnd(CallBackEvent.BUILD_START)
         val buildStartEvent = PipelineBuildStatusBroadCastEvent(
             source = "vm-build-claim($firstContainerId)", projectId = projectId, pipelineId = pipelineId,
-            userId = userId, buildId = buildId, actionType = ActionType.START
+            userId = userId, buildId = buildId, actionType = ActionType.START, stageId = null,
+            containerHashId = null, jobId = null, taskId = null, stepId = null, executeCount = null,
+            buildStatus = null
         )
 
 //        val startTime = System.currentTimeMillis()
@@ -162,6 +164,13 @@ class CallBackControlTest : TestBase() {
                 events = events.toString()
             )
         } returns (callbacks!!)
+        every {
+            projectPipelineCallBackService.getPipelineCallback(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                event = events.toString()
+            )
+        } returns (listOf())
     }
 
     @Test

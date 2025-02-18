@@ -63,5 +63,7 @@ data class PipelineDetailInfo(
     @get:Schema(title = "最新流水线版本状态（如有任何发布版本则为发布版本）", required = false)
     var latestVersionStatus: VersionStatus? = VersionStatus.RELEASED,
     @get:Schema(title = "流水线组名称列表", required = false)
-    var viewNames: List<String>?
+    var viewNames: List<String>?,
+    @get:Schema(title = "运行锁定", required = false)
+    val locked: Boolean = false
 )

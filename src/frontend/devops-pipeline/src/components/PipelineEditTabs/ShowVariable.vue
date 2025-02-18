@@ -1,16 +1,21 @@
 <template>
-    <section :class="['variable-version-wrapper', {
-        'variable-panel-show': showVariable
-    }]">
+    <section
+        :class="['variable-version-wrapper', {
+            'variable-panel-show': showVariable
+        }]"
+    >
         <div
             class="variable-entry"
             :class="{ 'is-close': !showVariable }"
             @click="toggleOpenVar"
         >
             <i class="bk-icon icon-angle-double-right"></i>
-            {{$t('newui.variable')}}
+            {{ $t('newui.variable') }}
         </div>
-        <div v-show="showVariable" class="variable-version-container">
+        <div
+            v-show="showVariable"
+            class="variable-version-container"
+        >
             <div class="select-tab-container">
                 <div class="tab-content">
                     <div
@@ -36,13 +41,19 @@
                     :editable="editable"
                     v-else-if="active === 'atomOutput'"
                 />
-                <system-var :container="container" :editable="editable" v-else-if="active === 'system'" />
+                <system-var
+                    :container="container"
+                    :editable="editable"
+                    v-else-if="active === 'system'"
+                />
                 <pipeline-version
                     v-else
                     :params="params"
                     :disabled="!editable"
+                    :pipeline-model="pipelineModel"
                     :container="container"
                     :update-container-params="handleContainerChange"
+                    :is-direct-show-version="isDirectShowVersion"
                 />
             </div>
         </div>
@@ -71,6 +82,14 @@
             editable: {
                 type: Boolean,
                 default: true
+            },
+            isDirectShowVersion: {
+                type: Boolean,
+                default: false
+            },
+            pipelineModel: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -107,6 +126,9 @@
         },
         mounted () {
             this.setShowVariable(true)
+            if (this.isDirectShowVersion) {
+                this.active = 'version'
+            }
         },
         beforeDestroy () {
             this.setShowVariable(false)

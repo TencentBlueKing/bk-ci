@@ -5,16 +5,29 @@
                 class="header-logo"
                 to="/console/"
             >
-                <span>
-                    <Logo
-                        :name="headerLogoName"
-                        width="auto"
-                        height="28"
-                    />
-                </span>
+                <template v-if="platformInfo.appLogo">
+                    <img
+                        class="logo"
+                        :src="platformInfo.appLogo"
+                        alt=""
+                    >
+                    
+                    <div class="app-name">{{ appName }}</div>
+                </template>
+                <template v-else>
+                    <span>
+                        <Logo
+                            :name="headerLogoName"
+                            width="auto"
+                            height="28"
+                        />
+                    </span>
+                </template>
             </router-link>
+
             <template v-if="showProjectList">
-                <bk-select ref="projectDropdown"
+                <bk-select
+                    ref="projectDropdown"
                     class="bkdevops-project-selector"
                     :placeholder="$t('selectProjectPlaceholder')"
                     :value="projectId"
@@ -52,8 +65,16 @@
                                     v-bk-tooltips="$t('userManage')"
                                     @click.stop.prevent="goToUserManage(item)"
                                 >
-                                    <img v-if="item.managePermission" src="../../assets/scss/logo/user-manage.svg" alt="">
-                                    <img v-else src="../../assets/scss/logo/user-manage-disabled.svg" alt="">
+                                    <img
+                                        v-if="item.managePermission"
+                                        src="../../assets/scss/logo/user-manage.svg"
+                                        alt=""
+                                    >
+                                    <img
+                                        v-else
+                                        src="../../assets/scss/logo/user-manage-disabled.svg"
+                                        alt=""
+                                    >
                                 </span>
                             </div>
                         </template>
@@ -72,7 +93,11 @@
                                 class="bk-selector-create-item"
                                 @click.stop.prevent="handleApplyProject"
                             >
-                                <icon name="icon-apply" size="14" class="mr5" />
+                                <icon
+                                    name="icon-apply"
+                                    size="14"
+                                    class="mr5"
+                                />
                                 <span class="text">{{ $t('joinProject') }}</span>
                             </span>
                         </div>
@@ -104,16 +129,24 @@
                 :on-show="handleShow"
             >
                 <div class="flag-box">
-                    <Icon :name="curLang.icon" size="20" />
+                    <Icon
+                        :name="curLang.icon"
+                        size="20"
+                    />
                 </div>
                 <template slot="content">
                     <li
                         v-for="(item, index) in langs"
                         :key="index"
                         :class="['bkci-dropdown-item', { active: curLang.id === item.id }]"
-                        @click="handleChangeLang(item)">
-                        <Icon class="mr5" :name="item.icon" size="20" />
-                        {{item.name}}
+                        @click="handleChangeLang(item)"
+                    >
+                        <Icon
+                            class="mr5"
+                            :name="item.icon"
+                            size="20"
+                        />
+                        {{ item.name }}
                     </li>
                 </template>
             </bk-popover>
@@ -124,14 +157,39 @@
                 :arrow="false"
                 ref="popoverRef"
                 :on-hide="handleHide"
-                :on-show="handleShow">
+                :on-show="handleShow"
+            >
                 <div class="flag-box">
-                    <Icon name="help-fill" size="20" />
+                    <Icon
+                        name="help-fill"
+                        size="20"
+                    />
                 </div>
                 <template slot="content">
-                    <li class="bkci-dropdown-item" @click.stop="goToDocs">{{ $t('documentation') }}</li>
-                    <li class="bkci-dropdown-item" @click.stop="goToFeedBack">{{ $t('feedback') }}</li>
-                    <li class="bkci-dropdown-item" @click.stop="goToGithubSource">{{ $t('community') }}</li>
+                    <li
+                        class="bkci-dropdown-item"
+                        @click.stop="goToDocs"
+                    >
+                        {{ $t('documentation') }}
+                    </li>
+                    <li
+                        class="bkci-dropdown-item"
+                        @click.stop="toggleShowVersionLog(true)"
+                    >
+                        {{ $t('releaseNotes') }}
+                    </li>
+                    <li
+                        class="bkci-dropdown-item"
+                        @click.stop="goToFeedBack"
+                    >
+                        {{ $t('feedback') }}
+                    </li>
+                    <li
+                        class="bkci-dropdown-item"
+                        @click.stop="goToGithubSource"
+                    >
+                        {{ $t('openSource') }}
+                    </li>
                 </template>
             </bk-popover>
             <User
@@ -145,6 +203,10 @@
             :title="projectDialogTitle"
         />
         <apply-project-dialog ref="applyProjectDialog"></apply-project-dialog>
+        <system-log
+            :show-system-log="showSystemLog"
+            :toggle-show-log="toggleShowVersionLog"
+        />
     </div>
 </template>
 
@@ -158,6 +220,7 @@
     import LocaleSwitcher from '../LocaleSwitcher/index.vue'
     import Logo from '../Logo/index.vue'
     import ProjectDialog from '../ProjectDialog/index.vue'
+    import SystemLog from '../SystemLog/index.vue'
     import DevopsSelect from '../Select/index.vue'
     import User from '../User/index.vue'
     import NavMenu from './NavMenu.vue'
@@ -170,7 +233,8 @@
             ApplyProjectDialog,
             Logo,
             DevopsSelect,
-            LocaleSwitcher
+            LocaleSwitcher,
+            SystemLog
         }
     })
     export default class Header extends Vue {
@@ -181,22 +245,24 @@
         @State headerConfig
 
         @Getter enableProjectList
+        @Getter platformInfo
 
         @Action toggleProjectDialog
         @Action togglePopupShow
 
         isDropdownMenuVisible: boolean = false
         isShowTooltip: boolean = true
+        showSystemLog: boolean = false
         langs: Array<any> = [
-            {
-                icon: 'english',
-                name: 'English',
-                id: 'en-US'
-            },
             {
                 icon: 'chinese',
                 name: '中文',
                 id: 'zh-CN'
+            },
+            {
+                icon: 'english',
+                name: 'English',
+                id: 'en-US'
             }
         ]
  
@@ -245,6 +311,10 @@
 
         get curLang () {
             return this.langs.find(item => item.id === this.$i18n.locale) || { id: 'zh-CN', icon: 'chinese' }
+        }
+
+        get appName () {
+            return this.platformInfo.i18n.name || this.$t('蓝盾')
         }
 
         $refs: {
@@ -386,6 +456,10 @@
         handleHide () {
             this.togglePopupShow(false)
         }
+
+        toggleShowVersionLog (value: boolean) {
+            this.showSystemLog = value
+        }
     }
 </script>
 
@@ -419,6 +493,16 @@
                 > span {
                     display: inline-flex;
 
+                }
+                .logo {
+                    width: 30px;
+                    height: 30px;
+                    margin-right: 8px;
+                }
+                .app-name {
+                    font-size: 16px;
+                    line-height: 30px;
+                    color: #fff;
                 }
             }
             $dropdownBorder: #2a2a42;

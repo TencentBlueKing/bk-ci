@@ -92,6 +92,8 @@ import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
+import com.tencent.devops.process.pojo.PTemplateOrderByType
+import com.tencent.devops.process.pojo.PTemplateSortType
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineTemplateInfo
 import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
@@ -120,6 +122,7 @@ import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.TemplateVersion
 import com.tencent.devops.process.pojo.template.TemplateWithPermission
 import com.tencent.devops.process.service.ParamFacadeService
+import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.process.service.StageTagService
@@ -178,7 +181,8 @@ class TemplateFacadeService @Autowired constructor(
     private val modelCheckPlugin: ModelCheckPlugin,
     private val pipelineSettingFacadeService: PipelineSettingFacadeService,
     private val templateCommonService: TemplateCommonService,
-    private val templateSettingService: TemplateSettingService
+    private val templateSettingService: TemplateSettingService,
+    private val pipelineAsCodeService: PipelineAsCodeService
 ) {
 
     @Value("\${template.maxSyncInstanceNum:10}")
@@ -230,13 +234,12 @@ class TemplateFacadeService @Autowired constructor(
                 version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data,
                 desc = template.desc
             )
-            templateSettingService.insertTemplateSetting(
+            templateSettingService.saveDefaultTemplateSetting(
                 context = context,
                 userId = userId,
                 projectId = projectId,
                 templateId = templateId,
-                pipelineName = template.name,
-                isTemplate = true
+                templateName = template.name
             )
             pipelineTemplatePermissionService.createResource(
                 userId = userId,
@@ -319,16 +322,17 @@ class TemplateFacadeService @Autowired constructor(
                     copyTemplateReq.templateName
                 )
                 templateSettingService.saveTemplatePipelineSetting(
-                    context, userId, setting, true
+                    context = context,
+                    userId = userId,
+                    setting = setting
                 )
             } else {
-                templateSettingService.insertTemplateSetting(
+                templateSettingService.saveDefaultTemplateSetting(
                     context = context,
                     userId = userId,
                     projectId = projectId,
                     templateId = newTemplateId,
-                    isTemplate = true,
-                    pipelineName = copyTemplateReq.templateName
+                    templateName = copyTemplateReq.templateName
                 )
             }
 
@@ -364,12 +368,12 @@ class TemplateFacadeService @Autowired constructor(
         )
 
         val template = pipelineResourceDao.getLatestVersionModelString(
-                dslContext, projectId, saveAsTemplateReq.pipelineId
+            dslContext, projectId, saveAsTemplateReq.pipelineId
         ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )
-        val templateModel: Model = objectMapper.readValue(template)
+        val templateModel: Model = PipelineUtils.fixedTemplateParam(objectMapper.readValue(template))
         checkTemplateAtomsForExplicitVersion(templateModel, userId)
         val templateId = UUIDUtil.generate()
         dslContext.transaction { configuration ->
@@ -382,7 +386,7 @@ class TemplateFacadeService @Autowired constructor(
                 templateName = saveAsTemplateReq.templateName,
                 versionName = INIT_TEMPLATE_NAME,
                 userId = userId,
-                template = template,
+                template = JsonUtil.toJson(templateModel, formatted = false),
                 storeFlag = false,
                 version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data,
                 desc = null
@@ -406,16 +410,17 @@ class TemplateFacadeService @Autowired constructor(
                     templateName = saveAsTemplateReq.templateName
                 )
                 templateSettingService.saveTemplatePipelineSetting(
-                    context, userId, setting, true
+                    context = context,
+                    userId = userId,
+                    setting = setting
                 )
             } else {
-                templateSettingService.insertTemplateSetting(
+                templateSettingService.saveDefaultTemplateSetting(
                     context = context,
                     userId = userId,
                     projectId = projectId,
                     templateId = templateId,
-                    pipelineName = saveAsTemplateReq.templateName,
-                    isTemplate = true
+                    templateName = saveAsTemplateReq.templateName
                 )
             }
             ActionAuditContext.current().setInstanceId(templateId).setInstanceName(saveAsTemplateReq.templateName)
@@ -688,6 +693,8 @@ class TemplateFacadeService @Autowired constructor(
         userId: String,
         templateType: TemplateType?,
         storeFlag: Boolean?,
+        orderBy: PTemplateOrderByType? = null,
+        sort: PTemplateSortType? = null,
         page: Int? = null,
         pageSize: Int? = null,
         keywords: String? = null
@@ -701,6 +708,8 @@ class TemplateFacadeService @Autowired constructor(
             templateType = templateType,
             storeFlag = storeFlag,
             hasManagerPermission = hasManagerPermission,
+            orderBy = orderBy,
+            sort = sort,
             page = page,
             pageSize = pageSize,
             templateIds = null
@@ -744,6 +753,8 @@ class TemplateFacadeService @Autowired constructor(
         storeFlag: Boolean?,
         hasManagerPermission: Boolean?,
         checkPermission: Boolean = true,
+        orderBy: PTemplateOrderByType? = null,
+        sort: PTemplateSortType? = null,
         page: Int?,
         pageSize: Int?,
         includePublicFlag: Boolean? = null,
@@ -758,6 +769,8 @@ class TemplateFacadeService @Autowired constructor(
                 includePublicFlag = includePublicFlag,
                 templateType = templateType,
                 storeFlag = storeFlag,
+                orderBy = orderBy,
+                sort = sort,
                 offset = offset,
                 pageSize = pageSize,
                 hasManagerPermission = hasManagerPermission,
@@ -780,6 +793,8 @@ class TemplateFacadeService @Autowired constructor(
                 includePublicFlag = includePublicFlag,
                 templateType = templateType,
                 storeFlag = storeFlag,
+                orderBy = orderBy,
+                sort = sort,
                 offset = offset,
                 pageSize = pageSize,
                 templatesByPermissionMap = templatesByPermissionMap
@@ -792,6 +807,8 @@ class TemplateFacadeService @Autowired constructor(
         includePublicFlag: Boolean?,
         templateType: TemplateType?,
         storeFlag: Boolean?,
+        orderBy: PTemplateOrderByType?,
+        sort: PTemplateSortType?,
         offset: Int?,
         pageSize: Int?,
         hasManagerPermission: Boolean?,
@@ -805,6 +822,8 @@ class TemplateFacadeService @Autowired constructor(
             templateType = templateType,
             templateIdList = templateIds,
             storeFlag = storeFlag,
+            orderBy = orderBy,
+            sort = sort,
             offset = offset,
             limit = pageSize,
             queryModelFlag = true
@@ -836,6 +855,8 @@ class TemplateFacadeService @Autowired constructor(
         includePublicFlag: Boolean?,
         templateType: TemplateType?,
         storeFlag: Boolean?,
+        orderBy: PTemplateOrderByType?,
+        sort: PTemplateSortType?,
         offset: Int?,
         pageSize: Int?,
         templatesByPermissionMap: Map<AuthPermission, List<String>>
@@ -867,6 +888,8 @@ class TemplateFacadeService @Autowired constructor(
             templateType = templateType,
             templateIdList = templatesWithListPermIds,
             storeFlag = storeFlag,
+            orderBy = orderBy,
+            sort = sort,
             offset = offset,
             limit = pageSize,
             queryModelFlag = true
@@ -988,7 +1011,9 @@ class TemplateFacadeService @Autowired constructor(
                         hasPermission = hasManagerPermission,
                         canView = templateWithPermission.templatesWithViewPermIds?.contains(templateId),
                         canDelete = templateWithPermission.templatesWithDeletePermIds?.contains(templateId),
-                        canEdit = templateWithPermission.templatesWithEditPermIds?.contains(templateId)
+                        canEdit = templateWithPermission.templatesWithEditPermIds?.contains(templateId),
+                        creator = record[tTemplate.CREATOR],
+                        updateTime = record[tTemplate.UPDATE_TIME].timestampmilli()
                     )
                 )
             }
@@ -1216,7 +1241,8 @@ class TemplateFacadeService @Autowired constructor(
                 stages = model.stages,
                 cloneTemplateSettingExist = CloneTemplateSettingExist.fromSetting(
                     setting, pipelinesWithLabels
-                )
+                ),
+                desc = record[tTemplate.DESC]
             )
         } else {
             null
@@ -1289,7 +1315,7 @@ class TemplateFacadeService @Autowired constructor(
             creator = latestTemplate.creator
         )
         val versions = listTemplateVersions(latestTemplate.projectId, latestTemplate.id)
-        val triggerContainer = templateResult.stages[0].containers[0] as TriggerContainer
+        val triggerContainer = templateResult.getTriggerContainer()
         val params = triggerContainer.params
         val templateParams = triggerContainer.templateParams
         return TemplateModelDetail(
@@ -1403,8 +1429,8 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     fun compareModel(versions: List<TemplateVersion>, v1Model: Model, v2Model: Model): TemplateCompareModelResult {
-        val v1TriggerContainer = v1Model.stages[0].containers[0] as TriggerContainer
-        val v2TriggerContainer = v2Model.stages[0].containers[0] as TriggerContainer
+        val v1TriggerContainer = v1Model.getTriggerContainer()
+        val v2TriggerContainer = v2Model.getTriggerContainer()
         return TemplateCompareModelResult(
             versions,
             TemplateCompareModel(
@@ -1480,7 +1506,7 @@ class TemplateFacadeService @Autowired constructor(
                     errorCode = ERROR_TEMPLATE_NOT_EXISTS
                 )
             val templateModel: Model = objectMapper.readValue(template.template)
-            val templateTriggerContainer = templateModel.stages[0].containers[0] as TriggerContainer
+            val templateTriggerContainer = templateModel.getTriggerContainer()
             val latestInstances = listLatestModel(projectId, pipelineIds)
             val settings = pipelineSettingDao.getSettings(dslContext, pipelineIds, projectId)
             val buildNos = pipelineBuildSummaryDao.getSummaries(dslContext, projectId, pipelineIds).map {
@@ -1490,7 +1516,7 @@ class TemplateFacadeService @Autowired constructor(
             return latestInstances.map {
                 val pipelineId = it.key
                 val instanceModel: Model = objectMapper.readValue(it.value)
-                val instanceTriggerContainer = instanceModel.stages[0].containers[0] as TriggerContainer
+                val instanceTriggerContainer = instanceModel.getTriggerContainer()
                 val instanceParams = paramService.filterParams(
                     userId = userId,
                     projectId = projectId,
@@ -1499,14 +1525,14 @@ class TemplateFacadeService @Autowired constructor(
                 )
                 logger.info("[$userId|$projectId|$templateId|$version] Get the param ($instanceParams)")
 
-                val buildNo = templateTriggerContainer.buildNo
-                var instanceBuildNoObj: BuildNo? = null
                 // 模板中的buildNo存在才需要回显
-                if (buildNo != null) {
-                    instanceBuildNoObj = BuildNo(
-                        buildNoType = buildNo.buildNoType,
-                        required = buildNo.required ?: instanceTriggerContainer.buildNo?.required,
-                        buildNo = buildNos[pipelineId] ?: buildNo.buildNo
+                // 将实例自己维护的当前值一起返回
+                val instanceBuildNoObj = templateTriggerContainer.buildNo?.let { no ->
+                    BuildNo(
+                        buildNoType = no.buildNoType,
+                        required = no.required ?: instanceTriggerContainer.buildNo?.required,
+                        buildNo = no.buildNo,
+                        currentBuildNo = buildNos[pipelineId]
                     )
                 }
 
@@ -1514,7 +1540,10 @@ class TemplateFacadeService @Autowired constructor(
                     pipelineId = pipelineId,
                     pipelineName = getPipelineName(settings, pipelineId) ?: templateModel.name,
                     buildNo = instanceBuildNoObj,
-                    param = instanceParams
+                    param = instanceParams,
+                    updateBuildNo = instanceTriggerContainer.buildNo?.let { ino ->
+                        ino.buildNo != templateModel.getTriggerContainer().buildNo?.buildNo
+                    }
                 )
             }.toMap()
         } catch (ignored: Throwable) {
@@ -1584,17 +1613,25 @@ class TemplateFacadeService @Autowired constructor(
                             pipelineId = pipelineId,
                             templateName = instance.pipelineName
                         )
-                        templateSettingService.saveTemplatePipelineSetting(
-                            context, userId, setting
-                        )
-                    } else {
-                        templateSettingService.insertTemplateSetting(
+                        pipelineSettingFacadeService.saveSetting(
                             context = context,
                             userId = userId,
+                            projectId = setting.projectId,
+                            pipelineId = setting.pipelineId,
+                            setting = setting
+                        )
+                    } else {
+                        val defaultSetting = templateCommonService.getDefaultSetting(
                             projectId = projectId,
                             templateId = pipelineId,
-                            pipelineName = pipelineName,
-                            isTemplate = false
+                            templateName = pipelineName
+                        )
+                        pipelineSettingFacadeService.saveSetting(
+                            context = context,
+                            userId = userId,
+                            projectId = defaultSetting.projectId,
+                            pipelineId = defaultSetting.pipelineId,
+                            setting = defaultSetting
                         )
                     }
                     addRemoteAuth(instanceModel, projectId, pipelineId, userId)
@@ -1778,17 +1815,6 @@ class TemplateFacadeService @Autowired constructor(
         )
 
         instanceModel.templateId = templateId
-        pipelineInfoFacadeService.editPipeline(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = templateInstanceUpdate.pipelineId,
-            model = instanceModel,
-            // TODO #9145 修改流水线实例时的yaml覆盖逻辑
-            yaml = null,
-            channelCode = ChannelCode.BS,
-            checkPermission = true,
-            checkTemplate = false
-        )
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             templatePipelineDao.update(
@@ -1836,6 +1862,27 @@ class TemplateFacadeService @Autowired constructor(
                         setting = setting,
                         checkPermission = true,
                         dispatchPipelineUpdateEvent = false
+                    )
+                }
+            }
+            pipelineInfoFacadeService.editPipeline(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = templateInstanceUpdate.pipelineId,
+                model = instanceModel,
+                // TODO #9145 修改流水线实例时的yaml覆盖逻辑
+                yaml = null,
+                channelCode = ChannelCode.BS,
+                checkPermission = true,
+                checkTemplate = false
+            )
+            templateInstanceUpdate.buildNo?.let {
+                if (templateInstanceUpdate.resetBuildNo == true) {
+                    pipelineInfoFacadeService.updateBuildNo(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = templateInstanceUpdate.pipelineId,
+                        targetBuildNo = it.buildNo
                     )
                 }
             }
@@ -1982,11 +2029,11 @@ class TemplateFacadeService @Autowired constructor(
         instance: Model,
         template: Model
     ): Model {
-        val templateParams = (template.stages[0].containers[0] as TriggerContainer).templateParams
+        val templateParams = (template.getTriggerContainer()).templateParams
         if (templateParams.isNullOrEmpty()) {
             return instance
         }
-        val triggerContainer = instance.stages[0].containers[0] as TriggerContainer
+        val triggerContainer = instance.getTriggerContainer()
         val finalParams = ArrayList<BuildFormProperty>()
         val params = triggerContainer.params
         params.forEach { param ->
@@ -2028,7 +2075,7 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     private fun instanceParamModel(userId: String, projectId: String, model: Model): Model {
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val triggerContainer = model.getTriggerContainer()
         val params = paramService.filterParams(userId, projectId, null, triggerContainer.params)
         val templateParams =
             if (triggerContainer.templateParams == null || triggerContainer.templateParams!!.isEmpty()) {
@@ -2106,6 +2153,7 @@ class TemplateFacadeService @Autowired constructor(
                     /**
                      * 1. 比较类型， 如果类型变了就直接用模板
                      * 2. 如果类型相同，下拉选项替换成模板的（要保存用户之前的默认值）
+                     * 3. 如果模版由常量改成变量,则流水线常量也应该改成变量
                      */
                     if (pipeline.type != template.type) {
                         result.add(template)
@@ -2113,6 +2161,7 @@ class TemplateFacadeService @Autowired constructor(
                         pipeline.options = template.options
                         pipeline.required = template.required
                         pipeline.desc = template.desc
+                        pipeline.constant = template.constant
                         result.add(pipeline)
                     }
                     return@outside
@@ -2289,11 +2338,14 @@ class TemplateFacadeService @Autowired constructor(
                 errorCode = ProcessMessageCode.TEMPLATE_NAME_CAN_NOT_NULL
             )
         }
+        // 模版先都统一使用项目配置
+        val projectDialect = projectId?.let { pipelineAsCodeService.getProjectDialect(projectId = it) }
         modelCheckPlugin.checkModelIntegrity(
             model = template,
             projectId = projectId,
             userId = userId,
-            isTemplate = true
+            isTemplate = true,
+            pipelineDialect = projectDialect
         )
         checkPipelineParam(template)
     }
@@ -2342,7 +2394,7 @@ class TemplateFacadeService @Autowired constructor(
      * 模板的流水线变量和模板常量不能相同
      */
     private fun checkPipelineParam(template: Model) {
-        val triggerContainer = template.stages[0].containers[0] as TriggerContainer
+        val triggerContainer = template.getTriggerContainer()
 
         if (triggerContainer.params.isEmpty()) {
             return
@@ -2382,6 +2434,9 @@ class TemplateFacadeService @Autowired constructor(
             stage.containers.forEach { container ->
                 if (container is TriggerContainer) {
                     container.params = PipelineUtils.cleanOptions(params = container.params)
+                    container.templateParams = container.templateParams?.let {
+                        PipelineUtils.cleanOptions(params = it)
+                    }
                 }
                 if (container.containerId.isNullOrBlank()) {
                     container.containerId = container.id
@@ -2466,13 +2521,12 @@ class TemplateFacadeService @Autowired constructor(
                 templateId = templateId,
                 templateName = templateName
             )
-            templateSettingService.insertTemplateSetting(
+            templateSettingService.saveDefaultTemplateSetting(
                 context = context,
                 userId = userId,
                 projectId = projectId,
                 templateId = templateId,
-                isTemplate = true,
-                pipelineName = templateName
+                templateName = templateName
             )
             projectTemplateMap[projectId] = templateId
         }

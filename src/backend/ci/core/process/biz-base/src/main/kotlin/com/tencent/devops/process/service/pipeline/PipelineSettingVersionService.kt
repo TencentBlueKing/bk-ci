@@ -38,7 +38,9 @@ import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.pojo.PipelineDetailInfo
 import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
+import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.utils.PipelineVersionUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -50,7 +52,8 @@ class PipelineSettingVersionService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineSettingDao: PipelineSettingDao,
-    private val pipelineSettingVersionDao: PipelineSettingVersionDao
+    private val pipelineSettingVersionDao: PipelineSettingVersionDao,
+    private val pipelineAsCodeService: PipelineAsCodeService
 ) {
 
     /**
@@ -127,6 +130,12 @@ class PipelineSettingVersionService @Autowired constructor(
                     ?: settingInfo.concurrencyCancelInProgress
                 settingInfo.waitQueueTimeMinute = ve.waitQueueTimeMinute ?: settingInfo.waitQueueTimeMinute
                 settingInfo.maxQueueSize = ve.maxQueueSize ?: settingInfo.maxQueueSize
+                settingInfo.maxConRunningQueueSize = if (ve.maxConRunningQueueSize != -1) {
+                    ve.maxConRunningQueueSize ?: settingInfo.maxConRunningQueueSize
+                } else {
+                    null
+                }
+                settingInfo.pipelineAsCodeSettings = ve.pipelineAsCodeSettings
             }
             // 来自前端的请求中，版本中的可能还不是正式生效的，如果和正式配置中有差异则重新获取名称
             if (settingInfo.labels.isNotEmpty() && settingInfo.labels != labels && userId != null) {
@@ -138,6 +147,10 @@ class PipelineSettingVersionService @Autowired constructor(
                 }
                 settingInfo.labelNames = labelNames
             }
+            settingInfo.pipelineAsCodeSettings = pipelineAsCodeService.getPipelineAsCodeSettings(
+                projectId = projectId,
+                settingInfo.pipelineAsCodeSettings
+            )
         }
 
         return settingInfo
@@ -168,5 +181,23 @@ class PipelineSettingVersionService @Autowired constructor(
         ) ?: pipelineSettingDao.getSetting(
             context ?: dslContext, projectId, pipelineId
         )?.let { PipelineSettingVersion.convertFromSetting(it) }
+    }
+
+    fun getSettingVersionAfterUpdate(
+        projectId: String,
+        pipelineId: String,
+        updateVersion: Boolean,
+        setting: PipelineSetting
+    ): Int {
+        return getLatestSettingVersion(
+            projectId = projectId,
+            pipelineId = pipelineId
+        )?.let { latest ->
+            if (updateVersion) PipelineVersionUtils.getSettingVersion(
+                currVersion = latest.version,
+                originSetting = latest,
+                newSetting = PipelineSettingVersion.convertFromSetting(setting)
+            ) else latest.version
+        } ?: 1
     }
 }

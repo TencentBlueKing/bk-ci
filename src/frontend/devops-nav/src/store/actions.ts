@@ -1,4 +1,5 @@
 import { ActionTree, ActionContext } from 'vuex'
+import { AxiosRequestConfig } from 'axios'
 import Request from '../utils/request'
 import { transformObj } from '../utils/util'
 import {
@@ -165,6 +166,18 @@ const actions: ActionTree<RootState, any> = {
     fetchWithoutPermissionsProjects (_, payload) {
         const { pageSize, page, projectName } = payload
         return Request.get(`${PROJECT_API_URL_PREFIX}/user/projects/listProjectsWithoutPermissions?page=${page}&pageSize=${pageSize}&projectName=${projectName}`)
+    },
+
+    fetchVersionsLogList () {
+        return Request.get(`${window.location.origin}/bundledVersionLog.json?t=${Date.now()}`, {
+            originalResponse: true
+        } as AxiosRequestConfig & { originalResponse: boolean })
+    },
+
+    fetchVersionsLogListEn () {
+        return Request.get(`${window.location.origin}/bundledVersionLog_en.json?t=${Date.now()}`, {
+            originalResponse: true
+        } as AxiosRequestConfig & { originalResponse: boolean })
     }
 }
 

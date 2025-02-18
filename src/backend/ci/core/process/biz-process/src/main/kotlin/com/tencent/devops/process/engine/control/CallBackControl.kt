@@ -31,8 +31,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.archive.util.closeQuietly
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
@@ -51,6 +51,7 @@ import com.tencent.devops.common.pipeline.event.SimpleModel
 import com.tencent.devops.common.pipeline.event.SimpleStage
 import com.tencent.devops.common.pipeline.event.SimpleTask
 import com.tencent.devops.common.pipeline.event.StreamEnabledEvent
+import com.tencent.devops.common.pipeline.utils.EventUtils.toEventType
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.util.HttpRetryUtils
@@ -175,7 +176,8 @@ class CallBackControl @Autowired constructor(
             pipelineId = pipelineInfo.pipelineId,
             pipelineName = pipelineInfo.pipelineName,
             userId = pipelineInfo.lastModifyUser,
-            updateTime = pipelineInfo.updateTime
+            updateTime = pipelineInfo.updateTime,
+            projectId = pipelineInfo.projectId
         )
 
         sendToCallBack(CallBackData(event = callBackEvent, data = pipelineEvent), list)
@@ -212,31 +214,10 @@ class CallBackControl @Autowired constructor(
         val projectId = event.projectId
         val pipelineId = event.pipelineId
         val buildId = event.buildId
-
-        val callBackEvent =
-            if (event.taskId.isNullOrBlank()) {
-                if (event.stageId.isNullOrBlank()) {
-                    if (event.actionType == ActionType.START) {
-                        CallBackEvent.BUILD_START
-                    } else {
-                        CallBackEvent.BUILD_END
-                    }
-                } else {
-                    if (event.actionType == ActionType.START) {
-                        CallBackEvent.BUILD_STAGE_START
-                    } else {
-                        CallBackEvent.BUILD_STAGE_END
-                    }
-                }
-            } else {
-                if (event.actionType == ActionType.START) {
-                    CallBackEvent.BUILD_TASK_START
-                } else if (event.actionType == ActionType.REFRESH) {
-                    CallBackEvent.BUILD_TASK_PAUSE
-                } else {
-                    CallBackEvent.BUILD_TASK_END
-                }
-            }
+        if (event.atomCode != null && VmOperateTaskGenerator.isVmAtom(event.atomCode!!)) {
+            return
+        }
+        val callBackEvent = event.toEventType() ?: return
 
         logger.info("$projectId|$pipelineId|$buildId|${callBackEvent.name}|${event.stageId}|${event.taskId}|callback")
         val list = mutableListOf<ProjectPipelineCallBack>()
@@ -246,9 +227,24 @@ class CallBackControl @Autowired constructor(
                 events = callBackEvent.name
             )
         )
-        val pipelineCallback = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)
-            ?.model
-            ?.getPipelineCallBack(projectId, callBackEvent) ?: emptyList()
+        // 流水线级别回调，旧数据存在model中，新数据存在数据库中
+        val pipelineCallback = projectPipelineCallBackService.getPipelineCallback(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            event = callBackEvent.name
+        ).let {
+            if (it.isEmpty()) {
+                pipelineRepositoryService.getPipelineResourceVersion(
+                    projectId = projectId,
+                    pipelineId = pipelineId
+                )?.model?.getPipelineCallBack(
+                    projectId = projectId,
+                    callbackEvent = callBackEvent
+                ) ?: emptyList()
+            } else {
+                it
+            }
+        }
         if (pipelineCallback.isNotEmpty()) {
             list.addAll(pipelineCallback)
         }
@@ -292,9 +288,11 @@ class CallBackControl @Autowired constructor(
                 is PipelineEvent -> {
                     data.pipelineId
                 }
+
                 is BuildEvent -> {
                     data.buildId
                 }
+
                 else -> ""
             }
             val watcher = Watcher(id = "${it.projectId}|${it.callBackUrl}|${it.events}|$uniqueId")
@@ -338,7 +336,7 @@ class CallBackControl @Autowired constructor(
         try {
             breaker.executeCallable {
                 HttpRetryUtils.retry(MAX_RETRY_COUNT) {
-                    callbackClient.newCall(request).execute()
+                    callbackClient.newCall(request).execute().closeQuietly()
                 }
                 if (callBack.failureTime != null) {
                     projectPipelineCallBackService.updateFailureTime(

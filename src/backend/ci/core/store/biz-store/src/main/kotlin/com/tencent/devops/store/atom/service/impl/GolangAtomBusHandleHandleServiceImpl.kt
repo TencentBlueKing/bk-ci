@@ -73,7 +73,7 @@ class GolangAtomBusHandleHandleServiceImpl : AtomBusHandleService {
         return if (reqTarget.isNullOrBlank()) target else reqTarget
     }
 
-    override fun checkTarget(target: String): Boolean {
-        return true
+    override fun getDefaultRuntimeVersion(): String? {
+        return null
     }
 }

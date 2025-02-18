@@ -34,12 +34,14 @@ import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkApiHandleType
@@ -496,15 +498,24 @@ interface ServiceBuildResource {
         @Parameter(description = "构建信息", required = false)
         @QueryParam("buildMsg")
         buildMsg: String? = null,
-        @Parameter(description = "触发人", required = false)
+        @Parameter(description = "执行人", required = false)
         @QueryParam("startUser")
         startUser: List<String>? = null,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false,
-        @Parameter(description = "查看指定版本调试数据", required = false, example = "false")
-        @QueryParam("version")
-        customVersion: Int? = null
+        @Parameter(description = "指定调试数据", required = false)
+        @QueryParam("debug")
+        debug: Boolean? = null,
+        @Parameter(description = "触发代码库", required = false)
+        @QueryParam("triggerAlias")
+        triggerAlias: List<String>? = null,
+        @Parameter(description = "触发分支", required = false)
+        @QueryParam("triggerBranch")
+        triggerBranch: List<String>? = null,
+        @Parameter(description = "触发人", required = false)
+        @QueryParam("triggerUser")
+        triggerUser: List<String>? = null
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @Operation(summary = "获取构建详情")
@@ -902,4 +913,32 @@ interface ServiceBuildResource {
         @BkField(required = true)
         buildIds: Set<String>
     ): Result<Boolean>
+
+    @Operation(summary = "添加构建的容器耗时")
+    @POST
+    @Path("projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/updateContainerTimeout")
+    fun updateContainerTimeout(
+        @Parameter(description = "项目ID", required = true)
+        @BkField(required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        @BkField(required = true)
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @PathParam("buildId")
+        @BkField(required = true)
+        buildId: String,
+        @Parameter(description = "containerId/vmSeqId")
+        @QueryParam("containerId")
+        containerId: String,
+        @Parameter(description = "执行次数", required = false)
+        @QueryParam("executeCount")
+        @BkField(required = true)
+        executeCount: Int,
+        @Parameter(description = "要写入的耗时", required = true)
+        @BkField(required = true)
+        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
+    )
 }

@@ -32,15 +32,16 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.callback.AuthConstants
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectApprovalDao
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectUpdateHistoryDao
-import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.pojo.ProjectApprovalInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectTipsStatus
@@ -59,8 +60,8 @@ class ProjectApprovalService @Autowired constructor(
     private val projectApprovalDao: ProjectApprovalDao,
     private val projectDao: ProjectDao,
     private val projectExtService: ProjectExtService,
-    private val projectDispatcher: ProjectDispatcher,
-    private val projectUpdateHistoryDao: ProjectUpdateHistoryDao
+    private val projectUpdateHistoryDao: ProjectUpdateHistoryDao,
+    private val projectDispatcher: SampleEventDispatcher
 ) {
 
     companion object {
@@ -257,6 +258,9 @@ class ProjectApprovalService @Autowired constructor(
                     params = arrayOf(projectId),
                     defaultMessage = "project $projectId is not exist"
                 )
+        // 属性只能变更前端展示的,其他的字段由op变更
+        val projectProperties = projectInfo.properties?.let { JsonUtil.to(it, ProjectProperties::class.java) }
+        val updateProjectProperties = projectApprovalInfo.properties?.let { projectProperties?.userCopy(it) }
         val projectUpdateInfo = with(projectApprovalInfo) {
             ProjectUpdateInfo(
                 projectName = projectName,
@@ -277,7 +281,8 @@ class ProjectApprovalService @Autowired constructor(
                 ccAppName = projectInfo.ccAppName,
                 kind = projectInfo.kind,
                 projectType = projectType ?: 0,
-                productId = projectApprovalInfo.productId
+                productId = projectApprovalInfo.productId,
+                properties = updateProjectProperties
             )
         }
         val logoAddress = projectUpdateInfo.logoAddress

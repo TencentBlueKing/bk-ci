@@ -29,7 +29,6 @@
 package com.tencent.devops.auth.provider.rbac.service.migrate
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.Action
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
@@ -41,11 +40,12 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
+import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.provider.rbac.pojo.migrate.MigrateTaskDataResult
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceCodeConverter
-import com.tencent.devops.auth.provider.rbac.service.PermissionGroupPoliciesService
-import com.tencent.devops.auth.provider.rbac.service.RbacCacheService
+import com.tencent.devops.auth.provider.rbac.service.RbacCommonService
 import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.util.PageUtil
@@ -68,10 +68,10 @@ class MigrateV0PolicyService constructor(
     private val migrateIamApiService: MigrateIamApiService,
     private val authResourceCodeConverter: AuthResourceCodeConverter,
     private val permissionService: PermissionService,
-    private val rbacCacheService: RbacCacheService,
+    private val rbacCommonService: RbacCommonService,
     private val authMigrationDao: AuthMigrationDao,
     private val deptService: DeptService,
-    private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
+    private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService,
     private val permissionResourceMemberService: PermissionResourceMemberService
 ) : AbMigratePolicyService(
     v2ManagerService = v2ManagerService,
@@ -82,9 +82,10 @@ class MigrateV0PolicyService constructor(
     migrateIamApiService = migrateIamApiService,
     authMigrationDao = authMigrationDao,
     permissionService = permissionService,
-    rbacCacheService = rbacCacheService,
+    rbacCommonService = rbacCommonService,
     deptService = deptService,
-    permissionGroupPoliciesService = permissionGroupPoliciesService
+    permissionResourceGroupPermissionService = permissionResourceGroupPermissionService,
+    permissionResourceMemberService = permissionResourceMemberService
 ) {
 
     companion object {
@@ -459,6 +460,7 @@ class MigrateV0PolicyService constructor(
     }
 
     override fun batchAddGroupMember(
+        projectCode: String,
         groupId: Int,
         defaultGroup: Boolean,
         members: List<RoleGroupMemberInfo>?,
@@ -480,10 +482,11 @@ class MigrateV0PolicyService constructor(
             groupIdOfPipelineActionGroupList.forEach {
                 logger.info("add subject template to group of pipeline:$it|$subjectTemplateId")
                 addGroupMember(
+                    projectCode = projectCode,
                     groupId = it.toInt(),
                     defaultGroup = true,
                     member = RoleGroupMemberInfo().apply {
-                        type = ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE)
+                        type = MemberType.TEMPLATE.type
                         id = subjectTemplateId
                         name = subjectTemplateId
                         expiredAt = 0
@@ -503,6 +506,7 @@ class MigrateV0PolicyService constructor(
         }
         members.forEach member@{ member ->
             addGroupMember(
+                projectCode = projectCode,
                 defaultGroup = defaultGroup,
                 member = member,
                 groupId = groupId
@@ -511,6 +515,7 @@ class MigrateV0PolicyService constructor(
     }
 
     private fun addGroupMember(
+        projectCode: String,
         defaultGroup: Boolean,
         member: RoleGroupMemberInfo,
         groupId: Int
@@ -523,11 +528,12 @@ class MigrateV0PolicyService constructor(
             V0_GROUP_EXPIRED_DAY[RandomUtils.nextInt(0, 2)]
         }
         permissionResourceMemberService.addGroupMember(
-            userId = member.id,
+            projectCode = projectCode,
+            memberId = member.id,
             memberType = member.type,
             expiredAt = System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(expiredDay) +
                 TimeUnit.DAYS.toSeconds(RandomUtils.nextLong(0, 180)),
-            groupId = groupId
+            iamGroupId = groupId
         )
     }
 

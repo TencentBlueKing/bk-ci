@@ -30,11 +30,11 @@ package com.tencent.devops.process.yaml.transfer
 import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildContainerType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
+import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
 import com.tencent.devops.process.utils.MINORVERSION
@@ -60,7 +60,7 @@ class VariableTransfer {
 
     fun makeVariableFromModel(model: Model): Map<String, Variable>? {
         val result = mutableMapOf<String, Variable>()
-        (model.stages[0].containers[0] as TriggerContainer).params.forEach {
+        model.getTriggerContainer().params.forEach {
             if (it.id in ignoredVariable) return@forEach
             val props = when {
                 // 不带
@@ -92,6 +92,12 @@ class VariableTransfer {
                     type = VariablePropType.GIT_REF.value,
                     repoHashId = it.repoHashId
                 )
+                CascadePropertyUtils.supportCascadeParam(it.type) -> {
+                    // 级联选择器类型变量
+                    VariableProps(
+                        type = VariablePropType.REPO_REF.value
+                    )
+                }
 
                 it.type == BuildFormPropertyType.MULTIPLE -> VariableProps(
                     type = VariablePropType.CHECKBOX.value,
@@ -133,7 +139,11 @@ class VariableTransfer {
             }
             val const = it.constant.nullIfDefault(false)
             result[it.id] = Variable(
-                value = it.defaultValue.toString(),
+                value = if (CascadePropertyUtils.supportCascadeParam(it.type)) {
+                    CascadePropertyUtils.parseDefaultValue(it.id, it.defaultValue, it.type)
+                } else {
+                    it.defaultValue.toString()
+                },
                 readonly = if (const == true) null else it.readOnly.nullIfDefault(false),
                 allowModifyAtStartup = if (const != true) it.required.nullIfDefault(true) else null,
                 const = const,
@@ -163,19 +173,18 @@ class VariableTransfer {
     }
 
     fun makeRecommendedVersion(model: Model): RecommendedVersion? {
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-        val res = if (triggerContainer.buildNo != null) {
-            with(triggerContainer.buildNo) {
-                RecommendedVersion(
-                    enabled = true, allowModifyAtStartup = this!!.required, buildNo = RecommendedVersion.BuildNo(
-                        this.buildNo,
-                        RecommendedVersion.Strategy.parse(this.buildNoType).alis
-                    )
+        val triggerContainer = model.getTriggerContainer()
+        val res = triggerContainer.buildNo?.let {
+            RecommendedVersion(
+                enabled = true,
+                allowModifyAtStartup = it.required,
+                buildNo = RecommendedVersion.BuildNo(
+                    it.buildNo, RecommendedVersion.Strategy.parse(it.buildNoType).alis
                 )
-            }
-        } else return null
+            )
+        } ?: return null
 
-        (model.stages[0].containers[0] as TriggerContainer).params.forEach {
+        triggerContainer.params.forEach {
             if (it.id == MAJORVERSION || it.id == "MajorVersion") {
                 res.major = it.defaultValue.toString().toIntOrNull() ?: 0
             }
@@ -209,8 +218,13 @@ class VariableTransfer {
                     required = variable.allowModifyAtStartup ?: true,
                     constant = variable.const ?: false,
                     type = type,
-                    defaultValue = when (type) {
-                        BuildFormPropertyType.BOOLEAN -> variable.value?.toBoolean() ?: false
+                    defaultValue = when {
+                        type == BuildFormPropertyType.BOOLEAN ->
+                            (variable.value as String?)?.toBoolean() ?: false
+
+                        CascadePropertyUtils.supportCascadeParam(type) ->
+                            variable.value ?: mapOf<String, String>()
+
                         else -> variable.value ?: ""
                     },
                     options = variable.props?.options?.map {

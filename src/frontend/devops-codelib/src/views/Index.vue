@@ -2,7 +2,10 @@
     <div class="codelib-content">
         <template v-if="hasCodelibs || aliasName.length || isLoading">
             <div id="codelib-list-content">
-                <layout :flod.sync="isListFlod" @on-flod="handleLayoutFlod">
+                <layout
+                    :flod.sync="isListFlod"
+                    @on-flod="handleLayoutFlod"
+                >
                     <template>
                         <section class="header-content">
                             <link-code-lib
@@ -19,7 +22,8 @@
                                 :create-codelib="createCodelib"
                             >
                             </link-code-lib>
-                            <bk-input :placeholder="$t('codelib.aliasNamePlaceholder')"
+                            <bk-input
+                                :placeholder="$t('codelib.aliasNamePlaceholder')"
                                 :class="{
                                     'codelib-search': true,
                                     'is-fold-search': isListFlod
@@ -67,11 +71,14 @@
             :desc="$t('codelib.codelibDesc')"
         >
             <bk-button
-                v-for="typeLabel in codelibTypes"
-                :key="typeLabel"
-                @click="createCodelib(typeLabel)"
+                v-for="item in codelibTypes"
+                :key="item.scmType"
+                :ext-cls="{
+                    'is-disabled': item.status !== 'OK'
+                }"
+                @click="createCodelib(item.scmType)"
             >
-                {{ $t('codelib.linkCodelibLabel', [typeLabel]) }}
+                {{ $t('codelib.linkCodelibLabel', [item.name]) }}
             </bk-button>
         </empty-tips>
         <empty-tips
@@ -100,26 +107,25 @@
 </template>
 
 <script>
-    import layout from '../components/layout'
-    import LinkCodeLib from '../components/LinkCodeLib'
-    import CodeLibTable from '../components/CodeLibTable'
+    import { mapActions, mapState } from 'vuex'
     import CodeLibDetail from '../components/CodeLibDetail'
     import CodeLibDialog from '../components/CodeLibDialog'
-    import { mapState, mapActions } from 'vuex'
-    import { getOffset } from '../utils/'
-    import { RESOURCE_ACTION, RESOURCE_TYPE } from '../utils/permission'
+    import CodeLibTable from '../components/CodeLibTable'
+    import LinkCodeLib from '../components/LinkCodeLib'
+    import layout from '../components/layout'
     import {
-        codelibTypes,
+        CODE_REPOSITORY_CACHE,
+        CODE_REPOSITORY_SEARCH_VAL,
         getCodelibConfig,
         isGit,
         isGitLab,
         isGithub,
-        isTGit,
         isP4,
-        CODE_REPOSITORY_CACHE,
-        CODE_REPOSITORY_SEARCH_VAL,
-        isSvn
+        isSvn,
+        isTGit
     } from '../config/'
+    import { getOffset } from '../utils/'
+    import { RESOURCE_ACTION, RESOURCE_TYPE } from '../utils/permission'
     
     export default {
         name: 'codelib-list',
@@ -151,12 +157,9 @@
         },
 
         computed: {
-            ...mapState('codelib', ['codelibs', 'showCodelibDialog', 'gitOAuth']),
+            ...mapState('codelib', ['codelibTypes', 'codelibs', 'showCodelibDialog', 'gitOAuth']),
             projectId () {
                 return this.$route.params.projectId
-            },
-            codelibTypes () {
-                return codelibTypes
             },
             hasCodelibs () {
                 const { codelibs } = this
@@ -316,7 +319,37 @@
                 this.refreshCodelibList(this.projectId, 1)
             },
 
+            extractMajorMinorVersion (version) {
+                let curVersion = version
+                if (curVersion.startsWith('v')) {
+                    curVersion = curVersion.substring(1)
+                }
+                
+                const match = curVersion.match(/^(\d+)\./)
+                
+                if (match) {
+                    return `/${match[1]}.0`
+                }
+                
+                return ''
+            },
+
+            getDocUrl (url) {
+                const languageCodeMatch = this.$i18n.locale.match(/^[A-Za-z]{2}/)
+                const lang = (languageCodeMatch && languageCodeMatch[0].toUpperCase()) || ''
+                const version = this.extractMajorMinorVersion(window.BK_CI_VERSION)
+                return `/markdown/${lang}/Devops${version}${url}`
+            },
             async createCodelib (typeLabel, isEdit) {
+                const codelibType = this.codelibTypes.find(type => type.scmType === typeLabel)
+                if (codelibType?.status === 'DEPLOYING') {
+                    this.showUndeployDialog({
+                        title: this.$t('codelib.codelibUndeployTitle', [codelibType.name]),
+                        desc: this.$t(`codelib.${typeLabel.toLowerCase()}UndeployDesc`),
+                        link: `${DOCS_URL_PREFIX}${this.getDocUrl(codelibType.docUrl)}`
+                    })
+                    return
+                }
                 const { credentialTypes, typeName } = getCodelibConfig(typeLabel)
                 const CodelibDialog = {
                     showCodelibDialog: true,

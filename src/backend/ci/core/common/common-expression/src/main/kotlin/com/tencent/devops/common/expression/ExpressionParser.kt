@@ -27,10 +27,11 @@
 
 package com.tencent.devops.common.expression
 
+import com.tencent.devops.common.expression.ExpressionParser.legalizeExpression
 import com.tencent.devops.common.expression.context.ContextValueNode
 import com.tencent.devops.common.expression.context.DictionaryContextData
 import com.tencent.devops.common.expression.context.PipelineContextData
-import com.tencent.devops.common.expression.context.StringContextData
+import com.tencent.devops.common.expression.expression.EvaluationOptions
 import com.tencent.devops.common.expression.expression.ExpressionConstants
 import com.tencent.devops.common.expression.expression.IExpressionNode
 import com.tencent.devops.common.expression.expression.IFunctionInfo
@@ -75,8 +76,9 @@ object ExpressionParser {
         nameValue: List<NamedValueInfo>,
         fetchValue: Boolean
     ): Any? {
+        val options = EvaluationOptions(false)
         val result = createTree(expression.legalizeExpression(), null, nameValue, null)!!
-            .evaluate(null, context, null, null)
+            .evaluate(null, context, options, null)
         if (!fetchValue) {
             return result
         }
@@ -91,10 +93,32 @@ object ExpressionParser {
         val context = ExecutionContext(DictionaryContextData())
         val nameValue = mutableListOf<NamedValueInfo>()
         fillContextByMap(contextMap, context, nameValue)
+        val options = EvaluationOptions(false)
+        try {
+            return doEvaluateByMap(
+                expression = expression,
+                context = context,
+                nameValue = nameValue,
+                options = options,
+                fetchValue = fetchValue
+            )
+        } catch (e: Throwable) {
+            if (options.contextNotNull() && e is ContextNotFoundException) {
+                throw ContextNotFoundException("Expression context ${options.contextNotNull.errKey()} not found.")
+            }
+            throw e
+        }
+    }
 
+    private fun doEvaluateByMap(
+        expression: String,
+        context: ExecutionContext,
+        nameValue: MutableList<NamedValueInfo>,
+        options: EvaluationOptions,
+        fetchValue: Boolean
+    ): Any? {
         val result = createTree(expression.legalizeExpression(), null, nameValue, null)!!
-            .evaluate(null, context, null, null)
-
+            .evaluate(null, context, options, null)
         if (!fetchValue) {
             return result
         }
@@ -102,44 +126,23 @@ object ExpressionParser {
         return if (result.value is PipelineContextData) result.value.fetchValue() else result.value
     }
 
+    /**
+     * 将流水线变量转换为表达式上下文类型，存在如下情况
+     * 1、a = str, 直接使用 string 类型的上下文保存即可
+     * 2、a.b.c = str, 将 a.b.c 转换为上下文中的嵌套 map 保存 既 a {b: {c: str}}
+     * 3、a.b.c = str 且 a.b = {"c": "str"}, 将 a.b 保存为兼容用户的数据类型，在不涉及引擎计算纯输出的情况下使用 a.b 的原数据，
+     * 在涉及引擎计算时，则使用 a.b.c 转换后的 map，同 2 中所述
+     */
     fun fillContextByMap(
         contextMap: Map<String, String>,
         context: ExecutionContext,
         nameValue: MutableList<NamedValueInfo>
     ) {
-        contextMap.forEach { (key, value) ->
-            var data: DictionaryContextData? = null
-            val tokens = key.split('.')
-            if (tokens.size > 1) {
-                tokens.forEachIndexed { index, token ->
-                    if (index == tokens.size - 1) {
-                        data!!.add(token, StringContextData(value))
-                        return@forEachIndexed
-                    }
-
-                    if (index == 0) {
-                        if (context.expressionValues[token] != null) {
-                            data = context.expressionValues[token] as DictionaryContextData
-                            return@forEachIndexed
-                        }
-                        nameValue.add(NamedValueInfo(token, ContextValueNode()))
-                        context.expressionValues[token] = DictionaryContextData()
-                        data = context.expressionValues[token] as DictionaryContextData
-                        return@forEachIndexed
-                    }
-
-                    data!![token]?.let {
-                        data = it as DictionaryContextData
-                        return@forEachIndexed
-                    }
-                    data!![token] = DictionaryContextData()
-                    data = data!![token] as DictionaryContextData
-                }
-            } else {
-                nameValue.add(NamedValueInfo(key, ContextValueNode()))
-                context.expressionValues[key] = StringContextData(value)
-            }
+        val contextTree = ContextTree()
+        contextMap.forEach { (k, v) ->
+            contextTree.addNode(k, v)
         }
+        contextTree.toContext(context.expressionValues, nameValue)
     }
 
     fun createTree(

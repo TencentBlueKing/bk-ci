@@ -153,10 +153,12 @@ CREATE TABLE IF NOT EXISTS `T_NODE` (
   `OS_TYPE` varchar(64) DEFAULT NULL COMMENT '从CC中查到的os类型',
   `SERVER_ID` bigint(20) NULL DEFAULT NULL COMMENT '服务器id',
   `SYSTEM_UPDATE_TIME` timestamp NULL DEFAULT NULL COMMENT '系统任务更新数据时间',
+  `SIZE` varchar(32) DEFAULT NULL COMMENT '机型',
   PRIMARY KEY (`NODE_ID`),
   KEY `PROJECT_ID` (`PROJECT_ID`),
   KEY `HOST_ID` (`HOST_ID`),
-  KEY `NODE_IP` (`NODE_IP`)
+  KEY `NODE_IP` (`NODE_IP`),
+  KEY `SERVER_ID` (`SERVER_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='节点信息表';
 
 -- ----------------------------

@@ -31,9 +31,10 @@ package com.tencent.devops.auth.provider.rbac.service
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
+import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.pojo.AuthResourceInfo
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -45,7 +46,9 @@ import java.time.ZoneId
 class AuthResourceService @Autowired constructor(
     private val dslContext: DSLContext,
     private val authResourceDao: AuthResourceDao,
-    private val authResourceGroupDao: AuthResourceGroupDao
+    private val authResourceGroupDao: AuthResourceGroupDao,
+    private val authResourceGroupMemberDao: AuthResourceGroupMemberDao,
+    private val resourceGroupPermissionService: PermissionResourceGroupPermissionService
 ) {
 
     companion object {
@@ -111,6 +114,17 @@ class AuthResourceService @Autowired constructor(
                 resourceType = resourceType,
                 resourceCode = resourceCode
             )
+            authResourceGroupMemberDao.deleteByResource(
+                dslContext = transactionContext,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            )
+            resourceGroupPermissionService.deleteByResource(
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            )
         }
     }
 
@@ -167,28 +181,13 @@ class AuthResourceService @Autowired constructor(
         resourceType: String,
         resourceCode: String
     ) {
-        val groupIds = authResourceGroupDao.getByResourceCode(
+        authResourceDao.disable(
             dslContext = dslContext,
+            userId = userId,
             projectCode = projectCode,
             resourceType = resourceType,
             resourceCode = resourceCode
-        ).filter {
-            it.groupCode != DefaultGroupType.MANAGER.value
-        }.map { it.id }
-        dslContext.transaction { configuration ->
-            val transactionContext = DSL.using(configuration)
-            authResourceDao.disable(
-                dslContext = transactionContext,
-                userId = userId,
-                projectCode = projectCode,
-                resourceType = resourceType,
-                resourceCode = resourceCode
-            )
-            authResourceGroupDao.deleteByIds(
-                dslContext = transactionContext,
-                ids = groupIds
-            )
-        }
+        )
     }
 
     fun list(
@@ -235,6 +234,17 @@ class AuthResourceService @Autowired constructor(
             projectCode = projectCode,
             resourceType = resourceType,
             createUser = createUser
+        )
+    }
+
+    fun listResourcesCreator(
+        projectCode: String,
+        resourceCodes: List<String>
+    ): List<String> {
+        return authResourceDao.listResourcesCreator(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceCodes = resourceCodes
         )
     }
 

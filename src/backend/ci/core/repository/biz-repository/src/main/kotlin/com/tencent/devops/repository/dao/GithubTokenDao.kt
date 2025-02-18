@@ -42,7 +42,8 @@ class GithubTokenDao {
         accessToken: String,
         tokenType: String,
         scope: String,
-        githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP
+        githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP,
+        operator: String
     ) {
         val now = LocalDateTime.now()
         with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
@@ -54,7 +55,8 @@ class GithubTokenDao {
                 SCOPE,
                 CREATE_TIME,
                 UPDATE_TIME,
-                TYPE
+                TYPE,
+                OPERATOR
             ).values(
                 userId,
                 accessToken,
@@ -62,7 +64,8 @@ class GithubTokenDao {
                 scope,
                 now,
                 now,
-                githubTokenType.name
+                githubTokenType.name,
+                operator
             ).execute()
         }
     }
@@ -73,13 +76,20 @@ class GithubTokenDao {
         accessToken: String,
         tokenType: String,
         scope: String,
-        githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP
+        githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP,
+        operator: String
     ) {
         with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
             dslContext.update(this)
                 .set(TOKEN_TYPE, tokenType)
                 .set(ACCESS_TOKEN, accessToken)
                 .set(SCOPE, scope)
+                .let {
+                    if (operator.isNotBlank()) {
+                        it.set(OPERATOR, operator)
+                    }
+                    it
+                }
                 .where(USER_ID.eq(userId)).and(TYPE.eq(githubTokenType.name))
                 .execute()
         }
@@ -88,19 +98,52 @@ class GithubTokenDao {
     fun getOrNull(
         dslContext: DSLContext,
         userId: String,
-        githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP
+        githubTokenType: GithubTokenType?
     ): TRepositoryGithubTokenRecord? {
         with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
-            return dslContext.selectFrom(this).where(USER_ID.eq(userId)).and(TYPE.eq(githubTokenType.name)).fetchOne()
+            return getByOperator(
+                dslContext = dslContext,
+                operator = userId,
+                githubTokenType = githubTokenType
+            ) ?: dslContext.selectFrom(this).where(USER_ID.eq(userId))
+                .let {
+                    if (githubTokenType != null) {
+                        it.and(TYPE.eq(githubTokenType.name))
+                    } else it
+                }
+                .fetchOne()
         }
     }
 
+    fun getByOperator(
+        dslContext: DSLContext,
+        operator: String,
+        githubTokenType: GithubTokenType?
+    ): TRepositoryGithubTokenRecord? {
+        with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
+            return dslContext.selectFrom(this)
+                .where(OPERATOR.eq(operator))
+                .let {
+                    if (githubTokenType != null) {
+                        it.and(TYPE.eq(githubTokenType.name))
+                    } else it
+                }
+                .orderBy(CREATE_TIME.desc())
+                .fetch()
+                .firstOrNull()
+        }
+    }
+
+    /**
+     * 删除token
+     * @param operator 蓝盾平台操作人用户名
+     */
     fun delete(
         dslContext: DSLContext,
-        userId: String
+        operator: String
     ) {
         with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
-            dslContext.deleteFrom(this).where(USER_ID.eq(userId))
+            dslContext.deleteFrom(this).where(OPERATOR.eq(operator))
         }
     }
 }

@@ -1,8 +1,18 @@
 <template>
     <div class="flex-container">
-        <bk-dropdown-menu trigger="click" align="bottom">
-            <div slot="dropdown-trigger" class="more-operation-entry">
-                <i class="entry-circle" v-for="i in [1, 2, 3]" :key="i" />
+        <bk-dropdown-menu
+            trigger="click"
+            align="bottom"
+        >
+            <div
+                slot="dropdown-trigger"
+                class="more-operation-entry"
+            >
+                <i
+                    class="entry-circle"
+                    v-for="i in [1, 2, 3]"
+                    :key="i"
+                />
             </div>
             <div
                 v-if="curPipelineId"
@@ -10,7 +20,10 @@
                 class="more-operation-dropmenu"
                 slot="dropdown-content"
             >
-                <ul v-for="(parent, index) in actionConfMenus" :key="index">
+                <ul
+                    v-for="(parent, index) in actionConfMenus"
+                    :key="index"
+                >
                     <template v-for="(action, aIndex) in parent">
                         <li
                             v-if="!action.hidden"
@@ -166,11 +179,15 @@
                                 {
                                     label: 'copyAsTemplateInstance',
                                     handler: () => this.copyAsTemplateInstance(pipeline),
-                                    permissionData: {
-                                        projectId,
-                                        resourceType: 'project',
-                                        resourceCode: projectId,
-                                        action: RESOURCE_ACTION.CREATE
+                                    vPerm: {
+                                        hasPermission: pipeline.permissions?.canManage,
+                                        disablePermissionApi: true,
+                                        permissionData: {
+                                            projectId,
+                                            resourceType: 'project',
+                                            resourceCode: projectId,
+                                            action: RESOURCE_ACTION.CREATE
+                                        }
                                     }
                                 }
                             ]
@@ -192,11 +209,13 @@
                         {
                             label: 'newlist.saveAsTemp',
                             handler: () => this.saveAsTempHandler(pipeline),
-                            permissionData: {
-                                projectId,
-                                resourceType: 'project',
-                                resourceCode: projectId,
-                                action: TEMPLATE_RESOURCE_ACTION.CREATE
+                            vPerm: {
+                                permissionData: {
+                                    projectId,
+                                    resourceType: 'project',
+                                    resourceCode: projectId,
+                                    action: TEMPLATE_RESOURCE_ACTION.CREATE
+                                }
                             }
                         },
                         {
@@ -264,7 +283,7 @@
             },
             afterDisablePipeline (enable) {
                 this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
-                    runLockType: enable ? 'MULTIPLE' : 'LOCK'
+                    locked: !enable
                 })
             },
 
@@ -293,8 +312,8 @@
             },
             copyAsTemplateInstance (pipeline) {
                 const pipelineName = (pipeline.pipelineName + '_copy').substring(0, 128)
-                const { templateId, projectId, templateVersion } = pipeline
-                window.top.location.href = `${location.origin}/console/pipeline/${projectId}/template/${templateId}/createInstance/${templateVersion}/${pipelineName}`
+                const { templateId, pipelineId, projectId, templateVersion } = pipeline
+                window.top.location.href = `${location.origin}/console/pipeline/${projectId}/template/${templateId}/createInstance/${templateVersion}/${pipelineName}?pipelineId=${pipelineId}`
             },
             afterRemovePipeline () {
                 this.$router.push({

@@ -29,27 +29,26 @@
 package com.tencent.devops.auth.provider.rbac.service.migrate
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
-import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
 import com.tencent.bk.sdk.iam.dto.manager.ManagerPath
 import com.tencent.bk.sdk.iam.dto.manager.ManagerResources
 import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.RoleGroupMemberInfo
-import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
+import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.provider.rbac.pojo.migrate.MigrateTaskDataResult
-import com.tencent.devops.auth.provider.rbac.service.PermissionGroupPoliciesService
-import com.tencent.devops.auth.provider.rbac.service.RbacCacheService
+import com.tencent.devops.auth.provider.rbac.service.RbacCommonService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateIamApiService.Companion.GROUP_API_POLICY
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateIamApiService.Companion.GROUP_WEB_POLICY
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateIamApiService.Companion.USER_CUSTOM_POLICY
 import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
+import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
@@ -76,9 +75,10 @@ abstract class AbMigratePolicyService(
     private val migrateIamApiService: MigrateIamApiService,
     private val authMigrationDao: AuthMigrationDao,
     private val permissionService: PermissionService,
-    private val rbacCacheService: RbacCacheService,
+    private val rbacCommonService: RbacCommonService,
     private val deptService: DeptService,
-    private val permissionGroupPoliciesService: PermissionGroupPoliciesService
+    private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService,
+    private val permissionResourceMemberService: PermissionResourceMemberService
 ) {
 
     companion object {
@@ -157,7 +157,7 @@ abstract class AbMigratePolicyService(
                 projectName = groupInfo.resourceName
             )
             authorizationScopeList.forEach { authorizationScope ->
-                v2ManagerService.grantRoleGroupV2(groupInfo.relationId.toInt(), authorizationScope)
+                v2ManagerService.grantRoleGroupV2(groupInfo.relationId, authorizationScope)
             }
         }
     }
@@ -258,6 +258,7 @@ abstract class AbMigratePolicyService(
             }
             // 往用户组添加成员
             batchAddGroupMember(
+                projectCode = projectCode,
                 groupId = groupId,
                 defaultGroup = defaultGroup,
                 members = result.members,
@@ -276,6 +277,7 @@ abstract class AbMigratePolicyService(
     ): Pair<List<AuthorizationScopes>/*组授权范围*/, List<String>/*流水线用户组ID（关联流水线动作组）*/>
 
     abstract fun batchAddGroupMember(
+        projectCode: String,
         groupId: Int,
         defaultGroup: Boolean,
         members: List<RoleGroupMemberInfo>?,
@@ -377,13 +379,14 @@ abstract class AbMigratePolicyService(
                     permission = permission
                 )
                 groupIds.forEach { groupId ->
-                    val managerMember = ManagerMember(ManagerScopesEnum.getType(ManagerScopesEnum.USER), userId)
-                    val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
-                        .members(listOf(managerMember))
-                        .expiredAt(
-                            System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(DEFAULT_EXPIRED_DAY)
-                        ).build()
-                    v2ManagerService.createRoleGroupMemberV2(groupId, managerMemberGroupDTO)
+                    permissionResourceMemberService.addGroupMember(
+                        projectCode = projectCode,
+                        memberId = userId,
+                        memberType = MemberType.USER.type,
+                        expiredAt = System.currentTimeMillis() / MILLISECOND +
+                            TimeUnit.DAYS.toSeconds(DEFAULT_EXPIRED_DAY),
+                        iamGroupId = groupId
+                    )
                 }
             }
         }
@@ -494,7 +497,7 @@ abstract class AbMigratePolicyService(
         resourceCode: String,
         userId: String
     ): Pair<Long? /*groupConfigId*/, Int? /*groupId*/> {
-        rbacCacheService.getGroupConfigAction(resourceType).forEach groupConfig@{ groupConfig ->
+        rbacCommonService.getGroupConfigAction(resourceType).forEach groupConfig@{ groupConfig ->
             if (groupConfig.actions.containsAll(actions)) {
                 val groupId = authResourceGroupDao.get(
                     dslContext = dslContext,
@@ -594,7 +597,7 @@ abstract class AbMigratePolicyService(
             defaultGroup = false,
             relationId = iamGroupId.toString()
         )
-        permissionGroupPoliciesService.grantGroupPermission(
+        permissionResourceGroupPermissionService.grantGroupPermission(
             authorizationScopesStr = groupConfig.authorizationScopes,
             projectCode = projectCode,
             projectName = projectName,

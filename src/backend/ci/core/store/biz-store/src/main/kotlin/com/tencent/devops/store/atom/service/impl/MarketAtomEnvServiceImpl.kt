@@ -46,6 +46,7 @@ import com.tencent.devops.store.atom.factory.AtomBusHandleFactory
 import com.tencent.devops.store.atom.service.AtomService
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
 import com.tencent.devops.store.atom.service.MarketAtomEnvService
+import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.service.StoreI18nMessageService
@@ -63,8 +64,8 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.ATOM_POST_FLAG
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
-import com.tencent.devops.store.pojo.common.version.StoreVersion
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.version.StoreVersion
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -88,7 +89,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
     private val atomService: AtomService,
     private val marketAtomCommonService: MarketAtomCommonService,
     private val storeI18nMessageService: StoreI18nMessageService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val storeInnerPipelineConfig: StoreInnerPipelineConfig
 ) : MarketAtomEnvService {
 
     private val logger = LoggerFactory.getLogger(MarketAtomEnvServiceImpl::class.java)
@@ -263,12 +265,15 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
             AtomStatusEnum.UNDERCARRIAGED.status.toByte()
         )
+        val buildingFlag =
+            projectCode == storeInnerPipelineConfig.innerPipelineProject && atomStatus == AtomStatusEnum.BUILDING.status.toByte()
         val atomStatusList = getAtomStatusList(
             atomStatus = atomStatus,
             version = version,
             normalStatusList = normalStatusList,
             atomCode = atomCode,
-            projectCode = projectCode
+            projectCode = projectCode,
+            queryTestFlag = buildingFlag
         )
         val atomDefaultFlag = marketAtomCommonService.isPublicAtom(atomCode)
         val atomBaseInfoRecord = marketAtomEnvInfoDao.getProjectAtomBaseInfo(
@@ -277,7 +282,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             atomCode = atomCode,
             version = version,
             atomDefaultFlag = atomDefaultFlag,
-            atomStatusList = atomStatusList
+            atomStatusList = atomStatusList,
+            queryProjectFlag = !buildingFlag
         ) ?: throw ErrorCodeException(
             errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
             params = arrayOf("[project($projectCode)-plugin($atomCode)]")
@@ -414,34 +420,38 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         version: String,
         normalStatusList: List<Byte>,
         atomCode: String,
-        projectCode: String
-    ): List<Byte>? {
-        var atomStatusList: List<Byte>? = null
-        if (atomStatus != null) {
+        projectCode: String,
+        queryTestFlag: Boolean
+    ): List<Byte> {
+        return if (atomStatus != null) {
             mutableListOf(atomStatus)
         } else {
-            if (VersionUtils.isLatestVersion(version)) {
-                atomStatusList = normalStatusList.toMutableList()
-                val releaseCount = marketAtomDao.countReleaseAtomByCode(dslContext, atomCode, version)
-                if (releaseCount > 0) {
-                    // 如果当前大版本内还有已发布的版本，则xx.latest只对应最新已发布的版本
-                    atomStatusList = mutableListOf(AtomStatusEnum.RELEASED.status.toByte())
+            normalStatusList.toMutableList().apply {
+                if (VersionUtils.isLatestVersion(version)) {
+                    val releaseCount = marketAtomDao.countReleaseAtomByCode(dslContext, atomCode, version)
+                    if (releaseCount > 0) {
+                        // 如果当前大版本内还有已发布的版本，则xx.latest只对应最新已发布的版本
+                        this.clear()
+                        this.add(AtomStatusEnum.RELEASED.status.toByte())
+                    }
                 }
-                val flag =
-                    storeProjectRelDao.isTestProjectCode(dslContext, atomCode, StoreTypeEnum.ATOM, projectCode)
-                logger.info("isInitTestProjectCode flag is :$flag")
+                val flag = queryTestFlag ||
+                        storeProjectRelDao.isTestProjectCode(
+                            dslContext = dslContext,
+                            storeCode = atomCode,
+                            storeType = StoreTypeEnum.ATOM,
+                            projectCode = projectCode
+                        )
                 if (flag) {
-                    // 原生项目或者调试项目有权查处于测试中、审核中的插件
-                    atomStatusList.addAll(
+                    // 初始化项目或者调试项目有权查处于测试中、审核中的插件
+                    this.addAll(
                         listOf(
-                            AtomStatusEnum.TESTING.status.toByte(),
-                            AtomStatusEnum.AUDITING.status.toByte()
+                            AtomStatusEnum.TESTING.status.toByte(), AtomStatusEnum.AUDITING.status.toByte()
                         )
                     )
                 }
             }
         }
-        return atomStatusList
     }
 
     /**

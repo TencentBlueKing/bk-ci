@@ -51,6 +51,8 @@ data class PipelineDetail(
     val instanceFromTemplate: Boolean,
     @get:Schema(title = "当前模板的ID", required = false)
     var templateId: String?,
+    @get:Schema(title = "关联模板版本", required = false)
+    var templateVersion: Long?,
     @get:Schema(title = "草稿或最新的发布版本")
     val version: Int,
     @get:Schema(title = "草稿或最新的发布版本名称")
@@ -88,5 +90,7 @@ data class PipelineDetail(
     @get:Schema(title = "流水线YAML信息", required = false)
     val yamlInfo: PipelineYamlVo?,
     @get:Schema(title = "yaml文件在默认分支是否存在", required = false)
-    var yamlExist: Boolean? = false
+    var yamlExist: Boolean? = false,
+    @get:Schema(title = "运行锁定", required = false)
+    val locked: Boolean
 )

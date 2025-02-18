@@ -63,8 +63,7 @@ interface ServiceStoreComponentResource {
     @Path("/types/{storeType}/component/main/page/list")
     @GET
     @BkInterfaceI18n(
-        keyPrefixNames = [
-            "{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
+        keyPrefixNames = ["{data[*].records[*].type}", "{data[*].records[*].code}", "{data[*].records[*].version}",
             "releaseInfo"
         ]
     )
@@ -98,7 +97,7 @@ interface ServiceStoreComponentResource {
     @GET
     @BkInterfaceI18n(
         keyPrefixNames = [
-            "{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
+            "{data.records[*].type}", "{data.records[*].code}", "{data.records[*].version}",
             "releaseInfo"
         ]
     )
@@ -158,6 +157,9 @@ interface ServiceStoreComponentResource {
         @Parameter(description = "实例ID", required = false)
         @QueryParam("instanceId")
         instanceId: String?,
+        @Parameter(description = "是否查测试中版本 true：是，false：否", required = false)
+        @QueryParam("queryTestFlag")
+        queryTestFlag: Boolean? = null,
         @Parameter(description = "页码", required = true)
         @QueryParam("page")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE)
@@ -173,7 +175,7 @@ interface ServiceStoreComponentResource {
     @Path("/types/{storeType}/ids/{storeId}/component/detail")
     @BkInterfaceI18n(
         keyPrefixNames = [
-            "{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
+            "{data.storeType}", "{data.storeCode}", "{data.version}",
             "releaseInfo"
         ]
     )

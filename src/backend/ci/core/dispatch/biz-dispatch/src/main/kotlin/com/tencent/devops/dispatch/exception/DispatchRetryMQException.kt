@@ -32,9 +32,8 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 class DispatchRetryMQException(
     errorCodeEnum: ErrorCodeEnum,
     errorMessage: String?
-) :
-    ErrorCodeException(
-        errorCode = errorCodeEnum.errorCode.toString(),
-        errorType = errorCodeEnum.errorType,
-        defaultMessage = errorMessage
-    )
+) : ErrorCodeException(
+    errorCode = errorCodeEnum.errorCode.toString(),
+    errorType = errorCodeEnum.errorType,
+    defaultMessage = errorMessage
+)

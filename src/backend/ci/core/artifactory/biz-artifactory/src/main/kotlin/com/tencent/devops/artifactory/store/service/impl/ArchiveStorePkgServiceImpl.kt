@@ -35,6 +35,7 @@ import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
 import com.tencent.devops.artifactory.store.service.ArchiveStorePkgService
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.STATIC
+import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -42,11 +43,11 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.store.api.common.ServiceStoreArchiveResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
-import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.CONFIG_YML_NAME
+import com.tencent.devops.store.pojo.common.QueryComponentPkgEnvInfoParam
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
 import com.tencent.devops.store.pojo.common.publication.StorePkgInfoUpdateRequest
-import org.apache.commons.codec.digest.DigestUtils
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -100,7 +101,8 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
         val storePkgEnvInfos: List<StorePkgEnvInfo>?
         var packageFileInfos: MutableList<PackageFileInfo>? = null
         try {
-            handleArchiveFile(
+            // 解压上传的包
+            handlePkgFile(
                 disposition = disposition,
                 inputStream = inputStream,
                 storeType = storeType,
@@ -108,12 +110,35 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                 version = version
             )
             val storeArchivePath = buildStoreArchivePath(storeType, storeCode, version)
-            storePkgEnvInfos = client.get(ServiceStoreArchiveResource::class).getComponentPkgEnvInfo(
-                userId = userId,
+            val bkConfigFile = File(storeArchivePath, CONFIG_YML_NAME)
+            storePkgEnvInfos = if (bkConfigFile.exists()) {
+                // 如果上传的文件是压缩包需要删除原压缩包
+                File(storeArchivePath, disposition.fileName).deleteRecursively()
+                client.get(ServiceStoreArchiveResource::class).getComponentPkgEnvInfo(
+                    userId = userId,
+                    storeType = storeType,
+                    storeCode = storeCode,
+                    version = version,
+                    queryComponentPkgEnvInfoParam = QueryComponentPkgEnvInfoParam(
+                        configFileContent = bkConfigFile.readText()
+                    )
+                ).data
+            } else {
+                listOf(
+                    StorePkgEnvInfo(
+                        osName = OSType.WINDOWS.name.lowercase(),
+                        pkgLocalPath = disposition.fileName,
+                        defaultFlag = true
+                    )
+                )
+            }
+            handleArchiveFile(
                 storeType = storeType,
                 storeCode = storeCode,
-                version = version
-            ).data
+                version = version,
+                storePkgEnvInfos = storePkgEnvInfos
+            )
+
             storePkgEnvInfos?.forEach { storePkgEnvInfo ->
                 var pkgLocalPath = storePkgEnvInfo.pkgLocalPath
                 if (storeType == StoreTypeEnum.ATOM && storePkgEnvInfo.target.isNullOrBlank() &&
@@ -129,28 +154,28 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                     pkgLocalPath = disposition.fileName
                 }
                 val packageFile = File("$storeArchivePath/$pkgLocalPath")
+                val packageFileName = packageFile.name
                 val packageFileInfo = PackageFileInfo(
-                    packageFileName = packageFile.name,
+                    packageFileName = packageFileName,
                     packageFilePath = packageFile.absolutePath.removePrefix(getStoreArchiveBasePath()),
                     packageFileSize = packageFile.length(),
                     shaContent = packageFile.inputStream().use { ShaUtils.sha1InputStream(it) }
                 )
-                storePkgEnvInfo.pkgRepoPath = "$storeCode/$version/$pkgLocalPath"
+                val pkgRepoPath = generatePkgRepoPath(
+                    storeCode = storeCode,
+                    version = version,
+                    pkgFileName = packageFileName,
+                    osName = storePkgEnvInfo.osName,
+                    osArch = storePkgEnvInfo.osArch
+                )
+                storePkgEnvInfo.pkgRepoPath = pkgRepoPath
                 storePkgEnvInfo.shaContent = packageFileInfo.shaContent
-                storePkgEnvInfo.pkgName = packageFileInfo.packageFileName
+                storePkgEnvInfo.pkgName = packageFileName
                 packageFileInfos!!.add(packageFileInfo)
             }
         } finally {
             // 清理服务器的解压的临时文件
             clearServerTmpFile(storeType, storeCode, version)
-        }
-        val finalStoreId = if (releaseType == ReleaseTypeEnum.NEW ||
-            releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE
-        ) {
-            archiveStorePkgRequest.storeId
-        } else {
-            // 普通发布类型会重新生成一条版本记录
-            DigestUtils.md5Hex("$storeType-$storeCode-$version")
         }
         storePkgEnvInfos?.let {
             val storePkgInfoUpdateRequest = StorePkgInfoUpdateRequest(
@@ -161,7 +186,6 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
             )
             val updateComponentPkgInfoResult = client.get(ServiceStoreArchiveResource::class).updateComponentPkgInfo(
                 userId = userId,
-                storeId = finalStoreId,
                 storePkgInfoUpdateRequest = storePkgInfoUpdateRequest
             )
             if (updateComponentPkgInfoResult.isNotOk()) {
@@ -196,7 +220,26 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
         return true
     }
 
-    protected fun handlePkgFile(
+    protected fun generatePkgRepoPath(
+        storeCode: String,
+        version: String,
+        pkgFileName: String,
+        osName: String? = null,
+        osArch: String? = null
+    ): String {
+        val pkgRepoPathSb = StringBuilder("$storeCode/$version/")
+        if (!osName.isNullOrBlank()) {
+            pkgRepoPathSb.append(osName).append("/")
+        }
+        if (!osArch.isNullOrBlank()) {
+            pkgRepoPathSb.append(osArch).append("/")
+        }
+        pkgRepoPathSb.append(pkgFileName)
+        val pkgRepoPath = pkgRepoPathSb.toString()
+        return pkgRepoPath
+    }
+
+    private fun handlePkgFile(
         disposition: FormDataContentDisposition,
         inputStream: InputStream,
         storeType: StoreTypeEnum,
@@ -216,7 +259,7 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
         file.outputStream().use {
             inputStream.copyTo(it)
         }
-        if (storeType != StoreTypeEnum.DEVX) {
+        if (fileName.endsWith(".zip")) {
             // 解压到指定目录
             ZipUtil.unZipFile(file, storeArchivePath, false)
         }
@@ -286,11 +329,10 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
     abstract fun getStoreArchiveBasePath(): String
 
     abstract fun handleArchiveFile(
-        disposition: FormDataContentDisposition,
-        inputStream: InputStream,
         storeType: StoreTypeEnum,
         storeCode: String,
-        version: String
+        version: String,
+        storePkgEnvInfos: List<StorePkgEnvInfo>?
     )
 
     override fun getComponentPkgDownloadUrl(

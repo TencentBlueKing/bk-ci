@@ -58,24 +58,33 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.process.api.service.ServicePipelineYamlResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode
+import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_USER_HAVE_NOT_DOWNLOAD_PEM
+import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
+import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_GITHUB_AUTHORIZED_BY_OAUTH
 import com.tencent.devops.repository.constant.RepositoryMessageCode.PAC_REPO_CAN_NOT_DELETE
 import com.tencent.devops.repository.constant.RepositoryMessageCode.PAC_REPO_CAN_NOT_RENAME
+import com.tencent.devops.repository.constant.RepositoryMessageCode.REPOSITORY_NO_SUPPORT_OAUTH
 import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_CREATE_PEM_ERROR
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
+import com.tencent.devops.repository.dao.RepositoryGithubDao
 import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.GithubRepository
+import com.tencent.devops.repository.pojo.RepoOauthRefVo
 import com.tencent.devops.repository.pojo.RepoRename
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
+import com.tencent.devops.repository.pojo.enums.GithubAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
+import com.tencent.devops.repository.service.github.IGithubService
 import com.tencent.devops.repository.service.loader.CodeRepositoryServiceRegistrar
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.IGitService
@@ -87,15 +96,16 @@ import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
-import java.time.LocalDateTime
-import java.util.Base64
-import javax.ws.rs.NotFoundException
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.Base64
+import javax.ws.rs.NotFoundException
 
 @Service
 @Suppress("ALL")
@@ -108,7 +118,9 @@ class RepositoryService @Autowired constructor(
     private val tGitOAuthService: TGitOAuthService,
     private val dslContext: DSLContext,
     private val repositoryPermissionService: RepositoryPermissionService,
-    private val client: Client
+    private val githubService: IGithubService,
+    private val client: Client,
+    private val repositoryGithubDao: RepositoryGithubDao
 ) {
 
     @Value("\${repository.git.devopsPrivateToken}")
@@ -200,7 +212,8 @@ class RepositoryService @Autowired constructor(
                     aliasName = gitRepositoryResp.name,
                     url = gitRepositoryResp.repositoryUrl,
                     type = ScmType.CODE_GIT,
-                    updatedTime = LocalDateTime.now().timestampmilli()
+                    updatedTime = LocalDateTime.now().timestampmilli(),
+                    remoteRepoId = gitRepositoryResp.id
                 )
             )
         } else {
@@ -538,6 +551,12 @@ class RepositoryService @Autowired constructor(
             .setInstanceName(repository.aliasName)
             .setInstance(repository)
         createResource(userId, projectId, repositoryId, repository.aliasName)
+        repositoryService.addResourceAuthorization(
+            projectId = projectId,
+            userId = userId,
+            repositoryId = repositoryId,
+            repository = repository
+        )
         try {
             if (repository.enablePac == true) {
                 client.get(ServicePipelineYamlResource::class).enable(
@@ -606,7 +625,7 @@ class RepositoryService @Autowired constructor(
         return compose(repository)
     }
 
-    private fun getRepository(projectId: String, repositoryConfig: RepositoryConfig): TRepositoryRecord {
+    fun getRepository(projectId: String, repositoryConfig: RepositoryConfig): TRepositoryRecord {
         logger.info("[$projectId]Start to get the repository - ($repositoryConfig)")
         return when (repositoryConfig.repositoryType) {
             RepositoryType.ID -> {
@@ -619,7 +638,7 @@ class RepositoryService @Autowired constructor(
         }
     }
 
-    private fun compose(repository: TRepositoryRecord): Repository {
+    fun compose(repository: TRepositoryRecord): Repository {
         val codeRepositoryService = CodeRepositoryServiceRegistrar.getServiceByScmType(repository.type)
         return codeRepositoryService.compose(repository = repository)
     }
@@ -1326,7 +1345,7 @@ class RepositoryService @Autowired constructor(
         if (atomRefRepositoryInfo.isEmpty()) {
             return
         }
-        val repoInfos = mutableListOf <TRepositoryRecord>()
+        val repoInfos = mutableListOf<TRepositoryRecord>()
         // 过滤无效数据
         atomRefRepositoryInfo.forEach {
             val repositoryRecord = repositoryDao.getById(
@@ -1382,6 +1401,222 @@ class RepositoryService @Autowired constructor(
 
             else ->
                 AuthorizeResult(200, "")
+        }
+    }
+
+    fun listRepositoryAuthorization(
+        projectId: String,
+        limit: Int,
+        offset: Int
+    ): Pair<Int, List<RepositoryInfo>> {
+        val repositoryAuthorizationInfos = repositoryDao.listRepositoryAuthorization(
+            dslContext = dslContext,
+            projectId = projectId,
+            limit = limit,
+            offset = offset
+        )
+        val count = repositoryDao.countRepositoryAuthorization(
+            dslContext = dslContext,
+            projectId = projectId
+        )
+        return Pair(count, repositoryAuthorizationInfos)
+    }
+
+    fun getRepository(projectId: String, repositoryHashId: String?, repoAliasName: String?): Repository {
+        if (repositoryHashId.isNullOrBlank() && repoAliasName.isNullOrBlank()) {
+            throw IllegalArgumentException("repositoryHashId or repoAliasName can not be null")
+        }
+        return compose(
+            getRepository(
+                projectId = projectId,
+                repositoryConfig = if (!repositoryHashId.isNullOrBlank()) {
+                    RepositoryConfig(
+                        repositoryHashId = repositoryHashId,
+                        repositoryName = null,
+                        repositoryType = RepositoryType.ID
+                    )
+                } else {
+                    RepositoryConfig(
+                        repositoryHashId = null,
+                        repositoryName = repoAliasName,
+                        repositoryType = RepositoryType.NAME
+                    )
+                }
+            )
+        )
+    }
+
+    /**
+     * 检查代码库下载权限
+     */
+    fun checkRepoDownloadPem(
+        userId: String,
+        projectId: String,
+        repository: Repository
+    ) {
+        val projectName = repository.projectName
+        val language = I18nUtil.getLanguage(userId)
+        val (havePermission, repoLink) = when (repository) {
+            is CodeGitRepository -> {
+                val token = gitOauthService.getAccessToken(userId = userId)?.accessToken ?: throw OperationException(
+                    MessageUtil.getMessageByLocale(
+                        NOT_AUTHORIZED_BY_OAUTH,
+                        language,
+                        arrayOf(userId)
+                    )
+                )
+                val members = try {
+                    gitService.getProjectMembersAll(
+                        token = token,
+                        gitProjectId = projectName,
+                        search = userId,
+                        page = 1,
+                        pageSize = 100,
+                        tokenType = TokenTypeEnum.OAUTH
+                    ).data
+                } catch (ignored: Exception) {
+                    logger.warn("get git repository members failed: $ignored")
+                    null
+                } ?: emptyList()
+                (members.find {
+                    it.username == userId && it.accessLevel >= GitAccessLevelEnum.REPORTER.level
+                } != null) to GitUtils.getHttpUrl(repository.url)
+            }
+
+            is GithubRepository -> {
+                val token = githubService.getAccessToken(userId) ?: throw OperationException(
+                    MessageUtil.getMessageByLocale(
+                        NOT_GITHUB_AUTHORIZED_BY_OAUTH,
+                        language,
+                        arrayOf(userId)
+                    )
+                )
+                // github 用户信息
+                val user = githubService.getUser(token.accessToken) ?: throw OperationException(
+                    MessageUtil.getMessageByLocale(
+                        NOT_GITHUB_AUTHORIZED_BY_OAUTH,
+                        language,
+                        arrayOf(userId)
+                    )
+                )
+                // 是否有下载权限
+                val permission = githubService.getRepositoryPermissions(
+                    projectName = projectName,
+                    userId = user.login,
+                    token = token.accessToken
+                )?.permission
+                // Github只有oauth
+                (GithubAccessLevelEnum.getGithubAccessLevel(permission).level >= GithubAccessLevelEnum.READ.level) to
+                    repository.url
+            }
+
+            else -> {
+                throw OperationException(
+                    MessageUtil.getMessageByLocale(
+                        REPOSITORY_NO_SUPPORT_OAUTH,
+                        language,
+                        arrayOf(repository.getScmType().name)
+                    )
+                )
+            }
+        }
+        if (!havePermission) {
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    ERROR_USER_HAVE_NOT_DOWNLOAD_PEM,
+                    language,
+                    arrayOf(userId, repoLink, repository.aliasName)
+                )
+            )
+        }
+    }
+
+    /**
+     * 重置oauth用户
+     */
+    fun reOauth(
+        repository: Repository,
+        repositoryRecord: TRepositoryRecord,
+        userId: String,
+        projectId: String
+    ) {
+        // 更新授权用户
+        val targetRepo = when (repository) {
+            is CodeGitRepository -> repository.copy(userName = userId)
+            is GithubRepository -> repository.copy(userName = userId)
+            else -> {
+                throw OperationException(
+                    MessageUtil.getMessageByLocale(
+                        REPOSITORY_NO_SUPPORT_OAUTH,
+                        I18nUtil.getLanguage(userId),
+                        arrayOf(repository.getScmType().name)
+                    )
+                )
+            }
+        }
+        val codeRepositoryService = CodeRepositoryServiceRegistrar.getService(repository)
+        codeRepositoryService.edit(
+            userId = userId,
+            projectId = projectId,
+            repositoryHashId = repository.repoHashId!!,
+            repository = targetRepo,
+            record = repositoryRecord
+        )
+    }
+
+    fun listOauthRepo(
+        userId: String,
+        scmType: ScmType,
+        limit: Int,
+        offset: Int
+    ): SQLPage<RepoOauthRefVo> {
+        val list = when (scmType) {
+            ScmType.CODE_GIT -> {
+                repositoryCodeGitDao.listOauthRepo(
+                    dslContext = dslContext,
+                    userId = userId,
+                    limit = limit,
+                    offset = offset
+                )
+            }
+
+            ScmType.GITHUB -> {
+                repositoryGithubDao.listOauthRepo(
+                    dslContext = dslContext,
+                    userId = userId,
+                    limit = limit,
+                    offset = offset
+                )
+            }
+
+            else -> {
+                listOf()
+            }
+        }
+        val count = countOauthRepo(userId, scmType)
+        return SQLPage(count, list)
+    }
+
+    fun countOauthRepo(
+        userId: String,
+        scmType: ScmType
+    ): Long {
+        return when (scmType) {
+            ScmType.CODE_GIT -> {
+                repositoryCodeGitDao.countOauthRepo(
+                    dslContext = dslContext,
+                    userId = userId
+                )
+            }
+
+            ScmType.GITHUB -> {
+                repositoryGithubDao.countOauthRepo(
+                    dslContext = dslContext,
+                    userId = userId
+                )
+            }
+
+            else -> 0L
         }
     }
 

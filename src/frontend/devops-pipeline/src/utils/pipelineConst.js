@@ -101,6 +101,10 @@ export const errorTypeMap = [
     {
         title: 'pluginError',
         icon: 'error-plugin'
+    },
+    {
+        title: 'containerError',
+        icon: 'error-node'
     }
 ]
 
@@ -188,7 +192,7 @@ export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
     startType: {
         index: 3,
         id: 'startType',
-        label: 'history.triggerType',
+        label: 'history.triggerInfo',
         width: 120
     },
     queueTime: {
@@ -276,6 +280,12 @@ export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
         width: 280,
         id: 'errorCode',
         label: 'history.errorCode'
+    },
+    buildMsg: {
+        index: 16,
+        width: 180,
+        id: 'buildMsg',
+        label: 'history.buildMsg'
     }
 }
 

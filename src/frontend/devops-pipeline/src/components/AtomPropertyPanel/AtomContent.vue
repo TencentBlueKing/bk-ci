@@ -1,20 +1,51 @@
 <template>
-    <section @click="toggleAtomSelectorPopup(false)" v-if="element" class="atom-property-panel">
-        <div class="atom-main-content" v-bkloading="{ isLoading: fetchingAtmoModal }">
-            <form-field v-if="atom && !isTriggerContainer(container)" :desc="$t('editPage.stepIdDesc')" label="Step ID"
-                :is-error="errors.has('stepId')" :error-msg="errors.first('stepId')">
-                <vuex-input :value="element.stepId" :clearable="false" :placeholder="$t('editPage.stepIdPlaceholder')"
-                    name="stepId" :handle-change="handleUpdateAtom" :disabled="!editable || showPanelType === 'PAUSE'"
-                    style="width: 282px; margin-top: 6px;" v-validate.initial="`varRule|unique:${allStepId}`">
+    <section
+        @click="toggleAtomSelectorPopup(false)"
+        v-if="element"
+        class="atom-property-panel"
+    >
+        <div
+            class="atom-main-content"
+            v-bkloading="{ isLoading: fetchingAtmoModal }"
+        >
+            <form-field
+                v-if="atom && !isTriggerContainer(container)"
+                :desc="$t('editPage.stepIdDesc')"
+                label="Step ID"
+                :is-error="errors.has('stepId')"
+                :error-msg="errors.first('stepId')"
+            >
+                <vuex-input
+                    :value="element.stepId"
+                    :clearable="false"
+                    :placeholder="$t('editPage.stepIdPlaceholder')"
+                    name="stepId"
+                    :handle-change="handleUpdateAtom"
+                    :disabled="!editable || showPanelType === 'PAUSE'"
+                    style="width: 282px; margin-top: 6px;"
+                    v-validate.initial="`varRule|unique:${allStepId}`"
+                >
                 </vuex-input>
             </form-field>
             <div class="atom-type-selector bk-form-row bk-form bk-form-vertical">
                 <div :class="{ 'form-field': true, 'bk-form-inline-item': true, 'is-danger': errors.has('@type') }">
-                    <label :title="$t('atom')" class="bk-label">
+                    <label
+                        :title="$t('atom')"
+                        class="bk-label"
+                    >
                         {{ $t('atom') }}：
-                        <a v-if="atom && atom.docsLink" :href="atom.docsLink" class="atom-link" target="_blank">
+                        <a
+                            v-if="atom && atom.docsLink"
+                            :href="atom.docsLink"
+                            class="atom-link"
+                            target="_blank"
+                        >
                             {{ $t('editPage.atomHelpDoc') }}
-                            <logo name="tiaozhuan" size="14" style="fill:#3c96ff;position:relative;top:2px;" />
+                            <logo
+                                name="tiaozhuan"
+                                size="14"
+                                style="fill:#3c96ff;position:relative;top:2px;"
+                            />
                         </a>
                     </label>
                     <div class="bk-form-content">
@@ -22,60 +53,124 @@
                             <template v-if="atom">
                                 <span
                                     :title="atom.recommendFlag === false ? $t('editPage.notRecomendPlugin') : atom.name"
-                                    :class="[{ 'not-recommend': atom.recommendFlag === false }, 'atom-selected-name']">{{
-                                        atom.name }}</span>
-                                <bk-button theme="primary" class="atom-select-btn reselect-btn"
+                                    :class="[{ 'not-recommend': atom.recommendFlag === false }, 'atom-selected-name']"
+                                >{{
+                                    atom.name }}</span>
+                                <bk-button
+                                    theme="primary"
+                                    class="atom-select-btn reselect-btn"
                                     :disabled="!editable || showPanelType === 'PAUSE'"
-                                    @click.stop="toggleAtomSelectorPopup(true)">{{ $t('editPage.reSelect')
-                                }}</bk-button>
+                                    @click.stop="toggleAtomSelectorPopup(true)"
+                                >
+                                    {{ $t('editPage.reSelect')
+                                    }}
+                                </bk-button>
                             </template>
                             <template v-else-if="!atomCode">
-                                <bk-button theme="primary" class="atom-select-btn"
-                                    @click.stop="toggleAtomSelectorPopup(true)">{{ $t('editPage.selectAtomTips')
-                                }}</bk-button>
+                                <bk-button
+                                    theme="primary"
+                                    class="atom-select-btn"
+                                    @click.stop="toggleAtomSelectorPopup(true)"
+                                >
+                                    {{ $t('editPage.selectAtomTips')
+                                    }}
+                                </bk-button>
                             </template>
                             <template v-else>
-                                <bk-button theme="primary" class="atom-select-btn"
-                                    @click.stop="toggleAtomSelectorPopup(true)">{{ $t('editPage.reSelect')
-                                }}</bk-button>
+                                <bk-button
+                                    theme="primary"
+                                    class="atom-select-btn"
+                                    @click.stop="toggleAtomSelectorPopup(true)"
+                                >
+                                    {{ $t('editPage.reSelect')
+                                    }}
+                                </bk-button>
                             </template>
                         </div>
                     </div>
                 </div>
-                <form-field v-if="hasVersionList" :desc="$t('editPage.atomVersionDesc')" :label="$t('version')">
-                    <bk-select :value="element.version" :clearable="false"
-                        :placeholder="$t('editPage.selectAtomVersion')" name="version" @selected="handleUpdateVersion"
-                        :disabled="!editable || showPanelType === 'PAUSE'">
-                        <bk-option v-for="v in computedAtomVersionList" :key="v.versionName" :id="v.versionValue"
-                            :name="v.versionName"></bk-option>
+                <form-field
+                    v-if="hasVersionList"
+                    :desc="$t('editPage.atomVersionDesc')"
+                    :label="$t('version')"
+                >
+                    <bk-select
+                        :value="element.version"
+                        :clearable="false"
+                        :placeholder="$t('editPage.selectAtomVersion')"
+                        name="version"
+                        @selected="handleUpdateVersion"
+                        :disabled="!editable || showPanelType === 'PAUSE'"
+                    >
+                        <bk-option
+                            v-for="v in computedAtomVersionList"
+                            :key="v.versionName"
+                            :id="v.versionValue"
+                            :name="v.versionName"
+                        ></bk-option>
                     </bk-select>
                 </form-field>
             </div>
             <div class="atom-form-content">
-                <bk-alert class="atom-changed-prop" type="warning" :title="$t('editPage.atomPropChangedTip')"
-                    v-if="atomVersionChangedKeys.length"></bk-alert>
+                <bk-alert
+                    class="atom-changed-prop"
+                    type="warning"
+                    :title="$t('editPage.atomPropChangedTip')"
+                    v-if="atomVersionChangedKeys.length"
+                ></bk-alert>
 
-                <div class="no-atom-tips" v-if="!atom && atomCode">
+                <div
+                    class="no-atom-tips"
+                    v-if="!atom && atomCode"
+                >
                     <div class="no-atom-tips-icon">
-                        <i class="bk-icon icon-info-circle-shape" size="14" />
+                        <i
+                            class="bk-icon icon-info-circle-shape"
+                            size="14"
+                        />
                     </div>
                     <p>{{ $t('editPage.noAtomVersion') }}</p>
                 </div>
 
-                <div class="quality-setting-tips" v-if="showSetRuleTips">
+                <div
+                    class="quality-setting-tips"
+                    v-if="showSetRuleTips"
+                >
                     <div class="quality-setting-desc">
                         {{ $t('details.quality.canSet') }}
-                        <span class="quality-rule-link" @click="toSetRule()">{{ $t('details.quality.settingNow') }}
-                            <logo name="tiaozhuan" size="14" style="fill:#3c96ff;position:relative;top:2px;" />
+                        <span
+                            class="quality-rule-link"
+                            @click="toSetRule()"
+                        >{{ $t('details.quality.settingNow') }}
+                            <logo
+                                name="tiaozhuan"
+                                size="14"
+                                style="fill:#3c96ff;position:relative;top:2px;"
+                            />
                         </span>
                     </div>
-                    <div class="refresh-btn" v-if="isSetted && !refreshLoading" @click="refresh()">{{
-                        $t('details.quality.reflashSetting') }}</div>
-                    <i class="devops-icon icon-circle-2-1 executing-job" v-if="isSetted && refreshLoading"></i>
+                    <div
+                        class="refresh-btn"
+                        v-if="isSetted && !refreshLoading"
+                        @click="refresh()"
+                    >
+                        {{
+                            $t('details.quality.reflashSetting') }}
+                    </div>
+                    <i
+                        class="devops-icon icon-circle-2-1 executing-job"
+                        v-if="isSetted && refreshLoading"
+                    ></i>
                 </div>
-                <qualitygate-tips v-if="showRuleList" :relative-rule-list="renderRelativeRuleList"></qualitygate-tips>
+                <qualitygate-tips
+                    v-if="showRuleList"
+                    :relative-rule-list="renderRelativeRuleList"
+                ></qualitygate-tips>
 
-                <div v-if="atom" :class="{ 'atom-form-box': true, 'readonly': !editable && !isRemoteAtom }">
+                <div
+                    v-if="atom"
+                    :class="{ 'atom-form-box': true, 'readonly': !editable && !isRemoteAtom }"
+                >
                     <!-- <div class='desc-tips' v-if="!isNewAtomTemplate(atom.htmlTemplateVersion) && atom.description"> <span>插件描述：</span> {{ atom.description }}</div> -->
                     <div
                         v-if="atom.atomModal"
@@ -90,6 +185,7 @@
                         :atom-props-model="atom.atomModal.props"
                         :set-parent-validate="setAtomValidate"
                         :disabled="!editable"
+                        :is-instance-template="isInstanceTemplate"
                         class="atom-content"
                     >
                     </div>
@@ -101,7 +197,6 @@
                     />
                     <div class="atom-option">
                         <atom-option
-                            v-if="element['@type'] !== 'manualTrigger'"
                             :element-index="elementIndex"
                             :atom-props-model="atom.atomModal.props"
                             :container-index="containerIndex"
@@ -115,12 +210,26 @@
                 </div>
             </div>
             <slot name="footer">
-                <section class="atom-form-footer" v-if="showPanelType === 'PAUSE'">
-                    <bk-button @click="changePluginPause(true, 'isExeContinue')" theme="primary"
-                        :loading="isExeContinue" :disabled="isExeStop">{{ $t('resume') }}</bk-button>
-                    <bk-button @click="changePluginPause(false, 'isExeStop')" :loading="isExeStop"
-                        :disabled="isExeContinue">{{
-                        $t('stop') }}</bk-button>
+                <section
+                    class="atom-form-footer"
+                    v-if="showPanelType === 'PAUSE'"
+                >
+                    <bk-button
+                        @click="changePluginPause(true, 'isExeContinue')"
+                        theme="primary"
+                        :loading="isExeContinue"
+                        :disabled="isExeStop"
+                    >
+                        {{ $t('resume') }}
+                    </bk-button>
+                    <bk-button
+                        @click="changePluginPause(false, 'isExeStop')"
+                        :loading="isExeStop"
+                        :disabled="isExeContinue"
+                    >
+                        {{
+                            $t('stop') }}
+                    </bk-button>
                 </section>
             </slot>
         </div>
@@ -145,6 +254,7 @@
     import CodePullGitX from './CodePullGitX'
     import CodePullSvn from './CodePullSvn'
     import CodeSvnWebHookTrigger from './CodeSvnWebHookTrigger'
+    import CodeWebHookTrigger from './CodeWebHookTrigger'
     import CrossDistribute from './CrossDistribute'
     import FormField from './FormField'
     import IosCertInstall from './IosCertInstall'
@@ -160,7 +270,6 @@
     import SubPipelineCall from './SubPipelineCall'
     import TimerTrigger from './TimerTrigger'
     import Unity3dBuild from './Unity3dBuild'
-    import CodeWebHookTrigger from './CodeWebHookTrigger'
 
     export default {
         name: 'atom-content',
@@ -471,7 +580,7 @@
                 'updateRefreshQualityLoading'
             ]),
 
-            changePluginPause (isContinue, loadingKey) {
+            handleExecutePluginPause (isContinue, loadingKey) {
                 const postData = {
                     projectId: this.projectId,
                     pipelineId: this.pipelineId,
@@ -505,6 +614,18 @@
                 }).finally(() => {
                     this[loadingKey] = false
                 })
+            },
+            changePluginPause (isContinue, loadingKey) {
+                if (isContinue && loadingKey === 'isExeContinue') {
+                    this.handleExecutePluginPause(isContinue, loadingKey)
+                } else {
+                    this.$bkInfo({
+                        title: this.$t('isTaskTermination'),
+                        confirmFn: async () => {
+                            this.handleExecutePluginPause(isContinue, loadingKey)
+                        }
+                    })
+                }
             },
             setAtomValidate (addErrors, removeErrors) {
                 if (addErrors && addErrors.length) {

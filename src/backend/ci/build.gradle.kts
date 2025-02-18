@@ -1,3 +1,5 @@
+import java.net.URI
+
 plugins {
     id("com.tencent.devops.boot") version "0.0.7"
     detektCheck
@@ -22,6 +24,11 @@ allprojects {
         if (System.getProperty("devops.assemblyMode") == "KUBERNETES") {
             pluginManager.apply("task-docker-build") // Docker镜像构建
         }
+    }
+
+    // 新增maven 仓库
+    repositories {
+        add(maven { url = URI("https://repo.jenkins-ci.org/releases") })
     }
 
     // 版本管理
@@ -141,6 +148,8 @@ allprojects {
             dependency("org.jvnet.winp:winp:${Versions.Winp}")
             dependency("net.java.dev.jna:jna:${Versions.Jna}")
             dependency("org.jenkins-ci:version-number:${Versions.JenkinsVersionNumber}")
+            // TODO 等undertow升级上来之后可以去掉
+            dependency("io.undertow:undertow-core:2.2.37.Final")
         }
     }
 
@@ -166,5 +175,9 @@ allprojects {
                 allVariants { withDependencies { clear() } }
             }
         }
+    }
+    configurations.all {
+        resolutionStrategy.cacheChangingModulesFor(0,"seconds")
+        resolutionStrategy.cacheDynamicVersionsFor(0,"seconds")
     }
 }

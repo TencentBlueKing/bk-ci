@@ -50,7 +50,7 @@ interface AtomBusHandleService {
     fun handleTarget(reqTarget: String?, target: String): String
 
     /**
-     * 检查系统预置指令（task.json.target）设置指令逻辑
+     * 获取插件默认运行环境版本
      */
-    fun checkTarget(target: String): Boolean
+    fun getDefaultRuntimeVersion(): String?
 }

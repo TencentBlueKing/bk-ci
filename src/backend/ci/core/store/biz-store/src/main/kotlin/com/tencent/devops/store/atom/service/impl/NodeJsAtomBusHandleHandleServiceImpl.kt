@@ -77,7 +77,8 @@ class NodeJsAtomBusHandleHandleServiceImpl : AtomBusHandleService {
 
     override fun handleTarget(reqTarget: String?, target: String): String = target
 
-    override fun checkTarget(target: String): Boolean {
-        return true
+    override fun getDefaultRuntimeVersion(): String {
+        // nodejs插件的runtimeVersion默认值为10.*
+        return "10.*"
     }
 }

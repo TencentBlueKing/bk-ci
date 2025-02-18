@@ -32,18 +32,23 @@ import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationHandoverDTO
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.UserNodeResource
+import com.tencent.devops.environment.permission.EnvNodeAuthorizationService
 import com.tencent.devops.environment.pojo.DisplayName
 import com.tencent.devops.environment.pojo.NodeWithPermission
+import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.service.NodeService
 import com.tencent.devops.environment.utils.NodeUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserNodeResourceImpl @Autowired constructor(
-    private val nodeService: NodeService
+    private val nodeService: NodeService,
+    private val authorizationService: EnvNodeAuthorizationService
 ) : UserNodeResource {
 
     @BkTimed(extraTags = ["operate", "getNode"])
@@ -76,17 +81,39 @@ class UserNodeResourceImpl @Autowired constructor(
         displayName: String?,
         createdUser: String?,
         lastModifiedUser: String?,
-        keywords: String?
+        keywords: String?,
+        nodeType: NodeType?
     ): Result<Page<NodeWithPermission>> {
         return Result(
             nodeService.listNew(
-                userId, projectId, page, pageSize, nodeIp, displayName, createdUser, lastModifiedUser, keywords
+                userId = userId,
+                projectId = projectId,
+                page = page,
+                pageSize = pageSize,
+                nodeIp = nodeIp,
+                displayName = displayName,
+                createdUser = createdUser,
+                lastModifiedUser = lastModifiedUser,
+                keywords = keywords,
+                nodeType = nodeType
             )
         )
     }
 
     override fun changeCreatedUser(userId: String, projectId: String, nodeHashId: String): Result<Boolean> {
-        nodeService.changeCreatedUser(userId, projectId, nodeHashId)
+        val nodeDisplayName = nodeService.changeCreatedUser(userId, projectId, nodeHashId)
+        authorizationService.batchModifyHandoverFrom(
+            projectId = projectId,
+            resourceAuthorizationHandoverList = listOf(
+                ResourceAuthorizationHandoverDTO(
+                    projectCode = projectId,
+                    resourceType = AuthResourceType.ENVIRONMENT_ENV_NODE.value,
+                    resourceName = nodeDisplayName,
+                    resourceCode = nodeHashId,
+                    handoverTo = userId
+                )
+            )
+        )
         return Result(true)
     }
 

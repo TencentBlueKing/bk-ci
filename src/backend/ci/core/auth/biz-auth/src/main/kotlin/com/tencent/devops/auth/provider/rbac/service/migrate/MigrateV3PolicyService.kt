@@ -41,9 +41,9 @@ import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.provider.rbac.pojo.migrate.MigrateTaskDataResult
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceCodeConverter
-import com.tencent.devops.auth.provider.rbac.service.PermissionGroupPoliciesService
-import com.tencent.devops.auth.provider.rbac.service.RbacCacheService
+import com.tencent.devops.auth.provider.rbac.service.RbacCommonService
 import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -72,10 +72,10 @@ class MigrateV3PolicyService constructor(
     private val migrateIamApiService: MigrateIamApiService,
     private val authResourceCodeConverter: AuthResourceCodeConverter,
     private val permissionService: PermissionService,
-    private val rbacCacheService: RbacCacheService,
+    private val rbacCommonService: RbacCommonService,
     private val authMigrationDao: AuthMigrationDao,
     private val deptService: DeptService,
-    private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
+    private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService,
     private val permissionResourceMemberService: PermissionResourceMemberService
 ) : AbMigratePolicyService(
     v2ManagerService = v2ManagerService,
@@ -86,9 +86,10 @@ class MigrateV3PolicyService constructor(
     migrateIamApiService = migrateIamApiService,
     authMigrationDao = authMigrationDao,
     permissionService = permissionService,
-    rbacCacheService = rbacCacheService,
+    rbacCommonService = rbacCommonService,
     deptService = deptService,
-    permissionGroupPoliciesService = permissionGroupPoliciesService
+    permissionResourceGroupPermissionService = permissionResourceGroupPermissionService,
+    permissionResourceMemberService = permissionResourceMemberService
 ) {
 
     companion object {
@@ -156,6 +157,7 @@ class MigrateV3PolicyService constructor(
         val rbacAuthorizationScopes = mutableListOf<AuthorizationScopes>()
         result.permissions.forEach permission@{ permission ->
             val (isManager, rbacActions) = buildRbacActions(
+                projectCode = projectCode,
                 managerGroupId = managerGroupId,
                 permission = permission,
                 members = result.members
@@ -181,6 +183,7 @@ class MigrateV3PolicyService constructor(
     }
 
     private fun buildRbacActions(
+        projectCode: String,
         managerGroupId: Int,
         permission: AuthorizationScopes,
         members: List<RoleGroupMemberInfo>?
@@ -191,7 +194,12 @@ class MigrateV3PolicyService constructor(
                 // 如果包含all_action,则直接添加到管理员组
                 Constants.ALL_ACTION -> {
                     logger.info("match all_action,member add to manager group $managerGroupId")
-                    batchAddGroupMember(groupId = managerGroupId, defaultGroup = true, members = members)
+                    batchAddGroupMember(
+                        projectCode = projectCode,
+                        groupId = managerGroupId,
+                        defaultGroup = true,
+                        members = members
+                    )
                     return Pair(true, emptyList())
                 }
                 PROJECT_VIEWS_MANAGER, PROJECT_DELETE, QUALITY_GROUP_ENABLE -> {
@@ -376,6 +384,7 @@ class MigrateV3PolicyService constructor(
     }
 
     override fun batchAddGroupMember(
+        projectCode: String,
         groupId: Int,
         defaultGroup: Boolean,
         members: List<RoleGroupMemberInfo>?,
@@ -391,10 +400,11 @@ class MigrateV3PolicyService constructor(
                 member.expiredAt
             }
             permissionResourceMemberService.addGroupMember(
-                userId = member.id,
+                projectCode = projectCode,
+                memberId = member.id,
                 memberType = member.type,
                 expiredAt = expiredAt,
-                groupId = groupId
+                iamGroupId = groupId
             )
         }
     }

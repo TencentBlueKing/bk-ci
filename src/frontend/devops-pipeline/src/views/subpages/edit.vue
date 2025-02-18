@@ -1,25 +1,51 @@
 <template>
-    <section v-bkloading="{ isLoading }" class="bkdevops-pipeline-edit-wrapper">
-        <empty-tips v-if="hasNoPermission" :show-lock="true" :title="noPermissionTipsConfig.title"
-            :desc="noPermissionTipsConfig.desc" :btns="noPermissionTipsConfig.btns">
+    <section
+        v-bkloading="{ isLoading }"
+        class="bkdevops-pipeline-edit-wrapper"
+    >
+        <empty-tips
+            v-if="hasNoPermission"
+            :show-lock="true"
+            :title="noPermissionTipsConfig.title"
+            :desc="noPermissionTipsConfig.desc"
+            :btns="noPermissionTipsConfig.btns"
+        >
         </empty-tips>
         <YamlPipelineEditor v-else-if="isCodeMode" />
         <template v-else>
-            <show-variable v-if="currentTab === 'pipeline' && pipeline" :editable="!isTemplatePipeline" :pipeline="pipeline" />
-            <header class="choose-type-switcher"
-                :class="{ 'when-show-variable': currentTab === 'pipeline' && showVariable }">
-                <span v-for="panel in panels" :key="panel.name" :class="[
-                    'choose-type-switcher-tab',
-                    {
-                        active: currentTab === panel.name
-                    }
-                ]" @click="switchTab(panel)">
+            <show-variable
+                v-if="currentTab === 'pipeline' && pipeline"
+                :editable="!isTemplatePipeline"
+                :pipeline="pipeline"
+            />
+            <header
+                class="choose-type-switcher"
+                :class="{ 'when-show-variable': currentTab === 'pipeline' && showVariable }"
+            >
+                <span
+                    v-for="panel in panels"
+                    :key="panel.name"
+                    :class="[
+                        'choose-type-switcher-tab',
+                        {
+                            active: currentTab === panel.name
+                        }
+                    ]"
+                    @click="switchTab(panel)"
+                >
                     {{ panel.label }}
                 </span>
             </header>
 
-            <div class="edit-content-area" :class="{ 'when-show-variable': currentTab === 'pipeline' && showVariable }">
-                <component :is="curPanel.component" v-bind="curPanel.bindData" v-on="curPanel.listeners"></component>
+            <div
+                class="edit-content-area"
+                :class="{ 'when-show-variable': currentTab === 'pipeline' && showVariable }"
+            >
+                <component
+                    :is="curPanel.component"
+                    v-bind="curPanel.bindData"
+                    v-on="curPanel.listeners"
+                ></component>
                 <template v-if="!isLoading && pipeline && currentTab === 'pipeline'">
                     <!-- <mini-map :stages="pipeline.stages" scroll-class=".bk-tab-section .bk-tab-content"></mini-map> -->
                 </template>
@@ -140,7 +166,7 @@
                         label: this.$t('settings.trigger'),
                         component: 'TriggerTab',
                         bindData: {
-                            editable: !this.pipeline?.instanceFromTemplate,
+                            editable: !this.isTemplatePipeline,
                             pipeline: this.pipeline
                         }
                     },

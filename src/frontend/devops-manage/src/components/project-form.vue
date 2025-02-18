@@ -14,6 +14,7 @@ import IAMIframe from './IAM-Iframe';
 import { useI18n } from 'vue-i18n';
 import { Message, Popover } from 'bkui-vue';
 import http from '@/http/api';
+import DialectPopoverTable from "@/components/dialectPopoverTable.vue";
 const {
   t,
 } = useI18n();
@@ -315,161 +316,224 @@ onBeforeUnmount(() => {
     ref="projectForm"
     :rules="rules"
     :model="projectData"
-    :label-width="160"
+    :label-width="216"
   >
-    <bk-form-item :label="t('项目名称')" property="projectName" :required="true">
-      <bk-input
-        v-model="projectData.projectName"
-        :placeholder="t('请输入1-32字符的项目名称')"
-        :maxlength="32"
-        @change="handleChangeForm"
-      ></bk-input>
-      <div class="error-tips" v-if="validateProjectNameTips">
-        {{ validateProjectNameTips }}
-      </div>
-    </bk-form-item>
-    <bk-form-item :label="t('项目ID')" property="englishName" :required="true">
-      <bk-input
-        v-model="projectData.englishName"
-        :disabled="type === 'edit'"
-        :maxlength="32"
-        :placeholder="t('请输入2-32 字符的项目ID，由小写字母、数字、中划线组成，以小写字母开头。提交后不可修改。')"
-      ></bk-input>
-      <div class="error-tips" v-if="validateEnglishNameTips">
-        {{ validateEnglishNameTips }}
-      </div>
-    </bk-form-item>
-    <bk-form-item :label="t('项目描述')" property="description" :required="true">
-      <bk-input
-        v-model="projectData.description"
-        class="textarea"
-        type="textarea"
-        :rows="3"
-        :maxlength="255"
-        :placeholder="t('请输入项目描述')"
-        @change="handleChangeForm"
-      ></bk-input>
-    </bk-form-item>
-    <bk-form-item :label="t('项目LOGO')">
-      <bk-upload
-        theme="picture"
-        :files="logoFiles"
-        with-credentials
-        :multiple="false"
-        :custom-request="handleUploadLogo"
-      />
-      <span class="logo-upload-tip">{{ t('只允许上传png、jpg，大小不超过 2M')}}</span>
-    </bk-form-item>
-    <!-- <bk-form-item :label="t('项目所属组织')" property="bgId" :required="true">
-      <div class="bk-dropdown-box">
-        <bk-select
-          v-model="projectData.bgId"
-          placeholder="BG"
-          name="bg"
-          :loading="deptLoading.bg"
-          filterable
-          @change="id => handleChangeBg('bg', id)"
-        >
-          <bk-option
-            v-for="bg in curDepartmentInfo.bg"
-            :value="bg.id"
-            :key="bg.id"
-            :label="bg.name"
-          />
-        </bk-select>
-      </div>
-      <div class="bk-dropdown-box">
-        <bk-select
-          v-model="projectData.deptId"
-          :placeholder="t('部门')"
-          name="dept"
-          :loading="deptLoading.dept"
-          filterable
-          @change="id => handleChangeDept('dept', id)"
-        >
-          <bk-option
-            v-for="bg in curDepartmentInfo.dept"
-            :value="bg.id"
-            :key="bg.id"
-            :label="bg.name"
-          />
-        </bk-select>
-      </div>
-      <div class="bk-dropdown-box">
-        <bk-select
-          v-model="projectData.centerId"
-          :placeholder="t('中心')"
-          name="center"
-          :loading="deptLoading.center"
-          filterable
-          @change="id => handleChangeCenter('center', id)"
-        >
-          <bk-option
-            v-for="center in curDepartmentInfo.center"
-            :value="center.id"
-            :key="center.id"
-            :label="center.name"
-          />
-        </bk-select>
-      </div>
-    </bk-form-item> -->
-    <bk-form-item :label="t('项目类型')" property="projectType" :required="true">
-      <bk-select
-        v-model="projectData.projectType"
-        :placeholder="t('选择项目类型')"
-        name="center"
-        searchable
-        @change="handleChangeForm"
-      >
-        <bk-option
-          v-for="type in projectTypeList"
-          :value="type.id"
-          :key="type.id"
-          :label="type.name"
+    <div class="project-tab advanced">
+      <p class="title">{{t('基础信息')}}</p>
+      <bk-form-item :label="t('项目名称')" property="projectName" :required="true">
+        <bk-input
+          v-model="projectData.projectName"
+          :placeholder="t('请输入1-32字符的项目名称')"
+          :maxlength="32"
+          @change="handleChangeForm"
+        ></bk-input>
+        <div class="error-tips" v-if="validateProjectNameTips">
+          {{ validateProjectNameTips }}
+        </div>
+      </bk-form-item>
+      <bk-form-item :label="t('项目ID')" property="englishName" :required="true">
+        <bk-input
+          v-model="projectData.englishName"
+          :disabled="type === 'edit'"
+          :maxlength="32"
+          :placeholder="t('请输入2-32 字符的项目ID，由小写字母、数字、中划线组成，以小写字母开头。提交后不可修改。')"
+        ></bk-input>
+        <div class="error-tips" v-if="validateEnglishNameTips">
+          {{ validateEnglishNameTips }}
+        </div>
+      </bk-form-item>
+      <bk-form-item :label="t('项目描述')" property="description" :required="true">
+        <bk-input
+          v-model="projectData.description"
+          class="textarea"
+          type="textarea"
+          :rows="3"
+          :maxlength="255"
+          :placeholder="t('请输入项目描述')"
+          @change="handleChangeForm"
+        ></bk-input>
+      </bk-form-item>
+      <bk-form-item :label="t('项目LOGO')">
+        <bk-upload
+          theme="picture"
+          :files="logoFiles"
+          with-credentials
+          :multiple="false"
+          :custom-request="handleUploadLogo"
         />
-      </bk-select>
-    </bk-form-item>
-    <bk-form-item
-      v-if="isRbac"
-      :label="t('项目性质')"
-      property="authSecrecy"
-      :required="true"
-    >
-      <bk-radio-group
-        v-model="projectData.authSecrecy"
-        @change="handleChangeForm"
+        <span class="logo-upload-tip">{{ t('只允许上传png、jpg，大小不超过 2M')}}</span>
+      </bk-form-item>
+      <!-- <bk-form-item :label="t('项目所属组织')" property="bgId" :required="true">
+        <div class="bk-dropdown-box">
+          <bk-select
+            v-model="projectData.bgId"
+            placeholder="BG"
+            name="bg"
+            :loading="deptLoading.bg"
+            filterable
+            @change="id => handleChangeBg('bg', id)"
+          >
+            <bk-option
+              v-for="bg in curDepartmentInfo.bg"
+              :value="bg.id"
+              :key="bg.id"
+              :label="bg.name"
+            />
+          </bk-select>
+        </div>
+        <div class="bk-dropdown-box">
+          <bk-select
+            v-model="projectData.deptId"
+            :placeholder="t('部门')"
+            name="dept"
+            :loading="deptLoading.dept"
+            filterable
+            @change="id => handleChangeDept('dept', id)"
+          >
+            <bk-option
+              v-for="bg in curDepartmentInfo.dept"
+              :value="bg.id"
+              :key="bg.id"
+              :label="bg.name"
+            />
+          </bk-select>
+        </div>
+        <div class="bk-dropdown-box">
+          <bk-select
+            v-model="projectData.centerId"
+            :placeholder="t('中心')"
+            name="center"
+            :loading="deptLoading.center"
+            filterable
+            @change="id => handleChangeCenter('center', id)"
+          >
+            <bk-option
+              v-for="center in curDepartmentInfo.center"
+              :value="center.id"
+              :key="center.id"
+              :label="center.name"
+            />
+          </bk-select>
+        </div>
+      </bk-form-item> -->
+      <bk-form-item :label="t('项目类型')" property="projectType" :required="true">
+        <bk-select
+          v-model="projectData.projectType"
+          :placeholder="t('选择项目类型')"
+          name="center"
+          searchable
+          @change="handleChangeForm"
+        >
+          <bk-option
+            v-for="type in projectTypeList"
+            :value="type.id"
+            :key="type.id"
+            :label="type.name"
+          />
+        </bk-select>
+      </bk-form-item>
+      <bk-form-item
+        v-if="isRbac"
+        :label="t('项目性质')"
+        property="authSecrecy"
+        :required="true"
       >
-        <bk-radio class="mr10" :label="0">
-          <Popover :content="t('`项目最大可授权人员范围`内的用户可以主动申请加入项目')">
-            <span class="authSecrecy-item">{{ t('私有项目') }}</span>
-          </Popover>
-        </bk-radio>
-        <bk-radio :label="1">
-          <Popover :content="t('拥有项目/资源管理权限的成员才可以主动添加用户')">
-            <span class="authSecrecy-item">{{ t('保密项目') }}</span>
-          </Popover>
-        </bk-radio>
-      </bk-radio-group>
-    </bk-form-item>
-    <bk-form-item
-      v-if="isRbac"
-      :label="t('项目最大可授权人员范围')"
-      :description="t('该设置表示可以加入项目的成员的最大范围，范围内的用户才可以成功加入项目下的任意用户组')"
-      property="subjectScopes"
-      :required="true">
-      <bk-tag
-        v-for="(subjectScope, index) in projectData.subjectScopes"
-        :key="index"
-      >
-        {{ subjectScope.id === '*' ? t('全员') : subjectScope.name }}
-      </bk-tag>
-      <EditLine
-        class="edit-line ml5"
-        @click="showMemberDialog"
-      />
-    </bk-form-item>
-    <div>
-      <slot></slot>
+        <bk-radio-group
+          v-model="projectData.authSecrecy"
+          @change="handleChangeForm"
+        >
+          <bk-radio class="mr10" :label="0">
+            <Popover :content="t('`项目最大可授权人员范围`内的用户可以主动申请加入项目')">
+              <span class="authSecrecy-item">{{ t('私有项目') }}</span>
+            </Popover>
+          </bk-radio>
+          <bk-radio :label="1">
+            <Popover :content="t('拥有项目/资源管理权限的成员才可以主动添加用户')">
+              <span class="authSecrecy-item">{{ t('保密项目') }}</span>
+            </Popover>
+          </bk-radio>
+        </bk-radio-group>
+      </bk-form-item>
+    </div>
+    <div class="project-tab">
+      <p class="title">{{t('高级信息')}}</p>
+      <div v-if="isRbac">
+        <div class="sub-title">{{ t('权限')  }}</div>
+        <bk-form-item
+          :label="t('项目最大可授权人员范围')"
+          :description="t('该设置表示可以加入项目的成员的最大范围，范围内的用户才可以成功加入项目下的任意用户组')"
+          property="subjectScopes"
+          :required="true">
+          <bk-tag
+            v-for="(subjectScope, index) in projectData.subjectScopes"
+            :key="index"
+          >
+            {{ subjectScope.id === '*' ? t('全员') : subjectScope.name }}
+          </bk-tag>
+          <EditLine
+            class="edit-line ml5"
+            @click="showMemberDialog"
+          />
+        </bk-form-item>
+      </div>
+      <div v-if="projectData.properties">
+        <div class="sub-title">{{ t('流水线')  }}</div>
+        <bk-form-item
+          property="pipelineDialect"
+        >
+          <template #label>
+            <dialect-popover-table />
+          </template>
+          <bk-radio-group
+            v-model="projectData.properties.pipelineDialect"
+            @change="handleChangeForm"
+          >
+            <bk-radio label="CLASSIC">
+              <span>{{ t('CLASSIC') }}</span>
+            </bk-radio>
+            <bk-radio label="CONSTRAINED">
+              <span>{{ t('CONSTRAINED') }}</span>
+            </bk-radio>
+          </bk-radio-group>
+        </bk-form-item>
+        <bk-form-item
+          :label="t('命名规范提示')"
+          :description="t('开启后，需填写流水线命名规范提示说明。规范提示说明将展示在「创建流水线」页面进行提示。')"
+        >
+          <bk-switcher
+            v-model="projectData.properties.enablePipelineNameTips"
+            size="large"
+            theme="primary"
+          />
+          <bk-input
+            class="textarea"
+            v-show="projectData.properties.enablePipelineNameTips"
+            v-model="projectData.properties.pipelineNameFormat"
+            :placeholder="t('请输入流水线命名规范提示说明')"
+            :rows="3"
+            :maxlength="200"
+            type="textarea"
+          >
+          </bk-input>
+        </bk-form-item>
+        <bk-form-item
+          :label="t('构建日志归档阈值')"
+          property="loggingLineLimit"
+          :description="t('单个步骤(Step)日志达到阈值时，将压缩并归档到日志仓库。可下载日志文件到本地查看。')"
+        >
+          <bk-input
+            v-model="projectData.properties.loggingLineLimit"
+            class="log-line-limit-input"
+            type="number"
+            :showControl="false"
+            :min="1"
+            :max="100"
+            :suffix="t('万行')"
+            :placeholder="t('缺省时默认为10')"
+          >
+          </bk-input>
+        </bk-form-item>
+      </div>
     </div>
   </bk-form>
 
@@ -497,6 +561,7 @@ onBeforeUnmount(() => {
     :deep(textarea) {
         width: auto;
     }
+    margin-top: 10px;
   }
   :deep(.bk-form-label) {
     font-size: 12px;
@@ -509,7 +574,7 @@ onBeforeUnmount(() => {
     cursor: pointer;
   }
   .member-iframe {
-    height: 100%;
+    height: 600px;
   }
   .bk-dropdown-box {
     width: 200px;
@@ -530,6 +595,9 @@ onBeforeUnmount(() => {
     font-size: 12px;
     color: #3c96ff;
   }
+  .log-line-limit-input {
+    width: 150px;
+  }
 </style>
 
 <style lang="postcss">
@@ -538,5 +606,29 @@ onBeforeUnmount(() => {
   }
   .bk-form-error {
     white-space: nowrap;
+  }
+  .project-tab {
+    width: 100%;
+    padding: 20px 30px;
+    background-color: #fff;
+    box-shadow: 0 2px 2px 0 #00000026;
+    &.advanced {
+      margin-bottom: 24px;
+    }
+    .title {
+      margin-bottom: 16px;
+      font-weight: 700;
+      font-size: 14px;
+      color: #63656E;
+    }
+    .sub-title {
+      font-size: 14px;
+      border-bottom: 2px solid #DCDEE5;
+      margin-bottom: 15px;
+    }
+    .conventions-input {
+      margin-top: 10px;
+      max-width: 1000px;
+    }
   }
 </style>

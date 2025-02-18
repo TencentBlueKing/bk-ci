@@ -1,14 +1,19 @@
 <template>
     <div class="container-node-selector">
-        <enum-input v-if="showAgentType"
+        <enum-input
+            v-if="showAgentType"
             class="agent-type"
             name="agentType"
             :list="agentTypeList"
             :disabled="disabled"
             :handle-change="handleChange"
-            :value="agentType">
+            :value="agentType"
+        >
         </enum-input>
-        <div :class="{ 'agent-name-select': true, 'abnormal-tip': abnormalSlave }" v-if="showAgentById">
+        <div
+            :class="{ 'agent-name-select': true, 'abnormal-tip': abnormalSlave }"
+            v-if="showAgentById"
+        >
             <selector
                 name="value"
                 :disabled="disabled"
@@ -17,24 +22,42 @@
                 :value="value"
                 :toggle-visible="toggleAgentList"
             >
-                
-                <template v-if="isAgentEnv" v-slot:option-item="optionProps">
+                <template
+                    v-if="isAgentEnv"
+                    v-slot:option-item="optionProps"
+                >
                     <div class="env-option-item">
-                        <span>{{optionProps.name}}</span>
-                        <span v-if="optionProps.isShared" class="env-info">{{ $t('editPage.shareEnvInfo', [optionProps.sharedProjectId, optionProps.sharedUserId]) }}</span>
-                        <bk-link target="_blank" class="env-link" :href="optionProps.envInfoHref" theme="primary">{{ $t('newlist.view') }}</bk-link>
+                        <span>{{ optionProps.name }}</span>
+                        <span
+                            v-if="optionProps.isShared"
+                            class="env-info"
+                        >{{ $t('editPage.shareEnvInfo', [optionProps.sharedProjectId, optionProps.sharedUserId]) }}</span>
+                        <bk-link
+                            target="_blank"
+                            class="env-link"
+                            :href="optionProps.envInfoHref"
+                            theme="primary"
+                        >
+                            {{ $t('newlist.view') }}
+                        </bk-link>
                     </div>
                 </template>
-                
+
                 <template>
-                    <div class="env-import-entry cursor-pointer" @click.stop.prevent="addThirdSlave">
+                    <div
+                        class="env-import-entry cursor-pointer"
+                        @click.stop.prevent="addThirdSlave"
+                    >
                         <i class="devops-icon icon-plus-circle"></i>
                         <span class="text">{{ $t('editPage.addThirdSlave') }}</span>
                     </div>
                 </template>
             </selector>
         </div>
-        <div class="alias-name-select" v-else>
+        <div
+            class="alias-name-select"
+            v-else
+        >
             <div class="env-alias-area">
                 <form-field
                     :is-error="hasError"
@@ -42,16 +65,15 @@
                     class="env-alias-area-item"
                     :label="(isAgentEnv && !isReuseJob) ? $t('editPage.environment') : ''"
                 >
-                    <selector
+                    <select-input
                         v-if="isReuseJob"
                         name="value"
                         :disabled="disabled"
+                        :value="getReuseJobNameByValue(value)"
+                        :options="reuseJobList"
                         :handle-change="handleSelect"
-                        :list="reuseJobList"
-                        :value="value"
-                        :toggle-visible="toggleAgentList"
                     >
-                    </selector>
+                    </select-input>
                     <devops-select
                         v-else
                         name="value"
@@ -63,7 +85,6 @@
                         @blur="handleBlur"
                         :value="value"
                     />
-                    
                 </form-field>
                 <form-field
                     v-if="isAgentEnv && !isReuseJob"
@@ -82,7 +103,6 @@
                     />
                 </form-field>
             </div>
-            
         </div>
     </div>
 </template>
@@ -93,6 +113,7 @@
     import EnumInput from '@/components/atomFormField/EnumInput'
     import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
+    import SelectInput from '@/components/AtomFormComponent/SelectInput'
     import { mapActions } from 'vuex'
 
     export default {
@@ -102,6 +123,7 @@
             FormField,
             VuexInput,
             Selector,
+            SelectInput,
             DevopsSelect
         },
         props: {
@@ -172,7 +194,7 @@
             return {
                 isLoading: false,
                 isFocus: false,
-                
+
                 nodeList: []
             }
         },
@@ -252,7 +274,7 @@
             ]),
             handleSelect (name, value) {
                 const node = this.nodeList.find(item => item.id === value)
-                const sharedId = node && node.sharedProjectId ? node.sharedProjectId : ''
+                const sharedId = node?.sharedProjectId
                 this.handleChange(name, value, sharedId)
             },
             handleBlur () {
@@ -305,6 +327,9 @@
                 } finally {
                     this.isLoading = false
                 }
+            },
+            getReuseJobNameByValue (value) {
+                return this.reuseJobList.find(i => i.id === value)?.name || value
             }
         }
     }
@@ -316,7 +341,7 @@
     .container-node-selector {
 
         .alias-name-select {
-            
+
             .abnormal-tip {
                 color: $dangerColor;
             }

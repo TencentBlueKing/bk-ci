@@ -66,16 +66,20 @@ class BuildLogQueryService @Autowired constructor(
         subTag: String? = null,
         jobId: String?,
         stepId: String?,
-        archiveFlag: Boolean? = null
+        archiveFlag: Boolean? = null,
+        checkPermissionFlag: Boolean = true,
+        reverse: Boolean?
     ): Result<QueryLogs> {
-        validateAuth(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            permission = AuthPermission.VIEW,
-            archiveFlag = archiveFlag
-        )
+        if (checkPermissionFlag) {
+            validateAuth(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                permission = AuthPermission.VIEW,
+                archiveFlag = archiveFlag
+            )
+        }
         val startEpoch = System.currentTimeMillis()
         var success = false
         val queryLogs = try {
@@ -88,7 +92,8 @@ class BuildLogQueryService @Autowired constructor(
                 containerHashId = containerHashId,
                 executeCount = executeCount,
                 jobId = jobId,
-                stepId = stepId
+                stepId = stepId,
+                reverse = reverse
             )
             result.timeUsed = System.currentTimeMillis() - startEpoch
             success = logStatusSuccess(result.status)
@@ -166,16 +171,19 @@ class BuildLogQueryService @Autowired constructor(
         subTag: String? = null,
         jobId: String?,
         stepId: String?,
-        archiveFlag: Boolean? = null
+        archiveFlag: Boolean? = null,
+        checkPermissionFlag: Boolean = true
     ): Result<QueryLogs> {
-        validateAuth(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            permission = AuthPermission.VIEW,
-            archiveFlag = archiveFlag
-        )
+        if (checkPermissionFlag) {
+            validateAuth(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                permission = AuthPermission.VIEW,
+                archiveFlag = archiveFlag
+            )
+        }
         val startEpoch = System.currentTimeMillis()
         var success = false
         val queryLogs = try {
@@ -217,16 +225,19 @@ class BuildLogQueryService @Autowired constructor(
         subTag: String? = null,
         jobId: String?,
         stepId: String?,
-        archiveFlag: Boolean? = null
+        archiveFlag: Boolean? = null,
+        checkPermissionFlag: Boolean = true
     ): Result<QueryLogs> {
-        validateAuth(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            permission = AuthPermission.VIEW,
-            archiveFlag = archiveFlag
-        )
+        if (checkPermissionFlag) {
+            validateAuth(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                permission = AuthPermission.VIEW,
+                archiveFlag = archiveFlag
+            )
+        }
         val startEpoch = System.currentTimeMillis()
         var success = false
         val queryLogs = try {

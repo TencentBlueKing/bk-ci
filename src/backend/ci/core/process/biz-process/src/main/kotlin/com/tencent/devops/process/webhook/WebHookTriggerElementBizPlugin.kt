@@ -28,10 +28,8 @@
 package com.tencent.devops.process.webhook
 
 import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
-import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -70,16 +68,7 @@ abstract class WebHookTriggerElementBizPlugin<T : WebHookTriggerElement> constru
         }
     }
 
-    override fun check(
-        projectId: String?,
-        userId: String,
-        stage: Stage,
-        container: Container,
-        element: T,
-        contextMap: Map<String, String>,
-        appearedCnt: Int,
-        isTemplate: Boolean
-    ) = ElementCheckResult(true)
+    override fun check(element: T, appearedCnt: Int) = Unit
 }
 
 @ElementBiz

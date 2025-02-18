@@ -46,16 +46,15 @@ import com.tencent.devops.worker.common.LOG_SUBTAG_FLAG
 import com.tencent.devops.worker.common.LOG_TASK_LINE_LIMIT
 import com.tencent.devops.worker.common.LOG_WARN_FLAG
 import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.api.log.LogSDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
-import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.sql.Date
 import java.text.SimpleDateFormat
@@ -67,11 +66,13 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
+import org.slf4j.LoggerFactory
 
 @Suppress("MagicNumber", "TooManyFunctions", "ComplexMethod", "LongMethod")
 object LoggerService {
 
     private val logResourceApi = ApiFactory.create(LogSDKApi::class)
+    private val archiveApi = ApiFactory.create(ArchiveSDKApi::class)
     private val logger = LoggerFactory.getLogger(LoggerService::class.java)
     private var future: Future<Boolean>? = null
     private val running = AtomicBoolean(true)
@@ -127,6 +128,7 @@ object LoggerService {
     var executeCount = 1
     var buildVariables: BuildVariables? = null
     var pipelineLogDir: File? = null
+    var loggingLineLimit: Int = LOG_TASK_LINE_LIMIT
 
     private val lock = ReentrantLock()
 
@@ -287,7 +289,7 @@ object LoggerService {
         }
 
         try {
-            if (currentTaskLineNo <= LOG_TASK_LINE_LIMIT) {
+            if (currentTaskLineNo <= loggingLineLimit) {
                 var offset = 0
                 // 上报前做长度等内容限制
                 while (offset < logMessage.message.length) {
@@ -304,7 +306,7 @@ object LoggerService {
                 )
                 this.uploadQueue.put(
                     logMessage.copy(
-                        message = "Printed logs cannot exceed 1 million lines. " +
+                        message = "Printed logs cannot exceed $loggingLineLimit lines. " +
                             "Please download logs to view."
                     )
                 )
@@ -365,7 +367,7 @@ object LoggerService {
         logger.info("Start to archive log files with LogMode[${AgentEnv.getLogMode()}]")
         try {
             val expireSeconds = buildVariables!!.timeoutMills / 1000
-            val token = RepoServiceFactory.getInstance().getRepoToken(
+            val token = archiveApi.getRepoToken(
                 userId = buildVariables!!.variables[PIPELINE_START_USER_ID] ?: "",
                 projectId = buildVariables!!.projectId,
                 repoName = "log",
@@ -452,6 +454,7 @@ object LoggerService {
                     logger.warn("Log service storage is unable：${result.message}")
                     disableLogUpload()
                 }
+
                 result.isNotOk() -> {
                     logger.error("Fail to send the multi logs：${result.message}")
                 }

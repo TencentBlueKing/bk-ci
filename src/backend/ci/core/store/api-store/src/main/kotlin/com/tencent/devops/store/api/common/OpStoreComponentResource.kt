@@ -26,13 +26,14 @@
  */
 package com.tencent.devops.store.api.common
 
+import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
-import com.tencent.devops.store.pojo.common.InstalledPkgShaContentRequest
+import com.tencent.devops.store.pojo.common.InstalledPkgFileShaContentRequest
 import com.tencent.devops.store.pojo.common.MyStoreComponent
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
@@ -79,6 +80,10 @@ interface OpStoreComponentResource {
     @Operation(summary = "获取组件列表")
     @GET
     @Path("/types/{storeType}/component/list")
+    @BkInterfaceI18n(
+        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
+            "releaseInfo"]
+    )
     @Suppress("LongParameterList")
     fun listComponents(
         @Parameter(description = "userId", required = true)
@@ -122,6 +127,10 @@ interface OpStoreComponentResource {
     @Operation(summary = "根据组件标识获取组件版本列表")
     @GET
     @Path("/types/{storeType}/codes/{storeCode}/component/version/list")
+    @BkInterfaceI18n(
+        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
+            "releaseInfo"]
+    )
     fun getComponentVersionsByCode(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -147,6 +156,9 @@ interface OpStoreComponentResource {
     @Operation(summary = "根据组件ID获取组件详情")
     @GET
     @Path("/types/{storeType}/ids/{storeId}/component/detail")
+    @BkInterfaceI18n(
+        keyPrefixNames = ["{data.storeType}", "{data.storeCode}", "{data.version}", "releaseInfo"]
+    )
     fun getComponentDetailInfoById(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -209,10 +221,10 @@ interface OpStoreComponentResource {
         storeOfflineRequest: StoreOfflineRequest
     ): Result<Boolean>
 
-    @Operation(summary = "更新组件已安装包sha1摘要值")
+    @Operation(summary = "更新组件已安装包文件sha1摘要值")
     @PUT
-    @Path("/types/{storeType}/codes/{storeCode}/versions/{version}/component/installed/pkg/sha/update")
-    fun updateComponentInstalledPkgShaContent(
+    @Path("/types/{storeType}/codes/{storeCode}/versions/{version}/component/installed/pkg/file/sha/update")
+    fun updateComponentInstalledPkgFileShaContent(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -227,7 +239,7 @@ interface OpStoreComponentResource {
         @Parameter(description = "组件版本", required = true)
         @PathParam("version")
         version: String,
-        @Parameter(description = "更新组件已安装包sha1摘要值请求报文", required = true)
-        installedPkgShaContentRequest: InstalledPkgShaContentRequest
+        @Parameter(description = "更新组件已安装包文件sha1摘要值请求报文", required = true)
+        installedPkgFileShaContentRequest: InstalledPkgFileShaContentRequest
     ): Result<Boolean>
 }

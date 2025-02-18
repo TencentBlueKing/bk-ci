@@ -21,7 +21,11 @@
                             :href="addConsole(child.link_new)"
                             @click.prevent="gotoPage(child)"
                         >
-                            <img class="service-url-icon" v-if="isAbsoluteUrl(child.logoUrl)" :src="child.logoUrl" />
+                            <img
+                                class="service-url-icon"
+                                v-if="isAbsoluteUrl(child.logoUrl)"
+                                :src="child.logoUrl"
+                            />
                             <i
                                 v-else-if="serviceIcon(child.logoUrl) === 'logo-bcs'"
                                 class="devops-icon service-icon icon-logo-bcs"
@@ -93,9 +97,18 @@
 
         isAbsoluteUrl = isAbsoluteUrl
         
-       gotoPage ({ link_new: linkNew, newWindow = false, newWindowUrl = '' }) {
+       gotoPage ({ link_new: linkNew, name, status, newWindow = false, newWindowUrl = '' }) {
            const cAlias = this.currentPage && getServiceAliasByPath(this.currentPage.link_new)
            const nAlias = getServiceAliasByPath(linkNew)
+           if (status === 'developing') {
+                this.$router.push({
+                    name: 'undeploy',
+                    params: {
+                        id: nAlias
+                    }
+                })
+                return
+            }
            const destUrl = this.addConsole(linkNew)
 
            if (cAlias === nAlias && this.currentPage && this.currentPage.inject_type === 'iframe') {
@@ -221,7 +234,6 @@
                     }
 
                     &[disabled] {
-                        pointer-events: none;
                         color: $fontLigtherColor;
                         cursor: default;
 

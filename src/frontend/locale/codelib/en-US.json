@@ -2,7 +2,7 @@
     "codelib": "Code Repositories",
     "linkCodelib": "Link Repositories",
     "repo": "Code Repositories",
-    "linkCodelibLabel": "Link {0} Repositories",
+    "linkCodelibLabel": "Link {0}",
     "typeCodelib": "{0} Repositories",
     "link": "link",
     "linkRepo": "Link {0} Repositories",
@@ -216,5 +216,7 @@
     "触发成功": "Trigger Success",
     "触发失败": "Trigger Failed",
     "触发器不匹配": "Trigger Not Match",
-    "触发结果": "Trigger Result"
+    "触发结果": "Trigger Result",
+    "codelibUndeployTitle": "{0} connection service has not been fully deployed",
+    "githubUndeployDesc": "To use this feature, please contact the platform administrator to register the GitHub APP"
 }

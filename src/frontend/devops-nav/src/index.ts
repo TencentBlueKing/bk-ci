@@ -1,7 +1,5 @@
 /// <reference path='./typings/index.d.ts' />
 
-import Vue from 'vue'
-
 import AsideNav from '@/components/AsideNav/index.vue'
 import ContentHeader from '@/components/ContentHeader/index.vue'
 import DevopsFormItem from '@/components/DevopsFormItem/index.vue'
@@ -15,11 +13,13 @@ import store from '@/store'
 import eventBus from '@/utils/eventBus'
 import iframeUtil from '@/utils/iframeUtil'
 import App from '@/views/App.vue'
-import { BkciDocs } from '../../common-lib/docs'
+import Vue from 'vue'
+import createDocs from '../../common-lib/docs'
 
 import createLocale from '../../locale'
 
 import '@/assets/scss/index.scss'
+import Undeploy from '@/components/Undeploy/index.vue'
 import bsWebSocket from '@/utils/bsWebSocket.js'
 import { BkPermission, PermissionDirective, handleNoPermission } from 'bk-permission'
 import 'bk-permission/dist/main.css'
@@ -35,7 +35,8 @@ import validDictionary from './utils/validDictionary'
 // 全量引入 bk-magic-vue
 import bkMagic from 'bk-magic-vue'
 // 全量引入 bk-magic-vue 样式
-require('bk-magic-vue/dist/bk-magic-vue.min.css') // eslint-disable-line
+// @ts-ignore
+import('bk-magic-vue/dist/bk-magic-vue.min.css')
 
 declare module 'vue/types/vue' {
     interface Vue {
@@ -58,8 +59,10 @@ Vue.component('EmptyTips', EmptyTips)
 Vue.component('ShowTooltip', ShowTooltip)
 Vue.component('DevopsFormItem', DevopsFormItem)
 Vue.component('BigSelect', BigSelect)
+Vue.component('undeploy', Undeploy)
 
-const { i18n, dynamicLoadModule, setLocale, localeList } = createLocale(require.context('@locale/nav/', false, /\.json$/), true)
+const { lang, i18n, dynamicLoadModule, setLocale, localeList } = createLocale(require.context('@locale/nav/', false, /\.json$/), true)
+const { BkciDocs } = createDocs(lang, window.BK_CI_VERSION)
 
 // @ts-ignore
 Vue.use(VeeValidate, {
@@ -103,6 +106,26 @@ judgementLsVersion()
 
 Vue.mixin({
     methods: {
+        showUndeployDialog ({
+            title,
+            desc,
+            link
+        }) {
+            this.$bkInfo({
+                subHeader: this.$createElement('undeploy', {
+                    props: {
+                        isInPopup: true,
+                        serviceName: title,
+                        serviceDesc: desc
+                    }
+                }, ''),
+                okText: this.$t('learnMore'),
+                cancelText: this.$t('close'),
+                confirmFn: () => {
+                    window.open(link, '_blank')
+                }
+            })
+        },
         async applyPermission (actionId, resourceId, instanceId = []) {
             try {
                 const redirectUrl = await this.$store.dispatch('getPermRedirectUrl', [{

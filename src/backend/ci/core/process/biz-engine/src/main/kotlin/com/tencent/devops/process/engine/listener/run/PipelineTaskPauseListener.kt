@@ -28,14 +28,15 @@
 package com.tencent.devops.process.engine.listener.run
 
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
 import com.tencent.devops.process.engine.common.BS_MANUAL_STOP_PAUSE_ATOM
 import com.tencent.devops.process.engine.common.VMUtils
@@ -65,7 +66,7 @@ class PipelineTaskPauseListener @Autowired constructor(
     private val buildVariableService: BuildVariableService,
     private val dslContext: DSLContext,
     private val buildLogPrinter: BuildLogPrinter
-) : BaseListener<PipelineTaskPauseEvent>(pipelineEventDispatcher) {
+) : PipelineEventListener<PipelineTaskPauseEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineTaskPauseEvent) {
         val taskRecord = pipelineTaskService.getBuildTask(event.projectId, event.buildId, event.taskId)
@@ -217,15 +218,23 @@ class PipelineTaskPauseListener @Autowired constructor(
                 executeCount = task.executeCount,
                 containerType = containerRecord?.containerType ?: "vmBuild"
             ),
+            // pause task 结束
             PipelineBuildStatusBroadCastEvent(
                 source = "pauseCancel-${task.containerId}-${task.buildId}",
                 projectId = task.projectId,
                 pipelineId = task.pipelineId,
                 userId = task.starter,
                 buildId = task.buildId,
-                taskId = null,
-                stageId = null,
-                actionType = ActionType.END
+                taskId = task.taskId,
+                stageId = task.stageId,
+                actionType = ActionType.END,
+                containerHashId = task.containerHashId,
+                jobId = task.jobId,
+                stepId = task.stepId,
+                atomCode = task.atomCode,
+                executeCount = task.executeCount,
+                buildStatus = BuildStatus.CANCELED.name,
+                type = PipelineBuildStatusBroadCastEventType.BUILD_TASK_END
             )
         )
     }

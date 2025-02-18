@@ -149,7 +149,8 @@ abstract class Element(
     open var progressRate: Double? = null,
     override var template: String? = null,
     override var ref: String? = null,
-    override var variables: Map<String, String>? = null
+    override var variables: Map<String, String>? = null,
+    var asyncStatus: String? = null
 ) : IModelTemplate {
 
     open fun getAtomCode() = getClassType()
@@ -166,7 +167,7 @@ abstract class Element(
 
     open fun transferYaml(defaultValue: JSONObject?): PreStep? = null
 
-    open fun isElementEnable(): Boolean {
+    open fun elementEnabled(): Boolean {
         return additionalOptions?.enable ?: true
     }
 
@@ -185,11 +186,11 @@ abstract class Element(
     open fun findFirstTaskIdByStartType(startType: StartType): String = ""
 
     /**
-     * 除非是本身的[isElementEnable]设置为未启用插件会返回SKIP，或者是设置了失败手动跳过
+     * 除非是本身的[elementEnabled]设置为未启用插件会返回SKIP，或者是设置了失败手动跳过
      * [rerun]允许对状态进行重置为QUEUE
      */
     fun initStatus(rerun: Boolean = false): BuildStatus {
-        return if (!isElementEnable()) { // 插件未启用
+        return if (!elementEnabled()) { // 插件未启用
             BuildStatus.SKIP // 跳过
         } else if (rerun) { // 除以上指定跳过或不启用的以外，在final Stage 下的插件都需要重置状态
             BuildStatus.QUEUE

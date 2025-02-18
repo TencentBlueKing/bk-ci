@@ -32,6 +32,7 @@ enum class ManualReviewParamType(val value: String) {
     TEXTAREA("textarea"),
     BOOLEAN("boolean"),
     ENUM("enum"),
+    CHECKBOX("checkbox"),
     MULTIPLE("multiple");
 
     override fun toString() = value

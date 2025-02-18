@@ -38,6 +38,9 @@ import com.tencent.devops.store.pojo.common.MyStoreComponent
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.media.StoreMediaInfo
+import com.tencent.devops.store.pojo.common.test.StoreTestItem
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import io.swagger.v3.oas.annotations.Operation
@@ -119,8 +122,7 @@ interface UserStoreComponentQueryResource {
     @GET
     @Path("/types/{storeType}/ids/{storeId}/component/detail")
     @BkInterfaceI18n(
-        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
-            "releaseInfo"]
+        keyPrefixNames = ["{data.storeType}", "{data.storeCode}", "{data.version}", "releaseInfo"]
     )
     fun getComponentDetailInfoById(
         @Parameter(description = "userId", required = true)
@@ -140,8 +142,7 @@ interface UserStoreComponentQueryResource {
     @GET
     @Path("/types/{storeType}/codes/{storeCode}/component/detail")
     @BkInterfaceI18n(
-        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
-            "releaseInfo"]
+        keyPrefixNames = ["{data.storeType}", "{data.storeCode}", "{data.version}", "releaseInfo"]
     )
     fun getComponentDetailInfoByCode(
         @Parameter(description = "userId", required = true)
@@ -161,8 +162,9 @@ interface UserStoreComponentQueryResource {
     @Path("/types/{storeType}/component/main/page/list")
     @GET
     @BkInterfaceI18n(
-        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
-            "releaseInfo"]
+        keyPrefixNames = ["{data[*].records[*].type}", "{data[*].records[*].code}", "{data[*].records[*].version}",
+            "releaseInfo"
+        ]
     )
     @Suppress("LongParameterList")
     fun getMainPageComponents(
@@ -193,8 +195,10 @@ interface UserStoreComponentQueryResource {
     @Path("/types/{storeType}/component/list")
     @GET
     @BkInterfaceI18n(
-        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
-            "releaseInfo"]
+        keyPrefixNames = [
+            "{data.records[*].type}", "{data.records[*].code}", "{data.records[*].version}",
+            "releaseInfo"
+        ]
     )
     @Suppress("LongParameterList")
     fun queryComponents(
@@ -252,6 +256,9 @@ interface UserStoreComponentQueryResource {
         @Parameter(description = "实例ID", required = false)
         @QueryParam("instanceId")
         instanceId: String?,
+        @Parameter(description = "是否查测试中版本 true：是，false：否", required = false)
+        @QueryParam("queryTestFlag")
+        queryTestFlag: Boolean?,
         @Parameter(description = "页码", required = true)
         @QueryParam("page")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE)
@@ -278,4 +285,38 @@ interface UserStoreComponentQueryResource {
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeCode: String
     ): Result<StoreShowVersionInfo>
+
+    @Operation(summary = "获取组件测试信息")
+    @GET
+    @Path("/types/{storeType}/codes/{storeCode}/component/test/info/get")
+    fun getStoreTestInfo(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: StoreTypeEnum,
+        @Parameter(description = "组件代码", required = true)
+        @PathParam("storeCode")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeCode: String
+    ): Result<Set<StoreTestItem>>
+
+    @Operation(summary = "获取组件媒体信息")
+    @Path("/types/{storeType}/codes/{storeCode}/component/media/info/get")
+    @GET
+    fun getStoreMediaInfo(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: StoreTypeEnum,
+        @Parameter(description = "组件代码", required = true)
+        @PathParam("storeCode")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeCode: String
+    ): Result<List<StoreMediaInfo>?>
 }

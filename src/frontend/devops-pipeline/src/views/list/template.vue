@@ -1,5 +1,8 @@
 <template>
-    <div class="pipeline-template-list" v-bkloading="{ isLoading }">
+    <div
+        class="pipeline-template-list"
+        v-bkloading="{ isLoading }"
+    >
         <div class="template-list-content">
             <div class="view-table-wrapper">
                 <template v-if="isEnabledPermission">
@@ -50,7 +53,8 @@
                     @getApiData="getTempFromSelf"
                 >
                 </template-table>
-                <empty-tips v-if="showSelfEmpty"
+                <empty-tips
+                    v-if="showSelfEmpty"
                     :title="$t('template.noTemplate')"
                     :desc="emptyTipsConfig.desc"
                     :btn-disabled="emptyTipsConfig.btnDisabled"
@@ -70,10 +74,17 @@
             :title="$t('template.addTemplate')"
             :cancel-text="$t('cancel')"
             width="480"
-            @confirm="createTemplate">
+            @confirm="createTemplate"
+        >
             <div>
-                <form-field :required="false" :label="$t('template.name')" :is-error="errors.has(&quot;templateName&quot;)" :error-msg="errors.first(&quot;templateName&quot;)">
-                    <input class="bk-form-input"
+                <form-field
+                    :required="false"
+                    :label="$t('template.name')"
+                    :is-error="errors.has(&quot;templateName&quot;)"
+                    :error-msg="errors.first(&quot;templateName&quot;)"
+                >
+                    <input
+                        class="bk-form-input"
                         maxlength="30"
                         :placeholder="$t('template.nameInputTips')"
                         v-focus="isFocus()"
@@ -141,7 +152,27 @@
                     name: '',
                     desc: '',
                     labels: [],
-                    stages: [{ containers: [{ '@type': 'trigger', name: this.$t('buildTrigger'), elements: [{ '@type': 'manualTrigger', name: this.$t('manualTrigger'), id: 'T-1-1-1', canElementSkip: true, useLatestParameters: false, executeCount: 1, canRetry: false, classType: 'manualTrigger', taskAtom: '' }], params: [], canRetry: false, classType: 'trigger' }], id: 'stage-1' }]
+                    stages: [{
+                        containers: [{
+                            '@type': 'trigger',
+                            name: this.$t('buildTrigger'),
+                            elements: [{
+                                '@type': 'manualTrigger',
+                                name: this.$t('manualTrigger'),
+                                id: 'T-1-1-1',
+                                canElementSkip: true,
+                                useLatestParameters: false,
+                                executeCount: 1,
+                                canRetry: false,
+                                classType: 'manualTrigger',
+                                taskAtom: ''
+                            }],
+                            params: [],
+                            canRetry: false,
+                            classType: 'trigger'
+                        }],
+                        id: 'stage-1'
+                    }]
                 },
                 hasCreatePermission: false,
                 isEnabledPermission: false
@@ -164,9 +195,9 @@
             showSetting () {
                 this.setting.isShow = true
             },
-            getTempFromSelf (success) {
+            getTempFromSelf (params, success) {
                 const { pagingConfig: { current, limit } } = this.$refs.selfTemp
-                this.getApiData(current, limit).then((res) => {
+                this.getApiData(current, limit, params).then((res) => {
                     success(res)
                     const list = res.models || []
                     this.showSelfEmpty = list.length <= 0
@@ -176,13 +207,14 @@
             /**
              * 获取流水线模板列表
              */
-            async getApiData (pageIndex, pageSize) {
+            async getApiData (pageIndex, pageSize, params = {}) {
                 this.isLoading = true
                 try {
                     const res = await this.$store.dispatch('pipelines/requestTemplateList', {
                         projectId: this.projectId,
                         pageIndex,
-                        pageSize
+                        pageSize,
+                        params
                     })
                     this.isManagerUser = res.hasPermission
                     this.hasCreatePermission = res.hasCreatePermission

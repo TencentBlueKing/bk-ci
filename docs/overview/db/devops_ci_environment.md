@@ -2,11 +2,12 @@
 
 **数据库名：** devops_ci_environment
 
-**文档版本：** 1.0.2
+**文档版本：** 1.0.7
 
 **文档描述：** devops_ci_environment 的数据库文档
 | 表名                  | 说明       |
 | :---: | :---: |
+| T_AGENT_BATCH_INSTALL_TOKEN |  |
 | T_AGENT_FAILURE_NOTIFY_USER |  |
 | T_AGENT_PIPELINE_REF |  |
 | T_AGENT_SHARE_PROJECT |  |
@@ -20,6 +21,20 @@
 | T_ENV_SHARE_PROJECT |  |
 | T_NODE | 节点信息表 |
 | T_PROJECT_CONFIG |  |
+
+**表名：** <a>T_AGENT_BATCH_INSTALL_TOKEN</a>
+
+**说明：** 
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 项目 ID  |
+|  2   | USER_ID |   varchar   | 64 |   0    |    N     |  Y   |       | token 用户  |
+|  3   | TOKEN |   varchar   | 64 |   0    |    N     |  N   |       | Base64 编码后 TOKEN  |
+|  4   | CREATED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 创建时间  |
+|  5   | EXPIRED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 过期时间  |
 
 **表名：** <a>T_AGENT_FAILURE_NOTIFY_USER</a>
 
@@ -249,6 +264,7 @@
 |  29   | OS_TYPE |   varchar   | 64 |   0    |    Y     |  N   |       | 从 CC 中查到的 os 类型  |
 |  30   | SERVER_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 服务器 id  |
 |  31   | SYSTEM_UPDATE_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 系统任务更新数据时间  |
+|  32   | SIZE |   varchar   | 32 |   0    |    Y     |  N   |       | 机型  |
 
 **表名：** <a>T_PROJECT_CONFIG</a>
 

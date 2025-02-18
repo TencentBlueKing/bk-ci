@@ -29,6 +29,8 @@ package com.tencent.devops.process.engine.control.command.container.impl
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
@@ -91,15 +93,33 @@ class UpdateStateContainerCmdFinally(
             if (matrixGroupId.isNullOrBlank()) {
                 sendBackStage(commandContext = commandContext)
             } else {
-                pipelineEventDispatcher.dispatch(
-                    commandContext.event.copy(
-                        actionType = ActionType.REFRESH,
-                        containerId = matrixGroupId,
-                        containerHashId = null,
-                        source = commandContext.latestSummary,
-                        reason = "Matrix(${commandContext.container.containerId}) inner container finished"
+                with(commandContext.event) {
+                    pipelineEventDispatcher.dispatch(
+                        commandContext.event.copy(
+                            actionType = ActionType.REFRESH,
+                            containerId = matrixGroupId,
+                            containerHashId = null,
+                            source = commandContext.latestSummary,
+                            reason = "Matrix(${commandContext.container.containerId}) inner container finished"
+                        ),
+                        // matrix job 结束
+                        PipelineBuildStatusBroadCastEvent(
+                            source = "StartActionTaskContainerCmd",
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            userId = userId,
+                            buildId = buildId,
+                            actionType = ActionType.END,
+                            stageId = stageId,
+                            containerHashId = containerHashId,
+                            jobId = commandContext.container.jobId,
+                            stepId = null,
+                            executeCount = executeCount,
+                            buildStatus = commandContext.buildStatus.name,
+                            type = PipelineBuildStatusBroadCastEventType.BUILD_JOB_END
+                        )
                     )
-                )
+                }
             }
         }
     }
@@ -211,6 +231,22 @@ class UpdateStateContainerCmdFinally(
                     buildId = buildId,
                     stageId = stageId,
                     actionType = ActionType.REFRESH
+                ),
+                // job 结束
+                PipelineBuildStatusBroadCastEvent(
+                    source = "StartActionTaskContainerCmd",
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    buildId = buildId,
+                    actionType = ActionType.END,
+                    stageId = stageId,
+                    containerHashId = containerHashId,
+                    jobId = commandContext.container.jobId,
+                    stepId = null,
+                    executeCount = executeCount,
+                    buildStatus = commandContext.buildStatus.name,
+                    type = PipelineBuildStatusBroadCastEventType.BUILD_JOB_END
                 )
             )
 

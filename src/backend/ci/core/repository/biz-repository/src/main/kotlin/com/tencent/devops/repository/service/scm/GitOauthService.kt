@@ -58,6 +58,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.net.URLDecoder
 import java.net.URLEncoder
+import java.time.LocalDateTime
 
 @Service
 @Suppress("ALL")
@@ -205,8 +206,11 @@ class GitOauthService @Autowired constructor(
         val userId = authParams["userId"] as String
         val gitProjectId = authParams["gitProjectId"] as String?
         val token = gitService.getToken(userId, code)
+        // 保存当前操作用户
+        token.operator = userId
         // 在oauth授权过程中,可以输入公共账号去鉴权，所以需要再验证token所属人
         val oauthUserId = gitService.getUserInfoByToken(token.accessToken).username ?: userId
+        logger.info("save the git access token for user $oauthUserId, operated by $userId")
         saveAccessToken(oauthUserId, token)
         val redirectUrl = gitService.getRedirectUrl(state)
         logger.info("gitCallback redirectUrl is: $redirectUrl")
@@ -273,13 +277,16 @@ class GitOauthService @Autowired constructor(
                 refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.refreshToken),
                 tokenType = it.tokenType,
                 expiresIn = it.expiresIn,
-                createTime = it.createTime.timestampmilli()
+                createTime = it.createTime.timestampmilli(),
+                updateTime = LocalDateTime.now().timestampmilli(),
+                operator = it.operator ?: userId
             )
         }
     }
 
     private fun refreshToken(userId: String, gitToken: GitToken): GitToken {
         val token = gitService.refreshToken(userId, gitToken)
+        token.operator = gitToken.operator
         saveAccessToken(userId, token)
         token.accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, token.accessToken)
         token.refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, token.refreshToken)
@@ -294,5 +301,16 @@ class GitOauthService @Autowired constructor(
 
     override fun deleteToken(userId: String): Int {
         return gitTokenDao.deleteToken(dslContext, userId)
+    }
+
+    override fun getOauthUrl(userId: String, redirectUrl: String): String {
+        return getAuthUrl(
+            mapOf(
+                "userId" to userId,
+                "redirectUrlType" to RedirectUrlTypeEnum.SPEC.type,
+                "redirectUrl" to redirectUrl,
+                "randomStr" to "BK_DEVOPS__${RandomStringUtils.randomAlphanumeric(8)}"
+            )
+        )
     }
 }

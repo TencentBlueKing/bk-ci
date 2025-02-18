@@ -49,6 +49,7 @@ import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureUpdateRequest
@@ -87,7 +88,8 @@ import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.common.utils.VersionUtils
+import java.net.URLDecoder
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
@@ -97,9 +99,8 @@ import org.jooq.Record3
 import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.impl.DSL
+import org.jooq.impl.DSL.countDistinct
 import org.springframework.stereotype.Repository
-import java.net.URLDecoder
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -214,18 +215,19 @@ class AtomDao : AtomBaseDao() {
      * 统计还在使用处于下架中或者已下架状态的插件的项目的个数
      */
     fun countUndercarriageAtomNumByClassifyId(dslContext: DSLContext, classifyId: String): Int {
-        val a = TAtom.T_ATOM.`as`("a")
-        val b = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("b")
+        val tAtom = TAtom.T_ATOM
+        val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
         val atomStatusList = listOf(
             AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
             AtomStatusEnum.UNDERCARRIAGED.status.toByte()
         )
-        return dslContext.selectCount().from(a).join(b).on(a.ATOM_CODE.eq(b.STORE_CODE))
+        return dslContext.select(countDistinct(tStoreProjectRel.PROJECT_CODE)).from(tAtom).join(tStoreProjectRel)
+            .on(tAtom.ATOM_CODE.eq(tStoreProjectRel.STORE_CODE))
             .where(
-                a.ATOM_STATUS.`in`(atomStatusList)
-                    .and(a.CLASSIFY_ID.eq(classifyId))
-            )
-            .fetchOne(0, Int::class.java)!!
+                tAtom.ATOM_STATUS.`in`(atomStatusList)
+                    .and(tAtom.CLASSIFY_ID.eq(classifyId))
+                    .and(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+            ).fetchOne(0, Int::class.java)!!
     }
 
     fun delete(dslContext: DSLContext, id: String) {
@@ -827,7 +829,7 @@ class AtomDao : AtomBaseDao() {
         taf: TAtomFeature,
         tsst: TStoreStatisticsTotal
     ): SelectOnConditionStep<Record1<Int>> {
-        return dslContext.select(DSL.countDistinct(ta.ATOM_CODE)).from(ta)
+        return dslContext.select(countDistinct(ta.ATOM_CODE)).from(ta)
             .leftJoin(taf)
             .on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
             .leftJoin(tsst)
@@ -1113,18 +1115,24 @@ class AtomDao : AtomBaseDao() {
      */
     fun countInstalledAtoms(
         dslContext: DSLContext,
-        projectCode: String,
+        projectCode: String? = null,
         classifyCode: String? = null,
         name: String? = null
     ): Int {
-        val (ta, tspr, conditions) = getInstalledConditions(projectCode, classifyCode, name, dslContext)
+        val (ta, tspr, conditions) = getInstalledConditions(
+            projectCode = projectCode,
+            classifyCode = classifyCode,
+            name = name,
+            dslContext = dslContext
+        )
 
-        return dslContext.select(DSL.countDistinct(ta.ATOM_CODE))
-            .from(ta)
-            .join(tspr)
-            .on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
-            .where(conditions)
-            .fetchOne(0, Int::class.java)!!
+        val step = dslContext.select(countDistinct(ta.ATOM_CODE)).from(ta)
+        if (!projectCode.isNullOrBlank()) {
+            step.join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
+        }
+        val tc = TClassify.T_CLASSIFY
+        return step.join(tc).on(ta.CLASSIFY_ID.eq(tc.ID))
+            .where(conditions).fetchOne(0, Int::class.java)!!
     }
 
     /**
@@ -1139,11 +1147,13 @@ class AtomDao : AtomBaseDao() {
         pageSize: Int? = null
     ): Result<out Record>? {
 
-        val (ta, tspr, conditions) = getInstalledConditions(projectCode, classifyCode, name, dslContext)
+        val (ta, tspr, conditions) = getInstalledConditions(
+            projectCode = projectCode,
+            classifyCode = classifyCode,
+            name = name,
+            dslContext = dslContext
+        )
         val tc = TClassify.T_CLASSIFY
-        // 查找每组atomCode最新的记录
-        val t = dslContext.select(ta.ATOM_CODE.`as`(KEY_ATOM_CODE), DSL.max(ta.CREATE_TIME).`as`(KEY_CREATE_TIME))
-            .from(ta).groupBy(ta.ATOM_CODE)
 
         val sql = dslContext.select(
             ta.ID.`as`(KEY_ID),
@@ -1154,6 +1164,7 @@ class AtomDao : AtomBaseDao() {
             ta.CATEGROY.`as`(KEY_CATEGORY),
             ta.SUMMARY.`as`(KEY_SUMMARY),
             ta.PUBLISHER.`as`(KEY_PUBLISHER),
+            ta.DEFAULT_FLAG.`as`(KEY_DEFAULT_FLAG),
             tc.ID.`as`(KEY_CLASSIFY_ID),
             tc.CLASSIFY_CODE.`as`(KEY_CLASSIFY_CODE),
             tc.CLASSIFY_NAME.`as`(KEY_CLASSIFY_NAME),
@@ -1162,11 +1173,6 @@ class AtomDao : AtomBaseDao() {
             tspr.TYPE.`as`(KEY_INSTALL_TYPE)
         )
             .from(ta)
-            .join(t)
-            .on(
-                ta.ATOM_CODE.eq(t.field(KEY_ATOM_CODE, String::class.java))
-                    .and(ta.CREATE_TIME.eq(t.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
-            )
             .join(tc)
             .on(ta.CLASSIFY_ID.eq(tc.ID))
             .join(tspr)
@@ -1179,7 +1185,7 @@ class AtomDao : AtomBaseDao() {
     }
 
     private fun getInstalledConditions(
-        projectCode: String,
+        projectCode: String? = null,
         classifyCode: String?,
         name: String?,
         dslContext: DSLContext
@@ -1187,8 +1193,21 @@ class AtomDao : AtomBaseDao() {
         val ta = TAtom.T_ATOM
         val tspr = TStoreProjectRel.T_STORE_PROJECT_REL
         val conditions = mutableListOf<Condition>()
-        conditions.add(tspr.PROJECT_CODE.eq(projectCode))
-        conditions.add(tspr.STORE_TYPE.eq(0))
+        if (projectCode.isNullOrBlank()) {
+            conditions.add(ta.DEFAULT_FLAG.eq(true))
+            conditions.add(ta.ATOM_STATUS.`in`(
+                listOf(
+                    AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
+                    AtomStatusEnum.UNDERCARRIAGED.status.toByte(),
+                    AtomStatusEnum.RELEASED.status.toByte()
+                )
+            ))
+        } else {
+            conditions.add(tspr.PROJECT_CODE.eq(projectCode).and(tspr.STORE_TYPE.eq(0)))
+            conditions.add(ta.DEFAULT_FLAG.eq(false))
+        }
+        conditions.add(ta.LATEST_FLAG.eq(true))
+
         if (!classifyCode.isNullOrEmpty()) {
             val tClassify = TClassify.T_CLASSIFY
             val classifyId = dslContext.select(tClassify.ID)
@@ -1402,5 +1421,47 @@ class AtomDao : AtomBaseDao() {
                     )
                 }
         }
+    }
+
+    /**
+     * 获取默认插件
+     */
+    fun getDefaultAtoms(
+        dslContext: DSLContext,
+        classifyCode: String? = null,
+        name: String? = null,
+        offset: Int? = null,
+        limit: Int? = null
+    ): Result<out Record>? {
+
+        val (ta, _, conditions) = getInstalledConditions(
+            classifyCode = classifyCode,
+            name = name,
+            dslContext = dslContext
+        )
+        val tc = TClassify.T_CLASSIFY
+
+        val sql = dslContext.select(
+            ta.ID.`as`(KEY_ID),
+            ta.ATOM_CODE.`as`(KEY_ATOM_CODE),
+            ta.VERSION.`as`(KEY_VERSION),
+            ta.NAME.`as`(NAME),
+            ta.LOGO_URL.`as`(KEY_LOGO_URL),
+            ta.CATEGROY.`as`(KEY_CATEGORY),
+            ta.SUMMARY.`as`(KEY_SUMMARY),
+            ta.PUBLISHER.`as`(KEY_PUBLISHER),
+            ta.DEFAULT_FLAG.`as`(KEY_DEFAULT_FLAG),
+            tc.ID.`as`(KEY_CLASSIFY_ID),
+            tc.CLASSIFY_CODE.`as`(KEY_CLASSIFY_CODE),
+            tc.CLASSIFY_NAME.`as`(KEY_CLASSIFY_NAME)
+        )
+            .from(ta)
+            .join(tc)
+            .on(ta.CLASSIFY_ID.eq(tc.ID))
+            .where(conditions)
+            .groupBy(ta.ATOM_CODE)
+            .orderBy(ta.CREATE_TIME, ta.ID)
+        if (offset != null && limit != null) sql.offset(offset).limit(limit)
+        return sql.skipCheck().fetch()
     }
 }

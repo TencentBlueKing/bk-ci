@@ -3,7 +3,7 @@ package com.tencent.devops.store.common.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.store.pojo.common.InstallStoreReq
-import com.tencent.devops.store.pojo.common.InstalledPkgShaContentRequest
+import com.tencent.devops.store.pojo.common.InstalledPkgFileShaContentRequest
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -66,6 +66,15 @@ interface StoreComponentManageService {
         storeType: StoreTypeEnum,
         storeCode: String,
         version: String,
-        installedPkgShaContentRequest: InstalledPkgShaContentRequest
+        installedPkgFileShaContentRequest: InstalledPkgFileShaContentRequest
+    ): Result<Boolean>
+
+    /**
+     * 更改组件授权人信息
+     */
+    fun updateStoreRepositoryAuthorizer(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String
     ): Result<Boolean>
 }

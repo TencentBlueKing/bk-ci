@@ -37,6 +37,7 @@ enum class BkAuthGroup(
     val roleId: Int? = null
 ) {
     /*项目用户组*/
+    VISITOR("visitor", "访问者", 0), // 访问者
     CIADMIN("ciAdmin", "CI管理员", 1), // CI管理员
     MANAGER("manager", "管理员", 2), // 管理员
     DEVELOPER("developer", "开发人员", 4), // 开发人员
@@ -46,6 +47,7 @@ enum class BkAuthGroup(
     QC("qc", "质量管理员", 7), // 质量管理员
     CI_MANAGER("ci_manager", "CI管理员", 9), // CI 管理员,流水线组及v0会使用到，新版RBAC废除
     GRADE_ADMIN("gradeAdmin", "分级管理员"), // 分级管理员
+    CGS_MANAGER("cgs_manager", "云研发管理员"),
 
     /*其他资源用户组*/
     RESOURCE_MANAGER("manager", "拥有者"), // 拥有者

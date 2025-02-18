@@ -198,7 +198,10 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         buildNoStart: Int?,
         buildNoEnd: Int?,
         buildMsg: String?,
-        customVersion: Int?
+        debug: Boolean?,
+        triggerAlias: List<String>?,
+        triggerBranch: List<String>?,
+        triggerUser: List<String>?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkParam(userId, projectId, pipelineId, pageSize)
         val result = pipelineBuildFacadeService.getHistoryBuild(
@@ -226,7 +229,10 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd,
             buildMsg = buildMsg,
-            customVersion = customVersion
+            debug = debug,
+            triggerAlias = triggerAlias,
+            triggerBranch = triggerBranch,
+            triggerUser = triggerUser
         )
         return Result(result)
     }
@@ -274,7 +280,10 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 version = version,
                 channelCode = channelCode
-            )
+            ).apply {
+                // TODO app暂时无法同步特性，临时方案为buildNo覆盖为currentBuildNo
+                buildNo?.currentBuildNo?.let { buildNo?.buildNo = it }
+            }
         )
     }
 

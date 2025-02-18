@@ -30,7 +30,7 @@ package com.tencent.devops.store.common.service.impl
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SHA_CONTENT
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.KEY_INSTALLED_PKG_SHA_CONTENT
+import com.tencent.devops.common.api.constant.KEY_FILE_SHA_CONTENT
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
@@ -105,7 +105,7 @@ class SensitiveApiServiceImpl @Autowired constructor(
         return JsonUtil.to(
             json = businessConfigRecord.configValue,
             typeReference = object : TypeReference<List<SensitiveApiConfig>>() {}
-        )
+        ).filter { !it.hideFlag }
     }
 
     override fun apply(
@@ -229,7 +229,8 @@ class SensitiveApiServiceImpl @Autowired constructor(
     }
 
     override fun verifyApi(
-        installedPkgShaContent: String?,
+        signFileName: String?,
+        fileShaContent: String?,
         osName: String?,
         osArch: String?,
         storeType: StoreTypeEnum,
@@ -241,7 +242,7 @@ class SensitiveApiServiceImpl @Autowired constructor(
             if (version.isNullOrBlank()) {
                 throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_NEED_PARAM_, params = arrayOf(KEY_VERSION))
             }
-            if (installedPkgShaContent.isNullOrBlank()) {
+            if (fileShaContent.isNullOrBlank()) {
                 throw ErrorCodeException(
                     errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
                     params = arrayOf(AUTH_HEADER_DEVOPS_SHA_CONTENT)
@@ -258,20 +259,18 @@ class SensitiveApiServiceImpl @Autowired constructor(
                 params = arrayOf("$storeType:$storeCode:$version")
             )
             val baseEnvRecord = storeBaseEnvQueryDao.getBaseEnvsByStoreId(
-                dslContext = dslContext,
-                storeId = storeId,
-                osName = osName,
-                osArch = osArch
-            )?.getOrNull(0) ?: throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf("$osName:$osArch")
+                dslContext = dslContext, storeId = storeId, osName = osName, osArch = osArch
+            )?.getOrNull(0) ?: storeBaseEnvQueryDao.getDefaultBaseEnvInfo(
+                dslContext = dslContext, storeId = storeId, osName = osName
+            ) ?: storeBaseEnvQueryDao.getDefaultBaseEnvInfo(dslContext, storeId) ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf("$osName:$osArch")
             )
-            val dbInstalledPkgShaContent = storeBaseEnvExtQueryDao.getBaseExtEnvsByEnvId(
+            val dbFileShaContent = storeBaseEnvExtQueryDao.getBaseExtEnvsByEnvId(
                 dslContext = dslContext,
                 envId = baseEnvRecord.id,
-                fieldName = KEY_INSTALLED_PKG_SHA_CONTENT
+                "${KEY_FILE_SHA_CONTENT}_$signFileName"
             )?.getOrNull(0)?.fieldValue ?: baseEnvRecord.shaContent
-            if (installedPkgShaContent.lowercase() != dbInstalledPkgShaContent) {
+            if (fileShaContent.lowercase() != dbFileShaContent) {
                 throw ErrorCodeException(
                     errorCode = CommonMessageCode.PARAMETER_VALIDATE_ERROR,
                     params = arrayOf(AUTH_HEADER_DEVOPS_SHA_CONTENT, "wrong sha1 content")

@@ -72,15 +72,25 @@ function setLsLocale (locale) {
             cookies.remove(LS_KEY, { domain, path: '/' })
         })
         const domain = window.LOCALE_DOMAIN || (subDomains[0] ?? location.hostname)
-        cookies.set(LS_KEY, formateLocale, { domain, path: '/' })
+        cookies.set(LS_KEY, formateLocale, { domain, path: '/', expires: 365 })
     }
+}
+
+function getLanguageCode (lang) {
+    const languageCodeMatch = lang.match(/^[A-Za-z]{2}/)
+    
+    if (languageCodeMatch) {
+        return languageCodeMatch[0].toUpperCase()
+    }
+
+    return 'ZH'
 }
 
 export default (r, initSetLocale = false) => {
     const { messages, localeList } = importAll(r)
     
     const initLocale = getLsLocale()
-    // export localeList
+    const lang = getLanguageCode(initLocale.split('_')[0].toLocaleUpperCase())
     
     const i18n = new VueI18n({
         locale: initLocale,
@@ -98,6 +108,7 @@ export default (r, initSetLocale = false) => {
 
     function dynamicLoadModule (module, locale = DEFAULT_LOCALE) {
         const localeModuleId = getLocalModuleId(module, locale)
+
         if (loadedModule[localeModuleId]) {
             return Promise.resolve()
         }
@@ -144,7 +155,7 @@ export default (r, initSetLocale = false) => {
             console.log('sync backendLocalEnum', backendLocalEnum[localeLang], localeLang, bkLocalEnum[localeLang])
             await Promise.any([
                 axios.put('/ms/project/api/user/locales/update', {
-                    language: backendLocalEnum[localeLang]
+                    language: backendLocalEnum[localeLang] ?? localeLang
                 }),
                 jsonpLocale(bkLocalEnum[localeLang])
             ])
@@ -154,6 +165,7 @@ export default (r, initSetLocale = false) => {
     }
      
     return {
+        lang,
         i18n,
         setLocale,
         localeList,

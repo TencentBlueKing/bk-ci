@@ -249,13 +249,15 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
     }
 
     override fun updatePipelineNum(pipelineNumUpdateList: List<StoreStatisticPipelineNumUpdate>, storeType: Byte) {
-        dslContext.transaction { t ->
-            val context = DSL.using(t)
-            storeStatisticTotalDao.batchUpdatePipelineNum(
-                dslContext = context,
-                pipelineNumUpdateList = pipelineNumUpdateList,
-                storeType = storeType
-            )
+        pipelineNumUpdateList.forEach { pipelineNumUpdate ->
+            dslContext.transaction { t ->
+                val context = DSL.using(t)
+                storeStatisticTotalDao.updateStorePipelineNum(
+                    dslContext = context,
+                    pipelineNumUpdate = pipelineNumUpdate,
+                    storeType = storeType
+                )
+            }
         }
     }
 
@@ -392,32 +394,35 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
         val statisticTotal = storeStatisticTotalDao.getStatisticByStoreCode(dslContext, storeCode, storeType)
         val percentileValue =
             redisOperation.get("STORE_${StoreTypeEnum.getStoreType(storeType.toInt())}_PERCENTILE_VALUE")
-        if (statisticTotal != null) {
-            storeStatisticTotalDao.updateStatisticData(
-                dslContext = dslContext,
-                storeCode = storeCode,
-                storeType = storeType,
-                downloads = downloads,
-                comments = comments,
-                score = score?.toInt(),
-                scoreAverage = scoreAverage,
-                recentExecuteNum = totalExecuteNum,
-                hotFlag = percentileValue?.let { totalExecuteNum >= percentileValue.toDouble() },
-                recentActiveDuration = totalActiveDuration
-            )
-        } else {
-            storeStatisticTotalDao.initStatisticData(
-                dslContext = dslContext,
-                storeCode = storeCode,
-                storeType = storeType,
-                downloads = downloads,
-                comments = comments,
-                score = score?.toInt(),
-                scoreAverage = scoreAverage,
-                recentExecuteNum = totalExecuteNum,
-                hotFlag = percentileValue?.let { totalExecuteNum >= percentileValue.toDouble() },
-                recentActiveDuration = totalActiveDuration
-            )
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            if (statisticTotal != null) {
+                storeStatisticTotalDao.updateStatisticData(
+                    dslContext = context,
+                    storeCode = storeCode,
+                    storeType = storeType,
+                    downloads = downloads,
+                    comments = comments,
+                    score = score?.toInt(),
+                    scoreAverage = scoreAverage,
+                    recentExecuteNum = totalExecuteNum,
+                    hotFlag = percentileValue?.let { totalExecuteNum >= percentileValue.toDouble() },
+                    recentActiveDuration = totalActiveDuration
+                )
+            } else {
+                storeStatisticTotalDao.initStatisticData(
+                    dslContext = context,
+                    storeCode = storeCode,
+                    storeType = storeType,
+                    downloads = downloads,
+                    comments = comments,
+                    score = score?.toInt(),
+                    scoreAverage = scoreAverage,
+                    recentExecuteNum = totalExecuteNum,
+                    hotFlag = percentileValue?.let { totalExecuteNum >= percentileValue.toDouble() },
+                    recentActiveDuration = totalActiveDuration
+                )
+            }
         }
     }
 

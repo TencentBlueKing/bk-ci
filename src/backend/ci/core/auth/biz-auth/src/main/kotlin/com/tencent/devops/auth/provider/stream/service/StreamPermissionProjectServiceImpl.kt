@@ -38,8 +38,7 @@ class StreamPermissionProjectServiceImpl @Autowired constructor(
     private val streamPermissionService: StreamPermissionServiceImpl
 ) : PermissionProjectService {
     override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
-        // stream场景下使用不到此接口。占做默认实现
-        return emptyList()
+        return streamPermissionService.getProjectUsers(projectCode, group)
     }
 
     override fun getProjectGroupAndUserList(projectCode: String): List<BkAuthGroupAndUserList> {
@@ -65,6 +64,10 @@ class StreamPermissionProjectServiceImpl @Autowired constructor(
         projectCode: String,
         group: BkAuthGroup?
     ): Boolean {
+        return streamPermissionService.isProjectMember(projectCode, userId).first
+    }
+
+    override fun isProjectMember(userId: String, projectCode: String): Boolean {
         return streamPermissionService.isProjectMember(projectCode, userId).first
     }
 

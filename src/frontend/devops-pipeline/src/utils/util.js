@@ -701,6 +701,10 @@ export function bkVarWrapper (name) {
     return '${{' + name + '}}'
 }
 
+export function bkVarRepoRefWrapper (name) {
+    return '${{variables.' + name + '.repo-name}}@${{variables.' + name + '.branch}}'
+}
+
 export const toolbars = {
     bold: false, // 粗体
     italic: false, // 斜体
@@ -901,4 +905,17 @@ export function showPipelineCheckMsg (showTooltips, message, h) {
             })))
         ])))
     })
+}
+
+export async function copyToClipboard (text) {
+    if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text)
+    } else {
+        const textArea = document.createElement('textarea')
+        textArea.value = text
+        document.body.appendChild(textArea)
+        textArea.select()
+        document.execCommand('Copy')
+        document.body.removeChild(textArea)
+    }
 }

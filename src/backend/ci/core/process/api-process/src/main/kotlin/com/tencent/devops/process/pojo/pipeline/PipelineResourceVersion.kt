@@ -27,9 +27,12 @@
 
 package com.tencent.devops.process.pojo.pipeline
 
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
+import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
+import com.tencent.devops.process.utils.PipelineVersionUtils
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
@@ -80,4 +83,30 @@ data class PipelineResourceVersion(
     val debugBuildId: String? = null,
     @get:Schema(title = "该版本的来源版本（空时一定为主路径）", required = false)
     val baseVersion: Int? = null
-)
+) {
+    fun toSimple() = PipelineVersionSimple(
+        pipelineId = pipelineId,
+        creator = creator,
+        createTime = createTime.timestampmilli(),
+        updater = updater,
+        updateTime = updateTime?.timestampmilli(),
+        version = version,
+        versionName = versionName ?: PipelineVersionUtils.getVersionName(
+            versionNum = version,
+            pipelineVersion = versionNum ?: version,
+            triggerVersion = 0,
+            settingVersion = 0
+        ) ?: "",
+        referFlag = referFlag,
+        referCount = referCount,
+        versionNum = versionNum,
+        pipelineVersion = pipelineVersion,
+        triggerVersion = triggerVersion,
+        settingVersion = settingVersion,
+        status = status,
+        debugBuildId = debugBuildId,
+        baseVersion = baseVersion,
+        description = description,
+        yamlVersion = yamlVersion
+    )
+}

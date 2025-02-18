@@ -1,8 +1,11 @@
 package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
+import com.tencent.devops.auth.pojo.request.GroupMemberSingleRenewalReq
+import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.web.RestResource
@@ -13,8 +16,9 @@ import com.tencent.devops.project.pojo.ProjectDeleteUserInfo
 import java.util.concurrent.TimeUnit
 
 @RestResource
-class ServiceResourceMemberResourceImpl constructor(
-    private val permissionResourceMemberService: PermissionResourceMemberService
+class ServiceResourceMemberResourceImpl(
+    private val permissionResourceMemberService: PermissionResourceMemberService,
+    private val permissionManageFacadeService: PermissionManageFacadeService
 ) : ServiceResourceMemberResource {
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun getResourceGroupMembers(
@@ -65,7 +69,9 @@ class ServiceResourceMemberResourceImpl constructor(
                         groupId = groupId,
                         projectCode = projectCode,
                         roleName = roleName,
-                        roleId = roleId
+                        roleId = roleId,
+                        resourceCode = resourceCode ?: projectCode,
+                        resourceType = resourceType ?: AuthResourceType.PROJECT.value
                     ),
                     expiredTime = expiredTime,
                     members = userIds,
@@ -89,7 +95,9 @@ class ServiceResourceMemberResourceImpl constructor(
                         groupId = groupId,
                         projectCode = projectCode,
                         roleName = roleName,
-                        roleId = roleId
+                        roleId = roleId,
+                        resourceType = resourceType ?: AuthResourceType.PROJECT.value,
+                        resourceCode = resourceCode ?: projectCode
                     ),
                     members = userIds,
                     departments = deptIds
@@ -98,15 +106,35 @@ class ServiceResourceMemberResourceImpl constructor(
         }
     }
 
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
+    override fun renewalGroupMember(
+        token: String,
+        userId: String,
+        projectCode: String,
+        renewalConditionReq: GroupMemberSingleRenewalReq
+    ): Result<Boolean> {
+        return Result(
+            permissionManageFacadeService.renewalGroupMember(
+                userId = userId,
+                projectCode = projectCode,
+                renewalConditionReq = renewalConditionReq
+            )
+        )
+    }
+
     private fun getIamGroupId(
         groupId: Int?,
         projectCode: String,
+        resourceType: String,
+        resourceCode: String,
         roleName: String?,
         roleId: Int?
     ): Int {
         return groupId ?: permissionResourceMemberService.roleCodeToIamGroupId(
             projectCode = projectCode,
-            roleCode = roleName ?: BkAuthGroup.getByRoleId(roleId!!).value
+            roleCode = roleName ?: BkAuthGroup.getByRoleId(roleId!!).value,
+            resourceType = resourceType,
+            resourceCode = resourceCode
         )
     }
 }

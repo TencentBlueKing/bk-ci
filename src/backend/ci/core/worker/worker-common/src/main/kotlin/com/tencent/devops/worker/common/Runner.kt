@@ -37,13 +37,16 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.NameAndValue
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.pojo.BuildJobResult
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_PREPARE_TO_BUILD
@@ -53,7 +56,6 @@ import com.tencent.devops.worker.common.constants.WorkerMessageCode.UNKNOWN_ERRO
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
-import com.tencent.devops.worker.common.env.DockerEnv
 import com.tencent.devops.worker.common.exception.TaskExecuteExceptionDecorator
 import com.tencent.devops.worker.common.expression.SpecialFunctions
 import com.tencent.devops.worker.common.heartbeat.Heartbeat
@@ -68,12 +70,12 @@ import com.tencent.devops.worker.common.utils.ShellUtil
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
-import org.slf4j.LoggerFactory
 import kotlin.system.exitProcess
+import org.slf4j.LoggerFactory
 
 object Runner {
 
-    private const val maxSleepStep = 50L
+    private const val maxSleepStep = 80L
     private const val windows = 5L
     private const val millsStep = 100L
     private val logger = LoggerFactory.getLogger(Runner::class.java)
@@ -84,6 +86,7 @@ object Runner {
         var workspacePathFile: File? = null
         val buildVariables = getBuildVariables()
         var failed = false
+        var errMsg: String? = null
         try {
             BuildEnv.setBuildId(buildVariables.buildId)
 
@@ -108,12 +111,13 @@ object Runner {
         } catch (ignore: Exception) {
             failed = true
             logger.warn("Catch unknown exceptions", ignore)
-            val errMsg = when (ignore) {
+            errMsg = when (ignore) {
                 is java.lang.IllegalArgumentException ->
                     MessageUtil.getMessageByLocale(
                         messageCode = PARAMETER_ERROR,
                         language = AgentEnv.getLocaleLanguage()
                     ) + "：${ignore.message}"
+
                 is FileNotFoundException, is IOException -> {
                     MessageUtil.getMessageByLocale(
                         messageCode = RUN_AGENT_WITHOUT_PERMISSION,
@@ -121,6 +125,7 @@ object Runner {
                         params = arrayOf("${ignore.message}")
                     )
                 }
+
                 else -> MessageUtil.getMessageByLocale(
                     messageCode = UNKNOWN_ERROR,
                     language = AgentEnv.getLocaleLanguage()
@@ -142,7 +147,7 @@ object Runner {
             throw ignore
         } finally {
             // 对应prepareWorker的兜底动作
-            finishWorker(buildVariables)
+            finishWorker(buildVariables, errMsg)
             finally(workspacePathFile, failed)
 
             if (systemExit) {
@@ -155,15 +160,29 @@ object Runner {
         try {
             // 启动成功, 报告process我已经启动了
             return EngineService.setStarted()
-        } catch (e: Exception) {
-            logger.warn("Set started catch unknown exceptions", e)
+        } catch (ignored: Exception) {
+            logger.warn("Set started catch unknown exceptions", ignored)
+            handleStartException(ignored)
+            throw ignored
+        }
+    }
+
+    private fun handleStartException(ignored: Exception) {
+        var endBuildFlag = true
+        if (ignored is RemoteServiceException) {
+            val errorCode = ignored.errorCode
+            if (errorCode == 2101182 || errorCode == 2101255) {
+                // 当构建已结束或者已经启动构建机时则不需要调结束构建接口
+                endBuildFlag = false
+            }
+        }
+        if (endBuildFlag) {
             // 启动失败，尝试结束构建
             try {
-                EngineService.endBuild(emptyMap(), DockerEnv.getBuildId())
-            } catch (e: Exception) {
-                logger.warn("End build catch unknown exceptions", e)
+                EngineService.endBuild(emptyMap(), "", BuildJobResult(ignored.message))
+            } catch (ignored: Exception) {
+                logger.warn("End build catch unknown exceptions", ignored)
             }
-            throw e
         }
     }
 
@@ -202,9 +221,9 @@ object Runner {
         return workspaceAndLogPath.first
     }
 
-    private fun finishWorker(buildVariables: BuildVariables) {
+    private fun finishWorker(buildVariables: BuildVariables, errMsg: String? = null) {
         LoggerService.stop()
-        EngineService.endBuild(buildVariables.variables)
+        EngineService.endBuild(variables = buildVariables.variables, result = BuildJobResult(errMsg))
         Heartbeat.stop()
     }
 
@@ -220,10 +239,9 @@ object Runner {
             logger.info("Start to execute the task($buildTask)")
             when (buildTask.status) {
                 BuildTaskStatus.DO -> {
-                    Preconditions.checkNotNull(
-                        obj = buildTask.taskId,
-                        exception = RemoteServiceException("Not valid build elementId")
-                    )
+                    Preconditions.checkNotNull(buildTask.taskId) {
+                        RemoteServiceException("Not valid build elementId")
+                    }
                     // 处理task和job级别的上下文
                     combineVariables(buildTask, buildVariables)
                     val task = TaskFactory.create(buildTask.type ?: "empty")
@@ -232,6 +250,8 @@ object Runner {
                         LoggerService.elementId = buildTask.taskId!!
                         LoggerService.stepId = buildTask.stepId ?: ""
                         LoggerService.elementName = buildTask.elementName ?: LoggerService.elementId
+                        LoggerService.loggingLineLimit = buildVariables.loggingLineLimit?.coerceIn(1, 100)
+                            ?.times(10000) ?: LOG_TASK_LINE_LIMIT
                         CredentialUtils.signToken = buildTask.signToken ?: ""
 
                         // 开始Task执行
@@ -254,9 +274,11 @@ object Runner {
                         LoggerService.elementId = ""
                         LoggerService.elementName = ""
                         LoggerService.stepId = ""
+                        LoggerService.loggingLineLimit = LOG_TASK_LINE_LIMIT
                         waitCount = 0
                     }
                 }
+
                 BuildTaskStatus.WAIT -> {
                     var sleepStep = waitCount++ / windows
                     if (sleepStep <= 0) {
@@ -266,6 +288,7 @@ object Runner {
                     logger.info("WAIT $sleepMills ms")
                     Thread.sleep(sleepMills)
                 }
+
                 BuildTaskStatus.END -> break@loop
             }
         }
@@ -428,6 +451,7 @@ object Runner {
 
         // 填充插件级的ENV参数
         val customEnvStr = buildTask.params?.get(Element::customEnv.name)
+        val dialect = PipelineDialectUtil.getPipelineDialect(jobBuildVariables.variables[PIPELINE_DIALECT])
         if (customEnvStr != null) {
             val customEnv = try {
                 JsonUtil.toOrNull(customEnvStr, object : TypeReference<List<NameAndValue>>() {})
@@ -443,7 +467,7 @@ object Runner {
                     val value = EnvReplacementParser.parse(
                         value = it.value ?: "",
                         contextMap = jobVariables,
-                        onlyExpression = jobBuildVariables.pipelineAsCodeSettings?.enable,
+                        onlyExpression = dialect.supportUseExpression(),
                         functions = SpecialFunctions.functions,
                         output = SpecialFunctions.output
                     )

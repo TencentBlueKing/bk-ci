@@ -42,6 +42,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserBuildResource
 import com.tencent.devops.process.engine.service.PipelineProgressRateService
+import com.tencent.devops.process.enums.HistorySearchType
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.BuildId
@@ -275,6 +276,7 @@ class UserBuildResourceImpl @Autowired constructor(
     }
 
     @Timed
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun getBuildDetail(
         userId: String,
         projectId: String,
@@ -296,6 +298,7 @@ class UserBuildResourceImpl @Autowired constructor(
         return Result(buildDetail)
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun getBuildRecordByExecuteCount(
         userId: String,
         projectId: String,
@@ -321,6 +324,7 @@ class UserBuildResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun getBuildRecordInfo(
         userId: String,
         projectId: String,
@@ -342,6 +346,7 @@ class UserBuildResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun getBuildDetailByBuildNo(
         userId: String,
         projectId: String,
@@ -365,6 +370,7 @@ class UserBuildResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun getBuildRecordByBuildNum(
         userId: String,
         projectId: String,
@@ -388,6 +394,7 @@ class UserBuildResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun goToLatestFinishedBuild(userId: String, projectId: String, pipelineId: String): Response {
         checkParam(userId = userId, projectId = projectId, pipelineId = pipelineId)
         return pipelineBuildFacadeService.goToLatestFinishedBuild(
@@ -399,6 +406,7 @@ class UserBuildResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun getHistoryBuild(
         userId: String,
         projectId: String,
@@ -424,6 +432,7 @@ class UserBuildResourceImpl @Autowired constructor(
     }
 
     @Timed
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun getHistoryBuildNew(
         userId: String,
         projectId: String,
@@ -450,7 +459,10 @@ class UserBuildResourceImpl @Autowired constructor(
         buildNoEnd: Int?,
         buildMsg: String?,
         archiveFlag: Boolean?,
-        customVersion: Int?
+        debug: Boolean?,
+        triggerAlias: List<String>?,
+        triggerBranch: List<String>?,
+        triggerUser: List<String>?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkParam(userId, projectId, pipelineId)
         val result = pipelineBuildFacadeService.getHistoryBuild(
@@ -479,7 +491,10 @@ class UserBuildResourceImpl @Autowired constructor(
             buildNoEnd = buildNoEnd,
             buildMsg = buildMsg,
             archiveFlag = archiveFlag,
-            customVersion = customVersion
+            debug = debug,
+            triggerAlias = triggerAlias,
+            triggerBranch = triggerBranch,
+            triggerUser = triggerUser
         )
         if (archiveFlag != true) {
             pipelineRecentUseService.record(userId, projectId, pipelineId)
@@ -527,12 +542,21 @@ class UserBuildResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        debugVersion: Int?
+        debugVersion: Int?,
+        search: String?,
+        type: HistorySearchType?
     ): Result<List<String>> {
         checkParam(userId, projectId, pipelineId)
-        return Result(pipelineBuildFacadeService.getHistoryConditionRepo(
-            userId, projectId, pipelineId, debugVersion
-        ))
+        return Result(
+            pipelineBuildFacadeService.getHistoryConditionRepo(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                debugVersion = debugVersion,
+                search = search,
+                type = type
+            )
+        )
     }
 
     override fun getHistoryConditionBranch(
@@ -540,7 +564,9 @@ class UserBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         alias: List<String>?,
-        debugVersion: Int?
+        debugVersion: Int?,
+        search: String?,
+        type: HistorySearchType?
     ): Result<List<String>> {
         checkParam(userId, projectId, pipelineId)
         return Result(
@@ -549,7 +575,9 @@ class UserBuildResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 alias = alias,
-                debugVersion = debugVersion
+                debugVersion = debugVersion,
+                search = search,
+                type = type
             )
         )
     }

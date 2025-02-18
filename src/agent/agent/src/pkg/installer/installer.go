@@ -28,8 +28,9 @@
 package installer
 
 import (
-	"errors"
 	"fmt"
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
+	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
@@ -45,6 +46,10 @@ import (
 func DoInstallAgent() error {
 	logs.Info("start install agent...")
 	config.Init(false)
+	if err := third_components.Init(); err != nil {
+		logs.WithError(err).Error("init third_components error")
+		systemutil.ExitProcess(1)
+	}
 
 	if len(config.GAgentConfig.BatchInstallKey) == 0 {
 		return errors.New("file .agent.properties 's devops.agent.batch.install key is null")
@@ -53,7 +58,7 @@ func DoInstallAgent() error {
 	totalLock := flock.New(fmt.Sprintf("%s/%s.lock", systemutil.GetRuntimeDir(), systemutil.TotalLock))
 	err := totalLock.Lock()
 	if err = totalLock.Lock(); err != nil {
-		logs.Error("get total lock failed, exit", err.Error())
+		logs.WithError(err).Error("get total lock failed, exit")
 		return errors.New("get total lock failed")
 	}
 	defer func() { totalLock.Unlock() }()
@@ -125,7 +130,7 @@ func InstallAgent() error {
 
 	err := fileutil.SetExecutable(startCmd)
 	if err != nil {
-		return fmt.Errorf("chmod install script failed: %s", err.Error())
+		return errors.Wrap(err, "chmod install script failed")
 	}
 
 	output, err := command.RunCommand(startCmd, []string{} /*args*/, workDir, nil)

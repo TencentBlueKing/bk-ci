@@ -34,11 +34,9 @@ import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
-import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -64,16 +62,7 @@ class TimerTriggerElementBizPlugin constructor(
         return TimerTriggerElement::class.java
     }
 
-    override fun check(
-        projectId: String?,
-        userId: String,
-        stage: Stage,
-        container: Container,
-        element: TimerTriggerElement,
-        contextMap: Map<String, String>,
-        appearedCnt: Int,
-        isTemplate: Boolean
-    ) = ElementCheckResult(true)
+    override fun check(element: TimerTriggerElement, appearedCnt: Int) = Unit
 
     override fun afterCreate(
         element: TimerTriggerElement,
@@ -88,13 +77,13 @@ class TimerTriggerElementBizPlugin constructor(
     ) {
         val crontabExpressions = mutableSetOf<String>()
         val params = (container as TriggerContainer).params.associate { it.id to it.defaultValue.toString() }
-        logger.info("[$pipelineId]|$userId| Timer trigger [${element.name}] enable=${element.isElementEnable()}")
+        logger.info("[$pipelineId]|$userId| Timer trigger [${element.name}] enable=${element.elementEnabled()}")
         /*
           在模板实例化时,有的流水线需要开启定时任务,有的流水线不需要开启,支持通过流水线变量控制定时任务的开启
           通过参数禁用定时任务,在流水线参数上配置BK_CI_TIMER_DISABLE,禁用定时触发器插件
          */
         val isParamDisable = params[PIPELINE_TIMER_DISABLE]?.toBoolean() ?: false
-        if (element.isElementEnable() && !isParamDisable) {
+        if (element.elementEnabled() && !isParamDisable) {
 
             val eConvertExpressions = element.convertExpressions(params = params)
             if (eConvertExpressions.isEmpty()) {

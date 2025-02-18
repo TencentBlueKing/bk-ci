@@ -1,5 +1,8 @@
 <template>
-    <div style="height: 100%;width: 100%;" v-bkloading="{ isLoading }">
+    <div
+        style="height: 100%;width: 100%;"
+        v-bkloading="{ isLoading }"
+    >
         <bk-resize-layout
             :collapsible="true"
             class="pipeline-exec-outputs"
@@ -7,77 +10,153 @@
             :min="260"
             :max="800"
         >
-            <aside slot="aside" class="pipeline-exec-outputs-aside">
+            <aside
+                slot="aside"
+                class="pipeline-exec-outputs-aside"
+            >
                 <div class="pipeline-exec-outputs-filter-input">
-                    <bk-input clearable right-icon="bk-icon icon-search" :placeholder="filterPlaceholder"
-                        v-model="keyWord" />
+                    <bk-input
+                        clearable
+                        right-icon="bk-icon icon-search"
+                        :placeholder="filterPlaceholder"
+                        v-model="keyWord"
+                    />
                 </div>
                 <!-- <div class="pipeline-exec-outputs-filter">
                     <i class="devops-icon icon-filter"></i>
                     {{ $t('条件查询') }}
                     <bk-tag class="output-filter-condition-count">2</bk-tag>
                 </div> -->
-                <ul v-if="visibleOutputs.length > 0" class="pipeline-exec-outputs-list">
-                    <li v-for="output in visibleOutputs" :key="output.id" :class="{
-                        active: output.id === activeOutput.id
-                    }" @click="setActiveOutput(output)">
+                <ul
+                    v-if="visibleOutputs.length > 0"
+                    class="pipeline-exec-outputs-list"
+                >
+                    <li
+                        v-for="output in visibleOutputs"
+                        :key="output.id"
+                        :class="{
+                            active: output.id === activeOutput.id
+                        }"
+                        @click="setActiveOutput(output)"
+                    >
                         <i :class="['devops-icon', `icon-${output.icon}`]"></i>
                         <span :title="output.name">{{ output.name }}</span>
                         <p class="output-hover-icon-box">
-                            <output-qrcode v-if="output.isApp" :output="output" />
-                            <artifact-download-button v-if="output.downloadable" :output="output" download-icon
-                                :has-permission="hasPermission" :path="output.fullPath" :name="output.name"
-                                :artifactory-type="output.artifactoryType" />
-                            <i v-if="output.isReportOutput" class="devops-icon icon-full-screen"
-                                @click.stop="fullScreenViewReport(output)" />
+                            <artifact-download-button
+                                v-if="output.downloadable"
+                                :output="output"
+                                download-icon
+                                :has-permission="hasPermission"
+                                :path="output.fullPath"
+                                :name="output.name"
+                                :artifactory-type="output.artifactoryType"
+                            />
+                            <i
+                                v-if="output.isReportOutput"
+                                class="devops-icon icon-full-screen"
+                                @click.stop="fullScreenViewReport(output)"
+                            />
                         </p>
                     </li>
                 </ul>
 
-                <div v-else class="no-outputs-placeholder">
-                    <logo name="empty" size="180" />
+                <div
+                    v-else
+                    class="no-outputs-placeholder"
+                >
+                    <logo
+                        name="empty"
+                        size="180"
+                    />
                     <span>{{ $t("empty") }}</span>
                 </div>
-
             </aside>
-            <section slot="main" class="pipeline-exec-outputs-section">
-                <iframe-report v-if="isCustomizeReport" ref="iframeReport" :report-name="activeOutput.name"
-                    :index-file-url="activeOutput.indexFileUrl" />
-                <third-party-report v-else-if="isActiveThirdReport" :report-list="thirdPartyReportList" />
+            <section
+                slot="main"
+                class="pipeline-exec-outputs-section"
+            >
+                <iframe-report
+                    v-if="isCustomizeReport"
+                    ref="iframeReport"
+                    :report-name="activeOutput.name"
+                    :index-file-url="activeOutput.indexFileUrl"
+                />
+                <third-party-report
+                    v-else-if="isActiveThirdReport"
+                    :report-list="thirdPartyReportList"
+                />
                 <template v-else-if="activeOutputDetail">
                     <div class="pipeline-exec-output-header">
                         <span class="pipeline-exec-output-header-name">
                             <i :class="`devops-icon icon-${activeOutputDetail.icon}`" />
-                            {{ activeOutputDetail.name }}
+                            <span v-bk-tooltips="activeOutputDetail.name">
+                                {{ activeOutputDetail.name }}
+                            </span>
                         </span>
                         <bk-tag theme="info">{{ $t(activeOutputDetail.artifactoryTypeTxt) }}</bk-tag>
                         <p class="pipeline-exec-output-actions">
-                            <artifact-download-button v-if="activeOutput.downloadable" :output="activeOutput"
-                                :has-permission="hasPermission" :path="activeOutput.fullPath" :name="activeOutput.name"
-                                :artifactory-type="activeOutput.artifactoryType" />
-                            <bk-button text theme="primary" v-for="btn in btns" :key="btn.text" @click="btn.handler">
+                            <artifact-download-button
+                                v-if="activeOutput.downloadable"
+                                :output="activeOutput"
+                                :has-permission="hasPermission"
+                                :path="activeOutput.fullPath"
+                                :name="activeOutput.name"
+                                :artifactory-type="activeOutput.artifactoryType"
+                            />
+                            <bk-button
+                                text
+                                theme="primary"
+                                v-for="btn in btns"
+                                :key="btn.text"
+                                @click="btn.handler"
+                            >
                                 {{ btn.text }}
                             </bk-button>
-                            <output-qrcode :output="activeOutput" v-if="activeOutputDetail.isApp" />
 
-                            <ext-menu v-if="!activeOutputDetail.folder" :data="activeOutputDetail"
-                                :config="artifactMoreActions"></ext-menu>
+                            <ext-menu
+                                v-if="!activeOutputDetail.folder"
+                                :data="activeOutputDetail"
+                                :config="artifactMoreActions"
+                            ></ext-menu>
                         </p>
                     </div>
                     <div class="pipeline-exec-output-artifact">
-                        <div v-for="block in infoBlocks" :key="block.title" class="pipeline-exec-output-block">
+                        <div
+                            v-for="block in infoBlocks"
+                            :key="block.title"
+                            class="pipeline-exec-output-block"
+                        >
                             <h6 class="pipeline-exec-output-block-title">{{ block.title }}</h6>
-                            <bk-table v-if="block.key === 'meta'" :data="block.value">
-                                <bk-table-column :label="$t('view.key')" prop="key"></bk-table-column>
-                                <bk-table-column :label="$t('view.value')" prop="value"></bk-table-column>
-                                <bk-table-column :label="$t('desc')" prop="description">
+                            <bk-table
+                                v-if="block.key === 'meta'"
+                                :data="block.value"
+                            >
+                                <bk-table-column
+                                    :label="$t('view.key')"
+                                    prop="key"
+                                ></bk-table-column>
+                                <bk-table-column
+                                    :label="$t('view.value')"
+                                    prop="value"
+                                ></bk-table-column>
+                                <bk-table-column
+                                    :label="$t('desc')"
+                                    prop="description"
+                                >
                                     <template slot-scope="scope">
                                         <span>{{ scope.row.description || '--' }}</span>
                                     </template>
                                 </bk-table-column>
                             </bk-table>
-                            <ul v-else slot="content" class="pipeline-exec-output-block-content">
-                                <li v-for="row in block.block" :key="row.key">
+                            <ul
+                                v-else
+                                slot="content"
+                                class="pipeline-exec-output-block-content"
+                            >
+                                <li
+                                    v-for="row in block.block"
+                                    :key="row.key"
+                                >
                                     <span class="pipeline-exec-output-block-row-label"> {{ row.name }}： </span>
                                     <span class="pipeline-exec-output-block-row-value">
                                         {{ block.value[row.key] || "--" }}
@@ -87,13 +166,22 @@
                         </div>
                     </div>
                 </template>
-                <div v-else class="no-outputs-placeholder">
-                    <logo name="empty" size="180" />
+                <div
+                    v-else
+                    class="no-outputs-placeholder"
+                >
+                    <logo
+                        name="empty"
+                        size="180"
+                    />
                     <span>{{ $t("empty") }}</span>
                 </div>
             </section>
         </bk-resize-layout>
-        <copy-to-custom-repo-dialog ref="copyToDialog" :artifact="activeOutput" />
+        <copy-to-custom-repo-dialog
+            ref="copyToDialog"
+            :artifact="activeOutput"
+        />
         <!-- <aside :class="['pipeline-outputs-filter-aside', {
             'pipeline-outputs-filter-aside-show': outputsFilterAsideVisible
         }]">
@@ -136,7 +224,6 @@
     import Logo from '@/components/Logo'
     import CopyToCustomRepoDialog from '@/components/Outputs/CopyToCustomRepoDialog'
     import IframeReport from '@/components/Outputs/IframeReport'
-    import OutputQrcode from '@/components/Outputs/OutputQrcode'
     import ThirdPartyReport from '@/components/Outputs/ThirdPartyReport'
     import ExtMenu from '@/components/pipelineList/extMenu'
     import { extForFile, repoTypeMap, repoTypeNameMap } from '@/utils/pipelineConst'
@@ -151,7 +238,6 @@
             ExtMenu,
             CopyToCustomRepoDialog,
             // ArtifactsList
-            OutputQrcode,
             ArtifactDownloadButton
         },
         props: {
@@ -783,10 +869,16 @@
 
             &-name {
                 display: flex;
+                max-width: 60%;
                 align-items: center;
                 font-size: 16px;
                 color: #313238;
                 padding-right: 16px;
+                >span {
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
 
                 >i {
                     padding-right: 12px;

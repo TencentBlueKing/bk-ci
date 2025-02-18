@@ -28,6 +28,8 @@
 package agent
 
 import (
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 	"time"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
@@ -47,17 +49,31 @@ import (
 
 func Run(isDebug bool) {
 	config.Init(isDebug)
+	if err := third_components.Init(); err != nil {
+		logs.WithError(err).Error("init third_components error")
+		systemutil.ExitProcess(1)
+	}
 
 	// 初始化国际化
 	i18n.InitAgentI18n()
 
+	// 启动 agent，需要等到上报启动成功才能继续
 	_, err := job.AgentStartup()
 	if err != nil {
-		logs.Warn("agent startup failed: ", err.Error())
+		logs.WithError(err).Error("agent startup failed")
+		for {
+			_, err = job.AgentStartup()
+			if err == nil {
+				break
+			} else {
+				logs.WithError(err).Error("agent startup failed")
+				time.Sleep(5 * time.Second)
+			}
+		}
 	}
 
 	// 数据采集
-	go collector.DoAgentCollect()
+	go collector.Collect()
 
 	// 定期清理
 	go cron.CleanJob()
@@ -102,7 +118,7 @@ func doAsk() {
 	}
 
 	if err != nil {
-		logs.Error("ask request failed: ", err.Error())
+		logs.WithErrorNoStack(err).Error("ask request failed")
 		return
 	}
 	if result.IsNotOk() {
@@ -122,7 +138,7 @@ func doAsk() {
 	resp := new(api.AskResp)
 	err = util.ParseJsonToData(result.Data, &resp)
 	if err != nil {
-		logs.Error("parse ask resp failed: ", err.Error())
+		logs.WithErrorNoStack(err).Error("parse ask resp failed")
 		return
 	}
 

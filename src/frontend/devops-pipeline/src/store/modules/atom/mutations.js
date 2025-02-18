@@ -49,6 +49,7 @@ import {
     SET_ATOM_MODAL_FETCHING,
     SET_ATOM_PAGE_OVER,
     SET_ATOM_VERSION_LIST,
+    SET_ATOMS_OUTPUT_MAP,
     SET_COMMEND_ATOM_COUNT,
     SET_COMMEND_ATOM_PAGE_OVER,
     SET_COMMON_PARAMS,
@@ -75,6 +76,7 @@ import {
     SET_STORE_LOADING,
     SET_STORE_SEARCH,
     SET_TEMPLATE,
+    SET_PLUGIN_HEAD_TAB,
     SWITCHING_PIPELINE_VERSION,
     TOGGLE_ATOM_SELECTOR_POPUP,
     TOGGLE_STAGE_REVIEW_PANEL,
@@ -209,6 +211,12 @@ export default {
         })
         return state
     },
+    [SET_ATOMS_OUTPUT_MAP]: (state, atomsOutputMap) => {
+        Object.assign(state, {
+            atomsOutputMap
+        })
+        return state
+    },
     [SET_ATOM_MODAL_FETCHING]: (state, fetchingAtmoModal) => {
         Object.assign(state, {
             fetchingAtmoModal
@@ -274,7 +282,8 @@ export default {
                     ? {
                         pauseBeforeExec: true
                     }
-                    : {}
+                    : {
+                    }
             }
         } else {
             const diffRes = diffAtomVersions(preVerEle, preVerAtomModal.props, atomModal.props, isChangeAtom)
@@ -314,11 +323,10 @@ export default {
 
     [UPDATE_ATOM_INPUT]: (state, { atom, newParam }) => {
         try {
-            for (const key in newParam) {
-                if (Object.prototype.hasOwnProperty.call(newParam, key)) {
-                    Vue.set(atom.data.input, key, newParam[key])
-                }
-            }
+            Vue.set(atom.data, 'input', {
+                ...atom.data.input,
+                ...newParam
+            })
         } catch (e) {
             console.warn(e, 'update atom input error', atom)
         }
@@ -353,7 +361,16 @@ export default {
             containers: [],
             checkIn: { timeout: 24 },
             checkOut: { timeout: 24 },
-            finally: insertStageIsFinally === true || undefined
+            finally: insertStageIsFinally === true || undefined,
+            stageControlOption: {
+                enable: true,
+                runCondition: 'AFTER_LAST_FINISHED',
+                customCondition: '',
+                customVariables: [{ key: 'param1', value: '' }],
+                manualTrigger: false,
+                triggerUsers: [],
+                timeout: 24
+            }
         })
         return state
     },
@@ -487,5 +504,10 @@ export default {
 
         })
         return state
+    },
+    [SET_PLUGIN_HEAD_TAB]: (state, { isGetPluginHeadTab }) => {
+        return Object.assign(state, {
+            isGetPluginHeadTab
+        })
     }
 }

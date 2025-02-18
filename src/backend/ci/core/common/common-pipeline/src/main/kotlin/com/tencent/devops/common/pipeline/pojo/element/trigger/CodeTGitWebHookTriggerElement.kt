@@ -81,6 +81,7 @@ data class CodeTGitWebHookTriggerElement(
                 CodeEventType.MERGE_REQUEST -> {
                     listOf(
                         vuexInput(name = "action", value = joinToString(includeMrAction)),
+                        selector(name = "skip-wip", value = listOf((skipWip ?: false).toString())),
                         vuexInput(name = "branchName", value = branchName),
                         vuexInput(name = "excludeBranchName", value = excludeBranchName),
                         vuexInput(
@@ -215,5 +216,7 @@ data class CodeTGitWebHookTriggerInput(
     @get:Schema(title = "push事件action")
     val includePushAction: List<String>? = null,
     @get:Schema(title = "是否启用第三方过滤")
-    val enableThirdFilter: Boolean? = false
+    val enableThirdFilter: Boolean? = false,
+    @get:Schema(title = "跳过WIP")
+    val skipWip: Boolean? = false
 )

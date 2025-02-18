@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.service.iam
 
 import com.tencent.devops.auth.pojo.dto.PermissionBatchValidateDTO
+import com.tencent.devops.auth.pojo.enum.OperateChannel
 
 interface PermissionResourceValidateService {
     fun batchValidateUserResourcePermission(
@@ -36,4 +37,24 @@ interface PermissionResourceValidateService {
         projectCode: String,
         permissionBatchValidateDTO: PermissionBatchValidateDTO
     ): Map<String, Boolean>
+
+    /**
+     * 是否有资源管理员权限
+     */
+    fun hasManagerPermission(
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        resourceCode: String
+    ): Boolean
+
+    /**
+     * 根据渠道来校验用户权限，主要用户管理界面/个人视角
+     */
+    fun validateUserProjectPermissionByChannel(
+        userId: String,
+        projectCode: String,
+        operateChannel: OperateChannel,
+        targetMemberId: String
+    )
 }

@@ -53,14 +53,20 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_UP
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
+import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.github.GithubBranch
 import com.tencent.devops.repository.pojo.github.GithubRepo
 import com.tencent.devops.repository.pojo.github.GithubRepoBranch
 import com.tencent.devops.repository.pojo.github.GithubRepoTag
 import com.tencent.devops.repository.pojo.github.GithubTag
+import com.tencent.devops.repository.pojo.github.GithubToken
+import com.tencent.devops.repository.sdk.github.pojo.RepositoryPermissions
 import com.tencent.devops.repository.sdk.github.request.GetRepositoryContentRequest
+import com.tencent.devops.repository.sdk.github.request.GetRepositoryPermissionsRequest
+import com.tencent.devops.repository.sdk.github.response.GetUserResponse
 import com.tencent.devops.repository.sdk.github.service.GithubRepositoryService
 import com.tencent.devops.repository.sdk.github.service.GithubUserService
+import com.tencent.devops.repository.utils.scm.QualityUtils
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.GithubApiException
 import com.tencent.devops.scm.pojo.Project
@@ -137,7 +143,14 @@ class GithubService @Autowired constructor(
         ) {
             logger.warn("conclusion and completedAt must be null or not null together")
         }
-
+        checkRuns.output?.let {
+            if (it.reportData?.second?.isNotEmpty() == true) {
+                it.text = QualityUtils.getQualityReport(
+                    titleData = it.reportData!!.first,
+                    resultData = it.reportData!!.second
+                )
+            }
+        }
         val body = objectMapper.writeValueAsString(checkRuns)
         val request = buildPatch(token, "repos/$projectName/check-runs/$checkRunId", body)
         val operation = getMessageByLocale(OPERATION_UPDATE_CHECK_RUNS)
@@ -394,7 +407,9 @@ class GithubService @Autowired constructor(
         userId: String,
         projectId: String,
         refreshToken: Boolean?,
-        resetType: String?
+        resetType: String?,
+        redirectUrlType: RedirectUrlTypeEnum?,
+        redirectUrl: String?
     ): AuthorizeResult {
         logger.info("isOAuth userId is: $userId,refreshToken is: $refreshToken")
         val accessToken = if (refreshToken == true) {
@@ -408,7 +423,9 @@ class GithubService @Autowired constructor(
                 userId = userId,
                 repoHashId = null,
                 popupTag = "",
-                resetType = resetType
+                resetType = resetType,
+                specRedirectUrl = redirectUrl,
+                redirectUrlTypeEnum = redirectUrlType
             ).redirectUrl
         )
         // 校验token是否有效
@@ -422,12 +439,42 @@ class GithubService @Autowired constructor(
                     userId = userId,
                     repoHashId = null,
                     popupTag = "",
-                    resetType = resetType
+                    resetType = resetType,
+                    specRedirectUrl = redirectUrl,
+                    redirectUrlTypeEnum = redirectUrlType
                 ).redirectUrl
             )
         }
         logger.info("github isOAuth accessToken is: $accessToken")
         return AuthorizeResult(200, "")
+    }
+
+    override fun getAccessToken(userId: String): GithubToken? {
+        return githubTokenService.getAccessToken(userId)
+    }
+
+    override fun getUser(token: String): GetUserResponse? {
+        return try {
+            githubUserService.getUser(token)
+        } catch (ignored: Exception) {
+            logger.warn("fail to get github user failed: $ignored")
+            null
+        }
+    }
+
+    override fun getRepositoryPermissions(projectName: String, userId: String, token: String): RepositoryPermissions? {
+        return try {
+            githubRepositoryService.getRepositoryPermissions(
+                request = GetRepositoryPermissionsRequest(
+                    repoName = projectName,
+                    username = userId
+                ),
+                token = token
+            )
+        } catch (ignored: Exception) {
+            logger.warn("get github repository permissions failed: $ignored")
+            null
+        }
     }
 
     companion object {

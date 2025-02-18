@@ -60,8 +60,8 @@ enum class PoolType {
         }
 
         override fun validatePool(pool: Pool) {
-            if (null == pool.container) {
-                throw OperationException("当pool.type=$this, container参数不能为空")
+            if (null == pool.container && pool.image == null) {
+                throw OperationException("When pool.type=$this, the container parameter cannot be empty")
             }
         }
 
@@ -93,8 +93,17 @@ enum class PoolType {
 
     SelfHosted {
         override fun transfer(pool: Pool): DispatchType {
-            if (!pool.envName.isNullOrBlank()) {
-                return ThirdPartyAgentEnvDispatchType(
+            return when {
+                /*构建资源锁定*/
+                !pool.lockResourceWith.isNullOrBlank() -> ThirdPartyAgentIDDispatchType(
+                    displayName = pool.lockResourceWith,
+                    workspace = pool.workspace,
+                    agentType = AgentType.REUSE_JOB_ID,
+                    dockerInfo = pool.dockerInfo,
+                    reusedInfo = null
+                )
+
+                !pool.envName.isNullOrBlank() -> ThirdPartyAgentEnvDispatchType(
                     envProjectId = pool.envProjectId,
                     envName = pool.envName,
                     workspace = pool.workspace,
@@ -102,8 +111,8 @@ enum class PoolType {
                     dockerInfo = pool.dockerInfo,
                     reusedInfo = null
                 )
-            } else {
-                return ThirdPartyAgentIDDispatchType(
+
+                else -> ThirdPartyAgentIDDispatchType(
                     displayName = pool.agentName!!,
                     workspace = pool.workspace,
                     agentType = AgentType.NAME,
@@ -114,39 +123,97 @@ enum class PoolType {
         }
 
         override fun transfer(dispatcher: DispatchType): RunsOn? {
-            if (dispatcher is ThirdPartyAgentEnvDispatchType) {
+            if (dispatcher is ThirdPartyAgentEnvDispatchType || dispatcher is ThirdPartyAgentIDDispatchType) {
                 return RunsOn(
                     selfHosted = true,
-                    poolName = dispatcher.envName,
-                    poolType = if (dispatcher.agentType == AgentType.NAME) {
-                        JobRunsOnPoolType.ENV_NAME.name
-                    } else {
-                        JobRunsOnPoolType.ENV_ID.name
-                    },
-                    workspace = dispatcher.workspace,
-                    container = makeContainer(dispatcher.dockerInfo),
-                    envProjectId = dispatcher.envProjectId
-                )
-            }
-            if (dispatcher is ThirdPartyAgentIDDispatchType) {
-                return RunsOn(
-                    selfHosted = true,
-                    poolName = null,
-                    nodeName = dispatcher.displayName,
-                    poolType = if (dispatcher.agentType == AgentType.NAME) {
-                        JobRunsOnPoolType.AGENT_NAME.name
-                    } else {
-                        JobRunsOnPoolType.AGENT_ID.name
-                    },
-                    workspace = dispatcher.workspace,
-                    container = makeContainer(dispatcher.dockerInfo)
+                    poolName = getPoolName(dispatcher),
+                    nodeName = getNodeName(dispatcher),
+                    lockResourceWith = getLockResourceWith(dispatcher),
+                    poolType = getPoolType(dispatcher)?.name,
+                    workspace = getWorkspace(dispatcher),
+                    container = makeContainer(getDockerInfo(dispatcher)),
+                    envProjectId = getEnvProjectId(dispatcher)
                 )
             }
             return null
         }
 
+        private fun getPoolName(dispatcher: DispatchType): String? = when (dispatcher) {
+            is ThirdPartyAgentEnvDispatchType -> dispatcher.envName
+            else -> null
+        }
+
+        private fun getNodeName(dispatcher: DispatchType): String? = when (dispatcher) {
+            is ThirdPartyAgentIDDispatchType -> dispatcher.displayName
+            else -> null
+        }
+
+        private fun getPoolType(dispatcher: DispatchType): JobRunsOnPoolType? = when (dispatcher) {
+            is ThirdPartyAgentEnvDispatchType -> {
+                when (dispatcher.agentType) {
+                    AgentType.NAME -> JobRunsOnPoolType.ENV_NAME
+                    AgentType.ID -> JobRunsOnPoolType.ENV_ID
+                    AgentType.REUSE_JOB_ID -> JobRunsOnPoolType.AGENT_REUSE_JOB
+                }
+            }
+
+            is ThirdPartyAgentIDDispatchType -> {
+                when (dispatcher.agentType) {
+                    AgentType.NAME -> JobRunsOnPoolType.AGENT_NAME
+                    AgentType.ID -> JobRunsOnPoolType.AGENT_ID
+                    AgentType.REUSE_JOB_ID -> JobRunsOnPoolType.AGENT_REUSE_JOB
+                }
+            }
+
+            else -> null
+        }
+
+        private fun getWorkspace(dispatcher: DispatchType): String? = when (dispatcher) {
+            is ThirdPartyAgentEnvDispatchType -> dispatcher.workspace
+            is ThirdPartyAgentIDDispatchType -> dispatcher.workspace
+            else -> null
+        }
+
+        private fun getDockerInfo(dispatcher: DispatchType): ThirdPartyAgentDockerInfo? = when (dispatcher) {
+            is ThirdPartyAgentEnvDispatchType -> dispatcher.dockerInfo
+            is ThirdPartyAgentIDDispatchType -> dispatcher.dockerInfo
+            else -> null
+        }
+
+        private fun getEnvProjectId(dispatcher: DispatchType): String? = when (dispatcher) {
+            is ThirdPartyAgentEnvDispatchType -> dispatcher.envProjectId
+            else -> null
+        }
+
+        private fun getLockResourceWith(dispatcher: DispatchType): String? = when {
+            dispatcher is ThirdPartyAgentEnvDispatchType &&
+                dispatcher.agentType == AgentType.REUSE_JOB_ID -> dispatcher.value
+
+            dispatcher is ThirdPartyAgentIDDispatchType &&
+                dispatcher.agentType == AgentType.REUSE_JOB_ID -> dispatcher.value
+
+            else -> null
+        }
+
         private fun makeContainer(dockerInfo: ThirdPartyAgentDockerInfo?): Container3? {
             if (dockerInfo == null) return null
+            // 使用研发商店镜像的情况
+            if (dockerInfo.storeImage != null) {
+                return Container3(
+                    imageVersion = dockerInfo.storeImage?.imageVersion,
+                    imageCode = dockerInfo.storeImage?.imageCode,
+                    credentials = with(dockerInfo.credential) {
+                        when {
+                            this == null -> null
+                            credentialId != null -> dockerInfo.credential?.credentialId?.ifBlank { null }
+                            user != null && password != null -> Credentials(user!!, password!!)
+                            else -> null
+                        }
+                    },
+                    options = dockerInfo.options,
+                    imagePullPolicy = dockerInfo.imagePullPolicy
+                )
+            }
             return Container3(
                 image = dockerInfo.image,
                 credentials = with(dockerInfo.credential) {
@@ -163,8 +230,11 @@ enum class PoolType {
         }
 
         override fun validatePool(pool: Pool) {
-            if (null == pool.agentName && null == pool.envName) {
-                throw OperationException("当pool.type=$this, agentName/envName参数不能全部为空")
+            if (null == pool.agentName && null == pool.envName && null == pool.lockResourceWith) {
+                throw OperationException(
+                    "When pool.type=$this, " +
+                        "node-name/pool-name/lock-resource-with cannot be all empty"
+                )
             }
         }
     }

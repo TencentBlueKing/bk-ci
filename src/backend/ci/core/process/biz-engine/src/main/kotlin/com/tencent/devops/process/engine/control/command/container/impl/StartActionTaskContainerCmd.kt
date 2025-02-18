@@ -30,6 +30,8 @@ package com.tencent.devops.process.engine.control.command.container.impl
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.expression.ExpressionParseException
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -81,8 +83,8 @@ class StartActionTaskContainerCmd(
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
         return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
-            !commandContext.buildStatus.isFinish() &&
-            commandContext.container.matrixGroupFlag != true
+                !commandContext.buildStatus.isFinish() &&
+                commandContext.container.matrixGroupFlag != true
     }
 
     override fun execute(commandContext: ContainerContext) {
@@ -94,6 +96,9 @@ class StartActionTaskContainerCmd(
                     commandContext.buildStatus = BuildStatus.SUCCEED
                 }
                 val waitToDoTask = findTask(commandContext)
+                if (waitToDoTask != null && TaskUtils.isStartVMTask(waitToDoTask)) {
+                    sendJobStartCallback(commandContext)
+                }
                 if (waitToDoTask == null) { // 非fast kill的强制终止时到最后无任务，最终状态必定是FAILED
                     val fastKill = FastKillUtils.isFastKillCode(commandContext.event.errorCode)
                     if (!fastKill && actionType.isTerminate() && !commandContext.buildStatus.isFailure()) {
@@ -112,6 +117,29 @@ class StartActionTaskContainerCmd(
                 commandContext.buildStatus = BuildStatus.UNKNOWN
                 commandContext.latestSummary = "j(${commandContext.container.containerId}) unknown action: $actionType"
             }
+        }
+    }
+
+    private fun sendJobStartCallback(commandContext: ContainerContext) {
+        with(commandContext.container) {
+            pipelineEventDispatcher.dispatch(
+                // job 启动
+                PipelineBuildStatusBroadCastEvent(
+                    source = "StartActionTaskContainerCmd",
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = commandContext.event.userId,
+                    buildId = buildId,
+                    actionType = ActionType.START,
+                    stageId = stageId,
+                    containerHashId = containerHashId,
+                    jobId = jobId,
+                    stepId = null,
+                    executeCount = executeCount,
+                    buildStatus = commandContext.buildStatus.name,
+                    type = PipelineBuildStatusBroadCastEventType.BUILD_JOB_START
+                )
+            )
         }
     }
 
@@ -239,8 +267,8 @@ class StartActionTaskContainerCmd(
 
         LOG.info(
             "ENGINE|${containerContext.event.buildId}|${containerContext.event.source}|CONTAINER_FIND_TASK|" +
-                "${containerContext.event.stageId}|j(${containerContext.event.containerId})|" +
-                "${toDoTask?.taskId}|break=$breakFlag|needTerminate=$needTerminate"
+                    "${containerContext.event.stageId}|j(${containerContext.event.containerId})|" +
+                    "${toDoTask?.taskId}|break=$breakFlag|needTerminate=$needTerminate"
         )
 
         if (!needTerminate && breakFlag) {
@@ -253,7 +281,7 @@ class StartActionTaskContainerCmd(
 
     private fun isTerminate(containerContext: ContainerContext): Boolean {
         return containerContext.event.actionType.isTerminate() ||
-            FastKillUtils.isTerminateCode(containerContext.event.errorCode)
+                FastKillUtils.isTerminateCode(containerContext.event.errorCode)
     }
 
     private fun findRunningTask(
@@ -265,23 +293,30 @@ class StartActionTaskContainerCmd(
             containerContext.event.actionType.isTerminate() -> { // 终止命令，需要设置失败，并返回
                 containerContext.buildStatus = BuildStatus.RUNNING
                 toDoTask = currentTask // 将当前任务传给TaskControl做终止
-                buildLogPrinter.addRedLine(
-                    buildId = toDoTask.buildId,
-                    message = "Terminate Plugin[${toDoTask.taskName}]: ${containerContext.event.reason ?: "unknown"}",
-                    tag = toDoTask.taskId,
-                    containerHashId = toDoTask.containerHashId,
-                    executeCount = toDoTask.executeCount ?: 1,
-                    jobId = null,
-                    stepId = toDoTask.stepId
-                )
+                val message = "Terminate Plugin[${currentTask.taskName}]: ${containerContext.event.reason ?: "unknown"}"
+                printRedLine(currentTask, message)
             }
 
             containerContext.event.actionType.isEnd() -> { // 将当前正在运行的任务传给TaskControl做结束
                 containerContext.buildStatus = BuildStatus.RUNNING
                 toDoTask = currentTask
+                val message = "Cancel Plugin[${currentTask.taskName}]: ${containerContext.event.reason ?: "unknown"}"
+                printRedLine(currentTask, message)
             }
         }
         return toDoTask
+    }
+
+    private fun printRedLine(task: PipelineBuildTask, message: String) {
+        buildLogPrinter.addRedLine(
+            buildId = task.buildId,
+            message = message,
+            tag = task.taskId,
+            containerHashId = task.containerHashId,
+            executeCount = task.executeCount ?: 1,
+            jobId = null,
+            stepId = task.stepId
+        )
     }
 
     @Suppress("LongMethod", "ComplexMethod")
@@ -322,14 +357,14 @@ class StartActionTaskContainerCmd(
         } catch (ignore: Throwable) {
             buildLogPrinter.addErrorLine(
                 message = "[EXPRESSION_ERROR] failed to parse condition(${additionalOptions?.customCondition}) " +
-                    "with error: ${ignore.message}",
+                        "with error: ${ignore.message}",
                 buildId = buildId, containerHashId = containerHashId, tag = taskId, executeCount = executeCount ?: 1,
                 jobId = null, stepId = stepId
             )
             LOG.error(
                 "BKSystemErrorMonitor|findNeedToRunTask|$buildId|$source|" +
-                    "EXPRESSION_CHECK_FAILED|$stageId|j($containerId)|$taskId|" +
-                    "customCondition=${additionalOptions?.customCondition}",
+                        "EXPRESSION_CHECK_FAILED|$stageId|j($containerId)|$taskId|" +
+                        "customCondition=${additionalOptions?.customCondition}",
                 ignore
             )
             Pair(false, ignore)
@@ -354,6 +389,11 @@ class StartActionTaskContainerCmd(
                     BuildStatus.UNEXEC
                 }
                 pipelineTaskService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
+                taskBuildRecordService.updateTaskStatus(
+                    projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                    stageId = stageId, containerId = containerId, taskId = taskId,
+                    executeCount = executeCount ?: 1, buildStatus = taskStatus, operation = "taskNeedTerminate"
+                )
                 // 打印构建日志
                 message.append(
                     I18nUtil.getCodeLanMessage(
@@ -533,7 +573,7 @@ class StartActionTaskContainerCmd(
             toDoTask = pipelineBuildTask
             LOG.info(
                 "ENGINE|${currentTask.buildId}|findNextTaskAfterPause|PAUSE|${currentTask.stageId}|" +
-                    "j(${currentTask.containerId})|${currentTask.taskId}|NextTask=${toDoTask.taskId}"
+                        "j(${currentTask.containerId})|${currentTask.taskId}|NextTask=${toDoTask.taskId}"
             )
             val endTask = containerContext.containerTasks
                 .filter { it.taskId.startsWith(VMUtils.getEndLabel()) } // 获取end插件

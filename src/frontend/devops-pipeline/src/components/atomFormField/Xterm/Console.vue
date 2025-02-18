@@ -1,5 +1,9 @@
 <template>
-    <div class="console" id="terminal" style="height: 100%; width: 100%; margin: 0; padding: 0;"></div>
+    <div
+        class="console"
+        id="terminal"
+        style="height: 100%; width: 100%; margin: 0; padding: 0;"
+    ></div>
 </template>
 
 <script>

@@ -128,7 +128,7 @@ class CodeGitlabRepositoryService @Autowired constructor(
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         var gitProjectId: Long? = null
         // 需要更新gitProjectId
-        if (record.url != repository.url) {
+        if (record.url != repository.url || repository.gitProjectId == null || repository.gitProjectId == 0L) {
             logger.info(
                 "repository url unMatch,need change gitProjectId,sourceUrl=[${record.url}] " +
                     "targetUrl=[${repository.url}]"
@@ -298,6 +298,13 @@ class CodeGitlabRepositoryService @Autowired constructor(
             repository = repository
         )
     }
+
+    override fun addResourceAuthorization(
+        projectId: String,
+        userId: String,
+        repositoryId: Long,
+        repository: CodeGitlabRepository
+    ) = Unit
 
     companion object {
         private val logger = LoggerFactory.getLogger(CodeGitlabRepositoryService::class.java)

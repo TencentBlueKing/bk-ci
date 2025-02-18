@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.service.impl
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
@@ -58,8 +59,11 @@ import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
+import com.tencent.devops.common.auth.enums.SubjectScopeType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.LogUtils
@@ -67,6 +71,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MIN_LENGTH
+import com.tencent.devops.project.constant.ProjectConstant.PIPELINE_NAME_FORMAT_MAX_LENGTH
 import com.tencent.devops.project.constant.ProjectConstant.PROJECT_ID_MAX_LENGTH
 import com.tencent.devops.project.constant.ProjectConstant.PROJECT_NAME_MAX_LENGTH
 import com.tencent.devops.project.constant.ProjectMessageCode
@@ -75,11 +80,11 @@ import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
 import com.tencent.devops.project.constant.ProjectMessageCode.UNDER_APPROVAL_PROJECT
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectUpdateHistoryDao
-import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.jmx.api.ProjectJmxApi.Companion.PROJECT_LIST
 import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectBaseInfo
+import com.tencent.devops.project.pojo.ProjectByConditionDTO
 import com.tencent.devops.project.pojo.ProjectCollation
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
@@ -93,9 +98,9 @@ import com.tencent.devops.project.pojo.ProjectUpdateCreatorDTO
 import com.tencent.devops.project.pojo.ProjectUpdateHistoryInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.ProjectByConditionDTO
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.PluginDetailsDisplayOrder
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectOperation
@@ -131,7 +136,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private val projectJmxApi: ProjectJmxApi,
     val redisOperation: RedisOperation,
     val client: Client,
-    private val projectDispatcher: ProjectDispatcher,
+    private val projectDispatcher: SampleEventDispatcher,
     private val authPermissionApi: AuthPermissionApi,
     private val projectAuthServiceCode: ProjectAuthServiceCode,
     private val shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService,
@@ -165,6 +170,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     )
                 }
             }
+
             ProjectValidateType.english_name -> {
                 // 2 ~ 32 个字符+数字，以小写字母开头
                 if (name.length < NAME_MIN_LENGTH) {
@@ -262,7 +268,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("Failed to create project in permission center： $projectCreateInfo | ${e.message}")
             throw OperationException(
-                message = I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL) + ": ${e.message}"
+                message = "${e.message}"
             )
         }
         if (projectId.isNullOrEmpty()) {
@@ -353,6 +359,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 deptId = deptId,
                 deptName = deptName
             )
+            validateProperties(properties)
         }
     }
 
@@ -447,7 +454,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             }
         }
         val tipsStatus = getAndUpdateTipsStatus(userId = userId, projectId = englishName)
-        return projectInfo.copy(tipsStatus = tipsStatus)
+        return projectInfo.copy(
+            tipsStatus = tipsStatus,
+            productName = projectInfo.productId?.let { getProductByProductId(it)?.productName }
+        )
     }
 
     protected fun getAndUpdateTipsStatus(userId: String, projectId: String): Int {
@@ -473,10 +483,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
         val projectApprovalInfo = projectApprovalService.get(englishName)
         val rightProjectOrganization = fixProjectOrganization(tProjectRecord = record)
+        val beforeProductName = if (record.productId != null) {
+            getProductByProductId(record.productId)
+        } else {
+            null
+        }
         return ProjectUtils.packagingBean(
             tProjectRecord = record,
             projectApprovalInfo = projectApprovalInfo,
-            projectOrganizationInfo = rightProjectOrganization
+            projectOrganizationInfo = rightProjectOrganization,
+            beforeProductName = beforeProductName?.productName
         )
     }
 
@@ -538,11 +554,15 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         )
                     }
                 }
+                // 属性只能变更前端展示的,其他的字段由op变更
+                val properties = projectInfo.properties?.let { JsonUtil.to(it, ProjectProperties::class.java) }
+                    ?: ProjectProperties()
+                projectUpdateInfo.properties = projectUpdateInfo.properties?.let { properties.userCopy(it) }
                 // 判断是否需要审批,当修改最大授权范围/权限敏感/关联运营产品时需要审批
                 val (finalNeedApproval, newApprovalStatus) = getUpdateApprovalStatus(
                     needApproval = needApproval,
                     projectInfo = projectInfo,
-                    subjectScopesStr = subjectScopesStr,
+                    afterSubjectScopes = subjectScopes,
                     projectUpdateInfo = projectUpdateInfo
                 )
                 val projectId = projectInfo.projectId
@@ -558,8 +578,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         originalProjectName = projectInfo.projectName,
                         modifiedProjectName = projectUpdateInfo.projectName,
                         finalNeedApproval = finalNeedApproval,
-                        beforeSubjectScopesStr = projectInfo.subjectScopes,
-                        afterSubjectScopesStr = subjectScopesStr
+                        beforeSubjectScopes = JsonUtil.to(
+                            projectInfo.subjectScopes, object : TypeReference<List<SubjectScopeInfo>>() {}
+                        ),
+                        afterSubjectScopes = subjectScopes
                     )) {
                     modifyProjectAuthResource(resourceUpdateInfo)
                 }
@@ -608,8 +630,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     afterProjectName = projectUpdateInfo.projectName,
                     beforeProductId = projectInfo.productId,
                     afterProductId = projectUpdateInfo.productId,
-                    beforeOrganization = with(projectInfo) { getOrganizationStr(bgName, businessLineName, deptName, centerName) },
-                    afterOrganization = with(projectUpdateInfo) { getOrganizationStr(bgName, businessLineName, deptName, centerName) },
+                    beforeOrganization = with(projectInfo) {
+                        getOrganizationStr(bgName, businessLineName, deptName, centerName)
+                    },
+                    afterOrganization = with(projectUpdateInfo) {
+                        getOrganizationStr(bgName, businessLineName, deptName, centerName)
+                    },
                     beforeSubjectScopes = projectInfo.subjectScopes,
                     afterSubjectScopes = subjectScopesStr,
                     operator = userId,
@@ -668,6 +694,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 deptId = deptId,
                 deptName = deptName
             )
+            validateProperties(properties)
         }
     }
 
@@ -692,29 +719,38 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         originalProjectName: String,
         modifiedProjectName: String,
         finalNeedApproval: Boolean,
-        beforeSubjectScopesStr: String,
-        afterSubjectScopesStr: String
+        beforeSubjectScopes: List<SubjectScopeInfo>,
+        afterSubjectScopes: List<SubjectScopeInfo>
     ): Boolean {
+        val isSubjectScopesChange = isSubjectScopesChange(
+            beforeSubjectScopes = beforeSubjectScopes,
+            afterSubjectScopes = afterSubjectScopes
+        )
         return originalProjectName != modifiedProjectName || finalNeedApproval ||
-            beforeSubjectScopesStr != afterSubjectScopesStr
+            isSubjectScopesChange
     }
 
     private fun getUpdateApprovalStatus(
         needApproval: Boolean?,
         projectInfo: TProjectRecord,
-        subjectScopesStr: String,
+        afterSubjectScopes: List<SubjectScopeInfo>,
         projectUpdateInfo: ProjectUpdateInfo
     ): Pair<Boolean, Int> {
         val authNeedApproval = projectPermissionService.needApproval(needApproval)
         val approveStatus = ProjectApproveStatus.parse(projectInfo.approvalStatus)
         // 判断是否需要审批
         return if (approveStatus.isSuccess()) {
+            val isSubjectScopesChange = isSubjectScopesChange(
+                beforeSubjectScopes = JsonUtil.to(
+                    projectInfo.subjectScopes,
+                    object : TypeReference<List<SubjectScopeInfo>>() {}
+                ),
+                afterSubjectScopes = afterSubjectScopes
+            )
             // 当项目创建成功,则只有最大授权范围和项目性质修改才审批
             val finalNeedApproval = authNeedApproval &&
-                (projectInfo.subjectScopes != subjectScopesStr ||
-                    projectInfo.authSecrecy != projectUpdateInfo.authSecrecy ||
-                    projectInfo.productId != projectUpdateInfo.productId
-                    )
+                (isSubjectScopesChange || projectInfo.authSecrecy != projectUpdateInfo.authSecrecy ||
+                    projectInfo.productId != projectUpdateInfo.productId)
             val approvalStatus = if (finalNeedApproval) {
                 ProjectApproveStatus.UPDATE_PENDING.status
             } else {
@@ -725,6 +761,33 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             // 当创建驳回时，需要再审批,状态又为重新创建
             Pair(authNeedApproval, ProjectApproveStatus.CREATE_PENDING.status)
         }
+    }
+
+    private fun isSubjectScopesChange(
+        beforeSubjectScopes: List<SubjectScopeInfo>,
+        afterSubjectScopes: List<SubjectScopeInfo>
+    ): Boolean {
+        val beforeUsernames = beforeSubjectScopes
+            .filter { it.type == SubjectScopeType.USER.value }
+            .map { it.username }
+            .toSet()
+
+        val afterUsernames = afterSubjectScopes
+            .filter { it.type == SubjectScopeType.USER.value }
+            .map { it.username }
+            .toSet()
+
+        val beforeDeptIds = beforeSubjectScopes
+            .filter { it.type != SubjectScopeType.USER.value }
+            .map { it.id }
+            .toSet()
+
+        val afterDeptIds = afterSubjectScopes
+            .filter { it.type != SubjectScopeType.USER.value }
+            .map { it.id }
+            .toSet()
+
+        return beforeUsernames != afterUsernames || beforeDeptIds != afterDeptIds
     }
 
     private fun updateApprovalInfo(
@@ -1000,6 +1063,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         limit: Int,
         offset: Int
     ): List<ProjectByConditionDTO> {
+        logger.info("list projects by condition:$projectConditionDTO|$limit|$offset")
         return projectDao.listProjectsByCondition(
             dslContext = dslContext,
             projectConditionDTO = projectConditionDTO,
@@ -1011,7 +1075,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 englishName = it.englishName,
                 permission = true,
                 routerTag = buildRouterTag(it.routerTag),
-                bgId = it.bgId
+                bgId = it.bgId,
+                remotedevManager = it.properties?.let { properties ->
+                    JsonUtil.to(
+                        properties, ProjectProperties::class.java
+                    )
+                }?.remotedevManager
             )
         }
     }
@@ -1225,6 +1294,15 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             projectId = projectInfo.projectId,
             enabled = enabled
         )
+        try {
+            projectExtService.enableProject(
+                userId = userId ?: "",
+                projectId = englishName,
+                enabled = enabled
+            )
+        } catch (ex: Exception) {
+            logger.warn("enable bkrepo project failed $englishName|$enabled|$ex")
+        }
         projectDispatcher.dispatch(
             ProjectEnableStatusBroadCastEvent(
                 userId = userId ?: "",
@@ -1572,6 +1650,49 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         deptId: Long?,
         deptName: String?
     )
+
+    override fun updatePluginDetailsDisplay(
+        englishName: String,
+        pluginDetailsDisplayOrder: List<PluginDetailsDisplayOrder>
+    ): Boolean {
+        logger.info("update plugin details display|$englishName|$pluginDetailsDisplayOrder")
+        val projectInfo = getByEnglishName(englishName)
+            ?: throw NotFoundException("project - $englishName is not exist!")
+
+        val validDisplayOrder = setOf(
+            PluginDetailsDisplayOrder.LOG,
+            PluginDetailsDisplayOrder.ARTIFACT,
+            PluginDetailsDisplayOrder.CONFIG
+        )
+
+        val isParamsLegal = pluginDetailsDisplayOrder.size == 3 && pluginDetailsDisplayOrder.toSet() == validDisplayOrder
+
+        if (isParamsLegal) {
+            val properties = projectInfo.properties ?: ProjectProperties()
+            properties.pluginDetailsDisplayOrder = pluginDetailsDisplayOrder
+            updateProjectProperties(null, englishName, properties)
+        } else {
+            throw IllegalArgumentException("The parameter is invalid. It must contain LOG, ARTIFACT, CONFIG in any order.")
+        }
+
+        return true
+    }
+
+    override fun getPipelineDialect(projectId: String): String {
+        return getByEnglishName(englishName = projectId)?.properties?.pipelineDialect
+            ?: PipelineDialectType.CLASSIC.name
+    }
+
+    private fun validateProperties(properties: ProjectProperties?) {
+        properties?.pipelineNameFormat?.let {
+            if (it.length > PIPELINE_NAME_FORMAT_MAX_LENGTH) {
+                throw ErrorCodeException(
+                    errorCode = ProjectMessageCode.ERROR_PIPELINE_NAME_FORMAT_TOO_LONG,
+                    defaultMessage = "The naming convention for pipelines should not exceed 200 characters."
+                )
+            }
+        }
+    }
 
     companion object {
         const val MAX_PROJECT_NAME_LENGTH = 64

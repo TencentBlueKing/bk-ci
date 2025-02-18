@@ -42,6 +42,7 @@ module.exports = (env, argv) => {
         new MonacoWebpackPlugin({
             publicPath: '/pipeline',
             languages: ['yaml'],
+            filename: '[name].[contenthash].worker.js',
             customLanguages: [
                 {
                     label: 'yaml',

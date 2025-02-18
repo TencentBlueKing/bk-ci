@@ -1,12 +1,24 @@
 <template>
     <article class="trend-common-home">
         <header class="common-head">
-            <bk-tab :active.sync="chartTab" type="unborder-card">
-                <bk-tab-panel v-for="(panel, index) in storeChartTabs" v-bind="panel" :key="index"></bk-tab-panel>
+            <bk-tab
+                :active.sync="chartTab"
+                type="unborder-card"
+            >
+                <bk-tab-panel
+                    v-for="(panel, index) in storeChartTabs"
+                    v-bind="panel"
+                    :key="index"
+                ></bk-tab-panel>
             </bk-tab>
 
-            <bk-select class="common-time" v-model="time" :clearable="false">
-                <bk-option v-for="item in timeList"
+            <bk-select
+                class="common-time"
+                v-model="time"
+                :clearable="false"
+            >
+                <bk-option
+                    v-for="item in timeList"
                     :key="item.value"
                     :id="item.value"
                     :name="item.name"
@@ -14,18 +26,25 @@
             </bk-select>
         </header>
 
-        <bk-exception class="exception-wrap-item exception-part" type="empty" v-show="isEmpty"></bk-exception>
-        <canvas class="store-chart" v-show="!isEmpty"></canvas>
+        <bk-exception
+            class="exception-wrap-item exception-part"
+            type="empty"
+            v-show="isEmpty"
+        ></bk-exception>
+        <canvas
+            class="store-chart"
+            v-show="!isEmpty"
+        ></canvas>
     </article>
 </template>
 
 <script>
     import BKChart from '@blueking/bkcharts'
-    import moment from 'moment'
+    import dayjs from 'dayjs'
     import api from '@/api'
 
     function getTimeRange (time) {
-        const now = moment(moment().format('YYYY-MM-DD')).subtract(1, 'days')
+        const now = dayjs(dayjs().format('YYYY-MM-DD')).subtract(1, 'days')
         const params = {
             endTime: now.format('YYYY-MM-DD HH:mm:ss'),
             startTime: now.subtract(1, time)

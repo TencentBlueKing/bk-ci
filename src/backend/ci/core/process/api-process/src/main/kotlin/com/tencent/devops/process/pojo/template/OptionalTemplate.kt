@@ -66,14 +66,20 @@ data class OptionalTemplate(
     @get:Schema(title = "阶段集合", required = true)
     val stages: List<Stage>,
     @get:Schema(title = "克隆模板设置项是否存在", required = false)
-    val cloneTemplateSettingExist: CloneTemplateSettingExist? = null
+    val cloneTemplateSettingExist: CloneTemplateSettingExist? = null,
+    @get:Schema(title = "模版描述", required = false)
+    val desc: String? = null
 )
 
 @Schema(title = "克隆模板设置")
 data class CloneTemplateSettingExist(
     val notifySettingExist: Boolean,
     val concurrencySettingExist: Boolean,
-    val labelSettingExist: Boolean
+    val labelSettingExist: Boolean,
+    @get:Schema(title = "是否继承项目流水线语言风格", required = false)
+    var inheritedDialect: Boolean? = true,
+    @get:Schema(title = "流水线语言风格", required = false)
+    var pipelineDialect: String? = null
 ) {
     companion object {
         fun fromSetting(setting: PipelineSetting?, pipelinesWithLabels: Set<String>?): CloneTemplateSettingExist {
@@ -83,7 +89,9 @@ data class CloneTemplateSettingExist(
             return CloneTemplateSettingExist(
                 notifySettingExist = !setting.notifySettingIsNull(),
                 concurrencySettingExist = !setting.concurrencySettingIsNull(),
-                labelSettingExist = pipelinesWithLabels?.contains(setting.pipelineId) ?: false
+                labelSettingExist = pipelinesWithLabels?.contains(setting.pipelineId) ?: false,
+                inheritedDialect = setting.pipelineAsCodeSettings?.inheritedDialect ?: true,
+                pipelineDialect = setting.pipelineAsCodeSettings?.pipelineDialect
             )
         }
     }

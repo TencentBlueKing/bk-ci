@@ -211,8 +211,8 @@ open class BaseBuildRecordService(
             )
         } catch (ignore: Throwable) {
             logger.warn(
-                "RECORD|parse record($buildId)-recordMap(${JsonUtil.toJson(recordMap ?: "")})" +
-                    "-$executeCount with error: ",
+                "RECORD|parse record with error|$projectId|$pipelineId|$buildId|$executeCount" +
+                    "|recordMap: ${JsonUtil.toJson(recordMap ?: "")}",
                 ignore
             )
             null
@@ -242,7 +242,7 @@ open class BaseBuildRecordService(
         executeCount: Int
     ) {
         val userId = startUser
-            ?: pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId)?.startUser
+            ?: pipelineBuildDao.getUserBuildInfo(dslContext, projectId, buildId)?.startUser
             ?: return
         pipelineEventDispatcher.dispatch(
             PipelineBuildWebSocketPushEvent(

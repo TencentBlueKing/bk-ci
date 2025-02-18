@@ -102,6 +102,11 @@ const customeRules = {
             return /^[a-zA-Z0-9_]+$/g.test(value)
         }
     },
+    paramsIdRule: {
+        validate: function (value, args) {
+            return /^[a-z][a-z\d_]*$/gi.test(value)
+        }
+    },
     buildNumRule: {
         validate: function (value, args) {
             return /^[\w-{}() +?.:$"]{1,256}$/.test(value)
@@ -120,6 +125,11 @@ const customeRules = {
     maxConcurrencyRule: {
         validate: function (value, args) {
             return /^(?:[1-9]|[1-9]\d|[1-9]\d{2}|1000)$/.test(value)
+        }
+    },
+    objectRequired: {
+        validate: function (value, args) {
+            return Object.values(value).every(val => !!val)
         }
     }
 }

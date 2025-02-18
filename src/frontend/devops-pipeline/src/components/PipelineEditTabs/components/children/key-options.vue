@@ -1,44 +1,80 @@
 <template>
     <section>
-        <form-field :hide-colon="true" :desc="$t('editPage.batchAddTips')" :label="$t('editPage.batchAdd')">
-            <bk-input class="key-val" :type="'textarea'" v-model="batchInput" :row="3" :placeholder="$t('editPage.optionTips')" />
-        </form-field>
-        <div class="batch-confirm-div">
-            <span @click="handleBatchInput">{{$t('editPage.batchAddBtn')}}</span>
-        </div>
-        <div class="Key-value-nomal" style="margin-top: 16px;">
-            <form-field :hide-colon="true" :label="$t('editPage.optionSetting')">
+        <batch-add-options :submit-batch-add="handleBatchInput" />
+        <div
+            class="Key-value-nomal"
+            style="margin-top: 16px;"
+        >
+            <p
+                v-if="list.length"
+                class="batch-copy"
+                @click.stop="handleCopy"
+            >
+                <i class="bk-icon icon-copy"></i>
+                {{ $t('editPage.batchCopy') }}
+            </p>
+            <form-field
+                :hide-colon="true"
+                :label="$t('editPage.optionSetting')"
+            >
                 <template v-if="list.length">
-                    <li class="param-item" v-for="(param, index) in list" :key="index" :isError="errors.any(`option-${index}`)">
-                        <form-field :is-error="errors.has(`option-${index}.key`)" :error-msg="errors.first(`option-${index}.key`)">
-                            <vuex-input
-                                :data-vv-scope="`option-${index}`"
-                                :disabled="disabled"
-                                :handle-change="(name, value) => handleEdit(name, value, index)"
-                                v-validate="keyRule"
-                                name="key"
-                                :placeholder="$t('editPage.optionValTips')"
-                                :value="param.key" />
-                        </form-field>
-                        <form-field :is-error="errors.has(`option-${index}.value`)" :error-msg="errors.first(`option-${index}.value`)">
-                            <vuex-input
-                                :data-vv-scope="`option-${index}`"
-                                :disabled="disabled"
-                                :handle-change="(name, value) => handleEdit(name, value, index)"
-                                v-validate="valueRule"
-                                name="value"
-                                :placeholder="$t('editPage.optionNameTips')"
-                                :value="param.value" />
-                        </form-field>
-                        <div class="operate-icon-div" v-if="!disabled">
-                            <i @click.stop.prevent="handleAdd(index)" class="bk-icon icon-plus-circle-shape" />
-                            <i @click.stop.prevent="handleDelete(index)" class="bk-icon icon-minus-circle-shape" />
-                        </div>
-                    </li>
+                    <draggable
+                        v-model="list"
+                        @end="onDragEnd"
+                    >
+                        <li
+                            class="param-item"
+                            v-for="(param, index) in list"
+                            :key="index"
+                        >
+                            <i class="devops-icon icon-drag column-drag-icon"></i>
+                            <form-field
+                                :is-error="keyErrs[index]"
+                                :error-msg="keyErrs[index]"
+                            >
+                                <vuex-input
+                                    :disabled="disabled"
+                                    :handle-change="(name, value) => handleEdit(name, value, index)"
+                                    name="key"
+                                    :placeholder="$t('editPage.optionValTips')"
+                                    :value="param.key"
+                                />
+                            </form-field>
+                            <form-field
+                                :is-error="valueErrs[index]"
+                                :error-msg="valueErrs[index]"
+                            >
+                                <vuex-input
+                                    :disabled="disabled"
+                                    :handle-change="(name, value) => handleEdit(name, value, index)"
+                                    name="value"
+                                    :placeholder="$t('editPage.optionNameTips')"
+                                    :value="param.value"
+                                />
+                            </form-field>
+                            <div
+                                class="operate-icon-div"
+                                v-if="!disabled"
+                            >
+                                <i
+                                    @click.stop.prevent="handleAdd(index)"
+                                    class="bk-icon icon-plus-circle-shape"
+                                />
+                                <i
+                                    @click.stop.prevent="handleDelete(index)"
+                                    class="bk-icon icon-minus-circle-shape"
+                                />
+                            </div>
+                        </li>
+                    </draggable>
                 </template>
-                <a :class="['text-link', 'hover-click']" v-if="!disabled && list.length === 0" @click.stop.prevent="handleAdd">
+                <a
+                    :class="['text-link', 'hover-click']"
+                    v-if="!disabled && list.length === 0"
+                    @click.stop.prevent="handleAdd"
+                >
                     <i class="devops-icon icon-plus-circle" />
-                    <span>{{$t('newui.pipelineParam.addItem')}}</span>
+                    <span>{{ $t('newui.pipelineParam.addItem') }}</span>
                 </a>
             </form-field>
         </div>
@@ -50,10 +86,15 @@
     import VuexInput from '@/components/atomFormField/VuexInput'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import validMixins from '@/components/validMixins'
+    import BatchAddOptions from './batch-add-options'
+    import { copyToClipboard } from '@/utils/util'
+    import draggable from 'vuedraggable'
     export default {
         components: {
             VuexInput,
-            FormField
+            FormField,
+            BatchAddOptions,
+            draggable
         },
         mixins: [atomFieldMixin, validMixins],
         props: {
@@ -72,27 +113,43 @@
         },
         data () {
             return {
-                batchInput: '',
-                list: []
-            }
-        },
-        computed: {
-            keyRule () {
-                return `required|unique:${this.list.map(p => p.key).join(',')}`
-            },
-            valueRule () {
-                return `unique:${this.list.map(p => p.value).join(',')}|max: 100`
+                list: [],
+                keyErrs: {},
+                valueErrs: {}
             }
         },
         created () {
             this.list = this.options || []
         },
         methods: {
-            handleBatchInput () {
-                if (!this.batchInput) return
+            handleCopy () {
+                const uniqueItemsMap = new Map()
+                this.list.forEach(item => {
+                    const identifier = `${item.key}=${item.value}`
+                    if (!uniqueItemsMap.has(identifier)) {
+                        uniqueItemsMap.set(identifier, item)
+                    }
+                })
+                const uniqueItems = Array.from(uniqueItemsMap.values())
+
+                const copyText = uniqueItems.map(item => {
+                    return item.key + (item.value !== item.key ? `=${item.value}` : '')
+                }).join('\n')
+
+                copyToClipboard(copyText)
+                this.$bkMessage({
+                    theme: 'success',
+                    message: this.$t('copySuc'),
+                    limit: 1
+                })
+            },
+            // 批量增加
+            handleBatchInput (batchStr) {
+                if (!batchStr) return
                 let opts = []
-                if (this.batchInput && typeof this.batchInput === 'string') {
-                    opts = this.batchInput.split('\n').map(opt => {
+                const existingPairs = new Set(this.list.map(item => `${item.key}=${item.value}`))
+                if (batchStr && typeof batchStr === 'string') {
+                    opts = batchStr.split('\n').map(opt => {
                         const v = opt.trim()
                         const equalPos = v.indexOf('=')
                         const res = equalPos > -1
@@ -103,18 +160,25 @@
                             key,
                             value
                         }
+                    }).filter(({ key, value }) => {
+                        const identifier = `${key}=${value}`
+                        if (existingPairs.has(identifier)) {
+                            return false
+                        } else {
+                            existingPairs.add(identifier)
+                            return true
+                        }
                     })
                 }
                 this.list.splice(this.list.length, 0, ...opts)
                 this.handleChangeOptions('options', this.list)
-                this.batchInput = ''
                 this.validateAllOptions()
             },
+            // 触发验证
             validateAllOptions () {
                 this.$nextTick(() => {
-                    this.list.forEach((option, index) => {
-                        this.$validator.validate(`option-${index}.*`)
-                    })
+                    this.keyErrs = this.findInvalidItems('key', 'value')
+                    this.valueErrs = this.findInvalidItems('value', 'name')
                 })
             },
             handleEdit (name, val, index) {
@@ -138,20 +202,40 @@
                 this.list.splice(index, 1)
                 this.handleChangeOptions('options', this.list)
                 this.validateAllOptions()
+            },
+            // 找出校验有错误的选项
+            findInvalidItems (key, errPrefix) {
+                const seen = new Map()
+                const result = {}
+
+                for (let i = 0; i < this.list.length; i++) {
+                    const value = this.list[i][key]
+
+                    if (!value) {
+                        if (key === 'key') {
+                            result[i] = this.$t('editPage.requiredTips', [errPrefix])
+                        }
+                    } else {
+                        if (seen.has(value)) {
+                            result[i] = result[i] = this.$t('editPage.noRepeatTips', [errPrefix])
+                            if (!result[seen.get(value)]) {
+                                result[seen.get(value)] = result[i] = this.$t('editPage.noRepeatTips', [errPrefix])
+                            }
+                        } else {
+                            seen.set(value, i)
+                        }
+                    }
+                }
+                return result
+            },
+            onDragEnd () {
+                this.handleChangeOptions('options', this.list)
             }
         }
     }
 </script>
 
 <style lang="scss" scoped>
-    .batch-confirm-div {
-        width: 100%;
-        padding: 8px 0 16px 0;
-        border-bottom: 1px solid #DCDEE5;
-        color: #3A84FF;
-        cursor: pointer;
-        font-size: 12px;
-    }
     .key-item {
         display: flex;
         align-items: center;
@@ -164,8 +248,6 @@
         .key-val {
             flex: 1;
             background: #FFFFFF;
-            /* border: 1px solid #C4C6CC;
-            border-radius: 2px; */
         }
         .key-del {
             width: 32px;
@@ -200,6 +282,25 @@
         color: #3A84FF;
         i {
             margin-right: 6px;
+        }
+    }
+    .Key-value-nomal {
+        position: relative;
+        .batch-copy {
+            position: absolute;
+            top: 0;
+            right: 0;
+            font-size: 12px;
+            color: #3A84FF;
+            line-height: 20px;
+            cursor: pointer;
+        }
+    }
+    .param-item {
+        .column-drag-icon {
+            margin: 8px;
+            cursor: move;
+            color: #C4C6CC;
         }
     }
 </style>

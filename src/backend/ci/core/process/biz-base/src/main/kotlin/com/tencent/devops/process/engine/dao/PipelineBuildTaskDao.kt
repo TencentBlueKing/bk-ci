@@ -66,6 +66,7 @@ class PipelineBuildTaskDao {
                     CONTAINER_TYPE,
                     CONTAINER_ID,
                     CONTAINER_HASH_ID,
+                    JOB_ID,
                     TASK_SEQ,
                     TASK_ID,
                     STEP_ID,
@@ -90,6 +91,7 @@ class PipelineBuildTaskDao {
                         buildTask.containerType,
                         buildTask.containerId,
                         buildTask.containerHashId,
+                        buildTask.jobId,
                         buildTask.taskSeq,
                         buildTask.taskId,
                         buildTask.stepId,
@@ -143,6 +145,7 @@ class PipelineBuildTaskDao {
                 ERROR_CODE,
                 ERROR_MSG,
                 CONTAINER_HASH_ID,
+                JOB_ID,
                 ATOM_CODE
             ).also { insert ->
                 taskList.forEach {
@@ -178,6 +181,7 @@ class PipelineBuildTaskDao {
                         it.errorCode,
                         it.errorMsg?.coerceAtMaxLength(PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX),
                         it.containerHashId,
+                        it.jobId,
                         it.atomCode
                     )
                 }
@@ -216,6 +220,7 @@ class PipelineBuildTaskDao {
                     .set(ERROR_MSG, it.errorMsg?.coerceAtMaxLength(PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX))
                     .set(ERROR_CODE, it.errorCode)
                     .set(CONTAINER_HASH_ID, it.containerHashId)
+                    .set(JOB_ID, it.jobId)
                     .set(ATOM_CODE, it.atomCode)
                     .where(BUILD_ID.eq(it.buildId).and(TASK_ID.eq(it.taskId)).and(PROJECT_ID.eq(it.projectId)))
                     .execute()
@@ -228,7 +233,8 @@ class PipelineBuildTaskDao {
         projectId: String,
         buildId: String,
         taskId: String?,
-        stepId: String?
+        stepId: String?,
+        executeCount: Int?
     ): PipelineBuildTask? {
         return with(T_PIPELINE_BUILD_TASK) {
 
@@ -238,6 +244,9 @@ class PipelineBuildTaskDao {
             }
             if (stepId != null) {
                 where.and(STEP_ID.eq(stepId))
+            }
+            if (executeCount != null) {
+                where.and(EXECUTE_COUNT.eq(executeCount))
             }
             where.fetchAny(mapper)
         }
@@ -402,6 +411,7 @@ class PipelineBuildTaskDao {
                     containerId = containerId,
                     containerHashId = containerHashId,
                     containerType = containerType,
+                    jobId = jobId,
                     taskSeq = taskSeq,
                     taskId = taskId,
                     stepId = stepId,

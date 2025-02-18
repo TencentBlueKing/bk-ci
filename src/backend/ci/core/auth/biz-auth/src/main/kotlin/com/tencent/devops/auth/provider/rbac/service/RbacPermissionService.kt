@@ -29,7 +29,6 @@
 package com.tencent.devops.auth.provider.rbac.service
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.InstanceDTO
 import com.tencent.bk.sdk.iam.dto.PathInfoDTO
 import com.tencent.bk.sdk.iam.dto.SubjectDTO
@@ -39,6 +38,7 @@ import com.tencent.bk.sdk.iam.dto.resource.ResourceDTO
 import com.tencent.bk.sdk.iam.dto.resource.V2ResourceNode
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
+import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.service.AuthProjectUserMetricsService
 import com.tencent.devops.auth.service.SuperManagerService
 import com.tencent.devops.auth.service.iam.PermissionService
@@ -51,19 +51,20 @@ import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.process.api.service.ServicePipelineViewResource
 import com.tencent.devops.process.api.user.UserPipelineViewResource
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 
 @Suppress("TooManyFunctions", "LongMethod", "LongParameterList")
-class RbacPermissionService constructor(
+class RbacPermissionService(
     private val authHelper: AuthHelper,
     private val authResourceService: AuthResourceService,
     private val iamConfiguration: IamConfiguration,
     private val policyService: PolicyService,
     private val authResourceCodeConverter: AuthResourceCodeConverter,
     private val superManagerService: SuperManagerService,
-    private val rbacCacheService: RbacCacheService,
+    private val rbacCommonService: RbacCommonService,
     private val client: Client,
     private val authProjectUserMetricsService: AuthProjectUserMetricsService
 ) : PermissionService {
@@ -94,7 +95,7 @@ class RbacPermissionService constructor(
         projectCode: String,
         resourceType: String?
     ): Boolean {
-        val actionInfo = rbacCacheService.getActionInfo(action)
+        val actionInfo = rbacCommonService.getActionInfo(action)
         // 如果action关联的资源是项目,则直接查询项目的权限
         return if (actionInfo.relatedResourceType == AuthResourceType.PROJECT.value) {
             validateUserResourcePermissionByRelation(
@@ -179,7 +180,7 @@ class RbacPermissionService constructor(
             } ?: return false
             val subject = SubjectDTO.builder()
                 .id(userId)
-                .type(ManagerScopesEnum.getType(ManagerScopesEnum.USER))
+                .type(MemberType.USER.type)
                 .build()
 
             val actionDTO = ActionDTO()
@@ -214,7 +215,11 @@ class RbacPermissionService constructor(
 
             val result = policyService.verifyPermissions(queryPolicyDTO)
             if (result) {
-                authProjectUserMetricsService.save(projectId = projectCode, userId = userId)
+                authProjectUserMetricsService.save(
+                    projectId = projectCode,
+                    userId = userId,
+                    operate = useAction
+                )
             }
             return result
         } finally {
@@ -261,7 +266,7 @@ class RbacPermissionService constructor(
         )
         val startEpoch = System.currentTimeMillis()
         try {
-            if (rbacCacheService.checkProjectManager(userId = userId, projectCode = projectCode)) {
+            if (rbacCommonService.checkProjectManager(userId = userId, projectCode = projectCode)) {
                 return actions.associateWith { true }
             }
             val actionList = actions.map { action ->
@@ -300,8 +305,12 @@ class RbacPermissionService constructor(
                 actionList,
                 listOf(resourceDTO)
             )
-            if (result.values.any { it }) {
-                authProjectUserMetricsService.save(projectId = projectCode, userId = userId)
+            result.filter { it.value }.keys.forEach { action ->
+                authProjectUserMetricsService.save(
+                    projectId = projectCode,
+                    userId = userId,
+                    operate = action
+                )
             }
             return result
         } finally {
@@ -352,6 +361,30 @@ class RbacPermissionService constructor(
                         projectCode = projectCode,
                         resourceType = resourceType
                     )
+
+                resourceType == AuthResourceType.PIPELINE_DEFAULT.value -> {
+                    val authViewPipelineIds = instanceMap[AuthResourceType.PIPELINE_GROUP.value]?.let { authViewIds ->
+                        client.get(ServicePipelineViewResource::class).listPipelineIdByViewIds(
+                            projectId = projectCode,
+                            viewIdsEncode = authViewIds
+                        ).data
+                    } ?: emptyList()
+
+                    val authPipelineIamIds = instanceMap[AuthResourceType.PIPELINE_DEFAULT.value] ?: emptyList()
+                    val pipelineIds = mutableSetOf<String>().apply {
+                        addAll(authViewPipelineIds)
+                        addAll(
+                            getFinalResourceCodes(
+                                projectCode = projectCode,
+                                resourceType = resourceType,
+                                iamResourceCodes = authPipelineIamIds,
+                                createUser = userId
+                            )
+                        )
+                    }
+                    pipelineIds.toList()
+                }
+
                 // 返回具体资源列表
                 else -> {
                     val iamResourceCodes = instanceMap[resourceType] ?: emptyList()
@@ -449,7 +482,7 @@ class RbacPermissionService constructor(
         )
         val startEpoch = System.currentTimeMillis()
         try {
-            if (rbacCacheService.checkProjectManager(userId = userId, projectCode = projectCode)) {
+            if (rbacCommonService.checkProjectManager(userId = userId, projectCode = projectCode)) {
                 return actions.associate {
                     val authPermission = it.substringAfterLast("_")
                     AuthPermission.get(authPermission) to resources.map { resource -> resource.resourceCode }
@@ -545,6 +578,7 @@ class RbacPermissionService constructor(
                     parents = parents
                 )
             }
+
             else -> {
                 AuthResourceInstance(
                     resourceType = resourceType,
@@ -605,7 +639,7 @@ class RbacPermissionService constructor(
         resourceType: String,
         action: String
     ): Boolean {
-        return rbacCacheService.checkProjectManager(
+        return rbacCommonService.checkProjectManager(
             userId = userId,
             projectCode = projectCode
         ) || superManagerService.projectManagerCheck(

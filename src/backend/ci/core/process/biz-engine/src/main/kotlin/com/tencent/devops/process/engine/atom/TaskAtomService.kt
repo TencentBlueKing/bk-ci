@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -45,11 +46,10 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BACKGROUND_SERVICE_RUNNING_ERROR
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BACKGROUND_SERVICE_TASK_EXECUTION
-import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
@@ -88,9 +88,7 @@ class TaskAtomService @Autowired(required = false) constructor(
         jmxElements.execute(task.taskType)
         var atomResponse = AtomResponse(BuildStatus.FAILED)
         try {
-            if (!VmOperateTaskGenerator.isVmAtom(task)) {
-                dispatchBroadCastEvent(task, ActionType.START)
-            }
+            dispatchBroadCastEvent(task, ActionType.START, task.status)
             // 更新状态
             pipelineTaskService.updateTaskStatus(
                 task = task,
@@ -147,8 +145,9 @@ class TaskAtomService @Autowired(required = false) constructor(
         return atomResponse
     }
 
-    private fun dispatchBroadCastEvent(task: PipelineBuildTask, actionType: ActionType) {
+    private fun dispatchBroadCastEvent(task: PipelineBuildTask, actionType: ActionType, status: BuildStatus) {
         pipelineEventDispatcher.dispatch(
+            // 内置task启动/结束，包含 startVM、stopVM、bash、batch
             PipelineBuildStatusBroadCastEvent(
                 source = "task-${task.taskId}",
                 projectId = task.projectId,
@@ -156,7 +155,18 @@ class TaskAtomService @Autowired(required = false) constructor(
                 userId = task.starter,
                 taskId = task.taskId,
                 buildId = task.buildId,
-                actionType = actionType
+                actionType = actionType,
+                containerHashId = task.containerHashId,
+                jobId = task.jobId,
+                stepId = task.stepId,
+                atomCode = task.atomCode,
+                executeCount = task.executeCount,
+                buildStatus = status.name,
+                type = when (actionType) {
+                    ActionType.START -> PipelineBuildStatusBroadCastEventType.BUILD_TASK_START
+                    ActionType.END -> PipelineBuildStatusBroadCastEventType.BUILD_TASK_END
+                    else -> null
+                }
             )
         )
     }
@@ -270,9 +280,7 @@ class TaskAtomService @Autowired(required = false) constructor(
             logger.warn("Fail to post the task($task): ${ignored.message}")
         }
 
-        if (!VmOperateTaskGenerator.isVmAtom(task)) {
-            dispatchBroadCastEvent(task, ActionType.END)
-        }
+        dispatchBroadCastEvent(task, ActionType.END, atomResponse.buildStatus)
 
         buildLogPrinter.stopLog(
             buildId = task.buildId,
@@ -336,15 +344,27 @@ class TaskAtomService @Autowired(required = false) constructor(
 
     private fun log(atomResponse: AtomResponse, task: PipelineBuildTask, stopFlag: Boolean) {
         if (atomResponse.buildStatus.isFinish()) {
-            buildLogPrinter.addLine(
-                buildId = task.buildId,
-                message = "Task [${task.taskName}] ${atomResponse.buildStatus}!",
-                tag = task.taskId,
-                containerHashId = task.containerHashId,
-                executeCount = task.executeCount ?: 1,
-                jobId = null,
-                stepId = task.stepId
-            )
+            if (atomResponse.errorCode != null) {
+                buildLogPrinter.addErrorLine(
+                    buildId = task.buildId,
+                    message = "Task [${task.taskName}] ${atomResponse.buildStatus} (${atomResponse.errorMsg})!",
+                    tag = task.taskId,
+                    containerHashId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1,
+                    jobId = null,
+                    stepId = task.stepId
+                )
+            } else {
+                buildLogPrinter.addLine(
+                    buildId = task.buildId,
+                    message = "Task [${task.taskName}] ${atomResponse.buildStatus}!",
+                    tag = task.taskId,
+                    containerHashId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1,
+                    jobId = null,
+                    stepId = task.stepId
+                )
+            }
         } else {
             if (stopFlag) {
                 buildLogPrinter.addLine(

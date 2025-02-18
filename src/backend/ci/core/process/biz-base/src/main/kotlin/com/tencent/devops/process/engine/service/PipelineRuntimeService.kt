@@ -106,6 +106,7 @@ import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.engine.utils.PipelineUtils
+import com.tencent.devops.process.enums.HistorySearchType
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildId
@@ -136,15 +137,15 @@ import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
+import java.time.LocalDateTime
+import java.util.Date
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.Date
-import java.util.concurrent.TimeUnit
 
 /**
  * 流水线运行时相关的服务
@@ -197,7 +198,8 @@ class PipelineRuntimeService @Autowired constructor(
             statusSet = setOf(
                 BuildStatus.RUNNING, BuildStatus.REVIEWING,
                 BuildStatus.QUEUE, BuildStatus.PREPARE_ENV,
-                BuildStatus.UNEXEC, BuildStatus.QUEUE_CACHE
+                BuildStatus.UNEXEC, BuildStatus.QUEUE_CACHE,
+                BuildStatus.STAGE_SUCCESS
             )
         )
 
@@ -210,7 +212,8 @@ class PipelineRuntimeService @Autowired constructor(
                         pipelineId = pipelineId,
                         userId = userId,
                         buildId = build.buildId,
-                        status = BuildStatus.TERMINATE
+                        status = BuildStatus.TERMINATE,
+                        executeCount = build.executeCount
                     )
                 )
             }
@@ -223,6 +226,13 @@ class PipelineRuntimeService @Autowired constructor(
 
     fun getBuildInfo(projectId: String, pipelineId: String, buildId: String): BuildInfo? {
         return pipelineBuildDao.getBuildInfo(dslContext, projectId, pipelineId, buildId)
+    }
+
+    fun getRunningBuildCount(
+        projectId: String,
+        pipelineId: String
+    ): Int {
+        return pipelineBuildDao.countAllBuildWithStatus(dslContext, projectId, pipelineId, setOf(BuildStatus.RUNNING))
     }
 
     /** 根据状态信息获取并发组构建列表
@@ -370,7 +380,10 @@ class PipelineRuntimeService @Autowired constructor(
         startUser: List<String>?,
         updateTimeDesc: Boolean? = null,
         queryDslContext: DSLContext? = null,
-        debugVersion: Int?
+        debug: Boolean?,
+        triggerAlias: List<String>?,
+        triggerBranch: List<String>?,
+        triggerUser: List<String>?
     ): List<BuildHistory> {
         val currentTimestamp = System.currentTimeMillis()
         // 限制最大一次拉1000，防止攻击
@@ -403,7 +416,10 @@ class PipelineRuntimeService @Autowired constructor(
             buildMsg = buildMsg,
             startUser = startUser,
             updateTimeDesc = updateTimeDesc,
-            debugVersion = debugVersion
+            debug = debug,
+            triggerAlias = triggerAlias,
+            triggerBranch = triggerBranch,
+            triggerUser = triggerUser
         )
         val result = mutableListOf<BuildHistory>()
         list.forEach {
@@ -416,43 +432,125 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineBuildDao.updateBuildRemark(dslContext, projectId, pipelineId, buildId, remark)
     }
 
-    fun getHistoryConditionRepo(projectId: String, pipelineId: String, debugVersion: Int?): List<String> {
-        val history = pipelineBuildDao.getBuildHistoryMaterial(dslContext, projectId, pipelineId, debugVersion)
-        val materialObjList = mutableListOf<PipelineBuildMaterial>()
-        history.forEach {
-            if (!it.material.isNullOrEmpty()) {
-                materialObjList.addAll(it.material!!)
+    fun getHistoryConditionRepo(
+        projectId: String,
+        pipelineId: String,
+        debugVersion: Int?,
+        search: String?,
+        type: HistorySearchType? = HistorySearchType.MATERIAL
+    ): List<String> {
+        val aliasNames = when (type) {
+            HistorySearchType.MATERIAL -> {
+                val history = pipelineBuildDao.listHistorySearchOptions(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    debugVersion = debugVersion,
+                    type = type
+                )
+                val materialObjList = mutableListOf<PipelineBuildMaterial>()
+                history.forEach {
+                    if (!it.material.isNullOrEmpty()) {
+                        materialObjList.addAll(it.material!!)
+                    }
+                }
+                materialObjList.filter { !it.aliasName.isNullOrBlank() }
+                    .map { it.aliasName!! }
+                    .distinct()
             }
+
+            HistorySearchType.TRIGGER -> {
+                val history = pipelineBuildDao.listHistorySearchOptions(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    debugVersion = debugVersion,
+                    type = type
+                )
+                history.filter { it.webhookInfo != null && !it.webhookInfo!!.webhookAliasName.isNullOrBlank() }
+                    .map { it.webhookInfo!!.webhookAliasName!! }
+                    .distinct()
+            }
+
+            else -> emptyList()
         }
-        return materialObjList.filter { !it.aliasName.isNullOrBlank() }.map { it.aliasName!! }.distinct()
+        return if (search.isNullOrBlank()) {
+            aliasNames
+        } else {
+            aliasNames.filter { it.contains(search) }
+        }
     }
 
     fun getHistoryConditionBranch(
         projectId: String,
         pipelineId: String,
         aliasList: List<String>?,
-        debugVersion: Int? = null
+        debugVersion: Int? = null,
+        search: String?,
+        type: HistorySearchType? = HistorySearchType.MATERIAL
     ): List<String> {
-        val history = pipelineBuildDao.getBuildHistoryMaterial(dslContext, projectId, pipelineId, debugVersion)
-        val materialObjList = mutableListOf<PipelineBuildMaterial>()
-        history.forEach {
-            if (!it.material.isNullOrEmpty()) {
-                materialObjList.addAll(it.material!!)
-            }
-        }
-        val aliasNames = if (aliasList.isNullOrEmpty()) {
-            materialObjList.map { it.aliasName }
-        } else {
-            aliasList
-        }
+        val branchNames = when (type) {
+            HistorySearchType.MATERIAL -> {
+                val history = pipelineBuildDao.listHistorySearchOptions(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    debugVersion = debugVersion,
+                    type = type
+                )
+                val materialObjList = mutableListOf<PipelineBuildMaterial>()
+                history.forEach {
+                    if (!it.material.isNullOrEmpty()) {
+                        materialObjList.addAll(it.material!!)
+                    }
+                }
+                val aliasNames = if (!aliasList.isNullOrEmpty() && aliasList.first().isNotBlank()) {
+                    aliasList
+                } else {
+                    materialObjList.map { it.aliasName }
+                }
 
-        val result = mutableListOf<String>()
-        aliasNames.distinct().forEach { alias ->
-            val branchNames = materialObjList.filter { it.aliasName == alias && !it.branchName.isNullOrBlank() }
-                .map { it.branchName!! }.distinct()
-            result.addAll(branchNames)
+                val result = mutableListOf<String>()
+                aliasNames.distinct().forEach { alias ->
+                    val branchNames = materialObjList.filter {
+                        it.aliasName == alias && !it.branchName.isNullOrBlank()
+                    }.map { it.branchName!! }.distinct()
+                    result.addAll(branchNames)
+                }
+                result.distinct()
+            }
+
+            HistorySearchType.TRIGGER -> {
+                val history = pipelineBuildDao.listHistorySearchOptions(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    debugVersion = debugVersion,
+                    type = type
+                )
+                val webhookInfoList = history.filter { it.webhookInfo != null }.map { it.webhookInfo!! }
+                val aliasNames = if (!aliasList.isNullOrEmpty() && aliasList.first().isNotBlank()) {
+                    aliasList
+                } else {
+                    webhookInfoList.map { it.webhookAliasName }
+                }
+                val result = mutableListOf<String>()
+                aliasNames.distinct().forEach { alias ->
+                    val branchNames = webhookInfoList.filter {
+                        it.webhookAliasName == alias && !it.webhookBranch.isNullOrBlank()
+                    }.map { it.webhookBranch!! }.distinct()
+                    result.addAll(branchNames)
+                }
+                result.distinct()
+            }
+
+            else -> emptyList()
         }
-        return result.distinct()
+        return if (search.isNullOrBlank()) {
+            branchNames
+        } else {
+            branchNames.filter { it.contains(search) }
+        }
     }
 
     private fun genBuildHistory(
@@ -477,7 +575,7 @@ class PipelineRuntimeService @Autowired constructor(
                 status = status.name,
                 stageStatus = stageStatus,
                 currentTimestamp = currentTimestamp,
-                material = material?.sortedBy { it.aliasName },
+                material = material,
                 queueTime = queueTime,
                 artifactList = artifactList,
                 remark = remark,
@@ -519,18 +617,18 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun getBuildBasicInfoByIds(buildIds: Set<String>): Map<String, BuildBasicInfo> {
-        val records = pipelineBuildDao.listBuildInfoByBuildIds(dslContext = dslContext, buildIds = buildIds)
+        val records = pipelineBuildDao.listBuildInfoByBuildIdsOnly(dslContext = dslContext, buildIds = buildIds)
         val result = mutableMapOf<String, BuildBasicInfo>()
         if (records.isEmpty()) {
             return result
         }
 
         buildIds.forEach { buildId ->
-            result[buildId] = BuildBasicInfo(buildId, "", "", 0)
+            result[buildId] = BuildBasicInfo(buildId, "", "", 0, null)
         }
         records.forEach {
             with(it) {
-                result[it.buildId] = BuildBasicInfo(buildId, projectId, pipelineId, version)
+                result[it.buildId] = BuildBasicInfo(buildId, projectId, pipelineId, version, status)
             }
         }
         return result
@@ -604,7 +702,8 @@ class PipelineRuntimeService @Autowired constructor(
                 userId = userId,
                 buildId = buildId,
                 status = buildStatus,
-                actionType = actionType
+                actionType = actionType,
+                executeCount = executeCount
             ),
             PipelineBuildCancelBroadCastEvent(
                 source = "cancelBuild",
@@ -679,7 +778,7 @@ class PipelineRuntimeService @Autowired constructor(
         // --- 第1层循环：Stage遍历处理 ---
         var afterRetryStage = false
         // #10082 针对构建容器的第三方构建机组装复用互斥信息
-        val agentReuseMutexTree = AgentReuseMutexTree(mutableListOf())
+        val agentReuseMutexTree = AgentReuseMutexTree(context.executeCount, mutableListOf())
         fullModel.stages.forEachIndexed nextStage@{ index, stage ->
             context.needUpdateStage = stage.finally // final stage 每次重试都会参与执行检查
 
@@ -725,7 +824,7 @@ class PipelineRuntimeService @Autowired constructor(
                     context.containerSeq++
                     containerBuildRecords.addRecords(
                         stageId = stage.id!!,
-                        stageEnableFlag = stage.isStageEnable(),
+                        stageEnableFlag = stage.stageEnabled(),
                         container = container,
                         context = context,
                         buildStatus = null,
@@ -739,7 +838,7 @@ class PipelineRuntimeService @Autowired constructor(
                         context.containerSeq++
                         containerBuildRecords.addRecords(
                             stageId = stage.id!!,
-                            stageEnableFlag = stage.isStageEnable(),
+                            stageEnableFlag = stage.stageEnabled(),
                             container = container,
                             context = context,
                             buildStatus = BuildStatus.SKIP,
@@ -752,7 +851,7 @@ class PipelineRuntimeService @Autowired constructor(
                         context.containerSeq++
                         containerBuildRecords.addRecords(
                             stageId = stage.id!!,
-                            stageEnableFlag = stage.isStageEnable(),
+                            stageEnableFlag = stage.stageEnabled(),
                             container = container,
                             context = context,
                             buildStatus = BuildStatus.SKIP,
@@ -762,7 +861,7 @@ class PipelineRuntimeService @Autowired constructor(
                     }
 
                     // #10082 针对构建容器的第三方构建机组装复用互斥信息
-                    agentReuseMutexTree.addNode(container, index)
+                    agentReuseMutexTree.addNode(container, index, context.variables)
                 }
 
                 modelCheckPlugin.checkJobCondition(container, stage.finally, context.variables)
@@ -875,7 +974,8 @@ class PipelineRuntimeService @Autowired constructor(
                         startTime = stageStartTime,
                         controlOption = stageOption,
                         checkIn = stage.checkIn,
-                        checkOut = stage.checkOut
+                        checkOut = stage.checkOut,
+                        stageIdForUser = stage.stageIdForUser
                     )
                 )
             }
@@ -885,7 +985,7 @@ class PipelineRuntimeService @Autowired constructor(
         }
 
         // #10082 使用互斥树节点重新回写Control和Container
-        agentReuseMutexTree.rewriteModel(buildContainersWithDetail, fullModel, buildTaskList)
+        agentReuseMutexTree.rewriteModel(context, buildContainersWithDetail, fullModel, buildTaskList)
 
         context.pipelineParamMap[PIPELINE_START_TASK_ID] =
             BuildParameters(PIPELINE_START_TASK_ID, context.firstTaskId, readOnly = true)
@@ -898,6 +998,7 @@ class PipelineRuntimeService @Autowired constructor(
                 status = context.startBuildStatus,
                 rebuild = context.retryStartTaskId.isNullOrBlank(),
                 nowTime = context.now,
+                executeCount = context.executeCount,
                 buildParameters = buildInfo.buildParameters?.let { self ->
                     val newList = self.toMutableList()
                     val retryCount = context.executeCount - 1
@@ -1302,7 +1403,7 @@ class PipelineRuntimeService @Autowired constructor(
 
     private fun StartBuildContext.sendBuildStartEvent() {
         // #8275 在发送运行或排队的开始事件时，进行排队计数+1
-        if (!debug) pipelineBuildSummaryDao.updateQueueCount(
+        pipelineBuildSummaryDao.updateQueueCount(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -1318,6 +1419,7 @@ class PipelineRuntimeService @Autowired constructor(
                 taskId = firstTaskId,
                 status = startBuildStatus,
                 actionType = actionType,
+                executeCount = executeCount,
                 buildNoType = buildNoType // 该字段是需要遍历Model‘获得，不过在审核阶段为null，不影响功能逻辑。
             ), // 监控事件
             PipelineBuildMonitorEvent(
@@ -1490,7 +1592,11 @@ class PipelineRuntimeService @Autowired constructor(
      * 完成认领构建的任务[completeTask]
      * [endBuild]表示最后一步，当前容器要结束
      */
-    fun completeClaimBuildTask(completeTask: CompleteTask, endBuild: Boolean = false): PipelineBuildTask? {
+    fun completeClaimBuildTask(
+        completeTask: CompleteTask,
+        endBuild: Boolean = false,
+        endBuildMsg: String? = null
+    ): PipelineBuildTask? {
         val buildTask = pipelineTaskService.getBuildTask(
             projectId = completeTask.projectId,
             buildId = completeTask.buildId,
@@ -1531,7 +1637,7 @@ class PipelineRuntimeService @Autowired constructor(
                     errorCode = completeTask.errorCode ?: 0,
                     errorTypeName = completeTask.errorType?.getI18n(I18nUtil.getDefaultLocaleLanguage()),
                     executeCount = buildTask.executeCount,
-                    reason = completeTask.errorMsg
+                    reason = endBuildMsg ?: completeTask.errorMsg
                 )
             )
         }
@@ -1581,7 +1687,6 @@ class PipelineRuntimeService @Autowired constructor(
                 projectId = latestRunningBuild.projectId,
                 buildId = latestRunningBuild.buildId,
                 startTime = if (latestRunningBuild.executeCount == 1) startTime else null,
-                executeCount = latestRunningBuild.executeCount,
                 debug = latestRunningBuild.debug
             )
             pipelineInfoDao.updateLatestStartTime(
@@ -1590,11 +1695,11 @@ class PipelineRuntimeService @Autowired constructor(
                 pipelineId = latestRunningBuild.pipelineId,
                 startTime = startTime
             )
-            // #8161 调试构建不参与刷新summary表
-            if (!latestRunningBuild.debug) pipelineBuildSummaryDao.startLatestRunningBuild(
+            pipelineBuildSummaryDao.startLatestRunningBuild(
                 dslContext = transactionContext,
                 latestRunningBuild = latestRunningBuild,
-                executeCount = latestRunningBuild.executeCount
+                executeCount = latestRunningBuild.executeCount,
+                debug = latestRunningBuild.debug
             )
         }
         pipelineEventDispatcher.dispatch(
@@ -1626,20 +1731,20 @@ class PipelineRuntimeService @Autowired constructor(
         errorInfoList: List<ErrorInfo>?,
         timeCost: BuildRecordTimeCost?
     ) {
-        if (!latestRunningBuild.debug) {
-            if (currentBuildStatus.isReadyToRun() || currentBuildStatus.isNeverRun()) {
-                // 减1,当作没执行过
-                pipelineBuildSummaryDao.updateQueueCount(
-                    dslContext = dslContext,
-                    projectId = latestRunningBuild.projectId,
-                    pipelineId = latestRunningBuild.pipelineId,
-                    queueIncrement = -1
-                )
-            }
+        if (currentBuildStatus.isReadyToRun() || currentBuildStatus.isNeverRun()) {
+            // 减1,当作没执行过
+            pipelineBuildSummaryDao.updateQueueCount(
+                dslContext = dslContext,
+                projectId = latestRunningBuild.projectId,
+                pipelineId = latestRunningBuild.pipelineId,
+                queueIncrement = -1
+            )
+        } else {
             pipelineBuildSummaryDao.finishLatestRunningBuild(
                 dslContext = dslContext,
                 latestRunningBuild = latestRunningBuild,
-                isStageFinish = currentBuildStatus.name == BuildStatus.STAGE_SUCCESS.name
+                isStageFinish = currentBuildStatus.name == BuildStatus.STAGE_SUCCESS.name,
+                debug = latestRunningBuild.debug
             )
         }
         with(latestRunningBuild) {
@@ -1791,7 +1896,10 @@ class PipelineRuntimeService @Autowired constructor(
         buildMsg: String? = null,
         startUser: List<String>? = null,
         queryDslContext: DSLContext? = null,
-        debugVersion: Int? = null
+        debug: Boolean?,
+        triggerAlias: List<String>?,
+        triggerBranch: List<String>?,
+        triggerUser: List<String>?
     ): Int {
         return pipelineBuildDao.count(
             dslContext = queryDslContext ?: dslContext,
@@ -1817,7 +1925,10 @@ class PipelineRuntimeService @Autowired constructor(
             buildNoEnd = buildNoEnd,
             buildMsg = buildMsg,
             startUser = startUser,
-            debugVersion = debugVersion
+            debug = debug,
+            triggerAlias = triggerAlias,
+            triggerBranch = triggerBranch,
+            triggerUser = triggerUser
         )
     }
 
@@ -2014,5 +2125,37 @@ class PipelineRuntimeService @Autowired constructor(
         } finally {
             redisLock.unlock()
         }
+    }
+
+    fun updateAsyncStatus(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String,
+        executeCount: Int,
+        asyncStatus: String
+    ) {
+        taskBuildRecordService.updateAsyncStatus(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = taskId,
+            executeCount = executeCount,
+            asyncStatus = asyncStatus
+        )
+    }
+
+    fun getBuildVariableService(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        keys: Set<String>
+    ): Map<String, String> {
+        return buildVariableService.getAllVariable(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            keys = keys
+        )
     }
 }

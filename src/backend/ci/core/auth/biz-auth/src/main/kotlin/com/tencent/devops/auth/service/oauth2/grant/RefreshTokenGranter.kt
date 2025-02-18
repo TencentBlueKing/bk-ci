@@ -3,7 +3,7 @@ package com.tencent.devops.auth.service.oauth2.grant
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_REFRESH_TOKEN_EXPIRED
 import com.tencent.devops.auth.pojo.ClientDetailsInfo
-import com.tencent.devops.auth.pojo.Oauth2AccessTokenRequest
+import com.tencent.devops.auth.pojo.Oauth2RefreshTokenRequest
 import com.tencent.devops.auth.pojo.dto.Oauth2AccessTokenDTO
 import com.tencent.devops.auth.pojo.enum.Oauth2GrantType
 import com.tencent.devops.auth.service.oauth2.Oauth2AccessTokenService
@@ -14,14 +14,13 @@ import org.springframework.stereotype.Service
 
 @Service
 class RefreshTokenGranter(
-    private val accessTokenService: Oauth2AccessTokenService,
-    private val refreshTokenService: Oauth2RefreshTokenService
-) : AbstractTokenGranter(
-    grantType = Oauth2GrantType.REFRESH_TOKEN.grantType,
+    private val refreshTokenService: Oauth2RefreshTokenService,
+    accessTokenService: Oauth2AccessTokenService
+) : AbstractTokenGranter<Oauth2RefreshTokenRequest>(
     accessTokenService = accessTokenService
 ) {
     override fun getAccessToken(
-        accessTokenRequest: Oauth2AccessTokenRequest,
+        accessTokenRequest: Oauth2RefreshTokenRequest,
         clientDetails: ClientDetailsInfo
     ): Oauth2AccessTokenDTO {
         val refreshToken = accessTokenRequest.refreshToken
@@ -63,4 +62,6 @@ class RefreshTokenGranter(
             scopeId = accessTokenInfo.scopeId
         )
     }
+
+    override fun type(): Oauth2GrantType = Oauth2GrantType.REFRESH_TOKEN
 }

@@ -28,17 +28,17 @@
 package com.tencent.devops.environment.dao
 
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.model.environment.tables.TNode
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
-import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 
 @Suppress("ALL")
 @Repository
@@ -70,7 +70,8 @@ class NodeDao {
         displayName: String?,
         createdUser: String?,
         lastModifiedUser: String?,
-        keywords: String?
+        keywords: String?,
+        nodeType: NodeType?
     ): List<TNodeRecord> {
         return with(TNode.T_NODE) {
             val query = dslContext.selectFrom(this)
@@ -90,6 +91,12 @@ class NodeDao {
             if (!lastModifiedUser.isNullOrEmpty()) {
                 query.and(LAST_MODIFY_USER.like("%$lastModifiedUser%"))
             }
+            if (nodeType != null) {
+                query.and(NODE_TYPE.eq(nodeType.name))
+            } else {
+                /*除非特别指定，暂不显示内部NodeType类型*/
+                query.and(NODE_TYPE.`in`(NodeType.coreTypesName()))
+            }
             query.orderBy(LAST_MODIFY_TIME.desc())
                 .limit(limit).offset(offset)
                 .fetch()
@@ -103,7 +110,8 @@ class NodeDao {
         displayName: String?,
         createdUser: String?,
         lastModifiedUser: String?,
-        keywords: String?
+        keywords: String?,
+        nodeType: NodeType?
     ): Int {
         with(TNode.T_NODE) {
             return if (projectId.isNullOrBlank()) {
@@ -129,16 +137,29 @@ class NodeDao {
                 if (!lastModifiedUser.isNullOrEmpty()) {
                     query.and(LAST_MODIFY_USER.like("%$lastModifiedUser%"))
                 }
+                if (nodeType != null) {
+                    query.and(NODE_TYPE.eq(nodeType.name))
+                } else {
+                    /*除非特别指定，暂不显示内部NodeType类型*/
+                    query.and(NODE_TYPE.`in`(NodeType.coreTypesName()))
+                }
                 query.fetchOne(0, Int::class.java)!!
             }
         }
     }
 
-    fun listNodes(dslContext: DSLContext, projectId: String): List<TNodeRecord> {
+    fun listNodes(dslContext: DSLContext, projectId: String, nodeType: NodeType? = null): List<TNodeRecord> {
         with(TNode.T_NODE) {
-            return dslContext.selectFrom(this)
+            val query = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
-                .orderBy(NODE_ID.desc())
+
+            if (nodeType != null) {
+                query.and(NODE_TYPE.eq(nodeType.name))
+            } else {
+                /*除非特别指定，暂不显示内部NodeType类型*/
+                query.and(NODE_TYPE.`in`(NodeType.coreTypesName()))
+            }
+            return query.orderBy(NODE_ID.desc())
                 .fetch()
         }
     }
@@ -236,6 +257,20 @@ class NodeDao {
         }
     }
 
+    fun countByNodeType(
+        dslContext: DSLContext,
+        projectId: String,
+        nodeType: NodeType
+    ): Long {
+        with(TNode.T_NODE) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(NODE_TYPE.`in`(nodeType.name))
+                .fetchOne(0, Long::class.java)!!
+        }
+    }
+
     fun getByDisplayName(
         dslContext: DSLContext,
         projectId: String,
@@ -329,13 +364,13 @@ class NodeDao {
 
     fun updateNodeStatus(
         dslContext: DSLContext,
-        id: Long,
+        ids: Set<Long>,
         status: NodeStatus
     ) {
         with(TNode.T_NODE) {
             dslContext.update(this)
                 .set(NODE_STATUS, status.name)
-                .where(NODE_ID.eq(id))
+                .where(NODE_ID.`in`(ids))
                 .execute()
         }
     }
@@ -353,7 +388,13 @@ class NodeDao {
         }
     }
 
-    fun listNodesByType(dslContext: DSLContext, projectId: String, nodeType: String): List<TNodeRecord> {
+    fun listNodesByType(
+        dslContext: DSLContext,
+        projectId: String,
+        nodeType: String,
+        limit: Int? = null,
+        offset: Int? = null
+    ): List<TNodeRecord> {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)
                 .where(NODE_TYPE.eq(nodeType))
@@ -361,6 +402,7 @@ class NodeDao {
                 .and(NODE_STATUS.ne(NodeStatus.CREATING.name))
                 .and(NODE_STATUS.ne(NodeStatus.DELETING.name))
                 .and(NODE_STATUS.ne(NodeStatus.DELETED.name))
+                .let { if (limit != null && offset != null) it.limit(limit).offset(offset) else it }
                 .fetch()
         }
     }

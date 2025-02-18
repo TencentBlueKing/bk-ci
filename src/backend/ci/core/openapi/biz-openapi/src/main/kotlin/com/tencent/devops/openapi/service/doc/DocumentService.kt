@@ -33,10 +33,8 @@ import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_ALL_MODEL_DATA
-import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_APPLICATION_STATE_REQUIRED
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_BODY_PARAMETER
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_CURL_PROMPT
-import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_DEFAULT_VALUE
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_DISCRIMINATOR_ILLUSTRATE
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_ERROR_PROMPT
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_HAVE_TO
@@ -45,7 +43,6 @@ import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_HTTP_CODE
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_ILLUSTRATE
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_INPUT_PARAMETER_DESCRIPTION
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_MUST_BE
-import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_NO
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_OBJECT_PROPERTY_ILLUSTRATE
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_PARAM_ILLUSTRATE
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_PARAM_NAME
@@ -62,7 +59,6 @@ import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_RESPONSE_PARAME
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_RETURNS_THE_SAMPLE
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_THE_FIELD_IS_READ_ONLY
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_USER_NAME
-import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_YES
 import com.tencent.devops.openapi.pojo.SwaggerDocParameterInfo
 import com.tencent.devops.openapi.pojo.SwaggerDocResponse
 import com.tencent.devops.openapi.utils.markdown.Code
@@ -85,17 +81,22 @@ import io.swagger.v3.oas.models.media.StringSchema
 import io.swagger.v3.oas.models.parameters.Parameter
 import io.swagger.v3.oas.models.parameters.RequestBody
 import io.swagger.v3.oas.models.responses.ApiResponse
-import org.apache.commons.lang3.StringUtils
-import org.reflections.Reflections
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
+import java.lang.reflect.Modifier
+import java.math.BigDecimal
+import java.time.LocalDateTime
 import kotlin.jvm.internal.DefaultConstructorMarker
 import kotlin.reflect.KFunction
 import kotlin.reflect.KType
+import kotlin.reflect.full.isSubtypeOf
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.javaConstructor
 import kotlin.reflect.jvm.javaType
+import kotlin.reflect.typeOf
+import org.apache.commons.lang3.StringUtils
+import org.reflections.Reflections
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 import io.swagger.v3.oas.annotations.media.Schema as SchemaAnnotation
 
 @Service
@@ -160,10 +161,11 @@ class DocumentService {
                                 getI18n(BK_PARAM_NAME),
                                 getI18n(BK_PARAM_TYPE),
                                 getI18n(BK_HAVE_TO),
-                                getI18n(BK_PARAM_ILLUSTRATE),
-                                getI18n(BK_DEFAULT_VALUE)
+                                getI18n(BK_PARAM_ILLUSTRATE)
                             ),
-                            rows = parseParameters(operation.parameters.filter { it.`in` == PATH_PARAM }),
+                            rows = parseParameters(
+                                operation.parameters?.filter { it.`in` == PATH_PARAM } ?: emptyList()
+                            ),
                             key = "path_parameter"
                         ).checkLoadModel(onLoadModel)
                     }, path + httpMethod + "path")
@@ -176,10 +178,11 @@ class DocumentService {
                                 getI18n(BK_PARAM_NAME),
                                 getI18n(BK_PARAM_TYPE),
                                 getI18n(BK_HAVE_TO),
-                                getI18n(BK_PARAM_ILLUSTRATE),
-                                getI18n(BK_DEFAULT_VALUE)
+                                getI18n(BK_PARAM_ILLUSTRATE)
                             ),
-                            rows = parseParameters(operation.parameters.filter { it.`in` == QUERY_PARAM }),
+                            rows = parseParameters(
+                                operation.parameters?.filter { it.`in` == QUERY_PARAM } ?: emptyList()
+                            ),
                             "query_parameter"
                         ).checkLoadModel(onLoadModel)
                     }, path + httpMethod + "query")
@@ -192,20 +195,20 @@ class DocumentService {
                                 getI18n(BK_PARAM_NAME),
                                 getI18n(BK_PARAM_TYPE),
                                 getI18n(BK_HAVE_TO),
-                                getI18n(BK_PARAM_ILLUSTRATE),
-                                getI18n(BK_DEFAULT_VALUE)
+                                getI18n(BK_PARAM_ILLUSTRATE)
                             ),
-                            rows = parseParameters(operation.parameters.filter { it.`in` == HEADER_PARAM }),
+                            rows = parseParameters(
+                                operation.parameters?.filter { it.`in` == HEADER_PARAM } ?: emptyList()
+                            ),
                             "header_parameter"
                         ).checkLoadModel(onLoadModel)
                             .setRow(
                                 AUTH_HEADER_USER_ID,
                                 "string",
-                                getI18n(BK_APPLICATION_STATE_REQUIRED),
-                                getI18n(BK_USER_NAME),
-                                "{X-DEVOPS-UID}"
+                                "√",
+                                getI18n(BK_USER_NAME)
                             )
-                            .setRow("Content-Type", "string", getI18n(BK_YES), "", "application/json")
+                            .setRow("Content-Type", "string", "√", "application/json")
                             .removeRow(AUTH_HEADER_DEVOPS_APP_CODE)
                     }, path + httpMethod + "header")
                 )
@@ -270,20 +273,22 @@ class DocumentService {
                 // 组装所有已使用的模型
                 loadMarkdown.addAll(parseAllModel(onLoadModel, loadedModel))
                 operation.tags.forEach { tag ->
-                    response[tag] = SwaggerDocResponse(
+                    val res = SwaggerDocResponse(
                         path = path,
                         httpMethod = httpMethod.name,
                         markdown = if (checkMDData) loadMarkdown.joinToString(separator = "") else null,
                         metaData = if (checkMetaData) loadMarkdown else null
                     )
+                    response[tag] = res
                     if (!outputPath.isNullOrBlank()) {
                         FileUtil.outFile(outputPath, "$tag.md", loadMarkdown.joinToString(separator = ""))
                     }
+
+                    if (!outputPath.isNullOrBlank()) {
+                        FileUtil.outFile("$outputPath/json", "$tag.json", JsonUtil.toJson(res))
+                    }
                 }
             }
-        }
-        if (!outputPath.isNullOrBlank()) {
-            FileUtil.outFile(outputPath, "all.json", JsonUtil.toJson(response))
         }
         onLoadTable.clear()
         definitions.clear()
@@ -309,8 +314,7 @@ class DocumentService {
                     val reflectInfo = parametersInfo?.get("${model.title}@${model.name}")?.get(table.columns[0])
                     if (reflectInfo != null) {
                         val column = table.columns.toMutableList()
-                        column[2] = if (reflectInfo.markedNullable.not()) getI18n(BK_YES) else getI18n(BK_NO)
-                        column[4] = if (reflectInfo.markedNullable) reflectInfo.defaultValue ?: "" else column[4]
+                        column[2] = if (reflectInfo.markedNullable.not()) "√" else ""
                         table.columns = column
                     }
                 }
@@ -319,10 +323,9 @@ class DocumentService {
                         getI18n(BK_PARAM_NAME),
                         getI18n(BK_PARAM_TYPE),
                         getI18n(BK_HAVE_TO),
-                        getI18n(BK_PARAM_ILLUSTRATE),
-                        getI18n(BK_DEFAULT_VALUE)
+                        getI18n(BK_PARAM_ILLUSTRATE)
                     ),
-                    rows = tableRows,
+                    rows = tableRows.sortedBy { it.columns[0] },
                     key = "model_$key"
                 )
             }, key)
@@ -346,20 +349,18 @@ class DocumentService {
                         getI18n(BK_PARAM_NAME),
                         getI18n(BK_PARAM_TYPE),
                         getI18n(BK_HAVE_TO),
-                        getI18n(BK_PARAM_ILLUSTRATE),
-                        getI18n(BK_DEFAULT_VALUE)
+                        getI18n(BK_PARAM_ILLUSTRATE)
                     ),
-                    rows = tableRows,
+                    rows = tableRows.sortedBy { it.columns[0] },
                     key = "model_$it"
                 )
             }, it).apply {
                 if (it in polymorphismMap) {
                     this.setRow(
-                        (definitions[it] as Schema).discriminator.toString(),
+                        (definitions[it] as Schema).discriminator.propertyName,
                         "string",
-                        getI18n(BK_YES),
-                        getI18n(BK_DISCRIMINATOR_ILLUSTRATE, arrayOf("${polymorphismMap[it]?.keys}")),
-                        ""
+                        "√",
+                        getI18n(BK_DISCRIMINATOR_ILLUSTRATE, arrayOf("${polymorphismMap[it]?.keys}"))
                     )
                 }
             }.checkLoadModel(onLoadModel)
@@ -370,7 +371,7 @@ class DocumentService {
 
             // 多态类展示
             polymorphismMap[it]?.forEach { (child, value) ->
-                val discriminator = (definitions[it] as Schema).discriminator.toString()
+                val discriminator = (definitions[it] as Schema).discriminator.propertyName
                 val childModel = cacheOrLoad({ null }, child)
                     .setRow(
                         discriminator,
@@ -411,7 +412,7 @@ class DocumentService {
                 )
             )
             markdownElement.add(
-                Code(language = "Json", body = JsonUtil.toJson(loadJson), key = "${httpStatus}_return_example")
+                Code(language = "Json", body = JsonUtil.toSortJson(loadJson), key = "${httpStatus}_return_example")
             )
         }
         return markdownElement
@@ -438,7 +439,7 @@ class DocumentService {
                 )
             )
             val jsonString = try {
-                JsonUtil.toJson(jsonSimple)
+                JsonUtil.toSortJson(jsonSimple)
             } catch (e: Throwable) {
                 jsonSimple.toString()
             }
@@ -487,7 +488,7 @@ class DocumentService {
                 body = "$httpMethod ${getI18n(BK_REQUEST_SAMPLE)}",
                 key = "${httpMethod}_request_sample_title"
             ),
-            Code(language = "Json", body = JsonUtil.toJson(outJson), key = "${httpMethod}_request_sample")
+            Code(language = "Json", body = JsonUtil.toSortJson(outJson), key = "${httpMethod}_request_sample")
         )
     }
 
@@ -496,7 +497,7 @@ class DocumentService {
             "${it.columns[0]}={${it.columns[0]}}"
         } ?: ""
         val headerString = header.rows.takeIf { it.isNotEmpty() }?.joinToString(prefix = "\\\n", separator = "\\\n") {
-            "-H '${it.columns[0]}: ${it.columns[4]}' "
+            "-H '${it.columns[0]}: ${it.columns[3]}' "
         } ?: ""
         return "curl -X ${httpMethod.toUpperCase()} '${getI18n(BK_CURL_PROMPT, arrayOf(queryString))}' $headerString"
     }
@@ -509,7 +510,7 @@ class DocumentService {
                 TableRow(httpStatus, loadModelType(schema), response.description)
             )
         }
-        return tableRow
+        return tableRow.sortedBy { it.columns[0] }
     }
 
     private fun parseRequestBody(requestBody: RequestBody?): List<TableRow> {
@@ -535,9 +536,8 @@ class DocumentService {
                     TableRow(
                         it.name,
                         Link(key, "#$key").toString(),
-                        if (it.required == true) getI18n(BK_YES) else getI18n(BK_NO),
-                        it.description,
-                        ""
+                        if (it.required == true) "√" else "",
+                        it.description
                     )
                 )
             } else {
@@ -545,14 +545,13 @@ class DocumentService {
                     TableRow(
                         it.name,
                         loadSerializableParameter(it.schema),
-                        if (it.required == true) getI18n(BK_YES) else getI18n(BK_NO),
-                        it.description,
-                        it.schema.default?.toString() ?: ""
+                        if (it.required == true) "√" else "",
+                        it.description
                     )
                 )
             }
         }
-        return tableRow
+        return tableRow.sortedBy { it.columns[0] }
     }
 
     private fun loadSwagger(): OpenAPI {
@@ -612,10 +611,9 @@ class DocumentService {
                                 getI18n(BK_PARAM_NAME),
                                 getI18n(BK_PARAM_TYPE),
                                 getI18n(BK_HAVE_TO),
-                                getI18n(BK_PARAM_ILLUSTRATE),
-                                getI18n(BK_DEFAULT_VALUE)
+                                getI18n(BK_PARAM_ILLUSTRATE)
                             ),
-                            rows = table,
+                            rows = table.sortedBy { it.columns[0] },
                             key = "model_$key"
                         )
                     }, key
@@ -635,9 +633,8 @@ class DocumentService {
                         TableRow(
                             key,
                             loadPropertyType(property),
-                            if (model.required != null && key in model.required) getI18n(BK_YES) else getI18n(BK_NO),
-                            loadDescriptionInfo(property),
-                            loadPropertyDefault(property)
+                            if (model.required != null && key in model.required) "√" else "",
+                            loadDescriptionInfo(property)
                         )
                     )
                 }
@@ -676,41 +673,51 @@ class DocumentService {
         }
     }
 
-    private fun loadModelJson(model: Schema<*>?, loadJson: MutableMap<String, Any>) {
+    private fun loadModelJson(
+        model: Schema<*>?,
+        loadJson: MutableMap<String, Any>,
+        deep: MutableSet<String> = mutableSetOf()
+    ) {
         if (model == null) return
         if (StringUtils.isNotBlank(model.`$ref`)) {
             val key = model.`$ref`.removePrefix("#/components/schemas/")
-            definitions[key]?.let { loadModelJson(it, loadJson) }
+            definitions[key]?.let { loadModelJson(it, loadJson, deep) }
         }
         when (model) {
             is ComposedSchema -> {
                 model.allOf?.forEach {
-                    loadModelJson(it, loadJson)
+                    loadModelJson(it, loadJson, deep)
                 }
             }
 
             else -> {
                 if (model.discriminator != null) {
-                    loadJson[model.discriminator.toString()] = "string"
+                    loadJson[model.discriminator.propertyName] = "string"
                 }
                 model.properties?.forEach { (key, property) ->
-                    loadJson[key] = loadPropertyJson(property)
+                    loadJson[key] = loadPropertyJson(property, deep)
                 }
             }
         }
     }
 
-    private fun loadPropertyJson(property: Schema<*>): Any {
+    private fun loadPropertyJson(property: Schema<*>, deep: MutableSet<String> = mutableSetOf()): Any {
         if (StringUtils.isNotBlank(property.`$ref`)) {
-            val loadJson = mutableMapOf<String, Any>()
-            val key = property.`$ref`.removePrefix("#/components/schemas/")
-            definitions[key]?.let { loadModelJson(it, loadJson) }
-            return loadJson
+            if (property.`$ref` !in deep) {
+                deep.add(property.`$ref`)
+                val loadJson = mutableMapOf<String, Any>()
+                val key = property.`$ref`.removePrefix("#/components/schemas/")
+                definitions[key]?.let { loadModelJson(it, loadJson, deep) }
+                deep.remove(property.`$ref`)
+                return loadJson
+            } else {
+                return property.`$ref`
+            }
         }
         return when (property) {
             // swagger无法获取到map的key类型
             is MapSchema -> {
-                mapOf("string" to property.additionalProperties)
+                mapOf("string" to loadPropertyJson(property.additionalProperties as Schema<*>, deep))
             }
 
             is ObjectSchema -> {
@@ -718,12 +725,12 @@ class DocumentService {
             }
 
             is ArraySchema -> {
-                listOf(loadPropertyJson(property.items))
+                listOf(loadPropertyJson(property.items, deep))
             }
 
             is StringSchema -> {
                 if (property.enum == null) {
-                    property.type
+                    ""
                 } else {
                     "enum"
                 }
@@ -731,11 +738,8 @@ class DocumentService {
 
             is BooleanSchema -> false
             else -> {
-                val result = when (property.default) {
-                    is Int -> 0
-                    is Long -> 0L
-                    is Double -> 0.0
-                    is Float -> 0f
+                val result = when (property.type) {
+                    "integer" -> 0
                     else -> property.type
                 }
                 result
@@ -826,9 +830,10 @@ class DocumentService {
                 val infoMap = mutableMapOf<String, String>()
                 val subTypes = it.getAnnotation(JsonSubTypes::class.java).value
 //            val typeInfo = it.getAnnotation(JsonTypeInfo::class.java).property
-                val name = it.getAnnotation(SchemaAnnotation::class.java)?.name ?: it.name.split(".").last()
+                val name = it.getAnnotation(SchemaAnnotation::class.java)?.name?.ifBlank { null }
+                    ?: it.name.split(".").last()
                 subTypes.forEach { child ->
-                    val childName = child.value.java.getAnnotation(SchemaAnnotation::class.java)?.name
+                    val childName = child.value.java.getAnnotation(SchemaAnnotation::class.java)?.name?.ifBlank { null }
                         ?: child.value.java.name.split(".").last()
                     infoMap[childName] = child.name
                 }
@@ -869,17 +874,23 @@ class DocumentService {
             val nullable = mutableMapOf<String, Boolean>()
             val kClazz = clazz.kotlin
             val mock = mockModel(clazz, nullable)
-//        val mock = try {
             val res = mutableMapOf<String, SwaggerDocParameterInfo>()
             kClazz.memberProperties.forEach {
                 // 编译后，属性默认是private,需要设置isAccessible  才可以读取到值
                 it.isAccessible = true
                 res[it.name] = SwaggerDocParameterInfo(
                     markedNullable = nullable[it.name] ?: false,
-                    defaultValue = checkDefaultValue(it.call(mock).toString())
+                    defaultValue = null
                 )
             }
             return res
+        }
+
+        private val initClazz: Lazy<Map<Class<*>, Any>> = lazy {
+            mapOf(
+                LocalDateTime::class.java to LocalDateTime.now(),
+                BigDecimal::class.java to BigDecimal.ONE
+            )
         }
 
         private fun mockModel(clazz: Class<*>, nullable: MutableMap<String, Boolean> = mutableMapOf()): Any? {
@@ -889,13 +900,13 @@ class DocumentService {
             if (clazz.isEnum) {
                 return clazz.enumConstants.first()
             }
-            if (clazz.simpleName == "GithubRepository") {
-                println()
+            if (Modifier.isAbstract(clazz.modifiers)) {
+                return null
             }
             println(clazz.name)
             val kClazz = clazz.kotlin
-            if (!kClazz.isData) {
-                return null
+            if (clazz in initClazz.value.keys) {
+                return initClazz.value[clazz]
             }
             val constructor = kClazz.constructors.maxByOrNull { it.parameters.size }!!
             val parameters = constructor.parameters
@@ -915,7 +926,9 @@ class DocumentService {
                 arguments[i] = 0
             }
             if (syntheticInit != null) {
-                arguments[argumentsSize - 2] = offset
+                if (syntheticInit.parameterTypes.size - parameters.size >= 2) {
+                    arguments[argumentsSize - 2] = offset
+                }
                 arguments[argumentsSize - 1] = null as DefaultConstructorMarker?
             }
             val javaConstructor = constructor.javaConstructor
@@ -932,43 +945,43 @@ class DocumentService {
         @Suppress("ComplexMethod")
         private fun makeStandardArgument(type: KType, debug: KFunction<*>): Any? {
             if (type.isMarkedNullable) return null
-            return when (type.classifier) {
-                Boolean::class -> false
-                Byte::class -> 0.toByte()
-                Short::class -> 0.toShort()
-                Char::class -> 0.toChar()
-                Int::class -> 0
-                Long::class -> 0L
-                Float::class -> 0f
-                Double::class -> 0.0
-                String::class -> ""
-                Enum::class -> {
-                    null
+            return when {
+                type.isSubtypeOf(typeOf<Boolean>()) -> false
+                type.isSubtypeOf(typeOf<Byte>()) -> 0.toByte()
+                type.isSubtypeOf(typeOf<Short>()) -> 0.toShort()
+                type.isSubtypeOf(typeOf<Char>()) -> 0.toChar()
+                type.isSubtypeOf(typeOf<Int>()) -> 0
+                type.isSubtypeOf(typeOf<Long>()) -> 0L
+                type.isSubtypeOf(typeOf<Float>()) -> 0f
+                type.isSubtypeOf(typeOf<Double>()) -> 0.0
+                type.isSubtypeOf(typeOf<String>()) -> ""
+                type.isSubtypeOf(typeOf<Enum<*>>()) -> {
+                    (type.javaType as Class<*>).enumConstants.firstOrNull()
                 }
 
-                Set::class -> {
-                    type.arguments.firstOrNull()?.let { setOf(makeStandardArgument(it.type!!, debug)) } ?: ""
+                type.isSubtypeOf(typeOf<Set<*>>()) -> {
+                    emptySet<Any>()
                 }
 
-                List::class -> {
-                    type.arguments.firstOrNull()?.let { listOf(makeStandardArgument(it.type!!, debug)) } ?: ""
+                type.isSubtypeOf(typeOf<ArrayList<*>>()) -> {
+                    ArrayList<Any>()
                 }
 
-                ArrayList::class -> {
-                    type.arguments.firstOrNull()?.let { arrayListOf(makeStandardArgument(it.type!!, debug)) } ?: ""
+                type.isSubtypeOf(typeOf<List<*>>()) -> {
+                    emptyList<Any>()
                 }
 
-                Array::class -> {
-                    type.arguments.firstOrNull()?.let { arrayOf(makeStandardArgument(it.type!!, debug)) } ?: ""
+                type.isSubtypeOf(typeOf<Array<*>>()) -> {
+                    val arrayType = type.arguments.firstOrNull()?.type ?: return emptyArray<Any>()
+                    java.lang.reflect.Array.newInstance(arrayType.javaType as Class<*>, 0)
                 }
 
-                Map::class -> {
-                    mapOf(
-                        makeStandardArgument(
-                            type.arguments[0].type!!,
-                            debug
-                        ) to makeStandardArgument(type.arguments[1].type!!, debug)
-                    )
+                type.isSubtypeOf(typeOf<Collection<*>>()) -> {
+                    emptyList<Any>()
+                }
+
+                type.isSubtypeOf(typeOf<Map<*, *>>()) -> {
+                    emptyMap<Any, Any>()
                 }
 
                 else -> {

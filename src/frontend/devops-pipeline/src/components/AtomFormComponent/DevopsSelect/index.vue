@@ -1,5 +1,8 @@
 <template>
-    <div class="select-input" v-bk-clickoutside="handleBlur">
+    <div
+        class="select-input"
+        v-bk-clickoutside="handleBlur"
+    >
         <input
             ref="inputArea"
             class="bk-form-input"
@@ -14,17 +17,32 @@
             @keypress="handleKeyPress"
             @keydown.up.prevent="handleKeyup"
             @keydown.down.prevent="handleKeydown"
-            @keydown.tab.prevent="handleBlur" />
-        <i v-if="loading" class="bk-icon icon-circle-2-1 option-fetching-icon spin-icon" />
-        <i v-else-if="!disabled && value" class="bk-icon icon-close-circle-shape option-fetching-icon" @click.stop="clearValue" />
-        <div class="dropbox-container" v-show="hasOption && optionListVisible && !loading" ref="dropMenu">
+            @keydown.tab.prevent="handleBlur"
+        />
+        <i
+            v-if="loading"
+            class="bk-icon icon-circle-2-1 option-fetching-icon spin-icon"
+        />
+        <i
+            v-else-if="!disabled && value"
+            class="bk-icon icon-close-circle-shape option-fetching-icon"
+            @click.stop="clearValue"
+        />
+        <div
+            class="dropbox-container"
+            v-show="hasOption && optionListVisible && !loading"
+            ref="dropMenu"
+        >
             <ul>
                 <template v-if="hasGroup">
-                    <li v-for="(item, index) in filteredList"
+                    <li
+                        v-for="(item, index) in filteredList"
                         :key="item.id + index"
-                        :disabled="item.disabled">
+                        :disabled="item.disabled"
+                    >
                         <div class="option-group-name">{{ item.name }}</div>
-                        <div class="option-group-item"
+                        <div
+                            class="option-group-item"
                             v-for="(child, childIndex) in item.children"
                             :key="child.id"
                             :class="{
@@ -35,7 +53,9 @@
                             @click.stop="selectOption(child)"
                             @mouseover="setSelectGroupPointer(index, childIndex)"
                             :title="item.name"
-                        >{{ child.name }}</div>
+                        >
+                            {{ child.name }}
+                        </div>
                     </li>
                 </template>
                 <template v-else>
@@ -53,7 +73,10 @@
                         @mouseover="setSelectPointer(index)"
                     >
                         {{ item.name }}
-                        <i v-if="isMultiple && item.active" class="devops-icon icon-check-1"></i>
+                        <i
+                            v-if="isMultiple && item.active"
+                            class="devops-icon icon-check-1"
+                        ></i>
                     </li>
                 </template>
             </ul>
@@ -62,10 +85,10 @@
 </template>
 
 <script>
+    import { debounce, isObject } from '@/utils/util'
     import mixins from '../mixins'
     import scrollMixins from '../SelectInput/scrollMixins'
     import selectorMixins from '../selectorMixins'
-    import { debounce, isObject } from '@/utils/util'
 
     export default {
         name: 'devops-select',
@@ -139,6 +162,23 @@
                 }
                 this.displayName = keyArr.join(',')
                 this.handleChange(this.name, params)
+            },
+            value (newValue) {
+                if (this.isMultiple) {
+                    if (this.displayName) {
+                        this.getMultipleDisplayName(this.displayName, 'name')
+                    } else {
+                        this.getMultipleDisplayName(newValue)
+                    }
+                } else {
+                    if (this.isEnvVar(this.displayName) && this.displayName.trim() !== newValue) {
+                        this.handleChange(this.name, this.displayName.trim())
+                    } else if (this.isEnvVar(newValue)) {
+                        this.displayName = newValue
+                    } else {
+                        this.displayName = this.getDisplayName(newValue ?? this.displayName)
+                    }
+                }
             }
         },
         created () {
@@ -240,27 +280,12 @@
             },
 
             handleBlur () {
+                if (!this.optionListVisible) return
                 this.optionListVisible = false
                 this.resetSelectPointer()
                 this.isFocused = false
                 this.$refs.inputArea && this.$refs.inputArea.blur()
                 this.$emit('blur', null)
-
-                if (this.isMultiple) {
-                    if (this.displayName) {
-                        this.getMultipleDisplayName(this.displayName, 'name')
-                    } else {
-                        this.getMultipleDisplayName(this.value)
-                    }
-                } else {
-                    if (this.isEnvVar(this.displayName)) {
-                        this.handleChange(this.name, this.displayName.trim())
-                    } else if (this.isEnvVar(this.value)) {
-                        this.displayName = this.value
-                    } else {
-                        this.displayName = this.getDisplayName(this.value ?? this.displayName)
-                    }
-                }
             },
 
             handleFocus (e) {
@@ -349,14 +374,15 @@
                 }
                 if (defaultVal && !this.loading) {
                     this.showValValidTips(defaultVal)
-                    this.handleChange(this.name, '')
+                    // this.handleChange(this.name, '')
                 }
                 return ''
             },
             showValValidTips (val) {
                 this.$bkMessage({
                     theme: 'error',
-                    message: `${this.$t('editPage.invalidValue', [this.label])}: ${val}`
+                    message: `${this.$t('editPage.invalidValue', [this.label])}: ${val}`,
+                    limit: 1
                 })
             },
             async getOptionList () {
@@ -411,98 +437,107 @@
 </script>
 
 <style lang="scss" scoped>
-    @import "../../../scss/conf";
-    .select-input {
-        position: relative;
-        .option-fetching-icon {
-            position: absolute;
-            right: 20px;
-            top: 10px;
-            color: $fontLighterColor;
-            &.icon-close-circle-shape {
-                cursor: pointer;
-            }
-        }
-        > input {
-            padding-right: 50px;
-            text-overflow: ellipsis;
-        }
-        > .dropbox-container {
-            position: absolute;
-            max-height: 222px;
-            width: 100%;
-            border: 1px solid $borderLightColor;
-            border-radius: 2px;
-            box-shadow: 0 0 8px 1px rgba(0, 0, 0, 0.1);
-            margin-top: 4px;
-            z-index: 1111;
-            overflow: auto;
-            background: white;
-            > ul {
-                float:left;
-                transition: all 0.3s ease;
-                min-width: 100%;
-                // > li {
-                //     line-height: 36px;
-                //     padding-left: 10px;
-                //     white-space: nowrap;
-                //     cursor: pointer;
-                //     font-size: 12px;
-                //     &.selected,
-                //     &.active,
-                //     &:hover {
-                //         background-color: $primaryLightColor;
-                //         color: $primaryColor;
-                //     }
+@import "../../../scss/conf";
 
-                //     &[disabled] {
-                //         color: $fontLighterColor;
-                //     }
-                // }
-                li:first-child {
-                    .option-group-name {
-                        border-top: 0
-                    }
-                }
+.select-input {
+    position: relative;
+
+    .option-fetching-icon {
+        position: absolute;
+        right: 20px;
+        top: 10px;
+        color: $fontLighterColor;
+
+        &.icon-close-circle-shape {
+            cursor: pointer;
+        }
+    }
+
+    >input {
+        padding-right: 50px;
+        text-overflow: ellipsis;
+    }
+
+    >.dropbox-container {
+        position: absolute;
+        max-height: 222px;
+        width: 100%;
+        border: 1px solid $borderLightColor;
+        border-radius: 2px;
+        box-shadow: 0 0 8px 1px rgba(0, 0, 0, 0.1);
+        margin-top: 4px;
+        z-index: 1111;
+        overflow: auto;
+        background: white;
+
+        >ul {
+            float: left;
+            transition: all 0.3s ease;
+            min-width: 100%;
+            // > li {
+            //     line-height: 36px;
+            //     padding-left: 10px;
+            //     white-space: nowrap;
+            //     cursor: pointer;
+            //     font-size: 12px;
+            //     &.selected,
+            //     &.active,
+            //     &:hover {
+            //         background-color: $primaryLightColor;
+            //         color: $primaryColor;
+            //     }
+
+            //     &[disabled] {
+            //         color: $fontLighterColor;
+            //     }
+            // }
+            li:first-child {
                 .option-group-name {
-                    padding: 0 12px;
-                    line-height: 36px;
-                    font-size: 12px;
-                    border-bottom: 1px solid #dcdee5;
-                    border-top: 1px solid #dcdee5;
-                    color: #999;
-
+                    border-top: 0
                 }
-                .option-item {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
+            }
+
+            .option-group-name {
+                padding: 0 12px;
+                line-height: 36px;
+                font-size: 12px;
+                border-bottom: 1px solid #dcdee5;
+                border-top: 1px solid #dcdee5;
+                color: #999;
+
+            }
+
+            .option-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .option-item,
+            .option-group-item {
+                line-height: 36px;
+                padding: 0 18px;
+                white-space: nowrap;
+                cursor: pointer;
+                font-size: 12px;
+                border: 1px solid transparent;
+
+                &.selected,
+                &.active,
+                &:hover {
+                    background-color: $primaryLightColor;
+                    color: $primaryColor;
                 }
 
-                .option-item,
-                .option-group-item {
-                    line-height: 36px;
-                    padding: 0 18px;
-                    white-space: nowrap;
-                    cursor: pointer;
-                    font-size: 12px;
-                    border: 1px solid transparent;
-                    &.selected,
-                    &.active,
-                    &:hover {
-                        background-color: $primaryLightColor;
-                        color: $primaryColor;
-                    }
+                &.selected {
+                    border-color: $primaryColor;
+                }
 
-                    &.selected {
-                       border-color : $primaryColor;
-                    }
-
-                    &[disabled] {
-                        color: $fontLighterColor;
-                    }
+                &[disabled] {
+                    color: $fontLighterColor;
                 }
             }
         }
     }
+}
 </style>

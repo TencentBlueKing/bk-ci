@@ -30,6 +30,10 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationDTO
+import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationHandoverDTO
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.constant.RepositoryMessageCode
@@ -42,6 +46,7 @@ import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.sdk.github.request.GetRepositoryRequest
 import com.tencent.devops.repository.sdk.github.service.GithubRepositoryService
 import com.tencent.devops.repository.service.github.GithubTokenService
+import com.tencent.devops.repository.service.permission.RepositoryAuthorizationService
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
@@ -49,6 +54,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import java.time.LocalDateTime
 
 @Component
 class CodeGithubRepositoryService @Autowired constructor(
@@ -56,7 +62,8 @@ class CodeGithubRepositoryService @Autowired constructor(
     private val repositoryGithubDao: RepositoryGithubDao,
     private val dslContext: DSLContext,
     private val githubRepositoryService: GithubRepositoryService,
-    private val githubTokenService: GithubTokenService
+    private val githubTokenService: GithubTokenService,
+    private val repositoryAuthorizationService: RepositoryAuthorizationService
 ) : CodeRepositoryService<GithubRepository> {
     override fun repositoryType(): String {
         return GithubRepository::class.java.name
@@ -120,9 +127,11 @@ class CodeGithubRepositoryService @Autowired constructor(
             repositoryId = repositoryId
         ).url
         var gitProjectId: Long? = null
-        if (sourceUrl != repository.url) {
-            logger.info("repository url unMatch,need change gitProjectId,sourceUrl=[$sourceUrl] " +
-                            "targetUrl=[${repository.url}]")
+        if (sourceUrl != repository.url || repository.gitProjectId == null || repository.gitProjectId == 0L) {
+            logger.info(
+                "repository url unMatch,need change gitProjectId,sourceUrl=[$sourceUrl] " +
+                    "targetUrl=[${repository.url}]"
+            )
             // Git项目ID
             gitProjectId = getProjectId(repository, userId)
         }
@@ -136,11 +145,23 @@ class CodeGithubRepositoryService @Autowired constructor(
                 updateUser = userId
             )
             repositoryGithubDao.edit(
-                dslContext,
+                transactionContext,
                 repositoryId,
                 repository.projectName,
                 repository.userName,
                 gitProjectId = gitProjectId
+            )
+            repositoryAuthorizationService.batchModifyHandoverFrom(
+                projectId = projectId,
+                resourceAuthorizationHandoverList = listOf(
+                    ResourceAuthorizationHandoverDTO(
+                        projectCode = projectId,
+                        resourceType = AuthResourceType.CODE_REPERTORY.value,
+                        resourceName = record.aliasName,
+                        resourceCode = repositoryHashId,
+                        handoverTo = repository.userName
+                    )
+                )
             )
         }
     }
@@ -210,4 +231,27 @@ class CodeGithubRepositoryService @Autowired constructor(
     ) = emptyList<GitFileInfo>()
 
     override fun getPacRepository(externalId: String): TRepositoryRecord? = null
+
+    override fun addResourceAuthorization(
+        projectId: String,
+        userId: String,
+        repositoryId: Long,
+        repository: GithubRepository
+    ) {
+        with(repository) {
+            repositoryAuthorizationService.addResourceAuthorization(
+                projectId = projectId,
+                listOf(
+                    ResourceAuthorizationDTO(
+                        projectCode = projectId,
+                        resourceType = AuthResourceType.CODE_REPERTORY.value,
+                        resourceName = repository.aliasName,
+                        resourceCode = HashUtil.encodeOtherLongId(repositoryId),
+                        handoverFrom = userId,
+                        handoverTime = LocalDateTime.now().timestampmilli()
+                    )
+                )
+            )
+        }
+    }
 }

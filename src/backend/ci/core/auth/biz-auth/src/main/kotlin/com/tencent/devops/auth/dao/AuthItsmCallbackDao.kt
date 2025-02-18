@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.dao
 
 import com.tencent.devops.auth.pojo.vo.AuthItsmCallbackInfo
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.auth.tables.TAuthItsmCallback
 import com.tencent.devops.model.auth.tables.records.TAuthItsmCallbackRecord
 import org.jooq.DSLContext
@@ -95,6 +96,7 @@ class AuthItsmCallbackDao {
             return dslContext.selectFrom(this)
                 .where(ENGLISH_NAME.eq(projectCode))
                 .orderBy(CREATE_TIME.desc())
+                .skipCheck()
                 .fetchAny()
         }
     }

@@ -10,6 +10,7 @@ object AuthI18nConstants {
     const val BK_YOU_AGREE_RENEW = "bkYouAgreeRenew" // 你已选择同意用户续期
     const val BK_REFUSE_RENEW = "bkRefuseRenew" // 拒绝续期
     const val BK_YOU_REFUSE_RENEW = "bkYouRefuseRenew" // 你已选择拒绝用户续期
+    const val BK_ALL_PROJECT_MEMBERS_GROUP = "bkAllProjectMembersGroup" // 全部项目成员组
 
     // **蓝盾超级管理员权限续期申请审批**\n申请人：{0}\n授权名称：{1}\n授权详情：{2}\n用户权限过期时间：{3}\n请选择是否同意用户续期权限\n
     const val BK_WEWORK_ROBOT_NOTIFY_MESSAGE = "bkWeworkRobotNotifyMessage"
@@ -43,4 +44,12 @@ object AuthI18nConstants {
     const val BK_DEVOPS_NAME = "bkDevopsName" // 蓝盾名称
     const val BK_MONITOR_NAME = "bkMonitorName" // 监控平台名称
     const val BK_MONITOR_SPACE = "bkMonitorSpace" // 监控空间
+    const val BK_MEMBER_EXPIRED_AT_DISPLAY_EXPIRED = "bkMemberExpiredAtDisplayExpired" // 有效期: 已过期
+    const val BK_MEMBER_EXPIRED_AT_DISPLAY_NORMAL = "bkMemberExpiredAtDisplayNormal" // 有效期: {0}天
+    const val BK_MEMBER_EXPIRED_AT_DISPLAY_PERMANENT = "bkMemberExpiredAtDisplayPermanent" // 有效期: 永久
+
+    const val BK_APPLY_TO_HANDOVER = "bkApplyToHandover" // 申请移交
+    const val BK_HANDOVER_GROUPS = "bkHandoverGroups" // 个权限用户组
+    const val BK_HANDOVER_AUTHORIZATIONS = "bkHandoverAuthorizations" // 个授权
+    const val BK_PROJECT = "bk_project" // 蓝盾项目
 }

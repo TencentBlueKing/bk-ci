@@ -13,4 +13,7 @@ module.exports = {
     'bk.config.js',
     'index.html',
   ],
+  rules: {
+    'vue/space-unary-ops': 'off',
+  }
 };

@@ -36,14 +36,15 @@ import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.project.pojo.OrgInfo
 import com.tencent.devops.project.pojo.ProjectBaseInfo
+import com.tencent.devops.project.pojo.ProjectByConditionDTO
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.ProjectByConditionDTO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.PluginDetailsDisplayOrder
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import io.swagger.v3.oas.annotations.Operation
@@ -82,7 +83,7 @@ interface ServiceProjectResource {
 
     @POST
     @Path("/listProjectsByCondition/{offset}/{limit}")
-    @Operation(summary = "条件迁移项目实体")
+    @Operation(summary = "根据条件查询项目")
     fun listProjectsByCondition(
         @Parameter(description = "条件迁移项目实体", required = false)
         projectConditionDTO: ProjectConditionDTO,
@@ -378,4 +379,15 @@ interface ServiceProjectResource {
         @QueryParam("englishName")
         englishName: List<String>
     ): Result<List<String>?>
+
+    @PUT
+    @Path("{projectId}/updatePluginDetailsDisplay")
+    @Operation(summary = "更新插件展示顺序")
+    fun updatePluginDetailsDisplay(
+        @Parameter(description = "项目Code", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "插件展示顺序", required = true)
+        pluginDetailsDisplayOrder: List<PluginDetailsDisplayOrder>
+    ): Result<Boolean>
 }

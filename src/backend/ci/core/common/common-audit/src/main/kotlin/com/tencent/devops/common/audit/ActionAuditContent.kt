@@ -76,36 +76,6 @@ object ActionAuditContent {
     const val CREDENTIAL_LIST_CONTENT = "list credential $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val CREDENTIAL_USE_CONTENT = "use credential $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
 
-    // 云桌面
-    const val CGS_CREATE_CONTENT = "create workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_LIST_CONTENT = "list workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_VIEW_CONTENT = "get workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_STOP_CONTENT = "stop workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_START_CONTENT = "start workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_RESTART_CONTENT = "restart workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_ASSIGN_USER_CONTENT = "assign workspace $CONTENT_TEMPLATE " +
-        "to [{{$ASSIGNS_TEMPLATE}}] from $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_ASSIGN_PROJECT_CONTENT = "assign workspace $CONTENT_TEMPLATE to project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_EDIT_TYPE_CONTENT = "modify workspace type $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_REBUILD_SYSTEM_DISK_CONTENT = "rebuild workspace system disk $CONTENT_TEMPLATE " +
-        "in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_MAKE_IMAGE_CONTENT = "make workspace image  $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_EXPAND_DISK_CONTENT = "expand workspace disk $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_DELETE_CONTENT = "delete workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_SHARE_CONTENT = "share workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_EDIT_CONTENT = "edit workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CGS_TOKEN_GENERATE_CONTENT = "generate workspace 1password $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-
-    // 云桌面镜像
-    const val IMAGE_LIST_CONTENT = "list workspace image $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val IMAGE_DELETE_CONTENT = "delete workspace image $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val IMAGE_EDIT_CONTENT = "modify workspace image $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-
-    // 代理仓库
-    const val CODE_PROXY_CREATE_CONTENT = "create code proxy $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CODE_PROXY_LIST_CONTENT = "list code proxy $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-    const val CODE_PROXY_DELETE_CONTENT = "delete code proxy $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
-
     // 环境
     const val ENVIRONMENT_CREATE_CONTENT = "create environment $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val ENVIRONMENT_EDIT_CONTENT = "modify environment $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"

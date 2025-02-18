@@ -28,21 +28,22 @@
 
 package com.tencent.devops.auth.provider.rbac.service.migrate
 
-import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
+import com.tencent.devops.auth.pojo.enum.JoinedType
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
+import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import org.jboss.logging.Logger
 import org.jooq.DSLContext
 
-class MigratePermissionHandoverService constructor(
-    private val v2ManagerService: V2ManagerService,
+class MigratePermissionHandoverService(
     private val permissionResourceMemberService: PermissionResourceMemberService,
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val authResourceService: AuthResourceService,
+    private val permissionManageFacadeService: PermissionManageFacadeService,
     private val dslContext: DSLContext
 ) {
     fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO) {
@@ -51,21 +52,10 @@ class MigratePermissionHandoverService constructor(
         val resourceType = permissionHandoverDTO.resourceType!!
         permissionHandoverDTO.projectList.forEach { projectCode ->
             if (permissionHandoverDTO.managerPermission) {
-                val projectManagerGroupId = authResourceGroupDao.get(
-                    dslContext = dslContext,
+                batchAddProjectManager(
                     projectCode = projectCode,
-                    resourceType = AuthResourceType.PROJECT.value,
-                    resourceCode = projectCode,
-                    groupCode = DefaultGroupType.MANAGER.value
+                    handoverToList = handoverToList
                 )
-                handoverToList.forEach { handoverTo ->
-                    permissionResourceMemberService.addGroupMember(
-                        userId = handoverTo,
-                        memberType = USER_TYPE,
-                        expiredAt = GROUP_EXPIRED_TIME,
-                        groupId = projectManagerGroupId!!.relationId.toInt()
-                    )
-                }
             }
             val resourceList = authResourceService.listByCreator(
                 resourceType = resourceType,
@@ -91,15 +81,16 @@ class MigratePermissionHandoverService constructor(
                 )
                 try {
                     permissionResourceMemberService.addGroupMember(
-                        userId = handoverTo,
+                        projectCode = projectCode,
+                        memberId = handoverTo,
                         memberType = USER_TYPE,
                         expiredAt = GROUP_EXPIRED_TIME,
-                        groupId = resourceManagerGroup!!.relationId.toInt()
+                        iamGroupId = resourceManagerGroup!!.relationId.toInt()
                     )
-                    v2ManagerService.deleteRoleGroupMemberV2(
-                        resourceManagerGroup.relationId.toInt(),
-                        USER_TYPE,
-                        handoverFrom
+                    permissionResourceMemberService.batchDeleteResourceGroupMembers(
+                        projectCode = projectCode,
+                        iamGroupId = resourceManagerGroup.relationId.toInt(),
+                        members = listOf(handoverFrom)
                     )
                 } catch (ignore: Exception) {
                     logger.warn(
@@ -108,6 +99,69 @@ class MigratePermissionHandoverService constructor(
                     )
                 }
             }
+        }
+    }
+
+    fun handoverAllPermissions(permissionHandoverDTO: PermissionHandoverDTO) {
+        val handoverFrom = permissionHandoverDTO.handoverFrom
+        val handoverToList = permissionHandoverDTO.handoverToList
+        permissionHandoverDTO.projectList.forEach { projectCode ->
+            // 是否将交接人直接加入管理员组
+            if (permissionHandoverDTO.managerPermission) {
+                batchAddProjectManager(
+                    projectCode = projectCode,
+                    handoverToList = handoverToList
+                )
+            }
+            // 交接用户组权限
+            val userJoinedGroups = permissionManageFacadeService.getMemberGroupsDetails(
+                projectId = projectCode,
+                memberId = handoverFrom
+            ).records.filter { it.joinedType == JoinedType.DIRECT }.map { it.groupId }
+            userJoinedGroups.forEach { iamGroupId ->
+                val handoverTo = handoverToList.random()
+                logger.info("handover resource permissions :$projectCode|$handoverFrom|$handoverTo|$iamGroupId")
+                try {
+                    permissionResourceMemberService.addGroupMember(
+                        projectCode = projectCode,
+                        memberId = handoverTo,
+                        memberType = USER_TYPE,
+                        expiredAt = GROUP_EXPIRED_TIME,
+                        iamGroupId = iamGroupId
+                    )
+                    permissionResourceMemberService.batchDeleteResourceGroupMembers(
+                        projectCode = projectCode,
+                        iamGroupId = iamGroupId,
+                        members = listOf(handoverFrom)
+                    )
+                } catch (ignore: Exception) {
+                    logger.warn(
+                        "handover permissions|operate group failed:$projectCode|$iamGroupId|${ignore.message}"
+                    )
+                }
+            }
+        }
+    }
+
+    private fun batchAddProjectManager(
+        projectCode: String,
+        handoverToList: List<String>
+    ) {
+        val projectManagerGroupId = authResourceGroupDao.get(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode,
+            groupCode = DefaultGroupType.MANAGER.value
+        )
+        handoverToList.forEach { handoverTo ->
+            permissionResourceMemberService.addGroupMember(
+                projectCode = projectCode,
+                memberId = handoverTo,
+                memberType = USER_TYPE,
+                expiredAt = GROUP_EXPIRED_TIME,
+                iamGroupId = projectManagerGroupId!!.relationId.toInt()
+            )
         }
     }
 

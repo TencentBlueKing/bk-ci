@@ -1,6 +1,10 @@
 <template>
     <ul class="trigger-event-list">
-        <li v-for="(event, index) in events" :key="index" class="trigger-event-item">
+        <li
+            v-for="(event, index) in events"
+            :key="index"
+            class="trigger-event-item"
+        >
             <span
                 class="trigger-event-item-indicator"
                 :style="`background: ${statusColorMap[event.status]}29`"
@@ -16,24 +20,44 @@
             </p>
             <p class="trigger-event-reason">
                 <span>{{ event.reason }}</span>  |
-                <em v-if="event.buildNum" v-html="event.buildNum"></em>
-                <em v-bk-overflow-tips v-else v-html="event.reasonDetailList.join(' | ')"></em>
+                <em
+                    v-if="event.buildNum"
+                    v-html="event.buildNum"
+                ></em>
+                <em
+                    v-bk-overflow-tips
+                    v-else-if="Array.isArray(event.reasonDetailList)"
+                    v-html="event.reasonDetailList.join(' | ')"
+                ></em>
             </p>
             <bk-button
                 text
                 size="small"
                 theme="primary"
                 @click="triggerEvent(event)"
+                v-perm="{
+                    hasPermission: canExecute,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: pipelineId,
+                        action: RESOURCE_ACTION.EXECUTE
+                    }
+                }"
             >
-                {{$t('reTrigger')}}
+                {{ $t('reTrigger') }}
             </bk-button>
         </li>
     </ul>
 </template>
 <script>
+    import {
+        RESOURCE_ACTION
+    } from '@/utils/permission'
     import { statusColorMap } from '@/utils/pipelineStatus'
     import { convertTime } from '@/utils/util'
-    import { mapActions } from 'vuex'
+    import { mapActions, mapState } from 'vuex'
     export default {
         props: {
             events: {
@@ -42,8 +66,21 @@
             }
         },
         computed: {
+            ...mapState('atom', ['pipelineInfo']),
+            RESOURCE_ACTION () {
+                return RESOURCE_ACTION
+            },
             statusColorMap () {
                 return statusColorMap
+            },
+            projectId () {
+                return this.$route.params.projectId
+            },
+            pipelineId () {
+                return this.$route.params.pipelineId
+            },
+            canExecute () {
+                return this.pipelineInfo?.permissions?.canExecute ?? true
             }
         },
         inject: ['updateList'],

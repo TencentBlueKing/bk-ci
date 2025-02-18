@@ -66,7 +66,8 @@ import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
-import com.tencent.devops.common.webhook.service.code.filter.SkipCiFilter
+import com.tencent.devops.common.webhook.service.code.filter.KeywordSkipFilter
+import com.tencent.devops.common.webhook.service.code.filter.KeywordSkipFilter.Companion.KEYWORD_SKIP_CI
 import com.tencent.devops.common.webhook.service.code.filter.ThirdFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
@@ -96,6 +97,10 @@ class TGitPushTriggerHandler(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TGitPushTriggerHandler::class.java)
+        // 空提交点，可用于推断是新增/删除分支
+        // 新增分支 -> before为此值
+        // 删除分支 -> after为此值
+        const val EMPTY_COMMIT_ID = "0000000000000000000000000000000000000000"
     }
 
     override fun eventClass(): Class<GitPushEvent> {
@@ -135,7 +140,11 @@ class TGitPushTriggerHandler(
     }
 
     override fun getAction(event: GitPushEvent): String? {
-        return event.action_kind
+        return when {
+            !event.action_kind.isNullOrBlank() -> event.action_kind
+            event.before == EMPTY_COMMIT_ID -> TGitPushActionKind.CREATE_BRANCH.value
+            else -> TGitPushActionKind.CLIENT_PUSH.value
+        }
     }
 
     override fun getEventDesc(event: GitPushEvent): String {
@@ -157,8 +166,9 @@ class TGitPushTriggerHandler(
     override fun preMatch(event: GitPushEvent): WebhookMatchResult {
         val isMatch = when {
             event.total_commits_count <= 0 -> {
-                logger.info("Git web hook no commit(${event.total_commits_count})")
-                false
+                val operationKind = event.operation_kind
+                logger.info("Git web hook no commit(${event.total_commits_count})|operationKind=$operationKind")
+                operationKind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value
             }
             GitUtils.isPrePushBranch(event.ref) -> {
                 logger.info("Git web hook is pre-push event|branchName=${event.ref}")
@@ -208,15 +218,16 @@ class TGitPushTriggerHandler(
                     params = listOf(triggerOnBranchName)
                 ).toJsonStr()
             )
-            val skipCiFilter = SkipCiFilter(
+            val skipCiFilter = KeywordSkipFilter(
                 pipelineId = pipelineId,
-                triggerOnMessage = event.commits?.get(0)?.message ?: ""
+                keyWord = KEYWORD_SKIP_CI,
+                triggerOnMessage = event.commits?.firstOrNull()?.message ?: ""
             )
             val commits = event.commits
             val commitMessageFilter = CommitMessageFilter(
                 includeCommitMsg,
                 excludeCommitMsg,
-                commits?.first()?.message ?: "",
+                commits?.firstOrNull()?.message ?: "",
                 pipelineId
             )
             val eventPaths = if (tryGetChangeFilePath(this, event.operation_kind)) {
@@ -273,7 +284,9 @@ class TGitPushTriggerHandler(
                 thirdUrl = thirdUrl,
                 thirdSecretToken = thirdSecretToken,
                 gitScmService = gitScmService,
-                callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry
+                callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry,
+                failedReason = I18Variable(code = WebhookI18nConstants.THIRD_FILTER_NOT_MATCH).toJsonStr(),
+                eventType = getEventType().name
             )
             return listOf(
                 userFilter, branchFilter, skipCiFilter,

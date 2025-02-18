@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_dispatch
 
-**文档版本：** 1.0.2
+**文档版本：** 1.0.7
 
 **文档描述：** devops_ci_dispatch 的数据库文档
 | 表名                  | 说明       |
@@ -28,6 +28,7 @@
 | T_DISPATCH_RUNNING_JOBS | 运行中的 JOB |
 | T_DISPATCH_THIRDPARTY_AGENT_BUILD |  |
 | T_DISPATCH_THIRDPARTY_AGENT_DOCKER_DEBUG | 第三方构建机 Docker 登录调试 |
+| T_DISPATCH_THIRDPARTY_AGENT_QUEUE | 第三方构建机排队表 |
 | T_DOCKER_RESOURCE_OPTIONS | docker 基础配额表 |
 
 **表名：** <a>T_DISPATCH_KUBERNETES_BUILD</a>
@@ -462,6 +463,26 @@
 |  12   | DOCKER_INFO |   json   | 1073741824 |   0    |    Y     |  N   |       | 第三方构建机 docker 构建信息  |
 |  13   | ERR_MSG |   text   | 65535 |   0    |    Y     |  N   |       | 启动构建时的错误信息  |
 |  14   | DEBUG_URL |   varchar   | 4096 |   0    |    Y     |  N   |       | debug 链接  |
+
+**表名：** <a>T_DISPATCH_THIRDPARTY_AGENT_QUEUE</a>
+
+**说明：** 第三方构建机排队表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
+|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目 ID  |
+|  3   | PIPELINE_ID |   varchar   | 34 |   0    |    N     |  N   |       | 流水线 ID  |
+|  4   | BUILD_ID |   varchar   | 34 |   0    |    N     |  N   |       | 构建 ID  |
+|  5   | VM_SEQ_ID |   varchar   | 34 |   0    |    N     |  N   |       | 构建序列号  |
+|  6   | DATA |   varchar   | 256 |   0    |    N     |  N   |       | 排队资源，随着类型不同而不同  |
+|  7   | DATA_TYPE |   varchar   | 64 |   0    |    N     |  N   |       | 排队资源类型  |
+|  8   | INFO |   json   | 1073741824 |   0    |    N     |  N   |       | 额外的事件信息  |
+|  9   | RETRY_TIME |   int   | 10 |   0    |    N     |  N   |       | 重试次数  |
+|  10   | CREATED_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  11   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 
 **表名：** <a>T_DOCKER_RESOURCE_OPTIONS</a>
 

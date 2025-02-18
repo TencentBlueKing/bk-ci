@@ -28,6 +28,10 @@
 package com.tencent.devops.process.engine.control.command.container.impl
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
@@ -57,8 +61,28 @@ class ContainerCmdLoop(
             commandContext.event.copy(delayMills = DEFAULT_LOOP_TIME_MILLS, source = commandContext.latestSummary)
         )
         // #5454 增加可视化的互斥状态打印
-        if (commandContext.latestSummary == "mutex_print") {
+        if (commandContext.latestSummary == "mutex_print" ||
+            commandContext.latestSummary == "agent_reuse_mutex_print"
+        ) {
             commandContext.cmdFlowState = CmdFlowState.FINALLY
+            with(commandContext.container) {
+                pipelineEventDispatcher.dispatch(
+                    PipelineBuildStatusBroadCastEvent(
+                        source = "container-queue-loop-$containerId", projectId = projectId,
+                        pipelineId = pipelineId, userId = commandContext.event.userId,
+                        buildId = buildId, taskId = null, actionType = ActionType.START,
+                        containerHashId = containerHashId, jobId = jobId, stageId = null,
+                        stepId = null, atomCode = null, executeCount = executeCount,
+                        buildStatus = BuildStatus.QUEUE.name,
+                        type = PipelineBuildStatusBroadCastEventType.BUILD_JOB_QUEUE,
+                        labels = mapOf(
+                            "latestSummary" to commandContext.latestSummary,
+                            "mutexGroup" to (controlOption.mutexGroup?.runtimeMutexGroup ?: ""),
+                            "agentReuseMutex" to (controlOption.agentReuseMutex?.runtimeAgentOrEnvId ?: "")
+                        )
+                    )
+                )
+            }
         }
     }
 }

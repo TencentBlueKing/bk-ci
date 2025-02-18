@@ -16,12 +16,17 @@ multiCluster:
 # 镜像配置
 backendImage:
   pullPolicy: IfNotPresent
+  registry: registry-1.docker.io/bkci
+  repository: bkci-kubernetes-manager
+  tag: 0.0.32
+  pullPolicy: IfNotPresent 
+  pullSecrets: []
 
 # 内部数据源配置
 mysql:
   enabled: true
   image:
-    tag: 5.7.26
+    tag: 8.0.37-debian-12-r2
   auth:
     # 修改此选项必须删除mysql的pvc , 否则会创建mysql失败
     rootPassword: blueking
@@ -94,6 +99,7 @@ service:
 # kubernetesManager Deployment
 kubernetesManager:
   enabled: true
+  debug: false
   replicas: 1
   resources:
     requests:
@@ -119,8 +125,6 @@ kubernetesManager:
     maxReplicas: 3
     targetCPU: 80
     targetMemory: 80
-  # 使用的镜像
-  image: bkci/bkci-kubernetes-manager:0.0.32
   # 决定每次helm部署时的构建机所在的命名空间，同时dockerInitSh也在那里，为空时默认为 {{ .Release.Namespace }}
   builderNamespace:
   redis:
@@ -135,23 +139,49 @@ kubernetesManager:
     prometheusUrl: 
   # 构建并推送镜像相关
   buildAndPushImage:
-    image: gcr.io/kaniko-project/executor:v1.9.0
+    # gcr.io/kaniko-project/executor:v1.9.0
+    image: 
+      registry: gcr.io
+      repository: kaniko-project/executor
+      tag: v1.9.0
     # 拉取kaniko需要的凭据，如果不填视为没有
     pullImageRegistry:
       server:
       username:
       password:
+  # 无编译构建机
+  buildlessDeployment:
+    # bkci/ci:latest
+    image: 
+      registry: registry-1.docker.io/bkci
+      repository: ci
+      tag: latest
   apiserver:
     auth:
       # 针对蓝盾流水线访问的超级权限token
       apiToken:
         key: Devops-Token
         value: landun
-      rsaPrivateKey: |
+      rsaPrivateKey: ""
   volumeMount:
       # 流水线构建工作空间和agent日志在容器内的挂载点
       dataPath: /data/devops/workspace
       logPath: /data/devops/logs
+  # manager使用docker相关配置，会启用特权模式容器
+  docker:
+    enable: false
+    image: 
+      registry: registry-1.docker.io
+      repository: docker
+      tag: 24.0.1-dind
+    resources:
+      requests:
+        cpu: 50m
+        memory: 512Mi
+      limits:
+        cpu: 100m
+        memory: 1024Mi
+
 dockerInit:
   # 是否使用当前chart的 dockerinit.sh
   useDockerInit: true

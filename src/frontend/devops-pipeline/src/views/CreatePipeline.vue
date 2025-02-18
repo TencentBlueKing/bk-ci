@@ -1,23 +1,37 @@
 <template>
     <div class="create-pipeline-page-wrapper">
         <pipeline-header>
-            <logo size="24" name="pipeline" slot="logo" />
-            <bk-breadcrumb slot="title" separator-class="devops-icon icon-angle-right">
+            <logo
+                size="24"
+                name="pipeline"
+                slot="logo"
+            />
+            <bk-breadcrumb
+                slot="title"
+                separator-class="devops-icon icon-angle-right"
+            >
                 <bk-breadcrumb-item
                     class="pipeline-breadcrumb-item"
                     :to="pipelineListRoute"
                 >
-                    {{$t('pipeline')}}
+                    {{ $t('pipeline') }}
                 </bk-breadcrumb-item>
                 <bk-breadcrumb-item
                     class="pipeline-breadcrumb-item"
                 >
-                    {{$t('newlist.addPipeline')}}
+                    {{ $t('newlist.addPipeline') }}
                 </bk-breadcrumb-item>
-
             </bk-breadcrumb>
         </pipeline-header>
-        <div v-bkloading="{ isLoading }" class="pipeline-template-box">
+        <alert-tips
+            v-if="enablePipelineNameTips"
+            :title="$t('pipelineNameConventions')"
+            :message="pipelineNameFormat"
+        />
+        <div
+            v-bkloading="{ isLoading }"
+            class="pipeline-template-box"
+        >
             <aside class="pipeline-template-box-left-side">
                 <bk-form form-type="vertical">
                     <bk-form-item :label="$t('pipelineName')">
@@ -30,26 +44,48 @@
                                 v-model.trim="newPipelineName"
                                 v-validate.initial="'required'"
                             />
-                            <span class="border-effect" v-show="!errors.has('newPipelineName')"></span>
-                            <span v-show="errors.has('newPipelineName')" class="validate-fail-border-effect"></span>
+                            <span
+                                class="border-effect"
+                                v-show="!errors.has('newPipelineName')"
+                            ></span>
+                            <span
+                                v-show="errors.has('newPipelineName')"
+                                class="validate-fail-border-effect"
+                            ></span>
                         </div>
                     </bk-form-item>
                     <template v-if="!isActiveTempEmpty">
                         <bk-form-item :label="$t('type')">
-                            <bk-radio-group class="pipelinte-template-type-group" v-model="templateType">
-                                <bk-popover placement="bottom" v-for="(entry, key) in tplTypes" :key="key">
+                            <bk-radio-group
+                                class="pipelinte-template-type-group"
+                                v-model="templateType"
+                            >
+                                <bk-popover
+                                    placement="bottom"
+                                    v-for="(entry, key) in tplTypes"
+                                    :key="key"
+                                >
                                     <bk-radio
                                         :value="entry.value"
                                     >
                                         <span class="radio-label">{{ entry.label }}</span>
                                     </bk-radio>
-                                    <div slot="content" style="white-space: normal;">{{entry.tip}}</div>
+                                    <div
+                                        slot="content"
+                                        style="white-space: normal;"
+                                    >
+                                        {{ entry.tip }}
+                                    </div>
                                 </bk-popover>
                             </bk-radio-group>
                         </bk-form-item>
-                        <bk-form-item :label="$t('copyTempConf')" label-width="auto">
+                        <bk-form-item
+                            :label="$t('copyTempConf')"
+                            label-width="auto"
+                        >
                             <bk-checkbox-group v-model="applySettings">
-                                <div v-for="item in settingItems"
+                                <div
+                                    v-for="item in settingItems"
                                     :key="item.label"
                                     :class="['template-setting-apply-checkbox', {
                                         'disabled-setting': item.disabled
@@ -57,14 +93,14 @@
                                 >
                                     <bk-checkbox
                                         :value="item.value"
-                                        :disabled="item.disabled"
+                                        :disabled="item.disabled || isConstrainMode"
                                     >
                                         <p class="template-apply-setting-checkbox-txt">
                                             <span class="template-apply-setting-checkbox-txt-label">{{ item.label }}</span>
                                         </p>
                                     </bk-checkbox>
                                     <em v-if="item.disabled">
-                                        {{$t('tempWithoutConf')}}
+                                        {{ $t('tempWithoutConf') }}
                                     </em>
                                     <bk-button
                                         text
@@ -73,12 +109,27 @@
                                         @click.stop="previewSetting(item.value)"
                                         v-else
                                     >
-                                        {{$t('pipelinesPreview')}}
+                                        {{ $t('pipelinesPreview') }}
                                     </bk-button>
                                 </div>
                             </bk-checkbox-group>
                         </bk-form-item>
                     </template>
+                    <bk-form-item>
+                        <pipeline-label-selector
+                            :value.sync="labelValues"
+                            :disabled="isConstrainMode"
+                        />
+                    </bk-form-item>
+                    <bk-form-item ext-cls="namingConvention">
+                        <syntax-style-configuration
+                            :disabled="isConstrainMode"
+                            :inherited-dialect="inheritedDialect"
+                            :pipeline-dialect="pipelineDialect"
+                            @inherited-change="inheritedChange"
+                            @pipeline-dialect-change="pipelineDialectChange"
+                        />
+                    </bk-form-item>
                 </bk-form>
                 <footer style="margin-top: 24px;">
                     <bk-button
@@ -86,18 +137,25 @@
                         :disabled="isConfirmDisable"
                         @click="createNewPipeline"
                     >
-                        {{$t('create')}}
+                        {{ $t('create') }}
                     </bk-button>
                     <bk-button
                         @click="goList"
                     >
-                        {{$t('cancel')}}
+                        {{ $t('cancel') }}
                     </bk-button>
                 </footer>
             </aside>
             <div class="pipeline-template-box-right-side">
-                <bk-tab :active.sync="activePanel" @tab-change="handleTemplateTypeChange" type="unborder-card">
-                    <div class="pipeline-template-searchbox" slot="setting">
+                <bk-tab
+                    :active.sync="activePanel"
+                    @tab-change="handleTemplateTypeChange"
+                    type="unborder-card"
+                >
+                    <div
+                        class="pipeline-template-searchbox"
+                        slot="setting"
+                    >
                         <bk-input
                             v-model.trim="searchName"
                             icon-right="bk-icon icon-search"
@@ -111,8 +169,13 @@
                     >
                     </bk-tab-panel>
                 </bk-tab>
-                <ul class="create-pipeline-template-list" v-if="tempList.length" @scroll.passive="scrollLoadMore">
-                    <li v-for="(temp, tIndex) in tempList"
+                <ul
+                    class="create-pipeline-template-list"
+                    v-if="tempList.length"
+                    @scroll.passive="scrollLoadMore"
+                >
+                    <li
+                        v-for="(temp, tIndex) in tempList"
                         :class="{
                             'active': activeTempIndex === tIndex,
                             'disabled': !temp.installed
@@ -120,16 +183,28 @@
                         :key="temp.name"
                         @click="selectTemp(tIndex)"
                     >
-
-                        <span v-if="activeTempIndex === tIndex" class="pipeline-template-corner">
+                        <span
+                            v-if="activeTempIndex === tIndex"
+                            class="pipeline-template-corner"
+                        >
                             <i class="bk-icon icon-check-1"></i>
                         </span>
                         <p class="pipeline-template-logo">
-                            <img :src="temp.logoUrl" v-if="temp.logoUrl">
-                            <logo size="50" :name="temp.icon || 'placeholder'" v-else></logo>
+                            <img
+                                :src="temp.logoUrl"
+                                v-if="temp.logoUrl"
+                            >
+                            <logo
+                                size="50"
+                                :name="temp.icon || 'placeholder'"
+                                v-else
+                            ></logo>
                         </p>
                         <div class="pipeline-template-detail">
-                            <p class="pipeline-template-title" :title="temp.name">
+                            <p
+                                class="pipeline-template-title"
+                                :title="temp.name"
+                            >
                                 <span>{{ temp.name }}</span>
                                 <logo
                                     v-if="temp.isStore"
@@ -138,11 +213,17 @@
                                     size="22"
                                 />
                             </p>
-                            <p class="pipeline-template-desc" :title="temp.desc">
+                            <p
+                                class="pipeline-template-desc"
+                                :title="temp.desc"
+                            >
                                 {{ temp.desc || '--' }}
                             </p>
                         </div>
-                        <div v-if="tIndex > 0" class="pipeline-template-status">
+                        <div
+                            v-if="tIndex > 0 || activePanel === 'store'"
+                            class="pipeline-template-status"
+                        >
                             <bk-button
                                 v-if="temp.hasPermission"
                                 text
@@ -160,16 +241,15 @@
                                 }"
                                 @click.stop="handleTemp(temp, tIndex)"
                             >
-                                {{$t(temp.btnText)}}
+                                {{ $t(temp.btnText) }}
                             </bk-button>
                             <span v-else>
-                                {{$t('newlist.noInstallPerm')}}
+                                {{ $t('newlist.noInstallPerm') }}
                             </span>
                         </div>
                     </li>
                 </ul>
             </div>
-
         </div>
         <pipeline-template-preview
             v-model="isShowPreview"
@@ -187,12 +267,18 @@
     import { templateTypeEnum } from '@/utils/pipelineConst'
     import { getCacheViewId } from '@/utils/util'
     import { mapActions, mapState } from 'vuex'
+    import SyntaxStyleConfiguration from '@/components/syntaxStyleConfiguration'
+    import AlertTips from '@/components/AlertTips.vue'
+    import PipelineLabelSelector from '@/components/PipelineLabelSelector/'
 
     export default {
         components: {
             pipelineHeader,
             PipelineTemplatePreview,
-            Logo
+            Logo,
+            SyntaxStyleConfiguration,
+            AlertTips,
+            PipelineLabelSelector
         },
         data () {
             return {
@@ -201,6 +287,8 @@
                 isDisabled: false,
                 activeTempIndex: 0,
                 applySettings: [],
+                inheritedDialect: true,
+                pipelineDialect: 'CLASSIC',
                 isLoading: false,
                 newPipelineName: '',
                 searchName: '',
@@ -212,7 +300,8 @@
                 page: 1,
                 pageSize: 50,
                 isShowPreview: false,
-                previewSettingType: ''
+                previewSettingType: '',
+                labelValues: []
             }
         },
         computed: {
@@ -220,8 +309,21 @@
                 'pipelineTemplateMap'
             ]),
             ...mapState('pipelines', [
-                'isManage'
+                'isManage',
+                'templateSetting'
             ]),
+            curProject () {
+                return this.$store.state.curProject
+            },
+            enablePipelineNameTips () {
+                return this.curProject?.properties?.enablePipelineNameTips ?? false
+            },
+            pipelineNameFormat () {
+                return this.curProject?.properties?.pipelineNameFormat ?? ''
+            },
+            defaultPipelineDialect () {
+                return this.curProject?.properties?.pipelineDialect
+            },
             pipelineListRoute () {
                 return {
                     name: 'PipelineManageList',
@@ -313,6 +415,9 @@
                         }
                     }).filter(item => item.name.toLowerCase().indexOf(this.searchName.toLowerCase()) > -1) ?? []
                 }
+            },
+            isConstrainMode () {
+                return this.templateType === templateTypeEnum.CONSTRAIN
             }
         },
         watch: {
@@ -324,17 +429,26 @@
                         }
                         return acc
                     }, [])
-                    console.log(this.applySettings)
                 }
+            },
+            searchName (val) {
+                if (this.activePanel === 'store') {
+                    this.requestMarkTemplates(true)
+                }
+            },
+            defaultPipelineDialect (val) {
+                this.pipelineDialect = val
             }
         },
-        created () {
+        async created () {
+            await this.$store.dispatch('requestProjectDetail', {
+                projectId: this.$route.params.projectId
+            })
             this.requestPipelineTemplate({
                 projectId: this.$route.params.projectId
             })
         },
         mounted () {
-            console.log(this.$refs.pipelineName)
             this.$nextTick(() => {
                 this.$refs.pipelineName.focus()
             })
@@ -346,7 +460,8 @@
             ]),
             ...mapActions('pipelines', [
                 'installPipelineTemplate',
-                'createPipelineWithTemplate'
+                'createPipelineWithTemplate',
+                'requestTemplateSetting'
             ]),
             goList () {
                 this.$router.push(this.pipelineListRoute)
@@ -376,7 +491,8 @@
                 const param = {
                     page: this.page,
                     pageSize: this.pageSize,
-                    projectCode: this.$route.params.projectId
+                    projectCode: this.$route.params.projectId,
+                    keyword: this.searchName
                 }
                 this.requestStoreTemplate(param).then((res) => {
                     this.page++
@@ -416,9 +532,17 @@
                     this.isLoading = false
                 }
             },
-            selectTemp (index) {
-                console.log(index)
+            async selectTemp (index) {
                 const target = this.tempList.length && this.tempList[index]
+                if (target?.templateType !== 'PUBLIC') {
+                    await this.requestTemplateSetting({
+                        projectId: this.$route.params.projectId,
+                        templateId: target.templateId
+                    })
+                    this.labelValues = this.templateSetting.labels
+                } else {
+                    this.labelValues = []
+                }
                 if (index !== this.activeTempIndex && target.installed) {
                     this.activeTempIndex = index
                 }
@@ -436,7 +560,6 @@
                 this.previewSettingType = ''
             },
             previewSetting (setting) {
-                console.log(setting)
                 this.isShowPreview = true
                 this.previewSettingType = setting
             },
@@ -462,7 +585,10 @@
                             result[item] = true
                             return result
                         }, {}),
-                        instanceType: this.templateType
+                        instanceType: this.templateType,
+                        inheritedDialect: this.inheritedDialect,
+                        pipelineDialect: this.pipelineDialect,
+                        labels: this.labelValues
                     }
 
                     if (this.templateType === templateTypeEnum.CONSTRAIN) {
@@ -472,6 +598,10 @@
                                 templateId: this.activeTemp.templateId,
                                 curVersionId: this.activeTemp.version,
                                 pipelineName: this.newPipelineName
+
+                            },
+                            query: {
+                                useTemplateSettings: true
                             }
                         })
                         return
@@ -505,6 +635,15 @@
                 } finally {
                     this.isDisabled = false
                 }
+            },
+            inheritedChange (value) {
+                this.inheritedDialect = value
+                if (value) {
+                    this.pipelineDialect = this.defaultPipelineDialect
+                }
+            },
+            pipelineDialectChange (value) {
+                this.pipelineDialect = value
             }
         }
     }
@@ -532,6 +671,10 @@
             padding: 24px;
             background: white;
             overflow: auto;
+            
+            .namingConvention {
+                position: relative;
+            }
 
             .pipeline-input {
                 position: relative;

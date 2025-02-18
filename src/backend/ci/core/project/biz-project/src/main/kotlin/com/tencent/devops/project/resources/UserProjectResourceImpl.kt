@@ -39,6 +39,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.user.UserProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
 import com.tencent.devops.project.pojo.OperationalProductVO
+import com.tencent.devops.project.pojo.ProjectByConditionDTO
 import com.tencent.devops.project.pojo.ProjectCollation
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
@@ -47,7 +48,6 @@ import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectSortType
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.ProjectByConditionDTO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
@@ -120,8 +120,7 @@ class UserProjectResourceImpl @Autowired constructor(
                 userId = userId,
                 englishName = projectId,
                 accessToken = accessToken
-            )
-                ?: throw OperationException("project $projectId not found")
+            ) ?: throw OperationException("project $projectId not found")
         )
     }
 
@@ -272,5 +271,9 @@ class UserProjectResourceImpl @Autowired constructor(
         return Result(
             projectService.getOperationalProductsByBgName(bgName)
         )
+    }
+
+    override fun getPipelineDialect(userId: String, projectId: String): Result<String> {
+        return Result(projectService.getPipelineDialect(projectId = projectId))
     }
 }

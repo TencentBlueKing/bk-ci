@@ -1,8 +1,12 @@
 <template>
-    <bk-form form-type="vertical" class="pipeline-execute-params-form">
+    <bk-form
+        form-type="vertical"
+        class="pipeline-execute-params-form"
+    >
         <form-field
             v-for="param in paramList"
-            :key="param.id" :required="param.required"
+            :key="param.id"
+            :required="param.required"
             :is-error="errors.has('devops' + param.name)"
             :error-msg="errors.first('devops' + param.name)"
             :label="param.label || param.id"
@@ -10,20 +14,19 @@
             <section class="component-row">
                 <component
                     :is="param.component"
-                    v-validate="{ required: param.required }"
+                    v-validate="{ required: param.required, objectRequired: isObject(param.value) }"
                     :click-unfold="true"
                     :show-select-all="true"
                     :handle-change="handleParamUpdate"
+                    flex
                     v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })"
                     :class="{
                         'is-diff-param': highlightChangedParam && param.isChanged
                     }"
                     :disabled="disabled"
                     :placeholder="param.placeholder"
+                    :is-diff-param="highlightChangedParam && param.isChanged"
                 />
-                <div class="file-upload" v-if="showFileUploader(param.type)">
-                    <file-param-input :file-path="param.value"></file-param-input>
-                </div>
             </section>
             <span
                 v-if="!errors.has('devops' + param.name)"
@@ -37,34 +40,39 @@
 </template>
 
 <script>
+    import EnumInput from '@/components/atomFormField/EnumInput'
+    import RequestSelector from '@/components/atomFormField/RequestSelector'
+    import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
-    import EnumInput from '@/components/atomFormField/EnumInput'
-    import Selector from '@/components/atomFormField/Selector'
-    import RequestSelector from '@/components/atomFormField/RequestSelector'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import metadataList from '@/components/common/metadata-list'
-    import FileParamInput from '@/components/FileParamInput'
+    import FileParamInput from '@/components/atomFormField/FileParamInput'
+    import CascadeRequestSelector from '@/components/atomFormField/CascadeRequestSelector'
+    import { isObject } from '@/utils/util'
     import {
-        BOOLEAN_LIST,
-        isMultipleParam,
-        isEnumParam,
-        isSvnParam,
-        isGitParam,
-        isCodelibParam,
-        isFileParam,
-        isRemoteType,
-        ParamComponentMap,
-        STRING,
         BOOLEAN,
-        MULTIPLE,
-        ENUM,
-        SVN_TAG,
-        GIT_REF,
+        BOOLEAN_LIST,
         CODE_LIB,
         CONTAINER_TYPE,
+        ENUM,
+        GIT_REF,
+        isCodelibParam,
+        isEnumParam,
+        isFileParam,
+        isGitParam,
+        isMultipleParam,
+        isRemoteType,
+        isSvnParam,
+        MULTIPLE,
+        ParamComponentMap,
+        STRING,
         SUB_PIPELINE,
-        TEXTAREA
+        SVN_TAG,
+        TEXTAREA,
+        REPO_REF,
+        getBranchOption,
+        isRepoParam
     } from '@/store/modules/atom/paramsConfig'
 
     export default {
@@ -77,7 +85,8 @@
             VuexTextarea,
             FormField,
             metadataList,
-            FileParamInput
+            FileParamInput,
+            CascadeRequestSelector
         },
         props: {
             disabled: {
@@ -108,7 +117,7 @@
                                 ...restParam,
                                 ...param.payload,
                                 multiSelect: param.type === 'MULTIPLE',
-                                value: param.type === 'MULTIPLE' ? param.value.split(',') : param.value
+                                value: param.type === 'MULTIPLE' ? this.paramValues?.[param.id]?.split(',') : this.paramValues[param.id]
                             }
                         } else {
                             restParam = {
@@ -160,12 +169,21 @@
                         name: param.id,
                         required: param.valueNotEmpty,
                         value: this.paramValues[param.id],
-                        ...restParam
+                        ...restParam,
+                        ...(
+                            isRepoParam(param.type)
+                                ? {
+                                    childrenOptions: this.getBranchOption(this.paramValues?.[param.id]?.['repo-name'])
+                                }
+                                : {}
+                        )
                     }
                 })
             }
         },
         methods: {
+            isObject,
+            getBranchOption,
             getParamComponentType (param) {
                 if (isRemoteType(param)) {
                     return 'request-selector'
@@ -184,6 +202,15 @@
                     case param.type === CODE_LIB:
                     case param.type === CONTAINER_TYPE:
                     case param.type === SUB_PIPELINE:
+                    case param.type === REPO_REF:
+                        return param.options
+                    default:
+                        return []
+                }
+            },
+            getCodeRepoOpt (param) {
+                switch (true) {
+                    case param.type === REPO_REF:
                         return param.options
                     default:
                         return []
@@ -199,7 +226,6 @@
             getParamByName (name) {
                 return this.paramList.find(param => `devops${param.name}` === name)
             },
-
             handleParamUpdate (name, value) {
                 const param = this.getParamByName(name)
                 if (isMultipleParam(param.type)) { // 复选框，需要将数组转化为逗号隔开的字符串
@@ -234,7 +260,9 @@
             }
 
             .bk-select {
-                background: white;
+                &:not(.is-disabled) {
+                    background: white;
+                }
                 width: 100%;
             }
             .meta-data {
@@ -248,40 +276,6 @@
             .meta-data:hover {
                 .metadata-box {
                     display: block;
-                }
-            }
-            .file-upload {
-                display: flex;
-                margin-left: 10px;
-                color: $fontWeightColor;
-                ::v-deep .bk-upload.button {
-                    position: static;
-                    display: flex;
-                    .file-wrapper {
-                        margin-bottom: 0;
-                        height: 32px;
-                        background: white;
-                    }
-                    p.tip {
-                        white-space: nowrap;
-                        position: static;
-                        margin-left: 8px;
-                    }
-                    .all-file {
-                        width: 100%;
-                        position: absolute;
-                        right: 0;
-                        top: 0;
-                        .file-item {
-                            margin-bottom: 0;
-                            &.file-item-fail {
-                                background: rgb(254,221,220);
-                            }
-                        }
-                        .error-msg {
-                            margin: 0
-                        }
-                    }
                 }
             }
         }

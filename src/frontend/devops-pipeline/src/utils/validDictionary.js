@@ -50,15 +50,19 @@ const dictionary = {
             nonVarRule: field => '该字段不需要包含${{}}',
             notStartWithBKCI: field => '该字段不能以BK_CI开头',
             paramsRule: field => '字段只能包含英文字母、数字及下划线',
+            paramsIdRule: field => '变量名只能使用英文字母，数字和下划线，首字符不能以数字开头',
             timeoutsRule: field => '请输入1-10080之间的正整数，支持引用流水线变量',
             reminderTimeRule: field => '请输入1-168之间的正整数',
-            maxConcurrencyRule: field => '请输入1-1000之间的正整数'
+            maxConcurrencyRule: field => '请输入1-1000之间的正整数',
+            objectRequired: field => '字段值缺失，请填入完整的值'
         }
     },
     'en-US': {
         messages: {
+            alpha: field => 'The field can only contain letters',
             unique: field => `${field} field cannot be repeated`,
             notInList: field => `${field} field cannot be repeated`,
+            required: field => 'This field cannot be empty',
             excludeComma: field => 'Field cannot contain English commas',
             string: field => 'Fields can only contain numbers, letters, and underscores',
             numeric: field => 'Fields can only contain numbers',
@@ -85,8 +89,11 @@ const dictionary = {
             nonVarRule: field => 'This field does not need to be included ${{}}',
             notStartWithBKCI: field => "Field can not start with 'BK_CI'",
             paramsRule: () => 'Field only support English letter, numbers and underscores',
+            paramsIdRule: field => 'Variable names can only contain English letters, numbers, and underscores, and must not start with a number.',
             timeoutsRule: field => 'Please enter an integer between 1-10080, or a pipeline variable',
-            reminderTimeRule: field => ''
+            reminderTimeRule: field => 'Please enter a positive integer between 1 and 168',
+            maxConcurrencyRule: field => 'Please enter a positive integer between 1 and 1000',
+            objectRequired: field => 'The field value is missing, please provide a complete value'
         }
     }
 }

@@ -33,15 +33,14 @@ import com.tencent.devops.store.pojo.common.KEY_HOT_FLAG
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.statistic.StoreStatisticPipelineNumUpdate
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import java.math.BigDecimal
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Query
 import org.jooq.Record1
 import org.jooq.Record8
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.math.BigDecimal
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -103,46 +102,27 @@ class StoreStatisticTotalDao {
         }
     }
 
-    fun updateStatisticDataHotFlag(
+    fun updateStorePipelineNum(
         dslContext: DSLContext,
-        storeCode: String,
-        storeType: Byte,
-        hotFlag: Boolean
-    ) {
-        with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
-            dslContext.update(this)
-                .set(HOT_FLAG, hotFlag)
-                .where(STORE_TYPE.eq(storeType).and(STORE_CODE.eq(storeCode)))
-                .execute()
-        }
-    }
-
-    fun batchUpdatePipelineNum(
-        dslContext: DSLContext,
-        pipelineNumUpdateList: List<StoreStatisticPipelineNumUpdate>,
+        pipelineNumUpdate: StoreStatisticPipelineNumUpdate,
         storeType: Byte
     ) {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
-            val list = mutableListOf<Query>()
-            pipelineNumUpdateList.forEach { pipelineNumUpdate ->
-                val baseStep = dslContext.update(this)
-                    .set(UPDATE_TIME, LocalDateTime.now())
-                val incrementFlag = pipelineNumUpdate.incrementFlag
-                if (incrementFlag != null) {
-                    if (incrementFlag) {
-                        baseStep.set(PIPELINE_NUM, PIPELINE_NUM + 1)
-                    } else {
-                        baseStep.set(PIPELINE_NUM, PIPELINE_NUM - 1)
-                    }
+            val baseStep = dslContext.update(this)
+                .set(UPDATE_TIME, LocalDateTime.now())
+            val incrementFlag = pipelineNumUpdate.incrementFlag
+            if (incrementFlag != null) {
+                if (incrementFlag) {
+                    baseStep.set(PIPELINE_NUM, PIPELINE_NUM + 1)
+                } else {
+                    baseStep.set(PIPELINE_NUM, PIPELINE_NUM - 1)
                 }
-                val num = pipelineNumUpdate.num
-                if (num != null) {
-                    baseStep.set(PIPELINE_NUM, num)
-                }
-                baseStep.where(STORE_CODE.eq(pipelineNumUpdate.storeCode).and(STORE_TYPE.eq(storeType)))
-                list.add(baseStep)
             }
-            dslContext.batch(list).execute()
+            val num = pipelineNumUpdate.num
+            if (num != null) {
+                baseStep.set(PIPELINE_NUM, num)
+            }
+            baseStep.where(STORE_CODE.eq(pipelineNumUpdate.storeCode).and(STORE_TYPE.eq(storeType))).execute()
         }
     }
 

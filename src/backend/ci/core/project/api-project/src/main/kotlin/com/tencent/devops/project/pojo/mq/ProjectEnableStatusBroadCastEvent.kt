@@ -1,10 +1,10 @@
 package com.tencent.devops.project.pojo.mq
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.stream.constants.StreamBinding
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Event(exchange = MQ.EXCHANGE_PROJECT_ENABLE_FANOUT)
+@Event(StreamBinding.PROJECT_ENABLE_FANOUT)
 data class ProjectEnableStatusBroadCastEvent(
     override val userId: String,
     override val projectId: String,

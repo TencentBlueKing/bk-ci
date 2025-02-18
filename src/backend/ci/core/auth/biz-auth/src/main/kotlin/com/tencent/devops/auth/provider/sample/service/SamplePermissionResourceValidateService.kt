@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.provider.sample.service
 
 import com.tencent.devops.auth.pojo.dto.PermissionBatchValidateDTO
+import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.service.iam.PermissionResourceValidateService
 
 class SamplePermissionResourceValidateService : PermissionResourceValidateService {
@@ -38,5 +39,21 @@ class SamplePermissionResourceValidateService : PermissionResourceValidateServic
         permissionBatchValidateDTO: PermissionBatchValidateDTO
     ): Map<String, Boolean> {
         return permissionBatchValidateDTO.actionList.associateWith { true }
+    }
+
+    override fun hasManagerPermission(
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        resourceCode: String
+    ): Boolean = true
+
+    override fun validateUserProjectPermissionByChannel(
+        userId: String,
+        projectCode: String,
+        operateChannel: OperateChannel,
+        targetMemberId: String
+    ) {
+        return
     }
 }

@@ -47,8 +47,12 @@ data class TemplateInstanceCreateRequest(
     var instanceType: String? = PipelineInstanceTypeEnum.FREEDOM.type,
     @get:Schema(title = "是否为空模板", required = false)
     var emptyTemplate: Boolean? = false,
-    @get:Schema(title = "标签", required = false)
-    var labels: List<String> = emptyList(),
     @get:Schema(title = "静态流水线组", required = false)
-    var staticViews: List<String> = emptyList()
+    var staticViews: List<String> = emptyList(),
+    @get:Schema(title = "是否继承项目流水线语言风格", required = false)
+    var inheritedDialect: Boolean? = true,
+    @get:Schema(title = "流水线语言风格", required = false)
+    var pipelineDialect: String? = null,
+    @get:Schema(title = "流水线标签", required = false)
+    val labels: List<String> = emptyList()
 )
