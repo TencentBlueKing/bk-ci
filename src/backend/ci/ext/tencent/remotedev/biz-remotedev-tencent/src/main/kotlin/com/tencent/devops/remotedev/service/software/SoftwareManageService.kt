@@ -129,7 +129,7 @@ class SoftwareManageService @Autowired constructor(
                 )
             // 校验状态
             when (workspace.status) {
-                WorkspaceStatus.DELIVERING, WorkspaceStatus.PREPARING -> {
+                WorkspaceStatus.DELIVERING, WorkspaceStatus.PREPARING, WorkspaceStatus.REBUILDING -> {
                     workspaceOpHistoryDao.createWorkspaceHistory(
                         dslContext = dslContext,
                         workspaceName = workspaceName,

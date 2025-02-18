@@ -74,13 +74,7 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                     commandContext.notifyValue["successContent"] = successContent
                     commandContext.notifyValue["emailSuccessContent"] = successContent
                     commandContext.notifyValue[NotifyUtils.WEWORK_GROUP_KEY] = group
-                    val receivers = successSubscription.users.split(",").map {
-                        EnvUtils.parseEnv(
-                            command = it,
-                            data = commandContext.variables,
-                            replaceWithEmpty = true
-                        )
-                    }.toMutableSet()
+                    val receivers = parseReceiver(successSubscription.users, commandContext.variables)
                     if (!emptyGroup(successSubscription.groups)) {
                         logger.info("success notify config group: ${successSubscription.groups}")
                         val projectRoleUsers = authProjectApi.getProjectGroupAndUserList(
@@ -129,13 +123,7 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                     commandContext.notifyValue["failContent"] = failContent
                     commandContext.notifyValue["emailFailContent"] = failContent
                     commandContext.notifyValue[NotifyUtils.WEWORK_GROUP_KEY] = group
-                    val receivers = failSubscription.users.split(",").map {
-                        EnvUtils.parseEnv(
-                            command = it,
-                            data = commandContext.variables,
-                            replaceWithEmpty = true
-                        )
-                    }.toMutableSet()
+                    val receivers = parseReceiver(failSubscription.users, commandContext.variables)
                     if (!emptyGroup(failSubscription.groups)) {
                         logger.info("fail notify config group: ${failSubscription.groups}")
                         val projectRoleUsers = authProjectApi.getProjectGroupAndUserList(
@@ -185,7 +173,30 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
         return false
     }
 
+    /**
+     * 解析接收人
+     */
+    private fun parseReceiver(receiversStr: String?, variables: Map<String, String>): MutableSet<String> {
+        val receivers = mutableSetOf<String>()
+        if (!receiversStr.isNullOrBlank()) {
+            receiversStr.split(USER_SEPARATOR_REGEX).map {
+                val userId = EnvUtils.parseEnv(
+                    command = it,
+                    data = variables,
+                    replaceWithEmpty = true
+                )
+                if (userId.contains(USER_SEPARATOR_REGEX)) {
+                    receivers.addAll(userId.split(USER_SEPARATOR_REGEX))
+                } else {
+                    receivers.add(userId)
+                }
+            }.toSet()
+        }
+        return receivers.filter { it.isNotBlank() }.toMutableSet()
+    }
+
     companion object {
         val logger = LoggerFactory.getLogger(TxNotifySendGroupMsgCmdImpl::class.java)
+        val USER_SEPARATOR_REGEX = "[,;]".toRegex()
     }
 }

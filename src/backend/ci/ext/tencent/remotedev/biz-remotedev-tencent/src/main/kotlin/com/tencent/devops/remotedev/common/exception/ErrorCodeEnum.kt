@@ -221,6 +221,11 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.USER,
         errorCode = "2132052",
         formatErrorMessage = "user face recognition error: {0}"
+    ),
+    WORKSPACE_CDS_ERROR(
+        errorType = ErrorType.SYSTEM,
+        errorCode = "2132053",
+        formatErrorMessage = "workspace cds error: {0}"
     );
 
     fun getErrorMessage(): String {

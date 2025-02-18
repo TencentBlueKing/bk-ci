@@ -28,12 +28,12 @@
 package com.tencent.devops.remotedev.service.projectworkspace
 
 import com.tencent.bk.audit.annotations.ActionAuditRecord
-import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.audit.ActionAuditContent
-import com.tencent.devops.common.auth.api.ActionId
-import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.audit.TencentActionAuditContent
+import com.tencent.devops.common.auth.api.TencentActionId
+import com.tencent.devops.common.auth.api.TencentResourceTypeId
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
@@ -85,15 +85,13 @@ class StartWorkspaceHandler @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.CGS_START,
+        actionId = TencentActionId.CGS_START,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS,
+            resourceType = TencentResourceTypeId.CGS,
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
-        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
-        scopeId = "#projectId",
-        content = ActionAuditContent.CGS_START_CONTENT
+        content = TencentActionAuditContent.CGS_START_CONTENT
     )
     fun startWorkspace(userId: String, workspaceName: String): WorkspaceResponse {
         logger.info("$userId start project workspace $workspaceName")
@@ -115,6 +113,10 @@ class StartWorkspaceHandler @Autowired constructor(
                 params = arrayOf("You do not have permission to start $workspaceName")
             )
         }
+        ActionAuditContext.current()
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .setScopeId(workspace.projectId)
+
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",

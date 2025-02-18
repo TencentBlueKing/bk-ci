@@ -9,3 +9,4 @@
 - [CHANGELOG-2.1.md](zh_CN/CHANGELOG-2.1.md)
 - [CHANGELOG-3.0.md](zh_CN/CHANGELOG-3.0.md)
 - [CHANGELOG-3.1.md](zh_CN/CHANGELOG-3.1.md)
+- [CHANGELOG-3.2.md](zh_CN/CHANGELOG-3.2.md)

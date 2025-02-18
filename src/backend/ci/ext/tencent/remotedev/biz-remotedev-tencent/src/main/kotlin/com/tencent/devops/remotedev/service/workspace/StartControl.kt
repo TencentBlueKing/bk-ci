@@ -31,9 +31,9 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.audit.ActionAuditContent
-import com.tencent.devops.common.auth.api.ActionId
-import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.audit.TencentActionAuditContent
+import com.tencent.devops.common.auth.api.TencentActionId
+import com.tencent.devops.common.auth.api.TencentResourceTypeId
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
@@ -53,15 +53,15 @@ import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
+import java.time.Duration
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.Duration
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("LongMethod")
@@ -83,13 +83,13 @@ class StartControl @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.CGS_START,
+        actionId = TencentActionId.CGS_START,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS,
+            resourceType = TencentResourceTypeId.CGS,
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
-        content = ActionAuditContent.CGS_START_CONTENT
+        content = TencentActionAuditContent.CGS_START_CONTENT
     )
     fun startWorkspace(userId: String, workspaceName: String): WorkspaceResponse {
         logger.info("$userId start workspace $workspaceName")
@@ -99,23 +99,10 @@ class StartControl @Autowired constructor(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(workspaceName)
             )
-        // 启动时先刷新状态，
-        val fix = workspaceCommon.fixUnexpectedStatus(
-            userId = userId,
-            workspaceName = workspaceName,
-            status = workspace.status,
-            mountType = workspace.workspaceMountType
-        )
-        if (fix.checkException()) {
-            logger.info("$workspaceName is EXCEPTION and not repaired, return error.")
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WORKSPACE_ERROR.errorCode
-            )
-        }
 
         // 审计
         ActionAuditContext.current()
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
             .scopeId = workspace.projectId
         // 启动云桌面时增加一个判断是否项目成员，避免成员已经剔除了还可以打开。
         permissionService.checkOwnerPermission(userId, workspaceName, workspace.projectId, workspace.ownerType)

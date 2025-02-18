@@ -13,6 +13,17 @@
             <span v-else>
                 <span>{{ formatCommitId(firstCommit.commit) }}</span>
             </span>
+            <span
+                v-if="isGItRepo"
+                class="ai-cr-button"
+                @click="handleOpenAISummary"
+            >
+                <logo
+                    name="aicr-colorful"
+                    size="12"
+                />
+                <span class="ai-cr-text">{{ $t('details.aiSummary') }}</span>
+            </span>
         </p>
         <bk-table :data="commitList">
             <!-- <bk-table-column :label="$t('history.remark')" prop="comment"></bk-table-column> -->
@@ -49,6 +60,11 @@
                 :formatter="formatTimeColumn"
             ></bk-table-column>
         </bk-table>
+
+        <code-ai-summary
+            :value.sync="showAiSummary"
+            :element-id="id"
+        />
     </div>
     <div
         v-else
@@ -69,10 +85,12 @@
 <script>
     import { convertTime } from '@/utils/util'
     import Logo from '@/components/Logo'
+    import CodeAiSummary from '@/components/CodeAiSummary/'
     export default {
         name: 'code-record-table',
         components: {
-            Logo
+            Logo,
+            CodeAiSummary
         },
         props: {
             commitList: {
@@ -82,6 +100,18 @@
             label: {
                 type: String,
                 default: ''
+            },
+            id: {
+                type: String,
+                default: ''
+            },
+            scmType: {
+                type: String
+            }
+        },
+        data () {
+            return {
+                showAiSummary: false
             }
         },
         computed: {
@@ -94,6 +124,9 @@
             lastCommit () {
                 const len = this.commitList.length
                 return this.hasCommitList && len > 0 ? this.commitList[len - 1] : ''
+            },
+            isGItRepo () {
+                return this.scmType === 'CODE_GIT'
             }
         },
         methods: {
@@ -102,6 +135,24 @@
             },
             formatCommitId (commitId) {
                 return commitId && typeof commitId === 'string' ? commitId.slice(0, 8) : '--'
+            },
+            async handleOpenAISummary () {
+                try {
+                    const res = await this.$store.dispatch('common/checkOAuth', {
+                        redirectUrlType: 'SPEC',
+                        redirectUrl: window.location.href
+                    })
+                    if (res.status === 403) {
+                        window.top.location.href = res.url
+                        return
+                    }
+                    this.showAiSummary = true
+                } catch (e) {
+                    this.$showTips({
+                        message: e.message ? e.message : e,
+                        theme: 'error'
+                    })
+                }
             }
         }
     }
@@ -114,9 +165,33 @@
         height: 100%;
         .prompt-tips {
             margin-bottom: 12px;
+            height: 32px;
+            line-height: 32px;
         }
         .commit-link {
             color: $primaryColor;
         }
+    }
+    .ai-cr-button {
+        display: inline-flex;
+        align-items: center;
+        background: linear-gradient(#fff, #fff) padding-box, linear-gradient(90deg, #21e3c0, #3144ec) border-box;
+        border: 1px solid transparent;
+        padding: 5px;
+        line-height: 18px;
+        font-size: 12px;
+        border-radius: 2px;
+        margin-left: 10px;
+        cursor: pointer;
+        span {
+            margin-left: 5px;
+        }
+    }
+    .ai-cr-text {
+        background-image: linear-gradient(90deg, #21e3c0, #3144ec);
+        background-size: 100%;
+        background-repeat: repeat;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
 </style>

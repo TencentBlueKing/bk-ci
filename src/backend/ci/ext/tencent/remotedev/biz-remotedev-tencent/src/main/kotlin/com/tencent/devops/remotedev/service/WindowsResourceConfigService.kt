@@ -150,27 +150,44 @@ class WindowsResourceConfigService @Autowired constructor(
     @Suppress("NestedBlockDepth", "ComplexMethod")
     fun allWindowsQuota(
         searchCustom: Boolean?,
-        quotaType: QuotaType,
+        quotaType: QuotaType?,
+        zoneType: WindowsResourceZoneConfigType,
         withProjectLimit: String?
     ): Map<String, Map<String, Int>> {
         // 自定义镜像为显卡配额，固定镜像为资源池中的配额加上显卡配额
         val res = mutableMapOf<String, MutableMap<String, Int>>()
-        val spec = windowsResourceZoneDao.fetchAllSpec(dslContext).map { it.zoneShortName }
+        val spec = lazy { getAllSpecZoneShortName() }
+        val zoneShortName = lazy { getAllZoneShortNameByType(zoneType) }
+        val internal = quotaType?.getInternal() ?: zoneType.getInternal()
         if (searchCustom != true) {
             workspaceCommon.realtimeStartCloudResourceList().forEach {
-                if (quotaType == QuotaType.OFFSHORE && it.zoneId in spec) return@forEach
+                if (CommonUtil.zoneIdCheck(
+                        quotaType = quotaType,
+                        zoneType = zoneType,
+                        zoneId = it.zoneId,
+                        zoneShortName = zoneShortName,
+                        spec = spec
+                    )
+                ) return@forEach
                 val key = it.zoneId.replace(Regex("\\d+"), "")
                 val map = res.getOrPut(key) { mutableMapOf() }
-                if (it.status == 11 && it.locked != true && it.internal == quotaType.getInternal()) {
+                if (it.status == 11 && it.locked != true && it.internal == internal) {
                     map[it.machineType] = (map[it.machineType] ?: 0) + 1
                 }
             }
         }
 
         SpringContextUtil.getBean(ServiceStartCloudInterface::class.java).getResourceVm(
-            ResourceVmReq(null, null, quotaType.getInternal())
+            ResourceVmReq(null, null, internal)
         ).data?.forEach { resource ->
-            if (quotaType == QuotaType.OFFSHORE && resource.zoneId in spec) return@forEach
+            if (CommonUtil.zoneIdCheck(
+                    quotaType = quotaType,
+                    zoneType = zoneType,
+                    zoneId = resource.zoneId,
+                    zoneShortName = zoneShortName,
+                    spec = spec
+                )
+            ) return@forEach
             val key = resource.zoneId.replace(Regex("\\d+"), "")
             val map = res.getOrPut(key) { mutableMapOf() }
             resource.machineResources?.forEach { mas ->
@@ -345,6 +362,12 @@ class WindowsResourceConfigService @Autowired constructor(
     fun getAllSpecZone() = windowsResourceZoneDao.fetchAllSpec(dslContext)
 
     fun getAllSpecZoneShortName() = getAllSpecZone().map { it.zoneShortName }
+
+    fun getAllZoneShortNameByType(zoneType: WindowsResourceZoneConfigType) = windowsResourceZoneDao.fetchAll(
+        dslContext = dslContext,
+        withUnavailable = true,
+        type = zoneType
+    ).map { it.zoneShortName }
 
     // 新增windows硬件资源配置
     fun addWindowsResource(windowsResourceConfig: WindowsResourceTypeConfig): Boolean {

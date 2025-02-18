@@ -861,7 +861,7 @@ class PipelineRuntimeService @Autowired constructor(
                     }
 
                     // #10082 针对构建容器的第三方构建机组装复用互斥信息
-                    agentReuseMutexTree.addNode(container, index)
+                    agentReuseMutexTree.addNode(container, index, context.variables)
                 }
 
                 modelCheckPlugin.checkJobCondition(container, stage.finally, context.variables)

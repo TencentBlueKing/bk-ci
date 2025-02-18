@@ -248,7 +248,7 @@ data class StartBuildContext(
             triggerReviewers: List<String>? = null,
             currentBuildNo: Int? = null
         ): StartBuildContext {
-
+            val buildParam = genOriginStartParamsList(realStartParamKeys, pipelineParamMap)
             val params: Map<String, String> = pipelineParamMap.values.associate { it.key to it.value.toString() }
             // 解析出定义的流水线变量
             val retryStartTaskId = params[PIPELINE_RETRY_START_TASK_ID]
@@ -291,7 +291,7 @@ data class StartBuildContext(
                 currentBuildNo = currentBuildNo,
                 webhookInfo = getWebhookInfo(params),
                 buildMsg = params[PIPELINE_BUILD_MSG]?.coerceAtMaxLength(MAX_LENGTH),
-                buildParameters = genOriginStartParamsList(realStartParamKeys, pipelineParamMap),
+                buildParameters = buildParam,
                 concurrencyGroup = pipelineSetting?.takeIf { it.runLockType == PipelineRunLockType.GROUP_LOCK }
                     ?.concurrencyGroup?.let {
                         val webhookParam = webHookStartParam.values.associate { p -> p.key to p.value.toString() }

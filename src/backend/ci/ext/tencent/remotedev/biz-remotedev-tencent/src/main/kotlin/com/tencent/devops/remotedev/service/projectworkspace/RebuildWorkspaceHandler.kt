@@ -28,12 +28,12 @@
 package com.tencent.devops.remotedev.service.projectworkspace
 
 import com.tencent.bk.audit.annotations.ActionAuditRecord
-import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.audit.ActionAuditContent
-import com.tencent.devops.common.auth.api.ActionId
-import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.audit.TencentActionAuditContent
+import com.tencent.devops.common.auth.api.TencentActionId
+import com.tencent.devops.common.auth.api.TencentResourceTypeId
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
@@ -59,13 +59,13 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY
 import com.tencent.devops.remotedev.service.software.SoftwareManageService
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Service
 class RebuildWorkspaceHandler @Autowired constructor(
@@ -81,15 +81,13 @@ class RebuildWorkspaceHandler @Autowired constructor(
     private val workspaceSharedDao: WorkspaceSharedDao
 ) {
     @ActionAuditRecord(
-        actionId = ActionId.CGS_REBUILD_SYSTEM_DISK,
+        actionId = TencentActionId.CGS_REBUILD_SYSTEM_DISK,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS,
+            resourceType = TencentResourceTypeId.CGS,
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
-        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
-        scopeId = "#projectId",
-        content = ActionAuditContent.CGS_REBUILD_SYSTEM_DISK_CONTENT
+        content = TencentActionAuditContent.CGS_REBUILD_SYSTEM_DISK_CONTENT
     )
     fun rebuildWorkspace(
         userId: String,
@@ -115,6 +113,9 @@ class RebuildWorkspaceHandler @Autowired constructor(
                 params = arrayOf("You do not have permission to rebuild $workspaceName")
             )
         }
+        ActionAuditContext.current()
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .setScopeId(workspace.projectId)
 
         RedisCallLimit(
             redisOperation,
@@ -230,6 +231,14 @@ class RebuildWorkspaceHandler @Autowired constructor(
         if (event.status) {
             // 成功的调用才删除参数
             logger.debug("rebuildWorkspace|getRebuildOptions|${event.workspaceName}|${event.userId}")
+            // 重写IOA注册表
+            if (workspace.workspaceSystemType.needSafeInitialization()) {
+                softwareManageService.safeInitialization(
+                    projectId = workspace.projectId,
+                    userId = event.userId,
+                    workspaceName = event.workspaceName
+                )
+            }
             if (options != null) {
                 WorkspaceOperateCommonObject.deleteRebuildOptions(redisOperation, event.taskUid!!)
             }
@@ -255,15 +264,6 @@ class RebuildWorkspaceHandler @Autowired constructor(
                         WorkspaceStatus.REBUILDING,
                         toStatus.name
                     )
-                )
-            }
-
-            // 重写IOA注册表
-            if (workspace.workspaceSystemType.needSafeInitialization()) {
-                softwareManageService.safeInitialization(
-                    projectId = workspace.projectId,
-                    userId = event.userId,
-                    workspaceName = event.workspaceName
                 )
             }
         } else {

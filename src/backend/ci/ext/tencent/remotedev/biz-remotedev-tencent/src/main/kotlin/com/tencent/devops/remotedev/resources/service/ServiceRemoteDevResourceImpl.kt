@@ -5,7 +5,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.audit.TencentActionAuditContent
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.BkApiPermission
@@ -235,7 +235,7 @@ class ServiceRemoteDevResourceImpl(
                     null,
                     null
                 )
-                .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
+                .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
                 .scopeId = data.projectId
             // 再根据机型和地域获取硬件资源配置
             val windowsResourceConfigId = windowsResourceConfigService.getTypeConfig(
@@ -485,11 +485,16 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
-    override fun getWindowsQuota(userId: String, type: QuotaType): Result<Map<String, Map<String, Int>>> {
+    override fun getWindowsQuota(
+        userId: String,
+        type: QuotaType?,
+        zoneType: WindowsResourceZoneConfigType
+    ): Result<Map<String, Map<String, Int>>> {
         return Result(
             windowsResourceConfigService.allWindowsQuota(
                 searchCustom = false,
                 quotaType = type,
+                zoneType = zoneType,
                 withProjectLimit = null
             )
         )
@@ -883,7 +888,12 @@ class ServiceRemoteDevResourceImpl(
         return Result(imageManageService.fetchImages(userId, data))
     }
 
-    override fun deleteImage(userId: String, projectId: String, imageId: String, delaySeconds: Int?): Result<DeleteImageResp> {
+    override fun deleteImage(
+        userId: String,
+        projectId: String,
+        imageId: String,
+        delaySeconds: Int?
+    ): Result<DeleteImageResp> {
         return Result(
             imageManageService.deleteImage(
                 userId = userId,

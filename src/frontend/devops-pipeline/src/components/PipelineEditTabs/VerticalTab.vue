@@ -22,6 +22,8 @@
             >
                 <component
                     :is="activeTab.component"
+                    :id="activeTab.id"
+                    :scm-type="activeTab.scmType"
                     v-bind="activeTab.componentProps"
                 ></component>
             </slot>

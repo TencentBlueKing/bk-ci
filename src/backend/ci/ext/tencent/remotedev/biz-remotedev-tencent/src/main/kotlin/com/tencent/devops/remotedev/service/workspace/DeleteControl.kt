@@ -31,9 +31,9 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.audit.ActionAuditContent
-import com.tencent.devops.common.auth.api.ActionId
-import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.audit.TencentActionAuditContent
+import com.tencent.devops.common.auth.api.TencentActionId
+import com.tencent.devops.common.auth.api.TencentResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
@@ -103,13 +103,13 @@ class DeleteControl @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.CGS_DELETE,
+        actionId = TencentActionId.CGS_DELETE,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS,
+            resourceType = TencentResourceTypeId.CGS,
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
-        content = ActionAuditContent.CGS_DELETE_CONTENT
+        content = TencentActionAuditContent.CGS_DELETE_CONTENT
     )
     fun deleteWorkspace(
         userId: String,
@@ -124,7 +124,7 @@ class DeleteControl @Autowired constructor(
             )
         // 审计
         ActionAuditContext.current()
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
             .scopeId = workspace.projectId
         if (needPermission) {
             permissionService.checkOwnerPermission(userId, workspaceName, workspace.projectId, workspace.ownerType)
@@ -315,11 +315,11 @@ class DeleteControl @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.CGS_DELETE,
+        actionId = TencentActionId.CGS_DELETE,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS
+            resourceType = TencentResourceTypeId.CGS
         ),
-        content = ActionAuditContent.CGS_DELETE_CONTENT
+        content = TencentActionAuditContent.CGS_DELETE_CONTENT
     )
     fun deleteWorkspace4System(
         userId: String,
@@ -342,7 +342,7 @@ class DeleteControl @Autowired constructor(
                 .addInstanceInfo(
                     workspaceName, workspaceName, null, null
                 )
-                .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+                .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
                 .scopeId = workspace.projectId
 
             // 创建操作历史记录

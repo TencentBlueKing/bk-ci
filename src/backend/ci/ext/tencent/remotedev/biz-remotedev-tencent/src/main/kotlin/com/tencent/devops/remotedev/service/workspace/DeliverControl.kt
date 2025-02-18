@@ -28,15 +28,14 @@
 package com.tencent.devops.remotedev.service.workspace
 
 import com.tencent.bk.audit.annotations.ActionAuditRecord
-import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.audit.ActionAuditContent.ASSIGNS_TEMPLATE
-import com.tencent.devops.common.audit.ActionAuditContent.CGS_ASSIGN_USER_CONTENT
-import com.tencent.devops.common.audit.ActionAuditContent.PROJECT_CODE_TEMPLATE
-import com.tencent.devops.common.auth.api.ActionId
-import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.audit.TencentActionAuditContent.ASSIGNS_TEMPLATE
+import com.tencent.devops.common.audit.TencentActionAuditContent.CGS_ASSIGN_USER_CONTENT
+import com.tencent.devops.common.audit.TencentActionAuditContent.PROJECT_CODE_TEMPLATE
+import com.tencent.devops.common.auth.api.TencentActionId
+import com.tencent.devops.common.auth.api.TencentResourceTypeId
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
@@ -67,14 +66,12 @@ class DeliverControl @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.CGS_ASSIGN,
+        actionId = TencentActionId.CGS_ASSIGN,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS,
+            resourceType = TencentResourceTypeId.CGS,
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
-        attributes = [AuditAttribute(name = PROJECT_CODE_TEMPLATE, value = "#projectId")],
-        scopeId = "#projectId",
         content = CGS_ASSIGN_USER_CONTENT
     )
     fun assignUser2Workspace(
@@ -96,8 +93,12 @@ class DeliverControl @Autowired constructor(
         val alreadyExist = sharedDao.fetchWorkspaceSharedInfo(dslContext, workspaceName)
         val existOwner = alreadyExist.firstOrNull { it.type == WorkspaceShared.AssignType.OWNER }
         logger.info("assignUser2Workspace|assign2Owner|$assign2Owner|alreadyExist|$alreadyExist")
+
         ActionAuditContext.current()
             .addAttribute(ASSIGNS_TEMPLATE, assigns.joinToString(",") { it.userId })
+            .addAttribute(PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .setScopeId(workspace.projectId)
+
         when {
             existOwner == null && assign2Owner != null -> {
                 logger.info("assignUser2Workspace|$userId|${assign2Owner.userId}")

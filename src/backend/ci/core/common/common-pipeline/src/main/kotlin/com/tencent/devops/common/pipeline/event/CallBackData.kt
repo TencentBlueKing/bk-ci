@@ -119,7 +119,8 @@ data class PipelineEvent(
     val pipelineId: String,
     val pipelineName: String,
     val userId: String,
-    val updateTime: Long
+    val updateTime: Long,
+    val projectId: String
 )
 
 data class StreamEnabledEvent(

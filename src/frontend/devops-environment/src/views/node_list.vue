@@ -75,7 +75,7 @@
                 <SearchSelect
                     class="search-input"
                     v-model="searchValue"
-                    :placeholder="$t('environment.nodeSearchTips')"
+                    :placeholder="filterPlaceHolder"
                     :data="filterData"
                     :show-condition="false"
                     clearable
@@ -724,11 +724,28 @@
                     {
                         name: this.$t('environment.lastModifier'),
                         id: 'lastModifiedUser'
+                    },
+                    {
+                        name: this.$t('environment.nodeInfo.usage'),
+                        id: 'nodeUsage',
+                        children: [
+                            {
+                                id: 'DEPLOY',
+                                name: this.$t('environment.部署')
+                            },
+                            {
+                                id: 'BUILD',
+                                name: this.$t('environment.构建')
+                            }
+                        ]
                     }
                 ]
                 return data.filter(data => {
                     return !this.searchValue.find(val => val.id === data.id)
                 })
+            },
+            filterPlaceHolder () {
+                return this.filterData.map(item => item.name).join(' / ')
             },
             usageMap () {
                 return {
@@ -765,9 +782,9 @@
                 if (val.length) {
                     val.forEach(i => {
                         if (i.values) {
-                            this.requestParams[i.id] = i.values[0].name.trim()
+                            this.requestParams[i.id] = i.values[0].id.trim()
                         } else {
-                            this.requestParams[i.id] = i.name
+                            this.requestParams[i.id] = i.id
                         }
                     })
                     this.pagination.current = 1

@@ -21,9 +21,9 @@
                         <bk-select v-model="searchInfo.interceptResult">
                             <bk-option
                                 v-for="(key, value) in statusAliasMap"
-                                :key="key"
-                                :id="key"
-                                :name="value"
+                                :key="value"
+                                :id="value"
+                                :name="key"
                             >
                             </bk-option>
                         </bk-select>

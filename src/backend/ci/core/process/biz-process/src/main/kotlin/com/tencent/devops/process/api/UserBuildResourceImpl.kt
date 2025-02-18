@@ -276,6 +276,7 @@ class UserBuildResourceImpl @Autowired constructor(
     }
 
     @Timed
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun getBuildDetail(
         userId: String,
         projectId: String,
@@ -297,6 +298,7 @@ class UserBuildResourceImpl @Autowired constructor(
         return Result(buildDetail)
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun getBuildRecordByExecuteCount(
         userId: String,
         projectId: String,
@@ -322,6 +324,7 @@ class UserBuildResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun getBuildRecordInfo(
         userId: String,
         projectId: String,
@@ -343,6 +346,7 @@ class UserBuildResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun getBuildDetailByBuildNo(
         userId: String,
         projectId: String,
@@ -366,6 +370,7 @@ class UserBuildResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun getBuildRecordByBuildNum(
         userId: String,
         projectId: String,
@@ -389,6 +394,7 @@ class UserBuildResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun goToLatestFinishedBuild(userId: String, projectId: String, pipelineId: String): Response {
         checkParam(userId = userId, projectId = projectId, pipelineId = pipelineId)
         return pipelineBuildFacadeService.goToLatestFinishedBuild(
@@ -400,6 +406,7 @@ class UserBuildResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun getHistoryBuild(
         userId: String,
         projectId: String,
@@ -425,6 +432,7 @@ class UserBuildResourceImpl @Autowired constructor(
     }
 
     @Timed
+    @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
     override fun getHistoryBuildNew(
         userId: String,
         projectId: String,

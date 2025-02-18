@@ -25,6 +25,12 @@ const actions = {
         return vue.$ajax.put(`${prefix}/user/experiences/${projectId}/${experienceHashId}/offline`)
     },
     /**
+     * 删除体验
+     */
+    deleteExp ({ commit }, { projectId, experienceHashId }) {
+        return vue.$ajax.delete(`${prefix}/user/experiences/${projectId}/${experienceHashId}`)
+    },
+    /**
      * 用户组列表
      */
     requestGroupList ({ commit }, { projectId, ...params }) {
@@ -169,7 +175,7 @@ const actions = {
             userIds
         })
     }
-    
+
 }
 
 export default actions

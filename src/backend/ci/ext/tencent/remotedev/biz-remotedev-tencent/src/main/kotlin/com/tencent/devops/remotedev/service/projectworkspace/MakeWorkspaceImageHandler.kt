@@ -28,12 +28,12 @@
 package com.tencent.devops.remotedev.service.projectworkspace
 
 import com.tencent.bk.audit.annotations.ActionAuditRecord
-import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.audit.ActionAuditContent
-import com.tencent.devops.common.auth.api.ActionId
-import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.audit.TencentActionAuditContent
+import com.tencent.devops.common.auth.api.TencentActionId
+import com.tencent.devops.common.auth.api.TencentResourceTypeId
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -89,15 +89,13 @@ class MakeWorkspaceImageHandler @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.CGS_MAKE_IMAGE,
+        actionId = TencentActionId.CGS_MAKE_IMAGE,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS,
+            resourceType = TencentResourceTypeId.CGS,
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
-        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
-        scopeId = "#projectId",
-        content = ActionAuditContent.CGS_MAKE_IMAGE_CONTENT
+        content = TencentActionAuditContent.CGS_MAKE_IMAGE_CONTENT
     )
     fun makeWorkspaceImage(
         userId: String,
@@ -122,6 +120,9 @@ class MakeWorkspaceImageHandler @Autowired constructor(
                 params = arrayOf("You do not have permission to make $workspaceName image")
             )
         }
+        ActionAuditContext.current()
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .setScopeId(workspace.projectId)
 
         RedisCallLimit(
             redisOperation,

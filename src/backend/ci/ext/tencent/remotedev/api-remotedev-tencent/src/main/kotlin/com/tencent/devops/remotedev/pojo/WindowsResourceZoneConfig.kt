@@ -56,6 +56,11 @@ enum class WindowsResourceZoneConfigType {
     CSIG_USE, /*csig使用专区*/
     DEVCLOUD; /*devcloud使用专区*/
 
+    fun getInternal(): Boolean = when (this) {
+        DEVCLOUD -> true
+        else -> false
+    }
+
     companion object {
         fun parse(value: String): WindowsResourceZoneConfigType {
             return values().find { it.name == value } ?: DEFAULT

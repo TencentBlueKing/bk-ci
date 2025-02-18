@@ -5,6 +5,7 @@ import com.tencent.devops.auth.pojo.request.GroupMemberSingleRenewalReq
 import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.web.RestResource
@@ -68,7 +69,9 @@ class ServiceResourceMemberResourceImpl(
                         groupId = groupId,
                         projectCode = projectCode,
                         roleName = roleName,
-                        roleId = roleId
+                        roleId = roleId,
+                        resourceCode = resourceCode ?: projectCode,
+                        resourceType = resourceType ?: AuthResourceType.PROJECT.value
                     ),
                     expiredTime = expiredTime,
                     members = userIds,
@@ -92,7 +95,9 @@ class ServiceResourceMemberResourceImpl(
                         groupId = groupId,
                         projectCode = projectCode,
                         roleName = roleName,
-                        roleId = roleId
+                        roleId = roleId,
+                        resourceType = resourceType ?: AuthResourceType.PROJECT.value,
+                        resourceCode = resourceCode ?: projectCode
                     ),
                     members = userIds,
                     departments = deptIds
@@ -120,12 +125,16 @@ class ServiceResourceMemberResourceImpl(
     private fun getIamGroupId(
         groupId: Int?,
         projectCode: String,
+        resourceType: String,
+        resourceCode: String,
         roleName: String?,
         roleId: Int?
     ): Int {
         return groupId ?: permissionResourceMemberService.roleCodeToIamGroupId(
             projectCode = projectCode,
-            roleCode = roleName ?: BkAuthGroup.getByRoleId(roleId!!).value
+            roleCode = roleName ?: BkAuthGroup.getByRoleId(roleId!!).value,
+            resourceType = resourceType,
+            resourceCode = resourceCode
         )
     }
 }

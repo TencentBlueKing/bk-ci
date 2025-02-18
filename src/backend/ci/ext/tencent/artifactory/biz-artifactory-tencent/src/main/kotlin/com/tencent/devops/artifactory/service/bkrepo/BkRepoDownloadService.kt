@@ -432,7 +432,7 @@ open class BkRepoDownloadService(
                 hspStringBuilder.append(
                     """,{
                           "name": "${hspMetadata[ARCHIVE_PROPS_APP_NAME] ?: d.moduleName}",
-                          "type": "${fileProperties[ARCHIVE_PROPS_APP_MODULE_TYPE] ?: "shared"}",
+                          "type": "${hspMetadata[ARCHIVE_PROPS_APP_MODULE_TYPE] ?: "shared"}",
                           "deviceTypes": ${hspMetadata[ARCHIVE_PROPS_APP_DEVICE_TYPES] ?: "[\"tablet\",\"phone\"]"},
                           "packageUrl": "$hspDownloadUrl",
                           "packageHash": "${hspFile.sha256}"

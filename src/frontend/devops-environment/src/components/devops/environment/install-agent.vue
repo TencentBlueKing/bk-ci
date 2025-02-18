@@ -388,7 +388,7 @@
                     account: 'root',
                     authType: 'PASSWORD',
                     password: '',
-                    installChannelId: 'auto',
+                    installChannelId: -1,
                     innerIp: '',
                     bkHostId: null,
                     port: '36000',
@@ -540,14 +540,8 @@
                             params.enableCompression = false
                             params.bkCloudId = this.cloudAreaId
                         }
-                        if (params.installChannelId === 'auto') {
-                            params.isAutoChooseInstallChannelId = true
+                        if (params.installChannelId === 'others') {
                             delete params.installChannelId
-                        } else if (params.installChannelId === 'others') {
-                            params.isAutoChooseInstallChannelId = false
-                            delete params.installChannelId
-                        } else {
-                            params.isAutoChooseInstallChannelId = false
                         }
                         const hosts = []
                         hosts.push(params)
@@ -637,10 +631,6 @@
                     projectId: this.projectId
                 })
                 this.channelList = res.installChannelList
-                this.channelList.unshift({
-                    id: 'auto',
-                    name: this.$t('environment.自动选择')
-                })
                 this.channelList.push({
                     id: 'others',
                     name: this.$t('environment.IDC直连区域')
