@@ -31,10 +31,8 @@ import com.tencent.devops.auth.api.OpPermissionExtResource
 import com.tencent.devops.auth.provider.rbac.service.TxMigrateService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
-import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource
 class OpPermissionExtResourceImpl @Autowired constructor(
     val migrateService: TxMigrateService
 ) : OpPermissionExtResource {

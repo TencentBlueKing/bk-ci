@@ -32,6 +32,7 @@ import com.tencent.devops.auth.provider.rbac.service.PermissionGradeManagerServi
 import com.tencent.devops.auth.provider.rbac.service.TxMigrateCreatorFixServiceImpl
 import com.tencent.devops.auth.provider.rbac.service.TxMigrateService
 import com.tencent.devops.auth.provider.rbac.service.TxRbacSuperManagerService
+import com.tencent.devops.auth.resources.OpPermissionExtResourceImpl
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
@@ -88,5 +89,12 @@ class TxRbacAuthConfiguration {
         permissionResourceMemberService = permissionResourceMemberService,
         permissionGradeManagerService = permissionGradeManagerService,
         resourceService = resourceService
+    )
+
+    @Bean
+    fun opPermissionExtResource(
+        migrateService: TxMigrateService
+    ) = OpPermissionExtResourceImpl(
+        migrateService = migrateService
     )
 }
