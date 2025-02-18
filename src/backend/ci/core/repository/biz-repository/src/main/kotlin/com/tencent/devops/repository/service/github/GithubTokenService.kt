@@ -87,7 +87,7 @@ class GithubTokenService @Autowired constructor(
             if (githubTokenRecord.operator != operator) {
                 logger.info(
                     "the operator of the gitHub token has changed|userId=$userId|" +
-                            "operator=$operator|oldOperator=${githubTokenRecord.operator}|id=${githubTokenRecord.id}"
+                            "operator=$operator|oldOperator=${githubTokenRecord.operator}"
                 )
             }
             githubTokenDao.update(
@@ -97,8 +97,7 @@ class GithubTokenService @Autowired constructor(
                 tokenType = tokenType,
                 scope = scope,
                 githubTokenType = githubTokenType,
-                operator = operator,
-                id = githubTokenRecord.id
+                operator = operator
             )
         }
     }

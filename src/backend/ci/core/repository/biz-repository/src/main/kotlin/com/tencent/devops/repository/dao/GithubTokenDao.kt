@@ -77,8 +77,7 @@ class GithubTokenDao {
         tokenType: String,
         scope: String,
         githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP,
-        operator: String,
-        id: Long
+        operator: String
     ) {
         with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
             dslContext.update(this)
@@ -91,7 +90,7 @@ class GithubTokenDao {
                     }
                     it
                 }
-                .where(ID.eq(id))
+                .where(USER_ID.eq(userId)).and(TYPE.eq(githubTokenType.name))
                 .execute()
         }
     }
@@ -141,19 +140,10 @@ class GithubTokenDao {
      */
     fun delete(
         dslContext: DSLContext,
-        operator: String,
-        githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP
+        operator: String
     ) {
         with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
-            val executeCount = dslContext.deleteFrom(this)
-                    .where(OPERATOR.eq(operator).and(TYPE.eq(githubTokenType.name)))
-                    .execute()
-            // 存量数据中operator字段有的为null, 且user_id字段为蓝盾平台操作人用户名
-            if (executeCount == 0) {
-                dslContext.deleteFrom(this)
-                        .where(USER_ID.eq(operator).and(TYPE.eq(githubTokenType.name)))
-                        .execute()
-            }
+            dslContext.deleteFrom(this).where(OPERATOR.eq(operator))
         }
     }
 }
