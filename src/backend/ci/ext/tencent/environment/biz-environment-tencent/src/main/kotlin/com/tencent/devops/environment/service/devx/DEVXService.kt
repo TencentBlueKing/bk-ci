@@ -27,10 +27,13 @@
 
 package com.tencent.devops.environment.service.devx
 
+import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NOT_EXISTS
@@ -63,7 +66,8 @@ class DEVXService @Autowired constructor(
     private val nodeDao: NodeDao,
     private val envNodeDao: EnvNodeDao,
     private val devxHookDao: DEVXHookDao,
-    private val environmentPermissionService: EnvironmentPermissionService
+    private val environmentPermissionService: EnvironmentPermissionService,
+    private val tokenService: ClientTokenService
 ) {
 
     fun createNode(
@@ -105,13 +109,18 @@ class DEVXService @Autowired constructor(
         }
         val res = mutableListOf<EnvWithNodeCount>()
         envRecordList.forEach { env ->
-            if (environmentPermissionService.checkEnvPermission(
-                    userId,
-                    env.projectId,
-                    env.envId,
-                    AuthPermission.USE
-                )
-            ) {
+            val authUsers = kotlin.runCatching {
+                client.get(ServiceResourceMemberResource::class).getResourceGroupMembers(
+                    token = tokenService.getSystemToken(),
+                    projectCode = env.projectId,
+                    resourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT.value,
+                    resourceCode = env.envId.toString()
+                ).data
+            }.onFailure {
+                logger.warn("getUserDEVXEnv|getResourceGroupMembers|$env")
+            }.getOrNull()
+
+            if (authUsers != null && authUsers.contains(userId)) {
                 val nodeIds = envNodeDao.list(dslContext, env.projectId, listOf(env.envId)).map { node ->
                     node.nodeId
                 }.toSet()
