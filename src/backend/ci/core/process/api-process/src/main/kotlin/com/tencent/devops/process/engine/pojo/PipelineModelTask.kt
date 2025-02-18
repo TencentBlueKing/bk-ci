@@ -46,7 +46,10 @@ data class PipelineModelTask(
     val taskAtom: String,
     val taskParams: MutableMap<String, Any>,
     val additionalOptions: ElementAdditionalOptions?,
-    val os: String? = "linux"
+    val os: String? = "linux",
+    val taskPosition: String = "", // 插件在model中的位置，eg: stageSeq-jobSeq-taskSeq
+    val stageEnable: Boolean = true,
+    val containerEnable: Boolean = true
 ) {
     fun getTaskParam(paramName: String): String {
         return if (taskParams[paramName] != null) {

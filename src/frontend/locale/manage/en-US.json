@@ -339,5 +339,9 @@
     "确认切换": "Confirm switch",
     "以确认切换": "To confirm switch",
     "请输入：我已明确变更风险且已确认变更无影响": "Please enter: I have acknowledged the change risk and confirmed there is no impact.",
-    "复制成功": "Copy successful"
+    "复制成功": "Copy successful",
+    "单个步骤(Step)日志达到阈值时，将压缩并归档到日志仓库。可下载日志文件到本地查看。": "When an individual step's log reaches the threshold, it will be compressed and archived to the log repository. The log file can be downloaded for local viewing.",
+    "万行": "10k lines",
+    "缺省时默认为10": "Defaults to 10",
+    "构建日志归档阈值": "Build log archival threshold"
 }

@@ -11,6 +11,9 @@
             hoverUnfold: {
                 type: Boolean,
                 default: false
+            },
+            maxlength: {
+                type: Number
             }
         },
         methods: {
@@ -28,7 +31,7 @@
             }
         },
         render (h) {
-            const { value, readOnly, handleInput, name, handleBlur, title, clickUnfold, hoverUnfold, placeholder, disabled } = this
+            const { value, readOnly, handleInput, name, handleBlur, title, clickUnfold, hoverUnfold, placeholder, disabled, maxlength } = this
             return (
                 <textarea
                     placeholder={placeholder}
@@ -39,6 +42,7 @@
                     name={name}
                     disabled={readOnly || disabled}
                     value={value}
+                    {...(maxlength ? { maxlength } : {})}
                 />
             )
         }

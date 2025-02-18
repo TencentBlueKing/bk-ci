@@ -100,7 +100,7 @@ class AgentUpgradeJob @Autowired constructor(
 
     private fun listCanUpdateAgents(maxParallelCount: Int): List<TEnvironmentThirdpartyAgentRecord>? {
         val currentVersion = agentPropsScope.getWorkerVersion().ifBlank {
-            logger.warn("invalid server agent version")
+            logger.warn("invalid server worker version")
             return null
         }
 
