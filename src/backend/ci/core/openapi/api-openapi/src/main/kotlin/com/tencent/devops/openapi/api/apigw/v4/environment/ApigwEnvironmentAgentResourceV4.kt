@@ -78,7 +78,7 @@ interface ApigwEnvironmentAgentResourceV4 {
         projectId: String
     ): Result<List<NodeBaseInfo>>
 
-    @Operation(summary = "获取指定构建机状态", tags = ["v4_user_node_status", "v4_app_node_status"])
+    @Operation(summary = "获取指定第三方构建机状态", tags = ["v4_user_node_status", "v4_app_node_status"])
     @Path("/third_part_agent_node_status")
     @GET
     fun getNodeStatus(
