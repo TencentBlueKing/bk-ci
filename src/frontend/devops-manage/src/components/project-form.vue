@@ -113,6 +113,9 @@ const pipelineSideslider = ref(false);
 const pipelineList = ref([]);
 const isLoading = ref(false);
 const pipelinePagination = ref({ count: 0, limit: 20, current: 1 });
+const initPipelineDialect = ref();
+const projectId = computed(() => projectData.value.englishName);
+const currentPipelineDialect = computed(() => projectData.value.properties.pipelineDialect);
 
 const getDepartment = async (type: string, id: any) => {
   deptLoading.value[type] = true;
@@ -276,7 +279,7 @@ const changeConstrained = () => {
 
 const getCountPipelineByDialect = async () => {
   try {
-    const res = await http.countPipelineByDialect(projectData.value.englishName, projectData.value.properties.pipelineDialect);
+    const res = await http.countPipelineByDialect(projectId.value, currentPipelineDialect.value);
     pipelinePagination.value.count = res;
   } catch (error) {
     console.log(error);
@@ -285,11 +288,11 @@ const getCountPipelineByDialect = async () => {
 
 const beforeChange = () => {
   return new Promise(async (resolve) => {
-    if (props.type === 'edit') {
+    if (props.type === 'edit' && initPipelineDialect.value === currentPipelineDialect.value) {
       confirmSwitch.value = '';
       await getCountPipelineByDialect();
       const copyText = t('我已明确变更风险且已确认变更无影响');
-      const isClassic = projectData.value.properties.pipelineDialect !== 'CLASSIC';
+      const isClassic = currentPipelineDialect.value !== 'CLASSIC';
       const title = isClassic ? t('确认切换成“传统风格？') : t('确认切换成“制约风格？');
       const content = isClassic ? changeClassic() : changeConstrained();
 
@@ -349,11 +352,11 @@ const fetchListViewPipelines = async ()=> {
   try {
     isLoading.value = true;
     const params = {
-      dialect: projectData.value.properties.pipelineDialect,
+      dialect: currentPipelineDialect.value,
       page: pipelinePagination.value.current,
       pageSize: pipelinePagination.value.limit,
     };
-    const res = await http.listPipelinesByDialect(projectData.value.englishName, params);
+    const res = await http.listPipelinesByDialect(projectId.value, params);
     pipelineList.value = res.records;
     pipelinePagination.value.count = res.count;
   } catch (error) {
@@ -374,7 +377,7 @@ const pageValueChange = (value:number) => {
 }
 
 const handleToPipeline = (row) => {
-  window.open(`/console/pipeline/${projectData.value.englishName}/${row.pipelineId}/history/pipeline`, '__blank');
+  window.open(`/console/pipeline/${projectId.value}/${row.pipelineId}/history/pipeline`, '__blank');
 }
 
 const handleMessage = (event: any) => {
@@ -405,7 +408,10 @@ const handleMessage = (event: any) => {
 };
 
 const fetchUserDetail = async () => {
-  if (props.type !== 'apply') return;
+  if (props.type !== 'apply') {
+    initPipelineDialect.value = projectData.value?.properties?.pipelineDialect
+    return;
+  };
   await http.getUserDetail().then((res) => {
     const { bgId, centerId, deptId } = res;
     projectData.value.bgId = bgId;
