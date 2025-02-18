@@ -394,7 +394,6 @@
                 ]
             },
             baseInfoRows () {
-                console.log(this.activeOutputDetail.folder, '??????????????????')
                 return this.activeOutputDetail.folder
                     ? [
                         { key: 'name', name: this.$t('details.directoryName') },
