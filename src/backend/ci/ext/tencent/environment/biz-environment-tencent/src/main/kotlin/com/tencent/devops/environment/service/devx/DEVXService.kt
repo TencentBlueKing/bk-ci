@@ -120,6 +120,7 @@ class DEVXService @Autowired constructor(
                 logger.warn("getUserDEVXEnv|getResourceGroupMembers|$env")
             }.getOrNull()
 
+            logger.debug("getUserDEVXEnv|authUsers|$env|$authUsers")
             if (authUsers != null && authUsers.contains(userId)) {
                 val nodeIds = envNodeDao.list(dslContext, env.projectId, listOf(env.envId)).map { node ->
                     node.nodeId
