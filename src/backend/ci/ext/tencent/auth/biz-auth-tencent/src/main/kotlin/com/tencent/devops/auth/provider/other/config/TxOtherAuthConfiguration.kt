@@ -25,19 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.resources
+package com.tencent.devops.auth.provider.other.config
 
-import com.tencent.devops.auth.api.OpPermissionExtResource
+import com.tencent.devops.auth.provider.other.service.OtherMigrateService
 import com.tencent.devops.auth.service.TxMigrateService
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
-import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 
-class OpPermissionExtResourceImpl @Autowired constructor(
-    private val migrateService: TxMigrateService
-) : OpPermissionExtResource {
-    override fun migrateRemoteDevManager(projectConditionDTO: ProjectConditionDTO): Result<Boolean> {
-        migrateService.migrateRemoteDevManager(projectConditionDTO)
-        return Result(true)
-    }
+@Configuration
+@ConditionalOnWebApplication
+class TxOtherAuthConfiguration {
+    @Bean
+    @ConditionalOnMissingBean(TxMigrateService::class)
+    fun txOtherMigrateService() = OtherMigrateService()
 }
