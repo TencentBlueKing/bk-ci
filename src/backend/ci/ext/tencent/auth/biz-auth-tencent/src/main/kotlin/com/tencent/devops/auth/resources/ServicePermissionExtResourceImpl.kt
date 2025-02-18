@@ -23,29 +23,21 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.project.pojo
+package com.tencent.devops.auth.resources
 
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.auth.api.ServicePermissionExtResource
+import com.tencent.devops.auth.provider.rbac.service.TxMigrateService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
 
-@Schema
-data class ProjectCreateUserInfo(
-    @get:Schema(title = "操作人")
-    val createUserId: String?,
-    @get:Schema(title = "待分配的角色名称")
-    val roleName: String?,
-    @get:Schema(title = "角色Id")
-    val roleId: Int?,
-    @get:Schema(title = "组ID")
-    val groupId: Int?,
-    @get:Schema(title = "目标用户")
-    val userIds: List<String>? = emptyList(),
-    @get:Schema(title = "目标部门")
-    val deptIds: List<String>? = emptyList(),
-    @get:Schema(title = "资源类型")
-    val resourceType: String?,
-    @get:Schema(title = "资源ID")
-    val resourceCode: String?
-)
+@RestResource
+class ServicePermissionExtResourceImpl @Autowired constructor(
+    val migrateService: TxMigrateService
+) : ServicePermissionExtResource {
+    override fun migrateRemoteDevManager(projectCode: String): Result<Int> {
+        return Result(migrateService.migrateRemoteDevManager(projectCode))
+    }
+}

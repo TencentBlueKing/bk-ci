@@ -5,7 +5,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.audit.TencentActionAuditContent
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.BkApiPermission
@@ -235,7 +235,7 @@ class ServiceRemoteDevResourceImpl(
                     null,
                     null
                 )
-                .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
+                .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
                 .scopeId = data.projectId
             // 再根据机型和地域获取硬件资源配置
             val windowsResourceConfigId = windowsResourceConfigService.getTypeConfig(

@@ -8,9 +8,9 @@ import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.audit.ActionAuditContent
-import com.tencent.devops.common.auth.api.ActionId
-import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.audit.TencentActionAuditContent
+import com.tencent.devops.common.auth.api.TencentActionId
+import com.tencent.devops.common.auth.api.TencentResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
@@ -40,10 +40,10 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_CONFIG_INFO
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.function.StreamBridge
+import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @RestResource
@@ -61,15 +61,15 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     private val configCacheService: ConfigCacheService
 ) : OpProjectWorkspaceResource {
     @AuditEntry(
-        actionId = ActionId.CGS_ASSIGN,
-        subActionIds = [ActionId.CGS_CREATE]
+        actionId = TencentActionId.CGS_ASSIGN,
+        subActionIds = [TencentActionId.CGS_CREATE]
     )
     @ActionAuditRecord(
-        actionId = ActionId.CGS_ASSIGN,
+        actionId = TencentActionId.CGS_ASSIGN,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS
+            resourceType = TencentResourceTypeId.CGS
         ),
-        content = ActionAuditContent.CGS_ASSIGN_PROJECT_CONTENT
+        content = TencentActionAuditContent.CGS_ASSIGN_PROJECT_CONTENT
     )
     override fun assignWorkspace(
         userId: String,
@@ -178,7 +178,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                     null,
                     null
                 )
-                .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
+                .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
                 .scopeId = data.projectId
             // 再根据机型和地域获取硬件资源配置
             val windowsResourceConfigId = windowsResourceConfigService.getTypeConfig(
@@ -218,7 +218,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                     null,
                     null
                 )
-                .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
+                .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
                 .scopeId = data.projectId
             // 再根据机型和地域获取硬件资源配置
             val windowsResourceConfigId = windowsResourceConfigService.getTypeConfig(

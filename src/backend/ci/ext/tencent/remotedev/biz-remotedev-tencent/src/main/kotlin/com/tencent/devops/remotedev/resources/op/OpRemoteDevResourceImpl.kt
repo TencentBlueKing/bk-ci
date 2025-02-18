@@ -5,7 +5,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpRemoteDevResource
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -81,7 +81,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.CGS_DELETE)
+    @AuditEntry(actionId = TencentActionId.CGS_DELETE)
     override fun deleteWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         return Result(
             deleteControl.deleteWorkspace4OP(
@@ -91,7 +91,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.CGS_DELETE)
+    @AuditEntry(actionId = TencentActionId.CGS_DELETE)
     override fun batchDeleteWorkspace(
         userId: String,
         workspaceNames: Set<String>
@@ -99,7 +99,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         return Result(deleteControl.batchDeleteWindowsWorkspace4OP(userId, workspaceNames))
     }
 
-    @AuditEntry(actionId = ActionId.CGS_STOP)
+    @AuditEntry(actionId = TencentActionId.CGS_STOP)
     override fun stopWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         return Result(
             sleepControl.stopWorkspace(

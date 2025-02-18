@@ -240,6 +240,7 @@ include(":ext:tencent:common:common-auth:common-auth-tencent")
 include(":ext:tencent:common:common-kafka-tencent")
 include(":ext:tencent:common:common-remotedev-tencent")
 include(":ext:tencent:common:common-pipeline-yaml-tencent")
+include(":ext:tencent:common:common-audit:common-audit-tencent")
 
 include(":ext:tencent:project")
 include(":ext:tencent:project:api-project-tencent")

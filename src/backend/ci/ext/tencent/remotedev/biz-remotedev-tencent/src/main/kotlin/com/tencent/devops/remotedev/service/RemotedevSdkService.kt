@@ -11,9 +11,9 @@ import com.tencent.devops.auth.pojo.enum.Oauth2GrantType
 import com.tencent.devops.auth.pojo.vo.Oauth2AccessTokenVo
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.ShaUtils
-import com.tencent.devops.common.audit.ActionAuditContent
-import com.tencent.devops.common.auth.api.ActionId
-import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.audit.TencentActionAuditContent
+import com.tencent.devops.common.auth.api.TencentActionId
+import com.tencent.devops.common.auth.api.TencentResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.remotedev.config.BkConfig
@@ -181,13 +181,13 @@ class RemotedevSdkService @Autowired constructor(
     ) = "remotedev-$appId-$workspaceName"
 
     @ActionAuditRecord(
-        actionId = ActionId.CGS_TOKEN_GENERATE,
+        actionId = TencentActionId.CGS_TOKEN_GENERATE,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS
+            resourceType = TencentResourceTypeId.CGS
         ),
-        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#ws?.projectId")],
+        attributes = [AuditAttribute(name = TencentActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#ws?.projectId")],
         scopeId = "#ws?.projectId",
-        content = ActionAuditContent.CGS_TOKEN_GENERATE_CONTENT
+        content = TencentActionAuditContent.CGS_TOKEN_GENERATE_CONTENT
     )
     fun check(
         ws: WeSecProjectWorkspace,
