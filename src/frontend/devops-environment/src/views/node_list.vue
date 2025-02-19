@@ -514,11 +514,11 @@
                         id: 'nodeType',
                         children: [
                             {
-                                id: 'DEPLOY',
+                                id: 'CMDB',
                                 name: this.$t('environment.部署')
                             },
                             {
-                                id: 'BUILD',
+                                id: 'THIRDPARTY',
                                 name: this.$t('environment.构建')
                             }
                         ]
