@@ -65,6 +65,8 @@ data class BuildFormProperty(
 
     @get:Schema(title = "自定义仓库通配符", required = false)
     val glob: String?,
+    @get:Schema(title = "开启文件版本管理", required = false)
+    val enableVersionControl: Boolean?,
     @get:Schema(title = "文件元数据", required = false)
     val properties: Map<String, String>?,
     @get:Schema(title = "元素标签", required = false)
