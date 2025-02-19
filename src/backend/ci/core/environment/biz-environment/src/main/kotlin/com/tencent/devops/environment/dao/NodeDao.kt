@@ -176,6 +176,7 @@ class NodeDao {
             /*导入人*/"createdUser" -> query.orderBy(CREATED_USER.transferOrder(collation))
             /*最近修改人*/"lastModifiedUser" -> query.orderBy(LAST_MODIFY_USER.transferOrder(collation))
             /*最近修改时间*/"lastModifiedTime" -> query.orderBy(LAST_MODIFY_TIME.transferOrder(collation))
+            /*用途*/"nodeType" -> query.orderBy(NODE_TYPE.transferOrder(collation))
             /*最近执行流水线*/"latestBuildPipelineId" -> query.orderBy(
             LAST_BUILD_PIPELINE_ID.transferOrder(
                 collation
