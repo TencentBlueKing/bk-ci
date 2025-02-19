@@ -510,6 +510,10 @@
                         id: 'displayName'
                     },
                     {
+                        name: this.$t('environment.nodeInfo.os'),
+                        id: 'osName'
+                    },
+                    {
                         name: this.$t('environment.nodeInfo.usage'),
                         id: 'nodeType',
                         children: [
