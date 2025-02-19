@@ -113,11 +113,7 @@ data class GSEAgentService @Autowired constructor(
                     bkHostId = it.bkHostId,
                     bkAddressing = it.bkAddressing,
                     apId = if (it.apId != null) it.apId else DEFAULT_INSTALL_AGENT_AP_ID,
-                    installChannelId = if (it.isAutoChooseInstallChannelId) {
-                        chooseAgentInstallChannelIdService.autoChooseAgentInstallChannelId(
-                            it.innerIp ?: ""
-                        )
-                    } else it.installChannelId,
+                    installChannelId = it.installChannelId,
                     innerIp = it.innerIp,
                     outerIp = null,
                     loginIp = it.loginIp,

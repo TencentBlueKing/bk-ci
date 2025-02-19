@@ -28,6 +28,7 @@
 package com.tencent.devops.environment.pojo.job.agentres
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -59,5 +60,6 @@ data class HostDetail(
     @get:Schema(title = "任务执行状态名称")
     val statusDisplay: String?,
     @get:Schema(title = "是否手动安装")
+    @get:JsonProperty("isManual")
     val isManual: Boolean?
 )

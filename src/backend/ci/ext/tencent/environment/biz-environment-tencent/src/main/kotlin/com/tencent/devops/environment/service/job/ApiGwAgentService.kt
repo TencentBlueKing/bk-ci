@@ -62,7 +62,6 @@ class ApiGwAgentService @Autowired constructor(
                         bkHostId = bkHostId,
                         bkCloudId = it.bkCloudId,
                         bkAddressing = null,
-                        isAutoChooseInstallChannelId = it.isAutoChooseInstallChannelId,
                         apId = null,
                         installChannelId = it.installChannelId,
                         innerIp = it.innerIp,
