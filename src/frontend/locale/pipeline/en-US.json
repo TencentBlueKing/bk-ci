@@ -145,7 +145,7 @@
   "importPipelineLabel": "Please upload a pipeline JSON/YAML file",
   "invalidPipelineJsonOrYaml": "Invalid Pipeline JSON/YAML",
   "exportPipelineSuccess": "Export Pipeline Success",
-  "sizeLimit": "Maximum file size is 100MB. When re-uploading, if the path remains unchanged, there is no need to save the pipeline.",
+  "sizeLimit": "Upload files up to {0}MB",
   "fileUploadSuccess": "Upload Successful",
   "empty": "No Data",
   "link": "link",
@@ -1052,7 +1052,7 @@
     "codelibConfigs": "Code Repositories Config",
     "timerTriggerCodelibTips": "- Git repository: Branch is optional, defaults to the default branch when not specified.\n-SVN repository: Branch is mandatory, must be a first-level subdirectory under the repository root path.",
     "timerTriggerBranchTips": "If multiple branches have changes, each branch will trigger once when conditions are met.",
-    "filePathTips": "Please enter directory, e.g., /a",
+    "filePathTips": "Please enter the directory where the file is stored, e.g., /a",
     "fileNameTips": "File name, leave blank to auto-detect",
     "enableDocker": "Enable Docker for Running Build Tasks",
     "imagePullPolicy": "Image Pull Policy",
@@ -1069,7 +1069,10 @@
     "lineBreak": "Separate multiple options with line breaks",
     "noEnglishCommas": "Each option cannot contain English commas",
     "formatSupport": "Similar to the HTML select tag, options support value=name / value formats",
-    "batchCopy": "One-click Copy"
+    "batchCopy": "One-click Copy",
+    "randomlyGenerate": "<Randomly generate>",
+    "enableVersionControl": "Enable version control",
+    "versionControlTip": "Once enabled, uploading files will automatically generate versioned paths within the directory to prevent overwriting files with the same name."
   },
   "storeMap": {
     "textarea": "Textarea",

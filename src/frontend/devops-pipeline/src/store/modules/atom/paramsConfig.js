@@ -184,6 +184,7 @@ export const DEFAULT_PARAM = {
         defaultValue: '',
         defalutValueLabel: 'fileDefaultValueLabel',
         defaultValueLabelTips: 'customFileLabelTips',
+        enableVersionControl: false,
         desc: '',
         type: CUSTOM_FILE,
         typeDesc: 'custom_file',
