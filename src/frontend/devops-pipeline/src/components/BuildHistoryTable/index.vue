@@ -406,6 +406,7 @@
             header-position="left"
             :title="`#${activeBuild && activeBuild.buildNum} - ${$t('history.artifactList')}`"
             @cancel="hideArtifactoriesPopup"
+            :style="{ '--dialog-top-translateY': `translateY(${dialogTopOffset}px)` }"
         >
             <p class="artifactory-popup-header">
                 <bk-button
@@ -426,6 +427,7 @@
             <ul
                 class="build-artifact-list-ul"
                 v-if="visibleIndex !== -1"
+                :style="{ 'max-height': `${ulMaxHeight}px` }"
             >
                 <li
                     v-for="artifactory in actifactories"
@@ -589,7 +591,8 @@
                 stoping: {},
                 isLoading: false,
                 tableColumnKeys: initSortedColumns,
-                tableHeight: null
+                tableHeight: null,
+                dialogTopOffset: null
             }
         },
         computed: {
@@ -766,6 +769,12 @@
                     page,
                     pageSize
                 }
+            },
+            ulMaxHeight () {
+                return window.innerHeight * 0.8 - 167
+            },
+            dialogWidth () {
+                return window.innerWidth * 0.8
             }
         },
         watch: {
@@ -1008,6 +1017,13 @@
             },
             showArtifactoriesPopup (e, index = -1) {
                 this.visibleIndex = index
+
+                const ITEM_HEIGHT = 46
+                const DIALOG_EXTRA_HEIGHT = 167
+                const totalListHeight = this.actifactories.length * ITEM_HEIGHT
+                const listHeight = Math.min(totalListHeight, this.ulMaxHeight)
+                this.dialogTopOffset = -Math.round((listHeight + DIALOG_EXTRA_HEIGHT) / 2)
+
                 this.isShowMoreArtifactories = true
             },
             hideErrorInfoPopup () {
@@ -1461,5 +1477,10 @@
             overflow: hidden;
         }
     }
+}
+
+.bk-dialog {
+    top: 50% !important;
+    transform: var(--dialog-top-translateY) !important;
 }
 </style>
