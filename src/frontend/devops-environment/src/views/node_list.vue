@@ -232,7 +232,8 @@
                     <bk-table-column
                         v-if="allRenderColumnMap.usage"
                         :label="$t('environment.nodeInfo.usage')"
-                        prop="usage"
+                        sortable
+                        prop="nodeType"
                         min-width="80"
                         show-overflow-tooltip
                     >
@@ -510,7 +511,7 @@
                     },
                     {
                         name: this.$t('environment.nodeInfo.usage'),
-                        id: 'nodeUsage',
+                        id: 'nodeType',
                         children: [
                             {
                                 id: 'DEPLOY',
