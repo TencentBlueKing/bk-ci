@@ -142,20 +142,14 @@
                                     v-if="row.approvalStatus === 3"
                                     class="devops-icon status-icon"
                                 >
-                                    <img
-                                        src="../assets/scss/logo/warning-circle-small.svg"
-                                        alt=""
-                                    >
+                                    <img src="../assets/scss/logo/warning-circle-small.svg">
                                 </div>
                                 <div
                                     v-bk-tooltips="{ content: $t('项目信息修改申请审批中') }"
                                     v-if="row.approvalStatus === 4"
                                     class="devops-icon status-icon"
                                 >
-                                    <img
-                                        src="../assets/scss/logo/wait-small.svg"
-                                        alt=""
-                                    >
+                                    <img src="../assets/scss/logo/wait-small.svg">
                                 </div>
                             </span>
                         </template>
@@ -235,7 +229,6 @@
             <template slot="header">
                 <img
                     src="../assets/scss/logo/warninfo.svg"
-                    alt=""
                     :width="42"
                     :height="42"
                 >
@@ -247,7 +240,6 @@
                         <span>
                             <img
                                 src="../assets/scss/logo/warning-circle-fill.svg"
-                                alt=""
                                 :width="14"
                                 :height="14"
                             >
@@ -261,7 +253,6 @@
                         <span class="refresh">
                             <img
                                 src="../assets/scss/logo/refresh.svg"
-                                alt=""
                                 :width="12"
                                 :height="12"
                             >
@@ -283,7 +274,6 @@
                             <p class="go-detail">
                                 <img
                                     src="../assets/scss/logo/jump-link-line.svg"
-                                    alt=""
                                     :width="12"
                                     :height="12"
                                 >
@@ -541,29 +531,30 @@
                                      h('div', { class: 'info-tips' }, this.$t('退出时，将清理你在此项目下获得的权限，确认退出吗？'))
                                  ]),
                     confirmFn: async () => {
-                        const params = {
-                            projectId: this.projectId,
-                            handoverParams: {
-                                targetMember: {
-                                    id: this.targetMember.username,
-                                    name: this.targetMember.chineseName,
-                                    type: 'user',
-                                    departed: true
+                        try {
+                            const params = {
+                                projectId: this.projectId,
+                                handoverParams: {
+                                    targetMember: {
+                                        id: this.targetMember.username,
+                                        name: this.targetMember.chineseName,
+                                        type: 'user',
+                                        departed: true
+                                    }
                                 }
                             }
-                        }
-                        await this.memberExitsProject(params).then(res => {
+                            await this.memberExitsProject(params)
                             this.$bkMessage({
                                 message: this.$t('已成功退出项目'),
                                 theme: 'success'
                             })
                             this.projectList = this.projectList.filter(item => item.englishName !== this.projectId)
-                        }).catch(error => {
+                        } catch (error) {
                             this.$bkMessage({
                                 message: error.message,
                                 theme: 'error'
                             })
-                        })
+                        }
                     }
                 })
             },
@@ -637,7 +628,9 @@
                         }
                     }
                     this.quitLoading = true
-                    await this.memberExitsProject(params).then(res => {
+                    
+                    try {
+                        const res = await this.memberExitsProject(params)
                         this.quitLoading = false
                         this.showDialog = false
                         const h = this.$createElement
@@ -677,13 +670,13 @@
                                 this.projectList = this.projectList.filter(item => item.englishName !== this.projectId)
                             }
                         })
-                    }).catch(error => {
+                    } catch (error) {
                         this.quitLoading = false
                         this.$bkMessage({
                             message: error.message,
                             theme: 'error'
                         })
-                    })
+                    }
                 })
             },
 
