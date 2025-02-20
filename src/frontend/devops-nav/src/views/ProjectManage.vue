@@ -610,7 +610,8 @@
              * 需要完成交接，才能退出
              */
             async handleHandoverConfirm () {
-                this.$refs.formRef.validate().then(async () => {
+                const valid = this.$refs.formRef.validate()
+                if (valid) {
                     const { displayName, ...handoverTo } = this.handOverForm
                     const params = {
                         projectId: this.projectId,
@@ -677,7 +678,7 @@
                             theme: 'error'
                         })
                     }
-                })
+                }
             },
 
             async updateExitProject (projectId) {
