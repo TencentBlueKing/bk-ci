@@ -27,6 +27,11 @@
 
 package com.tencent.devops.common.api.util
 
+import kotlin.reflect.KMutableProperty
+import kotlin.reflect.full.isSubtypeOf
+import kotlin.reflect.full.memberProperties
+import kotlin.reflect.jvm.isAccessible
+
 /**
  *
  * @version 1.0
@@ -45,5 +50,23 @@ object ReflectUtil {
 
     fun isCollectionType(obj: Any): Boolean {
         return obj is Map<*, *> || obj is Collection<*>
+    }
+
+    fun copyMatchingProperties(source: Any, target: Any) {
+        val sourceProperties = source::class.memberProperties
+        val targetPropertyMap = target::class.memberProperties.associateBy { it.name }
+        for (sourceProp in sourceProperties) {
+            // 跳过只读属性（val）
+            val targetProp = targetPropertyMap[sourceProp.name] as? KMutableProperty<*> ?: continue
+            // 类型需一致
+            if (!sourceProp.returnType.isSubtypeOf(targetProp.returnType)) continue
+            // 解决无法访问私有属性的问题
+            sourceProp.isAccessible = true
+            targetProp.isAccessible = true
+            // 属性值替换
+            val value = sourceProp.getter.call(source)
+            if (value == null && !targetProp.returnType.isMarkedNullable) continue
+            targetProp.setter.call(target, value)
+        }
     }
 }
