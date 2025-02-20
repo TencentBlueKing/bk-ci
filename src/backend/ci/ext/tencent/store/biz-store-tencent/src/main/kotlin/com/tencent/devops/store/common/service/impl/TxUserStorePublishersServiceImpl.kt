@@ -35,14 +35,6 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
         var sucessFlag = true
         //矫正插件首次发布人数据
         modifyCompoentFirstPublisher(userId, type)
-        //矫正模板首次发布人数据
-//        modifyCompoentFirstPublisher(userId, StoreTypeEnum.TEMPLATE)
-//        //矫正镜像首次发布人数据
-//        modifyCompoentFirstPublisher(userId, StoreTypeEnum.IMAGE)
-//        //修正插件 ide插件首次发布人数据
-//        modifyCompoentFirstPublisher(userId, StoreTypeEnum.IDE_ATOM)
-//        //修正服务插件首次发布人数据
-//        modifyCompoentFirstPublisher(userId, StoreTypeEnum.SERVICE)
 
         if (totalResults.isEmpty()) {
             sucessFlag = false
@@ -80,7 +72,7 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
                     break
                 }
 
-
+                offset += BATCH_SIZE
                 val componentList = if (storeTypeEnum in HAS_VERSION_LOG) {
 
                     val atomIds = storeList.map { it.value1() }
@@ -101,11 +93,11 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
 
                 }
 
-                updateFirstPublisherIfNecessary(StoreTypeEnum.ATOM, componentList, userId)
+                updateFirstPublisherIfNecessary(storeTypeEnum, componentList, userId)
 
 
             }
-            offset += BATCH_SIZE
+
 
 
         } catch (e: Exception) {
