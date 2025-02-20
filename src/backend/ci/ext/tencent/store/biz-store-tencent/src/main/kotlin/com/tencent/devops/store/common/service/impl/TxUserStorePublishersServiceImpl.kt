@@ -31,18 +31,18 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
     }
 
 
-    override fun updateComponentFirstPublisher(userId: String): Boolean {
+    override fun updateComponentFirstPublisher(userId: String, type: StoreTypeEnum): Boolean {
         var sucessFlag = true
         //矫正插件首次发布人数据
-        modifyCompoentFirstPublisher(userId, StoreTypeEnum.ATOM)
+        modifyCompoentFirstPublisher(userId, type)
         //矫正模板首次发布人数据
-        modifyCompoentFirstPublisher(userId, StoreTypeEnum.TEMPLATE)
-        //矫正镜像首次发布人数据
-        modifyCompoentFirstPublisher(userId, StoreTypeEnum.IMAGE)
-        //修正插件 ide插件首次发布人数据
-        modifyCompoentFirstPublisher(userId, StoreTypeEnum.IDE_ATOM)
-        //修正服务插件首次发布人数据
-        modifyCompoentFirstPublisher(userId, StoreTypeEnum.SERVICE)
+//        modifyCompoentFirstPublisher(userId, StoreTypeEnum.TEMPLATE)
+//        //矫正镜像首次发布人数据
+//        modifyCompoentFirstPublisher(userId, StoreTypeEnum.IMAGE)
+//        //修正插件 ide插件首次发布人数据
+//        modifyCompoentFirstPublisher(userId, StoreTypeEnum.IDE_ATOM)
+//        //修正服务插件首次发布人数据
+//        modifyCompoentFirstPublisher(userId, StoreTypeEnum.SERVICE)
 
         if (totalResults.isEmpty()) {
             sucessFlag = false

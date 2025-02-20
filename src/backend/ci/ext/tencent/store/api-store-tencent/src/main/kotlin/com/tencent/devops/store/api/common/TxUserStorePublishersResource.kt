@@ -2,6 +2,7 @@ package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -25,6 +26,8 @@ interface TxUserStorePublishersResource {
     fun updateComponentFirstPublisher(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
+        userId: String,
+        @Parameter(description = "type", required = true)
+        type: StoreTypeEnum
     ): Result<Boolean>
 }
