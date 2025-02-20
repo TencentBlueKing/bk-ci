@@ -155,9 +155,12 @@ class TxUserStorePublishersDao {
             )
         )
         val countQuery = dslContext.selectCount()
-            .from(tTemplate)
-            .where(conditions)
-            .groupBy(tTemplate.TEMPLATE_CODE)
+            .from(
+                dslContext.select(tTemplate.TEMPLATE_CODE)
+                    .from(tTemplate)
+                    .where(conditions)
+                    .groupBy(tTemplate.TEMPLATE_CODE)
+            )
 
 
         // 执行查询并返回结果
@@ -217,9 +220,12 @@ class TxUserStorePublishersDao {
             )
         )
         val countQuery = dslContext.selectCount()
-            .from(tImage)
-            .where(conditions)
-            .groupBy(tImage.IMAGE_CODE)
+            .from(
+                dslContext.select(tImage.IMAGE_CODE)
+                    .from(tImage)
+                    .where(conditions)
+                    .groupBy(tImage.IMAGE_CODE)
+            )
 
 
         // 执行查询并返回结果
@@ -281,9 +287,12 @@ class TxUserStorePublishersDao {
             )
         )
         val countQuery = dslContext.selectCount()
-            .from(tExtensionService)
-            .where(conditions)
-            .groupBy(tExtensionService.SERVICE_CODE)
+            .from(
+                dslContext.select(tExtensionService.SERVICE_CODE)
+                    .from(tExtensionService)
+                    .where(conditions)
+                    .groupBy(tExtensionService.SERVICE_CODE)
+            )
 
 
         // 执行查询并返回结果
@@ -341,9 +350,12 @@ class TxUserStorePublishersDao {
             )
         )
         val countQuery = dslContext.selectCount()
-            .from(tIdeAtom)
-            .where(conditions)
-            .groupBy(tIdeAtom.ATOM_CODE)
+            .from(
+                dslContext.select(tIdeAtom.ATOM_CODE)
+                    .from(tIdeAtom)
+                    .where(conditions)
+                    .groupBy(tIdeAtom.ATOM_CODE)
+            )
 
 
         // 执行查询并返回结果

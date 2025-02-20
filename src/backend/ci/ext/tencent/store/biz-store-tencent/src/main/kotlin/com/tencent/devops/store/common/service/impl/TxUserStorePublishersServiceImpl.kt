@@ -25,7 +25,6 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
     companion object {
         private const val BATCH_SIZE = 500
         private val logger = LoggerFactory.getLogger(TxUserStorePublishersServiceImpl::class.java)
-        private val totalResults = mutableListOf<Future<Boolean>>()
         private val HAS_VERSION_LOG =
             setOf(StoreTypeEnum.SERVICE, StoreTypeEnum.ATOM, StoreTypeEnum.IMAGE, StoreTypeEnum.IDE_ATOM)
     }
@@ -34,7 +33,7 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
     override fun updateComponentFirstPublisher(userId: String, type: StoreTypeEnum): Boolean {
         var sucessFlag = true
         //矫正插件首次发布人数据
-        modifyCompoentFirstPublisher(userId, type)
+        val totalResults =modifyComponentFirstPublisher(userId, type)
 
         if (totalResults.isEmpty()) {
             sucessFlag = false
@@ -54,20 +53,22 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
 
         }
 
+
         return sucessFlag
 
     }
 
 
-    private fun modifyCompoentFirstPublisher(userId: String, storeTypeEnum: StoreTypeEnum) {
+    private fun modifyComponentFirstPublisher(userId: String, storeTypeEnum: StoreTypeEnum): List<Future<Boolean>> {
 
-        val count = countCompoentPublisherByStoreType(storeTypeEnum)
+        val count = countComponentPublisherByStoreType(storeTypeEnum)
         var offset = 0
+        val totalResults = mutableListOf<Future<Boolean>>()
         try {
             while (offset < count) {
 
 
-                val storeList = listCompoentByStoreType(storeTypeEnum, offset)
+                val storeList = listComponentByStoreType(storeTypeEnum, offset)
                 if (storeList.isNullOrEmpty()) {
                     break
                 }
@@ -93,18 +94,20 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
 
                 }
 
-                updateFirstPublisherIfNecessary(storeTypeEnum, componentList, userId)
+                val results = updateFirstPublisherIfNecessary(storeTypeEnum, componentList, userId)
+                if (results != null) {
+                    totalResults.addAll(results)
+                }
 
 
             }
-
-
 
         } catch (e: Exception) {
             logger.error("modify${storeTypeEnum.name}FirstPublisher error:${e.message}")
             throw RuntimeException(e.message)
         }
 
+        return totalResults
 
     }
 
@@ -114,7 +117,6 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
         list: List<Component>?,
         userId: String?
     ): List<Future<Boolean>>? {
-
 
         if (!list.isNullOrEmpty()) {
             val codes = list.map { it.code }
@@ -154,7 +156,6 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
 
                     }
 
-                    totalResults.addAll(results)
                     return results
                 } catch (e: Exception) {
                     logger.error("update${storeTypeEnum.name}FirstPublisherIfNecessary error:${e.message}")
@@ -172,7 +173,7 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
     }
 
 
-    private fun countCompoentPublisherByStoreType(storeTypeEnum: StoreTypeEnum): Int {
+    private fun countComponentPublisherByStoreType(storeTypeEnum: StoreTypeEnum): Int {
         when (storeTypeEnum) {
             StoreTypeEnum.ATOM -> {
                 return txUserStorePublishersDao.countByAtomCode(dslContext)
@@ -203,7 +204,7 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
     }
 
 
-    private fun listCompoentByStoreType(
+    private fun listComponentByStoreType(
         storeTypeEnum: StoreTypeEnum,
         offset: Int,
     ): Result<Record2<String, String>>? {
