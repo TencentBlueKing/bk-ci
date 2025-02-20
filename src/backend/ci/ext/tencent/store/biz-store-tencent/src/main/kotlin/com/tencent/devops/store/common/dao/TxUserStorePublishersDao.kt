@@ -419,7 +419,7 @@ class TxUserStorePublishersDao {
         return with(TStoreRelease.T_STORE_RELEASE) {
             dslContext.selectFrom(this)
                 .where(STORE_CODE.`in`(storeCodes))
-                .and(STORE_TYPE.eq(storeType))
+                .and(STORE_TYPE.eq(storeType)).and(FIRST_PUB_TIME.isNotNull).and(FIRST_PUB_CREATOR.isNotNull)
                 .fetch()
         }
 
