@@ -610,27 +610,27 @@
              * 需要完成交接，才能退出
              */
             async handleHandoverConfirm () {
-                const valid = this.$refs.formRef.validate()
-                if (valid) {
-                    const { displayName, ...handoverTo } = this.handOverForm
-                    const params = {
-                        projectId: this.projectId,
-                        handoverParams: {
-                            targetMember: {
-                                id: this.targetMember.username,
-                                name: this.targetMember.chineseName,
-                                type: 'user',
-                                departed: true
-                            },
-                            handoverTo: {
-                                ...handoverTo,
-                                departed: true
+                try {
+                    const valid = await this.$refs.formRef.validate()
+                    if (valid) {
+                        const { displayName, ...handoverTo } = this.handOverForm
+                        const params = {
+                            projectId: this.projectId,
+                            handoverParams: {
+                                targetMember: {
+                                    id: this.targetMember.username,
+                                    name: this.targetMember.chineseName,
+                                    type: 'user',
+                                    departed: true
+                                },
+                                handoverTo: {
+                                    ...handoverTo,
+                                    departed: true
+                                }
                             }
                         }
-                    }
-                    this.quitLoading = true
-                    
-                    try {
+                        this.quitLoading = true
+
                         const res = await this.memberExitsProject(params)
                         this.quitLoading = false
                         this.showDialog = false
@@ -671,13 +671,14 @@
                                 this.projectList = this.projectList.filter(item => item.englishName !== this.projectId)
                             }
                         })
-                    } catch (error) {
-                        this.quitLoading = false
-                        this.$bkMessage({
-                            message: error.message,
-                            theme: 'error'
-                        })
                     }
+                } catch (error) {
+                    this.$bkMessage({
+                        message: error.message || error.content,
+                        theme: 'error'
+                    })
+                } finally {
+                    this.quitLoading = false
                 }
             },
 
