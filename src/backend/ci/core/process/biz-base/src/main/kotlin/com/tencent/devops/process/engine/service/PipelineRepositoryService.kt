@@ -1222,7 +1222,7 @@ class PipelineRepositoryService constructor(
         }
 
         // TODO 暂时只有正式发布的版本需要推送，等草稿历史出来后调整消费者再全推送
-        if (versionStatus == VersionStatus.RELEASED) pipelineEventDispatcher.dispatch(
+        if (versionStatus?.fix() == VersionStatus.RELEASED) pipelineEventDispatcher.dispatch(
             PipelineUpdateEvent(
                 source = "update_pipeline",
                 projectId = projectId,
