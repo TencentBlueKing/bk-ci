@@ -8,6 +8,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.ApigwRemoteDevResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
+import com.tencent.devops.remotedev.pojo.BkItsmTicketInfo
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
@@ -650,5 +651,9 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<DeleteImageResp> {
         logger.info("deleteImage |$userId|$projectId|$imageId|$delaySeconds")
         return client.get(ServiceRemoteDevResource::class).deleteImage(userId, projectId, imageId, delaySeconds)
+    }
+
+    override fun createItsmTicket(userId: String, createReq: BkItsmTicketInfo): Result<String> {
+        TODO("Not yet implemented")
     }
 }

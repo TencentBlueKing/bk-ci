@@ -161,7 +161,7 @@ class BKItsmService @Autowired constructor(
         )
     }
 
-    private fun createTicket(
+    fun createTicket(
         creator: String,
         fields: List<Map<String, String>>,
         serviceId: Int,

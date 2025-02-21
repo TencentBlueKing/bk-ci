@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.BkItsmTicketInfo
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
@@ -857,4 +858,15 @@ interface ServiceRemoteDevResource {
         @QueryParam("delaySeconds")
         delaySeconds: Int?
     ): Result<DeleteImageResp>
+
+    @Operation(summary = "创建ITSM单据流程")
+    @POST
+    @Path("/create_itsm_ticket")
+    fun createItsmTicket(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "请求参数", required = true)
+        createReq: BkItsmTicketInfo
+    ): Result<String>
 }
