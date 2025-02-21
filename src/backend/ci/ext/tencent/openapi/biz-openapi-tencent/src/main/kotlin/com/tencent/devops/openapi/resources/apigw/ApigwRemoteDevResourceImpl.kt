@@ -654,6 +654,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     }
 
     override fun createItsmTicket(userId: String, createReq: BkItsmTicketInfo): Result<String> {
-        TODO("Not yet implemented")
+        logger.info("createItsmTicket |$userId|$createReq")
+        return client.get(ServiceRemoteDevResource::class).createItsmTicket(userId, createReq)
     }
 }
