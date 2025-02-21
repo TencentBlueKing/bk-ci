@@ -23,7 +23,7 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
     private lateinit var dslContext: DSLContext
 
     companion object {
-        private const val BATCH_SIZE = 500
+        private const val BATCH_SIZE = 100
         private val logger = LoggerFactory.getLogger(TxUserStorePublishersServiceImpl::class.java)
         private val HAS_VERSION_LOG =
             setOf(StoreTypeEnum.SERVICE, StoreTypeEnum.ATOM, StoreTypeEnum.IMAGE, StoreTypeEnum.IDE_ATOM)
