@@ -133,7 +133,10 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
                         val future = executorService.submit<Boolean> {
                             try {
                                 val storeRelease =
-                                    storeReleaseList.find { storeRelease -> storeRelease.storeCode == it.code && storeRelease.storeType == storeTypeEnum.type.toByte() }
+                                    storeReleaseList.find { storeRelease ->
+                                        storeRelease.storeCode == it.code
+                                                && storeRelease.storeType == storeTypeEnum.type.toByte()
+                                    }
                                 if (storeRelease != null && it.modifier != storeRelease.firstPubCreator) {
                                     txUserStorePublishersDao.updateComponentFirstPublisher(
                                         dslContext = dslContext,
