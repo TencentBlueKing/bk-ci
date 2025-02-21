@@ -34,31 +34,31 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
 
 
     override fun updateComponentFirstPublisher(type: StoreTypeEnum): StorePublisherCorrectionResult {
-        var sucessFlag = true
-        //矫正组件首次发布人数据
         val totalResults = modifyComponentFirstPublisher(type)
-
         if (totalResults.isEmpty()) {
-            sucessFlag = false
+            return StorePublisherCorrectionResult()
         }
+
+        var successCount = 0
 
         for (totalResult in totalResults) {
             try {
                 val result = totalResult.get()
-                if (!result) {
-                    sucessFlag = false
-                    break
+                if (result) {
+                    successCount += 1
                 }
             } catch (e: Exception) {
-                logger.error("updateComponentFirstPublisher error:${e.message}")
+                logger.error("Error updating component first publisher: ${e.message}")
                 throw RuntimeException(e.message)
             }
-
         }
 
+        return StorePublisherCorrectionResult(
+            executionResult = true,
+            successCount = successCount,
+            totalCount = totalResults.size,
 
-        return StorePublisherCorrectionResult(sucessFlag, totalResults.size)
-
+        )
     }
 
 
