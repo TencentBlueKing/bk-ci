@@ -37,8 +37,10 @@ import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.jooq.Record3
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository(value = "TEMPLATE_COMMON_DAO")
 class TemplateCommonDao : AbstractStoreCommonDao() {
@@ -148,4 +150,25 @@ class TemplateCommonDao : AbstractStoreCommonDao() {
             dslContext.select(TEMPLATE_CODE).from(this).where(ID.eq(storeId)).fetchOne(0, String::class.java)
         }
     }
+
+    override fun getStoreComponentVersionLogs(
+        dslContext: DSLContext,
+        storeCode: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Record3<String, String, LocalDateTime>>? {
+        return with(TTemplate.T_TEMPLATE) {
+            val baseStep = dslContext.select(VERSION, PUB_DESCRIPTION, UPDATE_TIME).from(this)
+                .where(TEMPLATE_CODE.eq(storeCode))
+                .and(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte()).and(TEMPLATE_CODE.eq(storeCode)))
+            if (null != page && null != pageSize) {
+                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            } else {
+                baseStep.fetch()
+            }
+        }
+    }
+
+
+
 }
