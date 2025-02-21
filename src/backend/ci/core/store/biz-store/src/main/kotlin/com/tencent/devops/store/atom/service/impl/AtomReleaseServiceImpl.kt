@@ -1223,8 +1223,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 atomCode = atomCode,
                 atomId = atomRecord.id,
                 userId = userId,
-                reason = reason,
-                version = version
+                reason = reason
             )
         }
     }
@@ -1234,8 +1233,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         atomCode: String,
         atomId: String,
         userId: String,
-        reason: String?,
-        version: String
+        reason: String?
     ) {
         // 查找插件最近二个已经发布的版本
         val releaseAtomRecords = marketAtomDao.getReleaseAtomsByCode(context, atomCode, 2)

@@ -35,8 +35,8 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import java.io.InputStream
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 
 interface OpAtomService {
 
@@ -98,4 +98,9 @@ interface OpAtomService {
      * 将插件设置为默认
      */
     fun setDefault(userId: String, atomCode: String): Boolean
+
+    /**
+     * 更新插件敏感参数配置
+     */
+    fun updateAtomSensitiveCacheConfig(userId: String, atomCode: String?): Result<Boolean>
 }
