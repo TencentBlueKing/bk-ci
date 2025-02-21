@@ -161,7 +161,7 @@ class BKItsmService @Autowired constructor(
         )
     }
 
-    fun createTicket(
+   private fun createTicket(
         creator: String,
         fields: List<Map<String, String>>,
         serviceId: Int,
@@ -206,6 +206,49 @@ class BKItsmService @Autowired constructor(
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.CREATE_ITSM_TICKET_ERROR.errorCode,
                 params = arrayOf(errorParam1, creator)
+            )
+        }
+
+        return resp.data.sn
+    }
+
+    fun createTicketWithJson(
+        creatoReq: String
+    ): String {
+        val url = "${bkConfig.itsmHost}/v2/itsm/create_ticket"
+        val request = Request.Builder()
+            .url(url)
+            .addHeader("x-bkapi-authorization", headerStr())
+            .post(JsonUtil.toJson(creatoReq).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+        logger.info("createTicketWithJson|$url|$creatoReq")
+        val resp = try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val data = response.body!!.string()
+                if (!response.isSuccessful) {
+                    logger.error("createTicketWithJson|$url|$creatoReq|${response.code}|$data")
+                    throw ErrorCodeException(
+                        errorCode = ErrorCodeEnum.CREATE_ITSM_TICKET_ERROR.errorCode,
+                        params = null
+                    )
+                }
+                val resp = objectMapper.readValue<BKItsmCreateTicketResp<BKItsmCreateTicketRespData>>(data)
+                if (!resp.result) {
+                    logger.error("createTicketWithJson|$url|$creatoReq|${response.code}|$data")
+                    throw ErrorCodeException(
+                        errorCode = ErrorCodeEnum.CREATE_ITSM_TICKET_ERROR.errorCode,
+                        params = null
+                    )
+                }
+                resp
+            }
+        } catch (e: ErrorCodeException) {
+            throw e
+        } catch (e: Exception) {
+            logger.error("createTicketWithJson request error", e)
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.CREATE_ITSM_TICKET_ERROR.errorCode,
+                params = null
             )
         }
 

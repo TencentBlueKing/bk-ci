@@ -957,7 +957,7 @@ interface ApigwRemoteDevResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "请求参数", required = true)
-        createReq: BkItsmTicketInfo
+        @Parameter(description = "请求参数,json字符串", required = true)
+        createReqStr: String
     ): Result<String>
 }
