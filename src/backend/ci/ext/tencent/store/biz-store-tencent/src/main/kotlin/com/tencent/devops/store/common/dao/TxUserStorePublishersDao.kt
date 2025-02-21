@@ -430,16 +430,13 @@ class TxUserStorePublishersDao {
         dslContext: DSLContext,
         storeCode: String,
         storeType: Byte,
-        firstPublisher: String,
-        userId: String?
+        firstPublisher: String
     ) {
         with(TStoreRelease.T_STORE_RELEASE) {
             val updateQuery = dslContext.update(this)
                 .set(FIRST_PUB_CREATOR, firstPublisher)
 
-            if (userId != null) {
-                updateQuery.set(MODIFIER, userId)
-            }
+
 
             updateQuery.where(STORE_CODE.eq(storeCode))
                 .and(STORE_TYPE.eq(storeType))

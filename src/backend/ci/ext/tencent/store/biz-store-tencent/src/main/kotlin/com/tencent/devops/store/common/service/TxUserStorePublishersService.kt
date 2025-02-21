@@ -6,5 +6,5 @@ interface TxUserStorePublishersService {
 
 
 
-    fun updateComponentFirstPublisher(userId: String,type:StoreTypeEnum): Boolean
+    fun updateComponentFirstPublisher(type:StoreTypeEnum): Boolean
 }

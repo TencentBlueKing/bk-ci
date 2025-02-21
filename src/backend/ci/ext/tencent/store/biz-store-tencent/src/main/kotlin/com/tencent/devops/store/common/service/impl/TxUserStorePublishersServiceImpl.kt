@@ -30,10 +30,10 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
     }
 
 
-    override fun updateComponentFirstPublisher(userId: String, type: StoreTypeEnum): Boolean {
+    override fun updateComponentFirstPublisher(type: StoreTypeEnum): Boolean {
         var sucessFlag = true
         //矫正插件首次发布人数据
-        val totalResults =modifyComponentFirstPublisher(userId, type)
+        val totalResults = modifyComponentFirstPublisher(type)
 
         if (totalResults.isEmpty()) {
             sucessFlag = false
@@ -59,7 +59,7 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
     }
 
 
-    private fun modifyComponentFirstPublisher(userId: String, storeTypeEnum: StoreTypeEnum): List<Future<Boolean>> {
+    private fun modifyComponentFirstPublisher(storeTypeEnum: StoreTypeEnum): List<Future<Boolean>> {
 
         val count = countComponentPublisherByStoreType(storeTypeEnum)
         var offset = 0
@@ -94,7 +94,7 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
 
                 }
 
-                val results = updateFirstPublisherIfNecessary(storeTypeEnum, componentList, userId)
+                val results = updateFirstPublisherIfNecessary(storeTypeEnum, componentList)
                 if (results != null) {
                     totalResults.addAll(results)
                 }
@@ -114,8 +114,7 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
 
     fun updateFirstPublisherIfNecessary(
         storeTypeEnum: StoreTypeEnum,
-        list: List<Component>?,
-        userId: String?
+        list: List<Component>?
     ): List<Future<Boolean>>? {
 
         if (!list.isNullOrEmpty()) {
@@ -140,8 +139,7 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
                                         dslContext = dslContext,
                                         storeCode = it.code,
                                         storeType = storeTypeEnum.type.toByte(),
-                                        firstPublisher = it.modifier,
-                                        userId = userId
+                                        firstPublisher = it.modifier
                                     )
 
                                 }
@@ -238,8 +236,6 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
 
 
     }
-
-
 
 
     class Component(

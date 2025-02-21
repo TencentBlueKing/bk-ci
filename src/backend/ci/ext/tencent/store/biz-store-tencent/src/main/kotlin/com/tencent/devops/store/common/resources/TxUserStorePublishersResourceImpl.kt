@@ -11,8 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class TxUserStorePublishersResourceImpl @Autowired constructor(
     private val txUserStorePublishersService: TxUserStorePublishersService
 ) : TxUserStorePublishersResource {
-    override fun updateComponentFirstPublisher(userId: String, type: StoreTypeEnum): Result<Boolean> {
-        return Result(txUserStorePublishersService.updateComponentFirstPublisher(userId,type))
+    override fun updateComponentFirstPublisher(type: StoreTypeEnum): Result<Boolean> {
+        return Result(txUserStorePublishersService.updateComponentFirstPublisher(type))
     }
 
 
