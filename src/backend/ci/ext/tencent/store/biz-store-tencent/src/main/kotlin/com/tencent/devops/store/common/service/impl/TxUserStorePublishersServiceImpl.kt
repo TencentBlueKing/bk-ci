@@ -30,22 +30,24 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
         private val logger = LoggerFactory.getLogger(TxUserStorePublishersServiceImpl::class.java)
         private val HAS_VERSION_LOG =
             setOf(StoreTypeEnum.SERVICE, StoreTypeEnum.ATOM, StoreTypeEnum.IMAGE, StoreTypeEnum.IDE_ATOM)
+        private var successUpdateCount = 0
     }
 
 
     override fun updateComponentFirstPublisher(type: StoreTypeEnum): StorePublisherCorrectionResult {
+        successUpdateCount = 0
         val totalResults = modifyComponentFirstPublisher(type)
         if (totalResults.isEmpty()) {
             return StorePublisherCorrectionResult()
         }
 
-        var successCount = 0
+        var successExecutionCount = 0
 
         for (totalResult in totalResults) {
             try {
                 val result = totalResult.get()
                 if (result) {
-                    successCount += 1
+                    successExecutionCount += 1
                 }
             } catch (e: Exception) {
                 logger.error("Error updating component first publisher: ${e.message}")
@@ -55,10 +57,11 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
 
         return StorePublisherCorrectionResult(
             executionResult = true,
-            successCount = successCount,
-            totalCount = totalResults.size,
+            successExecutionCount = successExecutionCount,
+            totalExecutionCount = totalResults.size,
+            successUpdateCount = successUpdateCount,
 
-        )
+            )
     }
 
 
@@ -145,6 +148,7 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
                             storeType = storeTypeEnum.type.toByte(),
                             firstPublisher = component.modifier
                         )
+                        successUpdateCount+=1
                     }
                     true
                 } catch (e: Exception) {
