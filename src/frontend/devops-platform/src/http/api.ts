@@ -8,27 +8,26 @@ const repositoryApiPerfix = '/repository/api/user';
 
 export default {
   // 获取代码库配置
-  fetchRepoConfigList () {
-    return fetch.get(`${repositoryApiPerfix}/repositories/config/listConfig`);
+  fetchRepoConfigList ({ page, pageSize }) {
+    return fetch.get(`${repositoryApiPerfix}/repositories/config/listConfig?page=${page}&pageSize=${pageSize}`);
   },
-  // 禁用代码库配置
-  disableRepoConfig (scmCode: string) {
-    return fetch.put(`${repositoryApiPerfix}/repositories/config/${scmCode}/disable`);
-  },
-  // 启用代码库配置
-  enableRepoConfig (scmCode: string) {
-    return fetch.put(`${repositoryApiPerfix}/repositories/config/${scmCode}/enable`);
-  },
-  // 删除代码库配置
+  // 启用/禁用代码库配置
   deleteRepoConfig (scmCode: string) {
     return fetch.delete(`${repositoryApiPerfix}/repositories/config/${scmCode}`);
   },
-  // 禁用代码库配置
-  updateRepoConfig (scmCode: string) {
-    return fetch.put(`${repositoryApiPerfix}/repositories/config/${scmCode}`);
+  // 启用/禁用代码库配置
+  toggleEnableRepoConfig (scmCode: string, type: string) {
+    return fetch.put(`${repositoryApiPerfix}/repositories/config/${scmCode}/${type}`);
+  },
+  // 更新代码库配置
+  updateRepoConfig (scmCode: string, param: object) {
+    return fetch.put(`${repositoryApiPerfix}/repositories/config/${scmCode}`, param);
   },
   // 创建代码库配置
-  createRepoConfig () {
-    return fetch.post(`${repositoryApiPerfix}/repositories/config`);
+  createRepoConfig (param: object) {
+    return fetch.post(`${repositoryApiPerfix}/repositories/config`, param);
+  },
+  fetchListProvider () {
+    return fetch.get(`${repositoryApiPerfix}/repositories/config/listProvider`);
   }
 };

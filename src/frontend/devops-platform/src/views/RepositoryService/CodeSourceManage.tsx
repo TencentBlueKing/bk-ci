@@ -3,17 +3,30 @@ import { defineComponent, ref, onMounted, h } from 'vue';
 import { timeFormatter } from '@/common/util';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
-import { Tag, InfoBox } from 'bkui-vue';
+import { Tag, InfoBox, Message } from 'bkui-vue';
 import { Plus } from 'bkui-vue/lib/icon';
 import PlatformHeader from '@/components/platform-header';
+import { storeToRefs } from 'pinia';
+import useRepoConfigTable from "./useRepoConfigTable";
 
 export default defineComponent({
   setup() {
     const { t } = useI18n();
     const router = useRouter();
-    const borderConfig = ['outer', 'row'];
-    const isLoading = ref(false);
-    const tableData = ref([]);
+    const repoConfigStore = useRepoConfigTable();
+    const {
+      pagination,
+      isLoading,
+      repoConfigList,
+      borderConfig,
+    } = storeToRefs(repoConfigStore)
+    const {
+      setCurConfig,
+      getRepoConfigList,
+      handlePageLimitChange,
+      handlePageValueChange
+    } = useRepoConfigTable();
+    const enabledStatus = ['OK', 'SUCCESS', 'DEPLOYING'];
     const columns = ref([
       {
         'label': t('代码源名称'),
@@ -26,7 +39,12 @@ export default defineComponent({
               src: row.logoUrl,
               class: 'w-[17px] mr-[2px]'
             }),
-            h('span', {}, row.name)
+            h('span', {
+              class: `text-[#3A84FF] text-[12px] cursor-pointer`,
+              onClick() {
+                handleToConfigDetail(row)
+              }
+            }, row.name)
           ])
         }
       },
@@ -41,6 +59,7 @@ export default defineComponent({
       {
         'label': 'Webhook',
         'field': 'webhookEnabled',
+        width: 120,
         render({ cell, row }) {
           return h(Tag, {
             theme: row.webhookEnabled ? 'success' : '',
@@ -52,6 +71,7 @@ export default defineComponent({
       {
         'label': 'PAC',
         'field': 'pacEnabled',
+        width: 120,
         render({ cell, row }) {
           return h(Tag, {
             theme: row.pacEnabled ? 'success' : ''
@@ -95,77 +115,70 @@ export default defineComponent({
             h('span', {
               class: 'text-[#3A84FF] text-[12px] mr-[8px] cursor-pointer',
               onClick() {
-                handleToggleConfigStatus(row.state, row.name)
+                handleToConfigDetail(row)
               }
-            }, row.state === 1 ? t('启用') : t('停用')),
+            }, t('编辑')),
             h('span', {
-              class: `text-[#3A84FF] text-[12px] cursor-pointer ${row.state === 2 ? 'text-[#C4C6CC]' : ''}`,
+              class: 'text-[#3A84FF] text-[12px] mr-[8px] cursor-pointer',
               onClick() {
-                handleDeleteConfig(row.state, row.name)
+                handleToggleConfigStatus(row)
+              }
+            }, enabledStatus.includes(row.status) ? t('停用') : t('启用')),
+            h('span', {
+              class: `text-[#3A84FF] text-[12px] ${!row.canDelete ? 'text-[#C4C6CC] cursor-not-allowed' : 'cursor-pointer'}`,
+              onClick() {
+                if (!row.canDelete) return
+                handleDeleteConfig(row)
               }
             }, t('删除'))
           ])
         }
       }
     ]);
-    const pagination = ref({ count: 0, current: 1, limit: 20 });
-
-    onMounted(() => {
-      // fetchData();
-      getRepoConfigList();
-    });
-
-    const fetchData = () => {
-      pagination.value.count = 10;
-    };
-
-    const getRepoConfigList = async () => {
-      try {
-        isLoading.value = true;
-        const res = await http.fetchRepoConfigList();
-        tableData.value = res.records;
-        pagination.value.count = res.count;
-      } catch (e) {
-        console.error(e)
-      } finally {
-        isLoading.value = false;
-      }
-    }
-
-    const handlePageLimitChange = (limit: number) => {
-      pagination.value.limit = limit;
-    };
-
-    const handlePageValueChange = (value: number) => {
-      pagination.value.current = value;
-    };
 
     const goCreateCodeSource = () => {
       router.push({
-        name: 'CreateCodeSource'
+        name: 'ConfigForm',
+        query: {
+          action: 'create'
+        }
       })
     };
 
-    const handleToggleConfigStatus = (state, name: string) => {
-      const tip = state === 10 ? t('停用') : t('启用');
+    const handleToggleConfigStatus = (row: any) => {
+      const { status, name, scmCode } = row;
+      const tip = enabledStatus.includes(status) ? '停用' : '启用';
       InfoBox({
         confirmText: tip,
         cancelText: t('取消'),
         confirmButtonTheme: 'danger',
-        title: t('是否X该代码源？', [tip]),
+        title: t('是否X该代码源？', [t(`${tip}`)]),
         content: h('div', {
           class: 'text-[14px] text-[#4D4F56]'
         }, [
           h('span', `${t('代码源名称')}：`),
           h('span', { class: 'text-[#313238]' }, name)
         ]),
-        onConfirm() {
-          console.log('---');
+        onConfirm: async () => {
+          try {
+            const type = enabledStatus.includes(status) ? 'disable' : 'enable'
+            const res = await http.toggleEnableRepoConfig(scmCode, type)
+            if (res) {
+              Message({
+                theme: 'success',
+                message: t(`${tip}成功`)
+              })
+              getRepoConfigList()
+            }
+          } catch (e) {
+            console.error(e)
+          }
         },
       });
     } 
 
-    const handleDeleteConfig = (state, name: string) => {
+    const handleDeleteConfig = (row: any) => {
+      const { name, scmCode } = row
       InfoBox({
         confirmText: t('删除'),
         cancelText: t('取消'),
@@ -177,11 +190,36 @@ export default defineComponent({
           h('span', `${t('代码源名称')}：`),
           h('span', { class: 'text-[#313238]' }, name)
         ]),
-        onConfirm() {
-          console.log('---');
+        onConfirm: async () => {
+          try {
+            const res = await http.deleteRepoConfig(scmCode)
+            if (res) {
+              Message({
+                theme: 'success',
+                message: t('删除成功')
+              })
+              getRepoConfigList()
+            }
+          } catch (e) {
+            console.error(e)
+          }
         },
       });
     };
+
+    const handleToConfigDetail = (row) => {
+      setCurConfig(row)
+      router.push({
+        name: 'ConfigForm',
+        query: {
+          action: 'detail'
+        }
+      })
+    }
+
+    onMounted(async () => {
+      await getRepoConfigList();
+    });
 
     return () => (
       <>
@@ -191,18 +229,19 @@ export default defineComponent({
             <Plus class="text-[22px]" />
             {t('新增代码源')}
           </bk-button>
-
-          <bk-table
-            class="bg-white !h-tableHeight"
-            border={borderConfig}
-            settings={true}
-            columns={columns.value}
-            data={tableData.value}
-            pagination={pagination.value}
-            remote-pagination
-            onPageLimitChange={handlePageLimitChange}
-            onPageValueChange={handlePageValueChange}
-          />
+          <bk-loading loading={isLoading.value}>
+            <bk-table
+              class="bg-white !h-tableHeight"
+              border={borderConfig.value}
+              settings={true}
+              columns={columns.value}
+              data={repoConfigList.value}
+              pagination={pagination.value}
+              remote-pagination
+              onPageLimitChange={handlePageLimitChange}
+              onPageValueChange={handlePageValueChange}
+            />
+          </bk-loading>
         </div>
       </>
     );

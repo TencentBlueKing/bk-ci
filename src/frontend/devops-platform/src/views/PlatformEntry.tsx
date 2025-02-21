@@ -14,16 +14,16 @@ export default defineComponent({
     const navList = [
       {
         name: t('代码源管理'),
-        router: 'CodeSourceManage',
+        router: 'Config',
         icon: 'metrics-overview',
-        meta: ['CodeSourceManage']
+        meta: ['Config', 'ConfigForm']
       },
-      {
-        name: t('系统管理员'),
-        router: 'SystemManage',
-        icon: 'metrics-fail-analysis',
-        meta: ['SystemManage']
-      },
+      // {
+      //   name: t('系统管理员'),
+      //   router: 'SystemManage',
+      //   icon: 'metrics-fail-analysis',
+      //   meta: ['SystemManage']
+      // },
     ];
 
     function handleShowMenu() {

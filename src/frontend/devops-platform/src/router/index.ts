@@ -8,7 +8,7 @@ const SystemManage = () => import('@/views/SystemManage/index');
 // 代码源管理
 const CodeSourceManage = () => import('@/views/RepositoryService/CodeSourceManage');
 // 新增代码源
-const CreateCodeSource = () => import('@/views/RepositoryService/CreateCodeSource');
+const CodeConfigForm = () => import('@/views/RepositoryService/CodeConfigForm');
 
 const router = createRouter({
   history: createWebHistory(),
@@ -18,18 +18,18 @@ const router = createRouter({
       name: 'platform',
       component: PlatformEntry,
       redirect: () => {
-        return { name: 'CodeSourceManage' }
+        return { name: 'Config' }
       },
       children: [
         {
-          path: 'codeSourceManage',
-          name: 'CodeSourceManage',
+          path: 'config',
+          name: 'Config',
           component: CodeSourceManage,
         },
         {
-          path: 'createCodeSource',
-          name: 'CreateCodeSource',
-          component: CreateCodeSource,
+          path: 'config/form/:action?',
+          name: 'ConfigForm',
+          component: CodeConfigForm,
         },
         {
           path: 'systemManage',

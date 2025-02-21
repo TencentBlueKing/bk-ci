@@ -42,6 +42,9 @@
     "创建时间": "Creation Time",
     "续期期限": "Renewal Period",
     "到期时间": "Expiration Time",
+    "停用成功": "Disabled successfully",
+    "启用成功": "Enabled successfully",
+    "删除成功": "Deleted successfully",
     "最近修改人": "Last Modified By",
     "代码库服务": "Repository Service",
     "系统管理员": "System Administrator",
@@ -80,5 +83,15 @@
     "由中/英文字符、下划线组成，不超过20个字符，如工蜂、GitHub": "Consists of Chinese/English characters and underscores, not exceeding 20 characters, such as Gongfeng, GitHub",
     "请上传png、jpg、尺寸为大于128*128的正方形Logo，大小不超过2M": "Please upload a png or jpg square logo with dimensions greater than 128*128, and size not exceeding 2M",
     "由英文字母和下划线组成，不超过20个字符，作为平台服务内交互的唯一标识，如GIT、TGIT": "Consists of English letters and underscores, not exceeding 20 characters, serving as a unique identifier for platform service interaction, such as GIT, TGIT",
-    "Pipeline AsCode（PAC）模式下，可以使用代码库.ci目录下的YAML文件编排流水线，且YAML文件变更将自动同步到对应的蓝盾流水线。": "In Pipeline AsCode (PAC) mode, YAML files in the .ci directory of the repository can be used to arrange the pipeline, and changes to the YAML files will automatically sync to the corresponding Blue Shield pipeline."
+    "Pipeline AsCode（PAC）模式下，可以使用代码库.ci目录下的YAML文件编排流水线，且YAML文件变更将自动同步到对应的蓝盾流水线。": "In Pipeline AsCode (PAC) mode, YAML files in the .ci directory of the repository can be used to arrange the pipeline, and changes to the YAML files will automatically sync to the corresponding Blue Shield pipeline.",
+    "OAUTH类型": "OAUTH Type",
+    "新建": "New",
+    "复用": "Reuse",
+    "只允许上传png、jpg": "Only PNG and JPG uploads are allowed",
+    "大小不超过2M": "Size must not exceed 2MB",
+    "新增代码源成功": "Successfully added new code source",
+    "编辑代码源": "Edit code source",
+    "确认离开当前页？": "Are you sure to leave now?",
+    "离开将会导致未保存信息丢失": "Your changes will be lost if you close without saving.",
+    "确定": "Confirm"
 }
