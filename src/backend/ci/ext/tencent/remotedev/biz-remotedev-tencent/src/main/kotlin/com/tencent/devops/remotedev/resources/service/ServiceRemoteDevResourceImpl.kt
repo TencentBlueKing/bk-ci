@@ -909,7 +909,7 @@ class ServiceRemoteDevResourceImpl(
     override fun createItsmTicket(userId: String, createReq: String): Result<String> {
         return Result(
             bkItsmService.createTicketWithJson(
-                creatoReq = createReq
+                createReq = createReq
             )
         )
     }
