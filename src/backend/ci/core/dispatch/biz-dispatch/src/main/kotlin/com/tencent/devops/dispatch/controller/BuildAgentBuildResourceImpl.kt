@@ -51,9 +51,9 @@ import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyDockerDebugInf
 import com.tencent.devops.dispatch.service.ThirdPartyAgentDockerService
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentUpgradeByVersionInfo
+import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.concurrent.TimeUnit
 
 @RestResource
 @Suppress("ALL")
@@ -173,7 +173,7 @@ class BuildAgentBuildResourceImpl @Autowired constructor(
             thirdPartyAgentBuildService.agentRepeatedInstallAlarm(projectId, agentId, data.heartbeat.agentIp)
             return AgentResult(1, "request too frequently")
         } else {
-            val lockKey = "environment:thirdPartyAgent:agentHeartbeatRequestLock_$agentId"
+            val lockKey = "dispatch:thirdPartyAgent:agentHeartbeatRequestLock_$agentId"
             val redisLock = RedisLock(redisOperation, lockKey, 1)
             if (redisLock.tryLock()) {
                 agentAskRequestCache.put(agentId, agentId)
