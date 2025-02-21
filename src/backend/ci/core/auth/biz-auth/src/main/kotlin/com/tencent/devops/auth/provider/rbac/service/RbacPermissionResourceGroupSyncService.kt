@@ -42,6 +42,7 @@ import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.enum.ApplyToGroupStatus
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.pojo.enum.MemberType
+import com.tencent.devops.auth.provider.rbac.pojo.event.AuthProjectLevelPermissionsSyncEvent
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
@@ -54,6 +55,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupApplyRecord
@@ -81,7 +83,8 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
     private val authResourceSyncDao: AuthResourceSyncDao,
     private val authResourceGroupApplyDao: AuthResourceGroupApplyDao,
     private val resourceGroupPermissionService: PermissionResourceGroupPermissionService,
-    private val deptService: DeptService
+    private val deptService: DeptService,
+    private val traceEventDispatcher: TraceEventDispatcher
 ) : PermissionResourceGroupSyncService {
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceGroupSyncService::class.java)
@@ -181,6 +184,12 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                             iamGroupId = groupId,
                             expiredTime = DateTimeUtil.convertTimestampToLocalDateTime(verifyResult.expiredAt),
                             memberId = memberId
+                        )
+                        traceEventDispatcher.dispatch(
+                            AuthProjectLevelPermissionsSyncEvent(
+                                projectCode = projectCode,
+                                iamGroupIds = listOf(groupId)
+                            )
                         )
                     }
                 }
@@ -560,6 +569,12 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                         projectCode = projectCode,
                         iamGroupIds = unsyncGroupIds
                     )
+                    traceEventDispatcher.dispatch(
+                        AuthProjectLevelPermissionsSyncEvent(
+                            projectCode = projectCode,
+                            iamGroupIds = unsyncGroupIds
+                        )
+                    )
                 }
                 offset += limit
             } while (resourceMemberGroupIds.size == limit)
@@ -663,6 +678,12 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
             authResourceGroupMemberDao.batchCreate(transactionContext, toAddMembers)
             authResourceGroupMemberDao.batchUpdate(transactionContext, toUpdateMembers)
         }
+        traceEventDispatcher.dispatch(
+            AuthProjectLevelPermissionsSyncEvent(
+                projectCode = projectCode,
+                iamGroupIds = listOf(iamGroupId)
+            )
+        )
     }
 
     /**

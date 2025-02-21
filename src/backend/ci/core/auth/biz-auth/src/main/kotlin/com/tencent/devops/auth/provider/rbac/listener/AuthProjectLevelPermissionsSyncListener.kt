@@ -23,40 +23,29 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.auth.resources.user
+package com.tencent.devops.auth.provider.rbac.listener
 
-import com.tencent.devops.auth.api.user.UserProjectMemberResource
-import com.tencent.devops.auth.pojo.DepartmentUserCount
-import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
-import com.tencent.devops.auth.service.iam.PermissionProjectService
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import com.tencent.devops.common.web.RestResource
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.auth.provider.rbac.pojo.event.AuthProjectLevelPermissionsSyncEvent
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
+import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
+import com.tencent.devops.common.event.listener.trace.BaseTraceListener
 
-@RestResource
-class UserProjectMemberResourceImpl @Autowired constructor(
-    val permissionProjectService: PermissionProjectService,
-    val permissionManageFacadeService: PermissionManageFacadeService
-) : UserProjectMemberResource {
-    override fun checkManager(userId: String, projectId: String): Result<Boolean> {
-        val result = permissionProjectService.checkProjectManager(userId, projectId) ||
-            permissionProjectService.isProjectUser(userId, projectId, BkAuthGroup.CI_MANAGER)
-        return Result(result)
-    }
-
-    override fun getProjectUserDepartmentDistribution(
-        userId: String,
-        projectId: String,
-        parentDepartmentId: Int
-    ): Result<List<DepartmentUserCount>> {
-        return Result(
-            permissionManageFacadeService.getProjectUserDepartmentDistribution(
-                projectCode = projectId,
-                parentDepartmentId = parentDepartmentId
-            )
-        )
+class AuthProjectLevelPermissionsSyncListener(
+    private val permissionService: PermissionResourceGroupPermissionService,
+    traceEventDispatcher: TraceEventDispatcher
+) : BaseTraceListener<AuthProjectLevelPermissionsSyncEvent>(traceEventDispatcher) {
+    override fun run(event: AuthProjectLevelPermissionsSyncEvent) {
+        with(event) {
+            logger.info("receive project level permission sync event|$event")
+            event.iamGroupIds.forEach {
+                permissionService.syncProjectLevelPermissions(
+                    projectCode = projectCode,
+                    iamGroupId = it
+                )
+            }
+        }
     }
 }

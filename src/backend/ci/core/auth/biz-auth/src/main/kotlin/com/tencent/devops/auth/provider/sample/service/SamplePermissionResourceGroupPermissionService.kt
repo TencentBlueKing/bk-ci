@@ -99,6 +99,13 @@ class SamplePermissionResourceGroupPermissionService : PermissionResourceGroupPe
         action: String
     ): Map<String, List<String>> = emptyMap()
 
+    override fun listResourcesWithPermission(
+        projectCode: String,
+        filterIamGroupIds: List<Int>,
+        relatedResourceType: String,
+        action: String
+    ): List<String> = emptyList()
+
     override fun getGroupPermissionDetail(
         iamGroupId: Int
     ): Map<String, List<GroupPermissionDetailVo>> = emptyMap()
@@ -126,4 +133,15 @@ class SamplePermissionResourceGroupPermissionService : PermissionResourceGroupPe
         resourceType: String,
         resourceCode: String
     ): Boolean = true
+
+    override fun syncProjectLevelPermissions(
+        projectCode: String,
+        iamGroupId: Int
+    ): Boolean = true
+
+    override fun syncProjectLevelPermissions(
+        projectCode: String,
+    ): Boolean = true
+
+    override fun syncProjectLevelPermissionsByCondition(projectConditionDTO: ProjectConditionDTO): Boolean = true
 }

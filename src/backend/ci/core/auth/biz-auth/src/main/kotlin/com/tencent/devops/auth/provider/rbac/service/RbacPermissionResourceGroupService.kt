@@ -311,11 +311,11 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                     projectCode = projectId,
                     iamGroupId = groupId
                 )
-                permissionResourceGroupPermissionService.deleteByGroupIds(
-                    projectCode = projectId,
-                    iamGroupIds = listOf(groupId)
-                )
             }
+            permissionResourceGroupPermissionService.deleteByGroupIds(
+                projectCode = projectId,
+                iamGroupIds = listOf(groupId)
+            )
         }
         return true
     }
@@ -669,11 +669,11 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                 dslContext = transactionContext,
                 ids = records.map { it.id!! }
             )
-            permissionResourceGroupPermissionService.deleteByGroupIds(
-                projectCode = projectCode,
-                iamGroupIds = records.map { it.relationId }
-            )
         }
+        permissionResourceGroupPermissionService.deleteByGroupIds(
+            projectCode = projectCode,
+            iamGroupIds = records.map { it.relationId }
+        )
         return true
     }
 

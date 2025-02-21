@@ -25,38 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.resources.user
+package com.tencent.devops.auth.pojo.vo
 
-import com.tencent.devops.auth.api.user.UserProjectMemberResource
-import com.tencent.devops.auth.pojo.DepartmentUserCount
-import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
-import com.tencent.devops.auth.service.iam.PermissionProjectService
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import com.tencent.devops.common.web.RestResource
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.auth.pojo.BkUserDeptInfo
+import io.swagger.v3.oas.annotations.media.Schema
 
-@RestResource
-class UserProjectMemberResourceImpl @Autowired constructor(
-    val permissionProjectService: PermissionProjectService,
-    val permissionManageFacadeService: PermissionManageFacadeService
-) : UserProjectMemberResource {
-    override fun checkManager(userId: String, projectId: String): Result<Boolean> {
-        val result = permissionProjectService.checkProjectManager(userId, projectId) ||
-            permissionProjectService.isProjectUser(userId, projectId, BkAuthGroup.CI_MANAGER)
-        return Result(result)
-    }
-
-    override fun getProjectUserDepartmentDistribution(
-        userId: String,
-        projectId: String,
-        parentDepartmentId: Int
-    ): Result<List<DepartmentUserCount>> {
-        return Result(
-            permissionManageFacadeService.getProjectUserDepartmentDistribution(
-                projectCode = projectId,
-                parentDepartmentId = parentDepartmentId
-            )
-        )
-    }
-}
+@Schema(title = "用户列表返回")
+data class BkDeptDetailsVo(
+    @get:Schema(title = "部门ID")
+    val id: Int,
+    @get:Schema(title = "部门名称")
+    val name: String,
+    @get:Schema(title = "详细信息")
+    val family: List<BkUserDeptInfo>?
+)

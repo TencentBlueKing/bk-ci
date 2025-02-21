@@ -1,5 +1,6 @@
 package com.tencent.devops.auth.cron
 
+import com.tencent.devops.auth.service.UserManageService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.auth.service.lock.CronSyncGroupMembersExpiredTimeLock
 import com.tencent.devops.auth.service.lock.CronSyncGroupPermissionsLock
@@ -14,7 +15,8 @@ import org.springframework.stereotype.Component
 @Component
 class AuthCronSyncGroupAndMember(
     private val redisOperation: RedisOperation,
-    private val permissionResourceGroupSyncService: PermissionResourceGroupSyncService
+    private val permissionResourceGroupSyncService: PermissionResourceGroupSyncService,
+    private val userManageService: UserManageService
 ) {
     @Value("\${sync.cron.enabled:#{false}}")
     private var enable: Boolean = false
@@ -92,6 +94,26 @@ class AuthCronSyncGroupAndMember(
             } catch (e: Exception) {
                 logger.warn("sync group member expired time regularly| error", e)
             }
+        }
+    }
+
+    @Scheduled(cron = "0 0 0 * * ?")
+    fun syncUserAndDepartmentRegularly() {
+        if (!enable) {
+            return
+        }
+        try {
+            logger.info("sync user and department regularly |start")
+            val lockSuccess = redisLock.tryLock()
+            if (lockSuccess) {
+                userManageService.syncUserInfoData()
+                userManageService.syncDepartmentInfoData()
+                logger.info("sync user and department regularly |finish")
+            } else {
+                logger.info("sync user and department regularly |running")
+            }
+        } catch (e: Exception) {
+            logger.warn("sync user and department regularly |error", e)
         }
     }
 }

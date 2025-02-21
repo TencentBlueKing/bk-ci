@@ -39,13 +39,18 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthI18nConstants
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthActionDao
+import com.tencent.devops.auth.dao.AuthResourceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
+import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.dao.AuthResourceGroupPermissionDao
+import com.tencent.devops.auth.dao.AuthUserProjectPermissionDao
 import com.tencent.devops.auth.pojo.RelatedResourceInfo
+import com.tencent.devops.auth.pojo.UserProjectPermission
 import com.tencent.devops.auth.pojo.dto.ResourceGroupPermissionDTO
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
+import com.tencent.devops.auth.provider.rbac.pojo.event.AuthProjectLevelPermissionsSyncEvent
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
 import com.tencent.devops.auth.service.AuthMonitorSpaceService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
@@ -53,9 +58,12 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineViewResource
@@ -66,6 +74,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Value
+import java.time.LocalDateTime
 import java.util.concurrent.Executors
 
 @Suppress("LongParameterList")
@@ -82,7 +91,11 @@ class RbacPermissionResourceGroupPermissionService(
     private val authAuthorizationScopesService: AuthAuthorizationScopesService,
     private val authActionDao: AuthActionDao,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val authResourceDao: AuthResourceDao,
+    private val authUserProjectPermissionDao: AuthUserProjectPermissionDao,
+    private val authResourceMemberDao: AuthResourceGroupMemberDao,
+    private val traceEventDispatcher: TraceEventDispatcher
 ) : PermissionResourceGroupPermissionService {
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
@@ -99,6 +112,10 @@ class RbacPermissionResourceGroupPermissionService(
         private const val ALL_RESOURCE = "*"
         private val syncExecutorService = Executors.newFixedThreadPool(5)
         private val syncProjectsExecutorService = Executors.newFixedThreadPool(10)
+        private val needToSyncProjectLevelAction = listOf(
+            ActionId.PROJECT_VISIT, ActionId.PROJECT_MANAGE,
+            ActionId.PIPELINE_TEMPLATE_CREATE, ActionId.PROJECT_VIEW
+        )
     }
 
     override fun grantGroupPermission(
@@ -240,6 +257,12 @@ class RbacPermissionResourceGroupPermissionService(
             projectCode = projectCode,
             iamGroupIds = iamGroupIds
         )
+        traceEventDispatcher.dispatch(
+            AuthProjectLevelPermissionsSyncEvent(
+                projectCode = projectCode,
+                iamGroupIds = iamGroupIds
+            )
+        )
         return true
     }
 
@@ -330,6 +353,49 @@ class RbacPermissionResourceGroupPermissionService(
             resourceType = resourceType,
             action = action
         )
+    }
+
+    override fun listResourcesWithPermission(
+        projectCode: String,
+        filterIamGroupIds: List<Int>,
+        relatedResourceType: String,
+        action: String
+    ): List<String> {
+        if (filterIamGroupIds.isEmpty())
+            return emptyList()
+        val resourceType = rbacCommonService.getActionInfo(action).relatedResourceType
+        val resourceType2Resources = resourceGroupPermissionDao.listGroupResourcesWithPermission(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            filterIamGroupIds = filterIamGroupIds,
+            resourceType = resourceType,
+            action = action
+        )
+
+        return when {
+            resourceType2Resources[ResourceTypeId.PROJECT] != null -> {
+                authResourceDao.getResourceCodeByType(
+                    dslContext = dslContext,
+                    projectCode = projectCode,
+                    resourceType = resourceType
+                )
+            }
+
+            resourceType == ResourceTypeId.PIPELINE -> {
+                val authViewPipelineIds = resourceType2Resources[ResourceTypeId.PIPELINE_GROUP]?.let { authViewIds ->
+                    client.get(ServicePipelineViewResource::class).listPipelineIdByViewIds(
+                        projectId = projectCode,
+                        viewIdsEncode = authViewIds
+                    ).data
+                } ?: emptyList()
+                val pipelineIds = resourceType2Resources[ResourceTypeId.PIPELINE] ?: emptyList()
+                (authViewPipelineIds + pipelineIds).toMutableSet().toList()
+            }
+
+            else -> {
+                resourceType2Resources[resourceType] ?: emptyList()
+            }
+        }
     }
 
     private fun listPipelineGroupIds(
@@ -505,6 +571,12 @@ class RbacPermissionResourceGroupPermissionService(
                     records = toAddRecords
                 )
             }
+            traceEventDispatcher.dispatch(
+                AuthProjectLevelPermissionsSyncEvent(
+                    projectCode = projectCode,
+                    iamGroupIds = listOf(iamGroupId),
+                )
+            )
             true
         } catch (ex: Exception) {
             logger.warn("sync group permissions failed! $projectCode|$iamGroupId|$ex")
@@ -533,8 +605,7 @@ class RbacPermissionResourceGroupPermissionService(
                 projectCode = projectCode
             )
             val toDeleteGroupIds = groupsWithPermissions.filter { it !in iamGroupIds }
-            resourceGroupPermissionDao.deleteByGroupIds(
-                dslContext = dslContext,
+            deleteByGroupIds(
                 projectCode = projectCode,
                 iamGroupIds = toDeleteGroupIds
             )
@@ -584,7 +655,151 @@ class RbacPermissionResourceGroupPermissionService(
                 relatedResourceCode = resourceCode
             )
         }
+        val iamGroupIds = authResourceGroupDao.listIamGroupIdsByConditions(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
+        traceEventDispatcher.dispatch(
+            AuthProjectLevelPermissionsSyncEvent(
+                projectCode = projectCode,
+                iamGroupIds = iamGroupIds
+            )
+        )
+        return true
+    }
 
+    override fun syncProjectLevelPermissions(projectCode: String): Boolean {
+        var offset = 0
+        val limit = PageUtil.MAX_PAGE_SIZE
+        do {
+            val groupIds = authResourceGroupDao.listIamGroupIdsByConditions(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                limit = limit,
+                offset = offset
+            )
+            groupIds.forEach {
+                syncProjectLevelPermissions(
+                    projectCode = projectCode,
+                    iamGroupId = it
+                )
+            }
+            offset += limit
+        } while (groupIds.size == limit)
+        return true
+    }
+
+    private fun buildUserProjectPermission(projectCode: String, iamGroupId: Int): List<UserProjectPermission> {
+        val actions = resourceGroupPermissionDao.getProjectLevelPermission(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            iamGroupId = iamGroupId
+        ).filter { needToSyncProjectLevelAction.contains(it) }
+
+        if (actions.isEmpty()) {
+            return emptyList()
+        }
+
+        val members = authResourceMemberDao.listResourceGroupMember(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            iamGroupId = iamGroupId,
+            minExpiredTime = LocalDateTime.now()
+        )
+
+        return members.flatMap { member ->
+            actions.map { action ->
+                UserProjectPermission(
+                    memberId = member.memberId,
+                    projectCode = projectCode,
+                    action = action,
+                    iamGroupId = iamGroupId,
+                    expireTime = member.expiredTime
+                )
+            }
+        }
+    }
+
+    override fun syncProjectLevelPermissions(
+        projectCode: String,
+        iamGroupId: Int
+    ): Boolean {
+        logger.info("start to sync group project level permissions,{}|{}", projectCode, iamGroupId)
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val authResourceGroup = authResourceGroupDao.get(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                relationId = iamGroupId.toString()
+            )
+            if (authResourceGroup == null) {
+                logger.info("delete group project level permissions,{}|{}", projectCode, iamGroupId)
+                authUserProjectPermissionDao.delete(
+                    dslContext = dslContext,
+                    projectCode = projectCode,
+                    iamGroupId = iamGroupId
+                )
+                return true
+            }
+            logger.info("sync project level permissions,{}|{}", projectCode, iamGroupId)
+            val oldRecords = authUserProjectPermissionDao.list(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                iamGroupId = iamGroupId
+            )
+            val lastedRecords = buildUserProjectPermission(
+                projectCode = projectCode,
+                iamGroupId = iamGroupId
+            )
+
+            val toDeleteRecords = oldRecords.filter { it !in lastedRecords }
+            val toAddRecords = lastedRecords.filter { it !in oldRecords }
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                authUserProjectPermissionDao.delete(
+                    dslContext = transactionContext,
+                    projectCode = projectCode,
+                    iamGroupId = iamGroupId,
+                    records = toDeleteRecords
+                )
+                authUserProjectPermissionDao.create(
+                    dslContext = transactionContext,
+                    records = toAddRecords
+                )
+            }
+        } catch (ex: Exception) {
+            logger.warn("sync group project level permissions failed ", ex)
+        } finally {
+            logger.info(
+                "It take(${System.currentTimeMillis() - startEpoch})ms " +
+                    "sync group project level permissions $projectCode|$iamGroupId"
+            )
+        }
+
+        return true
+    }
+
+    override fun syncProjectLevelPermissionsByCondition(projectConditionDTO: ProjectConditionDTO): Boolean {
+        logger.info("start to sync user project permissions by condition by condition|$projectConditionDTO")
+        val traceId = MDC.get(TraceTag.BIZID)
+        syncExecutorService.submit {
+            MDC.put(TraceTag.BIZID, traceId)
+            var offset = 0
+            val limit = PageUtil.MAX_PAGE_SIZE / 2
+            do {
+                val projectCodes = client.get(ServiceProjectResource::class).listProjectsByCondition(
+                    projectConditionDTO = projectConditionDTO,
+                    limit = limit,
+                    offset = offset
+                ).data ?: break
+                projectCodes.forEach {
+                    syncProjectLevelPermissions(it.englishName)
+                }
+                offset += limit
+            } while (projectCodes.size == limit)
+        }
         return true
     }
 }

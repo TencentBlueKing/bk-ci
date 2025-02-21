@@ -101,7 +101,7 @@ interface PermissionResourceGroupPermissionService {
     ): Boolean
 
     /**
-     * 获取用户组有权限的资源
+     * 获取用户组有权限的资源--按照资源类型区分
      * */
     fun listGroupResourcesWithPermission(
         projectCode: String,
@@ -109,6 +109,16 @@ interface PermissionResourceGroupPermissionService {
         relatedResourceType: String,
         action: String
     ): Map<String/*resourceType*/, List<String>/*resourceCodes*/>
+
+    /**
+     * 获取用户组有权限的资源
+     * */
+    fun listResourcesWithPermission(
+        projectCode: String,
+        filterIamGroupIds: List<Int>,
+        relatedResourceType: String,
+        action: String
+    ): List<String>
 
     fun getGroupPermissionDetail(
         iamGroupId: Int
@@ -136,5 +146,18 @@ interface PermissionResourceGroupPermissionService {
         projectCode: String,
         resourceType: String,
         resourceCode: String
+    ): Boolean
+
+    fun syncProjectLevelPermissions(
+        projectCode: String
+    ): Boolean
+
+    fun syncProjectLevelPermissions(
+        projectCode: String,
+        iamGroupId: Int
+    ): Boolean
+
+    fun syncProjectLevelPermissionsByCondition(
+        projectConditionDTO: ProjectConditionDTO
     ): Boolean
 }
