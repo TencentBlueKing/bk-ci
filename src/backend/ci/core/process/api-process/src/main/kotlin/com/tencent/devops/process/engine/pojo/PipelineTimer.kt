@@ -37,5 +37,7 @@ data class PipelineTimer(
     val channelCode: ChannelCode,
     val repoHashId: String?,
     val branchs: List<String>?,
-    val noScm: Boolean?
+    val noScm: Boolean?,
+    val taskId: String,
+    val startParam: Map<String, String>?
 )
