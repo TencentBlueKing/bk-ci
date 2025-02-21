@@ -33,10 +33,12 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.DisplayName
 import com.tencent.devops.environment.pojo.NodeWithPermission
+import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -45,6 +47,7 @@ import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
+import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
 
 @Tag(name = "USER_NODE", description = "用户-节点")
@@ -122,10 +125,90 @@ interface UserNodeResource {
         @Parameter(description = "关键字", required = false)
         @QueryParam("keywords")
         keywords: String?,
-        @Parameter(description = "节点类型", required = false)
+        @Parameter(description = "节点类型|用途 (构建: THIRDPARTY;部署: CMDB)", required = false)
         @QueryParam("nodeType")
-        nodeType: NodeType?
+        nodeType: NodeType?,
+        @Parameter(description = "Agent 状态", required = false)
+        @QueryParam("nodeStatus")
+        nodeStatus: NodeStatus?,
+        @Parameter(description = "Agent 版本", required = false)
+        @QueryParam("agentVersion")
+        agentVersion: String?,
+        @Parameter(description = "操作系统", required = false)
+        @QueryParam("osName")
+        osName: String?,
+        @Parameter(description = "最近执行流水线", required = false)
+        @QueryParam("latestBuildPipelineId")
+        latestBuildPipelineId: String?,
+        @Parameter(description = "最近构建执行时间 (开始)", required = false)
+        @QueryParam("latestBuildTimeStart")
+        latestBuildTimeStart: Long?,
+        @Parameter(description = "最近构建执行时间 (结束)", required = false)
+        @QueryParam("latestBuildTimeEnd")
+        latestBuildTimeEnd: Long?,
+        @Parameter(description = "排序字段", required = false)
+        @QueryParam("sortType")
+        sortType: String?,
+        @Parameter(description = "正序ASC/倒序DESC (默认倒序)", required = false)
+        @QueryParam("collation")
+        collation: String?
     ): Result<Page<NodeWithPermission>>
+
+    @Operation(summary = "导出节点管理列表相关信息csv文件")
+    @POST
+    @Path("/{projectId}/listNew_export")
+    fun listNewExport(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "IP", required = false)
+        @QueryParam("nodeIp")
+        nodeIp: String?,
+        @Parameter(description = "别名", required = false)
+        @QueryParam("displayName")
+        displayName: String?,
+        @Parameter(description = "创建人", required = false)
+        @QueryParam("createdUser")
+        createdUser: String?,
+        @Parameter(description = "最后修改人", required = false)
+        @QueryParam("lastModifiedUser")
+        lastModifiedUser: String?,
+        @Parameter(description = "关键字", required = false)
+        @QueryParam("keywords")
+        keywords: String?,
+        @Parameter(description = "节点类型|用途 (构建: THIRDPARTY;部署: CMDB)", required = false)
+        @QueryParam("nodeType")
+        nodeType: NodeType?,
+        @Parameter(description = "Agent 状态", required = false)
+        @QueryParam("nodeStatus")
+        nodeStatus: NodeStatus?,
+        @Parameter(description = "Agent 版本", required = false)
+        @QueryParam("agentVersion")
+        agentVersion: String?,
+        @Parameter(description = "操作系统", required = false)
+        @QueryParam("osName")
+        osName: String?,
+        @Parameter(description = "最近执行流水线", required = false)
+        @QueryParam("latestBuildPipelineId")
+        latestBuildPipelineId: String?,
+        @Parameter(description = "最近构建执行时间 (开始)", required = false)
+        @QueryParam("latestBuildTimeStart")
+        latestBuildTimeStart: Long?,
+        @Parameter(description = "最近构建执行时间 (结束)", required = false)
+        @QueryParam("latestBuildTimeEnd")
+        latestBuildTimeEnd: Long?,
+        @Parameter(description = "排序字段", required = false)
+        @QueryParam("sortType")
+        sortType: String?,
+        @Parameter(description = "正序ASC/倒序DESC (默认倒序)", required = false)
+        @QueryParam("collation")
+        collation: String?,
+        @Context
+        response: HttpServletResponse
+    )
 
     @Operation(summary = "获取用户有权限使用的服务器列表")
     @GET

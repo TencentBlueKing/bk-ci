@@ -33,10 +33,15 @@ import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.model.environment.tables.TNode
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
+import java.sql.Timestamp
 import java.time.LocalDateTime
 import org.jooq.DSLContext
+import org.jooq.Field
+import org.jooq.OrderField
+import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Result
+import org.jooq.SelectConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
@@ -71,35 +76,122 @@ class NodeDao {
         createdUser: String?,
         lastModifiedUser: String?,
         keywords: String?,
-        nodeType: NodeType?
+        nodeType: NodeType?,
+        nodeStatus: NodeStatus?,
+        agentVersion: String?,
+        osName: String?,
+        latestBuildPipelineId: String?,
+        latestBuildTimeStart: Long?,
+        latestBuildTimeEnd: Long?,
+        sortType: String?,
+        collation: String?
     ): List<TNodeRecord> {
         return with(TNode.T_NODE) {
             val query = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
-            if (!keywords.isNullOrEmpty()) {
-                query.and(NODE_IP.like("%$keywords%").or(DISPLAY_NAME.like("%$keywords%")))
-            }
-            if (!nodeIp.isNullOrEmpty()) {
-                query.and(NODE_IP.like("%$nodeIp%"))
-            }
-            if (!displayName.isNullOrEmpty()) {
-                query.and(DISPLAY_NAME.like("%$displayName%"))
-            }
-            if (!createdUser.isNullOrEmpty()) {
-                query.and(CREATED_USER.like("%$createdUser%"))
-            }
-            if (!lastModifiedUser.isNullOrEmpty()) {
-                query.and(LAST_MODIFY_USER.like("%$lastModifiedUser%"))
-            }
-            if (nodeType != null) {
-                query.and(NODE_TYPE.eq(nodeType.name))
-            } else {
-                /*除非特别指定，暂不显示内部NodeType类型*/
-                query.and(NODE_TYPE.`in`(NodeType.coreTypesName()))
-            }
-            query.orderBy(LAST_MODIFY_TIME.desc())
-                .limit(limit).offset(offset)
+            conditions(
+                keywords = keywords,
+                query = query,
+                nodeIp = nodeIp,
+                displayName = displayName,
+                createdUser = createdUser,
+                lastModifiedUser = lastModifiedUser,
+                nodeType = nodeType,
+                nodeStatus = nodeStatus,
+                agentVersion = agentVersion,
+                osName = osName,
+                latestBuildPipelineId = latestBuildPipelineId,
+                latestBuildTimeStart = latestBuildTimeStart,
+                latestBuildTimeEnd = latestBuildTimeEnd,
+                sortType = sortType,
+                collation = collation
+            )
+            query.limit(limit).offset(offset)
                 .fetch()
+        }
+    }
+
+    private fun <T : Record> TNode.conditions(
+        keywords: String?,
+        query: SelectConditionStep<T>,
+        nodeIp: String?,
+        displayName: String?,
+        createdUser: String?,
+        lastModifiedUser: String?,
+        nodeType: NodeType?,
+        nodeStatus: NodeStatus?,
+        agentVersion: String?,
+        osName: String?,
+        latestBuildPipelineId: String?,
+        latestBuildTimeStart: Long?,
+        latestBuildTimeEnd: Long?,
+        sortType: String?,
+        collation: String?
+    ) {
+        if (!keywords.isNullOrEmpty()) {
+            query.and(NODE_IP.like("%$keywords%").or(DISPLAY_NAME.like("%$keywords%")))
+        }
+        if (!nodeIp.isNullOrEmpty()) {
+            query.and(NODE_IP.like("%$nodeIp%"))
+        }
+        if (!displayName.isNullOrEmpty()) {
+            query.and(DISPLAY_NAME.like("%$displayName%"))
+        }
+        if (!createdUser.isNullOrEmpty()) {
+            query.and(CREATED_USER.like("%$createdUser%"))
+        }
+        if (!lastModifiedUser.isNullOrEmpty()) {
+            query.and(LAST_MODIFY_USER.like("%$lastModifiedUser%"))
+        }
+        if (nodeType != null) {
+            query.and(NODE_TYPE.eq(nodeType.name))
+        } else {
+            /*除非特别指定，暂不显示内部NodeType类型*/
+            query.and(NODE_TYPE.`in`(NodeType.coreTypesName()))
+        }
+        if (nodeStatus != null) {
+            query.and(NODE_STATUS.eq(nodeStatus.name))
+        }
+        if (!agentVersion.isNullOrEmpty()) {
+            query.and(AGENT_VERSION.like("%$agentVersion%"))
+        }
+        if (!osName.isNullOrEmpty()) {
+            query.and(OS_NAME.like("%$osName%"))
+        }
+        if (!latestBuildPipelineId.isNullOrEmpty()) {
+            query.and(LAST_BUILD_PIPELINE_ID.like("%$latestBuildPipelineId%"))
+        }
+
+        if (latestBuildTimeStart != null && latestBuildTimeStart > 0) {
+            query.and(LAST_BUILD_TIME.ge(Timestamp(latestBuildTimeStart).toLocalDateTime()))
+        }
+        if (latestBuildTimeEnd != null && latestBuildTimeEnd > 0) {
+            query.and(LAST_BUILD_TIME.le(Timestamp(latestBuildTimeEnd).toLocalDateTime()))
+        }
+        when (sortType) {
+            /*别名*/"displayName" -> query.orderBy(DISPLAY_NAME.transferOrder(collation))
+            /*IP*/"nodeIp" -> query.orderBy(NODE_IP.transferOrder(collation))
+            /*操作系统*/"osName" -> query.orderBy(OS_NAME.transferOrder(collation))
+            /*Agent 状态*/"nodeStatus" -> query.orderBy(NODE_STATUS.transferOrder(collation))
+            /*导入人*/"createdUser" -> query.orderBy(CREATED_USER.transferOrder(collation))
+            /*最近修改人*/"lastModifiedUser" -> query.orderBy(LAST_MODIFY_USER.transferOrder(collation))
+            /*最近修改时间*/"lastModifiedTime" -> query.orderBy(LAST_MODIFY_TIME.transferOrder(collation))
+            /*用途*/"nodeType" -> query.orderBy(NODE_TYPE.transferOrder(collation))
+            /*最近执行流水线*/"latestBuildPipelineId" -> query.orderBy(
+            LAST_BUILD_PIPELINE_ID.transferOrder(
+                collation
+            )
+        )
+            /*最近执行时间*/"latestBuildTime" -> query.orderBy(LAST_BUILD_TIME.transferOrder(collation))
+            else -> query.orderBy(LAST_MODIFY_TIME.desc())
+        }
+    }
+
+    private fun <T> Field<T>.transferOrder(collation: String?): OrderField<T> {
+        return if (collation == "ASC") {
+            this.asc()
+        } else {
+            this.desc()
         }
     }
 
@@ -111,40 +203,38 @@ class NodeDao {
         createdUser: String?,
         lastModifiedUser: String?,
         keywords: String?,
-        nodeType: NodeType?
+        nodeType: NodeType?,
+        nodeStatus: NodeStatus?,
+        agentVersion: String?,
+        osName: String?,
+        latestBuildPipelineId: String?,
+        latestBuildTimeStart: Long?,
+        latestBuildTimeEnd: Long?,
+        sortType: String?,
+        collation: String?
     ): Int {
         with(TNode.T_NODE) {
-            return if (projectId.isNullOrBlank()) {
-                dslContext.selectCount()
-                    .from(TNode.T_NODE)
-                    .fetchOne(0, Int::class.java)!!
-            } else {
-                val query = dslContext.selectCount()
-                    .from(TNode.T_NODE)
-                    .where(PROJECT_ID.eq(projectId))
-                if (!keywords.isNullOrEmpty()) {
-                    query.and(NODE_IP.like("%$keywords%").or(DISPLAY_NAME.like("%$keywords%")))
-                }
-                if (!nodeIp.isNullOrEmpty()) {
-                    query.and(NODE_IP.like("%$nodeIp%"))
-                }
-                if (!displayName.isNullOrEmpty()) {
-                    query.and(DISPLAY_NAME.like("%$displayName%"))
-                }
-                if (!createdUser.isNullOrEmpty()) {
-                    query.and(CREATED_USER.like("%$createdUser%"))
-                }
-                if (!lastModifiedUser.isNullOrEmpty()) {
-                    query.and(LAST_MODIFY_USER.like("%$lastModifiedUser%"))
-                }
-                if (nodeType != null) {
-                    query.and(NODE_TYPE.eq(nodeType.name))
-                } else {
-                    /*除非特别指定，暂不显示内部NodeType类型*/
-                    query.and(NODE_TYPE.`in`(NodeType.coreTypesName()))
-                }
-                query.fetchOne(0, Int::class.java)!!
-            }
+            val query = dslContext.selectCount()
+                .from(TNode.T_NODE)
+                .where(PROJECT_ID.eq(projectId))
+            conditions(
+                keywords = keywords,
+                query = query,
+                nodeIp = nodeIp,
+                displayName = displayName,
+                createdUser = createdUser,
+                lastModifiedUser = lastModifiedUser,
+                nodeType = nodeType,
+                nodeStatus = nodeStatus,
+                agentVersion = agentVersion,
+                osName = osName,
+                latestBuildPipelineId = latestBuildPipelineId,
+                latestBuildTimeStart = latestBuildTimeStart,
+                latestBuildTimeEnd = latestBuildTimeEnd,
+                sortType = sortType,
+                collation = collation
+            )
+            return query.fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -515,10 +605,11 @@ class NodeDao {
         dslContext.executeUpdate(nodeRecord)
     }
 
-    fun updateLastBuildTime(dslContext: DSLContext, nodeId: Long, time: LocalDateTime) {
+    fun updateLastBuildTime(dslContext: DSLContext, pipelineId: String, nodeId: Long, time: LocalDateTime) {
         with(TNode.T_NODE) {
             dslContext.update(this)
                 .set(LAST_BUILD_TIME, time)
+                .set(LAST_BUILD_PIPELINE_ID, pipelineId)
                 .where(NODE_ID.eq(nodeId))
                 .execute()
         }

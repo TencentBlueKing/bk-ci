@@ -341,6 +341,24 @@ interface UserThirdPartyAgentResource {
         pageSize: Int?
     ): Result<Page<AgentBuildDetail>>
 
+    @Operation(summary = "获取构建机最近执行记录")
+    @GET
+    @Path("/projects/{projectId}/listLatestBuildPipelines")
+    fun listLatestBuildPipelines(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "第几页", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页条数", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<AgentBuildDetail>>
+
     @Operation(summary = "获取第三方构建机活动")
     @GET
     @Path("/projects/{projectId}/nodes/{nodeHashId}/listAgentActions")
