@@ -51,11 +51,11 @@
     "targets": {
       "public:master": {
         "inputs": [
-          "{workspaceRoot}/locale/metrics/*.json",
+          "{workspaceRoot}/locale/platform/*.json",
           "{projectRoot}"
         ],
         "outputs": [
-          "{workspaceRoot}/frontend/metrics"
+          "{workspaceRoot}/frontend/platform"
         ]
       }
     }
