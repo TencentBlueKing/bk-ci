@@ -23,23 +23,23 @@
 - [新增] feat: taskControl的loop循环太久导致Consumer线程池被占满问题 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11352)
 - [新增] feat：子流水线插件支持输出触发的子流水线 build_num [链接](http://github.com/TencentBlueKing/bk-ci/issues/11373)
 - [新增] feat：保存流水线时，校验是否有子流水线循环依赖 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10479)
+- [新增] feat：第三方构建机Job并发排队耗时归属优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10745)
+- [新增] 支持流水线模板内的输入参数需要支持“从接口获取选项”的功能 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11428)
 
 ##### 权限中心
 - [新增] feat：新增 支持往资源级用户组下添加用户接口 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11403)
 
 ##### 项目管理
 - [新增] feat：构建日志归档阈值支持按项目配置 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11437)
+- [新增] feat：支持管理我的 OAUTH [链接](http://github.com/TencentBlueKing/bk-ci/issues/10995)
 
 ##### 调度
 - [新增] 构建资源锁定支持使用只读变量 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11425)
-
-##### 未分类
-- [新增] feat：支持管理我的 OAUTH [链接](http://github.com/TencentBlueKing/bk-ci/issues/10995)
-- [新增] feat：第三方构建机Job并发排队耗时归属优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10745)
-- [新增] feat: 需要修复的chart包问题 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11105)
 - [新增] 第三方构建机升级优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11431)
 - [新增] feat: 删除老的心跳key [链接](http://github.com/TencentBlueKing/bk-ci/issues/11430)
-- [新增] 支持流水线模板内的输入参数需要支持“从接口获取选项”的功能 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11428)
+
+##### 未分类
+- [新增] feat: 需要修复的chart包问题 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11105)
 - [新增] sql doc 文档更新 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9974)
 - [新增] feat: api文档更新 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11409)
 
@@ -64,10 +64,15 @@
 ##### 研发商店
 - [修复] bug:插件关联的流水线数量在流水线并发保存时可能计算出错 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11419)
 
-##### 未分类
+##### 质量红线
 - [修复] bug: 质量红线生效范围选择模板保存后，再点开查看数据没有正确展示 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11470)
-- [修复] bug: 修复v3.0版本打helm chart包时报错 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11391)
+
+##### Stream
 - [修复] 【Stream】selector组件下拉选项列表通过接口获取，数据为空 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11375)
+
+##### 未分类
+- [修复] bug: 修复v3.0版本打helm chart包时报错 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11391)
+
 
 # v3.2.0-rc.1
 ## 2025-02-11
@@ -106,4 +111,3 @@
 
 ##### 未分类
 - [修复] bug: 修复v3.0版本打helm chart包时报错 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11391)
-
