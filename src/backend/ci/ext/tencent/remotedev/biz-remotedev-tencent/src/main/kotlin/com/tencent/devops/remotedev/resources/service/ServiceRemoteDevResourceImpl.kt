@@ -16,7 +16,6 @@ import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.async.AsyncExecute
-import com.tencent.devops.remotedev.pojo.BkItsmTicketInfo
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.OperateCvmDataType
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
@@ -907,10 +906,10 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
-    override fun createItsmTicket(userId: String, createReqStr: String): Result<String> {
+    override fun createItsmTicket(userId: String, createReq: String): Result<String> {
         return Result(
             bkItsmService.createTicketWithJson(
-                creatoReq = createReqStr
+                creatoReq = createReq
             )
         )
     }
