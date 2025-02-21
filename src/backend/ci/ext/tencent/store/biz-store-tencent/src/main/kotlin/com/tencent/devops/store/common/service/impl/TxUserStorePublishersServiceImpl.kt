@@ -60,7 +60,7 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
 
 
     private fun modifyComponentFirstPublisher(storeTypeEnum: StoreTypeEnum): List<Future<Boolean>> {
-
+        val executorService = Executors.newFixedThreadPool(5)
         val count = countComponentPublisherByStoreType(storeTypeEnum)
         var offset = 0
         val totalResults = mutableListOf<Future<Boolean>>()
@@ -94,9 +94,53 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
 
                 }
 
-                val results = updateFirstPublisherIfNecessary(storeTypeEnum, componentList)
-                if (results != null) {
-                    totalResults.addAll(results)
+                if (!componentList.isNullOrEmpty()) {
+                    val codes = componentList.map { it.code }
+                    val storeReleaseList = txUserStorePublishersDao.selectStoreReleaseInfoByStoreCodes(
+                        dslContext,
+                        codes,
+                        storeTypeEnum.type.toByte()
+                    )
+
+                    if (!storeReleaseList.isNullOrEmpty()) {
+                        val results = mutableListOf<Future<Boolean>>()
+                        try {
+                            componentList.forEach {
+                                val future = executorService.submit<Boolean> {
+                                    try {
+                                        val storeRelease =
+                                            storeReleaseList.find { storeRelease ->
+                                                storeRelease.storeCode == it.code
+                                                        && storeRelease.storeType == storeTypeEnum.type.toByte()
+                                            }
+                                        if (storeRelease != null && it.modifier != storeRelease.firstPubCreator) {
+                                            txUserStorePublishersDao.updateComponentFirstPublisher(
+                                                dslContext = dslContext,
+                                                storeCode = it.code,
+                                                storeType = storeTypeEnum.type.toByte(),
+                                                firstPublisher = it.modifier
+                                            )
+
+                                        }
+                                        true
+                                    } catch (e: Exception) {
+                                        logger.error("update${storeTypeEnum.name}FirstPublisher error:${e.message}")
+                                        false
+                                    }
+                                }
+
+                                results.add(future)
+
+                            }
+
+                            totalResults.addAll(results)
+                        } catch (e: Exception) {
+                            logger.error("update${storeTypeEnum.name}FirstPublisherIfNecessary error:${e.message}")
+                            throw RuntimeException(e.message)
+                        }
+
+                    }
+
                 }
 
 
@@ -105,71 +149,11 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
         } catch (e: Exception) {
             logger.error("modify${storeTypeEnum.name}FirstPublisher error:${e.message}")
             throw RuntimeException(e.message)
+        } finally {
+            executorService.shutdown()
         }
 
         return totalResults
-
-    }
-
-
-    fun updateFirstPublisherIfNecessary(
-        storeTypeEnum: StoreTypeEnum,
-        list: List<Component>?
-    ): List<Future<Boolean>>? {
-
-        if (!list.isNullOrEmpty()) {
-            val codes = list.map { it.code }
-            val storeReleaseList = txUserStorePublishersDao.selectStoreReleaseInfoByStoreCodes(
-                dslContext,
-                codes,
-                storeTypeEnum.type.toByte()
-            )
-
-            if (!storeReleaseList.isNullOrEmpty()) {
-                val executorService = Executors.newFixedThreadPool(5)
-                val results = mutableListOf<Future<Boolean>>()
-                try {
-                    list.forEach {
-                        val future = executorService.submit<Boolean> {
-                            try {
-                                val storeRelease =
-                                    storeReleaseList.find { storeRelease ->
-                                        storeRelease.storeCode == it.code
-                                                && storeRelease.storeType == storeTypeEnum.type.toByte()
-                                    }
-                                if (storeRelease != null && it.modifier != storeRelease.firstPubCreator) {
-                                    txUserStorePublishersDao.updateComponentFirstPublisher(
-                                        dslContext = dslContext,
-                                        storeCode = it.code,
-                                        storeType = storeTypeEnum.type.toByte(),
-                                        firstPublisher = it.modifier
-                                    )
-
-                                }
-                                true
-                            } catch (e: Exception) {
-                                logger.error("update${storeTypeEnum.name}FirstPublisher error:${e.message}")
-                                false
-                            }
-                        }
-
-                        results.add(future)
-
-                    }
-
-                    return results
-                } catch (e: Exception) {
-                    logger.error("update${storeTypeEnum.name}FirstPublisherIfNecessary error:${e.message}")
-                    throw RuntimeException(e.message)
-                } finally {
-                    executorService.shutdown()
-                }
-
-            }
-
-        }
-
-        return null
 
     }
 
