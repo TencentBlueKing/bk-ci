@@ -32,7 +32,7 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
 
     override fun updateComponentFirstPublisher(type: StoreTypeEnum): Boolean {
         var sucessFlag = true
-        //矫正插件首次发布人数据
+        //矫正组件首次发布人数据
         val totalResults = modifyComponentFirstPublisher(type)
 
         if (totalResults.isEmpty()) {
