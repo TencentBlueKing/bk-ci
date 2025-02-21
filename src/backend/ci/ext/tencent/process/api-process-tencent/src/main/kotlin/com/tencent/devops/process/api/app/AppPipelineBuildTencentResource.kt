@@ -29,17 +29,21 @@ package com.tencent.devops.process.api.app
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.process.pojo.pipeline.AppModelDetail
-import io.swagger.v3.oas.annotations.tags.Tag
+import com.tencent.devops.repository.pojo.enums.Permission
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Tag(name = "APP_PIPELINE_BUILD", description = "app流水线相关接口")
@@ -65,4 +69,49 @@ interface AppPipelineBuildTencentResource {
         @PathParam("buildId")
         buildId: String
     ): Result<AppModelDetail>
+
+    @Operation(summary = "构建表单查询分支/Tag变量")
+    @GET
+    @Path("/buildParam/{projectId}/repository/refs")
+    fun listRepoRefs(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "repo hash id", required = true)
+        @QueryParam("repositoryId")
+        repositoryId: String,
+        @Parameter(description = "代码库请求类型", required = false)
+        @QueryParam("repositoryType")
+        repositoryType: RepositoryType?,
+        @Parameter(description = "搜索条件", required = false)
+        @QueryParam("search")
+        search: String?
+    ): Result<List<BuildFormValue>>
+
+    @Operation(summary = "构建表单查询代码库别名列表")
+    @GET
+    @Path("/buildParam/repository/{projectId}/aliasName")
+    fun listRepositoryAliasName(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "仓库类型", required = false)
+        @QueryParam("repositoryType")
+        repositoryType: String?,
+        @Parameter(description = "对应权限", required = true, example = "")
+        @QueryParam("permission")
+        permission: Permission,
+        @Parameter(description = "别名", required = false)
+        @QueryParam("aliasName")
+        aliasName: String? = null,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页多少条", required = false, example = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<List<BuildFormValue>>
 }

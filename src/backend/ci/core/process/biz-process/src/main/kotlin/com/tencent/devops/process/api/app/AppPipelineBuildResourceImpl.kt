@@ -37,6 +37,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
+import com.tencent.devops.common.pipeline.pojo.cascade.BuildCascadeProps
 import com.tencent.devops.common.quality.pojo.request.QualityReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
@@ -283,8 +284,32 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             ).apply {
                 // TODO app暂时无法同步特性，临时方案为buildNo覆盖为currentBuildNo
                 buildNo?.currentBuildNo?.let { buildNo?.buildNo = it }
+                // 分支接口要改为app接口
+                properties.forEach {
+                    it.searchUrl?.let { searchUrl ->
+                        if (searchUrl.contains("/api/user/buildParam")) {
+                            it.searchUrl =
+                                searchUrl.replace("/api/user/buildParam", "/api/app/pipelineBuild/buildParam")
+                        }
+                    }
+                    replaceBuildCascadePropsSearchUrl(it.cascadeProps)
+                }
             }
         )
+    }
+
+    // 替换BuildCascadeProps以及子节点的的searchUrl
+    private fun replaceBuildCascadePropsSearchUrl(buildCascadeProps: BuildCascadeProps?) {
+        if (buildCascadeProps == null) {
+            return
+        }
+        buildCascadeProps.searchUrl?.let { searchUrl ->
+            if (searchUrl.contains("/api/user/buildParam")) {
+                buildCascadeProps.searchUrl =
+                    searchUrl.replace("/api/user/buildParam", "/api/app/pipelineBuild/buildParam")
+            }
+        }
+        replaceBuildCascadePropsSearchUrl(buildCascadeProps.children)
     }
 
     @AuditEntry(actionId = ActionId.PIPELINE_EXECUTE)

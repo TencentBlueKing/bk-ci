@@ -37,7 +37,7 @@ data class BuildCascadeProps(
     // 级联下拉框值
     val options: List<BuildFormValue>,
     // 后端搜索url
-    val searchUrl: String?,
+    var searchUrl: String?,
     // 搜索key
     val replaceKey: String?,
     // 级联子级
