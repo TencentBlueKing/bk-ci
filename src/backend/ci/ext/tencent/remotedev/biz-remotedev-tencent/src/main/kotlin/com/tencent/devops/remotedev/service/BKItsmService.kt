@@ -213,20 +213,20 @@ class BKItsmService @Autowired constructor(
     }
 
     fun createTicketWithJson(
-        creatoReq: String
+        createReq: String
     ): String {
         val url = "${bkConfig.itsmHost}/v2/itsm/create_ticket"
         val request = Request.Builder()
             .url(url)
             .addHeader("x-bkapi-authorization", headerStr())
-            .post(JsonUtil.toJson(creatoReq).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .post(createReq.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
-        logger.info("createTicketWithJson|$url|$creatoReq")
+        logger.info("createTicketWithJson|$url|$createReq")
         val resp = try {
             OkhttpUtils.doHttp(request).use { response ->
                 val data = response.body!!.string()
                 if (!response.isSuccessful) {
-                    logger.error("createTicketWithJson|$url|$creatoReq|${response.code}|$data")
+                    logger.error("createTicketWithJson|$url|$createReq|${response.code}|$data")
                     throw ErrorCodeException(
                         errorCode = ErrorCodeEnum.CREATE_ITSM_TICKET_ERROR.errorCode,
                         params = null
@@ -234,7 +234,7 @@ class BKItsmService @Autowired constructor(
                 }
                 val resp = objectMapper.readValue<BKItsmCreateTicketResp<BKItsmCreateTicketRespData>>(data)
                 if (!resp.result) {
-                    logger.error("createTicketWithJson|$url|$creatoReq|${response.code}|$data")
+                    logger.error("createTicketWithJson|$url|$createReq|${response.code}|$data")
                     throw ErrorCodeException(
                         errorCode = ErrorCodeEnum.CREATE_ITSM_TICKET_ERROR.errorCode,
                         params = null
