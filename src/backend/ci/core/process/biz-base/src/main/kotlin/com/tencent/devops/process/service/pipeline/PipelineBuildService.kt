@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
-import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -55,6 +54,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.app.StartBuildContext
+import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.util.BuildMsgUtils
@@ -128,8 +128,7 @@ class PipelineBuildService(
         pipelineParamMap: MutableMap<String, BuildParameters>,
         channelCode: ChannelCode,
         isMobile: Boolean,
-        model: Model,
-        yamlVersion: String?,
+        resource: PipelineResourceVersion,
         signPipelineVersion: Int? = null, // 指定的版本
         frequencyLimit: Boolean = true,
         buildNo: Int? = null,
@@ -137,8 +136,7 @@ class PipelineBuildService(
         handlePostFlag: Boolean = true,
         webHookStartParam: MutableMap<String, BuildParameters> = mutableMapOf(),
         triggerReviewers: List<String>? = null,
-        debug: Boolean? = false,
-        versionName: String? = null
+        debug: Boolean? = false
     ): BuildId {
 
         var acquire = false
@@ -195,11 +193,11 @@ class PipelineBuildService(
 
             // 如果指定了版本号，则设置指定的版本号
             pipeline.version = signPipelineVersion ?: pipeline.version
-            val originModelStr = JsonUtil.toJson(model, formatted = false)
+            val originModelStr = JsonUtil.toJson(resource.model, formatted = false)
             // 只有新构建才需要填充Post插件与质量红线插件
             if (!pipelineParamMap.containsKey(PIPELINE_RETRY_BUILD_ID)) {
                 pipelineElementService.fillElementWhenNewBuild(
-                    model = model,
+                    model = resource.model,
                     projectId = pipeline.projectId,
                     pipelineId = pipeline.pipelineId,
                     startValues = startValues,
@@ -243,16 +241,17 @@ class PipelineBuildService(
                 pipelineParamMap = pipelineParamMap,
                 webHookStartParam = webHookStartParam,
                 // 解析出定义的流水线变量
-                realStartParamKeys = model.getTriggerContainer().params.map { it.id },
+                realStartParamKeys = resource.model.getTriggerContainer()
+                    .params.map { it.id },
                 debug = debug ?: false,
-                versionName = versionName,
-                yamlVersion = yamlVersion
+                versionName = resource.versionName,
+                yamlVersion = resource.yamlVersion
             )
 
             val interceptResult = pipelineInterceptorChain.filter(
                 InterceptData(
                     pipelineInfo = pipeline,
-                    model = model,
+                    model = resource.model,
                     startType = startType,
                     buildId = buildId,
                     runLockType = setting.runLockType,
@@ -272,7 +271,7 @@ class PipelineBuildService(
                 )
             }
 
-            return pipelineRuntimeService.startBuild(fullModel = model, context = context)
+            return pipelineRuntimeService.startBuild(fullModel = resource.model, context = context)
         } finally {
             if (acquire) {
                 simpleRateLimiter.release(lockKey = lockKey)
