@@ -402,17 +402,40 @@
         <bk-dialog
             v-model="isShowMoreArtifactories"
             render-directive="if"
-            :width="640"
+            :width="900"
             header-position="left"
             :title="`#${activeBuild && activeBuild.buildNum} - ${$t('history.artifactList')}`"
             @cancel="hideArtifactoriesPopup"
             :style="{ '--dialog-top-translateY': `translateY(${dialogTopOffset}px)` }"
         >
-            <p class="artifactory-popup-header">
+            <template slot="header">
+                <div class="artifactory-popup-header">
+                    <span class="header-title">{{ $t('history.artifactList') }}</span>
+                    <span
+                        class="pipeline-name"
+                        v-bk-tooltips="{ content: pipelineName }"
+                    >{{ $t('pipeline') }}: {{ pipelineName }}</span>
+                    <span class="build-num">{{ $t('buildNum') }}: {{ `#${activeBuild && activeBuild.buildNum}` }}</span>
+                    <bk-button
+                        text
+                        theme="primary"
+                        class="outputs-btn"
+                        @click.stop="gotoArtifactoryList"
+                    >
+                        <span class="go-outputs-btn">
+                            <logo
+                                name="tiaozhuan"
+                                size="14"
+                            />
+                            {{ $t("goOutputs") }}
+                        </span>
+                    </bk-button>
+                </div>
+            </template>
+            <!-- <p class="artifactory-popup-header">
                 <bk-button
                     text
                     theme="primary"
-
                     @click.stop="gotoArtifactoryList"
                 >
                     <span class="go-outputs-btn">
@@ -423,7 +446,7 @@
                         {{ $t("goOutputs") }}
                     </span>
                 </bk-button>
-            </p>
+            </p> -->
             <ul
                 class="build-artifact-list-ul"
                 v-if="visibleIndex !== -1"
@@ -631,6 +654,9 @@
             },
             canManualStartup () {
                 return this.pipelineInfo?.canManualStartup ?? true
+            },
+            pipelineName () {
+                return this.pipelineInfo?.pipelineName
             },
             executable () {
                 return !this.isCurPipelineLocked && ((this.canManualStartup && this.isReleasePipeline) || this.isDebug)
@@ -1415,12 +1441,39 @@
     grid-gap: 8px;
 }
 .artifactory-popup-header {
-    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    >span {
+        display: inline-block;
+        font-size: 14px;
+        color: #979BA5;
+    }
+    .header-title {
+        font-size: 20px;
+        color: #313238;
+        line-height: 28px;
+    }
+    .pipeline-name {
+        max-width: 300px;
+        padding-left: 9px;
+        margin-left: 9px;
+        border-left: 1px solid #979BA5;
+        @include ellipsis();
+    }
+    .build-num {
+        padding: 0 26px;
+    }
     .go-outputs-btn {
+        svg {
+            vertical-align: middle;
+        }
         display: grid;
         align-items: center;
         grid-gap: 6px;
         grid-auto-flow: column;
+        font-size: 14px;
+        color: #3A84FF;
     }
 }
 .build-artifact-list-ul {
