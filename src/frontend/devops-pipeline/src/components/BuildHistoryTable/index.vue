@@ -1487,6 +1487,8 @@
         justify-content: space-between;
         border-bottom: 1px solid #EAEBF0;
         font-size: 12px;
+        padding: 8px 10px;
+        line-height: 20px;
         .build-artifact-name {
             display: grid;
             grid-gap: 6px;
@@ -1501,10 +1503,14 @@
             color: #C4C6CC;
         }
         .build-artifactory-operation {
+            max-width: 160px;
             display: grid;
-            grid-gap: 10px;
             grid-auto-flow: column;
             flex-shrink: 0;
+
+            .bk-button-text.bk-button-small {
+                padding: 0 10px !important;
+            }
         }
     }
 }
