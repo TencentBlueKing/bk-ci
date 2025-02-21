@@ -3,6 +3,7 @@ package com.tencent.devops.store.common.service.impl
 import com.tencent.devops.model.store.tables.records.TStoreReleaseRecord
 import com.tencent.devops.store.common.dao.TxUserStorePublishersDao
 import com.tencent.devops.store.common.service.TxUserStorePublishersService
+import com.tencent.devops.store.pojo.common.StorePublisherCorrectionResult
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Record2
@@ -32,7 +33,7 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
     }
 
 
-    override fun updateComponentFirstPublisher(type: StoreTypeEnum): Boolean {
+    override fun updateComponentFirstPublisher(type: StoreTypeEnum): StorePublisherCorrectionResult {
         var sucessFlag = true
         //矫正组件首次发布人数据
         val totalResults = modifyComponentFirstPublisher(type)
@@ -56,7 +57,7 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
         }
 
 
-        return sucessFlag
+        return StorePublisherCorrectionResult(sucessFlag, totalResults.size)
 
     }
 
