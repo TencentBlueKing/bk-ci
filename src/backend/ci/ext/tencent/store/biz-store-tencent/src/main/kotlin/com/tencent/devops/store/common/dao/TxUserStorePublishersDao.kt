@@ -375,7 +375,7 @@ class TxUserStorePublishersDao {
 
         val tIdeAtomVersionLog = TIdeAtomVersionLog.T_IDE_ATOM_VERSION_LOG
 
-        val TExtensionServiceVersionLog = TExtensionServiceVersionLog.T_EXTENSION_SERVICE_VERSION_LOG
+        val tExtensionServiceVersionLog = TExtensionServiceVersionLog.T_EXTENSION_SERVICE_VERSION_LOG
 
 
         when (storeTypeEnum) {
@@ -396,9 +396,9 @@ class TxUserStorePublishersDao {
             }
 
             StoreTypeEnum.SERVICE -> {
-                return dslContext.select(TExtensionServiceVersionLog.MODIFIER, TExtensionServiceVersionLog.SERVICE_ID)
-                    .from(TExtensionServiceVersionLog)
-                    .where(TExtensionServiceVersionLog.SERVICE_ID.`in`(componentIds)).fetch()
+                return dslContext.select(tExtensionServiceVersionLog.MODIFIER, tExtensionServiceVersionLog.SERVICE_ID)
+                    .from(tExtensionServiceVersionLog)
+                    .where(tExtensionServiceVersionLog.SERVICE_ID.`in`(componentIds)).fetch()
             }
 
             else -> {
