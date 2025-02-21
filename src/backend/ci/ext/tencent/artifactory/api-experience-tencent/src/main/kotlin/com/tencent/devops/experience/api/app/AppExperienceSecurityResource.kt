@@ -1,9 +1,9 @@
 package com.tencent.devops.experience.api.app
 
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -20,12 +20,18 @@ interface AppExperienceSecurityResource {
     @Path("/getClearSign")
     @GET
     fun getClearSign(
-        @Parameter(description = "用户唯一标识", required = true)
+        @Parameter(description = "用户唯一标识", required = false)
         @QueryParam("openId")
-        openId: String,
-        @Parameter(description = "用户昵称", required = true)
+        openId: String?,
+        @Parameter(description = "用户昵称", required = false)
         @QueryParam("nickName")
-        nickName: String,
+        nickName: String?,
+        @Parameter(description = "用户唯一标识", required = false)
+        @QueryParam("openid")
+        openid: String?,
+        @Parameter(description = "用户昵称", required = false)
+        @QueryParam("nickname")
+        nickname: String?,
         @Parameter(description = "用户头像", required = true)
         @QueryParam("avatar")
         avatar: String
