@@ -233,7 +233,10 @@
         "remaining": "Remaining",
         "canApplyCount": "Can apply count",
         "selectNewNode": "Select new Agent",
-        "dockerMaxConcurrency": "Maximum Docker Build Concurrency"
+        "dockerMaxConcurrency": "Maximum Docker Build Concurrency",
+        "lastRunPipeline": "Last Run Pipeline",
+        "lastRunAs": "Last Run As",
+        "usage": "Usage"
     },
     "nodeTypeMap": {
         "CC": "CC",
@@ -265,12 +268,25 @@
         "DEVCLOUD": "DevCloud",
         "TSTACK": "DevCloud",
         "OTHER": "Other",
-        "UNKNOWN": "Unknown"
+        "UNKNOWN": "Unknown",
+        "NOT_INSTALLED": "Not Install"
     },
     "newPool": "New Pool",
     "启用": "Enable",
     "停用": "Disable",
     "启用成功": "Enable successful",
     "停用成功": "Disable successful",
-    "authManage": "Permission Manage"
+    "authManage": "Permission Manage",
+    "关键字": "Keywords",
+    "alias": "Alias",
+    "lastModifier": "最近修改人",
+    "暂无数据": "No Data",
+    "搜索结果为空": "Search result is empty",
+    "清空筛选条件": "Clear Search Conditions",
+    "可以尝试 调整关键词 或": "You can try adjusting keywords or ",,
+    "构建": "Build",
+    "部署": "Deploy",
+    "version": "Version",
+    "选择最近执行时间范围": "Select the recent execution time range",
+    "导出": "Export"
 }
