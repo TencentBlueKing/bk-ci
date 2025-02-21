@@ -56,9 +56,9 @@ object ReflectUtil {
         val sourceProperties = source::class.memberProperties
         val targetPropertyMap = target::class.memberProperties.associateBy { it.name }
         for (sourceProp in sourceProperties) {
-            // 跳过只读属性（val）
+            // 跳过只读属性（val类型变量）
             val targetProp = targetPropertyMap[sourceProp.name] as? KMutableProperty<*> ?: continue
-            // 类型需一致
+            // 判断类型是否一致
             if (!sourceProp.returnType.isSubtypeOf(targetProp.returnType)) continue
             // 解决无法访问私有属性的问题
             sourceProp.isAccessible = true

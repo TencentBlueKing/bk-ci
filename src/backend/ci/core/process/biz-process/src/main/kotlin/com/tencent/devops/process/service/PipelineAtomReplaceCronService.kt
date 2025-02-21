@@ -905,7 +905,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             atomCode = toAtomInfo.atomCode
             version = toAtomVersion
             data = dataMap
-        } ?: MarketBuildLessAtomElement().apply {
+        } ?: MarketBuildLessAtomElement(name = element.name).apply {
             // 如果是内置插件替换成市场插件，则需先定义市场插件模型再把被替换插件的属性值赋值过来
             ReflectUtil.copyMatchingProperties(element, this)
             atomCode = toAtomInfo.atomCode
@@ -925,7 +925,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             atomCode = toAtomInfo.atomCode
             version = toAtomVersion
             data = dataMap
-        } ?: MarketBuildAtomElement().apply {
+        } ?: MarketBuildAtomElement(name = element.name).apply {
             // 如果是内置插件替换成市场插件，则需先定义市场插件模型再把被替换插件的属性值赋值过来
             ReflectUtil.copyMatchingProperties(element, this)
             atomCode = toAtomInfo.atomCode
