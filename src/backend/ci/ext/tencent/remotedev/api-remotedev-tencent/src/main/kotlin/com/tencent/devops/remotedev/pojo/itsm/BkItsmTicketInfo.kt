@@ -3,7 +3,7 @@ package com.tencent.devops.remotedev.pojo.itsm
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "更新bkticket信息")
+@Schema(title = "创建itsm单据相关信息")
 data class BKItsmCreateTicketReq(
     @JsonProperty("service_id")
     val serviceId: Int,
