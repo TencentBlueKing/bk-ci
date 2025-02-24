@@ -56,6 +56,7 @@ interface SearchParamsType {
   minExpiredAt?: number,
   maxExpiredAt?: number,
   groupName?: string,
+  uniqueManagerGroupsQueryFlag?: boolean
 }
 
 export default defineStore('userGroupTable', () => {
@@ -184,6 +185,9 @@ export default defineStore('userGroupTable', () => {
         case 'groupName':
           params.groupName = item.values[0].name;
           break;
+        case 'uniqueManagerGroupsQueryFlag':
+          params.uniqueManagerGroupsQueryFlag = item.values[0].id;
+          break;
       }
     })
     return params;
@@ -194,9 +198,9 @@ export default defineStore('userGroupTable', () => {
   async function fetchUserGroupList(memberIdParam: string, projectIdParam: string, seacrhParams: SearchParamsType) {
     const params = getParams(seacrhParams);
     searchObj.value = {
-      ...['relatedResourceType', 'relatedResourceCode', 'action', 'minExpiredAt', 'maxExpiredAt', 'groupName']
+      ...['relatedResourceType', 'relatedResourceCode', 'action', 'minExpiredAt', 'maxExpiredAt', 'groupName', 'uniqueManagerGroupsQueryFlag']
         .reduce((acc, key) => {
-          if (params[key]) {
+          if (params[key]!== null && params[key] !== undefined) {
             acc[key] = params[key];
           }
           return acc;
