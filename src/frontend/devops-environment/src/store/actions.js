@@ -82,8 +82,8 @@ const actions = {
     /**
      * 节点列表
      */
-    requestNodeList ({ commit }, { projectId }) {
-        return vue.$ajax.get(`${prefix}/user/envnode/${projectId}`).then(response => {
+    requestNodeList ({ commit }, { projectId, params }) {
+        return vue.$ajax.get(`${prefix}/user/envnode/${projectId}/listNew`, { params }).then(response => {
             return response
         })
     },
@@ -294,8 +294,22 @@ const actions = {
         return vue.$ajax.post(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/nodes/${nodeHashId}/dockerParallelTaskCount?count=${count}`).then(response => {
             return response
         })
-    }
+    },
+    /**
+     * 获取构建机最近执行记录
+     */
+    getLatestBuildPipelineList ({ commit }, { projectId }) {
+        return vue.$ajax.get(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/listLatestBuildPipelines`)
+    },
 
+    exportNodeListCSV ({ commit }, { projectId, params }) {
+        const queryString = new URLSearchParams(params).toString()
+        return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/listNew_export?${queryString}`, {}, {
+            originalResponse: true
+        }).then(response => {
+            return response
+        })
+    }
 }
 
 export default actions
