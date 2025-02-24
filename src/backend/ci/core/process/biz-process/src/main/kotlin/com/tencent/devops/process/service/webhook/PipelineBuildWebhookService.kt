@@ -84,7 +84,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDate
-import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -521,31 +520,20 @@ class PipelineBuildWebhookService @Autowired constructor(
 
         val repoName = webhookCommit.repoName
 
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                params = arrayOf(pipelineId)
-            )
+        val (pipelineInfo, resource, _) = pipelineRepositoryService.getBuildTriggerInfo(
+            projectId, pipelineId, null
+        )
         if (pipelineInfo.locked == true) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
         }
+        if (pipelineInfo.latestVersionStatus?.isNotReleased() == true) throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
+        )
         // 代码库触发支持仅有分支版本的情况，如果仅有草稿不需要在这里拦截
 //        if (pipelineInfo.latestVersionStatus == VersionStatus.COMMITTING) throw ErrorCodeException(
 //            errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
 //        )
         val version = webhookCommit.version ?: pipelineInfo.version
-
-        val resource = pipelineRepositoryService.getPipelineResourceVersion(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = version
-        )
-        if (resource == null) {
-            logger.warn("[$pipelineId]| Fail to get the model")
-            return null
-        }
-        val model = resource.model
 
         // 兼容从旧v1版本下发过来的请求携带旧的变量命名
         val params = mutableMapOf<String, Any>()
@@ -571,11 +559,9 @@ class PipelineBuildWebhookService @Autowired constructor(
                 pipelineParamMap = HashMap(pipelineParamMap),
                 channelCode = pipelineInfo.channelCode,
                 isMobile = false,
-                model = model,
+                resource = resource,
                 signPipelineVersion = version,
-                frequencyLimit = false,
-                versionName = resource.versionName,
-                yamlVersion = resource.yamlVersion
+                frequencyLimit = false
             )
             pipelineWebHookQueueService.onWebHookTrigger(
                 projectId = projectId,
