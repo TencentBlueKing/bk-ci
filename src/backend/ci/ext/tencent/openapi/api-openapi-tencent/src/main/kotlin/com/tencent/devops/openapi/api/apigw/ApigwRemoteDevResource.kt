@@ -9,7 +9,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.remotedev.pojo.BkItsmTicketInfo
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
@@ -32,6 +31,8 @@ import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
 import com.tencent.devops.remotedev.pojo.image.ListImagesData
 import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
+import com.tencent.devops.remotedev.pojo.itsm.BKItsmCreateTicketReq
+import com.tencent.devops.remotedev.pojo.itsm.BKItsmCreateTicketRespData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.EnableRemotedevData
@@ -958,6 +959,6 @@ interface ApigwRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "请求参数,json字符串", required = true)
-        createReqStr: BkItsmTicketInfo
-    ): Result<String>
+        createReqStr: BKItsmCreateTicketReq
+    ): Result<BKItsmCreateTicketRespData>
 }

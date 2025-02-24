@@ -8,7 +8,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.ApigwRemoteDevResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
-import com.tencent.devops.remotedev.pojo.BkItsmTicketInfo
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
@@ -31,6 +30,8 @@ import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
 import com.tencent.devops.remotedev.pojo.image.ListImagesData
 import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
+import com.tencent.devops.remotedev.pojo.itsm.BKItsmCreateTicketReq
+import com.tencent.devops.remotedev.pojo.itsm.BKItsmCreateTicketRespData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.EnableRemotedevData
@@ -653,7 +654,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).deleteImage(userId, projectId, imageId, delaySeconds)
     }
 
-    override fun createItsmTicket(userId: String, createReqStr: BkItsmTicketInfo): Result<String> {
+    override fun createItsmTicket(userId: String, createReqStr: BKItsmCreateTicketReq): Result<BKItsmCreateTicketRespData> {
         logger.info("createItsmTicket |$userId|$createReqStr")
         return client.get(ServiceRemoteDevResource::class).createItsmTicket(userId, createReqStr)
     }

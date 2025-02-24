@@ -16,7 +16,6 @@ import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.async.AsyncExecute
-import com.tencent.devops.remotedev.pojo.BkItsmTicketInfo
 import com.tencent.devops.remotedev.pojo.OperateCvmData
 import com.tencent.devops.remotedev.pojo.OperateCvmDataType
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
@@ -43,6 +42,8 @@ import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
 import com.tencent.devops.remotedev.pojo.image.ListImagesData
 import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
+import com.tencent.devops.remotedev.pojo.itsm.BKItsmCreateTicketReq
+import com.tencent.devops.remotedev.pojo.itsm.BKItsmCreateTicketRespData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -907,13 +908,10 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
-    override fun createItsmTicket(userId: String, createReq: BkItsmTicketInfo): Result<String> {
+    override fun createItsmTicket(userId: String, createReq: BKItsmCreateTicketReq): Result<BKItsmCreateTicketRespData> {
         return Result(
-            bkItsmService.createTicket(
-                creator = createReq.creator,
-                serviceId = createReq.serviceId,
-                fields = createReq.fields,
-                meta = createReq.meta,
+            bkItsmService.createDirectTicket(
+                createReq = createReq,
                 errorParam1 = userId
             )
         )
