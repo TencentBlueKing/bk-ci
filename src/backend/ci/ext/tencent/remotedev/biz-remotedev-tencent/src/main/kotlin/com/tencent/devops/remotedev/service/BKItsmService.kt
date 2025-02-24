@@ -226,7 +226,7 @@ class BKItsmService @Autowired constructor(
             OkhttpUtils.doHttp(request).use { response ->
                 val data = response.body!!.string()
                 if (!response.isSuccessful) {
-                    logger.error("createTicketWithJson|$url|$createReq|${response.code}|$data")
+                    logger.error("createTicketWithJson doHttp error|$url|$createReq|${response.code}|$data")
                     throw ErrorCodeException(
                         errorCode = ErrorCodeEnum.CREATE_ITSM_TICKET_ERROR.errorCode,
                         params = null
@@ -234,7 +234,7 @@ class BKItsmService @Autowired constructor(
                 }
                 val resp = objectMapper.readValue<BKItsmCreateTicketResp<BKItsmCreateTicketRespData>>(data)
                 if (!resp.result) {
-                    logger.error("createTicketWithJson|$url|$createReq|${response.code}|$data")
+                    logger.error("createTicketWithJson readValue error|$url|$createReq|${response.code}|$data")
                     throw ErrorCodeException(
                         errorCode = ErrorCodeEnum.CREATE_ITSM_TICKET_ERROR.errorCode,
                         params = null
