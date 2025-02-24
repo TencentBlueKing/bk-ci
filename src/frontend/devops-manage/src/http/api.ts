@@ -5,6 +5,7 @@ import {
   STORE_PERFIX,
   USER_PERFIX,
   OPERATE_CHANNEL,
+  PIPELINES_PERFIX,
 } from './constants';
 import http from './fetch';
 export default {
@@ -391,5 +392,20 @@ export default {
    */
   listGroupsOfHandover(params: any) {
     return http.post(`${USER_PERFIX}/auth/handover/listGroupsOfHandover`, params);
+  },
+  /**
+   * 根据流水线方言获取流水线数量
+   */
+  countPipelineByDialect(projectId: string, dialect: any) {
+    return http.get(`${PIPELINES_PERFIX}/${projectId}/countPipelineByDialect?dialect=${dialect}`);
+  },
+  /**
+   * 根据流水线方言获取流水线列表
+   */
+  listPipelinesByDialect(projectId: string, params: any) {
+    const query = new URLSearchParams({
+      ...params,
+    }).toString();
+    return http.get(`${PIPELINES_PERFIX}/${projectId}/listPipelinesByDialect?${query}`);
   },
 };
