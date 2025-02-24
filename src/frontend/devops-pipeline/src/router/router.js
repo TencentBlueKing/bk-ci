@@ -27,6 +27,7 @@ const PipelineListAuth = () => import(/* webpackChunkName: "pipelinesNewList" */
 
 const pipelinesGroup = () => import(/* webpackChunkName: "pipelinesGroup" */'../views/list/group')
 const pipelinesTemplate = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/list/template')
+const templateManageEntry = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/list/templateManageEntry')
 const pipelinesAudit = () => import(/* webpackChunkName: "pipelinesAudit" */'../views/list/audit')
 
 const templateEntry = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/')
@@ -103,6 +104,11 @@ const routes = [
                         path: 'template',
                         name: 'pipelinesTemplate',
                         component: pipelinesTemplate
+                    },
+                    {
+                        path: 'templateManageEntry',
+                        name: 'templateManageEntry',
+                        component: templateManageEntry
                     },
                     {
                         path: 'atomManage',

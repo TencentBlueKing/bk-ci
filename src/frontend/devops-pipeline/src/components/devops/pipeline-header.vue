@@ -17,6 +17,7 @@
                         {{ title }}
                     </slot>
                 </span>
+                <slot name="middle"></slot>
             </slot>
         </div>
         <div class="sub-header-right">
@@ -57,14 +58,12 @@
         justify-content: space-between;
         background: #fff;
         flex-shrink: 0;
+        z-index: 1;
         &-left {
             display: flex;
             flex: 1;
             align-items: center;
-        }
-        .fl {
-            display: flex;
-            align-items: center;
+            justify-content: center;
         }
         &-right {
             display: flex;

@@ -463,7 +463,13 @@
     },
     "editStoreTemplateTips": "The development store template does not support editing",
     "lastModifiedDate": "Last Modified on",
-    "lastModifiedBy": "Updater"
+    "lastModifiedBy": "Updater",
+    "desc": "Template description",
+    "type": "Template type",
+    "searchPlaceholder": "Template name/Template description/Template type/Source/Updated by",
+    "lastedVersion": "Latest version",
+    "debugPipelineCount": "Debug pipeline",
+    "instancePipelineCount": "Instance"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",

@@ -462,7 +462,13 @@
     },
     "editStoreTemplateTips": "研发商店模板不支持编辑",
     "lastModifiedDate": "更新时间",
-    "lastModifiedBy": "更新人"
+    "lastModifiedBy": "更新人",
+    "desc": "模板描述",
+    "type": "模板类型",
+    "searchPlaceholder": "模板名称/模板描述/模板类型/来源/更新人",
+    "lastedVersion": "最新版本",
+    "debugPipelineCount": "调试流水线",
+    "instancePipelineCount": "实例"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",

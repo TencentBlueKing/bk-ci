@@ -15,12 +15,10 @@
         :on-show="handleShowMenu"
         :on-hide="handleHideMenu"
     >
-        <div :class="`dot-menu-trigger ${extCls}`">
-            <span
-                :class="[{ 'has-show': hasShow }, 'show-more']"
-            >
-                {{ $t('more') }}
-            </span>
+        <div
+            :class="`dot-menu-trigger ${extCls}`"
+        >
+            <i class="devops-icon icon-more" />
         </div>
         <ul
             v-if="config.length > 0"
@@ -96,6 +94,7 @@
     .template-ext-menu {
         height: 40px;
         display: flex;
+        align-items: center;
         .dot-menu-trigger {
             display: flex;
             align-items: center;
@@ -105,7 +104,7 @@
             cursor: pointer;
             border-radius: 50%;
             &:hover {
-                background: rgba(0, 0, 0, 0) !important;
+                background: #EAEBF0 !important;
                 color: $primaryColor;
             }
         }
