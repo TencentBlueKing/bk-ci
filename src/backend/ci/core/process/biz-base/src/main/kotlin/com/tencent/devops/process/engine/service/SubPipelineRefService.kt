@@ -46,7 +46,7 @@ class SubPipelineRefService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(SubPipelineRefService::class.java)
     }
 
-    fun deleteAll(transaction: DSLContext? = null, projectId: String, pipelineId: String) {
+    fun deleteAll(transaction: DSLContext? = null, projectId: String, pipelineId: String?) {
         val changeCount = subPipelineRefDao.deleteAll(
             dslContext = transaction ?: dslContext,
             pipelineId = pipelineId,

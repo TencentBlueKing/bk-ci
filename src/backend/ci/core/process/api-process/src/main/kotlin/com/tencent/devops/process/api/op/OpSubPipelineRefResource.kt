@@ -34,6 +34,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -57,6 +58,21 @@ interface OpSubPipelineRefResource {
         @Parameter(description = "项目ID", required = false)
         @QueryParam("projectId")
         projectId: String?,
+        @Parameter(description = "流水线id", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?
+    ): Result<Boolean>
+
+    @Operation(summary = "删除子流水线引用信息")
+    @DELETE
+    @Path("/delete")
+    fun delSubPipelineRef(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
         @Parameter(description = "流水线id", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?

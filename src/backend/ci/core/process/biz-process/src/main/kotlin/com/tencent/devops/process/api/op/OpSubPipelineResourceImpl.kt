@@ -51,4 +51,9 @@ class OpSubPipelineResourceImpl @Autowired constructor(
         }
         return Result(true)
     }
+
+    override fun delSubPipelineRef(userId: String, projectId: String, pipelineId: String?): Result<Boolean> {
+        subPipelineUpgradeService.delSubPipelineRef(userId, projectId, pipelineId)
+        return Result(true)
+    }
 }
