@@ -1,7 +1,6 @@
 package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StorePublisherCorrectionResult
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -27,5 +26,5 @@ interface TxUserStorePublishersResource {
         @Parameter(description = "组件类型", required = true)
         @QueryParam("storeType")
         type: StoreTypeEnum
-    ): Result<StorePublisherCorrectionResult>
+    )
 }

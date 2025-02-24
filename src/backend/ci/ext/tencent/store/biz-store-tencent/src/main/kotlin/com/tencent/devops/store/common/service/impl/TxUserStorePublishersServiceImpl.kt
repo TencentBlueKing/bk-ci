@@ -3,7 +3,6 @@ package com.tencent.devops.store.common.service.impl
 import com.tencent.devops.model.store.tables.records.TStoreReleaseRecord
 import com.tencent.devops.store.common.dao.TxUserStorePublishersDao
 import com.tencent.devops.store.common.service.TxUserStorePublishersService
-import com.tencent.devops.store.pojo.common.StorePublisherCorrectionResult
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Record2
@@ -28,48 +27,26 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
     companion object {
         private const val BATCH_SIZE = 100
         private val logger = LoggerFactory.getLogger(TxUserStorePublishersServiceImpl::class.java)
-        private val HAS_VERSION_LOG =
-            setOf(StoreTypeEnum.SERVICE, StoreTypeEnum.ATOM, StoreTypeEnum.IMAGE, StoreTypeEnum.IDE_ATOM)
         private var successUpdateCount = 0
     }
 
 
-    override fun updateComponentFirstPublisher(type: StoreTypeEnum): StorePublisherCorrectionResult {
+    override fun updateComponentFirstPublisher(type: StoreTypeEnum) {
+        val startTime = System.currentTimeMillis()
+        logger.info("start to update component first publisher,time:${startTime}")
         successUpdateCount = 0
-        val totalResults = modifyComponentFirstPublisher(type)
-        if (totalResults.isEmpty()) {
-            return StorePublisherCorrectionResult()
-        }
+        modifyComponentFirstPublisher(type)
+        val endTime = System.currentTimeMillis()
+        logger.info("update component first publisher end,time:${endTime}")
+        logger.info("update total cost ${endTime - startTime}")
+        logger.info("successUpdateCount: $successUpdateCount")
 
-        var successExecutionCount = 0
-
-        for (totalResult in totalResults) {
-            try {
-                val result = totalResult.get()
-                if (result) {
-                    successExecutionCount += 1
-                }
-            } catch (e: Exception) {
-                logger.error("Error updating component first publisher: ${e.message}")
-                throw RuntimeException(e.message)
-            }
-        }
-
-        return StorePublisherCorrectionResult(
-            executionResult = true,
-            successExecutionCount = successExecutionCount,
-            totalExecutionCount = totalResults.size,
-            successUpdateCount = successUpdateCount,
-
-            )
     }
 
 
-    private fun modifyComponentFirstPublisher(storeTypeEnum: StoreTypeEnum): List<Future<Boolean>> {
-        val executorService = Executors.newFixedThreadPool(5)
+    private fun modifyComponentFirstPublisher(storeTypeEnum: StoreTypeEnum) {
         val count = countComponentPublisherByStoreType(storeTypeEnum)
         var offset = 0
-        val totalResults = mutableListOf<Future<Boolean>>()
         try {
             while (offset < count) {
 
@@ -81,85 +58,74 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
 
                 offset += BATCH_SIZE
                 val componentList = getComponentList(storeTypeEnum, storeList)
-                val results = updateFirstPublisherIfNecessary(
+                updateFirstPublisherIfNecessary(
                     storeTypeEnum = storeTypeEnum,
-                    list = componentList,
-                    executorService = executorService
+                    list = componentList
                 )
-                if (results != null) {
-                    totalResults.addAll(results)
-                }
-
 
             }
 
-        } catch (e: Exception) {
-            logger.error("modify${storeTypeEnum.name}FirstPublisher error:${e.message}")
-            throw RuntimeException(e.message)
-        } finally {
-            executorService.shutdown()
+        } catch (ignored: Throwable) {
+            logger.error("modify${storeTypeEnum.name}FirstPublisher error:${ignored},offset:${offset},has been modified $successUpdateCount")
+            throw RuntimeException("modify${storeTypeEnum.name}FirstPublisher error:${ignored}")
         }
 
-        return totalResults
 
     }
 
 
     fun updateFirstPublisherIfNecessary(
         storeTypeEnum: StoreTypeEnum,
-        list: List<Component>?,
-        executorService: ExecutorService
-    ): List<Future<Boolean>>? {
-        if (list.isNullOrEmpty()) return null
+        list: List<Component>?
+    ) {
+        if (!list.isNullOrEmpty()) {
 
-        val codes = list.map { it.code }
-        val storeReleaseList = txUserStorePublishersDao.selectStoreReleaseInfoByStoreCodes(
-            dslContext,
-            codes,
-            storeTypeEnum.type.toByte()
-        )
+            val codes = list.map { it.code }
+            val storeReleaseList = txUserStorePublishersDao.selectStoreReleaseInfoByStoreCodes(
+                dslContext,
+                codes,
+                storeTypeEnum.type.toByte()
+            )
 
-        if (storeReleaseList.isNullOrEmpty()) return null
+            if (!storeReleaseList.isNullOrEmpty()) {
 
-        return updatePublishers(
-            storeTypeEnum = storeTypeEnum,
-            componentList = list,
-            storeReleaseList = storeReleaseList,
-            executorService = executorService
-        )
+                updatePublishers(
+                    storeTypeEnum = storeTypeEnum,
+                    componentList = list,
+                    storeReleaseList = storeReleaseList
+                )
+            }
+        }
     }
 
 
     private fun updatePublishers(
         storeTypeEnum: StoreTypeEnum,
         componentList: List<Component>,
-        storeReleaseList: List<TStoreReleaseRecord>,
-        executorService: ExecutorService
-    ): List<Future<Boolean>> {
-        return componentList.map { component ->
-            executorService.submit<Boolean> {
-                try {
-                    val storeRelease =
-                        storeReleaseList.find {
-                            it.storeCode == component.code &&
-                                    it.storeType == storeTypeEnum.type.toByte()
-                        }
-                    if (storeRelease != null && component.modifier != storeRelease.firstPubCreator) {
-                        txUserStorePublishersDao.updateComponentFirstPublisher(
-                            dslContext = dslContext,
-                            storeCode = component.code,
-                            storeType = storeTypeEnum.type.toByte(),
-                            firstPublisher = component.modifier
-                        )
-                        successUpdateCount += 1
-                    }
-                    true
-                } catch (e: Exception) {
-                    logger.error("update${storeTypeEnum.name}FirstPublisher error:${e.message}")
-                    false
+        storeReleaseList: List<TStoreReleaseRecord>
+    ) {
+        for (component in componentList) {
+
+
+            val storeRelease =
+                storeReleaseList.find {
+                    it.storeCode == component.code &&
+                            it.storeType == storeTypeEnum.type.toByte()
                 }
+            if (storeRelease != null && component.modifier != storeRelease.firstPubCreator) {
+                txUserStorePublishersDao.updateComponentFirstPublisher(
+                    dslContext = dslContext,
+                    storeCode = component.code,
+                    storeType = storeTypeEnum.type.toByte(),
+                    firstPublisher = component.modifier
+                )
+                successUpdateCount += 1
             }
+
+
         }
+
+
     }
 
 
@@ -167,20 +133,18 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
         storeTypeEnum: StoreTypeEnum,
         storeList: List<Record2<String, String>>
     ): List<Component> {
-        return if (storeTypeEnum in HAS_VERSION_LOG) {
-            val atomIds = storeList.map { it.value1() }
-            val versionLogList = txUserStorePublishersDao.queryModifierByAtomId(dslContext, atomIds, storeTypeEnum)
 
-            versionLogList?.takeIf { it.isNotEmpty }?.let { logs ->
-                storeList.mapNotNull { store ->
-                    logs.find { it.value2() == store.value1() }?.let { versionLog ->
-                        Component(store.value2(), versionLog.value1())
-                    }
+        val componentIds = storeList.map { it.value1() }
+        val versionLogList = txUserStorePublishersDao.queryModifierByAtomId(dslContext, componentIds, storeTypeEnum)
+
+        return versionLogList?.takeIf { it.isNotEmpty }?.let { logs ->
+            storeList.mapNotNull { store ->
+                logs.find { it.value2() == store.value1() }?.let { versionLog ->
+                    Component(store.value2(), versionLog.value1())
                 }
-            } ?: emptyList()
-        } else {
-            storeList.map { Component(it.value1(), it.value2()) }
-        }
+            }
+        } ?: emptyList()
+
     }
 
 
