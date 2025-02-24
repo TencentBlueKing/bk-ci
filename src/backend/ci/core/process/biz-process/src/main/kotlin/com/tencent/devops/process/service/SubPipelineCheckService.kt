@@ -255,14 +255,12 @@ class SubPipelineCheckService @Autowired constructor(
             }
             logger.info("check circular dependency|subRefList[$subRefList]")
             if (subRefList.isEmpty()) {
-                recursiveChain.removeLast()
                 return ElementCheckResult(true)
             }
             subRefList.forEach {
-                val exist = HashMap(existsPipeline)
                 // 增加新节点
                 recursiveChain.add(it)
-                exist[it.refKey()] = it
+                existsPipeline[it.refKey()] = it
                 logger.info(
                     "callPipelineStartup|" +
                             "supProjectId:${it.subProjectId},subPipelineId:${it.subPipelineId}," +
@@ -273,14 +271,18 @@ class SubPipelineCheckService @Autowired constructor(
                     subPipelineRef = it,
                     rootPipelineKey = rootPipelineKey,
                     recursiveChain = recursiveChain,
-                    existsPipeline = exist
+                    existsPipeline = existsPipeline
                 )
                 // 检查不成功，直接返回
                 if (!checkResult.result) {
-                    recursiveChain.removeLast()
                     return checkResult
                 }
-                existsPipeline.putAll(exist)
+                if(recursiveChain.isNotEmpty()) {
+                    recursiveChain.removeLast()
+                }
+                if(existsPipeline.isNotEmpty()) {
+                    existsPipeline.remove(it.refKey())
+                }
             }
             return ElementCheckResult(true)
         }
