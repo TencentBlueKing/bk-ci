@@ -250,4 +250,17 @@ class SubPipelineUpgradeService @Autowired constructor(
             }
         }
     }
+
+    fun delSubPipelineRef(
+        userId: String,
+        projectId: String,
+        pipelineId: String?
+    ) {
+        logger.info("delSubPipelineRef|userId:$userId|projectId:$projectId|pipelineId:$pipelineId")
+        subPipelineRefService.deleteAll(
+            transaction = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+    }
 }
