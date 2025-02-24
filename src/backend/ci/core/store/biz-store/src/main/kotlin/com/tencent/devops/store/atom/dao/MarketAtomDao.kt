@@ -48,16 +48,18 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import java.math.BigDecimal
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.UpdateSetFirstStep
 import org.jooq.impl.DSL
+import org.jooq.impl.DSL.min
 import org.springframework.stereotype.Repository
+import java.math.BigDecimal
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -911,4 +913,39 @@ class MarketAtomDao : AtomBaseDao() {
             }
         }
     }
+
+    fun listByAtomCode(dslContext: DSLContext): Result<Record2<String, String>>? {
+        val tAtom = TAtom.T_ATOM.`as`("t_atom")
+        val tAtomChild = TAtom.T_ATOM.`as`("t_atom_child")
+        val tAtomVersionLog = TAtomVersionLog.T_ATOM_VERSION_LOG
+
+        val minCreateTimeSubquery = dslContext.select(min(tAtomChild.CREATE_TIME))
+            .from(tAtomChild)
+            .where(
+                tAtomChild.ATOM_CODE.eq(tAtom.ATOM_CODE)
+                    .and(
+                        tAtomChild.ATOM_STATUS.`in`(
+                            AtomStatusEnum.RELEASED.status.toByte(),
+                            AtomStatusEnum.UNDERCARRIAGED.status.toByte(),
+                            AtomStatusEnum.UNDERCARRIAGING.status.toByte()
+                        )
+                    )
+            )
+
+        return dslContext
+            .select(tAtom.ATOM_CODE, tAtomVersionLog.MODIFIER)
+            .from(tAtom)
+            .join(tAtomVersionLog)
+            .on(tAtom.ID.eq(tAtomVersionLog.ATOM_ID))
+            .where(
+                tAtom.ATOM_STATUS.`in`(
+                    AtomStatusEnum.RELEASED.status.toByte(),
+                    AtomStatusEnum.UNDERCARRIAGED.status.toByte(),
+                    AtomStatusEnum.UNDERCARRIAGING.status.toByte()
+                )
+                    .and(tAtom.CREATE_TIME.eq(minCreateTimeSubquery))
+            )
+            .fetch()
+    }
+
 }
