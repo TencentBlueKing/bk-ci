@@ -912,7 +912,7 @@ class ServiceRemoteDevResourceImpl(
         return Result(
             bkItsmService.createDirectTicket(
                 createReq = createReq,
-                errorParam1 = userId
+                errorParam = userId
             )
         )
     }

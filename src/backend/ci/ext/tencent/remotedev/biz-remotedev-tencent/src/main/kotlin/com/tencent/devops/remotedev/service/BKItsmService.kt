@@ -167,15 +167,13 @@ class BKItsmService @Autowired constructor(
         creator: String,
         fields: List<Map<String, String>>,
         serviceId: Int,
-        errorParam1: String,
-        meta: Map<String, Any>? = null
+        errorParam1: String
     ): String {
         val url = "${bkConfig.itsmHost}/v2/itsm/create_ticket"
         val body = BKItsmCreateTicketReq(
             serviceId = serviceId,
             creator = creator,
-            fields = fields,
-            meta = meta
+            fields = fields
         )
         val request = Request.Builder()
             .url(url)
@@ -218,7 +216,7 @@ class BKItsmService @Autowired constructor(
 
     fun createDirectTicket(
         createReq: BKItsmCreateTicketReq,
-        errorParam1: String
+        errorParam: String
     ): BKItsmCreateTicketRespData {
         val url = "${bkConfig.itsmHost}/v2/itsm/create_ticket"
         val request = Request.Builder()
@@ -234,7 +232,7 @@ class BKItsmService @Autowired constructor(
                     logger.error("createDirectTicket|$url|$createReq|${response.code}|$data")
                     throw ErrorCodeException(
                         errorCode = ErrorCodeEnum.CREATE_ITSM_TICKET_ERROR.errorCode,
-                        params = arrayOf(errorParam1, createReq.creator)
+                        params = arrayOf(errorParam, createReq.creator)
                     )
                 }
                 val resp = objectMapper.readValue<BKItsmCreateTicketResp<BKItsmCreateTicketRespData>>(data)
@@ -242,7 +240,7 @@ class BKItsmService @Autowired constructor(
                     logger.error("createDirectTicket|$url|$createReq|${response.code}|$data")
                     throw ErrorCodeException(
                         errorCode = ErrorCodeEnum.CREATE_ITSM_TICKET_ERROR.errorCode,
-                        params = arrayOf(errorParam1, createReq.creator)
+                        params = arrayOf(errorParam, createReq.creator)
                     )
                 }
                 resp
@@ -253,7 +251,7 @@ class BKItsmService @Autowired constructor(
             logger.error("createDirectTicket request error", e)
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.CREATE_ITSM_TICKET_ERROR.errorCode,
-                params = arrayOf(errorParam1, createReq.creator)
+                params = arrayOf(errorParam, createReq.creator)
             )
         }
 
