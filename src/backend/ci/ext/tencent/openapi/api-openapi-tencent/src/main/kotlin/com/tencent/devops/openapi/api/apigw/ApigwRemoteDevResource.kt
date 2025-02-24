@@ -958,6 +958,6 @@ interface ApigwRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "请求参数,json字符串", required = true)
-        createReqStr: String
+        createReqStr: BkItsmTicketInfo
     ): Result<String>
 }

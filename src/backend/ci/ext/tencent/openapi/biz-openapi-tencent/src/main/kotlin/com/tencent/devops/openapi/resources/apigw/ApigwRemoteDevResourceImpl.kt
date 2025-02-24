@@ -653,7 +653,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).deleteImage(userId, projectId, imageId, delaySeconds)
     }
 
-    override fun createItsmTicket(userId: String, createReqStr: String): Result<String> {
+    override fun createItsmTicket(userId: String, createReqStr: BkItsmTicketInfo): Result<String> {
         logger.info("createItsmTicket |$userId|$createReqStr")
         return client.get(ServiceRemoteDevResource::class).createItsmTicket(userId, createReqStr)
     }
