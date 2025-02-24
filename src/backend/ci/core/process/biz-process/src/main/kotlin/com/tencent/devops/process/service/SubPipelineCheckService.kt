@@ -277,10 +277,10 @@ class SubPipelineCheckService @Autowired constructor(
                 if (!checkResult.result) {
                     return checkResult
                 }
-                if(recursiveChain.isNotEmpty()) {
+                if (recursiveChain.isNotEmpty()) {
                     recursiveChain.removeLast()
                 }
-                if(existsPipeline.isNotEmpty()) {
+                if (existsPipeline.isNotEmpty()) {
                     existsPipeline.remove(it.refKey())
                 }
             }
