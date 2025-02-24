@@ -140,7 +140,10 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
             executorService.submit<Boolean> {
                 try {
                     val storeRelease =
-                        storeReleaseList.find { it.storeCode == component.code && it.storeType == storeTypeEnum.type.toByte() }
+                        storeReleaseList.find {
+                            it.storeCode == component.code &&
+                                    it.storeType == storeTypeEnum.type.toByte()
+                        }
                     if (storeRelease != null && component.modifier != storeRelease.firstPubCreator) {
                         txUserStorePublishersDao.updateComponentFirstPublisher(
                             dslContext = dslContext,
@@ -148,7 +151,7 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
                             storeType = storeTypeEnum.type.toByte(),
                             firstPublisher = component.modifier
                         )
-                        successUpdateCount+=1
+                        successUpdateCount += 1
                     }
                     true
                 } catch (e: Exception) {
