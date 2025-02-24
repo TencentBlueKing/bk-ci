@@ -27,6 +27,10 @@
 
 package com.tencent.devops.common.archive.util
 
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
+import java.nio.file.Paths
+
 object PathUtil {
     fun getParentFolder(path: String): String {
         val tmpPath = path.removeSuffix("/")
@@ -39,5 +43,11 @@ object PathUtil {
 
     fun getFileName(path: String): String {
         return path.removeSuffix("/").split("/").last()
+    }
+
+    fun getNormalizedPath(filePath: String): String {
+        val decodeFilePath = URLDecoder.decode(filePath, StandardCharsets.UTF_8.name())
+        val normalizedPath = Paths.get(decodeFilePath).normalize().toString()
+        return normalizedPath
     }
 }

@@ -39,6 +39,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.archive.util.PathUtil
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
@@ -82,19 +83,21 @@ class UserFileResourceImpl @Autowired constructor(
     }
 
     override fun downloadFileToLocal(userId: String, filePath: String, response: HttpServletResponse) {
-        val validateResult = archiveFileService.validateUserDownloadFilePermission(userId, filePath)
+        val normalizedPath = PathUtil.getNormalizedPath(filePath)
+        val validateResult = archiveFileService.validateUserDownloadFilePermission(userId, normalizedPath)
         if (!validateResult) {
             throw PermissionForbiddenException("no permission")
         }
-        return archiveFileService.downloadFileToLocal(userId, filePath, response)
+        return archiveFileService.downloadFileToLocal(userId, normalizedPath, response)
     }
 
     override fun downloadFile(userId: String, filePath: String, logo: Boolean?, response: HttpServletResponse) {
-        val validateResult = archiveFileService.validateUserDownloadFilePermission(userId, filePath)
+        val normalizedPath = PathUtil.getNormalizedPath(filePath)
+        val validateResult = archiveFileService.validateUserDownloadFilePermission(userId, normalizedPath)
         if (!validateResult) {
             throw PermissionForbiddenException("no permission")
         }
-        archiveFileService.downloadFile(userId, filePath, response, logo)
+        archiveFileService.downloadFile(userId, normalizedPath, response, logo)
     }
 
     override fun downloadFileExt(userId: String, filePath: String, logo: Boolean?, response: HttpServletResponse) {
