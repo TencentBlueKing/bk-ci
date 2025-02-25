@@ -1163,7 +1163,7 @@
             handleSortChange ({ column, prop, order }) {
                 const orderMap = {
                     ascending: 'ASC',
-                    descending: 'DES'
+                    descending: 'DESC'
                 }
                 this.pagination.current = 1
                 this.requestParams.sortType = prop
