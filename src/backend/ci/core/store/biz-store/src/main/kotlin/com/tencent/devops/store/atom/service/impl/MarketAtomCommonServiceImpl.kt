@@ -395,9 +395,24 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         val keyInputGroupMapList = taskDataMap[KEY_INPUT_GROUPS] as? List<Map<String, Any>>
         if (!keyInputGroupMapList.isNullOrEmpty()) {
             keyInputGroupMapList.forEach { inputGroupMap ->
-                validateTaskJsonField(dataMap = inputGroupMap, fieldName = NAME, expectedType = String::class)
-                validateTaskJsonField(dataMap = inputGroupMap, fieldName = LABEL, expectedType = String::class)
-                validateTaskJsonField(dataMap = inputGroupMap, fieldName = IS_EXPANDED, expectedType = Boolean::class)
+                validateTaskJsonField(
+                    dataMap = inputGroupMap,
+                    fieldName = NAME,
+                    promptName = "${KEY_INPUT_GROUPS}.${NAME}",
+                    expectedType = String::class
+                )
+                validateTaskJsonField(
+                    dataMap = inputGroupMap,
+                    fieldName = LABEL,
+                    promptName = "${KEY_INPUT_GROUPS}.${LABEL}",
+                    expectedType = String::class
+                )
+                validateTaskJsonField(
+                    dataMap = inputGroupMap,
+                    fieldName = IS_EXPANDED,
+                    promptName = "${KEY_INPUT_GROUPS}.${IS_EXPANDED}",
+                    expectedType = Boolean::class
+                )
             }
         }
         var atomPostInfo: AtomPostInfo? = null
@@ -413,6 +428,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             dataMap = executionInfoMap,
             fieldName = KEY_LANGUAGE,
             expectedType = String::class,
+            promptName = "${KEY_EXECUTION}.${KEY_LANGUAGE}",
             supportedFieldTypeCheck = true,
             supportedFieldTypes = setOf(JAVA, PYTHON, GOLANG, NODEJS)
         )
@@ -461,13 +477,14 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 validateTaskJsonField(
                     dataMap = osExecutionInfoMap,
                     fieldName = KEY_OS_NAME,
+                    promptName = "${KEY_OS}.${KEY_OS_NAME}",
                     expectedType = String::class
                 )
                 val osName = osExecutionInfoMap[KEY_OS_NAME].toString()
                 validateTaskJsonField(
                     dataMap = osExecutionInfoMap,
                     fieldName = KEY_TARGET,
-                    parentFieldName = KEY_OS,
+                    promptName = "${KEY_OS}.${KEY_TARGET}",
                     expectedType = String::class
                 )
                 val target = osExecutionInfoMap[KEY_TARGET].toString()
@@ -509,7 +526,12 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 }
             }
         } else {
-            validateTaskJsonField(dataMap = executionInfoMap, fieldName = KEY_TARGET, expectedType = String::class)
+            validateTaskJsonField(
+                dataMap = executionInfoMap,
+                fieldName = KEY_TARGET,
+                promptName = "${KEY_EXECUTION}.${KEY_TARGET}",
+                expectedType = String::class
+            )
             val target = executionInfoMap[KEY_TARGET] as String
             val pkgLocalPath = executionInfoMap[KEY_PACKAGE_PATH] as? String ?: ""
             val atomEnvRequest = AtomEnvRequest(
@@ -537,15 +559,17 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             )
         }
         inputDataMap?.let { dataMap ->
-            dataMap.values.mapNotNull { value ->
-                value as? Map<String, Any>
-            }.forEach { map ->
-                validateTaskJsonField(
-                    dataMap = map,
-                    fieldName = KEY_TYPE,
-                    parentFieldName = KEY_INPUT,
-                    expectedType = String::class
-                )
+            for (entry in dataMap) {
+                val key = entry.key as? String
+                val value = entry.value as? Map<String, Any>
+                if (key != null && value != null) {
+                    validateTaskJsonField(
+                        dataMap = value,
+                        fieldName = KEY_TYPE,
+                        promptName = "${KEY_INPUT}.${key}.${KEY_TYPE}",
+                        expectedType = String::class
+                    )
+                }
             }
         }
         val outputDataMap = taskDataMap[KEY_OUTPUT] as? Map<String, Any>
@@ -556,17 +580,19 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             )
         }
         outputDataMap?.let { dataMap ->
-            dataMap.values.mapNotNull { value ->
-                value as? Map<String, Any>
-            }.forEach { map ->
-                validateTaskJsonField(
-                    dataMap = map,
-                    fieldName = KEY_TYPE,
-                    parentFieldName = KEY_OUTPUT,
-                    expectedType = String::class,
-                    supportedFieldTypeCheck = true,
-                    supportedFieldTypes = setOf(STRING, ARTIFACT, REPORT)
-                )
+            for (entry in dataMap) {
+                val key = entry.key as? String
+                val value = entry.value as? Map<String, Any>
+                if (key != null && value != null) {
+                    validateTaskJsonField(
+                        dataMap = value,
+                        fieldName = KEY_TYPE,
+                        promptName = "${KEY_OUTPUT}.${key}.${KEY_TYPE}",
+                        expectedType = String::class,
+                        supportedFieldTypeCheck = true,
+                        supportedFieldTypes = setOf(STRING, ARTIFACT, REPORT)
+                    )
+                }
             }
         }
         return GetAtomConfigResult("0", arrayOf(""), taskDataMap, atomEnvRequests)
@@ -575,56 +601,38 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
     private fun <T : Any> validateTaskJsonField(
         dataMap: Map<String, Any>,
         fieldName: String,
-        parentFieldName: String? = null,
+        promptName: String,
         expectedType: KClass<T>,
-        checkForBlank: Boolean = true,
+        requireNotBlank: Boolean = true,
         supportedFieldTypeCheck: Boolean = false,
         supportedFieldTypes: Set<String>? = null
     ) {
 
         val fieldValue = dataMap[fieldName]
-        if (checkForBlank) {
+        if (requireNotBlank) {
             if (fieldValue == null || (fieldValue is String && fieldValue.isBlank())) {
-                if (parentFieldName != null) {
-                    throw ErrorCodeException(
-                        errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_SUBFIELD_IS_NULL,
-                        params = arrayOf(parentFieldName, fieldName)
-                    )
-                } else {
-                    throw ErrorCodeException(
-                        errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-                        params = arrayOf(fieldName)
-                    )
-                }
+
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
+                    params = arrayOf(promptName)
+                )
+
             }
         }
         if (!expectedType.isInstance(fieldValue)) {
-            if (parentFieldName != null) {
-                throw ErrorCodeException(
-                    errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_SUBFIELD_IS_INVALID,
-                    params = arrayOf(parentFieldName, fieldName)
-                )
-            } else {
-                throw ErrorCodeException(
-                    errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
-                    params = arrayOf(fieldName)
-                )
-            }
-        }
 
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
+                params = arrayOf(promptName)
+            )
+        }
         if (supportedFieldTypeCheck) {
             if (supportedFieldTypes != null && fieldValue !in supportedFieldTypes) {
-                if (parentFieldName != null) {
-                    throw ErrorCodeException(
-                        errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_SUBFIELD_IS_NOT_SUPPORT,
-                        params = arrayOf(parentFieldName, fieldName, supportedFieldTypes.joinToString(separator = ","))
-                    )
-                } else {
-                    throw ErrorCodeException(
-                        errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NOT_SUPPORT,
-                        params = arrayOf(fieldName, supportedFieldTypes.joinToString(separator = ","))
-                    )
-                }
+
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NOT_SUPPORT,
+                    params = arrayOf(promptName, supportedFieldTypes.joinToString(separator = ","))
+                )
             }
         }
     }
