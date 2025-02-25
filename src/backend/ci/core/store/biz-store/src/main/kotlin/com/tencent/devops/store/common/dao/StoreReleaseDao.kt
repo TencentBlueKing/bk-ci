@@ -93,41 +93,5 @@ class StoreReleaseDao {
         }
     }
 
-    fun updateComponentFirstPublisher(
-        dslContext: DSLContext,
-        storeCode: String,
-        storeType: Byte,
-        firstPublisher: String,
-        userId: String?
-    ) {
-        with(TStoreRelease.T_STORE_RELEASE) {
-            val updateQuery = dslContext.update(this)
-                .set(FIRST_PUB_CREATOR, firstPublisher)
-                .set(UPDATE_TIME, LocalDateTime.now())
 
-            if (userId != null) {
-                updateQuery.set(MODIFIER, userId)
-            }
-
-            updateQuery.where(STORE_CODE.eq(storeCode))
-                .and(STORE_TYPE.eq(storeType))
-
-            updateQuery.execute()
-        }
-    }
-
-
-    fun selectStoreReleaseInfo(
-        dslContext: DSLContext,
-        storeCode: List<String>,
-        storeType: Byte
-    ): List<TStoreReleaseRecord>? {
-        return with(TStoreRelease.T_STORE_RELEASE) {
-            dslContext.selectFrom(this)
-                .where(STORE_CODE.`in`(storeCode))
-                .and(STORE_TYPE.eq(storeType))
-                .fetch()
-        }
-
-    }
 }

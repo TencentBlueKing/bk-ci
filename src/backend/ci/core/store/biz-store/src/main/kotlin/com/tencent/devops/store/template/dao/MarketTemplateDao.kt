@@ -665,33 +665,4 @@ class MarketTemplateDao {
     }
 
 
-    fun listByTemplateCode(dslContext: DSLContext): List<TTemplateRecord>? {
-        val tTemplate = TTemplate.T_TEMPLATE.`as`("t_template")
-        val tTemplateChild = TTemplate.T_TEMPLATE.`as`("t_template_child")
-
-        val minCreateTimeSubquery = dslContext.select(min(tTemplateChild.CREATE_TIME))
-            .from(tTemplateChild)
-            .where(
-                tTemplateChild.TEMPLATE_CODE.eq(tTemplate.TEMPLATE_CODE)
-                    .and(
-                        tTemplateChild.TEMPLATE_STATUS.`in`(
-                            TemplateStatusEnum.RELEASED.status.toByte(),
-                            TemplateStatusEnum.UNDERCARRIAGED.status.toByte()
-                        )
-                    )
-            )
-
-        return dslContext
-            .selectFrom(tTemplate)
-            .where(
-                tTemplate.TEMPLATE_STATUS.`in`(
-                    TemplateStatusEnum.RELEASED.status.toByte(),
-                    TemplateStatusEnum.UNDERCARRIAGED.status.toByte()
-                )
-                    .and(tTemplate.CREATE_TIME.eq(minCreateTimeSubquery))
-            )
-            .fetch()
-            .into(TTemplateRecord::class.java)
-    }
-
 }
