@@ -37,8 +37,7 @@ data class ApiGwInstallAgentReq(
     val osType: String,
     @get:Schema(title = "主机管控区域ID，可在蓝鲸配置平台搜索主机信息查看，默认值为0，表示公司内部区域")
     val bkCloudId: Int = 0,
-    @get:Schema(title = "是否自动选择安装通道，默认为true")
-    val isAutoChooseInstallChannelId: Boolean = true,
-    @get:Schema(title = "安装通道ID，默认为自动选择安装通道。若需要手动选择安装通道，可到蓝盾【环境管理-节点-安装Agent】打开F12 查看安装通道对应的id，isAutoChooseInstallChannelId为false时必填")
-    val installChannelId: Int?,
+    @get:Schema(title = "安装通道ID，默认为自动选择安装通道，channelId为-1。若需要手动选择安装通道，" +
+        "可到蓝盾【环境管理-节点-安装Agent】打开F12 查看安装通道对应的id。")
+    val installChannelId: Int = -1,
 )

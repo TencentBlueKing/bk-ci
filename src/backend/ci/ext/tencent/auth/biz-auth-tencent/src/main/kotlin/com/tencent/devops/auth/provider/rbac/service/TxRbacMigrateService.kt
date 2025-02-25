@@ -1,6 +1,7 @@
 package com.tencent.devops.auth.provider.rbac.service
 
 import com.tencent.devops.auth.pojo.enum.MemberType
+import com.tencent.devops.auth.service.TxMigrateService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.util.PageUtil
@@ -11,15 +12,15 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 
-class TxMigrateService(
+class TxRbacMigrateService(
     private val client: Client,
     private val permissionResourceGroupService: PermissionResourceGroupService,
     private val permissionResourceMemberService: PermissionResourceMemberService,
     private val permissionGradeManagerService: PermissionGradeManagerService,
     private val resourceService: AuthResourceService
-) {
+) : TxMigrateService {
 
-    fun migrateRemoteDevManager(projectConditionDTO: ProjectConditionDTO) {
+    override fun migrateRemoteDevManager(projectConditionDTO: ProjectConditionDTO) {
         var offset = 0
         val limit = PageUtil.MAX_PAGE_SIZE / 2
         logger.info("start to migrate remote dev manager|${projectConditionDTO}")
@@ -41,7 +42,7 @@ class TxMigrateService(
         } while (migrateProjects.size == limit)
     }
 
-    fun migrateRemoteDevManager(projectCode: String): Int {
+    override fun migrateRemoteDevManager(projectCode: String): Int {
         logger.info("migrate remote dev manager $projectCode")
         val projectInfo = client.get(ServiceProjectResource::class).get(projectCode).data!!
         val gradeManagerId = resourceService.get(
@@ -76,6 +77,6 @@ class TxMigrateService(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(TxMigrateService::class.java)
+        private val logger = LoggerFactory.getLogger(TxRbacMigrateService::class.java)
     }
 }

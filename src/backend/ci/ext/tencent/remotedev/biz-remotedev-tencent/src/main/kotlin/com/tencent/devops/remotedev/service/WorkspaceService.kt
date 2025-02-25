@@ -1215,6 +1215,17 @@ class WorkspaceService @Autowired constructor(
             workspace.createUserId
         }
         val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
+        val defaultZoneConfig = windowsResourceConfigService.getAllZone()
+            .associateBy { it.zoneShortName }
+        val specZoneConfig = windowsResourceConfigService.getAllSpecZone().associateBy { it.zoneShortName }
+        val zone = if (workspace.hostIp != null) {
+            /*后续直接取windows表中的zoneId，不通过ip进行解析*/
+            val zoneId = workspace.hostIp?.substringBefore(".")
+            specZoneConfig[zoneId] ?: defaultZoneConfig[zoneId?.removeSuffixNumb()]
+        } else {
+            null
+        }
+
         return WorkspaceStartCloudDetail(
             ip = workspace.hostIp ?: "",
             curLaunchId = workspace.curLaunchId ?: gameId.second.toInt(),
@@ -1224,7 +1235,8 @@ class WorkspaceService @Autowired constructor(
             creator = workspace.createUserId,
             owner = owner,
             resourceId = resourceId,
-            displayName = workspace.displayName
+            displayName = workspace.displayName,
+            zoneConfig = zone
         )
     }
 

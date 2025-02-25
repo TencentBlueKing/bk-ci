@@ -27,6 +27,7 @@
 
 package com.tencent.devops.environment.pojo.job.agentreq
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "安装agent的请求信息")
@@ -36,5 +37,6 @@ data class InstallAgentReq(
     @get:Schema(title = "被替换的Proxy主机ID")
     val replaceHostId: Int?,
     @get:Schema(title = "是否安装最新版本插件，默认不安装最新插件")
+    @JsonProperty("isInstallLatestPlugins")
     val isInstallLatestPlugins: Boolean?
 )

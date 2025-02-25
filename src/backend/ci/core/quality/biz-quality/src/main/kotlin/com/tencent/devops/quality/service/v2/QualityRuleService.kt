@@ -372,7 +372,9 @@ class QualityRuleService @Autowired constructor(
         } else {
             mapOf()
         }
-        val templateRange = templateMap?.map { UserQualityRule.RangeItem(it.key, it.value.name) } ?: listOf()
+        val templateRange = templateMap?.map {
+            UserQualityRule.RangeItem(it.value.templateId, it.value.name)
+        } ?: listOf()
 
         // 获取模板对应的流水线总数
         val templatePipelineCount = client.get(ServiceTemplateInstanceResource::class)

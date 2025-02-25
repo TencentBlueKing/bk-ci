@@ -30,6 +30,8 @@ import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
 import com.tencent.devops.remotedev.pojo.image.ListImagesData
 import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
+import com.tencent.devops.remotedev.pojo.itsm.BKItsmCreateTicketReq
+import com.tencent.devops.remotedev.pojo.itsm.BKItsmCreateTicketRespData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.EnableRemotedevData
@@ -650,5 +652,13 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<DeleteImageResp> {
         logger.info("deleteImage |$userId|$projectId|$imageId|$delaySeconds")
         return client.get(ServiceRemoteDevResource::class).deleteImage(userId, projectId, imageId, delaySeconds)
+    }
+
+    override fun createItsmTicket(
+        userId: String,
+        createReqStr: BKItsmCreateTicketReq
+    ): Result<BKItsmCreateTicketRespData> {
+        logger.info("createItsmTicket |$userId|$createReqStr")
+        return client.get(ServiceRemoteDevResource::class).createItsmTicket(userId, createReqStr)
     }
 }

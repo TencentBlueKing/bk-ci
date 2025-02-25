@@ -1,0 +1,345 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "title" : "云桌面应用CDI接口",
+    "description" : "这是提供给云研发应用所使用的CDI SDK工具",
+    "version" : "1.0.0"
+  },
+  "tags" : [ {
+    "name" : "CDI_REMOTE_DEV",
+    "description" : "cdi-remoteDev"
+  } ],
+  "paths" : {
+    "/remotedev/api/external/cdi/login_user_id" : {
+      "get" : {
+        "tags" : [ "CDI_REMOTE_DEV" ],
+        "summary" : "云桌面应用获取当前实例登陆人",
+        "operationId" : "getLoginUserId",
+        "parameters" : [ {
+          "name" : "X-CDI-OAUTH2-AUTHORIZATION",
+          "in" : "header",
+          "description" : "应用请求时需带上此授权token",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "X-DEVOPS-STORE-CODE",
+          "in" : "header",
+          "description" : "应用id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "default" : {
+            "description" : "成功获取当前登录人ID",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultString"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "目前无法获取云桌面登录用户。可以尝试退出云桌面，然后重新登录。"
+          },
+          "401" : {
+            "description" : "未授权，提供的token无效或缺失"
+          }
+        }
+      }
+    },
+    "/remotedev/api/external/cdi/workspace_detail" : {
+      "get" : {
+        "tags" : [ "CDI_REMOTE_DEV" ],
+        "summary" : "云桌面应用获取云桌面信息",
+        "operationId" : "getWorkspaceDetail",
+        "parameters" : [ {
+          "name" : "X-CDI-OAUTH2-AUTHORIZATION",
+          "in" : "header",
+          "description" : "应用请求时需带上此授权token",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "X-DEVOPS-STORE-CODE",
+          "in" : "header",
+          "description" : "应用id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "default" : {
+            "description" : "云桌面详情",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultWeSecProjectWorkspace"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "获取云桌面详情失败，请确认云桌面是否真实存在"
+          },
+          "401" : {
+            "description" : "未授权，提供的token无效或缺失"
+          }
+        }
+      }
+    },
+    "/remotedev/api/external/cdi/notify" : {
+      "post" : {
+        "tags" : [ "CDI_REMOTE_DEV" ],
+        "summary" : "云桌面应用给云桌面或者客户端发送消息",
+        "operationId" : "messageRegister",
+        "parameters" : [ {
+          "name" : "X-CDI-OAUTH2-AUTHORIZATION",
+          "in" : "header",
+          "description" : "应用请求时需带上此授权token",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "X-DEVOPS-STORE-CODE",
+          "in" : "header",
+          "description" : "应用id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/WorkspaceDesktopNotifyData"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "default" : {
+            "description" : "返回通知成功与否",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultBoolean"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "通知异常。请确认1.通知人是不是项目成员，2.云桌面是否真实存在"
+          },
+          "401" : {
+            "description" : "未授权，提供的token无效或缺失"
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "ResultString" : {
+        "title" : "数据返回包装模型",
+        "required" : [ "status" ],
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "title" : "状态码",
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "message" : {
+            "title" : "错误信息",
+            "type" : "string"
+          },
+          "data" : {
+            "title" : "数据",
+            "type" : "string"
+          }
+        }
+      },
+      "DepartmentsInfo" : {
+        "title" : "组织信息",
+        "type" : "object",
+        "properties" : {
+          "deptId" : {
+            "title" : "组织ID",
+            "type" : "string"
+          },
+          "deptName" : {
+            "title" : "组织名称",
+            "type" : "string"
+          }
+        }
+      },
+      "ResultWeSecProjectWorkspace" : {
+        "title" : "数据返回包装模型",
+        "required" : [ "status" ],
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "title" : "状态码",
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "message" : {
+            "title" : "错误信息",
+            "type" : "string"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/WeSecProjectWorkspace"
+          }
+        }
+      },
+      "WeSecProjectWorkspace" : {
+        "title" : "提供给安全侧的项目下云桌面信息",
+        "type" : "object",
+        "properties" : {
+          "workspace_name" : {
+            "title" : "工作空间名称",
+            "type" : "string"
+          },
+          "project_id" : {
+            "title" : "项目ID",
+            "type" : "string"
+          },
+          "create_time" : {
+            "title" : "工作空间创建时间",
+            "type" : "string"
+          },
+          "region_id" : {
+            "title" : "region_id",
+            "type" : "string"
+          },
+          "inner_ip" : {
+            "title" : "inner_ip",
+            "type" : "string"
+          },
+          "real_owner" : {
+            "title" : "工作空间实际拥有者，待分配时为空",
+            "type" : "string"
+          },
+          "display_name" : {
+            "title" : "云桌面别名",
+            "type" : "string"
+          },
+          "machine_type" : {
+            "title" : "机型",
+            "type" : "string"
+          },
+          "mac_address" : {
+            "title" : "mac地址",
+            "type" : "string"
+          },
+          "zone_type" : {
+            "title" : "专区类型",
+            "type" : "string"
+          },
+          "creator" : {
+            "title" : "工作空间创建人",
+            "type" : "string"
+          },
+          "owner" : {
+            "title" : "工作空间拥有者",
+            "type" : "string"
+          },
+          "status" : {
+            "title" : "状态",
+            "type" : "string"
+          },
+          "ownerDepartments" : {
+            "title" : "拥有者所属组织信息",
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DepartmentsInfo"
+            }
+          },
+          "currentLoginUsers" : {
+            "title" : "当前登录人",
+            "uniqueItems" : true,
+            "type" : "array",
+            "items" : {
+              "title" : "当前登录人",
+              "type" : "string"
+            }
+          },
+          "viewers" : {
+            "title" : "共享人",
+            "type" : "array",
+            "items" : {
+              "title" : "共享人",
+              "type" : "string"
+            }
+          },
+          "nodeIp" : {
+            "title" : "母机IP",
+            "type" : "string"
+          }
+        }
+      },
+      "ResultBoolean" : {
+        "title" : "数据返回包装模型",
+        "required" : [ "status" ],
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "title" : "状态码",
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "message" : {
+            "title" : "错误信息",
+            "type" : "string"
+          },
+          "data" : {
+            "title" : "数据",
+            "type" : "boolean"
+          }
+        }
+      },
+      "WorkspaceDesktopNotifyData" : {
+        "type" : "object",
+        "properties" : {
+          "operator" : {
+            "type" : "string"
+          },
+          "userIdList" : {
+            "uniqueItems" : true,
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "dataType" : {
+            "type" : "string",
+            "enum" : [ "EMAIL", "CLIENT_PUSH", "RTX", "DESKTOP_MARQUEE", "DESKTOP_COMPLEX" ]
+          },
+          "data" : {
+            "type" : "string"
+          },
+          "notifyTemplateCode" : {
+            "type" : "string"
+          },
+          "messageStartTime" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "messageEndTime" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      }
+    }
+  }
+}

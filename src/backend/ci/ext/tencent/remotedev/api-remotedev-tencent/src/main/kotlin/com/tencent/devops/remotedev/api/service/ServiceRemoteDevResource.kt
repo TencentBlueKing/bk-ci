@@ -26,6 +26,8 @@ import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
 import com.tencent.devops.remotedev.pojo.image.ListImagesData
 import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
+import com.tencent.devops.remotedev.pojo.itsm.BKItsmCreateTicketReq
+import com.tencent.devops.remotedev.pojo.itsm.BKItsmCreateTicketRespData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -857,4 +859,15 @@ interface ServiceRemoteDevResource {
         @QueryParam("delaySeconds")
         delaySeconds: Int?
     ): Result<DeleteImageResp>
+
+    @Operation(summary = "创建ITSM单据流程")
+    @POST
+    @Path("/create_itsm_ticket")
+    fun createItsmTicket(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "请求参数", required = true)
+        createReq: BKItsmCreateTicketReq
+    ): Result<BKItsmCreateTicketRespData>
 }

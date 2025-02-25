@@ -68,11 +68,22 @@ class RemotedevSdkService @Autowired constructor(
         return RsaUtil.rsaEncrypt(dToken, rsaPublicKey)
     }
 
-    fun getAccessToken(desktopIP: String, sign: DesktopTokenSign): Oauth2AccessTokenVo {
+    fun getAccessToken(desktopIP: String, new: Boolean?, sign: DesktopTokenSign): Oauth2AccessTokenVo {
         val ws = workspaceService.getWorkspaceList4WeSec(
             ip = desktopIP
         ).firstOrNull() ?: throwTokenFail(desktopIP, "unknown ip", "not find $desktopIP")
         check(ws, sign, desktopIP)
+        return if (new == true) {
+            permissionService.getCDIOauth(ws.workspaceName, sign.appId)
+        } else old(ws, desktopIP, sign)
+    }
+
+    @Deprecated("晚点下掉换新的oauth生成逻辑")
+    private fun old(
+        ws: WeSecProjectWorkspace,
+        desktopIP: String,
+        sign: DesktopTokenSign
+    ): Oauth2AccessTokenVo {
         val userId = ws.owner ?: throwTokenFail(desktopIP, "unknown owner", "${ws.workspaceName} not has owner")
         val clientDetail = workspaceAppOauth2MaterialsDao.fetchAny(
             dslContext = dslContext,

@@ -209,6 +209,7 @@ class SubPipelineTaskService @Autowired constructor(
         val modelString = pipelineResDao.getLatestVersionModelString(dslContext, projectId, pipelineId)
         if (modelString.isNullOrBlank()) {
             logger.warn("model not found: [$projectId|$pipelineId]")
+            return null
         }
         try {
             model = objectMapper.readValue(modelString, Model::class.java)

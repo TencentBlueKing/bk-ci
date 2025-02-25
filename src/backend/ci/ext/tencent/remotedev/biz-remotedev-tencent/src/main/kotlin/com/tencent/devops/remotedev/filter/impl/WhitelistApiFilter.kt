@@ -33,6 +33,7 @@ class WhitelistApiFilter constructor(
         EXTERNAL("/api/external/", false),
         REMOTEDEV("/api/remotedev/", false),
         SERVICE("/api/service/", false),
+        CDI("/api/cdi/", false),
         OP("/api/op/", true),
         SWAGGER("/api/swagger.json", false),
         OPEN("/api/open/", false);

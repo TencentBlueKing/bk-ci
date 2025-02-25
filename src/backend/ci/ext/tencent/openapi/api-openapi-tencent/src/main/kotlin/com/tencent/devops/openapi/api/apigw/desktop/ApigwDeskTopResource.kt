@@ -16,7 +16,6 @@ import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.remotedev.pojo.DesktopTokenSignBody
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
-import com.tencent.devops.remotedev.pojo.sdk.SdkReportData
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -27,6 +26,7 @@ import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "OPEN_API_DESKTOP", description = "云桌面SDK API")
@@ -154,13 +154,9 @@ interface ApigwDeskTopResource {
         @Parameter(description = "应用版本", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_STORE_VERSION)
         storeVersion: String,
+        @Parameter(description = "new", required = true)
+        @QueryParam("new")
+        new: Boolean?,
         sign: DesktopTokenSignBody
     ): Result<Oauth2AccessTokenVo>
-
-    @Operation(summary = "云桌面SDK上报数据", tags = ["v4_app_desktop_sdk_reportdata"])
-    @POST
-    @Path("/sdk/reportdata")
-    fun sdkReportData(
-        data: SdkReportData
-    ): Result<Boolean>
 }
