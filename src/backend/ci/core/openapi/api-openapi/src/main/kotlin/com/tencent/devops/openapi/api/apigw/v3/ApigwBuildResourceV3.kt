@@ -41,7 +41,7 @@ import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
-import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.ExampleObject
@@ -276,7 +276,7 @@ interface ApigwBuildResourceV3 {
         @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
-    ): Result<ModelDetail>
+    ): Result<ModelRecord>
 
     @Operation(summary = "手动审核启动阶段", tags = ["v3_app_build_stage_start", "v3_user_build_stage_start"])
     @POST

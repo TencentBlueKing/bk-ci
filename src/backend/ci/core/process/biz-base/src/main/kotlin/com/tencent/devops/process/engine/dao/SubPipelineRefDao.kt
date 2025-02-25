@@ -111,14 +111,14 @@ class SubPipelineRefDao {
     fun deleteAll(
         dslContext: DSLContext,
         projectId: String,
-        pipelineId: String
+        pipelineId: String?
     ): Int {
         return with(TPipelineSubRef.T_PIPELINE_SUB_REF) {
-            dslContext.deleteFrom(this).where(
-                PROJECT_ID.eq(projectId).and(
-                    PIPELINE_ID.eq(pipelineId)
-                )
-            ).execute()
+            val conditions = mutableListOf(PROJECT_ID.eq(projectId))
+            if (!pipelineId.isNullOrBlank()) {
+                conditions.add(PIPELINE_ID.eq(pipelineId))
+            }
+            dslContext.deleteFrom(this).where(conditions).execute()
         }
     }
 

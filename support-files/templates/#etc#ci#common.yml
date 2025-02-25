@@ -335,7 +335,7 @@ auth:
   accessToken:
     enabled: __BK_CI_API_TOKEN_ENABLED__
     secret: __BK_CI_API_TOKEN_SECRET__
-    expirationTime: __BK_CI_API_TOKEN_EXPIRED_MILLISECOND__
+    expirationTime: "__BK_CI_API_TOKEN_EXPIRED_MILLISECOND__"
   gateway:
     devopsToken: __BK_CI_DEVOPS_TOKEN__
 
