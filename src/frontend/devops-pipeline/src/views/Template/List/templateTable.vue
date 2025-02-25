@@ -32,7 +32,7 @@
                     <span>{{ row.name }}</span>
                     <img
                         v-if="row.enablePac"
-                        src="../../images/pacIcon.png"
+                        src="../../../images/pacIcon.png"
                         class="pac-code-icon"
                     />
                 </div>

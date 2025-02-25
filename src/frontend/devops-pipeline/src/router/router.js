@@ -26,16 +26,17 @@ const PipelineManageList = () => import(/* webpackChunkName: "pipelinesNewList" 
 const PipelineListAuth = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/Auth')
 
 const pipelinesGroup = () => import(/* webpackChunkName: "pipelinesGroup" */'../views/list/group')
-const pipelinesTemplate = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/list/template')
-const templateManageEntry = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/list/templateManageEntry')
 const pipelinesAudit = () => import(/* webpackChunkName: "pipelinesAudit" */'../views/list/audit')
 
-const templateEntry = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/')
-const templateEdit = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/edit.vue')
-const templateSetting = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/setting.vue')
-const templateInstance = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/instance.vue')
-const templateInstanceCreate = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/instance_create.vue')
-const templatePermission = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/permission.vue')
+// 流水线模板
+const templateList = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/list/')
+// const pipelinesTemplate = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/list/template')
+// const templateEntry = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/')
+// const templateEdit = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/edit.vue')
+// const templateSetting = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/setting.vue')
+// const templateInstance = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/instance.vue')
+// const templateInstanceCreate = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/instance_create.vue')
+// const templatePermission = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/permission.vue')
 
 const atomManage = () => import(/* webpackChunkName: "atomManage" */'../views/list/atomManage.vue')
 
@@ -100,15 +101,15 @@ const routes = [
                         name: 'pipelinesGroup',
                         component: pipelinesGroup
                     },
+                    // {
+                    //     path: 'template',
+                    //     name: 'pipelinesTemplate',
+                    //     component: pipelinesTemplate
+                    // },
                     {
                         path: 'template',
-                        name: 'pipelinesTemplate',
-                        component: pipelinesTemplate
-                    },
-                    {
-                        path: 'templateManageEntry',
-                        name: 'templateManageEntry',
-                        component: templateManageEntry
+                        name: 'template',
+                        component: templateList
                     },
                     {
                         path: 'atomManage',
@@ -135,37 +136,37 @@ const routes = [
                     }
                 ]
             },
-            {
-                path: 'template/:templateId',
-                component: templateEntry,
-                children: [
-                    {
-                        path: 'edit',
-                        name: 'templateEdit',
-                        component: templateEdit
-                    },
-                    {
-                        path: 'setting',
-                        name: 'templateSetting',
-                        component: templateSetting
-                    },
-                    {
-                        path: 'instance',
-                        name: 'templateInstance',
-                        component: templateInstance
-                    },
-                    {
-                        path: 'createInstance/:curVersionId/:pipelineName?',
-                        name: 'createInstance',
-                        component: templateInstanceCreate
-                    },
-                    {
-                        path: 'permission',
-                        name: 'templatePermission',
-                        component: templatePermission
-                    }
-                ]
-            },
+            // {
+            //     path: 'template/:templateId',
+            //     component: templateEntry,
+            //     children: [
+            //         {
+            //             path: 'edit',
+            //             name: 'templateEdit',
+            //             component: templateEdit
+            //         },
+            //         {
+            //             path: 'setting',
+            //             name: 'templateSetting',
+            //             component: templateSetting
+            //         },
+            //         {
+            //             path: 'instance',
+            //             name: 'templateInstance',
+            //             component: templateInstance
+            //         },
+            //         {
+            //             path: 'createInstance/:curVersionId/:pipelineName?',
+            //             name: 'createInstance',
+            //             component: templateInstanceCreate
+            //         },
+            //         {
+            //             path: 'permission',
+            //             name: 'templatePermission',
+            //             component: templatePermission
+            //         }
+            //     ]
+            // },
             {
                 // docker console
                 path: 'dockerConsole',

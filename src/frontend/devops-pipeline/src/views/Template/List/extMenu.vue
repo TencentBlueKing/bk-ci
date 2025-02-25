@@ -89,7 +89,7 @@
 </script>
 
 <style lang="scss">
-     @import '../../scss/conf';
+     @import '@/scss/conf';
 
     .template-ext-menu {
         height: 40px;
