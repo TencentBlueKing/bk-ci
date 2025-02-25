@@ -1,6 +1,5 @@
 package com.tencent.devops.store.common.resources
 
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.TxUserStorePublishersResource

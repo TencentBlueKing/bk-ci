@@ -10,9 +10,6 @@ import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
 
 
 @Service
@@ -68,7 +65,11 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
             }
 
         } catch (ignored: Throwable) {
-            logger.error("modify${storeTypeEnum.name}FirstPublisher error:${ignored},offset:${offset},has been modified $successUpdateCount")
+            logger.error(
+                "modify${storeTypeEnum.name}FirstPublisher error:${ignored}" +
+                        ",offset:${offset}," +
+                        "has been modified $successUpdateCount"
+            )
             throw RuntimeException("modify${storeTypeEnum.name}FirstPublisher error:${ignored}")
         }
 
