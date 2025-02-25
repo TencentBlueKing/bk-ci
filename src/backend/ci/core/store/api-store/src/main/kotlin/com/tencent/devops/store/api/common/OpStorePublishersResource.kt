@@ -46,4 +46,5 @@ interface OpStorePublishersResource {
     @PUT
     @Path("/refresh/person")
     fun refreshPersonPublisherGroup(): Result<Boolean>
+
 }

@@ -40,4 +40,5 @@ class OpStorePublishersResourceImpl constructor(
     override fun refreshPersonPublisherGroup(): Result<Boolean> {
         return Result(publishersDataService.refreshPersonPublisherGroup())
     }
+
 }
