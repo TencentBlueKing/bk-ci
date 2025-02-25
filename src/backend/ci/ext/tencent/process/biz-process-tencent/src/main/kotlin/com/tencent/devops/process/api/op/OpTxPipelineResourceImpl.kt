@@ -15,7 +15,6 @@ import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import kotlin.math.log
 
 @RestResource
 class OpTxPipelineResourceImpl @Autowired constructor(
