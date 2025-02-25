@@ -191,7 +191,7 @@
             padding: 0 20px;
             color: $fontWeightColor;
             background-color: #fff;
-            text-align: center;
+            text-align: left;
             cursor: pointer;
             &:hover {
                 background-color: $primaryLightColor;

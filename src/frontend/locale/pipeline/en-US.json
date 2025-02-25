@@ -469,7 +469,10 @@
     "searchPlaceholder": "Template name/Template description/Template type/Source/Updated by",
     "lastedVersion": "Latest version",
     "debugPipelineCount": "Debug pipeline",
-    "instancePipelineCount": "Instance"
+    "instancePipelineCount": "Instance",
+    "shelfStore": "List on the development store",
+    "convertToCustom": "Convert to custom",
+    "export": "Export"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",

@@ -144,6 +144,14 @@
             dropdownMenus () {
                 return [
                     {
+                        label: 'labelManage',
+                        routeName: 'pipelinesGroup'
+                    },
+                    {
+                        label: 'pluginManage',
+                        routeName: 'atomManage'
+                    },
+                    {
                         label: 'operatorAudit',
                         routeName: 'pipelinesAudit'
                     }
@@ -158,15 +166,6 @@
                     {
                         label: this.$t('templateName'),
                         name: 'templateManageEntry'
-                    },
-                    {
-                        label: this.$t('atom'),
-                        // name: 'atomManage'
-                        name: 'pipelinesTemplate'
-                    },
-                    {
-                        label: this.$t('label'),
-                        name: 'pipelinesGroup'
                     }
                 ]
             }

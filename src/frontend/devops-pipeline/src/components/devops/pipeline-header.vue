@@ -58,7 +58,6 @@
         justify-content: space-between;
         background: #fff;
         flex-shrink: 0;
-        z-index: 1;
         &-left {
             display: flex;
             flex: 1;

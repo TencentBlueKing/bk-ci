@@ -5,10 +5,10 @@
         ref="tableRef"
         :data="data"
         :size="tableSize"
+        :max-height="718"
         :pagination="pagination"
         @page-change="handlePageChange"
         @page-limit-change="handlePageLimitChange"
-        @sort-change="handleSort"
         @header-dragend="handelHeaderDragend"
     >
         <TemplateEmpty
@@ -21,7 +21,7 @@
             :label="$t('template.name')"
             prop="name"
             :width="tableWidthMap.name"
-            sortable="custom"
+            sortable
         >
             <template slot-scope="{ row }">
                 <div
@@ -43,7 +43,11 @@
             :width="tableWidthMap.desc"
             :label="$t('template.desc')"
             prop="desc"
-        ></bk-table-column>
+        >
+            <template slot-scope="{ row }">
+                <span>{{ row.desc || '--' }}</span>
+            </template>
+        </bk-table-column>
         <bk-table-column
             v-if="allRenderColumnMap.type"
             :width="tableWidthMap.type"
@@ -58,12 +62,16 @@
             :width="tableWidthMap.lastedVersion"
             :label="$t('template.lastedVersion')"
             prop="lastedVersion"
-        ></bk-table-column>
+        >
+            <template slot-scope="{ row }">
+                <span>{{ row.lastedVersion || '--' }}</span>
+            </template>
+        </bk-table-column>
         <bk-table-column
             v-if="allRenderColumnMap.source"
             :width="tableWidthMap.source"
             :label="$t('template.source')"
-            prop="source"
+            prop="sourceName"
         ></bk-table-column>
         <bk-table-column
             v-if="allRenderColumnMap.debugPipelineCount"
@@ -90,40 +98,36 @@
             :width="tableWidthMap.updater"
             :label="$t('template.lastModifiedBy')"
             prop="updater"
-        ></bk-table-column>
+        >
+            <template slot-scope="{ row }">
+                <span>{{ row.updater || '--' }}</span>
+            </template>
+        </bk-table-column>
         <bk-table-column
             v-if="allRenderColumnMap.updateTime"
             :width="tableWidthMap.updateTime"
             key="updateTime"
             :label="$t('template.lastModifiedDate')"
-            sortable="custom"
+            sortable
             prop="updateTime"
             :formatter="formatTime"
         />
         <bk-table-column
+            :width="tableWidthMap.operate"
             :label="$t('operate')"
             :min-width="100"
-            :width="tableWidthMap.operate"
         >
             <div
                 slot-scope="{ row }"
                 class="template-operate"
             >
                 <span
-                    v-if="row.type === 'PIPELINE'"
                     @click="toInstanceList(row)"
-                    :key="row.templateId"
-                    :class="row.canEdit ? 'select-text' : 'not-create-permission'"
-                    v-perm="{
-                        permissionData: {
-                            projectId: projectId,
-                            resourceType: row.canView ? 'pipeline' : 'pipeline_template',
-                            resourceCode: row.canView ? projectId : row.id,
-                            action: row.canView ? RESOURCE_ACTION.CREATE : TEMPLATE_RESOURCE_ACTION.VIEW
-                        }
-                    }"
+                    :class="['action', row.canEdit ? 'create-permission' : 'not-create-permission']"
                 >
-                    {{ $t('template.instantiate') }}
+                    <span v-if="row.type === 'PIPELINE'">
+                        {{ $t('template.instantiate') }}
+                    </span>
                 </span>
                 <ext-menu
                     type="template"
@@ -184,10 +188,10 @@
         data () {
             return {
                 sourceFilters: [
-                    { text: '类型1', value: 'CUSTOM' },
-                    { text: '类型2', value: 'REPOSITORY' },
-                    { text: '类型3', value: 'MARKET' },
-                    { text: '类型4', value: 'YAML' }
+                    { text: '流水线模板', value: 'PIPELINE' },
+                    { text: 'Stage模板', value: 'STAGE' },
+                    { text: 'Job模板', value: 'JOB' },
+                    { text: 'Step模板', value: 'STEP' }
                 ],
                 tableSize: 'medium',
                 tableColumn: [],
@@ -284,12 +288,12 @@
                 desc: 200,
                 type: 100,
                 lastedVersion: 80,
-                source: '',
+                source: 80,
                 debugPipelineCount: 80,
                 instancePipelineCount: '',
                 updater: '',
                 updateTime: 100,
-                operate: 100
+                operate: 96
             }
         },
         methods: {
@@ -327,21 +331,6 @@
                 this.tableWidthMap[column.property] = newWidth
                 localStorage.setItem(CACHE_TEMPLATE_TABLE_WIDTH_MAP, JSON.stringify(this.tableWidthMap))
             },
-            handleSort ({ prop, order }) {
-                // const sortType = PIPELINE_SORT_FILED[prop]
-                // if (sortType) {
-                //     const collation = prop ? ORDER_ENUM[order] : ORDER_ENUM.descending
-                //     localStorage.setItem('pipelineSortType', sortType)
-                //     localStorage.setItem('pipelineSortCollation', collation)
-                //     this.$router.replace({
-                //         query: {
-                //             ...this.$route.query,
-                //             sortType,
-                //             collation
-                //         }
-                //     })
-                // }
-            },
             sourceFilterMethod (value, row, column) {
                 const property = column.property
                 return row[property] === value
@@ -352,10 +341,10 @@
 </script>
 
 <style lang="scss">
-  @import '@/scss/conf.scss';
-  @import '@/scss/mixins/ellipsis';
+@import '@/scss/conf.scss';
+@import '@/scss/mixins/ellipsis';
 
-  .template-name {
+.template-name {
     display: flex;
     align-items: center;
     img {
@@ -365,22 +354,29 @@
     .pac-code-icon {
         margin: 0 0 0 12px;
     }
-  }
-  .template-operate {
+}
+.template-operate {
     display: flex;
     align-items: center;
-    height: 39px;
-    span {
-        margin-right: 15px;
+    height: 40px;
+    .action {
+        display: inline-block;
+        text-align: center;
+        min-width: 62px;
     }
-  }
+}
 
-  .select-text {
+.select-text {
     color: #3A84FF;
     cursor: pointer;
-  }
-  .not-create-permission {
+}
+
+.create-permission {
+    cursor: pointer;
+}
+
+.not-create-permission {
     cursor: not-allowed;
-  }
+}
 
 </style>

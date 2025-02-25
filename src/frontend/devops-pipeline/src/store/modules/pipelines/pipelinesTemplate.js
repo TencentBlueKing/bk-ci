@@ -82,6 +82,11 @@ const actions = {
             return response.data
         })
     },
+    hasPipelineTemplatePermission (_, { projectId, permission }) {
+        return ajax.get(`${prefix}/pipeline/template/v2/${projectId}/hasPipelineTemplatePermission?&permission=${permission}`).then(response => {
+            return response.data
+        })
+    },
     getTemplateList (_, params) {
         return ajax.post(`${prefix}/pipeline/template/v2/${params.projectId}/list`, params).then(response => {
             return response.data
