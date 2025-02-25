@@ -44,9 +44,7 @@ import com.tencent.devops.store.common.dao.PublishersDao
 import com.tencent.devops.store.common.dao.StoreDockingPlatformDao
 import com.tencent.devops.store.common.dao.StoreDockingPlatformErrorCodeDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
-import com.tencent.devops.store.common.dao.StoreReleaseDao
 import com.tencent.devops.store.common.service.PublishersDataService
-import com.tencent.devops.store.common.service.StoreComponentDataCorrectionService
 import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.pojo.common.enums.PublisherType
@@ -72,9 +70,7 @@ class PublishersDataServiceImpl @Autowired constructor(
     private val storeDockingPlatformDao: StoreDockingPlatformDao,
     private val storeMemberDao: StoreMemberDao,
     private val storeUserService: StoreUserService,
-    private val storeDockingPlatformErrorCodeDao: StoreDockingPlatformErrorCodeDao,
-    private val storeReleaseDao: StoreReleaseDao,
-    private val storeComponentDataCorrectionService: StoreComponentDataCorrectionService
+    private val storeDockingPlatformErrorCodeDao: StoreDockingPlatformErrorCodeDao
 ) : PublishersDataService {
 
     private val executorService = Executors.newSingleThreadExecutor()
@@ -351,12 +347,6 @@ class PublishersDataServiceImpl @Autowired constructor(
         return true
     }
 
-    override fun updateComponentFirstPublisher(
-        userId: String,
-    ): Boolean {
-        storeComponentDataCorrectionService.updateComponentFirstPublisher(userId)
-        return true
-    }
 
     private fun getPublisherDeptInfo(userDeptDetail: UserDeptDetail): PublisherDeptInfo {
         userDeptDetail.let {

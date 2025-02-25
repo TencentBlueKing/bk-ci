@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.OpStorePublishersResource
 import com.tencent.devops.store.common.service.PublishersDataService
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 @RestResource
 class OpStorePublishersResourceImpl constructor(
@@ -42,9 +41,4 @@ class OpStorePublishersResourceImpl constructor(
         return Result(publishersDataService.refreshPersonPublisherGroup())
     }
 
-    override fun updateComponentFirstPublisher(
-        userId: String
-    ): Result<Boolean> {
-        return Result(publishersDataService.updateComponentFirstPublisher(userId))
-    }
 }
