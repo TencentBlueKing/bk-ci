@@ -1,20 +1,27 @@
 package com.tencent.devops.process.api.op
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.TencentPipelineBuildDao
 import com.tencent.devops.process.dao.TxPipelineInfoDao
+import com.tencent.devops.process.dao.TxPipelineResourceDao
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import kotlin.math.log
 
 @RestResource
 class OpTxPipelineResourceImpl @Autowired constructor(
-    val pipelineInfoDao: TxPipelineInfoDao,
+    val txPipelineInfoDao: TxPipelineInfoDao,
+    val txPipelineResourceDao: TxPipelineResourceDao,
+    val pipelineInfoDao: PipelineInfoDao,
     val tencentPipelineBuildDao: TencentPipelineBuildDao,
     val pipelineBuildFacadeService: PipelineBuildFacadeService,
     val dslContext: DSLContext,
@@ -27,7 +34,7 @@ class OpTxPipelineResourceImpl @Autowired constructor(
         // 校验用户是否为tx在职用户
         client.get(ServiceTxUserResource::class).get(creator)
 
-        pipelineInfoDao.updateCreator(dslContext, pipelineId, creator)
+        txPipelineInfoDao.updateCreator(dslContext, pipelineId, creator)
 
         return Result(true)
     }
@@ -75,5 +82,34 @@ class OpTxPipelineResourceImpl @Autowired constructor(
             }
         }
         return Result(count)
+    }
+
+    override fun fixResourceVersion(
+        projectId: String,
+        pipelineId: String,
+        version: Int?
+    ): Result<Int> {
+        val info = pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId)
+            ?: throw ErrorCodeException(
+            statusCode = 404,
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
+        )
+        logger.info("fixResourceVersion|$projectId|$pipelineId|$version|info=$info")
+        val deleted = if (version == null) {
+            txPipelineResourceDao.deleteResourceExceptVersion(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = info.version
+            )
+        } else {
+            txPipelineResourceDao.deleteResourceVersion(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version
+            )
+        }
+        return Result(deleted)
     }
 }
