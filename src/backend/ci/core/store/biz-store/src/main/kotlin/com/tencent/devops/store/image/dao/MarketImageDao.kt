@@ -36,7 +36,6 @@ import com.tencent.devops.model.store.tables.TImageAgentType
 import com.tencent.devops.model.store.tables.TImageCategoryRel
 import com.tencent.devops.model.store.tables.TImageFeature
 import com.tencent.devops.model.store.tables.TImageLabelRel
-import com.tencent.devops.model.store.tables.TImageVersionLog
 import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.TStoreDeptRel
 import com.tencent.devops.model.store.tables.TStoreProjectRel
@@ -64,7 +63,6 @@ import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_SUMMARY
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_TAG
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_VERSION
 import com.tencent.devops.store.image.exception.ClassifyNotExistException
-import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_NAME
 import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_ID
@@ -89,12 +87,10 @@ import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Record19
-import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.UpdateSetFirstStep
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.groupConcat
-import org.jooq.impl.DSL.min
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal

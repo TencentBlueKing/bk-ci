@@ -51,7 +51,6 @@ import org.jooq.Record
 import org.jooq.Result
 import org.jooq.SelectJoinStep
 import org.jooq.impl.DSL
-import org.jooq.impl.DSL.min
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 import java.time.LocalDateTime
