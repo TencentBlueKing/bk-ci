@@ -36,7 +36,7 @@ val shardingDbTableCheckTask = tasks.register("shardingDbTableCheck") {
             ModuleUtil.getBkModuleName(project.name, project.findProperty("i18n.module.name")?.toString())
         val moduleNames = ModuleUtil.getBkActualModuleNames(bkModuleName)
         moduleNames.forEach { moduleName ->
-            var (mysqlURL, mysqlUser, mysqlPasswd) = DatabaseUtil.getMysqlInfo(
+            val (mysqlURL, mysqlUser, mysqlPasswd) = DatabaseUtil.getMysqlInfo(
                 moduleName = moduleName,
                 defaultMysqlURL = project.extra["DB_HOST"]?.toString(),
                 defaultMysqlUser = project.extra["DB_USERNAME"]?.toString(),
@@ -47,7 +47,7 @@ val shardingDbTableCheckTask = tasks.register("shardingDbTableCheck") {
             if (moduleName in listOf("process", "engine") && archiveDbUrls == null) {
                 archiveDbUrls = normalDbUrls
             }
-            if ((!normalDbUrls.isEmpty() && normalDbUrls.size > 1) || archiveDbUrls?.isEmpty() == false) {
+            if ((normalDbUrls.isNotEmpty() && normalDbUrls.size > 1) || archiveDbUrls?.isEmpty() == false) {
                 val databaseName = DatabaseUtil.getDatabaseName(moduleName, project.extra["DB_PREFIX"].toString())
                 // 各普通DB的表进行比较
                 val referNormalDb = doCompareDatabasesBus(
@@ -308,27 +308,28 @@ fun compareColumns(
     compareDbUrl: String,
     compareDatabaseName: String
 ) {
-    if (referenceTable.columns != compareTable.columns) {
-        var missingColumns = referenceTable.columns - compareTable.columns
-        var extraColumns = compareTable.columns - referenceTable.columns
-        val mismatchColumns = mutableListOf<ColumnInfo>()
-        val missingColumnNames = missingColumns.map { it.name }
-        extraColumns.forEach { extraColumn ->
-            if (missingColumnNames.contains(extraColumn.name)) {
-                mismatchColumns.add(extraColumn)
-            }
+    if (referenceTable.columns == compareTable.columns) {
+        return
+    }
+    var missingColumns = referenceTable.columns - compareTable.columns.toSet()
+    var extraColumns = compareTable.columns - referenceTable.columns.toSet()
+    val mismatchColumns = mutableListOf<ColumnInfo>()
+    val missingColumnNames = missingColumns.map { it.name }
+    extraColumns.forEach { extraColumn ->
+        if (missingColumnNames.contains(extraColumn.name)) {
+            mismatchColumns.add(extraColumn)
         }
-        val mismatchColumnNames = mismatchColumns.map { it.name }
-        missingColumns = missingColumns.filter { !mismatchColumnNames.contains(it.name) }
-        extraColumns = extraColumns - mismatchColumns
-        val columnTip = "Compared with the table of database ($referenceDbUrl/$referenceDatabaseName), " +
+    }
+    val mismatchColumnNames = mismatchColumns.map { it.name }
+    missingColumns = missingColumns.filter { !mismatchColumnNames.contains(it.name) }
+    extraColumns = extraColumns - mismatchColumns.toSet()
+    val columnTip = "Compared with the table of database ($referenceDbUrl/$referenceDatabaseName), " +
             "the differences of table ($tableName) of database ($compareDbUrl/$compareDatabaseName) are as " +
             "follows:  missing columns: $missingColumns;  extra columns: $extraColumns;  " +
             "different columns: $mismatchColumns."
-        if (!missingColumns.isNullOrEmpty() || !extraColumns.isNullOrEmpty() || !mismatchColumns.isNullOrEmpty()) {
-            // 字段有差异则抛出错误提示
-            throw RuntimeException(columnTip)
-        }
+    if (missingColumns.isNotEmpty() || extraColumns.isNotEmpty() || mismatchColumns.isNotEmpty()) {
+        // 字段有差异则抛出错误提示
+        throw RuntimeException(columnTip)
     }
 }
 
@@ -341,26 +342,27 @@ fun compareIndexes(
     compareDbUrl: String,
     compareDatabaseName: String
 ) {
-    if (referenceTable.indexes != compareTable.indexes) {
-        var missingIndexes = referenceTable.indexes - compareTable.indexes
-        var extraIndexes = compareTable.indexes - referenceTable.indexes
-        val mismatchIndexes = mutableListOf<IndexInfo>()
-        val missingIndexNames = missingIndexes.map { it.name }
-        extraIndexes.forEach { extraIndex ->
-            if (missingIndexNames.contains(extraIndex.name)) {
-                mismatchIndexes.add(extraIndex)
-            }
+    if (referenceTable.indexes == compareTable.indexes) {
+        return
+    }
+    var missingIndexes = referenceTable.indexes - compareTable.indexes.toSet()
+    var extraIndexes = compareTable.indexes - referenceTable.indexes.toSet()
+    val mismatchIndexes = mutableListOf<IndexInfo>()
+    val missingIndexNames = missingIndexes.map { it.name }
+    extraIndexes.forEach { extraIndex ->
+        if (missingIndexNames.contains(extraIndex.name)) {
+            mismatchIndexes.add(extraIndex)
         }
-        val mismatchIndexNames = mismatchIndexes.map { it.name }
-        missingIndexes = missingIndexes.filter { !mismatchIndexNames.contains(it.name) }
-        extraIndexes = extraIndexes - mismatchIndexes
-        val indexTip = "Compared with the table of database ($referenceDbUrl/$referenceDatabaseName), " +
+    }
+    val mismatchIndexNames = mismatchIndexes.map { it.name }
+    missingIndexes = missingIndexes.filter { !mismatchIndexNames.contains(it.name) }
+    extraIndexes = extraIndexes - mismatchIndexes.toSet()
+    val indexTip = "Compared with the table of database ($referenceDbUrl/$referenceDatabaseName), " +
             "the differences of table ($tableName) of database ($compareDbUrl/$compareDatabaseName) are as " +
             "follows:  missing indexs: $missingIndexes;  extra indexs: $extraIndexes;  " +
             "different indexs: $mismatchIndexes."
-        if (!missingIndexes.isNullOrEmpty() || !extraIndexes.isNullOrEmpty() || !mismatchIndexes.isNullOrEmpty()) {
-            // 字段有差异则抛出错误提示
-            throw RuntimeException(indexTip)
-        }
+    if (missingIndexes.isNotEmpty() || extraIndexes.isNotEmpty() || mismatchIndexes.isNotEmpty()) {
+        // 字段有差异则抛出错误提示
+        throw RuntimeException(indexTip)
     }
 }

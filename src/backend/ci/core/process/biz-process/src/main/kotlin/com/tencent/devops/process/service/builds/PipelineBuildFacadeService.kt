@@ -42,6 +42,7 @@ import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -128,7 +129,6 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
-import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.util.TaskUtils
@@ -146,6 +146,7 @@ import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder
@@ -180,12 +181,14 @@ class PipelineBuildFacadeService(
     private val pipelineRedisService: PipelineRedisService,
     private val pipelineRetryFacadeService: PipelineRetryFacadeService,
     private val webhookBuildParameterService: WebhookBuildParameterService,
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService,
-    private val templateFacadeService: TemplateFacadeService
+    private val pipelineYamlFacadeService: PipelineYamlFacadeService
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
     private var cancelIntervalLimitTime: Int = 60 // 取消间隔时间为60秒
+
+    @Value("\${pipeline.build.retry.limit_days:21}")
+    private var retryLimitDays: Int = 21
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildFacadeService::class.java)
@@ -410,6 +413,14 @@ class PipelineBuildFacadeService(
 
             if (buildInfo.pipelineId != pipelineId) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT)
+            }
+            buildInfo.startTime?.let {
+                // 判断当前时间是否超过最大重试时间
+                if (LocalDateTime.now().minusDays(retryLimitDays.toLong()).timestampmilli() - it < 0) {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY
+                    )
+                }
             }
 
             // 运行中的task重试走全新的处理逻辑
