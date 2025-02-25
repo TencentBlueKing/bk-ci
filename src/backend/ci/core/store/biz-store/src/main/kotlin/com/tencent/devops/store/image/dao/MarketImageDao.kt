@@ -1433,6 +1433,4 @@ class MarketImageDao @Autowired constructor() {
                 .fetch()
         }
     }
-
-
 }

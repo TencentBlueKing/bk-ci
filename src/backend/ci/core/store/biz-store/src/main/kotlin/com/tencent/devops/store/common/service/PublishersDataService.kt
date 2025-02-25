@@ -74,5 +74,4 @@ interface PublishersDataService {
      * 更新研发商店个人发布者组织架构信息
      */
     fun refreshPersonPublisherGroup(): Boolean
-
 }
