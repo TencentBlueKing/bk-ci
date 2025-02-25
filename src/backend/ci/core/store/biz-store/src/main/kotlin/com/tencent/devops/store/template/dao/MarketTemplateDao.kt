@@ -662,6 +662,4 @@ class MarketTemplateDao {
                 .execute()
         }
     }
-
-
 }
