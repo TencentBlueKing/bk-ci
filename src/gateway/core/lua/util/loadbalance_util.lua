@@ -45,12 +45,11 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
         else
             if ngx.var.devops_region == 'DEVNET' then
                 kubernetes_domain = config.kubernetes.devnetDomain
-            elseif self:is_recovery_project(devops_project_id) then
+            elseif self:is_recovery_project(devops_tag, devops_project_id) then
                 kubernetes_domain = config.kubernetes.recovery.domain
             else
                 kubernetes_domain = config.kubernetes.domain
             end
-
         end
         -- 特殊处理的域名,优先级最高
         local special_key = gateway_project .. ":" .. devops_tag
@@ -173,8 +172,12 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
     return ips[math.random(#ips)] .. ":" .. port
 end
 
-function _M:is_recovery_project(devops_project_id)
+function _M:is_recovery_project(devops_tag, devops_project_id)
     if config.kubernetes.recovery.switchAll then
+        return true
+    end
+
+    if devops_tag == "kubernetes-rbac-gray" or devops_tag == "kubernetes-stream-gray" or devops_tag == "kubernetes-auto" or devops_tag == "kubernetes-stream" then
         return true
     end
 
