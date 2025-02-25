@@ -87,11 +87,22 @@ const actions = {
             return response.data
         })
     },
+    templateCopy (_, { projectId, srcTemplateId, copySetting, name }) {
+        return ajax.post(`${prefix}/pipeline/template/v2/${projectId}/${srcTemplateId}/copy?copySetting=${copySetting}&name=${name}`).then(response => {
+            return response.data
+        })
+    },
+    templateDelete (_, { projectId, templateId }) {
+        return ajax.delete(`${prefix}/pipeline/template/v2/${projectId}/${templateId}/delete`).then(response => {
+            return response.data
+        })
+    },
     getTemplateList (_, params) {
         return ajax.post(`${prefix}/pipeline/template/v2/${params.projectId}/list`, params).then(response => {
             return response.data
         })
     },
+    // 老版
     requestTemplateList (_, { projectId, pageIndex, pageSize, params }) {
         return ajax.get(`${prefix}/templates/projects/${projectId}/templates?page=${pageIndex}&pageSize=${pageSize}`, { params }).then(response => {
             return response.data
@@ -107,11 +118,13 @@ const actions = {
             return response.data
         })
     },
+    // 老版
     deleteTemplate (_, { projectId, templateId }) {
         return ajax.delete(`${prefix}/templates/projects/${projectId}/templates/${templateId}`).then(response => {
             return response.data
         })
     },
+    // 老版
     copyTemplate (_, { projectId, templateId, params }) {
         return ajax.post(`${prefix}/templates/projects/${projectId}/templates/${templateId}/copy`, params).then(response => {
             return response.data

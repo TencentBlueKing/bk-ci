@@ -131,7 +131,6 @@
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
     import TemplateManageEntry from '@/components/template/templateManageTable.vue'
-    // import { navConfirm } from '@/utils/util'
     import {
         RESOURCE_ACTION,
         TEMPLATE_RESOURCE_ACTION,
@@ -395,49 +394,58 @@
              * @param row
              */
             toRelativeStore (row) {
-            // if (!this.isEnabledPermission && !row.canEdit) return
+                if (!row.canEdit) return
 
-            // const href = `${WEB_URL_PREFIX}/store/workList/template?projectCode=${this.projectId}&templateId=${row.id}`
-            // window.open(href, '_blank')
+                const href = `${WEB_URL_PREFIX}/store/workList/template?projectCode=${this.projectId}&templateId=${row.id}`
+                window.open(href, '_blank')
             },
             /**
              * 删除模板
              * @param row
              */
             deleteTemplate (row) {
-            // if (!this.isEnabledPermission && !row.canEdit) return
-            // const content = `${this.$t('template.deleteTemplateTips', [row.name])}`
+                if (!row.canEdit) return
 
-            // navConfirm({ type: 'warning', content })
-            //     .then((val) => {
-            //         val && this.confirmDeleteTemplate(row)
-            //     }).catch(() => {})
+                const h = this.$createElement
+                this.$bkInfo({
+                    okText: this.$t('delete'),
+                    title: '确认删除自定义模板？',
+                    extCls: 'delete_template',
+                    subHeader: h('div', [
+                        h('span', '模板：'),
+                        h('span', row.name)
+                    ]),
+                    confirmLoading: true,
+                    confirmFn: () => {
+                        this.confirmDeleteTemplate(row)
+                    }
+                })
             },
             async confirmDeleteTemplate (row) {
-            // this.$parent.isLoading = true
-            // try {
-            //     await this.$store.dispatch('pipelines/deleteTemplate', {
-            //         projectId: this.projectId,
-            //         templateId: row.id
-            //     })
+                this.isLoading = true
+                try {
+                    await this.$store.dispatch('pipelines/templateDelete', {
+                        projectId: this.projectId,
+                        templateId: row.id
+                    })
 
-            //     this.getListData()
-            //     this.$showTips({ message: this.$t('template.deleteSuc'), theme: 'success' })
-            // } catch (err) {
-            //     this.$showTips({
-            //         message: err.message || err,
-            //         theme: 'error'
-            //     })
-            // } finally {
-            //     this.$parent.isLoading = false
-            // }
+                    this.fetchTableData()
+                    this.$showTips({ message: this.$t('template.deleteSuc'), theme: 'success' })
+                } catch (err) {
+                    this.$showTips({
+                        message: err.message || err,
+                        theme: 'error'
+                    })
+                } finally {
+                    this.isLoading = false
+                }
             },
 
             async copyConfirmHandler (row) {
                 const valid = await this.$validator.validate()
                 if (!valid) return
 
-                this.$parent.isLoading = true
+                this.isLoading = true
                 const templateName = this.copyTemp.templateName || ''
                 if (!templateName.trim()) {
                     this.copyTemp.nameHasError = true; return
@@ -447,22 +455,22 @@
                     projectId: this.projectId,
                     srcTemplateId: this.copyTemp.srcTemplateId,
                     copySetting: this.copyTemp.isCopySetting,
-                    templateName: this.copyTemp.templateName
+                    name: this.copyTemp.templateName
                 }
-                console.log('🚀 ~ copyConfirmHandler ~ postData:', postData)
-            // this.$store.dispatch('pipelines/copyTemplate', postData).then(({ id: templateId }) => {
-            //     this.copyCancelHandler()
-            //     this.$showTips({ message: this.$t('template.copySuc'), theme: 'success' })
-            //     this.$router.push({
-            //         name: 'templateEdit',
-            //         params: { templateId }
-            //     })
-            // }).catch((err) => {
-            //     const message = err.message || err
-            //     this.$showTips({ message, theme: 'error' })
-            // }).finally(() => {
-            //     this.$parent.isLoading = false
-            // })
+                this.$store.dispatch('pipelines/templateCopy', postData).then((templateId) => {
+                    console.log('🚀 ~ templateId:', templateId)
+                    this.copyCancelHandler()
+                    this.$showTips({ message: this.$t('template.copySuc'), theme: 'success' })
+                    // this.$router.push({
+                    //     name: 'templateEdit',
+                    //     params: { templateId }
+                    // })
+                }).catch((err) => {
+                    const message = err.message || err
+                    this.$showTips({ message, theme: 'error' })
+                }).finally(() => {
+                    this.isLoading = false
+                })
             },
 
             copyCancelHandler () {
@@ -544,14 +552,28 @@
 
 }
 .form-dialog {
-     .err-name {
-         text-align: left;
-         margin-left: 150px;
-         margin-bottom: -21px;
-     }
-     .form-radio {
-         margin-right: 30px;
-         margin-top: 5px;
-     }
- }
+    .err-name {
+        text-align: left;
+        margin-left: 150px;
+        margin-bottom: -21px;
+    }
+    .form-radio {
+        margin-right: 30px;
+        margin-top: 5px;
+    }
+}
+
+</style>
+<style>
+.delete_template {
+    font-size: 14px;
+    color: #4D4F56;
+
+    .bk-dialog-sub-header {
+        padding-left: 24px !important;
+    }
+    .bk-dialog-footer {
+        padding: 0 65px 48px !important;
+    }
+}
 </style>
