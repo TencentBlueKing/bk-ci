@@ -232,9 +232,6 @@ class PipelineBuildFacadeService(
         if (pipeline.locked == true) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
         }
-        if (pipeline.latestVersionStatus?.isNotReleased() == true) throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
-        )
         val triggerContainer = resource.model.getTriggerContainer()
 
         var canManualStartup = false
