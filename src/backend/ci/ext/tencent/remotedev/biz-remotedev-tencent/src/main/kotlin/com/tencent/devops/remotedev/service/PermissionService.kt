@@ -43,10 +43,12 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -97,7 +99,7 @@ class PermissionService @Autowired constructor(
     private val clientSecret: String = ""
 
     private val workspaceOwnerCache = CacheBuilder.newBuilder()
-        .maximumSize(1000)
+        .maximumSize(10000)
         .expireAfterWrite(1, TimeUnit.MINUTES)
         .build(
             object : CacheLoader<String, List<String>>() {
@@ -117,12 +119,23 @@ class PermissionService @Autowired constructor(
         )
 
     private val workspaceViewerCache = CacheBuilder.newBuilder()
-        .maximumSize(1000)
+        .maximumSize(10000)
         .expireAfterWrite(1, TimeUnit.MINUTES)
         .build(
             object : CacheLoader<String, List<String>>() {
                 override fun load(name: String): List<String> {
                     return workspaceDao.fetchWorkspaceUser(dslContext, name)
+                }
+            }
+        )
+
+    private val projectManagerCache = CacheBuilder.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build(
+            object : CacheLoader<String, List<String>>() {
+                override fun load(projectId: String): List<String> {
+                    return managers(projectId).ifEmpty { managersOld(projectId) }
                 }
             }
         )
@@ -212,24 +225,40 @@ class PermissionService @Autowired constructor(
     }
 
     fun checkUserManager(userId: String, projectId: String) {
-        val projectInfo = kotlin.runCatching {
-            client.get(ServiceProjectResource::class).get(projectId)
-        }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
-            .getOrElse { null }?.data ?: throw ErrorCodeException(
-            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
-        )
+        val managers = managers(projectId).ifEmpty { managersOld(projectId) }
         val checkProjectManager = client.get(ServiceProjectAuthResource::class).checkProjectManager(
             token = checkTokenService.getSystemToken(),
             userId = userId,
             projectCode = projectId
         ).data ?: false
 
-        if (!checkProjectManager && projectInfo.properties?.remotedevManager?.split(";")?.contains(userId) != true) {
+        if (!checkProjectManager && userId !in managers) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access project $projectId")
             )
         }
+    }
+
+    @Deprecated("use managers instead, 暂时保留")
+    fun managersOld(projectId: String): List<String> {
+        logger.error("use managersOld instead, 暂时保留")
+        val projectInfo = kotlin.runCatching {
+            client.get(ServiceProjectResource::class).get(projectId)
+        }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
+            .getOrElse { null }?.data ?: throw ErrorCodeException(
+            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
+        )
+        return projectInfo.properties?.remotedevManager?.split(";") ?: emptyList()
+    }
+
+    fun managers(projectId: String): List<String> {
+        return client.get(ServiceUserResource::class)
+            .getProjectUserRoles(projectId, BkAuthGroup.CGS_MANAGER).data ?: emptyList()
+    }
+
+    fun getCacheManager(projectId: String): List<String> {
+        return projectManagerCache.get(projectId)
     }
 
     fun hasUserManager(userId: String, projectId: String): Boolean {

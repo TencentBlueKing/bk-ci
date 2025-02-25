@@ -48,7 +48,6 @@ import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.EnableRemotedevData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
-import com.tencent.devops.remotedev.pojo.project.UpdateRemotedevDataManagers
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
@@ -869,17 +868,6 @@ class ServiceRemoteDevResourceImpl(
                 enable = data.enable,
                 quota = data.quota ?: 1000,
                 rewriteManages = data.managers
-            )
-        )
-    }
-
-    override fun updateProjectRemotedevManager(userId: String, data: UpdateRemotedevDataManagers): Result<Boolean> {
-        return Result(
-            windowsResourceConfigService.addProjectRemotedevManagerWithPermission(
-                userId = userId,
-                projectId = data.projectId,
-                manager = data.managers.joinToString(";"),
-                delete = !data.add
             )
         )
     }

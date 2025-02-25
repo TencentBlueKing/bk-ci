@@ -28,23 +28,21 @@
 package com.tencent.devops.project.service
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectSeniorUserDao
 import com.tencent.devops.project.dao.ProjectUserDao
 import com.tencent.devops.project.dao.UserDao
-import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.SeniorUserDTO
 import com.tencent.devops.project.pojo.taihu.TaiUserInfoRequest
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.taihu.TaiHuService
 import com.tencent.devops.project.service.tof.TOFService
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 class ProjectUserService @Autowired constructor(
@@ -111,27 +109,6 @@ class ProjectUserService @Autowired constructor(
                 businessLineName = it.businessLineName
             )
         }
-    }
-
-    fun getRemoteDevAdmin(projectIds: Set<String>): Map<String, Set<String>?> {
-        // 获取项目的云研发管理员
-        val projects = projectDao.listByCodes(dslContext, projectIds, enabled = true)
-        val res = mutableMapOf<String, MutableSet<String>>()
-        projects.forEach { project ->
-            val projectProperties = project.properties?.let {
-                JsonUtil.toOrNull(project.properties.toString(), ProjectProperties::class.java)
-            } ?: return@forEach
-
-            if (projectProperties.remotedev != true) {
-                return@forEach
-            }
-
-            res[project.englishName] = projectProperties.remotedevManager?.split(";")
-                ?.filter { it.isNotBlank() }
-                ?.toMutableSet() ?: mutableSetOf()
-        }
-
-        return res
     }
 
     fun creatSeniorUser(seniorUserList: List<SeniorUserDTO>): Boolean {

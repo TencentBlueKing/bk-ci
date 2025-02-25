@@ -632,9 +632,10 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).enableProjectRemotedev(userId, data)
     }
 
+    @Deprecated("废弃，后续会删除")
     override fun updateRemotedevManager(userId: String, data: UpdateRemotedevDataManagers): Result<Boolean> {
         logger.info("updateRemotedevManager |$userId|$data")
-        return client.get(ServiceRemoteDevResource::class).updateProjectRemotedevManager(userId, data)
+        return Result(true)
     }
 
     override fun fetchImages(userId: String, data: ListImagesData): Result<ListImagesResp?> {

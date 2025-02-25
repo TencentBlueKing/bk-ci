@@ -39,8 +39,6 @@ import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -252,18 +250,10 @@ class DeleteControl @Autowired constructor(
 
         data.forEach { (user, workspaces) ->
             // 同时抄送给工作空间所属项目的管理员和工作空间的创建人
-            val projects = kotlin.runCatching {
-                client.get(ServiceProjectResource::class)
-                    .listByProjectCodeList(workspaces.map { it.projectId }.toList())
-            }.onFailure {
-                logger.warn("get project ${workspaces.map { w -> w.projectId }.toList()} info error|${it.message}")
-            }.getOrElse { null }?.data ?: throw ErrorCodeException(
-                errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
-            )
-
-            val cc = projects.map {
-                it.properties?.remotedevManager?.split(";")?.toSet() ?: emptySet()
-            }.flatten().toMutableSet()
+            val cc = mutableSetOf<String>()
+            workspaces.forEach { workspace ->
+                cc.addAll(permissionService.getCacheManager(workspace.projectId))
+            }
             cc.addAll(workspaces.map { w -> w.createUserId }.toSet())
 
             // 生成表格数据

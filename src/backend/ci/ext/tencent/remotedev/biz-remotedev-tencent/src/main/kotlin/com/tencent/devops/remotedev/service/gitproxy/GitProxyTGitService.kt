@@ -32,6 +32,7 @@ import com.tencent.devops.remotedev.pojo.gitproxy.TGitNamespace
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoStatus
 import com.tencent.devops.remotedev.service.BKItsmService
+import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.devcloud.DevcloudService
 import com.tencent.devops.remotedev.service.gitproxy.OffshoreTGitApiClient.Companion.LOG_UPDATE_TGIT_ACL_TAG
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
@@ -64,7 +65,8 @@ class GitProxyTGitService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val streamBridge: StreamBridge,
     private val devcloudService: DevcloudService,
-    private val configCacheService: ConfigCacheService
+    private val configCacheService: ConfigCacheService,
+    private val permissionService: PermissionService
 ) {
     // 校验当前凭据的用户是否拥有连接项目的 master 及以上权限
     @ActionAuditRecord(
@@ -1281,8 +1283,7 @@ class GitProxyTGitService @Autowired constructor(
                 urls = idAndUrls.values.toList(),
                 projectId = projectId,
                 projectName = project.projectName,
-                managers = project.properties?.remotedevManager?.split(";")?.filter { it.isNotBlank() }
-                    ?.toMutableSet()
+                managers = permissionService.managers(projectId).toMutableSet()
             )
         }
     }
