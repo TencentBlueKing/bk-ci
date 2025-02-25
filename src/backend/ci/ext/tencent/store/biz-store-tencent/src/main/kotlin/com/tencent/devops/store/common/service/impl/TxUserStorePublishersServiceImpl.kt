@@ -45,9 +45,11 @@ class TxUserStorePublishersServiceImpl : TxUserStorePublishersService {
 
 
     private fun modifyComponentFirstPublisher(storeTypeEnum: StoreTypeEnum) {
-        val count = countComponentPublisherByStoreType(storeTypeEnum)
+
         var offset = 0
         try {
+            val count = countComponentPublisherByStoreType(storeTypeEnum)
+
             while (offset < count) {
 
 
