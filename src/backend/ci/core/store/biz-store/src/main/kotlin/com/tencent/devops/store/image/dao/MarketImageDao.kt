@@ -1439,39 +1439,4 @@ class MarketImageDao @Autowired constructor() {
     }
 
 
-    fun listByImageCode(dslContext: DSLContext): Result<Record2<String, String>>? {
-        val tImage = TImage.T_IMAGE.`as`("t_image")
-        val tImageChild = TImage.T_IMAGE.`as`("t_image_child")
-
-        val tImageVersionLog = TImageVersionLog.T_IMAGE_VERSION_LOG
-
-        val minCreateTimeSubquery = dslContext.select(min(tImageChild.CREATE_TIME))
-            .from(tImageChild)
-            .where(
-                tImageChild.IMAGE_CODE.eq(tImage.IMAGE_CODE)
-                    .and(
-                        tImageChild.IMAGE_STATUS.`in`(
-                            AtomStatusEnum.RELEASED.status.toByte(),
-                            AtomStatusEnum.UNDERCARRIAGED.status.toByte(),
-                            AtomStatusEnum.UNDERCARRIAGING.status.toByte()
-                        )
-                    )
-            )
-
-
-        return dslContext
-            .select(tImage.IMAGE_CODE, tImageVersionLog.MODIFIER)
-            .from(tImage)
-            .join(tImageVersionLog)
-            .on(tImage.ID.eq(tImageVersionLog.IMAGE_ID))
-            .where(
-                tImage.IMAGE_STATUS.`in`(
-                    AtomStatusEnum.RELEASED.status.toByte(),
-                    AtomStatusEnum.UNDERCARRIAGED.status.toByte(),
-                    AtomStatusEnum.UNDERCARRIAGING.status.toByte()
-                )
-                    .and(tImage.CREATE_TIME.eq(minCreateTimeSubquery))
-            )
-            .fetch()
-    }
 }
