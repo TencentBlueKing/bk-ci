@@ -1,6 +1,5 @@
 package com.tencent.devops.remotedev.service
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -8,6 +7,9 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.BkConfig
+import com.tencent.devops.remotedev.pojo.itsm.BKItsmCreateTicketReq
+import com.tencent.devops.remotedev.pojo.itsm.BKItsmCreateTicketResp
+import com.tencent.devops.remotedev.pojo.itsm.BKItsmCreateTicketRespData
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -212,6 +214,50 @@ class BKItsmService @Autowired constructor(
         return resp.data.sn
     }
 
+    fun createDirectTicket(
+        createReq: BKItsmCreateTicketReq,
+        errorParam: String
+    ): BKItsmCreateTicketRespData {
+        val url = "${bkConfig.itsmHost}/v2/itsm/create_ticket"
+        val request = Request.Builder()
+            .url(url)
+            .addHeader("x-bkapi-authorization", headerStr())
+            .post(JsonUtil.toJson(createReq).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+        logger.info("createDirectTicket|$url|$createReq")
+        val resp = try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val data = response.body!!.string()
+                if (!response.isSuccessful) {
+                    logger.error("createDirectTicket|$url|$createReq|${response.code}|$data")
+                    throw ErrorCodeException(
+                        errorCode = ErrorCodeEnum.CREATE_ITSM_TICKET_ERROR.errorCode,
+                        params = arrayOf(errorParam, createReq.creator)
+                    )
+                }
+                val resp = objectMapper.readValue<BKItsmCreateTicketResp<BKItsmCreateTicketRespData>>(data)
+                if (!resp.result) {
+                    logger.error("createDirectTicket|$url|$createReq|${response.code}|$data")
+                    throw ErrorCodeException(
+                        errorCode = ErrorCodeEnum.CREATE_ITSM_TICKET_ERROR.errorCode,
+                        params = arrayOf(errorParam, createReq.creator)
+                    )
+                }
+                resp
+            }
+        } catch (e: ErrorCodeException) {
+            throw e
+        } catch (e: Exception) {
+            logger.error("createDirectTicket request error", e)
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.CREATE_ITSM_TICKET_ERROR.errorCode,
+                params = arrayOf(errorParam, createReq.creator)
+            )
+        }
+
+        return resp.data
+    }
+
     private fun headerStr(): String {
         return objectMapper.writeValueAsString(
             mapOf("bk_app_code" to bkConfig.appCode, "bk_app_secret" to bkConfig.appSecret)
@@ -222,22 +268,3 @@ class BKItsmService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(BKItsmService::class.java)
     }
 }
-
-data class BKItsmCreateTicketReq(
-    @JsonProperty("service_id")
-    val serviceId: Int,
-    val creator: String,
-    // [{"key": "title", "value": "d" }]
-    val fields: List<Map<String, String>>
-)
-
-data class BKItsmCreateTicketResp<T>(
-    val result: Boolean,
-    val message: String,
-    val code: String,
-    val data: T
-)
-
-data class BKItsmCreateTicketRespData(
-    val sn: String
-)
