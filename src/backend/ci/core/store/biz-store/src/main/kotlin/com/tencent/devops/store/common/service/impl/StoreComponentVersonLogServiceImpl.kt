@@ -45,7 +45,11 @@ class StoreComponentVersonLogServiceImpl : StoreComponentVersonLogService() {
         var count = 0
 
         val storeVersionLogList =
-            storeVersionLogDao.getStoreComponentVersionLogs(dslContext, storeCode, storeType.type.toByte())
+            storeVersionLogDao.getStoreComponentVersionLogs(
+                dslContext = dslContext,
+                storeCode = storeCode,
+                storeType = storeType.type.toByte()
+            )
 
         val versionLogInfos = if (storeVersionLogList?.isNotEmpty == true) {
             count = storeVersionLogList.size

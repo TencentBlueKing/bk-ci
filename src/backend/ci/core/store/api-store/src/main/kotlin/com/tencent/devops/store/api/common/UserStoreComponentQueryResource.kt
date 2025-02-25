@@ -326,12 +326,12 @@ interface UserStoreComponentQueryResource {
 
     @Operation(summary = "根据组件Code获取组件版本日志")
     @GET
-    @Path("/{storeType}/{storeCode}/getVersionLogs/")
+    @Path("/types/{storeType}/codes/{storeCode}/version/logs/get")
     fun getStoreVersionLogs(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "组件ID", required = true)
+        @Parameter(description = "组件代码", required = true)
         @PathParam("storeCode")
         storeCode: String,
         @Parameter(description = "组件类型", required = true)

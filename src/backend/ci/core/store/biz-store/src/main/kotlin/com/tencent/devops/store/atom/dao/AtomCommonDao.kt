@@ -211,11 +211,11 @@ class AtomCommonDao : AbstractStoreCommonDao() {
         pageSize: Int?
     ): Result<Record3<String, String, LocalDateTime>>? {
         val atom = TAtom.T_ATOM
-        val atomVersionLogs = TAtomVersionLog.T_ATOM_VERSION_LOG
-        val baseStep = dslContext.select(atom.VERSION, atomVersionLogs.CONTENT, atom.UPDATE_TIME)
+        val atomVersionLog = TAtomVersionLog.T_ATOM_VERSION_LOG
+        val baseStep = dslContext.select(atom.VERSION, atomVersionLog.CONTENT, atom.UPDATE_TIME)
             .from(atom)
-            .join(atomVersionLogs)
-            .on(atom.ID.eq(atomVersionLogs.ATOM_ID))
+            .join(atomVersionLog)
+            .on(atom.ID.eq(atomVersionLog.ATOM_ID))
             .where(atom.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()).and(atom.ATOM_CODE.eq(storeCode)))
 
         if (null != page && null != pageSize) {
