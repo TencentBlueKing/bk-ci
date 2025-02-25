@@ -19,7 +19,6 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
-import com.tencent.devops.project.pojo.FetchRemoteDevData
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.UserAuthApplyDao
