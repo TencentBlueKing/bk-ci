@@ -34,6 +34,7 @@ import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.auth.api.service.ServiceAuthAuthorizationResource
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.archive.util.PathUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
@@ -61,7 +62,7 @@ class BuildFileResourceImpl @Autowired constructor(
         response: HttpServletResponse
     ) {
         val userId = getLastModifyUser(projectCode, pipelineId)
-        archiveFileService.downloadFile(userId, filePath, response)
+        archiveFileService.downloadFile(userId, PathUtil.getNormalizedPath(filePath), response)
     }
 
     override fun archiveFile(
@@ -103,7 +104,7 @@ class BuildFileResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             fileType = fileType,
-            customFilePath = customFilePath,
+            customFilePath = PathUtil.getNormalizedPath(customFilePath),
             response = response
         )
     }

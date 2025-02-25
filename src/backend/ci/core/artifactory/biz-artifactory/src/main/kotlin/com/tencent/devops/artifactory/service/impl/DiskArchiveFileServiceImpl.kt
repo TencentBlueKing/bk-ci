@@ -307,14 +307,14 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         if (filePath.contains("..")) {
             throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(filePath))
         }
-        val file = File("${getBasePath()}$fileSeparator${URLDecoder.decode(filePath, "UTF-8")}")
+        val file = File("${getBasePath()}$fileSeparator$filePath")
         response.contentType = MimeUtil.mediaType(filePath)
         FileCopyUtils.copy(FileInputStream(file), response.outputStream)
     }
 
     override fun downloadFileToLocal(userId: String, filePath: String, response: HttpServletResponse) {
         logger.info("downloadFileToLocal, filePath: $filePath")
-        val file = File("${getBasePath()}$fileSeparator${URLDecoder.decode(filePath, "UTF-8")}")
+        val file = File("${getBasePath()}$fileSeparator$filePath")
         // 如果文件不存在，提示404
         if (!file.exists()) {
             logger.info("file($filePath) not found")

@@ -84,10 +84,19 @@ abstract class AtomBaseDao {
         }
     }
 
-    fun getMaxVersionAtomByCode(dslContext: DSLContext, atomCode: String): TAtomRecord? {
+    fun getMaxVersionAtomByCode(
+        dslContext: DSLContext,
+        atomCode: String,
+        atomStatus: AtomStatusEnum? = null
+    ): TAtomRecord? {
         return with(TAtom.T_ATOM) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ATOM_CODE.eq(atomCode))
+            if (atomStatus != null) {
+                conditions.add(ATOM_STATUS.eq(atomStatus.status.toByte()))
+            }
             dslContext.selectFrom(this)
-                .where(ATOM_CODE.eq(atomCode))
+                .where(conditions)
                 .orderBy(
                     JooqUtils.subStr(
                         str = VERSION,
