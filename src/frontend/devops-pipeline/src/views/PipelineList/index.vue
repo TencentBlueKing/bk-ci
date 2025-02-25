@@ -49,7 +49,7 @@
                     @tab-change="go"
                 >
                     <bk-tab-panel
-                        v-for="(panel, index) in panels"
+                        v-for="(panel, index) in modelMenu"
                         v-bind="panel"
                         :key="index"
                     >
@@ -157,7 +157,7 @@
                     }
                 ]
             },
-            panels () {
+            modelMenu () {
                 return [
                     {
                         label: this.$t('pipeline'),
@@ -165,7 +165,7 @@
                     },
                     {
                         label: this.$t('templateName'),
-                        name: 'templateManageEntry'
+                        name: 'template'
                     }
                 ]
             }
@@ -174,12 +174,11 @@
         watch: {
             '$route.name': {
                 handler (name) {
-                    this.panels.forEach((panel) => {
-                        if (name === panel.name) {
-                            this.activeTab = panel.name
-                            this.go(panel.name)
-                        }
-                    })
+                    const curModel = this.modelMenu.find(i => i.name === name)
+                    if (curModel) {
+                        this.activeTab = curModel.name
+                        this.go(curModel.name)
+                    }
                 },
                 immediate: true
             }

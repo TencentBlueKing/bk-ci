@@ -50,7 +50,7 @@
                 >
                 </search-select>
             </div>
-            <template-manage-entry
+            <templateTable
                 ref="selfTemp"
                 :type="activeTab"
                 :data="tableData"
@@ -130,7 +130,8 @@
     import Logo from '@/components/Logo'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
-    import TemplateManageEntry from '@/components/template/templateManageTable.vue'
+    import templateTable from './templateTable'
+
     import {
         RESOURCE_ACTION,
         TEMPLATE_RESOURCE_ACTION,
@@ -142,7 +143,7 @@
         components: {
             Logo,
             SearchSelect,
-            TemplateManageEntry
+            templateTable
         },
         data () {
             return {
@@ -491,6 +492,7 @@
     overflow: hidden;
     display: flex;
     box-sizing: border-box;
+    border: 1px solid #dcdee5;
 
     .template-aside{
         width: 240px;
