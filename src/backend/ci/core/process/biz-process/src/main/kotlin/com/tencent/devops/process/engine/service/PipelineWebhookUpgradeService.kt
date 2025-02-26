@@ -339,7 +339,7 @@ class PipelineWebhookUpgradeService(
             repositoryList.filter { !it.repoHashId.isNullOrBlank() }.forEach {
                 repoCache[it.repoHashId!!] = it
             }
-            webhookList.forEach { webhook ->
+            webhookList.filter { !it.repoHashId.isNullOrBlank() }.forEach { webhook ->
                 val repository = repoCache[webhook.repoHashId]
                 if (repository == null) {
                     logger.info("${webhook.projectId}|repoCache[${webhook.repoHashId}] is null")
