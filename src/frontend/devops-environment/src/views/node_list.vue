@@ -67,7 +67,7 @@
                 >
                     <bk-table-column
                         :label="$t('environment.nodeInfo.displayName')"
-                        sortable
+                        sortable="custom"
                         prop="displayName"
                         min-width="160"
                     >
@@ -143,7 +143,7 @@
                     </bk-table-column>
                     <bk-table-column
                         label="IP"
-                        sortable
+                        sortable="custom"
                         prop="nodeIp"
                         min-width="120"
                         show-overflow-tooltip
@@ -154,7 +154,7 @@
                     </bk-table-column>
                     <bk-table-column
                         v-if="allRenderColumnMap.os"
-                        sortable
+                        sortable="custom"
                         :label="$t('environment.nodeInfo.os')"
                         min-width="120"
                         prop="osName"
@@ -166,7 +166,7 @@
                     <bk-table-column
                         v-if="allRenderColumnMap.nodeStatus"
                         :label="`${$t('environment.status')}(${$t('environment.version')})`"
-                        sortable
+                        sortable="custom"
                         width="180"
                         prop="nodeStatus"
                     >
@@ -232,7 +232,7 @@
                     <bk-table-column
                         v-if="allRenderColumnMap.usage"
                         :label="$t('environment.nodeInfo.usage')"
-                        sortable
+                        sortable="custom"
                         prop="nodeType"
                         min-width="80"
                         show-overflow-tooltip
@@ -244,7 +244,7 @@
                     <bk-table-column
                         v-if="allRenderColumnMap.createdUser"
                         :label="$t('environment.nodeInfo.importer')"
-                        sortable
+                        sortable="custom"
                         prop="createdUser"
                         min-width="120"
                         show-overflow-tooltip
@@ -252,7 +252,7 @@
                     <bk-table-column
                         v-if="allRenderColumnMap.lastModifyBy"
                         :label="$t('environment.lastModifier')"
-                        sortable
+                        sortable="custom"
                         prop="lastModifiedUser"
                         min-width="120"
                         show-overflow-tooltip
@@ -261,7 +261,7 @@
                         v-if="allRenderColumnMap.lastModifyTime"
                         :label="$t('environment.nodeInfo.lastModifyTime')"
                         :width="180"
-                        sortable
+                        sortable="custom"
                         prop="lastModifiedTime"
                         min-width="80"
                         show-overflow-tooltip
@@ -274,7 +274,7 @@
                         v-if="allRenderColumnMap.latestBuildPipeline"
                         :label="$t('environment.nodeInfo.lastRunPipeline')"
                         :width="180"
-                        sortable
+                        sortable="custom"
                         prop="latestBuildPipelineId"
                         show-overflow-tooltip
                     >
@@ -292,7 +292,7 @@
                         :width="180"
                         :label="$t('environment.nodeInfo.lastRunAs')"
                         prop="latestBuildTime"
-                        sortable
+                        sortable="custom"
                         min-width="80"
                         show-overflow-tooltip
                     >
