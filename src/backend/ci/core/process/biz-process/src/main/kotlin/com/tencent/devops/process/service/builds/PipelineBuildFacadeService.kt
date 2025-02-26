@@ -420,7 +420,7 @@ class PipelineBuildFacadeService(
             }
             buildInfo.startTime?.let {
                 // 判断当前时间是否超过最大重试时间
-                if (LocalDateTime.now().minusDays(retryLimitDays.toLong()).timestampmilli() - it < 0) {
+                if (LocalDateTime.now().minusDays(retryLimitDays.toLong()).timestampmilli() - it > 0) {
                     throw ErrorCodeException(
                         errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY
                     )
