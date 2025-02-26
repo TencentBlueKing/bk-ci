@@ -346,16 +346,16 @@ class PipelineWebhookUpgradeService(
                     return@forEach
                 }
                 if (webhook.projectName != repository.projectName) {
-                    logger.info(
-                        "${webhook.id}|${webhook.projectId}|${webhook.pipelineId}|update webhook projectName|" +
-                                "[${webhook.projectName}]==>[${repository.projectName}]"
-                    )
-                    pipelineWebhookDao.updateProjectName(
+                    val count = pipelineWebhookDao.updateProjectName(
                         dslContext = dslContext,
                         projectId = webhook.projectId,
                         pipelineId = webhook.pipelineId,
                         taskId = webhook.taskId!!,
                         projectName = repository.projectName
+                    )
+                    logger.info(
+                        "${webhook.projectId}|${webhook.pipelineId}|${webhook.taskId}|update webhook projectName|" +
+                                "[${webhook.projectName}]==>[${repository.projectName}]|changeCount[$count]"
                     )
                 }
             }
