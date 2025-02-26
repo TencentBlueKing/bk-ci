@@ -100,7 +100,7 @@
                     <div class="bk-form-item">
                         <label class="bk-label tip-bottom">{{ $t('template.applySetting') }}
                             <span
-                                v-bk-tooltips.bottom-end="'选“是”则将流水线设置应用于复制后的模版'"
+                                v-bk-tooltips.bottom-end="$t('template.tipsSetting')"
                                 class="bottom-end"
                             >
                                 <i class="bk-icon icon-info-circle"></i>
@@ -131,7 +131,6 @@
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
     import templateTable from './templateTable'
-
     import {
         RESOURCE_ACTION,
         TEMPLATE_RESOURCE_ACTION,
@@ -146,9 +145,10 @@
             templateTable
         },
         data () {
+            const that = this
             return {
                 hasCreatePermission: false,
-                activeTab: 'UNKNOWN',
+                activeTab: 'ALL',
                 searchValue: [],
                 isLoading: false,
                 tableData: [],
@@ -159,7 +159,7 @@
                 },
                 copyTemp: {
                     isShow: false,
-                    title: this.$t('template.saveAsTemplate'),
+                    title: that.$t('template.saveAsTemplate'),
                     closeIcon: false,
                     quickClose: true,
                     padding: '0 20px',
@@ -168,47 +168,40 @@
                     isCopySetting: true
                 },
                 copySettings: [
-                    { label: this.$t('true'), value: true },
-                    { label: this.$t('false'), value: false }
+                    { label: that.$t('true'), value: true },
+                    { label: that.$t('false'), value: false }
+                ],
+                navList: [
+                    {
+                        label: this.$t('template.allTemplate'),
+                        name: 'ALL',
+                        isAll: true,
+                        icon: 'group'
+                    },
+                    {
+                        label: this.$t('template.pipelineTemplate'),
+                        name: 'PIPELINE',
+                        icon: 'pipeline'
+                    },
+                    {
+                        label: this.$t('template.stageTemplate'),
+                        name: 'STAGE',
+                        icon: 'pipeline-group-item-icon'
+                    },
+                    {
+                        label: this.$t('template.jobTemplate'),
+                        name: 'JOB',
+                        icon: 'pipeline-group-item-icon'
+                    },
+                    {
+                        label: this.$t('template.stepTemplate'),
+                        name: 'STEP',
+                        icon: 'pipeline-group-item-icon'
+                    }
                 ]
             }
         },
         computed: {
-            navList () {
-                return [
-                    {
-                        label: this.$t('全部模板'),
-                        name: 'UNKNOWN',
-                        isAll: true,
-                        icon: 'time-circle-fill',
-                        num: 60
-                    },
-                    {
-                        label: this.$t('流水线模板'),
-                        name: 'PIPELINE',
-                        icon: 'pipeline-group-item-icon',
-                        num: 10
-                    },
-                    {
-                        label: this.$t('Stage模板'),
-                        name: 'STAGE',
-                        icon: 'pipeline-group-item-icon',
-                        num: 6
-                    },
-                    {
-                        label: this.$t('Job模板'),
-                        name: 'JOB',
-                        icon: 'pipeline-group-item-icon',
-                        num: 10
-                    },
-                    {
-                        label: this.$t('Step模板'),
-                        name: 'STEP',
-                        icon: 'pipeline-group-item-icon',
-                        num: 6
-                    }
-                ]
-            },
             filterData () {
                 return [{
                     name: this.$t('template.name'),
@@ -241,12 +234,18 @@
             }
         },
         mounted () {
+            const historyTab = localStorage.getItem('TEMPLATE_TYPE_CACHE')
+            if (historyTab) {
+                this.activeTab = historyTab
+            }
+            this.getType2Count()
             this.fetchTableData()
             this.hasPipelineTemplatePermission()
         },
         methods: {
             handleChangeMenu (name) {
                 this.activeTab = name
+                localStorage.setItem('TEMPLATE_TYPE_CACHE', this.activeTab)
                 this.fetchTableData()
             },
             sourceFilterMethod (value, row, column) {
@@ -263,6 +262,20 @@
                     this.$showTips({ message: err.message || err, theme: 'error' })
                 }
             },
+            async getType2Count () {
+                try {
+                    const nums = await this.$store.dispatch('pipelines/getType2Count', {
+                        projectId: this.projectId
+                    })
+                    this.navList = this.navList.map(item => {
+                        const key = item.name.toLowerCase()
+                        item.num = nums[key] || 0
+                        return item
+                    })
+                } catch (err) {
+                    this.$showTips({ message: err.message || err, theme: 'error' })
+                }
+            },
             async fetchTableData (params = { }) {
                 this.isLoading = true
                 try {
@@ -270,7 +283,7 @@
                         projectId: this.projectId,
                         page: this.pagination.current,
                         pageSize: this.pagination.limit,
-                        ...(this.activeTab !== 'UNKNOWN' && { type: this.activeTab }),
+                        ...(this.activeTab !== 'ALL' && { type: this.activeTab }),
                         ...params
                     }
                     const res = await this.$store.dispatch('pipelines/getTemplateList', param)
@@ -283,6 +296,7 @@
                                 handler: this.copyTemplate,
                                 hasPermission: x.canEdit,
                                 disablePermissionApi: true,
+                                isShow: true,
                                 permissionData: {
                                     projectId: this.projectId,
                                     resourceType: 'pipeline_template',
@@ -295,6 +309,7 @@
                                 handler: this.toRelativeStore,
                                 hasPermission: x.canEdit,
                                 disablePermissionApi: true,
+                                isShow: x.source === 'MARKET',
                                 permissionData: {
                                     projectId: this.projectId,
                                     resourceType: 'pipeline_template',
@@ -304,9 +319,10 @@
                             },
                             {
                                 text: this.$t('template.convertToCustom'), // 转为自定义
-                                // handler: this.toRelativeStore,
+                                handler: this.convertToCustom,
                                 hasPermission: x.canEdit,
                                 disablePermissionApi: true,
+                                isShow: x.source === 'CUSTOM',
                                 permissionData: {
                                     projectId: this.projectId,
                                     resourceType: 'pipeline_template',
@@ -319,6 +335,7 @@
                                 // handler: this.toRelativeStore,
                                 hasPermission: x.canEdit,
                                 disablePermissionApi: true,
+                                isShow: true,
                                 permissionData: {
                                     projectId: this.projectId,
                                     resourceType: 'pipeline_template',
@@ -331,6 +348,7 @@
                                 handler: this.deleteTemplate,
                                 hasPermission: x.canDelete,
                                 disablePermissionApi: true,
+                                isShow: true,
                                 permissionData: {
                                     projectId: this.projectId,
                                     resourceType: 'pipeline_template',
@@ -401,20 +419,56 @@
                 window.open(href, '_blank')
             },
             /**
+             * 转为自定义
+             * @param row
+             */
+            convertToCustom (row) {
+                if (!row.canEdit) return
+
+                const h = this.$createElement
+                this.$bkInfo({
+                    width: 480,
+                    title: this.$t('template.templateToCustom'),
+                    extCls: 'custom_template',
+                    subHeader: h('div', [
+                        h('p', {
+                            class: 'template-title',
+                            directives: [
+                                {
+                                    name: 'bk-tooltips',
+                                    value: row.name
+                                }
+                            ]
+                        }, [
+                            h('span', `${this.$t('templateName')} : `),
+                            h('span', { class: 'template-name-info' }, row.name)
+                        ]),
+                        h('div', { class: 'custom-tip' }, this.$t('template.customTip'))
+                    ]),
+                    confirmLoading: true,
+                    confirmFn: () => {
+                        
+                    }
+                })
+            },
+            /**
              * 删除模板
              * @param row
              */
             deleteTemplate (row) {
                 if (!row.canEdit) return
+                const title = row.source === 'CUSTOM' ? this.$t('template.deleteCustom') : this.$t('template.deleteStore')
 
                 const h = this.$createElement
                 this.$bkInfo({
+                    title,
                     okText: this.$t('delete'),
-                    title: '确认删除自定义模板？',
                     extCls: 'delete_template',
                     subHeader: h('div', [
-                        h('span', '模板：'),
-                        h('span', row.name)
+                        h('p', { class: 'template-title' }, [
+                            h('span', `${this.$t('templateName')} : `),
+                            h('span', { class: 'template-name-info' }, row.name)
+                        ])
                     ]),
                     confirmLoading: true,
                     confirmFn: () => {
@@ -441,7 +495,6 @@
                     this.isLoading = false
                 }
             },
-
             async copyConfirmHandler (row) {
                 const valid = await this.$validator.validate()
                 if (!valid) return
@@ -473,7 +526,6 @@
                     this.isLoading = false
                 })
             },
-
             copyCancelHandler () {
                 this.copyTemp.isShow = false
                 this.copyTemp.templateName = ''
@@ -486,6 +538,8 @@
 </script>
 
 <style lang="scss" scoped>
+@import '@/scss/mixins/ellipsis';
+
 .template-manage-entry{
     width: 100%;
     height: 100%;
@@ -561,10 +615,21 @@
     }
     .form-radio {
         margin-right: 30px;
-        margin-top: 5px;
     }
 }
-
+.template-name-info {
+    color: #313238;
+}
+.custom-tip {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: #F5F7FA;
+    border-radius: 2px;
+}
+.template-title {
+    width: 336px;
+    @include ellipsis();
+}
 </style>
 <style>
 .delete_template {
@@ -576,6 +641,16 @@
     }
     .bk-dialog-footer {
         padding: 0 65px 48px !important;
+    }
+}
+.custom_template {
+    font-size: 14px;
+    color: #4D4F56;
+    .bk-dialog-sub-header {
+        padding: 5px 32px 21px !important;
+    }
+    .bk-dialog-footer {
+        padding: 0 65px 24px !important;
     }
 }
 </style>

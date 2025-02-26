@@ -29,7 +29,7 @@
                     @click="goEdit(row)"
                 >
                     <img :src="row.logoUrl">
-                    <span>{{ row.name }}</span>
+                    <span :title="row.name">{{ row.name }}</span>
                     <img
                         v-if="row.enablePac"
                         src="../../../images/pacIcon.png"
@@ -56,7 +56,11 @@
             :filters="sourceFilters"
             :filter-method="sourceFilterMethod"
             :filter-multiple="false"
-        ></bk-table-column>
+        >
+            <template slot-scope="{ row }">
+                <span>{{ TEMPLATE_TYPE[row.type] || '--' }}</span>
+            </template>
+        </bk-table-column>
         <bk-table-column
             v-if="allRenderColumnMap.lastedVersion"
             :width="tableWidthMap.lastedVersion"
@@ -72,7 +76,24 @@
             :width="tableWidthMap.source"
             :label="$t('template.source')"
             prop="sourceName"
-        ></bk-table-column>
+        >
+            <template slot-scope="{ row }">
+                <div class="source-name">
+                    <span>{{ row.sourceName }}</span>
+                    <bk-badge
+                        class="mr40"
+                        dot
+                        :theme="'danger'"
+                        v-if="row.storeFlag"
+                    >
+                        <Logo
+                            size="14"
+                            name="is-store"
+                        />
+                    </bk-badge>
+                </div>
+            </template>
+        </bk-table-column>
         <bk-table-column
             v-if="allRenderColumnMap.debugPipelineCount"
             :width="tableWidthMap.debugPipelineCount"
@@ -151,6 +172,7 @@
 
 <script>
     import ExtMenu from './extMenu'
+    import Logo from '@/components/Logo'
     import TemplateEmpty from '@/components/common/exception'
     import {
         RESOURCE_ACTION,
@@ -162,10 +184,19 @@
     } from '@/store/constants'
     import { convertTime } from '@/utils/util'
 
+    const TEMPLATE_TRANSLATIONS = {
+        PIPELINE: 'template.pipelineTemplate',
+        STAGE: 'template.stageTemplate',
+        JOB: 'template.jobTemplate',
+        STEP: 'template.stepTemplate',
+        ALL: 'template.allTemplate'
+    }
+
     export default {
         components: {
             ExtMenu,
-            TemplateEmpty
+            TemplateEmpty,
+            Logo
         },
         props: {
             data: {
@@ -187,12 +218,6 @@
         },
         data () {
             return {
-                sourceFilters: [
-                    { text: '流水线模板', value: 'PIPELINE' },
-                    { text: 'Stage模板', value: 'STAGE' },
-                    { text: 'Job模板', value: 'JOB' },
-                    { text: 'Step模板', value: 'STEP' }
-                ],
                 tableSize: 'medium',
                 tableColumn: [],
                 selectedTableColumn: [],
@@ -200,6 +225,19 @@
             }
         },
         computed: {
+            sourceFilters () {
+                return ['PIPELINE', 'STAGE', 'JOB', 'STEP'].map(type => ({
+                    text: this.$t(TEMPLATE_TRANSLATIONS[type]),
+                    value: type
+                }))
+            },
+            TEMPLATE_TYPE () {
+                const types = {}
+                Object.keys(TEMPLATE_TRANSLATIONS).forEach(type => {
+                    types[type] = this.$t(TEMPLATE_TRANSLATIONS[type])
+                })
+                return types
+            },
             projectId () {
                 return this.$route.params.projectId
             },
@@ -341,7 +379,6 @@
 </script>
 
 <style lang="scss">
-@import '@/scss/conf.scss';
 @import '@/scss/mixins/ellipsis';
 
 .template-name {
@@ -353,6 +390,16 @@
     }
     .pac-code-icon {
         margin: 0 0 0 12px;
+    }
+    span {
+        @include ellipsis();
+    }
+}
+.source-name {
+    display: flex;
+    align-items: center;
+    span {
+        flex-shrink: 0;
     }
 }
 .template-operate {

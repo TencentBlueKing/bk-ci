@@ -25,20 +25,24 @@
             class="dot-menu-list"
             slot="content"
         >
-            <li
-                v-perm="item.permissionData ? {
-                    hasPermission: item.hasPermission,
-                    disablePermissionApi: item.disablePermissionApi,
-                    permissionData: item.permissionData
-                } : {}"
-                :class="[{ 'is-disable': item.disable, 'bk-permission-disable': !item.hasPermission }, 'dot-menu-item']"
+            <template
                 v-for="(item, index) of config"
-                v-bk-tooltips="getTooltips(item)"
-                :key="index"
-                @click.stop="clickMenuItem(item)"
             >
-                {{ item.text }}
-            </li>
+                <li
+                    v-perm="item.permissionData ? {
+                        hasPermission: item.hasPermission,
+                        disablePermissionApi: item.disablePermissionApi,
+                        permissionData: item.permissionData
+                    } : {}"
+                    :class="[{ 'is-disable': item.disable, 'bk-permission-disable': !item.hasPermission }, 'dot-menu-item']"
+                    :key="index"
+                    v-bk-tooltips="getTooltips(item)"
+                    @click.stop="clickMenuItem(item)"
+                    v-if="item.isShow"
+                >
+                    {{ item.text }}
+                </li>
+            </template>
         </ul>
     </bk-popover>
 </template>

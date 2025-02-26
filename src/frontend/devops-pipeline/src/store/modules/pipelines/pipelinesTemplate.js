@@ -97,6 +97,11 @@ const actions = {
             return response.data
         })
     },
+    getType2Count (_, { projectId }) {
+        return ajax.get(`${prefix}/pipeline/template/v2/${projectId}/getType2Count`).then(response => {
+            return response.data
+        })
+    },
     getTemplateList (_, params) {
         return ajax.post(`${prefix}/pipeline/template/v2/${params.projectId}/list`, params).then(response => {
             return response.data
