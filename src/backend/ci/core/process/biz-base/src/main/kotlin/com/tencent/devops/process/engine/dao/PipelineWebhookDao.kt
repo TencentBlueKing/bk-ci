@@ -290,7 +290,7 @@ class PipelineWebhookDao {
             }
             dslContext.selectFrom(this)
                 .where(conditions)
-                .orderBy(ID.desc())
+                .orderBy(PIPELINE_ID.desc())
                 .limit(offset, limit)
                 .fetch()
         }?.map { convert(it) }
