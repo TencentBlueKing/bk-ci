@@ -96,16 +96,6 @@ BEGIN
         ADD COLUMN `MAX_CON_RUNNING_QUEUE_SIZE` int(11) DEFAULT NULL COMMENT '并发构建数量限制,值为-1时表示取系统默认值。';
     END IF;
 
-    IF EXISTS(SELECT 1
-                  FROM information_schema.statistics
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_TEMPLATE'
-                    AND INDEX_NAME = 'UPDATE_TIME') THEN
-        ALTER TABLE T_TEMPLATE
-            CHANGE COLUMN UPDATE_TIME
-                UPDATE_TIME datetime(3) DEFAULT NULL COMMENT '更新时间';
-    END IF;
-
 COMMIT;
 
 END <CI_UBF>
