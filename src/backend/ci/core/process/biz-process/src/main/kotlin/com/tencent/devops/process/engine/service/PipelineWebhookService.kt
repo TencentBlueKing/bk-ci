@@ -156,7 +156,7 @@ class PipelineWebhookService @Autowired constructor(
             repoHashId = repositoryConfig.repositoryHashId,
             repoName = repositoryConfig.repositoryName,
             taskId = element.id,
-            projectName = getProjectName(repository.projectName),
+            projectName = getExternalName(scmType = scmType, repository.projectName),
             repositoryHashId = repository.repoHashId,
             eventType = eventType?.name ?: "",
             externalId = repository.getExternalId(),
@@ -333,7 +333,7 @@ class PipelineWebhookService @Autowired constructor(
         )?.toSet() ?: setOf()
         // projectName字段补充完毕后，模糊匹配结果应为空
         if (needExactMatch && fuzzyResults.isNotEmpty()) {
-            logger.info("$repositoryType|$name|projectName contains dirty data")
+            logger.info("$repositoryType|$name|projectName contains dirty data|${fuzzyResults.size}")
         }
         pipelineSet.addAll(exactResults)
         pipelineSet.addAll(fuzzyResults)
