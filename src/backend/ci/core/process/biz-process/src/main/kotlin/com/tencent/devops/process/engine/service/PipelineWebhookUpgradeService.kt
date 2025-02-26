@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
+import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.process.engine.dao.PipelineWebhookDao
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.service.scm.ScmProxyService
@@ -298,6 +299,69 @@ class PipelineWebhookUpgradeService(
                 logger.info("updateWebhookEventInfo finish cost: ${System.currentTimeMillis() - startTime}")
             }
         }
+    }
+
+    fun updateWebhookProjectName(projectId: String?) {
+        ThreadPoolUtil.submitAction(
+            actionTitle = "updateWebhookProjectName",
+            action = {
+                updateProjectName(projectId)
+            }
+        )
+    }
+
+    private fun updateProjectName(projectId: String?) {
+        logger.info("start update webhook project name|projectId:$projectId")
+        var offset = 0
+        val limit = 100
+        var webhookList = listOf<PipelineWebhook>()
+        val repoCache = mutableMapOf<String, Repository?>()
+        do {
+            webhookList = pipelineWebhookDao.listWebhook(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = null,
+                ignoredRepoTypes = setOf(ScmType.CODE_SVN.name, ScmType.CODE_P4.name),
+                limit = limit,
+                offset = offset
+            ) ?: mutableListOf()
+            // 仅查没缓存的仓库
+            val repoIds = webhookList.mapNotNull { it.repoHashId }.filter { !repoCache.containsKey(it) }.toSet()
+            val repositoryList = try {
+                client.get(ServiceRepositoryResource::class).listRepoByIds(
+                    repositoryIds = repoIds
+                ).data
+            } catch (ignored: Exception) {
+                logger.warn("failed to get repository list", ignored)
+                null
+            } ?: listOf()
+            // 仓库信息
+            repositoryList.filter { !it.repoHashId.isNullOrBlank() }.forEach {
+                repoCache[it.repoHashId!!] = it
+            }
+            webhookList.forEach { webhook ->
+                val repository = repoCache[webhook.repoHashId]
+                if (repository == null) {
+                    logger.info("${webhook.projectId}|repoCache[${webhook.repoHashId}] is null")
+                    return@forEach
+                }
+                if (webhook.projectName != repository.projectName) {
+                    logger.info(
+                        "${webhook.id}|${webhook.projectId}|${webhook.pipelineId}|update webhook projectName|" +
+                                "[${webhook.projectName}]==>[${repository.projectName}]"
+                    )
+                    pipelineWebhookDao.updateProjectNameAndTaskId(
+                        dslContext = dslContext,
+                        projectId = webhook.projectId,
+                        taskId = webhook.taskId!!,
+                        projectName = repository.projectName,
+                        id = webhook.id!!
+                    )
+                }
+            }
+            offset += limit
+        } while (webhookList.size == 100)
+        logger.info("final update webhook project name|projectId:$projectId")
     }
 
     private fun updateWebhookEventInfoTask(projectId: String?) {

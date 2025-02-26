@@ -33,6 +33,7 @@ import com.tencent.devops.model.process.Tables.T_PIPELINE_WEBHOOK
 import com.tencent.devops.model.process.tables.records.TPipelineWebhookRecord
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.pojo.webhook.WebhookTriggerPipeline
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
@@ -270,16 +271,26 @@ class PipelineWebhookDao {
 
     fun listWebhook(
         dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
+        projectId: String?,
+        pipelineId: String?,
+        ignoredRepoTypes: Set<String>? = null,
         offset: Int,
         limit: Int
     ): List<PipelineWebhook>? {
         return with(T_PIPELINE_WEBHOOK) {
+            val conditions = mutableListOf(DELETE.eq(false))
+            if (!projectId.isNullOrBlank()) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
+            if (!pipelineId.isNullOrBlank()) {
+                conditions.add(PIPELINE_ID.eq(pipelineId))
+            }
+            if (!ignoredRepoTypes.isNullOrEmpty()) {
+                conditions.add(REPOSITORY_TYPE.notIn(ignoredRepoTypes))
+            }
             dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .and(DELETE.eq(false))
-                .and(PROJECT_ID.eq(projectId))
+                .where(conditions)
+                .orderBy(ID.desc())
                 .limit(offset, limit)
                 .fetch()
         }?.map { convert(it) }

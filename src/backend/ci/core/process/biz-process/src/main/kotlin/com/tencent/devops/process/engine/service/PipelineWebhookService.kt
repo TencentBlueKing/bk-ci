@@ -302,15 +302,42 @@ class PipelineWebhookService @Autowired constructor(
 
     fun getTriggerPipelines(
         name: String,
-        repositoryType: String,
+        repositoryType: ScmType,
         yamlPipelineIds: List<String>?
     ): List<WebhookTriggerPipeline> {
-        return pipelineWebhookDao.getByProjectNameAndType(
+        val pipelineSet = mutableSetOf<WebhookTriggerPipeline>()
+        // 需要精确匹配的代码库类型
+        val needExactMatch = repositoryType in setOf(
+            ScmType.CODE_GIT,
+            ScmType.CODE_TGIT,
+            ScmType.CODE_GITLAB,
+            ScmType.GITHUB
+        ) && name != getProjectName(name)
+        // 精准匹配结果
+        val exactResults = if (needExactMatch) {
+            pipelineWebhookDao.getByProjectNameAndType(
+                dslContext = dslContext,
+                projectName = name,
+                repositoryType = repositoryType.name,
+                yamlPipelineIds = yamlPipelineIds
+            )?.toSet() ?: setOf()
+        } else {
+            setOf()
+        }
+        // 模糊匹配结果
+        val fuzzyResults = pipelineWebhookDao.getByProjectNameAndType(
             dslContext = dslContext,
             projectName = getProjectName(name),
-            repositoryType = repositoryType,
+            repositoryType = repositoryType.name,
             yamlPipelineIds = yamlPipelineIds
-        ) ?: emptyList()
+        )?.toSet() ?: setOf()
+        // projectName字段补充完毕后，模糊匹配结果应为空
+        if (needExactMatch && fuzzyResults.isNotEmpty()) {
+            logger.info("$repositoryType|$name|projectName contains dirty data")
+        }
+        pipelineSet.addAll(exactResults)
+        pipelineSet.addAll(fuzzyResults)
+        return pipelineSet.toList()
     }
 
     fun listTriggerPipeline(

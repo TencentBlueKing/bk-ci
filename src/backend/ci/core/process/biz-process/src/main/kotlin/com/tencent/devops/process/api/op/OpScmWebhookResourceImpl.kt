@@ -28,4 +28,9 @@ class OpScmWebhookResourceImpl(
         )
         return Result(true)
     }
+
+    override fun updateWebhookProjectName(projectId: String?): Result<Boolean> {
+        pipelineWebhookUpgradeService.updateWebhookProjectName(projectId)
+        return Result(true)
+    }
 }
