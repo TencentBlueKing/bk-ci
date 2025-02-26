@@ -326,7 +326,7 @@ class PipelineWebhookUpgradeService(
                 offset = offset
             ) ?: mutableListOf()
             // 仅查没缓存的仓库
-            val repoIds = webhookList.mapNotNull { it.repoHashId }.filter { !repoCache.containsKey(it) }.toSet()
+            val repoIds = webhookList.mapNotNull { it.repositoryHashId }.filter { !repoCache.containsKey(it) }.toSet()
             val repositoryList = try {
                 client.get(ServiceRepositoryResource::class).listRepoByIds(
                     repositoryIds = repoIds
@@ -339,10 +339,10 @@ class PipelineWebhookUpgradeService(
             repositoryList.filter { !it.repoHashId.isNullOrBlank() }.forEach {
                 repoCache[it.repoHashId!!] = it
             }
-            webhookList.filter { !it.repoHashId.isNullOrBlank() }.forEach { webhook ->
-                val repository = repoCache[webhook.repoHashId]
+            webhookList.filter { !it.repositoryHashId.isNullOrBlank() }.forEach { webhook ->
+                val repository = repoCache[webhook.repositoryHashId]
                 if (repository == null) {
-                    logger.info("${webhook.projectId}|repoCache[${webhook.repoHashId}] is null")
+                    logger.info("${webhook.projectId}|repoCache[${webhook.repositoryHashId}] is null")
                     return@forEach
                 }
                 if (webhook.projectName != repository.projectName) {

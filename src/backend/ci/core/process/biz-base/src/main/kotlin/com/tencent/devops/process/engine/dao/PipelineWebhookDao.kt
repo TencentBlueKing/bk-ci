@@ -155,7 +155,8 @@ class PipelineWebhookDao {
                 repoName = repoName,
                 id = id,
                 projectName = projectName,
-                taskId = taskId
+                taskId = taskId,
+                repositoryHashId = repositoryHashId
             )
         }
     }
