@@ -34,6 +34,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class ServiceVO(
     @get:Schema(title = "主键ID")
     val id: Long,
+    @get:Schema(title = "标识")
+    val code: String,
     @get:Schema(title = "名称")
     val name: String,
     @get:Schema(title = "链接")
@@ -83,9 +85,9 @@ data class ServiceVO(
     @get:Schema(title = "是否可见")
     val hidden: Boolean? = false,
     @get:Schema(title = "new_window")
-    val newWindow: Boolean? = false,
+    var newWindow: Boolean? = false,
     @get:Schema(title = "new_window_url")
-    val newWindowUrl: String? = null,
+    var newWindowUrl: String? = null,
     @get:Schema(title = "集群类型")
     val clusterType: String = "",
     @get:Schema(title = "文档链接")
