@@ -347,6 +347,23 @@ class PipelineWebhookDao {
         }
     }
 
+    fun updateProjectName(
+        dslContext: DSLContext,
+        projectName: String,
+        pipelineId: String,
+        projectId: String,
+        taskId: String
+    ) {
+        return with(T_PIPELINE_WEBHOOK) {
+            dslContext.update(this)
+                    .set(PROJECT_NAME, projectName)
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(PIPELINE_ID.eq(pipelineId))
+                    .and(TASK_ID.eq(taskId))
+                    .execute()
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineWebhookDao::class.java)
     }

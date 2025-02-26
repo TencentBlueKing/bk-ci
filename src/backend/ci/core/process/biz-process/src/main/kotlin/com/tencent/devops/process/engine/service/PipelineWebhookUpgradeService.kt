@@ -350,12 +350,12 @@ class PipelineWebhookUpgradeService(
                         "${webhook.id}|${webhook.projectId}|${webhook.pipelineId}|update webhook projectName|" +
                                 "[${webhook.projectName}]==>[${repository.projectName}]"
                     )
-                    pipelineWebhookDao.updateProjectNameAndTaskId(
+                    pipelineWebhookDao.updateProjectName(
                         dslContext = dslContext,
                         projectId = webhook.projectId,
+                        pipelineId = webhook.pipelineId,
                         taskId = webhook.taskId!!,
-                        projectName = repository.projectName,
-                        id = webhook.id!!
+                        projectName = repository.projectName
                     )
                 }
             }
