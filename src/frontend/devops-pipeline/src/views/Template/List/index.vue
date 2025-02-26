@@ -31,14 +31,15 @@
                     <bk-button
                         :theme="'primary'"
                         :disabled="!hasCreatePermission"
-                        @click="handleCreateClick"
+                        @click="handleShowCreateTemplateDialog"
                     >
-                        新建模板
+                        {{ $t('template.addTemplate') }}
                     </bk-button>
                     <bk-button
                         :disabled="!hasCreatePermission"
+                        @click="handleShowInstallTemplateDialog"
                     >
-                        安装/导入模板
+                        {{ $t('template.installOrImportTemplate') }}
                     </bk-button>
                 </div>
                 <search-select
@@ -122,6 +123,15 @@
                 </section>
             </template>
         </bk-dialog>
+
+        <CreateTemplateDialog
+            :value.sync="showAddTemplateDialog"
+            @confirm="handleConfirmCreate"
+        />
+
+        <InstallTemplateDialog
+            :value.sync="showInstallTemplateDialog"
+        />
     </article>
 </template>
   
@@ -131,6 +141,8 @@
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
     import templateTable from './templateTable'
+    import CreateTemplateDialog from './CreateTemplateDialog'
+    import InstallTemplateDialog from './InstallTemplateDialog'
     // import { navConfirm } from '@/utils/util'
     import {
         RESOURCE_ACTION,
@@ -143,7 +155,9 @@
         components: {
             Logo,
             SearchSelect,
-            templateTable
+            templateTable,
+            CreateTemplateDialog,
+            InstallTemplateDialog
         },
         data () {
             return {
@@ -170,7 +184,9 @@
                 copySettings: [
                     { label: this.$t('true'), value: true },
                     { label: this.$t('false'), value: false }
-                ]
+                ],
+                showAddTemplateDialog: false,
+                showInstallTemplateDialog: false
             }
         },
         computed: {
@@ -359,8 +375,11 @@
                 this.pagination.current = page
                 this.fetchTableData()
             },
-            handleCreateClick () {
-
+            handleShowCreateTemplateDialog () {
+                this.showAddTemplateDialog = true
+            },
+            handleShowInstallTemplateDialog () {
+                this.showInstallTemplateDialog = true
             },
             formatValue (originVal) {
                 return originVal.reduce((acc, filter) => {
@@ -471,6 +490,12 @@
                 this.copyTemp.pipelineId = ''
                 this.copyTemp.nameHasError = false
                 this.copyTemp.isCopySetting = true
+            },
+
+            handleConfirmCreate () {
+                this.tableData = []
+                this.pagination.current = 1
+                this.fetchTableData()
             }
         }
     }

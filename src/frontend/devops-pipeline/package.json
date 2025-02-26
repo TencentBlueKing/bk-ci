@@ -17,6 +17,7 @@
         "@blueking/log": "2.2.2",
         "@blueking/search-select": "0.0.1-beta.2",
         "@icon-cool/bk-icon-devops": "^0.2.1",
+        "@vue/composition-api": "^1.7.2",
         "axios": "0.28.0",
         "bk-magic-vue": "2.5.9-beta.41",
         "bk-permission": "workspace:bk-permission",

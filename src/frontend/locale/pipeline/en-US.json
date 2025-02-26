@@ -472,7 +472,17 @@
     "instancePipelineCount": "Instance",
     "shelfStore": "List on the development store",
     "convertToCustom": "Convert to custom",
-    "export": "Export"
+    "export": "Export",
+    "installOrImportTemplate": "Install / Import Template",
+    "repository": "Repository",
+    "localFile": "Local File",
+    "store": "Store",
+    "pipelineTemplate": "Pipeline Template",
+    "pipelineTypeTips": "A pipeline template includes triggers, stages, jobs, and steps. After creation, multiple pipelines can be instantiated in batches. The template type cannot be modified after the template is created",
+    "create": "Create",
+    "searchTemplate": "Search Template",
+    "install": "Install",
+    "import": "Import"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",

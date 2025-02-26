@@ -97,11 +97,11 @@ const actions = {
             return response.data
         })
     },
-    createTemplate (_, { projectId, params }) {
-        return ajax.post(`${prefix}/templates/projects/${projectId}/templates`, params).then(response => {
-            return response.data
-        })
-    },
+    // createTemplate (_, { projectId, params }) {
+    //     return ajax.post(`${prefix}/templates/projects/${projectId}/templates`, params).then(response => {
+    //         return response.data
+    //     })
+    // },
     updateTemplate (_, { projectId, templateId, versionName, params }) {
         return ajax.put(`${prefix}/templates/projects/${projectId}/templates/${templateId}?versionName=${versionName}`, params).then(response => {
             return response.data
@@ -147,7 +147,11 @@ const actions = {
     },
     getTemplateHasCreatePermission (_, { projectId, templateId }) {
         return ajax.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}/hasPipelineTemplatePermission?permission=CREATE`)
+    },
+    createTemplate (_, { projectId, params }) {
+        return ajax.post(`/${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/create`, params)
     }
+
 }
 
 export default {

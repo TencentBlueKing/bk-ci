@@ -463,7 +463,7 @@
     "editStoreTemplateTips": "研发商店模板不支持编辑",
     "lastModifiedDate": "更新时间",
     "lastModifiedBy": "更新人",
-    "desc": "模板描述",
+    "desc": "简介",
     "type": "模板类型",
     "searchPlaceholder": "模板名称/模板描述/模板类型/来源/更新人",
     "lastedVersion": "最新版本",
@@ -471,7 +471,17 @@
     "instancePipelineCount": "实例",
     "shelfStore": "上架研发商店",
     "convertToCustom": "转为自定义",
-    "export": "导出"
+    "export": "导出",
+    "installOrImportTemplate": "安装/导入模板",
+    "repository": "代码库",
+    "localFile": "本地文件",
+    "store": "研发商店",
+    "pipelineTemplate": "流水线模板",
+    "pipelineTypeTips": "流水线模板包含触发器、Stage、Job、Step 等。创建之后可以批量实例化多条流水线。\n模板类型在模板创建后不可修改。",
+    "create": "创建",
+    "searchTemplate": "搜索模板",
+    "install": "安装",
+    "import": "导入"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",
