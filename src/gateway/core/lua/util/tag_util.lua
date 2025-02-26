@@ -155,7 +155,7 @@ function _M:get_frontend_path(tag, project)
         if not frontend_path or frontend_path == ngx.null then
             frontend_path = ""
         end
-        frontend_path_cache:set(local_cache_key, frontend_path, 60)
+        frontend_path_cache:set(local_cache_key, frontend_path, 300)
         red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
     end
 
@@ -190,7 +190,7 @@ function _M:get_sub_path(tag)
         if not sub_path or sub_path == ngx.null then
             sub_path = "prod"
         end
-        sub_path_cache:set(tag, sub_path, 60)
+        sub_path_cache:set(tag, sub_path, 300)
         red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
         return sub_path
     else
