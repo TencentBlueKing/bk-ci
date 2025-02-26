@@ -134,6 +134,9 @@
             value: {
                 handler: 'splitFilePath',
                 immediate: true
+            },
+            enableVersionControl () {
+                this.updatePath()
             }
         },
         methods: {
@@ -147,10 +150,12 @@
 
                 const lastSlashIndex = this.value.lastIndexOf('/')
                 this.fileDefaultVal.fileName = this.value.slice(lastSlashIndex + 1)
+                
+                const randomFile = this.extractRandomString(this.value)
 
-                if (this.enableVersionControl) {
+                if (this.enableVersionControl && randomFile) {
                     const lastIndex = this.value.lastIndexOf('/', lastSlashIndex - 1)
-                    this.fileDefaultVal.randomFilePath = this.extractRandomString(this.value)
+                    this.fileDefaultVal.randomFilePath = randomFile
                     this.fileDefaultVal.directory = this.value.slice(0, lastIndex)
                 } else {
                     this.fileDefaultVal.directory = this.value.slice(0, lastSlashIndex)
@@ -158,7 +163,7 @@
             },
             updatePath () {
                 const { directory, fileName, randomFilePath } = this.fileDefaultVal
-                const path = this.enableVersionControl
+                const path = this.enableVersionControl && randomFilePath
                     ? `${directory}/${randomFilePath}/${fileName}`
                     : `${directory}/${fileName}`
                 this.handleChange(this.name, path)
@@ -172,9 +177,10 @@
                 this.updatePath()
             },
             uploadPathFromFileName (value) {
-                if (this.fileDefaultVal.fileName) return
+                if (!this.fileDefaultVal.fileName) {
+                    this.fileDefaultVal.fileName = value
+                }
 
-                this.fileDefaultVal.fileName = value
                 if (this.enableVersionControl) {
                     const uniqueStrings = new Set()
                     this.fileDefaultVal.randomFilePath = this.generateUniqueRandomString(uniqueStrings)
