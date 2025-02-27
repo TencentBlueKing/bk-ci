@@ -778,7 +778,7 @@ class AuthResourceGroupMemberDao {
                 .from(this)
                 .where(PROJECT_CODE.eq(projectCode))
                 .and(GROUP_CODE.eq(BkAuthGroup.MANAGER.value))
-                .and(IAM_GROUP_ID.`in`(iamGroupIds))
+                .let { if (iamGroupIds.isEmpty()) it else it.and(IAM_GROUP_ID.`in`(iamGroupIds)) }
                 .groupBy(IAM_GROUP_ID)
                 .having(count(MEMBER_ID).eq(1))
                 .fetch().map { it.value1() }
