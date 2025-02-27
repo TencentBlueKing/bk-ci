@@ -27,7 +27,6 @@
 
 package com.tencent.devops.remotedev.service.workspace
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
@@ -41,8 +40,6 @@ import com.tencent.devops.model.remotedev.tables.TWorkspace
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.NotifyMessageContextRequest
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
-import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.dao.ProjectNotifyDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
@@ -225,15 +222,8 @@ class NotifyControl @Autowired constructor(
         notifyType: MutableSet<RemoteDevNotifyType>,
         bodyParams: MutableMap<String, String>
     ) {
-        val projectInfo = kotlin.runCatching {
-            client.get(ServiceProjectResource::class).get(projectId)
-        }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
-            .getOrElse { null }?.data ?: throw ErrorCodeException(
-            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
-        )
         notify4User(
-            userIds = projectInfo.properties?.remotedevManager?.split(";")?.toMutableSet()
-                ?: mutableSetOf(),
+            userIds = permissionService.managers(projectId).toMutableSet(),
             notifyType = notifyType,
             bodyParams = bodyParams,
             cc = cc
@@ -271,15 +261,7 @@ class NotifyControl @Autowired constructor(
         bodyParams: MutableMap<String, String>
     ) {
         if (projectId != null) {
-            val projectInfo = kotlin.runCatching {
-                client.get(ServiceProjectResource::class).get(projectId)
-            }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
-                .getOrElse { null }?.data ?: throw ErrorCodeException(
-                errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
-            )
-            projectInfo.properties?.remotedevManager?.split(";")?.toMutableSet()?.let {
-                cc.addAll(it)
-            }
+            cc.addAll(permissionService.managers(projectId))
         }
         notify4User(
             userIds = userIds,

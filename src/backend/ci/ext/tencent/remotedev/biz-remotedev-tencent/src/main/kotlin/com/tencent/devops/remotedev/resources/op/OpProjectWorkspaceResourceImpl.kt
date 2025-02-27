@@ -29,7 +29,6 @@ import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyListData
 import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
-import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminData
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceRecordService
@@ -40,10 +39,10 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_CONFIG_INFO
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
+import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.function.StreamBridge
-import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @RestResource
@@ -243,13 +242,6 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         data: ProjectWorkspaceFetchData
     ): Result<Page<ProjectWorkspace>> {
         return Result(workspaceService.getProjectWorkspaceList4Op(userId, data))
-    }
-
-    override fun fetchOwnerAndAdmin(
-        userId: String,
-        data: FetchOwnerAndAdminData
-    ): Result<Set<String>> {
-        return Result(desktopWorkspaceService.fetchOwnerAndAdmin(data))
     }
 
     override fun updateCCHost(userId: String, data: OpUpdateCCHostData): Result<Boolean> {
