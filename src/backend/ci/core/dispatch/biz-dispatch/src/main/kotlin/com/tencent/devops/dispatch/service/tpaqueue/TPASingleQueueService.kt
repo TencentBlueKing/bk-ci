@@ -197,7 +197,7 @@ class TPASingleQueueService @Autowired constructor(
             return
         }
         val event = TPAMonitorEvent(
-            delayMills = 20,
+            delayMills = 20 * 1000,
             timeoutMin = data.jobTimeoutMinutes.toLong(),
             projectId = data.projectId,
             pipelineId = data.pipelineId,

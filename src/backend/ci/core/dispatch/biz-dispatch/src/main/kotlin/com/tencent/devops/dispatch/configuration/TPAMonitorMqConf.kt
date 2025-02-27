@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class TPAMonitorMqConf {
     @EventConsumer
-    fun asyncExecuteConsumer(
+    fun tpaMonitorConsumer(
         @Autowired tpaMonitorListener: TPAMonitorListener
     ) = ScsConsumerBuilder.build<TPAMonitorEvent> { tpaMonitorListener.listenTPAMonitorEvent(it) }
 }
