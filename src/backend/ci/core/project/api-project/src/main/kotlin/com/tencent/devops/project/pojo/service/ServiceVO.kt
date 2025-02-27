@@ -50,9 +50,9 @@ data class ServiceVO(
     val injectType: String,
     @get:Schema(title = "框架URL", description = "iframe_url")
     @JsonProperty("iframe_url")
-    val iframeUrl: String,
+    var iframeUrl: String,
     @get:Schema(title = "grayIframeUrl")
-    val grayIframeUrl: String?,
+    var grayIframeUrl: String?,
     @get:Schema(title = "cssURL", description = "css_url")
     @JsonProperty("css_url")
     val cssUrl: String,
