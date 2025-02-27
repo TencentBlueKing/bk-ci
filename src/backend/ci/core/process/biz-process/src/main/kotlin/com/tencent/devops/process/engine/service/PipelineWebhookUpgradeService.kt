@@ -301,16 +301,16 @@ class PipelineWebhookUpgradeService(
         }
     }
 
-    fun updateWebhookProjectName(projectId: String?) {
+    fun updateWebhookProjectName(projectId: String?, pipelineId: String?) {
         ThreadPoolUtil.submitAction(
             actionTitle = "updateWebhookProjectName",
             action = {
-                updateProjectName(projectId)
+                updateProjectName(projectId, pipelineId)
             }
         )
     }
 
-    private fun updateProjectName(projectId: String?) {
+    private fun updateProjectName(projectId: String?, pipelineId: String?) {
         logger.info("start update webhook project name|projectId:$projectId")
         var offset = 0
         val limit = 100
@@ -320,7 +320,7 @@ class PipelineWebhookUpgradeService(
             webhookList = pipelineWebhookDao.listWebhook(
                 dslContext = dslContext,
                 projectId = projectId,
-                pipelineId = null,
+                pipelineId = pipelineId,
                 ignoredRepoTypes = setOf(ScmType.CODE_SVN.name, ScmType.CODE_P4.name),
                 limit = limit,
                 offset = offset

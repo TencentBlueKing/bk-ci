@@ -46,6 +46,9 @@ interface OpScmWebhookResource {
     fun updateWebhookProjectName(
         @Parameter(description = "待更新的项目ID", required = false)
         @QueryParam("projectId")
-        projectId: String?
+        projectId: String?,
+        @Parameter(description = "待更新的流水线ID", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?
     ): Result<Boolean>
 }
