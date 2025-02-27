@@ -29,7 +29,7 @@ package com.tencent.devops.project.service
 
 import com.tencent.devops.project.pojo.service.ServiceVO
 
-interface ServiceManageService {
+abstract class ServiceManageService {
 
     /**
      * 处理特殊逻辑
@@ -38,5 +38,5 @@ interface ServiceManageService {
      * @param projectId 项目ID
      * @return ServiceVO
      */
-    fun doSpecBus(userId: String, serviceVO: ServiceVO, projectId: String? = null): ServiceVO
+    abstract fun doSpecBus(userId: String, serviceVO: ServiceVO, projectId: String? = null): ServiceVO
 }
