@@ -69,8 +69,9 @@ class TxMetricsServiceManageServiceImpl(
         val projectRecord = projectDao.getByEnglishName(dslContext, projectId)
             ?: throw ErrorCodeException(errorCode = ProjectMessageCode.PROJECT_NOT_EXIST, params = arrayOf(projectId))
         val isSecrecy = projectRecord.isSecrecy
-        if (!isSecrecy && !panelUrl.isNullOrBlank() && panelPid != null && panelNid != null) {
-            // 保密项目才跳去eplus页面看统计数据
+        val checkParamFlag = !panelUrl.isNullOrBlank() && panelPid != null && panelNid != null
+        if (!isSecrecy && checkParamFlag) {
+            // 非保密项目才跳去eplus页面看统计数据
             val jsonData = JsonData(
                 nid = panelNid, pid = panelPid, user = userId, filter = listOf(
                     Filter(col = "project_id", op = "=", `val` = projectId)
@@ -79,7 +80,7 @@ class TxMetricsServiceManageServiceImpl(
             // 生成token
             val token = encryptPanelToken(publicKey, jsonData)
             // 生成eplus的跳转页面地址
-            val serviceUrl = MessageFormat(panelUrl).format(arrayOf(panelFrom, token))
+            val serviceUrl = MessageFormat(panelUrl!!).format(arrayOf(panelFrom, token))
             serviceVO.newWindow = true
             serviceVO.newWindowUrl = serviceUrl
             serviceVO.iframeUrl = serviceUrl

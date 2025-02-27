@@ -158,12 +158,12 @@ class UserProjectServiceImpl @Autowired constructor(
                         clusterType = it.clusterType,
                         docUrl = it.docUrl ?: ""
                     )
-                    val beanName = "${code.uppercase()}_MANAGE_SERVICE"
-                    if (SpringContextUtil.isBeanExist(beanName)) {
-                        // 对服务数据进行特殊处理
-                        val serviceManageService = SpringContextUtil.getBean(ServiceManageService::class.java, beanName)
-                        serviceVO = serviceManageService.doSpecBus(userId, serviceVO, projectId)
-                    }
+                    serviceVO = doServiceSpecBus(
+                        code = code,
+                        serviceVO = serviceVO,
+                        userId = userId,
+                        projectId = projectId
+                    )
                     services.add(serviceVO)
                 }
                 if (serviceListByTypeId != null) {
@@ -179,6 +179,22 @@ class UserProjectServiceImpl @Autowired constructor(
             return Result(code = 0, message = "OK", data = serviceListVO)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list services")
+        }
+    }
+
+    private fun doServiceSpecBus(
+        code: String,
+        serviceVO: ServiceVO,
+        userId: String,
+        projectId: String?
+    ): ServiceVO {
+        val beanName = "${code.uppercase()}_MANAGE_SERVICE"
+        return if (SpringContextUtil.isBeanExist(beanName)) {
+            // 对服务数据进行特殊处理
+            val serviceManageService = SpringContextUtil.getBean(ServiceManageService::class.java, beanName)
+            serviceManageService.doSpecBus(userId, serviceVO, projectId)
+        } else {
+            serviceVO
         }
     }
 
