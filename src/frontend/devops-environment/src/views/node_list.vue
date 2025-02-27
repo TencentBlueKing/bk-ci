@@ -252,20 +252,14 @@
                                         v-else-if="['NOT_INSTALLED'].includes(props.row.nodeStatus)"
                                         status="normal"
                                     />
-                                
-                                    <div
+                                    <bk-loading
                                         v-else-if="runningStatus.includes(props.row.nodeStatus)"
-                                        class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary loading-icon"
-                                    >
-                                        <div class="rotate rotate1"></div>
-                                        <div class="rotate rotate2"></div>
-                                        <div class="rotate rotate3"></div>
-                                        <div class="rotate rotate4"></div>
-                                        <div class="rotate rotate5"></div>
-                                        <div class="rotate rotate6"></div>
-                                        <div class="rotate rotate7"></div>
-                                        <div class="rotate rotate8"></div>
-                                    </div>
+                                        theme="primary"
+                                        mode="spin"
+                                        size="normal"
+                                        is-loading
+                                        class="loading-icon"
+                                    />
                                     <!-- 状态值 -->
                                     <span class="node-status">
                                         {{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}
@@ -1007,11 +1001,12 @@
                             pageSize: this.pagination.limit
                         }
                     })
-                    this.nodeList.splice(0, this.nodeList.length)
                     this.pagination.count = res.count
-                    res.records.forEach(item => {
-                        item.isEnableEdit = item.nodeHashId === this.curEditNodeItem
-                        this.nodeList.push(item)
+                    this.nodeList = res.records.map(i => {
+                        return {
+                            isEnableEdit: i.nodeHashId === this.curEditNodeItem,
+                            ...i
+                        }
                     })
                 } catch (err) {
                     const message = err.message ? err.message : err
