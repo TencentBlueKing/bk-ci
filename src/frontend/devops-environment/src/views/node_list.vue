@@ -189,19 +189,17 @@
                                     v-if="failStatus.includes(props.row.nodeStatus)"
                                 >
                                 </span>
-                                <div
-                                    class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
+                                <span
                                     v-if="runningStatus.includes(props.row.nodeStatus)"
+                                    class="loading-icon"
                                 >
-                                    <div class="rotate rotate1"></div>
-                                    <div class="rotate rotate2"></div>
-                                    <div class="rotate rotate3"></div>
-                                    <div class="rotate rotate4"></div>
-                                    <div class="rotate rotate5"></div>
-                                    <div class="rotate rotate6"></div>
-                                    <div class="rotate rotate7"></div>
-                                    <div class="rotate rotate8"></div>
-                                </div>
+                                    <bk-loading
+                                        theme="primary"
+                                        mode="spin"
+                                        size="mini"
+                                        is-loading
+                                    />
+                                </span>
                                 <!-- 状态值 -->
                                 <span
                                     class="install-agent"
@@ -737,12 +735,13 @@
                         }
                     })
 
-                    this.nodeList.splice(0, this.nodeList.length)
                     this.pagination.count = res.count
-                    res.records.forEach(item => {
-                        item.isEnableEdit = item.nodeHashId === this.curEditNodeItem
-                        item.isMore = item.nodeHashId === this.lastCliCKNode.nodeHashId
-                        this.nodeList.push(item)
+                    this.nodeList = res.records.map(i => {
+                        return {
+                            isEnableEdit: i.nodeHashId === this.curEditNodeItem,
+                            isMore: i.nodeHashId === this.lastCliCKNode.nodeHashId,
+                            ...i
+                        }
                     })
                 } catch (err) {
                     const message = err.message ? err.message : err
@@ -1303,6 +1302,14 @@
             border: 2px solid #30D878;
             border-radius: 50%;
             -webkit-border-radius: 50%;
+        }
+
+        .loading-icon {
+            display: inline-block;
+            position: relative;
+            width: 12px;
+            top: -12px;
+            margin-right: 5px;
         }
 
         .abnormal-stutus-icon {
