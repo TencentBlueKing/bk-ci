@@ -2238,15 +2238,15 @@ class PipelineListFacadeService @Autowired constructor(
         projectId: String,
         dialect: PipelineDialectType
     ): Long {
-        val pipelineIds = pipelineSettingDao.getPipelineIdsByDialect(
+        val pipelineIds = pipelineSettingDao.getNonInheritedPipelineIds(
             dslContext = dslContext,
             projectId = projectId
         )
-        return pipelineInfoDao.countByPipelineIds(
+        return pipelineInfoDao.countExcludePipelineIds(
             dslContext = dslContext,
             projectId = projectId,
             channelCode = ChannelCode.BS,
-            pipelineIds = pipelineIds
+            excludePipelineIds = pipelineIds
         ).toLong()
     }
 
@@ -2259,20 +2259,20 @@ class PipelineListFacadeService @Autowired constructor(
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 10
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-        val pipelineIds = pipelineSettingDao.getPipelineIdsByDialect(
+        val pipelineIds = pipelineSettingDao.getNonInheritedPipelineIds(
             dslContext = dslContext,
             projectId = projectId
         )
-        val count = pipelineInfoDao.countByPipelineIds(
+        val count = pipelineInfoDao.countExcludePipelineIds(
             dslContext = dslContext,
             projectId = projectId,
             channelCode = ChannelCode.BS,
-            pipelineIds = pipelineIds
+            excludePipelineIds = pipelineIds
         )
         val records = pipelineInfoDao.listByPipelineIds(
             dslContext = dslContext,
             projectId = projectId,
-            pipelineIds = pipelineIds,
+            excludePipelineIds = pipelineIds,
             channelCode = ChannelCode.BS,
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
