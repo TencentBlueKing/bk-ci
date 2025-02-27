@@ -66,7 +66,7 @@ class TxMetricsServiceManageServiceImpl(
     @Value("\${eplus.ms.metrics.panelPid:#{null}}")
     private val panelPid: Int? = null
 
-    override fun doSpecBus(serviceVO: ServiceVO, projectId: String?): ServiceVO {
+    override fun doSpecBus(userId: String, serviceVO: ServiceVO, projectId: String?): ServiceVO {
         if (projectId.isNullOrBlank() || publicKey.isNullOrBlank()) {
             return serviceVO
         }
@@ -76,15 +76,15 @@ class TxMetricsServiceManageServiceImpl(
         val isSecrecy = projectRecord.isSecrecy
         if (isSecrecy && !panelUrl.isNullOrBlank() && panelPid != null && panelNid != null) {
             val jsonData = JsonData(
-                nid = panelNid, pid = panelPid, user = "carlyin", filter = listOf(
+                nid = panelNid, pid = panelPid, user = userId, filter = listOf(
                     Filter(col = "project_id", op = "=", `val` = projectId)
                 )
             )
             // 生成token
             val token = encryptPanelToken(publicKey, jsonData)
-            logger.info("encryptPanelToken projectId:$projectId|publicKey: $publicKey|token: $token")
             // 生成eplus的跳转页面地址
             val serviceUrl = MessageFormat(panelUrl).format(arrayOf(panelFrom, token))
+            logger.info("encryptPanelToken userId:$userId|projectId:$projectId|serviceUrl:$serviceUrl")
             serviceVO.newWindow = true
             serviceVO.newWindowUrl = serviceUrl
         }
