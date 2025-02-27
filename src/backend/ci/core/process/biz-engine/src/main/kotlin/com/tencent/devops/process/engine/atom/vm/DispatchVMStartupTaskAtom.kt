@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -47,8 +46,6 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.dispatch.api.ServiceDispatchJobResource
-import com.tencent.devops.dispatch.pojo.AgentStartMonitor
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -69,8 +66,8 @@ import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.utils.BK_CI_AUTHORIZER
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
+import com.tencent.devops.process.yaml.transfer.VariableDefault
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
-import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
@@ -279,7 +276,9 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 jobId = container.jobId,
                 ignoreEnvAgentIds = ignoreEnvAgentIds,
                 singleNodeConcurrency = param.jobControlOption?.singleNodeConcurrency,
-                allNodeConcurrency = param.jobControlOption?.allNodeConcurrency
+                allNodeConcurrency = param.jobControlOption?.allNodeConcurrency,
+                jobTimeoutMinutes = param.jobControlOption?.timeoutVar?.toIntOrNull() ?: param.jobControlOption?.timeout
+                ?: VariableDefault.DEFAULT_JOB_MAX_RUNNING_MINUTES
             )
         )
     }
@@ -393,12 +392,6 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                         ignoreEnvAgentIds = retryThirdAgentEnv.split(",").filter { it.isNotBlank() }.toSet()
                     )
                 }
-
-                try {
-                    thirdPartyAgentMonitorPrint(task)
-                } catch (ignore: Exception) {
-                    // 忽略掉因调用打印接口出错而导致调度失败的问题
-                }
             }
 
             AtomResponse(
@@ -407,30 +400,6 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 errorCode = task.errorCode,
                 errorMsg = task.errorMsg
             )
-        }
-    }
-
-    private fun thirdPartyAgentMonitorPrint(task: PipelineBuildTask) {
-        // #5806 超过10秒，开始查询调度情况，并Log出来
-        val timePasses = System.currentTimeMillis() - (task.startTime?.timestampmilli() ?: 0L)
-        val modSeconds = TimeUnit.MILLISECONDS.toSeconds(timePasses) % 20
-
-        /*
-            此处说明： 在每20秒的前5秒内会执行一下以下逻辑。每5秒一次的本方法调用，在取4秒是防5秒在不断累计延迟可能会产生的最大限度不精准
-         */
-        if (modSeconds < 5) {
-
-            val agentMonitor = AgentStartMonitor(
-                projectId = task.projectId,
-                pipelineId = task.pipelineId,
-                buildId = task.buildId,
-                vmSeqId = task.containerId,
-                containerHashId = task.containerHashId,
-                userId = task.starter,
-                executeCount = task.executeCount,
-                stepId = task.stepId
-            )
-            client.get(ServiceDispatchJobResource::class).monitor(agentStartMonitor = agentMonitor)
         }
     }
 }

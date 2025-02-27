@@ -11,6 +11,7 @@ import com.tencent.devops.dispatch.constants.TRY_AGENT_DISPATCH
 import com.tencent.devops.dispatch.exception.ErrorCodeEnum
 import com.tencent.devops.dispatch.pojo.QueueContext
 import com.tencent.devops.dispatch.pojo.QueueDataContext
+import com.tencent.devops.dispatch.pojo.TPAMonitorEvent
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import com.tencent.devops.dispatch.utils.TPACommonUtil
@@ -26,6 +27,7 @@ import com.tencent.devops.process.pojo.SetContextVarData
 import com.tencent.devops.process.pojo.VmInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Service
 
 /**
@@ -36,6 +38,7 @@ import org.springframework.stereotype.Service
 @Service
 class TPASingleQueueService @Autowired constructor(
     private val redisOperation: RedisOperation,
+    private val streamBridge: StreamBridge,
     private val client: Client,
     private val commonUtil: TPACommonUtil,
     private val thirdPartyAgentBuildRedisUtils: ThirdPartyAgentBuildRedisUtils,
@@ -179,7 +182,33 @@ class TPASingleQueueService @Autowired constructor(
             nodeHashId = agent.nodeId,
             agentHashId = agent.agentId
         )
+
+        // 延迟队列轮训构建机状态监控
+        dispatchAgentMonitor(data)
+
         return true
+    }
+
+    private fun dispatchAgentMonitor(
+        data: ThirdPartyAgentDispatchData
+    ) {
+        if (data.jobTimeoutMinutes == null) {
+            logger.error("dispatchAgentMonitor|${data.toLog()}|jobTimeoutMinutes is null!")
+            return
+        }
+        val event = TPAMonitorEvent(
+            delayMills = 20,
+            timeoutMin = data.jobTimeoutMinutes.toLong(),
+            projectId = data.projectId,
+            pipelineId = data.pipelineId,
+            userId = data.userId,
+            buildId = data.buildId,
+            vmSeqId = data.vmSeqId,
+            containerHashId = data.containerHashId,
+            executeCount = data.executeCount,
+            stepId = null
+        )
+        event.sendTo(streamBridge)
     }
 
     private fun logAgentReuse(
