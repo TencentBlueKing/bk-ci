@@ -308,7 +308,8 @@ class JobService @Autowired constructor(
             apigwJobCloudApi.executePostRequest(
                 shortPostTag = true,
                 jobCloud = jobCloudQueryJobInstanceLogsReq,
-                classOfU = JobCloudQueryJobInstanceLogsResult::class.java
+                classOfU = JobCloudQueryJobInstanceLogsResult::class.java,
+                withRetry = true
             )
         val queryJobInstanceLogsRes: JobResult<QueryJobInstanceLogsResult> = JobResult(
             code = jobCloudQueryJobInstanceLogsRes.code,

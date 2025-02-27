@@ -33,6 +33,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudResult
 import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudAuthenticationReq
 import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudPermission
@@ -62,6 +63,8 @@ class ApigwJobCloudApi {
     companion object {
         private const val LOG_OUTPUT_MAX_LENGTH = 4000
         private const val INTERNAL_SERVER_ERROR_CODE = 1240002
+        private const val MAX_HTTP_RETRY_TIME = 3
+        private const val MIN_HTTP_RETRY_TIME = 1
         private val INTERNAL_SERVER_ERROR_STATUS = javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR
 
         private val postPathMap = mapOf(
@@ -110,7 +113,8 @@ class ApigwJobCloudApi {
     fun <T : JobCloudPermission, U : Any> executePostRequest(
         shortPostTag: Boolean = false,
         jobCloud: T,
-        classOfU: Class<U>
+        classOfU: Class<U>,
+        withRetry: Boolean = false
     ): JobCloudResult<U> {
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq = getJobCloudAuthReq()
         jobCloud.bkScopeType = jobCloudAuthenticationReq.bkScopeType
@@ -122,9 +126,26 @@ class ApigwJobCloudApi {
                 "body: ${logWithLengthLimit(requestContent)}"
         )
         val resp = if (!shortPostTag) {
-            OkhttpUtils.doPost(url = jobCloudAuthenticationReq.url, jsonParam = requestContent, headers = headers)
+            RetryUtils.execute(action = object : RetryUtils.Action<Response> {
+                override fun execute(): Response {
+                    return OkhttpUtils.doPost(
+                        url = jobCloudAuthenticationReq.url,
+                        jsonParam = requestContent,
+                        headers = headers
+                    )
+                }
+            }, retryTime = if (withRetry) MAX_HTTP_RETRY_TIME else MIN_HTTP_RETRY_TIME)
         } else {
-            OkhttpUtils.doShortPost(url = jobCloudAuthenticationReq.url, jsonParam = requestContent, headers = headers)
+            RetryUtils.execute(action = object : RetryUtils.Action<Response> {
+                override fun execute(): Response {
+                    return OkhttpUtils.doShortPost(
+                        url = jobCloudAuthenticationReq.url,
+                        jsonParam = requestContent,
+                        headers = headers
+                    )
+                }
+            }, retryTime = if (withRetry) MAX_HTTP_RETRY_TIME else MIN_HTTP_RETRY_TIME)
+
         }
         return getResultFromRes(resp, classOfU)
     }
