@@ -15,7 +15,7 @@
                             size="14"
                             :name="item.icon"
                         />
-                        <span>{{ item.label }}</span>
+                        <span>{{ $t(item.label) }}</span>
                     </div>
                     <span class="nav-num">{{ item.num }}</span>
                 </div>
@@ -33,12 +33,12 @@
                         :disabled="!hasCreatePermission"
                         @click="handleCreateClick"
                     >
-                        新建模板
+                        {{ $t('template.addTemplate') }}
                     </bk-button>
                     <bk-button
                         :disabled="!hasCreatePermission"
                     >
-                        安装/导入模板
+                        {{ $t('template.installOrImportTemplate') }}
                     </bk-button>
                 </div>
                 <search-select
@@ -124,8 +124,9 @@
         </bk-dialog>
     </article>
 </template>
-  
+
 <script>
+    import { getCurrentInstance, onMounted, ref, computed, h, nextTick } from '@vue/composition-api'
     import dayjs from 'dayjs'
     import Logo from '@/components/Logo'
     import SearchSelect from '@blueking/search-select'
@@ -134,7 +135,6 @@
     import {
         RESOURCE_ACTION,
         TEMPLATE_RESOURCE_ACTION,
-        PROJECT_RESOURCE_ACTION,
         TEMPLATE_CREATE
     } from '@/utils/permission'
 
@@ -144,295 +144,318 @@
             SearchSelect,
             templateTable
         },
-        data () {
-            const that = this
-            return {
-                hasCreatePermission: false,
-                activeTab: 'ALL',
-                searchValue: [],
-                isLoading: false,
-                tableData: [],
-                pagination: {
-                    current: 1,
-                    count: 6,
-                    limit: 20
+        setup () {
+            const instance = getCurrentInstance()
+            const route = instance.proxy.$route
+            // const router = instance.proxy.$router
+            const i18n = instance.proxy.$i18n
+            const store = instance.proxy.$store
+            const showTips = instance.proxy.$showTips
+            const bkInfo = instance.proxy.$bkInfo
+            const validator = instance.proxy.$validator
+
+            const hasCreatePermission = ref(false)
+            const activeTab = ref('ALL')
+            const searchValue = ref([])
+            const isLoading = ref(false)
+            const tableData = ref([])
+            const pagination = ref({
+                current: 1,
+                count: 6,
+                limit: 20
+            })
+            const copyTemp = ref({
+                isShow: false,
+                title: i18n.t('template.saveAsTemplate'),
+                closeIcon: false,
+                quickClose: true,
+                padding: '0 20px',
+                srcTemplateId: '',
+                templateName: '',
+                isCopySetting: true
+            })
+            const copySettings = ref([
+                { label: i18n.t('true'), value: true },
+                { label: i18n.t('false'), value: false }
+            ])
+            const navList = ref([
+                {
+                    label: 'template.allTemplate',
+                    name: 'ALL',
+                    isAll: true,
+                    icon: 'group'
                 },
-                copyTemp: {
-                    isShow: false,
-                    title: that.$t('template.saveAsTemplate'),
-                    closeIcon: false,
-                    quickClose: true,
-                    padding: '0 20px',
-                    srcTemplateId: '',
-                    templateName: '',
-                    isCopySetting: true
+                {
+                    label: 'template.pipelineTemplate',
+                    name: 'PIPELINE',
+                    icon: 'pipeline'
                 },
-                copySettings: [
-                    { label: that.$t('true'), value: true },
-                    { label: that.$t('false'), value: false }
-                ],
-                navList: [
-                    {
-                        label: this.$t('template.allTemplate'),
-                        name: 'ALL',
-                        isAll: true,
-                        icon: 'group'
-                    },
-                    {
-                        label: this.$t('template.pipelineTemplate'),
-                        name: 'PIPELINE',
-                        icon: 'pipeline'
-                    },
-                    {
-                        label: this.$t('template.stageTemplate'),
-                        name: 'STAGE',
-                        icon: 'pipeline-group-item-icon'
-                    },
-                    {
-                        label: this.$t('template.jobTemplate'),
-                        name: 'JOB',
-                        icon: 'pipeline-group-item-icon'
-                    },
-                    {
-                        label: this.$t('template.stepTemplate'),
-                        name: 'STEP',
-                        icon: 'pipeline-group-item-icon'
-                    }
-                ]
+                {
+                    label: 'template.stageTemplate',
+                    name: 'STAGE',
+                    icon: 'pipeline-group-item-icon'
+                },
+                {
+                    label: 'template.jobTemplate',
+                    name: 'JOB',
+                    icon: 'pipeline-group-item-icon'
+                },
+                {
+                    label: 'template.stepTemplate',
+                    name: 'STEP',
+                    icon: 'pipeline-group-item-icon'
+                }
+            ])
+            const filterData = computed(() => [{
+                name: i18n.t('template.name'),
+                id: 'fuzzySearchName'
+            }, {
+                name: i18n.t('template.desc'),
+                id: 'desc'
+            }, {
+                name: i18n.t('template.type'),
+                id: 'type'
+            }, {
+                name: i18n.t('template.source'),
+                id: 'source'
+            }, {
+                name: i18n.t('template.lastModifiedBy'),
+                id: 'updater'
+            }])
+            const projectId = computed(() => route.params.projectId)
+
+            onMounted(() => {
+                const historyTab = localStorage.getItem('TEMPLATE_TYPE_CACHE')
+                if (historyTab) {
+                    activeTab.value = historyTab
+                }
+                getType2Count()
+                fetchTableData()
+                hasPipelineTemplatePermission()
+            })
+
+            function handleChangeMenu (name) {
+                activeTab.value = name
+                localStorage.setItem('TEMPLATE_TYPE_CACHE', activeTab.value)
+                fetchTableData()
             }
-        },
-        computed: {
-            filterData () {
-                return [{
-                    name: this.$t('template.name'),
-                    id: 'fuzzySearchName'
-                }, {
-                    name: this.$t('template.desc'),
-                    id: 'desc'
-                }, {
-                    name: this.$t('template.type'),
-                    id: 'type'
-                }, {
-                    name: this.$t('template.source'),
-                    id: 'source'
-                }, {
-                    name: this.$t('template.lastModifiedBy'),
-                    id: 'updater'
-                }]
-            },
-            projectId () {
-                return this.$route.params.projectId
-            },
-            TEMPLATE_RESOURCE_ACTION () {
-                return TEMPLATE_RESOURCE_ACTION
-            },
-            RESOURCE_ACTION () {
-                return RESOURCE_ACTION
-            },
-            PROJECT_RESOURCE_ACTION () {
-                return PROJECT_RESOURCE_ACTION
-            }
-        },
-        mounted () {
-            const historyTab = localStorage.getItem('TEMPLATE_TYPE_CACHE')
-            if (historyTab) {
-                this.activeTab = historyTab
-            }
-            this.getType2Count()
-            this.fetchTableData()
-            this.hasPipelineTemplatePermission()
-        },
-        methods: {
-            handleChangeMenu (name) {
-                this.activeTab = name
-                localStorage.setItem('TEMPLATE_TYPE_CACHE', this.activeTab)
-                this.fetchTableData()
-            },
-            sourceFilterMethod (value, row, column) {
+            function sourceFilterMethod (value, row, column) {
                 const property = column.property
                 return row[property] === value
-            },
-            async hasPipelineTemplatePermission () {
+            }
+            async function hasPipelineTemplatePermission () {
                 try {
-                    this.hasCreatePermission = await this.$store.dispatch('pipelines/hasPipelineTemplatePermission', {
-                        projectId: this.projectId,
+                    hasCreatePermission.value = await store.dispatch('pipelines/hasPipelineTemplatePermission', {
+                        projectId: projectId.value,
                         permission: TEMPLATE_CREATE
                     })
                 } catch (err) {
-                    this.$showTips({ message: err.message || err, theme: 'error' })
+                    showTips({ message: err.message || err, theme: 'error' })
                 }
-            },
-            async getType2Count () {
+            }
+            async function getType2Count () {
                 try {
-                    const nums = await this.$store.dispatch('pipelines/getType2Count', {
-                        projectId: this.projectId
+                    const nums = await store.dispatch('pipelines/getType2Count', {
+                        projectId: projectId.value
                     })
-                    this.navList = this.navList.map(item => {
+                    navList.value = navList.value.map(item => {
                         const key = item.name.toLowerCase()
                         item.num = nums[key] || 0
                         return item
                     })
                 } catch (err) {
-                    this.$showTips({ message: err.message || err, theme: 'error' })
+                    showTips({ message: err.message || err, theme: 'error' })
                 }
-            },
-            async fetchTableData (params = { }) {
-                this.isLoading = true
+            }
+            async function fetchTableData (params = { }) {
+                isLoading.value = true
                 try {
                     const param = {
-                        projectId: this.projectId,
-                        page: this.pagination.current,
-                        pageSize: this.pagination.limit,
-                        ...(this.activeTab !== 'ALL' && { type: this.activeTab }),
+                        projectId: projectId.value,
+                        page: pagination.value.current,
+                        pageSize: pagination.value.limit,
+                        ...(activeTab.value !== 'ALL' && { type: activeTab.value }),
                         ...params
                     }
-                    const res = await this.$store.dispatch('pipelines/getTemplateList', param)
-
-                    this.tableData = (res.records || []).map(x => {
+                    const res = await store.dispatch('pipelines/getTemplateList', param)
+                    tableData.value = (res.records || []).map(x => {
                         x.updateTime = dayjs(x.updateTime).format('YYYY-MM-DD HH:mm:ss')
                         x.templateActions = [
                             {
-                                text: this.$t('copy'), // 复制
-                                handler: this.copyTemplate,
+                                text: i18n.t('copy'), // 复制
+                                handler: copyTemplate,
                                 hasPermission: x.canEdit,
                                 disablePermissionApi: true,
                                 isShow: true,
                                 permissionData: {
-                                    projectId: this.projectId,
+                                    projectId: projectId.value,
                                     resourceType: 'pipeline_template',
-                                    resourceCode: this.projectId,
-                                    action: this.RESOURCE_ACTION.CREATE
+                                    resourceCode: projectId.value,
+                                    action: RESOURCE_ACTION.CREATE
                                 }
                             },
                             {
-                                text: this.$t('template.shelfStore'), // 上架研发商店
-                                handler: this.toRelativeStore,
+                                text: i18n.t('template.shelfStore'), // 上架研发商店
+                                handler: toRelativeStore,
                                 hasPermission: x.canEdit,
                                 disablePermissionApi: true,
                                 isShow: x.source === 'MARKET',
                                 permissionData: {
-                                    projectId: this.projectId,
+                                    projectId: projectId.value,
                                     resourceType: 'pipeline_template',
                                     resourceCode: x.id,
-                                    action: this.TEMPLATE_RESOURCE_ACTION.EDIT
+                                    action: TEMPLATE_RESOURCE_ACTION.EDIT
                                 }
                             },
                             {
-                                text: this.$t('template.convertToCustom'), // 转为自定义
-                                handler: this.convertToCustom,
+                                text: i18n.t('template.convertToCustom'), // 转为自定义
+                                handler: convertToCustom,
                                 hasPermission: x.canEdit,
                                 disablePermissionApi: true,
                                 isShow: x.source === 'CUSTOM',
                                 permissionData: {
-                                    projectId: this.projectId,
+                                    projectId: projectId.value,
                                     resourceType: 'pipeline_template',
                                     resourceCode: x.id,
-                                    action: this.TEMPLATE_RESOURCE_ACTION.EDIT
+                                    action: TEMPLATE_RESOURCE_ACTION.EDIT
                                 }
                             },
                             {
-                                text: this.$t('template.export'), // 导出
-                                // handler: this.toRelativeStore,
+                                text: i18n.t('template.export'), // 导出
+                                // handler: toRelativeStore,
                                 hasPermission: x.canEdit,
                                 disablePermissionApi: true,
                                 isShow: true,
                                 permissionData: {
-                                    projectId: this.projectId,
+                                    projectId: projectId.value,
                                     resourceType: 'pipeline_template',
                                     resourceCode: x.id,
-                                    action: this.TEMPLATE_RESOURCE_ACTION.EDIT
+                                    action: TEMPLATE_RESOURCE_ACTION.EDIT
                                 }
                             },
                             {
-                                text: this.$t('delete'),
-                                handler: this.deleteTemplate,
+                                text: i18n.t('delete'),
+                                handler: deleteTemplate,
                                 hasPermission: x.canDelete,
                                 disablePermissionApi: true,
                                 isShow: true,
                                 permissionData: {
-                                    projectId: this.projectId,
+                                    projectId: projectId.value,
                                     resourceType: 'pipeline_template',
                                     resourceCode: x.id,
-                                    action: this.TEMPLATE_RESOURCE_ACTION.EDIT
+                                    action: TEMPLATE_RESOURCE_ACTION.EDIT
                                 }
                             }
                         ]
                         return x
                     })
-                    this.pagination.count = res.count
+                    pagination.value.count = res.count
                 } catch (err) {
-                    this.$showTips({
+                    showTips({
                         message: err.message || err,
                         theme: 'error'
                     })
                 } finally {
-                    this.isLoading = false
+                    isLoading.value = false
                 }
-            },
-            handlePageLimitChange (limit) {
-                this.pagination.limit = limit
-                this.fetchTableData()
-            },
-            handlePageChange (page) {
-                this.pagination.current = page
-                this.fetchTableData()
-            },
-            handleCreateClick () {
+            }
+            function handlePageLimitChange (limit) {
+                pagination.value.limit = limit
+                fetchTableData()
+            }
+            function handlePageChange (page) {
+                pagination.value.current = page
+                fetchTableData()
+            }
+            function handleCreateClick () {
 
-            },
-            formatValue (originVal) {
+            }
+            function formatValue (originVal) {
                 return originVal.reduce((acc, filter) => {
                     acc[filter.id] = filter.values.map(val => val.id).join(',')
                     return acc
                 }, {})
-            },
-            handleSearchChange (value) {
+            }
+            function handleSearchChange (value) {
                 const formatVal = value.reduce((acc, filter) => {
                     acc[filter.id] = filter.values.map(val => val.id).join(',')
                     return acc
                 }, {})
-                this.fetchTableData(formatVal)
-            },
-            handleClear () {
-                this.searchValue = []
-                this.fetchTableData()
-            },
+                fetchTableData(formatVal)
+            }
+            function handleClear () {
+                searchValue.value = []
+                fetchTableData()
+            }
             /**
              * 复制
              * @param row
              */
-            copyTemplate (row) {
+            function copyTemplate (row) {
                 if (!row.canEdit) return
 
-                this.copyTemp.templateName = `${row.name}_copy`
-                this.copyTemp.isShow = true
-                this.copyTemp.srcTemplateId = row.id
-            },
+                copyTemp.value.templateName = `${row.name}_copy`
+                copyTemp.value.isShow = true
+                copyTemp.value.srcTemplateId = row.id
+            }
             /**
              * 上架研发商店-关联商店
              * @param row
              */
-            toRelativeStore (row) {
+            function toRelativeStore (row) {
                 if (!row.canEdit) return
 
-                const href = `${WEB_URL_PREFIX}/store/workList/template?projectCode=${this.projectId}&templateId=${row.id}`
+                const href = `${WEB_URL_PREFIX}/store/workList/template?projectCode=${projectId.value}&templateId=${row.id}`
                 window.open(href, '_blank')
-            },
+            }
             /**
              * 转为自定义
              * @param row
              */
-            convertToCustom (row) {
+            async function convertToCustom (row) {
                 if (!row.canEdit) return
+                nextTick(() => {
+                    bkInfo({
+                        width: 480,
+                        title: i18n.t('template.templateToCustom'),
+                        extCls: 'custom_template',
+                        subHeader: h('div', [
+                            h('p', {
+                                class: 'template-title',
+                                directives: [
+                                    {
+                                        name: 'bk-tooltips',
+                                        value: row.name
+                                    }
+                                ]
+                            }, [
+                                h('span', `${i18n.t('templateName')} : `),
+                                h('span', { class: 'template-name-info' }, row.name)
+                            ]),
+                            h('div', { class: 'custom-tip' }, i18n.t('template.customTip'))
+                        ]),
+                        confirmLoading: true,
+                        confirmFn: () => {
+                            
+                        }
+                    })
+                })
+            }
+            /**
+             * 删除模板
+             * @param row
+             */
+            function deleteTemplate (row) {
+                if (!row.canEdit) return
+                const title = row.source === 'CUSTOM' ? i18n.t('template.deleteCustom') : i18n.t('template.deleteStore')
 
-                const h = this.$createElement
-                this.$bkInfo({
-                    width: 480,
-                    title: this.$t('template.templateToCustom'),
-                    extCls: 'custom_template',
+                bkInfo({
+                    title,
+                    okText: i18n.t('delete'),
+                    extCls: 'delete_template',
                     subHeader: h('div', [
                         h('p', {
-                            class: 'template-title',
+                            class: 'template-title-delete',
                             directives: [
                                 {
                                     name: 'bk-tooltips',
@@ -440,106 +463,111 @@
                                 }
                             ]
                         }, [
-                            h('span', `${this.$t('templateName')} : `),
-                            h('span', { class: 'template-name-info' }, row.name)
-                        ]),
-                        h('div', { class: 'custom-tip' }, this.$t('template.customTip'))
-                    ]),
-                    confirmLoading: true,
-                    confirmFn: () => {
-                        
-                    }
-                })
-            },
-            /**
-             * 删除模板
-             * @param row
-             */
-            deleteTemplate (row) {
-                if (!row.canEdit) return
-                const title = row.source === 'CUSTOM' ? this.$t('template.deleteCustom') : this.$t('template.deleteStore')
-
-                const h = this.$createElement
-                this.$bkInfo({
-                    title,
-                    okText: this.$t('delete'),
-                    extCls: 'delete_template',
-                    subHeader: h('div', [
-                        h('p', { class: 'template-title' }, [
-                            h('span', `${this.$t('templateName')} : `),
+                            h('span', `${i18n.t('templateName')} : `),
                             h('span', { class: 'template-name-info' }, row.name)
                         ])
                     ]),
                     confirmLoading: true,
                     confirmFn: () => {
-                        this.confirmDeleteTemplate(row)
+                        confirmDeleteTemplate(row)
                     }
                 })
-            },
-            async confirmDeleteTemplate (row) {
-                this.isLoading = true
+            }
+            async function confirmDeleteTemplate (row) {
+                isLoading.value = true
                 try {
-                    await this.$store.dispatch('pipelines/templateDelete', {
-                        projectId: this.projectId,
+                    await store.dispatch('pipelines/templateDelete', {
+                        projectId: projectId.value,
                         templateId: row.id
                     })
 
-                    this.fetchTableData()
-                    this.$showTips({ message: this.$t('template.deleteSuc'), theme: 'success' })
+                    fetchTableData()
+                    showTips({ message: i18n.t('template.deleteSuc'), theme: 'success' })
                 } catch (err) {
-                    this.$showTips({
+                    showTips({
                         message: err.message || err,
                         theme: 'error'
                     })
                 } finally {
-                    this.isLoading = false
+                    isLoading.value = false
                 }
-            },
-            async copyConfirmHandler (row) {
-                const valid = await this.$validator.validate()
+            }
+            async function copyConfirmHandler (row) {
+                const valid = await validator.validate()
                 if (!valid) return
 
-                this.isLoading = true
-                const templateName = this.copyTemp.templateName || ''
+                isLoading.value = true
+                const templateName = copyTemp.value.templateName || ''
                 if (!templateName.trim()) {
-                    this.copyTemp.nameHasError = true; return
+                    copyTemp.value.nameHasError = true; return
                 }
 
                 const postData = {
-                    projectId: this.projectId,
-                    srcTemplateId: this.copyTemp.srcTemplateId,
-                    copySetting: this.copyTemp.isCopySetting,
-                    name: this.copyTemp.templateName
+                    projectId: projectId.value,
+                    srcTemplateId: copyTemp.value.srcTemplateId,
+                    copySetting: copyTemp.value.isCopySetting,
+                    name: copyTemp.value.templateName
                 }
-                this.$store.dispatch('pipelines/templateCopy', postData).then((templateId) => {
+                store.dispatch('pipelines/templateCopy', postData).then((templateId) => {
                     console.log('🚀 ~ templateId:', templateId)
-                    this.copyCancelHandler()
-                    this.$showTips({ message: this.$t('template.copySuc'), theme: 'success' })
-                    // this.$router.push({
+                    copyCancelHandler()
+                    showTips({ message: i18n.t('template.copySuc'), theme: 'success' })
+                    // router.push({
                     //     name: 'templateEdit',
                     //     params: { templateId }
                     // })
                 }).catch((err) => {
                     const message = err.message || err
-                    this.$showTips({ message, theme: 'error' })
+                    showTips({ message, theme: 'error' })
                 }).finally(() => {
-                    this.isLoading = false
+                    isLoading.value = false
                 })
-            },
-            copyCancelHandler () {
-                this.copyTemp.isShow = false
-                this.copyTemp.templateName = ''
-                this.copyTemp.pipelineId = ''
-                this.copyTemp.nameHasError = false
-                this.copyTemp.isCopySetting = true
+            }
+            function copyCancelHandler () {
+                copyTemp.value.isShow = false
+                copyTemp.value.templateName = ''
+                copyTemp.value.pipelineId = ''
+                copyTemp.value.nameHasError = false
+                copyTemp.value.isCopySetting = true
+            }
+                
+            return {
+                hasCreatePermission,
+                activeTab,
+                searchValue,
+                isLoading,
+                tableData,
+                pagination,
+                copyTemp,
+                copySettings,
+                navList,
+                filterData,
+                projectId,
+                handleChangeMenu,
+                sourceFilterMethod,
+                hasPipelineTemplatePermission,
+                getType2Count,
+                fetchTableData,
+                handlePageLimitChange,
+                handlePageChange,
+                handleCreateClick,
+                formatValue,
+                handleSearchChange,
+                handleClear,
+                copyTemplate,
+                toRelativeStore,
+                convertToCustom,
+                deleteTemplate,
+                confirmDeleteTemplate,
+                copyConfirmHandler,
+                copyCancelHandler
             }
         }
     }
+
 </script>
 
 <style lang="scss" scoped>
-@import '@/scss/mixins/ellipsis';
-
 .template-manage-entry{
     width: 100%;
     height: 100%;
@@ -617,6 +645,18 @@
         margin-right: 30px;
     }
 }
+</style>
+<style lang="scss">
+@import '@/scss/mixins/ellipsis';
+
+.template-title {
+    max-width: 415px;
+    @include ellipsis();
+}
+.template-title-delete {
+    max-width: 355px;
+    @include ellipsis();
+}
 .template-name-info {
     color: #313238;
 }
@@ -626,12 +666,6 @@
     background: #F5F7FA;
     border-radius: 2px;
 }
-.template-title {
-    width: 336px;
-    @include ellipsis();
-}
-</style>
-<style>
 .delete_template {
     font-size: 14px;
     color: #4D4F56;

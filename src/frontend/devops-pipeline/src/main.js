@@ -50,6 +50,7 @@ import createDocs from '../../common-lib/docs'
 import 'bk-magic-vue/dist/bk-magic-vue.min.css'
 import { BkPermission, PermissionDirective } from 'bk-permission'
 import 'bk-permission/dist/main.css'
+import VueCompositionAPI from '@vue/composition-api'
 
 const { lang, i18n, setLocale } = createLocale(
     require.context('@locale/pipeline/', false, /\.json$/)
@@ -66,7 +67,7 @@ Vue.use(PermissionDirective(handlePipelineNoPermission))
 Vue.use(BkPermission, {
     i18n
 })
-
+Vue.use(VueCompositionAPI)
 Vue.use(VeeValidate, {
     i18nRootKey: 'validations', // customize the root path for validation messages.
     i18n,
