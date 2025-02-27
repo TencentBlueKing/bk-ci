@@ -11,15 +11,15 @@
 </template>
 
 <script>
-    import { mapState } from 'vuex'
     import Pipeline from '@/components/Pipeline'
+    import { mapState } from 'vuex'
 
     export default {
         components: {
             Pipeline
         },
         computed: {
-            ...mapState('atom', ['pipelineWithoutTrigger', 'pipeline'])
+            ...mapState('atom', ['pipelineWithoutTrigger'])
         }
     }
 </script>

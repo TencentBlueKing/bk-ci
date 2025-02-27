@@ -9,7 +9,7 @@
 </template>
 
 <script>
-    import { mapActions, mapState } from 'vuex'
+    import { mapActions, mapState } from 'vuex';
     export default {
         data () {
             return {
@@ -32,14 +32,14 @@
             }
         },
         created () {
-            this.requestTemplate({
+            this.requestPipeline({
                 projectId: this.projectCode,
                 templateId: this.resourceCode
             })
         },
         methods: {
             ...mapActions('atom', [
-                'requestTemplate'
+                'requestPipeline'
             ])
         }
     }

@@ -34,7 +34,7 @@ const getters = {
 }
 
 const mutations = {
-   
+
 }
 
 const actions = {
@@ -82,8 +82,8 @@ const actions = {
             return response.data
         })
     },
-    requestTemplateList (_, { projectId, pageIndex, pageSize, params }) {
-        return ajax.get(`${prefix}/templates/projects/${projectId}/templates?page=${pageIndex}&pageSize=${pageSize}`, { params }).then(response => {
+    requestTemplateList (_, params) {
+        return ajax.post(`${prefix}/pipeline/template/v2/${params.projectId}/list`, params).then(response => {
             return response.data
         })
     },

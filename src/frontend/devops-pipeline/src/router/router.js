@@ -30,11 +30,11 @@ const pipelinesTemplate = () => import(/* webpackChunkName: "pipelinesTemplate" 
 const pipelinesAudit = () => import(/* webpackChunkName: "pipelinesAudit" */'../views/list/audit')
 
 const templateEntry = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/')
+const TemplateOverview = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/TemplateOverview')
 const templateEdit = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/edit.vue')
-const templateSetting = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/setting.vue')
-const templateInstance = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/instance.vue')
-const templateInstanceCreate = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/instance_create.vue')
-const templatePermission = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/permission.vue')
+// const templateSetting = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/setting.vue')
+// const templateInstanceCreate = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/instance_create.vue')
+// const templatePermission = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/permission.vue')
 
 const atomManage = () => import(/* webpackChunkName: "atomManage" */'../views/list/atomManage.vue')
 
@@ -130,7 +130,7 @@ const routes = [
                 ]
             },
             {
-                path: 'template/:templateId',
+                path: 'template/:templateId/:version?',
                 component: templateEntry,
                 children: [
                     {
@@ -138,25 +138,25 @@ const routes = [
                         name: 'templateEdit',
                         component: templateEdit
                     },
+                    // {
+                    //     path: 'createInstance/:curVersionId/:pipelineName?',
+                    //     name: 'createInstance',
+                    //     component: templateInstanceCreate
+                    // },
+                    // {
+                    //     path: 'setting',
+                    //     name: 'templateSetting',
+                    //     component: templateSetting
+                    // },
+                    // {
+                    //     path: 'permission',
+                    //     name: 'templatePermission',
+                    //     component: templatePermission
+                    // },
                     {
-                        path: 'setting',
-                        name: 'templateSetting',
-                        component: templateSetting
-                    },
-                    {
-                        path: 'instance',
-                        name: 'templateInstance',
-                        component: templateInstance
-                    },
-                    {
-                        path: 'createInstance/:curVersionId/:pipelineName?',
-                        name: 'createInstance',
-                        component: templateInstanceCreate
-                    },
-                    {
-                        path: 'permission',
-                        name: 'templatePermission',
-                        component: templatePermission
+                        path: ':type?',
+                        name: 'TemplateOverview',
+                        component: TemplateOverview
                     }
                 ]
             },

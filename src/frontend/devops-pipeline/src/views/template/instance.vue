@@ -6,17 +6,6 @@
             title: loading.title
         }"
     >
-        <inner-header>
-            <div
-                class="instance-header"
-                slot="left"
-            >
-                <span
-                    class="inner-header-title"
-                    slot="left"
-                >{{ $t('template.instanceManage') }}</span>
-            </div>
-        </inner-header>
         <div
             class="sub-view-port"
             v-if="showContent && showInstanceList"
@@ -218,9 +207,7 @@
             :cur-version="currentVersion"
             :version-list="versionList"
             :cur-params-list="curParamsList"
-            :cur-tpl-params-list="curTplParamsList"
             :target-params-list="targetParamsList"
-            :target-tpl-params-list="targetTplParamsList"
             :cur-stages="curStages"
             :target-stages="targetStages"
             @cancel="cancelHandler"
@@ -237,7 +224,6 @@
 </template>
 
 <script>
-    import innerHeader from '@/components/devops/inner_header'
     import emptyTips from '@/components/pipelineList/imgEmptyTips'
     import instanceCompared from '@/components/template/instance-compared.vue'
     import instanceMessage from '@/components/template/instance-message.vue'
@@ -249,7 +235,6 @@
 
     export default {
         components: {
-            innerHeader,
             emptyTips,
             instanceCompared,
             instanceMessage
@@ -501,16 +486,12 @@
 
                     const curData = res.origin
                     const targetData = res.target
-                    const curContainer = curData.model.stages[0].containers[0]
-                    const targetContainer = targetData.model.stages[0].containers[0]
 
                     this.curStages = curData.model.stages
                     this.targetStages = targetData.model.stages
 
                     this.curParamsList.splice(0, this.curParamsList.length)
                     this.targetParamsList.splice(0, this.targetParamsList.length)
-                    this.curTplParamsList.splice(0, this.curTplParamsList.length)
-                    this.targetTplParamsList.splice(0, this.targetTplParamsList.length)
 
                     curData.params && curData.params.forEach((item) => {
                         const temp = {
@@ -526,22 +507,6 @@
                             value: item.defaultValue
                         }
                         this.targetParamsList.push(temp)
-                    })
-
-                    curContainer.templateParams && curContainer.templateParams.forEach((item) => {
-                        const temp = {
-                            key: item.id,
-                            value: item.defaultValue
-                        }
-                        this.curTplParamsList.push(temp)
-                    })
-
-                    targetContainer.templateParams && targetContainer.templateParams.forEach((item) => {
-                        const temp = {
-                            key: item.id,
-                            value: item.defaultValue
-                        }
-                        this.targetTplParamsList.push(temp)
                     })
                 } catch (err) {
                     this.$showTips({

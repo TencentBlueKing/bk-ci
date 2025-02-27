@@ -214,7 +214,7 @@
                         projectId: this.projectId,
                         pageIndex,
                         pageSize,
-                        params
+                        ...params
                     })
                     this.isManagerUser = res.hasPermission
                     this.hasCreatePermission = res.hasCreatePermission
@@ -244,7 +244,6 @@
                             }
                         })
                     }
-                    console.log()
                     return res
                 } catch (err) {
                     this.$showTips({
