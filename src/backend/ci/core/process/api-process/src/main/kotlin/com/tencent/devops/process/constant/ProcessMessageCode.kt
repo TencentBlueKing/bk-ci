@@ -365,6 +365,7 @@ object ProcessMessageCode {
 
     // 在 {0} 下，构建机复用互斥组节点 {1} 与被复用的 {2} 节点前后顺序不明，使用变量需明确前后顺序
     const val ERROR_AGENT_REUSE_MUTEX_VAR_ERROR = "2101257"
+    const val ERROR_PIPELINE_RETRY_TIME_INVALID = "2101258" // 构建数据已过期，重试时间不能晚于构建开始时间{0}天以上
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
