@@ -33,9 +33,10 @@ interface ServiceManageService {
 
     /**
      * 处理特殊逻辑
+     * @param userId 用户ID
      * @param serviceVO 服务bean
      * @param projectId 项目ID
      * @return ServiceVO
      */
-    fun doSpecBus(serviceVO: ServiceVO, projectId: String? = null): ServiceVO
+    fun doSpecBus(userId: String, serviceVO: ServiceVO, projectId: String? = null): ServiceVO
 }
