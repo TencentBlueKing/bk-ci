@@ -29,6 +29,7 @@ package com.tencent.devops.environment.service.job
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_DISTRIBUTE_FILE_EXECUTE_TARGET_HOST_EMPTY
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_DISTRIBUTE_FILE_FILE_SOURCE_HOST_EMPTY
@@ -115,6 +116,7 @@ class JobService @Autowired constructor(
 ) {
     companion object {
         private const val DEFAULT_FAILED_RETRY_OPERATION_CODE = 2
+        private const val MAX_HTTP_RETRY_TIME = 3
     }
 
     fun executeScript(
@@ -304,12 +306,18 @@ class JobService @Autowired constructor(
             bkUsername = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
         )
         ApigwJobCloudApi.setJobOperationName(::queryJobInstanceLogs.name)
-        val jobCloudQueryJobInstanceLogsRes: JobCloudResult<JobCloudQueryJobInstanceLogsResult> =
-            apigwJobCloudApi.executePostRequest(
-                shortPostTag = true,
-                jobCloud = jobCloudQueryJobInstanceLogsReq,
-                classOfU = JobCloudQueryJobInstanceLogsResult::class.java
-            )
+        val jobCloudQueryJobInstanceLogsRes: JobCloudResult<JobCloudQueryJobInstanceLogsResult> = RetryUtils.execute(
+            action = object : RetryUtils.Action<JobCloudResult<JobCloudQueryJobInstanceLogsResult>> {
+                override fun execute(): JobCloudResult<JobCloudQueryJobInstanceLogsResult> {
+                    return apigwJobCloudApi.executePostRequest(
+                        shortPostTag = true,
+                        jobCloud = jobCloudQueryJobInstanceLogsReq,
+                        classOfU = JobCloudQueryJobInstanceLogsResult::class.java
+                    )
+                }
+            },
+            retryTime = MAX_HTTP_RETRY_TIME
+        )
         val queryJobInstanceLogsRes: JobResult<QueryJobInstanceLogsResult> = JobResult(
             code = jobCloudQueryJobInstanceLogsRes.code,
             result = jobCloudQueryJobInstanceLogsRes.result,
@@ -457,9 +465,17 @@ class JobService @Autowired constructor(
     ): JobResult<QueryJobInstanceStatusResult> {
         ApigwJobCloudApi.setJobOperationName(::queryJobInstanceStatus.name)
         val jobCloudQueryJobInstanceStatusRes: JobCloudResult<JobCloudQueryJobInstanceStatusResult> =
-            apigwJobCloudApi.executeGetRequest(
-                JobCloudQueryJobInstanceStatusResult::class.java, jobInstanceId, returnIpResult ?: ""
+            RetryUtils.execute(
+                action = object : RetryUtils.Action<JobCloudResult<JobCloudQueryJobInstanceStatusResult>> {
+                    override fun execute(): JobCloudResult<JobCloudQueryJobInstanceStatusResult> {
+                        return apigwJobCloudApi.executeGetRequest(
+                            JobCloudQueryJobInstanceStatusResult::class.java, jobInstanceId, returnIpResult ?: ""
+                        )
+                    }
+                },
+                retryTime = MAX_HTTP_RETRY_TIME
             )
+
         val queryJobInstanceStatusRes: JobResult<QueryJobInstanceStatusResult> = JobResult(
             code = jobCloudQueryJobInstanceStatusRes.code,
             result = jobCloudQueryJobInstanceStatusRes.result,
