@@ -24,36 +24,12 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.scm.enums
 
-package com.tencent.devops.process.api.op
-
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.service.pipeline.SubPipelineUpgradeService
-import org.springframework.beans.factory.annotation.Autowired
-
-@RestResource
-class OpSubPipelineResourceImpl @Autowired constructor(
-    private val subPipelineUpgradeService: SubPipelineUpgradeService
-) : OpSubPipelineRefResource {
-    override fun createSubPipelineRef(userId: String, projectId: String?, pipelineId: String?): Result<Boolean> {
-        if (!pipelineId.isNullOrBlank() && !projectId.isNullOrBlank()) {
-            subPipelineUpgradeService.createSubPipelineRef(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                userId = userId
-            )
-        } else {
-            subPipelineUpgradeService.createAllSubPipelineRef(
-                projectId = projectId,
-                userId = userId
-            )
-        }
-        return Result(true)
-    }
-
-    override fun delSubPipelineRef(userId: String, projectId: String, pipelineId: String?): Result<Boolean> {
-        subPipelineUpgradeService.delSubPipelineRef(userId, projectId, pipelineId)
-        return Result(true)
-    }
+/**
+ * 针对[AI 摘要]的评论类型
+ */
+enum class AISummaryRateType constructor(val value: String) {
+    UP("up"),
+    DOWN("down")
 }

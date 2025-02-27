@@ -3,6 +3,8 @@ package com.tencent.devops.dispatch.utils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -10,6 +12,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.exception.DispatchRetryMQException
 import com.tencent.devops.dispatch.exception.ErrorCodeEnum
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.slf4j.Logger
@@ -203,21 +206,21 @@ class TPACommonUtil @Autowired constructor(
         endTime: Long?
     ) {
         // TODO: #9897 因为需要前端配合，所以一期先不写入耗时，等待前端完善排队耗时展示
-//        try {
-//            client.get(ServiceBuildResource::class).updateContainerTimeout(
-//                projectId = projectId,
-//                pipelineId = pipelineId,
-//                buildId = buildId,
-//                containerId = vmSeqId,
-//                executeCount = executeCount ?: 1,
-//                timestamps = mapOf(
-//                    BuildTimestampType.JOB_THIRD_PARTY_QUEUE to BuildRecordTimeStamp(createTime, endTime)
-//                )
-//            )
-//        } catch (e: Throwable) {
-//            logger.error("updateQueueTime|$projectId|$pipelineId|$buildId|$vmSeqId|$executeCount" +
-//                    "|$createTime|$endTime|error", e)
-//        }
+        try {
+            client.get(ServiceBuildResource::class).updateContainerTimeout(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                containerId = vmSeqId,
+                executeCount = executeCount,
+                timestamps = mapOf(
+                    BuildTimestampType.JOB_THIRD_PARTY_QUEUE to BuildRecordTimeStamp(createTime, endTime)
+                )
+            )
+        } catch (e: Throwable) {
+            logger.error("updateQueueTime|$projectId|$pipelineId|$buildId|$vmSeqId|$executeCount" +
+                    "|$createTime|$endTime|error", e)
+        }
     }
 
     companion object {

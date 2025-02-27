@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_repository
 
-**文档版本：** 1.0.6
+**文档版本：** 1.0.7
 
 **文档描述：** devops_ci_repository 的数据库文档
 | 表名                  | 说明       |
@@ -164,6 +164,7 @@
 |  6   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  7   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 |  8   | TYPE |   varchar   | 32 |   0    |    Y     |  N   |   GITHUB_APP    | GitHubtoken 类型（GITHUB_APP、OAUTH_APP）  |
+|  9   | OPERATOR |   varchar   | 64 |   0    |    Y     |  N   |       | 操作人  |
 
 **表名：** <a>T_REPOSITORY_GIT_CHECK</a>
 
@@ -200,6 +201,8 @@
 |  5   | TOKEN_TYPE |   varchar   | 64 |   0    |    Y     |  N   |       | token 类型  |
 |  6   | EXPIRES_IN |   bigint   | 20 |   0    |    Y     |  N   |       | 过期时间  |
 |  7   | CREATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |   CURRENT_TIMESTAMP    | token 的创建时间  |
+|  8   | UPDATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |   CURRENT_TIMESTAMP    | 修改时间  |
+|  9   | OPERATOR |   varchar   | 64 |   0    |    Y     |  N   |       | 操作人  |
 
 **表名：** <a>T_REPOSITORY_PIPELINE_REF</a>
 
@@ -247,6 +250,7 @@
 |  7   | EXPIRES_IN |   bigint   | 20 |   0    |    Y     |  N   |       | 过期时间  |
 |  8   | CREATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 创建时间  |
 |  9   | UPDATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 更新时间  |
+|  10   | OPERATOR |   varchar   | 64 |   0    |    Y     |  N   |       | 操作人  |
 
 **表名：** <a>T_REPOSITORY_TGIT_TOKEN</a>
 

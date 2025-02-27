@@ -156,7 +156,7 @@ mysql:
 redis:
   enabled: true
   auth:
-    password: bluking
+    password: blueking
   replica:
     replicaCount: 1
     persistence: 
@@ -295,68 +295,21 @@ kubernetes-manager:
 
   # 内部数据源配置
   mysql:
-    enabled: true
-    nameOverride: kubernetes-manager-mysql
-    image:
-      tag: 8.0.37-debian-12-r2
-    auth:
-      # 修改此选项必须删除mysql的pvc , 否则会创建mysql失败
-      rootPassword: blueking
-    primary:
-      persistence:
-        size: 10Gi
-      configuration: |-
-        [mysqld]
-        default_authentication_plugin=mysql_native_password
-        skip-name-resolve
-        explicit_defaults_for_timestamp
-        basedir=/opt/bitnami/mysql
-        plugin_dir=/opt/bitnami/mysql/lib/plugin
-        port=3306
-        socket=/opt/bitnami/mysql/tmp/mysql.sock
-        datadir=/bitnami/mysql/data
-        tmpdir=/opt/bitnami/mysql/tmp
-        max_allowed_packet=16M
-        bind-address=*
-        pid-file=/opt/bitnami/mysql/tmp/mysqld.pid
-        log-error=/opt/bitnami/mysql/logs/mysqld.log
-        character-set-server=UTF8
-        collation-server=utf8_general_ci
-        max_connections=2000
-        default-time-zone='+08:00'
-        [client]
-        port=3306
-        socket=/opt/bitnami/mysql/tmp/mysql.sock
-        default-character-set=UTF8
-        plugin_dir=/opt/bitnami/mysql/lib/plugin
-        [manager]
-        port=3306
-        socket=/opt/bitnami/mysql/tmp/mysql.sock
-        pid-file=/opt/bitnami/mysql/tmp/mysqld.pid
+    enabled: false
 
   redis:
-    enabled: true
-    nameOverride: kubernetes-manager-redis
-    auth:
-      password: bluking
-    replica:
-      replicaCount: 1
-      persistence:
-        size: 10Gi
-    master:
-      persistence:
-        size: 10Gi
+    enabled: false
 
   #外部数据库
   externalMysql:
-    host: localhost
+    host: "" #为空时使用bkci的mysql
     port: 3306
-    username: bkci
-    password: bkci
+    username: root
+    password: blueking
   externalRedis:
-    host: localhost
+    host: "" #为空时使用bkci的redis
     port: 6379
-    password: bkci
+    password: blueking
 
   # kubernetesManager service
   service:
