@@ -2240,8 +2240,7 @@ class PipelineListFacadeService @Autowired constructor(
     ): Long {
         val pipelineIds = pipelineSettingDao.getPipelineIdsByDialect(
             dslContext = dslContext,
-            projectId = projectId,
-            dialect = dialect
+            projectId = projectId
         )
         return pipelineInfoDao.countByPipelineIds(
             dslContext = dslContext,
@@ -2262,8 +2261,7 @@ class PipelineListFacadeService @Autowired constructor(
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         val pipelineIds = pipelineSettingDao.getPipelineIdsByDialect(
             dslContext = dslContext,
-            projectId = projectId,
-            dialect = dialect
+            projectId = projectId
         )
         val count = pipelineInfoDao.countByPipelineIds(
             dslContext = dslContext,
