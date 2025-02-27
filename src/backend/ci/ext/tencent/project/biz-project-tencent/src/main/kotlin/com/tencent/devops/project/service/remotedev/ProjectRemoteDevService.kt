@@ -247,7 +247,7 @@ class ProjectRemoteDevService @Autowired constructor(
                 projectCode = projectCode,
                 projectCreateUserInfo = ProjectCreateUserInfo(
                     createUserId = userId,
-                    roleName = BkAuthGroup.CGS_MANAGER.groupName,
+                    roleName = BkAuthGroup.CGS_MANAGER.value,
                     userIds = add.toList(),
                     roleId = null,
                     groupId = null,
