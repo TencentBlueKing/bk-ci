@@ -189,8 +189,8 @@ class PipelineBuildFacadeService(
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
     private var cancelIntervalLimitTime: Int = 60 // 取消间隔时间为60秒
 
-    @Value("\${pipeline.build.retry.limit_days:21}")
-    private var retryLimitDays: Int = 21
+    @Value("\${pipeline.build.retry.limit_days:28}")
+    private var retryLimitDays: Int = 28
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildFacadeService::class.java)
@@ -422,7 +422,8 @@ class PipelineBuildFacadeService(
                 // 判断当前时间是否超过最大重试时间
                 if (LocalDateTime.now().minusDays(retryLimitDays.toLong()).timestampmilli() - it > 0) {
                     throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY
+                        errorCode = ProcessMessageCode.ERROR_PIPELINE_RETRY_TIME_INVALID,
+                        params = arrayOf(retryLimitDays.toString())
                     )
                 }
             }
