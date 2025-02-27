@@ -36,7 +36,6 @@ import com.tencent.devops.project.service.eplus.EplusEncrptUtil.Filter
 import com.tencent.devops.project.service.eplus.EplusEncrptUtil.JsonData
 import com.tencent.devops.project.service.eplus.EplusEncrptUtil.encryptPanelToken
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.text.MessageFormat
@@ -45,11 +44,7 @@ import java.text.MessageFormat
 class TxMetricsServiceManageServiceImpl(
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao
-) : ServiceManageService {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(TxMetricsServiceManageServiceImpl::class.java)
-    }
+) : ServiceManageService() {
 
     @Value("\${eplus.panelFrom:#{null}}")
     private val panelFrom: String? = null
@@ -74,7 +69,8 @@ class TxMetricsServiceManageServiceImpl(
         val projectRecord = projectDao.getByEnglishName(dslContext, projectId)
             ?: throw ErrorCodeException(errorCode = ProjectMessageCode.PROJECT_NOT_EXIST, params = arrayOf(projectId))
         val isSecrecy = projectRecord.isSecrecy
-        if (isSecrecy && !panelUrl.isNullOrBlank() && panelPid != null && panelNid != null) {
+        if (!isSecrecy && !panelUrl.isNullOrBlank() && panelPid != null && panelNid != null) {
+            // 保密项目才跳去eplus页面看统计数据
             val jsonData = JsonData(
                 nid = panelNid, pid = panelPid, user = userId, filter = listOf(
                     Filter(col = "project_id", op = "=", `val` = projectId)
@@ -84,9 +80,10 @@ class TxMetricsServiceManageServiceImpl(
             val token = encryptPanelToken(publicKey, jsonData)
             // 生成eplus的跳转页面地址
             val serviceUrl = MessageFormat(panelUrl).format(arrayOf(panelFrom, token))
-            logger.info("encryptPanelToken userId:$userId|projectId:$projectId|serviceUrl:$serviceUrl")
             serviceVO.newWindow = true
             serviceVO.newWindowUrl = serviceUrl
+            serviceVO.iframeUrl = serviceUrl
+            serviceVO.grayIframeUrl = serviceUrl
         }
         return serviceVO
     }
