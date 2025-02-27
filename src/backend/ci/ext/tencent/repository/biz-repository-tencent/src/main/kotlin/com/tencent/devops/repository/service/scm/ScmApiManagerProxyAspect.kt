@@ -29,6 +29,7 @@
 package com.tencent.devops.repository.service.scm
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReflectUtil
 import com.tencent.devops.common.client.Client
@@ -36,6 +37,7 @@ import com.tencent.devops.repository.service.ScmProxy
 import com.tencent.devops.scm.api.ServiceScmApiProxyResource
 import com.tencent.devops.scm.pojo.ScmApiParameter
 import com.tencent.devops.scm.pojo.ScmApiRequest
+import com.tencent.devops.scm.sdk.tgit.TGitApiException
 import com.tencent.devops.scm.spring.properties.ScmProviderProperties
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
@@ -101,11 +103,15 @@ class ScmApiManagerProxyAspect @Autowired constructor(
             parameters = parameters
         )
         logger.info("proxy scm api request|serviceName:$serviceName|method:$methodName")
-        val data = client.getScm(ServiceScmApiProxyResource::class).proxy(
-            serviceName = serviceName,
-            methodName = methodName,
-            request = request
-        ).data
+        val data = try {
+            client.getScm(ServiceScmApiProxyResource::class).proxy(
+                serviceName = serviceName,
+                methodName = methodName,
+                request = request
+            ).data
+        } catch (ignored: TGitApiException) {
+            throw OperationException(ignored.message ?: "")
+        }
         return data?.let {
             if (ReflectUtil.isPrimitiveOrStringType(method.returnType)) {
                 it
