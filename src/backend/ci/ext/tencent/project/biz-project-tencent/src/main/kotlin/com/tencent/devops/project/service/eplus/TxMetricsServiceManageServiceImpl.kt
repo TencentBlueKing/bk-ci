@@ -62,30 +62,27 @@ class TxMetricsServiceManageServiceImpl(
     private val panelPid: Int? = null
 
     override fun doSpecBus(userId: String, serviceVO: ServiceVO, projectId: String?): ServiceVO {
-        if (projectId.isNullOrBlank() || publicKey.isNullOrBlank()) {
-            return serviceVO
-        }
+        if (projectId.isNullOrBlank() || publicKey.isNullOrBlank()) return serviceVO
         // 查看项目是否是保密项目
-        val projectRecord = projectDao.getByEnglishName(dslContext, projectId)
+        val project = projectDao.getByEnglishName(dslContext, projectId)
             ?: throw ErrorCodeException(errorCode = ProjectMessageCode.PROJECT_NOT_EXIST, params = arrayOf(projectId))
-        val isSecrecy = projectRecord.isSecrecy
-        val checkParamFlag = !panelUrl.isNullOrBlank() && panelPid != null && panelNid != null
-        if (!isSecrecy && checkParamFlag) {
-            // 非保密项目才跳去eplus页面看统计数据
+        if (!project.isSecrecy) return serviceVO
+        if (panelUrl.isNullOrBlank() || panelPid == null || panelNid == null) return serviceVO
+        // 非保密项目才跳去eplus页面看统计数据
+        return serviceVO.apply {
             val jsonData = JsonData(
-                nid = panelNid, pid = panelPid, user = userId, filter = listOf(
-                    Filter(col = "project_id", op = "=", `val` = projectId)
-                )
+                nid = panelNid,
+                pid = panelPid,
+                user = userId,
+                filter = listOf(Filter(col = "project_id", op = "=", `val` = projectId))
             )
-            // 生成token
             val token = encryptPanelToken(publicKey, jsonData)
             // 生成eplus的跳转页面地址
-            val serviceUrl = MessageFormat(panelUrl!!).format(arrayOf(panelFrom, token))
-            serviceVO.newWindow = true
-            serviceVO.newWindowUrl = serviceUrl
-            serviceVO.iframeUrl = serviceUrl
-            serviceVO.grayIframeUrl = serviceUrl
+            val serviceUrl = MessageFormat(panelUrl).format(arrayOf(panelFrom, token))
+            newWindow = true
+            newWindowUrl = serviceUrl
+            iframeUrl = serviceUrl
+            grayIframeUrl = serviceUrl
         }
-        return serviceVO
     }
 }
