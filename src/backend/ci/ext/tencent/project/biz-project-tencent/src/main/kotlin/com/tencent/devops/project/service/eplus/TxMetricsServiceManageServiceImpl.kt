@@ -63,11 +63,11 @@ class TxMetricsServiceManageServiceImpl(
 
     override fun doSpecBus(userId: String, serviceVO: ServiceVO, projectId: String?): ServiceVO {
         if (projectId.isNullOrBlank() || publicKey.isNullOrBlank()) return serviceVO
+        if (panelUrl.isNullOrBlank() || panelPid == null || panelNid == null) return serviceVO
         // 查看项目是否是保密项目
         val project = projectDao.getByEnglishName(dslContext, projectId)
             ?: throw ErrorCodeException(errorCode = ProjectMessageCode.PROJECT_NOT_EXIST, params = arrayOf(projectId))
-        if (!project.isSecrecy) return serviceVO
-        if (panelUrl.isNullOrBlank() || panelPid == null || panelNid == null) return serviceVO
+        if (project.isSecrecy) return serviceVO
         // 非保密项目才跳去eplus页面看统计数据
         return serviceVO.apply {
             val jsonData = JsonData(
