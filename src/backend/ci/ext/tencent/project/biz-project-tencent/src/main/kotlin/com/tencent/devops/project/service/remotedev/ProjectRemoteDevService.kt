@@ -4,12 +4,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.auth.api.ServicePermissionExtResource
 import com.tencent.devops.auth.api.service.ServiceMonitorSpaceResource
-import com.tencent.devops.auth.api.service.ServiceResourceGroupResource
 import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
@@ -214,12 +213,8 @@ class ProjectRemoteDevService @Autowired constructor(
             // 更新云研发项目时相关操作
             val enableRemoteDev = dbProperties.remotedev != true && enableRemotedev == true
             if (enableRemoteDev) {
-                client.get(ServiceResourceGroupResource::class).createGroupByGroupCode(
-                    projectCode = projectCode,
-                    resourceType = ResourceTypeId.PROJECT,
-                    groupCode = BkAuthGroup.CGS_MANAGER,
-                    groupName = null,
-                    groupDesc = null
+                client.get(ServicePermissionExtResource::class).migrateRemoteDevManager(
+                    projectCode = projectCode
                 )
                 enableRemoteDev(
                     userId = userId,
