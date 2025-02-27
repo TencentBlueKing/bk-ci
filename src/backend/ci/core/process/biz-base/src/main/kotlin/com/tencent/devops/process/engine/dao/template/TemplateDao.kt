@@ -38,6 +38,7 @@ import com.tencent.devops.process.pojo.PTemplateSortType
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_ID
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -45,7 +46,6 @@ import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -186,6 +186,7 @@ class TemplateDao {
                 .set(TEMPLATE_NAME, name)
                 .set(CATEGORY, category)
                 .set(LOGO_URL, logoUrl)
+                .set(UPDATE_TIME, UPDATE_TIME)
                 .where(SRC_TEMPLATE_ID.eq(srcTemplateId))
                 .execute()
         }
@@ -201,6 +202,7 @@ class TemplateDao {
         with(TTemplate.T_TEMPLATE) {
             return dslContext.update(this)
                 .set(STORE_FLAG, storeFlag)
+                .set(UPDATE_TIME, UPDATE_TIME)
                 .where(ID.eq(templateId).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
@@ -683,6 +685,7 @@ class TemplateDao {
         with(TTemplate.T_TEMPLATE) {
             val dsl = dslContext.update(this)
                 .set(DESC, desc)
+                .set(UPDATE_TIME, UPDATE_TIME)
             if (!name.isNullOrBlank()) {
                 dsl.set(TEMPLATE_NAME, name)
             }
