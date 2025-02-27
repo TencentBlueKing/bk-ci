@@ -122,7 +122,7 @@ class ApigwJobCloudApi {
                 "body: ${logWithLengthLimit(requestContent)}"
         )
         val resp = if (!shortPostTag) {
-            OkhttpUtils.doPost(url = jobCloudAuthenticationReq.url,jsonParam = requestContent,headers = headers)
+            OkhttpUtils.doPost(url = jobCloudAuthenticationReq.url, jsonParam = requestContent, headers = headers)
         } else {
             OkhttpUtils.doShortPost(url = jobCloudAuthenticationReq.url, jsonParam = requestContent, headers = headers)
         }
