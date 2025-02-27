@@ -252,14 +252,17 @@
                                         v-else-if="['NOT_INSTALLED'].includes(props.row.nodeStatus)"
                                         status="normal"
                                     />
-                                    <bk-loading
+                                    <span
                                         v-else-if="runningStatus.includes(props.row.nodeStatus)"
-                                        theme="primary"
-                                        mode="spin"
-                                        size="normal"
-                                        is-loading
                                         class="loading-icon"
-                                    />
+                                    >
+                                        <bk-loading
+                                            theme="primary"
+                                            mode="spin"
+                                            size="mini"
+                                            is-loading
+                                        />
+                                    </span>
                                     <!-- 状态值 -->
                                     <span class="node-status">
                                         {{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}
@@ -1856,9 +1859,10 @@
               }
             }
             .loading-icon {
-                display: inline-flex;
+                display: inline-block;
                 position: relative;
-                top: -2px;
+                width: 12px;
+                top: -12px;
                 margin-right: 5px;
             }
             .log-icon-box {
