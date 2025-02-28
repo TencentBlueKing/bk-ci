@@ -72,14 +72,30 @@
             }"
         >
             <template>
-                <SearchSelect
-                    class="search-input"
-                    v-model="searchValue"
-                    :placeholder="filterPlaceHolder"
-                    :data="filterData"
-                    :show-condition="false"
-                    clearable
-                ></SearchSelect>
+                <section class="filter-bar">
+                    <SearchSelect
+                        class="search-input"
+                        v-model="searchValue"
+                        :placeholder="filterPlaceHolder"
+                        :data="filterData"
+                        :show-condition="false"
+                        clearable
+                    ></SearchSelect>
+                    <bk-date-picker
+                        ref="dateTimeRangeRef"
+                        v-model="dateTimeRange"
+                        :placeholder="$t('environment.选择最近执行时间范围')"
+                        :type="'datetimerange'"
+                        @change="handleDateRangeChange"
+                    >
+                    </bk-date-picker>
+                    <bk-button
+                        class="export-btn"
+                        @click="handleExportCSV"
+                    >
+                        {{ $t('environment.导出') }}
+                    </bk-button>
+                </section>
                 <bk-table
                     v-bkloading="{ isLoading: tableLoading }"
                     :size="tableSize"
@@ -89,10 +105,13 @@
                     :pagination="pagination"
                     @page-change="handlePageChange"
                     @page-limit-change="handlePageLimitChange"
+                    @sort-change="handleSortChange"
                 >
                     <bk-table-column
                         :label="$t('environment.nodeInfo.displayName')"
+                        sortable="custom"
                         prop="displayName"
+                        min-width="160"
                         :show-overflow-tooltip="!isEditNodeStatus"
                     >
                         <template slot-scope="props">
@@ -171,8 +190,9 @@
                     </bk-table-column>
                     <bk-table-column
                         label="IP"
-                        prop="ip"
-                        min-width="80"
+                        prop="nodeIp"
+                        sortable="custom"
+                        min-width="120"
                         show-overflow-tooltip
                     >
                         <template slot-scope="props">
@@ -182,6 +202,8 @@
                     <bk-table-column
                         v-if="allRenderColumnMap.os"
                         :label="$t('environment.nodeInfo.os')"
+                        sortable="custom"
+                        min-width="120"
                         prop="osName"
                         show-overflow-tooltip
                     >
@@ -192,8 +214,9 @@
                     <bk-table-column
                         v-if="allRenderColumnMap.nodeStatus"
                         :label="`${$t('environment.status')}(${$t('environment.version')})`"
+                        sortable="custom"
                         prop="nodeStatus"
-                        min-width="150"
+                        :width="180"
                         show-overflow-tooltip
                     >
                         <template slot-scope="props">
@@ -229,20 +252,17 @@
                                         v-else-if="['NOT_INSTALLED'].includes(props.row.nodeStatus)"
                                         status="normal"
                                     />
-                                
-                                    <div
+                                    <span
                                         v-else-if="runningStatus.includes(props.row.nodeStatus)"
-                                        class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary loading-icon"
+                                        class="loading-icon"
                                     >
-                                        <div class="rotate rotate1"></div>
-                                        <div class="rotate rotate2"></div>
-                                        <div class="rotate rotate3"></div>
-                                        <div class="rotate rotate4"></div>
-                                        <div class="rotate rotate5"></div>
-                                        <div class="rotate rotate6"></div>
-                                        <div class="rotate rotate7"></div>
-                                        <div class="rotate rotate8"></div>
-                                    </div>
+                                        <bk-loading
+                                            theme="primary"
+                                            mode="spin"
+                                            size="mini"
+                                            is-loading
+                                        />
+                                    </span>
                                     <!-- 状态值 -->
                                     <span class="node-status">
                                         {{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}
@@ -269,7 +289,8 @@
                     <bk-table-column
                         v-if="allRenderColumnMap.usage"
                         :label="$t('environment.nodeInfo.usage')"
-                        prop="usage"
+                        sortable="custom"
+                        prop="nodeType"
                         min-width="80"
                         show-overflow-tooltip
                     >
@@ -280,21 +301,25 @@
                     <bk-table-column
                         v-if="allRenderColumnMap.createdUser"
                         :label="$t('environment.nodeInfo.importer')"
+                        sortable="custom"
                         prop="createdUser"
-                        min-width="80"
+                        min-width="120"
                         show-overflow-tooltip
                     ></bk-table-column>
                     <bk-table-column
                         v-if="allRenderColumnMap.lastModifyBy"
                         :label="$t('environment.nodeInfo.lastModifyBy')"
-                        prop="lastModifyUser"
-                        min-width="80"
+                        sortable="custom"
+                        prop="lastModifiedUser"
+                        min-width="120"
                         show-overflow-tooltip
                     ></bk-table-column>
                     <bk-table-column
                         v-if="allRenderColumnMap.lastModifyTime"
                         :label="$t('environment.nodeInfo.lastModifyTime')"
-                        prop="lastModifyTime"
+                        :width="180"
+                        prop="lastModifiedTime"
+                        sortable="custom"
                         min-width="80"
                         show-overflow-tooltip
                     >
@@ -303,8 +328,39 @@
                         </template>
                     </bk-table-column>
                     <bk-table-column
+                        v-if="allRenderColumnMap.latestBuildPipeline"
+                        :label="$t('environment.nodeInfo.lastRunPipeline')"
+                        :width="180"
+                        sortable="custom"
+                        prop="latestBuildPipelineId"
+                        show-overflow-tooltip
+                    >
+                        <template slot-scope="props">
+                            <span
+                                class="pipeline-name"
+                                @click="handleToPipelineDetail(props.row.latestBuildDetail)"
+                            >
+                                {{ props.row?.latestBuildDetail?.pipelineName }}
+                            </span>
+                        </template>
+                    </bk-table-column>
+                    <bk-table-column
+                        v-if="allRenderColumnMap.latestBuildTime"
+                        :width="180"
+                        :label="$t('environment.nodeInfo.lastRunAs')"
+                        prop="latestBuildTime"
+                        sortable="custom"
+                        min-width="80"
+                        show-overflow-tooltip
+                    >
+                        <template slot-scope="props">
+                            {{ props.row.lastBuildTime || '--' }}
+                        </template>
+                    </bk-table-column>
+                    <bk-table-column
                         :label="$t('environment.operation')"
                         width="180"
+                        fixed="right"
                     >
                         <template slot-scope="props">
                             <template v-if="props.row.canUse">
@@ -484,7 +540,7 @@
                     </bk-table-column>
                     <template #empty>
                         <EmptyTableStatus
-                            :type="searchValue.length ? 'search-empty' : 'empty'"
+                            :type="(searchValue.length || !!dateTimeRange[1]) ? 'search-empty' : 'empty'"
                             @clear="clearFilter"
                         />
                     </template>
@@ -554,13 +610,11 @@
     import { getQueryString } from '@/utils/util'
     import SearchSelect from '@blueking/search-select'
     import webSocketMessage from '../utils/webSocketMessage.js'
-    // import emptyNode from './empty_node'
     import '@blueking/search-select/dist/styles/index.css'
     const NODE_TABLE_COLUMN_CACHE = 'node_list_columns'
     const ENV_NODE_TABLE_LIMIT_CACHE = 'env_node_table_limit_cache'
     export default {
         components: {
-            // emptyNode,
             thirdConstruct,
             configManageNode,
             dropdownList,
@@ -678,6 +732,7 @@
                     limitList: [10, 50, 100, 200]
                 },
                 requestParams: {},
+                dateTimeRange: [],
                 buildNodes: ['DEVCLOUD', 'THIRDPARTY'], // Build 构建用途的节点 - 第三方构建机类型
                 deploymentNodes: ['CC', 'CMDB', 'UNKNOWN', 'OTHER'], // deployment 部署用途的节点
                 curNode: {},
@@ -718,32 +773,74 @@
                         id: 'displayName'
                     },
                     {
+                        name: this.$t('environment.nodeInfo.os'),
+                        id: 'osName'
+                    },
+                    {
+                        name: this.$t('environment.nodeInfo.usage'),
+                        id: 'nodeType',
+                        children: [
+                            {
+                                id: 'CMDB',
+                                name: this.$t('environment.部署')
+                            },
+                            {
+                                id: 'THIRDPARTY',
+                                name: this.$t('environment.构建')
+                            }
+                        ]
+                    },
+                    {
                         name: this.$t('environment.nodeInfo.importer'),
                         id: 'createdUser'
+                    },
+                    {
+                        name: this.$t('environment.status'),
+                        id: 'nodeStatus',
+                        children: [
+                            {
+                                id: 'NORMAL',
+                                name: this.$t('environment.nodeStatusMap.NORMAL')
+                            },
+                            {
+                                id: 'ABNORMAL',
+                                name: this.$t('environment.nodeStatusMap.ABNORMAL')
+                            },
+                            {
+                                id: 'NOT_INSTALLED',
+                                name: this.$t('environment.nodeStatusMap.NOT_INSTALLED')
+                            }
+                        ]
+                    },
+                    {
+                        name: this.$t('environment.nodeInfo.agentVersion'),
+                        id: 'agentVersion'
                     },
                     {
                         name: this.$t('environment.lastModifier'),
                         id: 'lastModifiedUser'
                     },
                     {
-                        name: this.$t('environment.nodeInfo.usage'),
-                        id: 'nodeUsage',
-                        children: [
-                            {
-                                id: 'DEPLOY',
-                                name: this.$t('environment.部署')
-                            },
-                            {
-                                id: 'BUILD',
-                                name: this.$t('environment.构建')
+                        name: this.$t('environment.nodeInfo.lastRunPipeline'),
+                        id: 'latestBuildPipelineId',
+                        remoteMethod:
+                            async (search) => {
+                                console.log(search)
+                                const res = await this.$store.dispatch('environment/getLatestBuildPipelineList', {
+                                    projectId: this.projectId
+                                })
+                                return res.records.map(item => ({
+                                    name: item.pipelineName,
+                                    id: item.pipelineId
+                                }))
                             }
-                        ]
                     }
                 ]
                 return data.filter(data => {
                     return !this.searchValue.find(val => val.id === data.id)
                 })
             },
+            
             filterPlaceHolder () {
                 return this.filterData.map(item => item.name).join(' / ')
             },
@@ -812,7 +909,7 @@
                 },
                 {
                     id: 'nodeStatus',
-                    label: `${this.$t('environment.status')}(${this.$t('environment.version')})`
+                    label: this.$t('environment.status')
                 },
                 {
                     id: 'usage',
@@ -829,8 +926,15 @@
                 {
                     id: 'lastModifyTime',
                     label: this.$t('environment.nodeInfo.lastModifyTime')
+                },
+                {
+                    id: 'latestBuildPipeline',
+                    label: this.$t('environment.nodeInfo.lastRunPipeline')
+                },
+                {
+                    id: 'latestBuildTime',
+                    label: this.$t('environment.nodeInfo.lastRunAs')
                 }
-
             ]
             const columnsCache = JSON.parse(localStorage.getItem(NODE_TABLE_COLUMN_CACHE))
             if (columnsCache) {
@@ -845,7 +949,9 @@
                     { id: 'usage' },
                     { id: 'createdUser' },
                     { id: 'lastModifyBy' },
-                    { id: 'lastModifyTime' }
+                    { id: 'lastModifyTime' },
+                    { id: 'latestBuildPipeline' },
+                    { id: 'latestBuildTime' }
                 ])
             }
 
@@ -898,11 +1004,12 @@
                             pageSize: this.pagination.limit
                         }
                     })
-                    this.nodeList.splice(0, this.nodeList.length)
                     this.pagination.count = res.count
-                    res.records.forEach(item => {
-                        item.isEnableEdit = item.nodeHashId === this.curEditNodeItem
-                        this.nodeList.push(item)
+                    this.nodeList = res.records.map(i => {
+                        return {
+                            isEnableEdit: i.nodeHashId === this.curEditNodeItem,
+                            ...i
+                        }
                     })
                 } catch (err) {
                     const message = err.message ? err.message : err
@@ -1447,6 +1554,63 @@
                 this.pagination.limit = limit
                 this.requestList(this.requestParams)
             },
+            handleSortChange ({ column, prop, order }) {
+                const orderMap = {
+                    ascending: 'ASC',
+                    descending: 'DESC'
+                }
+                this.pagination.current = 1
+                this.requestParams.sortType = prop
+                this.requestParams.collation = orderMap[order]
+                this.requestList()
+            },
+            handleToPipelineDetail (param) {
+                if (!param.projectId) return
+                window.open(`${window.location.origin}/console/pipeline/${param.projectId}/${param.pipelineId}/detail/${param.buildId}/executeDetail`, '_blank')
+            },
+            formatTime (date) {
+                try {
+                    return +new Date(date)
+                } catch (e) {
+                    return ''
+                }
+            },
+            handleDateRangeChange (value) {
+                const startTime = this.formatTime(value[0])
+                const endTime = this.formatTime(value[1])
+                if (startTime && endTime) {
+                    this.requestParams.latestBuildTimeStart = startTime
+                    this.requestParams.latestBuildTimeEnd = endTime
+                } else {
+                    delete this.requestParams.latestBuildTimeStart
+                    delete this.requestParams.latestBuildTimeEnd
+                }
+                this.pagination.current = 1
+                this.requestList()
+            },
+            async handleExportCSV () {
+                try {
+                    const res = await this.$store.dispatch('environment/exportNodeListCSV', {
+                        projectId: this.projectId,
+                        params: this.requestParams
+                    })
+                    this.downloadCsv(res)
+                } catch (e) {
+                    console.error(e)
+                }
+            },
+            downloadCsv (response) {
+                if (!response) return
+                const csvContent = response.split(',')
+                const bom = new Uint8Array([0xEF, 0xBB, 0xBF])
+                const blob = new Blob([bom, csvContent], { type: 'text/csv;charset=utf-8;' })
+                const link = document.createElement('a')
+                link.href = URL.createObjectURL(blob)
+                link.download = 'data.csv'
+                document.body.appendChild(link)
+                link.click()
+                document.body.removeChild(link)
+            },
             handleReImport (row) {
                 const params = []
                 params.push({
@@ -1477,6 +1641,7 @@
                 })
             },
             clearFilter () {
+                this.$refs.dateTimeRangeRef?.handleClear()
                 this.searchValue = []
             },
             handleInstallEnd () {
@@ -1694,9 +1859,10 @@
               }
             }
             .loading-icon {
-                display: inline-flex;
+                display: inline-block;
                 position: relative;
-                top: -2px;
+                width: 12px;
+                top: -12px;
                 margin-right: 5px;
             }
             .log-icon-box {
@@ -1730,12 +1896,25 @@
         }
     }
 
-    .search-input {
-        width: 500px;
-        background: #fff;
-        flex: 1;
-        ::placeholder {
-            color: #c4c6cc;
+    .filter-bar {
+        display: flex;
+        align-items: center;
+        .search-input {
+            width: 680px;
+            background: #fff;
+            margin-right: 10px;
+            ::placeholder {
+                color: #c4c6cc;
+            }
+        }
+        .export-btn {
+            margin-left: 10px;
+        }
+    }
+    .pipeline-name {
+        cursor: pointer;
+        &:hover {
+            color: $primaryColor;
         }
     }
 </style>

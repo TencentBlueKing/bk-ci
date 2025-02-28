@@ -481,8 +481,22 @@ const actions = {
     // 更新环境hook设置
     updateEnvHookDetail (_, { projectId, envHashId, params }) {
         return vue.$ajax.post(`${prefix}/user/devx/env_hook/${projectId}?envHashId=${envHashId}`, params)
-    }
+    },
+    /**
+     * 获取构建机最近执行记录
+     */
+    getLatestBuildPipelineList ({ commit }, { projectId }) {
+        return vue.$ajax.get(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/listLatestBuildPipelines`)
+    },
 
+    exportNodeListCSV ({ commit }, { projectId, params }) {
+        const queryString = new URLSearchParams(params).toString()
+        return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/listNew_export?${queryString}`, {}, {
+            originalResponse: true
+        }).then(response => {
+            return response
+        })
+    }
 }
 
 export default actions
