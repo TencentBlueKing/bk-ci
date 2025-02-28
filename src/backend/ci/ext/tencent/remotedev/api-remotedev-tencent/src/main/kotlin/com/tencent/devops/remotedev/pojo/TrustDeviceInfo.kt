@@ -17,8 +17,6 @@ data class TrustDeviceInfo(
 
 @Schema(title = "获取授信设备Token数据")
 data class TrustDeviceTokenGetData(
-    @get:Schema(title = "用户ID")
-    val userId: String,
     @get:Schema(title = "设备唯一标识")
     val deviceId: String,
     @get:Schema(title = "详细信息")

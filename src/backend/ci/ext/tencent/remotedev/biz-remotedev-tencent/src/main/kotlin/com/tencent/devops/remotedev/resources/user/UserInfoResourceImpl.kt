@@ -10,6 +10,7 @@ import com.tencent.devops.remotedev.pojo.userinfo.FaceRecognitionResult
 import com.tencent.devops.remotedev.pojo.userinfo.UserInfoAuthCheck
 import com.tencent.devops.remotedev.pojo.userinfo.UserInfoCheckData
 import com.tencent.devops.remotedev.pojo.userinfo.UserInfoCheckResult
+import com.tencent.devops.remotedev.pojo.userinfo.UserInfoMoaCheckConfig
 import com.tencent.devops.remotedev.service.TrustDeviceService
 import com.tencent.devops.remotedev.service.UserInfoCertService
 import org.springframework.beans.factory.annotation.Autowired
@@ -29,12 +30,13 @@ class UserInfoResourceImpl @Autowired constructor(
         token: String?,
         data: UserInfoCheckData
     ): Result<UserInfoCheckResult> {
+        val res = userInfoCertService.multipleCert(data)
         if (userId != null && deviceId != null && token != null) {
             if (trustDeviceService.checkTrustDevice(userId, deviceId, token)) {
-                return Result(UserInfoCheckResult.noCheck())
+                return Result(res.copy(moa = UserInfoMoaCheckConfig(false)))
             }
         }
-        return Result(userInfoCertService.multipleCert(data))
+        return Result(res)
     }
 
     override fun faceRecognition(data: FaceRecognitionData): Result<FaceRecognitionResult> {
@@ -46,8 +48,8 @@ class UserInfoResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun getTrustDeviceToken(data: TrustDeviceTokenGetData): Result<String> {
-        return Result(trustDeviceService.getOrCreateToken(data.userId, data.deviceId, data.detail))
+    override fun getTrustDeviceToken(userId: String, data: TrustDeviceTokenGetData): Result<String> {
+        return Result(trustDeviceService.getOrCreateToken(userId, data.deviceId, data.detail))
     }
 
     override fun verifyTrustDeviceToken(userId: String, deviceId: String, token: String): Result<Boolean> {
