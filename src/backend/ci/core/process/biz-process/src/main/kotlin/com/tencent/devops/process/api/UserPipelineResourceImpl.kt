@@ -776,19 +776,19 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(MatrixYamlCheckUtils.checkYaml(yaml))
     }
 
-    override fun countPipelineByDialect(
+    override fun countInheritedDialectPipeline(
         userId: String,
         projectId: String,
         dialect: PipelineDialectType
     ): Result<Long> {
         return Result(
-            pipelineListFacadeService.countPipelineByDialect(
+            pipelineListFacadeService.countInheritedDialectPipeline(
                 projectId = projectId, dialect = dialect
             )
         )
     }
 
-    override fun listPipelinesByDialect(
+    override fun listInheritedDialectPipelines(
         userId: String,
         projectId: String,
         dialect: PipelineDialectType,
@@ -796,7 +796,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         pageSize: Int?
     ): Result<SQLPage<PipelineIdAndName>> {
         return Result(
-            pipelineListFacadeService.listPipelinesByDialect(
+            pipelineListFacadeService.listInheritedDialectPipelines(
                 projectId = projectId,
                 dialect = dialect,
                 page = page,

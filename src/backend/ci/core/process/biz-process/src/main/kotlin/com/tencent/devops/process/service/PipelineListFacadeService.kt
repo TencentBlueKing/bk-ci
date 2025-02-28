@@ -2234,7 +2234,7 @@ class PipelineListFacadeService @Autowired constructor(
         return pipelineLabelPipelineDao.getPipelineLabelRelateInfos(dslContext, projectIds)
     }
 
-    fun countPipelineByDialect(
+    fun countInheritedDialectPipeline(
         projectId: String,
         dialect: PipelineDialectType
     ): Long {
@@ -2250,7 +2250,7 @@ class PipelineListFacadeService @Autowired constructor(
         ).toLong()
     }
 
-    fun listPipelinesByDialect(
+    fun listInheritedDialectPipelines(
         projectId: String,
         dialect: PipelineDialectType,
         page: Int?,

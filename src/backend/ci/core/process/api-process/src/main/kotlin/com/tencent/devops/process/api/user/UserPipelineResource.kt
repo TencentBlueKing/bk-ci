@@ -631,10 +631,10 @@ interface UserPipelineResource {
         projectId: String
     ): Result<PipelineCount>
 
-    @Operation(summary = "获取流水线数量根据流水线方言")
+    @Operation(summary = "获取继承项目方言的流水线数量")
     @GET
-    @Path("{projectId}/countPipelineByDialect")
-    fun countPipelineByDialect(
+    @Path("{projectId}/countInheritedDialectPipeline")
+    fun countInheritedDialectPipeline(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -648,8 +648,8 @@ interface UserPipelineResource {
 
     @Operation(summary = "获取流水线列表根据流水线方言")
     @GET
-    @Path("{projectId}/listPipelinesByDialect")
-    fun listPipelinesByDialect(
+    @Path("{projectId}/listInheritedDialectPipelines")
+    fun listInheritedDialectPipelines(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
