@@ -44,7 +44,7 @@ import com.tencent.devops.dispatch.constants.BK_TASK_FETCHING_TIMEOUT
 import com.tencent.devops.dispatch.constants.BK_UNLIMITED
 import com.tencent.devops.dispatch.constants.BK_WAS_RECENTLY_BUILT
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
-import com.tencent.devops.dispatch.pojo.AgentStartMonitor
+import com.tencent.devops.dispatch.pojo.TPAMonitorEvent
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
@@ -52,8 +52,11 @@ import com.tencent.devops.process.engine.common.VMUtils
 import java.util.Date
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 /**
  * 三方构建机的业务监控拓展
@@ -61,32 +64,59 @@ import org.springframework.stereotype.Service
 @Suppress("ALL")
 @Service
 class ThirdPartyAgentMonitorService @Autowired constructor(
+    private val streamBridge: StreamBridge,
     private val client: Client,
     private val commonConfig: CommonConfig,
     private val dslContext: DSLContext,
     private val buildLogPrinter: BuildLogPrinter,
     private val thirdPartyAgentBuildDao: ThirdPartyAgentBuildDao
 ) {
+    fun monitorQueue(event: TPAMonitorEvent) {
+        try {
+            if (monitor(event)) {
+                event.sendTo(streamBridge)
+            } else {
+                logger.info("monitorQueue|${event.toLog()}|exit")
+            }
+        } catch (e: Exception) {
+            logger.error("monitorQueue|${event.toLog()}|error", e)
+        }
+    }
 
-    fun monitor(event: AgentStartMonitor) {
+    fun monitor(event: TPAMonitorEvent): Boolean {
+        val record = thirdPartyAgentBuildDao.get(dslContext, event.buildId, event.vmSeqId) ?: return false
+        if (record.executeCount != event.executeCount) {
+            logger.warn("monitor|${event.toLog()}|executeCount not equal ${record.executeCount}")
+            return false
+        }
 
-        val record = thirdPartyAgentBuildDao.get(dslContext, event.buildId, event.vmSeqId) ?: return
+        // 重置可能的失败任务，先停掉这个功能
+        // tryRollBackQueue(event, record)
 
-        val logMessage = StringBuilder(128)
-
-        tryRollBackQueue(event, record, logMessage)
-
-        // #5806 已经不再排队，则退出监控, 暂时需求如此，后续可修改
+        // #5806 已经不再排队，则退出监控
         if (PipelineTaskStatus.toStatus(record.status) != PipelineTaskStatus.QUEUE) {
-            return
+            return false
+        }
+
+        // 如果是第一次取创建时间，如果是重试取更新时间，作为超时依据
+        val recordTime = if (record.executeCount == 1 || record.executeCount == null) {
+            record.createdTime
+        } else {
+            record.updatedTime
+        }
+        if (recordTime.plusMinutes(event.timeoutMin) <= LocalDateTime.now()) {
+            logger.info("monitor|${event.toLog()}|timeout")
+            return false
         }
 
         val agentDetail = client.get(ServiceThirdPartyAgentResource::class)
             .getAgentDetail(userId = event.userId, projectId = event.projectId, agentHashId = record.agentId)
-            .data ?: return
+            .data ?: return false
 
         val tag = VMUtils.genStartVMTaskId(event.vmSeqId)
         val heartbeatInfo = agentDetail.heartbeatInfo
+
+        val logMessage = StringBuilder(128)
 
         logMessage.append(
             I18nUtil.getCodeLanMessage(
@@ -135,7 +165,7 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
         log(event, logMessage, tag)
 
         if (heartbeatInfo == null) {
-            return
+            return true
         }
 
         heartbeatInfo.heartbeatTime?.let { self ->
@@ -198,9 +228,11 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
         }
 
         log(event, logMessage, tag)
+
+        return true
     }
 
-    private fun log(event: AgentStartMonitor, sb: StringBuilder, tag: String) {
+    private fun log(event: TPAMonitorEvent, sb: StringBuilder, tag: String) {
         buildLogPrinter.addLine(
             buildId = event.buildId,
             message = sb.toString(),
@@ -215,7 +247,7 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
 
     private fun genBuildDetailUrl(projectId: String, pipelineId: String, buildId: String): String {
         return HomeHostUtil.getHost(commonConfig.devopsHostGateway!!) +
-            "/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+                "/console/pipeline/$projectId/$pipelineId/detail/$buildId"
     }
 
     /**
@@ -226,7 +258,7 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
      * 未解决的场景：
      *  本次不涉及构建机集群重新漂移指定其他构建机，需要重新设计。
      */
-    fun tryRollBackQueue(event: AgentStartMonitor, record: TDispatchThirdpartyAgentBuildRecord, sb: StringBuilder) {
+    fun tryRollBackQueue(event: TPAMonitorEvent, record: TDispatchThirdpartyAgentBuildRecord) {
         if (PipelineTaskStatus.toStatus(record.status) != PipelineTaskStatus.RUNNING) {
             return
         }
@@ -240,20 +272,21 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
             // Agent发起领取超过x分钟没有启动，基本上存在问题需要重回队列以便被再次调度到
             if (outTime) {
                 thirdPartyAgentBuildDao.updateStatus(dslContext, record.id, PipelineTaskStatus.QUEUE)
+                val sb = StringBuilder()
                 sb.append(
                     I18nUtil.getCodeLanMessage(
                         messageCode = BK_TASK_FETCHING_TIMEOUT,
                         language = I18nUtil.getDefaultLocaleLanguage(),
                         params = arrayOf("$ROLLBACK_MIN")
                     )
-                )
-                    .append("(Over $ROLLBACK_MIN minutes, try roll back to queue.)")
+                ).append("(Over $ROLLBACK_MIN minutes, try roll back to queue.)")
                 log(event, sb, VMUtils.genStartVMTaskId(event.vmSeqId))
             }
         }
     }
 
     companion object {
+        private val logger = LoggerFactory.getLogger(ThirdPartyAgentMonitorService::class.java)
         private const val ROLLBACK_MIN = 3L // 3分钟如果构建任务领取后没启动，尝试回退状态
         private const val DOCKER_ROLLBACK_MIN = 10L // 针对docker构建场景增加拉镜像可能需要的时间
     }
