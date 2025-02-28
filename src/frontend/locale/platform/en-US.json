@@ -93,5 +93,7 @@
     "编辑代码源": "Edit code source",
     "确认离开当前页？": "Are you sure to leave now?",
     "离开将会导致未保存信息丢失": "Your changes will be lost if you close without saving.",
-    "确定": "Confirm"
+    "确定": "Confirm",
+    "由中/英文字符、下划线组成，不超过20个字符": "Consists of Chinese/English characters and underscores, up to 20 characters",
+    "由英文字母和下划线组成，不超过20个字符": "Consists of English letters and underscores, up to 20 characters"
 }

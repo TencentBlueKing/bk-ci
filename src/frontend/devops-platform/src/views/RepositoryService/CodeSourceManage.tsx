@@ -147,12 +147,12 @@ export default defineComponent({
 
     const handleToggleConfigStatus = (row: any) => {
       const { status, name, scmCode } = row;
-      const tip = enabledStatus.includes(status) ? '停用' : '启用';
+      const tip = enabledStatus.includes(status) ? t('停用') : t('启用');
       InfoBox({
         confirmText: tip,
         cancelText: t('取消'),
         confirmButtonTheme: 'danger',
-        title: t('是否X该代码源？', [t(`${tip}`)]),
+        title: t('是否X该代码源？', [t(tip)]),
         content: h('div', {
           class: 'text-[14px] text-[#4D4F56]'
         }, [
@@ -217,8 +217,8 @@ export default defineComponent({
       })
     }
 
-    onMounted(async () => {
-      await getRepoConfigList();
+    onMounted(() => {
+      getRepoConfigList();
     });
 
     return () => (

@@ -3,7 +3,7 @@ import { watch, computed, defineComponent, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
-import { providerConfig, repoConfigFromData } from '@/types/index';
+import { providerConfig, repoConfigFromData, UploadLogoResponse } from '@/types/index';
 import { Message, InfoBox } from 'bkui-vue';
 import { deepCopy } from '@/utils/utils';
 import useRepoConfigTable from "./useRepoConfigTable";
@@ -224,7 +224,7 @@ export default defineComponent({
       configFormData.value.logoUrl = ''
     }
 
-    const handleUploadLogo = async (res: any) => {
+    const handleUploadLogo = async (res: UploadLogoResponse) => {
       const { file } = res;
       if (file) {
         if (!(file.type === 'image/jpeg' || file.type === 'image/png')) {
@@ -344,7 +344,7 @@ export default defineComponent({
                   label="Logo"
                   property="logoUrl"
                 >
-                  <div class="flex">
+                  <div class="flex">111
                     <bk-upload
                       files={logoFiles.value}
                       multiple={false}

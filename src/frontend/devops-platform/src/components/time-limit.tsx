@@ -29,13 +29,11 @@ export default defineComponent({
 
     const handleChangeCustomTime = (value: string | number) => {
       let newValue = Number(value);
-      if (!/^[0-9]*$/.test(value.toString())) {
-        newValue = 1;
-      } else if (newValue > 3650) {
-        newValue = 3650;
+      if (!Number.isInteger(newValue)) {
+          newValue = 1;
       }
       nextTick(() => {
-        emit('changeTime', newValue);
+          emit('changeTime', Math.min(newValue, 3650));
       });
     };
 

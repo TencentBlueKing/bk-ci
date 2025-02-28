@@ -53,3 +53,9 @@ export interface repoConfigFromData {
     proxyEnabled: string;
   }
 }
+
+export interface UploadLogoResponse {
+  type: string;
+  file: Blob;
+  filename: string;
+}
