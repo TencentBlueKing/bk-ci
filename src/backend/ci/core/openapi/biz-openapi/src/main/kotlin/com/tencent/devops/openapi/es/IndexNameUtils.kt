@@ -47,5 +47,5 @@ object IndexNameUtils {
     }
 
     private const val LOG_INDEX_PREFIX = "openapi-metric-log-"
-    private const val LOG_INDEX_DATE_FORMAT = "yyyy-MM-dd"
+    private const val LOG_INDEX_DATE_FORMAT = "yyyy-MM"
 }
