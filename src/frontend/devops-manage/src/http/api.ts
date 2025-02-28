@@ -396,16 +396,16 @@ export default {
   /**
    * 根据流水线方言获取流水线数量
    */
-  countPipelineByDialect(projectId: string, dialect: any) {
-    return http.get(`${PIPELINES_PERFIX}/${projectId}/countPipelineByDialect?dialect=${dialect}`);
+  countInheritedDialectPipeline(projectId: string) {
+    return http.get(`${PIPELINES_PERFIX}/${projectId}/countInheritedDialectPipeline`);
   },
   /**
    * 根据流水线方言获取流水线列表
    */
-  listPipelinesByDialect(projectId: string, params: any) {
+  listInheritedDialectPipelines(projectId: string, params: any) {
     const query = new URLSearchParams({
       ...params,
     }).toString();
-    return http.get(`${PIPELINES_PERFIX}/${projectId}/listPipelinesByDialect?${query}`);
+    return http.get(`${PIPELINES_PERFIX}/${projectId}/listInheritedDialectPipelines?${query}`);
   },
 };

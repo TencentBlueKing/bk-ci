@@ -279,7 +279,7 @@ const changeConstrained = () => {
 
 const getCountPipelineByDialect = async () => {
   try {
-    const res = await http.countPipelineByDialect(projectId.value, currentPipelineDialect.value);
+    const res = await http.countInheritedDialectPipeline(projectId.value);
     pipelinePagination.value.count = res;
   } catch (error) {
     console.log(error);
@@ -356,7 +356,7 @@ const fetchListViewPipelines = async ()=> {
       page: pipelinePagination.value.current,
       pageSize: pipelinePagination.value.limit,
     };
-    const res = await http.listPipelinesByDialect(projectId.value, params);
+    const res = await http.listInheritedDialectPipelines(projectId.value, params);
     pipelineList.value = res.records;
     pipelinePagination.value.count = res.count;
   } catch (error) {
