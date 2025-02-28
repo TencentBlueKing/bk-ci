@@ -462,7 +462,9 @@
     },
     "editStoreTemplateTips": "研发商店模板不支持编辑",
     "lastModifiedDate": "更新时间",
-    "lastModifiedBy": "更新人"
+    "lastModifiedBy": "更新人",
+    "templateCoverWarning": "草稿即将覆盖警告",
+    "templateCoverWarningDesc": "{0} 编辑的草稿（从{1}创建）尚未发布。编辑分支版本将覆盖尚未发布的草稿，请确认是否继续"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",
@@ -1485,7 +1487,9 @@
   "pipelineSetting": "流水线设置",
   "COMMIT_TO_MASTER": "提交到默认分支",
   "CHECKOUT_BRANCH_AND_REQUEST_MERGE": "新增分支并创建 MR 到默认分支",
-  "PUSH_BRANCH_AND_REQUEST_MERGE": "提交到【{0}】分支并创建 MR",
+  "COMMIT_TO_SOURCE_BRANCH": "提交到 {0} 分支",
+  "COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE": "提交到 {0} 分支并创建 MR",
+  "COMMIT_TO_BRANCH": "提交到指定分支",
   "atomModel": "插件设置",
   "previewYaml": "预览YAML",
   "applyToYaml": "应用",

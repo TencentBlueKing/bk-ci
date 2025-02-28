@@ -116,6 +116,7 @@
 
 <script>
     import ModeSwitch from '@/components/ModeSwitch'
+    import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry.vue'
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import {
         RESOURCE_ACTION
@@ -125,7 +126,6 @@
     import { mapActions, mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
     import ReleaseButton from './ReleaseButton'
-    import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry.vue'
 
     export default {
         components: {
@@ -345,7 +345,7 @@
                         canRelease: true,
                         baseVersion: this.pipelineInfo?.baseVersion ?? this.pipelineInfo?.releaseVersion ?? this.pipelineInfo?.version,
                         baseVersionName: this.pipelineInfo?.baseVersionName ?? this.pipelineInfo?.releaseVersionName ?? this.pipelineInfo?.versionName,
-                        baseVersionStatus: this.pipelineInfo?.latestVersionStatus,
+                        baseVersionStatus: this.pipelineInfo?.baseVersionStatus ?? this.pipelineInfo?.latestVersionStatus,
                         version,
                         versionName
                     })

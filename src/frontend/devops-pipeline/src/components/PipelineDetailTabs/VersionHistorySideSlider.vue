@@ -139,7 +139,6 @@
 <script>
     import Logo from '@/components/Logo'
     import EmptyException from '@/components/common/exception'
-    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import { VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     import { convertTime, navConfirm } from '@/utils/util'
     import SearchSelect from '@blueking/search-select'
@@ -249,10 +248,11 @@
             window.__bk_zIndex_manager.zIndex = this.preZIndex
         },
         methods: {
-            ...mapActions('pipelines', [
-                'requestPipelineVersionList',
-                'deletePipelineVersion'
-            ]),
+            ...mapActions({
+                requestPipelineSummary: 'atom/requestPipelineSummary',
+                requestPipelineVersionList: 'pipelines/requestPipelineVersionList',
+                deletePipelineVersion: 'pipelines/deletePipelineVersion'
+            }),
             handleShown () {
                 this.handlePageChange(1)
             },
@@ -330,12 +330,7 @@
                             })
 
                             if (row.isDraft) { // 删除草稿时需要更新pipelineInfo
-                                this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
-                                    version: this.pipelineInfo?.releaseVersion,
-                                    versionName: this.pipelineInfo?.releaseVersionName,
-                                    canDebug: false,
-                                    canRelease: false
-                                })
+                                this.requestPipelineSummary(this.$route.params)
                             }
                         } catch (err) {
                             this.$showTips({

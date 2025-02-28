@@ -175,6 +175,10 @@
             includeDraft: {
                 type: Boolean,
                 default: true
+            },
+            buildOnly: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -266,7 +270,8 @@
                         page: nextPage,
                         pageSize: pagination.limit,
                         versionName: this.searchKeyword,
-                        includeDraft: this.includeDraft
+                        includeDraft: this.includeDraft,
+                        buildOnly: this.buildOnly
                     })
                     this.pagination.page = res.page
                     this.hasNext = res.count > res.page * pagination.limit
