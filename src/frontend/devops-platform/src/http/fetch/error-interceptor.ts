@@ -6,7 +6,6 @@ import authModel from '@/common/auth-model';
 export default (error: any, config: IFetchConfig) => {
   const {
     code,
-    message,
     response
   } = error;
   switch (code) {
@@ -16,7 +15,7 @@ export default (error: any, config: IFetchConfig) => {
   }
   // 全局捕获错误给出提示
   if (config.globalError && !document.getElementsByClassName('bk-message').length) {
-    Message({ theme: 'error', message });
+    Message({ theme: 'error', message: error.message || error });
   }
   return Promise.reject(error);
 };

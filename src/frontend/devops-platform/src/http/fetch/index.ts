@@ -5,7 +5,8 @@ import RequestError from './request-error';
 
 export interface IFetchConfig extends RequestInit {
   responseType?: 'json' | 'text' | 'arrayBuffer' | 'blob' | 'formData',
-  globalError?: Boolean
+  globalError?: Boolean,
+  disabledResponseType?: Boolean,
 }
 
 type HttpMethod = (url: string, payload?: any, config?: IFetchConfig) => Promise<any>;
@@ -30,6 +31,14 @@ const allMethods = [...methodsWithoutData, ...methodsWithData];
 // 拼装发送请求配置
 const getFetchConfig = (method: string, payload: any, config: IFetchConfig) => {
   const execResult = /\/platform\/([^\/]+)/.exec(location.href);
+  let headers = {
+    'X-DEVOPS-PROJECT-ID': execResult?.[1] || '',
+    'X-Requested-With': 'fetch',
+    'Content-Type': contentTypeMap[config.responseType] || 'application/json'
+  }
+  if (config.disabledResponseType) {
+    delete headers['Content-Type']
+  }
   // 合并配置
   let fetchConfig: IFetchConfig = deepMerge(
     {
@@ -37,9 +46,7 @@ const getFetchConfig = (method: string, payload: any, config: IFetchConfig) => {
       mode: 'cors',
       cache: 'default',
       credentials: 'include',
-      headers: {
-        'X-DEVOPS-PROJECT-ID': execResult?.[1] || '',
-      },
+      headers,
       redirect: 'follow',
       referrerPolicy: 'no-referrer-when-downgrade',
       responseType: 'json',
@@ -47,11 +54,11 @@ const getFetchConfig = (method: string, payload: any, config: IFetchConfig) => {
     },
     config,
   );
-  // set Content-Type
-  fetchConfig.headers['Content-Type'] = config?.headers?.['Content-Type'] || contentTypeMap[fetchConfig.responseType];
   // merge payload
+  const body = config.disabledResponseType ? payload : JSON.stringify(payload)
+
   if (methodsWithData.includes(method)) {
-    fetchConfig = deepMerge(fetchConfig, { body: JSON.stringify(payload) });
+    fetchConfig = deepMerge(fetchConfig, { body }, payload);
   } else {
     fetchConfig = deepMerge(fetchConfig, payload);
   }
@@ -104,9 +111,11 @@ allMethods.forEach((method) => {
         const fetchConfig: IFetchConfig = getFetchConfig(method, payload, config);
         try {
           const fetchUrl = getFetchUrl(url, method, payload);
+          console.log(fetchUrl, 11)
           const response = await fetch(fetchUrl, fetchConfig);
           return await successInterceptor(response, fetchConfig);
         } catch (err) {
+          console.error(fetchConfig, '1111111')
           return errorInterceptor(err, fetchConfig);
         }
       };

@@ -29,5 +29,10 @@ export default {
   },
   fetchListProvider () {
     return fetch.get(`${repositoryApiPerfix}/repositories/config/listProvider`);
+  },
+  uploadConfigLog ({ formData }) {
+    return fetch.post(`${repositoryApiPerfix}/repositories/config/uploadLogo`, formData, {
+      disabledResponseType: true
+    });
   }
 };
