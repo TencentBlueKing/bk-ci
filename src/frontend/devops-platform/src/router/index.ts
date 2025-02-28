@@ -11,10 +11,10 @@ const CodeSourceManage = () => import('@/views/RepositoryService/CodeSourceManag
 const CodeConfigForm = () => import('@/views/RepositoryService/CodeConfigForm');
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory('platform'),
   routes: [
     {
-      path: '/platform',
+      path: '/',
       name: 'platform',
       component: PlatformEntry,
       redirect: () => {
@@ -44,6 +44,8 @@ const router = createRouter({
 // afterEach
 router.afterEach((to) => {
   // 同步导航数据
-  window.$syncUrl?.(to.fullPath);
+  if (!location.search.includes('disableSyncUrl=true')) {
+    window.$syncUrl?.(to.fullPath);
+  }
 });
 export default router;
