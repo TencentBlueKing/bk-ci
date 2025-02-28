@@ -86,7 +86,6 @@ import org.springframework.stereotype.Service
 import java.time.LocalDate
 import javax.ws.rs.core.Response
 
-
 @Suppress("ALL")
 @Service
 class PipelineBuildWebhookService @Autowired constructor(
