@@ -28,12 +28,14 @@
 package com.tencent.devops.auth.api
 
 import com.tencent.devops.common.api.pojo.Result
+import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
+import javax.ws.rs.QueryParam
 
 @Tag(name = "SERVICE_EXT_PERMISSION")
 @Path("/service/auth/ext/")
@@ -44,6 +46,8 @@ interface ServicePermissionExtResource {
     @POST
     @Path("/migrateRemoteDevManager")
     fun migrateRemoteDevManager(
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectCode")
         projectCode: String
     ): Result<Int>
 }
