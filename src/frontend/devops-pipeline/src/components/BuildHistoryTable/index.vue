@@ -403,6 +403,7 @@
             v-model="isShowMoreArtifactories"
             render-directive="if"
             :width="900"
+            ext-cls="history-dialog"
             header-position="left"
             :title="`#${activeBuild && activeBuild.buildNum} - ${$t('history.artifactList')}`"
             @cancel="hideArtifactoriesPopup"
@@ -433,20 +434,20 @@
                 </div>
             </template>
             <!-- <p class="artifactory-popup-header">
-                <bk-button
-                    text
-                    theme="primary"
-                    @click.stop="gotoArtifactoryList"
-                >
-                    <span class="go-outputs-btn">
-                        <logo
-                            name="tiaozhuan"
-                            size="18"
-                        />
-                        {{ $t("goOutputs") }}
-                    </span>
-                </bk-button>
-            </p> -->
+                    <bk-button
+                        text
+                        theme="primary"
+                        @click.stop="gotoArtifactoryList"
+                    >
+                        <span class="go-outputs-btn">
+                            <logo
+                                name="tiaozhuan"
+                                size="18"
+                            />
+                            {{ $t("goOutputs") }}
+                        </span>
+                    </bk-button>
+                </p> -->
             <ul
                 class="build-artifact-list-ul"
                 v-if="visibleIndex !== -1"
@@ -1538,8 +1539,10 @@
     }
 }
 
-.bk-dialog {
-    top: 50% !important;
-    transform: var(--dialog-top-translateY) !important;
+.history-dialog{
+    .bk-dialog {
+        top: 50% !important;
+        transform: var(--dialog-top-translateY) !important;
+    }
 }
 </style>
