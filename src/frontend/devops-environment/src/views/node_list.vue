@@ -609,8 +609,8 @@
     import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
     import { getQueryString } from '@/utils/util'
     import SearchSelect from '@blueking/search-select'
-    import webSocketMessage from '../utils/webSocketMessage.js'
     import '@blueking/search-select/dist/styles/index.css'
+    import webSocketMessage from '../utils/webSocketMessage.js'
     const NODE_TABLE_COLUMN_CACHE = 'node_list_columns'
     const ENV_NODE_TABLE_LIMIT_CACHE = 'env_node_table_limit_cache'
     export default {
@@ -1735,6 +1735,14 @@
             -webkit-border-radius: 50%;
         }
 
+        .loading-icon {
+            display: inline-block;
+            position: relative;
+            width: 12px;
+            top: -12px;
+            margin-right: 5px;
+        }
+
         .abnormal-stutus-icon {
             border-color: $failColor;
         }
@@ -1893,6 +1901,28 @@
                 padding-left: 2px;
                 color: #ea3636;
             }
+        }
+    }
+
+    .filter-bar {
+        display: flex;
+        align-items: center;
+        .search-input {
+            width: 680px;
+            background: #fff;
+            margin-right: 10px;
+            ::placeholder {
+                color: #c4c6cc;
+            }
+        }
+        .export-btn {
+            margin-left: 10px;
+        }
+    }
+    .pipeline-name {
+        cursor: pointer;
+        &:hover {
+            color: $primaryColor;
         }
     }
 

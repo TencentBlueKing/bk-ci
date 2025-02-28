@@ -24,3 +24,12 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+@mixin multiline-ellipsis ($max-width: auto) {
+    max-width: $max-width;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+    word-break: break-all;
+  }

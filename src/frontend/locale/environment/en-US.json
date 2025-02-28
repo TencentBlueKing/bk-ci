@@ -454,9 +454,10 @@
     "正在生成手动安装命令": "Generating manual installation command",
     "已加载X条": "{0} items loaded",
     "共X个节点": "Total: {0} items",
-    "authManage": "Permission Manage",
     "advancedSetting": "Advanced Setting",
     "saveChange": "Save",
+    "authManage": "Permission Manage",
+    "可以尝试 调整关键词 或": "You can try adjusting keywords or ",
     "选择最近执行时间范围": "Select the recent execution time range",
     "导出": "Export"
 }
