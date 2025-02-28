@@ -352,7 +352,6 @@ const fetchListViewPipelines = async ()=> {
   try {
     isLoading.value = true;
     const params = {
-      dialect: currentPipelineDialect.value,
       page: pipelinePagination.value.current,
       pageSize: pipelinePagination.value.limit,
     };
