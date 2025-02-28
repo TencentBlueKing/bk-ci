@@ -237,13 +237,14 @@ export default defineComponent({
             theme: 'danger',
             message: t('大小不超过2M'),
           });
-        } else {
-          const reader = new FileReader();
-          reader.readAsDataURL(file);
-          reader.onload = () => {
-            configFormData.value.logoUrl = reader.result;
-          };
         }
+        const formData = new FormData();
+        formData.append('logo', file);
+        await http.uploadConfigLog({
+          formData,
+        }).then((res) => {
+          configFormData.value.logoUrl = res.url;
+        })
       }
     }
 
@@ -296,7 +297,7 @@ export default defineComponent({
                             ${!isCreate.value ? 'cursor-not-allowed' : 'cursor-pointer'}`
                           }
                         >
-                          <img src={item.logoUrl} alt="" class="h-[32px] w-[32px] pr-[12px]" />
+                          <img src={item.logoUrl} alt="" class="h-[32px] pr-[12px]" />
                           <div>
                             <p class="text-[14px] h-[22px]">{item.name}</p>
                             <p class="text-[12px] text-[#979BA5]">{item.desc}</p>
