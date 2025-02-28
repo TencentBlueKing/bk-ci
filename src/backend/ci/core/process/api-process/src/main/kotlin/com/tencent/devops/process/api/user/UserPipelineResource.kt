@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -640,10 +639,7 @@ interface UserPipelineResource {
         userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "流水线方言")
-        @QueryParam("dialect")
-        dialect: PipelineDialectType
+        projectId: String
     ): Result<Long>
 
     @Operation(summary = "获取流水线列表根据流水线方言")
@@ -656,9 +652,6 @@ interface UserPipelineResource {
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线方言")
-        @QueryParam("dialect")
-        dialect: PipelineDialectType,
         @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,

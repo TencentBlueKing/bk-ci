@@ -41,7 +41,6 @@ import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
@@ -778,27 +777,22 @@ class UserPipelineResourceImpl @Autowired constructor(
 
     override fun countInheritedDialectPipeline(
         userId: String,
-        projectId: String,
-        dialect: PipelineDialectType
+        projectId: String
     ): Result<Long> {
         return Result(
-            pipelineListFacadeService.countInheritedDialectPipeline(
-                projectId = projectId, dialect = dialect
-            )
+            pipelineListFacadeService.countInheritedDialectPipeline(projectId = projectId)
         )
     }
 
     override fun listInheritedDialectPipelines(
         userId: String,
         projectId: String,
-        dialect: PipelineDialectType,
         page: Int?,
         pageSize: Int?
     ): Result<SQLPage<PipelineIdAndName>> {
         return Result(
             pipelineListFacadeService.listInheritedDialectPipelines(
                 projectId = projectId,
-                dialect = dialect,
                 page = page,
                 pageSize = pageSize
             )

@@ -48,7 +48,6 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
@@ -2235,8 +2234,7 @@ class PipelineListFacadeService @Autowired constructor(
     }
 
     fun countInheritedDialectPipeline(
-        projectId: String,
-        dialect: PipelineDialectType
+        projectId: String
     ): Long {
         val pipelineIds = pipelineSettingDao.getNonInheritedPipelineIds(
             dslContext = dslContext,
@@ -2252,7 +2250,6 @@ class PipelineListFacadeService @Autowired constructor(
 
     fun listInheritedDialectPipelines(
         projectId: String,
-        dialect: PipelineDialectType,
         page: Int?,
         pageSize: Int?
     ): SQLPage<PipelineIdAndName> {
