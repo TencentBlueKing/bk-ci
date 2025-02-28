@@ -114,7 +114,7 @@ export default defineComponent({
       },
       {
         icon: SvnIcon,
-        name: t('SVN'),
+        name: 'SVN',
       },
       {
         icon: GithubIcon,
@@ -344,7 +344,7 @@ export default defineComponent({
                   label="Logo"
                   property="logoUrl"
                 >
-                  <div class="flex">111
+                  <div class="flex">
                     <bk-upload
                       files={logoFiles.value}
                       multiple={false}
