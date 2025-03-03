@@ -91,7 +91,7 @@
                                     {
                                         customDesc
                                         ? <NamingConventionTip/>
-                                        : <div style="white-space: pre-wrap; font-size: 12px; max-width: 500px;">
+                                        : <div style="white-space: pre-wrap; overflow-wrap: break-word; font-size: 12px; max-width: 500px;">
                                             {
                                                 descMap.length > 1
                                                 ? descMap.map(item => (
