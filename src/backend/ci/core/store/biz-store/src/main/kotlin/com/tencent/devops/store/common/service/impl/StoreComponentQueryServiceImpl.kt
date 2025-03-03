@@ -65,7 +65,7 @@ import com.tencent.devops.store.common.service.ClassifyService
 import com.tencent.devops.store.common.service.StoreCommentService
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreComponentQueryService
-import com.tencent.devops.store.common.service.StoreComponentVersonLogService
+import com.tencent.devops.store.common.service.StoreComponentVersionLogService
 import com.tencent.devops.store.common.service.StoreHonorService
 import com.tencent.devops.store.common.service.StoreIndexManageService
 import com.tencent.devops.store.common.service.StoreLabelService
@@ -187,7 +187,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
     lateinit var labelDao: LabelDao
 
     @Autowired
-    lateinit var storeComponentVersonLogService: StoreComponentVersonLogService
+    lateinit var storeComponentVersionLogService: StoreComponentVersionLogService
 
 
     companion object {
@@ -1104,7 +1104,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         page: Int,
         pageSize: Int
     ): Result<Page<StoreVersionLogInfo>> {
-        return storeComponentVersonLogService.getStoreComponentVersionLogs(userId, storeCode, storeType,page,pageSize)
+        return storeComponentVersionLogService.getStoreComponentVersionLogs(userId, storeCode, storeType,page,pageSize)
     }
 
 }

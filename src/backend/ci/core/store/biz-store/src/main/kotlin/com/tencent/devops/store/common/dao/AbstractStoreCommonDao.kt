@@ -88,8 +88,15 @@ abstract class AbstractStoreCommonDao {
     abstract fun getStoreComponentVersionLogs(
         dslContext: DSLContext,
         storeCode: String,
-        page: Int? = null,
-        pageSize: Int? = null
+        page: Int,
+        pageSize: Int
     ): Result<Record3<String, String, LocalDateTime>>?
+
+
+    abstract fun countStoreComponentVersionLogs(
+        dslContext: DSLContext,
+        storeCode: String,
+    ): Long
+
 
 }

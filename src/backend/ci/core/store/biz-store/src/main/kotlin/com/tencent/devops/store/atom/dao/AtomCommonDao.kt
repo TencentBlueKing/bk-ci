@@ -207,8 +207,8 @@ class AtomCommonDao : AbstractStoreCommonDao() {
     override fun getStoreComponentVersionLogs(
         dslContext: DSLContext,
         storeCode: String,
-        page: Int?,
-        pageSize: Int?
+        page: Int,
+        pageSize: Int
     ): Result<Record3<String, String, LocalDateTime>>? {
         val atom = TAtom.T_ATOM
         val atomVersionLog = TAtomVersionLog.T_ATOM_VERSION_LOG
@@ -218,13 +218,24 @@ class AtomCommonDao : AbstractStoreCommonDao() {
             .on(atom.ID.eq(atomVersionLog.ATOM_ID))
             .where(atom.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()).and(atom.ATOM_CODE.eq(storeCode)))
 
-        if (null != page && null != pageSize) {
-            baseStep.limit((page - 1) * pageSize, pageSize)
-        }
+        baseStep.limit((page - 1) * pageSize, pageSize)
 
         return baseStep.fetch()
 
 
+    }
+
+    override fun countStoreComponentVersionLogs(dslContext: DSLContext, storeCode: String): Long {
+
+        val atom = TAtom.T_ATOM
+        val atomVersionLog = TAtomVersionLog.T_ATOM_VERSION_LOG
+        val baseStep = dslContext.selectCount()
+            .from(atom)
+            .join(atomVersionLog)
+            .on(atom.ID.eq(atomVersionLog.ATOM_ID))
+            .where(atom.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()).and(atom.ATOM_CODE.eq(storeCode)))
+
+        return baseStep.fetchOne(0, Long::class.java) ?: 0L
     }
 
 }
