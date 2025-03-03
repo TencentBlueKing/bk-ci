@@ -429,7 +429,6 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             fieldName = KEY_LANGUAGE,
             expectedType = String::class,
             promptName = "${KEY_EXECUTION}.${KEY_LANGUAGE}",
-            supportedFieldTypeCheck = true,
             supportedFieldTypes = setOf(JAVA, PYTHON, GOLANG, NODEJS)
         )
         val language = executionInfoMap[KEY_LANGUAGE].toString()
@@ -558,20 +557,6 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 params = arrayOf(maxInputNum.toString())
             )
         }
-        inputDataMap?.let { dataMap ->
-            for (entry in dataMap) {
-                val key = entry.key as? String
-                val value = entry.value as? Map<String, Any>
-                if (key != null && value != null) {
-                    validateTaskJsonField(
-                        dataMap = value,
-                        fieldName = KEY_TYPE,
-                        promptName = "${KEY_INPUT}.${key}.${KEY_TYPE}",
-                        expectedType = String::class
-                    )
-                }
-            }
-        }
         val outputDataMap = taskDataMap[KEY_OUTPUT] as? Map<String, Any>
         if (outputDataMap != null && outputDataMap.size > maxOutputNum) {
             throw ErrorCodeException(
@@ -589,7 +574,6 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                         fieldName = KEY_TYPE,
                         promptName = "${KEY_OUTPUT}.${key}.${KEY_TYPE}",
                         expectedType = String::class,
-                        supportedFieldTypeCheck = true,
                         supportedFieldTypes = setOf(STRING, ARTIFACT, REPORT)
                     )
                 }
@@ -603,32 +587,26 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         fieldName: String,
         promptName: String,
         expectedType: KClass<T>,
-        requireNotBlank: Boolean = true,
-        supportedFieldTypeCheck: Boolean = false,
+        require: Boolean = true,
         supportedFieldTypes: Set<String>? = null
     ) {
-
         val fieldValue = dataMap[fieldName]
-        if (requireNotBlank) {
+        if (require) {
             if (fieldValue == null || (fieldValue is String && fieldValue.isBlank())) {
-
                 throw ErrorCodeException(
                     errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
                     params = arrayOf(promptName)
                 )
-
             }
         }
         if (!expectedType.isInstance(fieldValue)) {
-
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
                 params = arrayOf(promptName)
             )
         }
-        if (supportedFieldTypeCheck) {
-            if (supportedFieldTypes != null && fieldValue !in supportedFieldTypes) {
-
+        if (supportedFieldTypes != null) {
+            if (fieldValue !in supportedFieldTypes) {
                 throw ErrorCodeException(
                     errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NOT_SUPPORT,
                     params = arrayOf(promptName, supportedFieldTypes.joinToString(separator = ","))
