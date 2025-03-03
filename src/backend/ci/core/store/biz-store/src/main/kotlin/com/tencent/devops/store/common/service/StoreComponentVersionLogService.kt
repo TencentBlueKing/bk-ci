@@ -40,7 +40,6 @@ abstract class StoreComponentVersionLogService {
         page: Int,
         pageSize: Int
     ): Result<Page<StoreVersionLogInfo>> {
-
         var count: Long
 
         count =
