@@ -114,7 +114,6 @@ class StoreVersionLogDao {
         }
     }
 
-
     fun getStoreComponentVersionLogs(
         dslContext: DSLContext,
         storeCode: String,

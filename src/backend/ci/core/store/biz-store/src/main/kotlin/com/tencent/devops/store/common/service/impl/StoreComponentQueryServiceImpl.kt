@@ -189,7 +189,6 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
     @Autowired
     lateinit var storeComponentVersionLogService: StoreComponentVersionLogService
 
-
     companion object {
         private val executor = Executors.newFixedThreadPool(30)
     }
@@ -1093,7 +1092,6 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         }
     }
 
-
     /**
      * 根据组件id获取组件版本日志
      */
@@ -1104,7 +1102,13 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         page: Int,
         pageSize: Int
     ): Result<Page<StoreVersionLogInfo>> {
-        return storeComponentVersionLogService.getStoreComponentVersionLogs(userId, storeCode, storeType,page,pageSize)
+        return storeComponentVersionLogService.getStoreComponentVersionLogs(
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType,
+            page = page,
+            pageSize = pageSize
+        )
     }
 
 }

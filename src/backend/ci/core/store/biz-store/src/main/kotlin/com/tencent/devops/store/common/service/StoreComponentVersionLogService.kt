@@ -29,14 +29,10 @@ abstract class StoreComponentVersionLogService {
     @Autowired
     lateinit var dslContext: DSLContext
 
-
     companion object {
         val HAS_TAG = setOf(StoreTypeEnum.ATOM)
         private val logger = LoggerFactory.getLogger(StoreComponentVersionLogService::class.java)
-
-
     }
-
     fun getStoreComponentVersionLogs(
         userId: String,
         storeCode: String,
@@ -92,7 +88,6 @@ abstract class StoreComponentVersionLogService {
         return Result(Page(count = count, page = page, pageSize = pageSize, records = versionLogInfos))
     }
 
-
     private fun getStoreCommonDao(storeType: String): AbstractStoreCommonDao {
         return SpringContextUtil.getBean(AbstractStoreCommonDao::class.java, "${storeType}_COMMON_DAO")
     }
@@ -123,6 +118,5 @@ abstract class StoreComponentVersionLogService {
             " "
         }
     }
-
 
 }

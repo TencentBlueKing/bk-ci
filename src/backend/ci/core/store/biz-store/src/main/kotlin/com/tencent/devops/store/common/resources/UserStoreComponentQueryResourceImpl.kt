@@ -221,7 +221,6 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
         return storeMediaService.getByCode(storeCode, storeType)
     }
 
-
     override fun getStoreVersionLogs(
         userId: String,
         storeCode: String,
@@ -236,6 +235,5 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
             page = page,
             pageSize = pageSize
         )
-
     }
 }

@@ -169,7 +169,6 @@ class ImageCommonDao : AbstractStoreCommonDao() {
         }
     }
 
-
     override fun getStoreComponentVersionLogs(
         dslContext: DSLContext,
         storeCode: String,
@@ -184,13 +183,11 @@ class ImageCommonDao : AbstractStoreCommonDao() {
             .on(image.ID.eq(imageLog.IMAGE_ID))
             .where(image.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()).and(image.IMAGE_CODE.eq(storeCode)))
 
-
         baseStep.limit((page - 1) * pageSize, pageSize)
 
         return baseStep.fetch()
 
     }
-
     override fun countStoreComponentVersionLogs(dslContext: DSLContext, storeCode: String): Long {
         val image = TImage.T_IMAGE
         val imageLog = TImageVersionLog.T_IMAGE_VERSION_LOG
@@ -199,8 +196,6 @@ class ImageCommonDao : AbstractStoreCommonDao() {
             .join(imageLog)
             .on(image.ID.eq(imageLog.IMAGE_ID))
             .where(image.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()).and(image.IMAGE_CODE.eq(storeCode)))
-
-
 
         return baseStep.fetchOne(0, Long::class.java) ?: 0L
     }

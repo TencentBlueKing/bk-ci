@@ -322,8 +322,6 @@ interface UserStoreComponentQueryResource {
         storeCode: String
     ): Result<List<StoreMediaInfo>?>
 
-
-
     @Operation(summary = "根据组件Code获取组件版本日志")
     @GET
     @Path("/types/{storeType}/codes/{storeCode}/version/logs/get")
