@@ -111,11 +111,9 @@ allMethods.forEach((method) => {
         const fetchConfig: IFetchConfig = getFetchConfig(method, payload, config);
         try {
           const fetchUrl = getFetchUrl(url, method, payload);
-          console.log(fetchUrl, 11)
           const response = await fetch(fetchUrl, fetchConfig);
           return await successInterceptor(response, fetchConfig);
         } catch (err) {
-          console.error(fetchConfig, '1111111')
           return errorInterceptor(err, fetchConfig);
         }
       };
