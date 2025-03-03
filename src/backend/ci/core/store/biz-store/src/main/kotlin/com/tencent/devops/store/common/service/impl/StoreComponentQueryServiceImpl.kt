@@ -1110,5 +1110,4 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             pageSize = pageSize
         )
     }
-
 }
