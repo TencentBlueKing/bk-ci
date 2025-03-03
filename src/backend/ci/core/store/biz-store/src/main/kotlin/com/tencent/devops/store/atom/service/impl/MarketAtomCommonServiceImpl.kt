@@ -398,19 +398,19 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 validateTaskJsonField(
                     dataMap = inputGroupMap,
                     fieldName = NAME,
-                    promptName = "${KEY_INPUT_GROUPS}.${NAME}",
+                    promptName = "$KEY_INPUT_GROUPS.$NAME",
                     expectedType = String::class
                 )
                 validateTaskJsonField(
                     dataMap = inputGroupMap,
                     fieldName = LABEL,
-                    promptName = "${KEY_INPUT_GROUPS}.${LABEL}",
+                    promptName = "$KEY_INPUT_GROUPS.$LABEL",
                     expectedType = String::class
                 )
                 validateTaskJsonField(
                     dataMap = inputGroupMap,
                     fieldName = IS_EXPANDED,
-                    promptName = "${KEY_INPUT_GROUPS}.${IS_EXPANDED}",
+                    promptName = "$KEY_INPUT_GROUPS.$IS_EXPANDED",
                     expectedType = Boolean::class
                 )
             }
@@ -428,7 +428,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             dataMap = executionInfoMap,
             fieldName = KEY_LANGUAGE,
             expectedType = String::class,
-            promptName = "${KEY_EXECUTION}.${KEY_LANGUAGE}",
+            promptName = "$KEY_EXECUTION.$KEY_LANGUAGE",
             supportedFieldTypes = setOf(JAVA, PYTHON, GOLANG, NODEJS)
         )
         val language = executionInfoMap[KEY_LANGUAGE].toString()
@@ -476,14 +476,14 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 validateTaskJsonField(
                     dataMap = osExecutionInfoMap,
                     fieldName = KEY_OS_NAME,
-                    promptName = "${KEY_OS}.${KEY_OS_NAME}",
+                    promptName = "$KEY_OS.$KEY_OS_NAME",
                     expectedType = String::class
                 )
                 val osName = osExecutionInfoMap[KEY_OS_NAME].toString()
                 validateTaskJsonField(
                     dataMap = osExecutionInfoMap,
                     fieldName = KEY_TARGET,
-                    promptName = "${KEY_OS}.${KEY_TARGET}",
+                    promptName = "$KEY_OS.$KEY_TARGET",
                     expectedType = String::class
                 )
                 val target = osExecutionInfoMap[KEY_TARGET].toString()
@@ -528,7 +528,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             validateTaskJsonField(
                 dataMap = executionInfoMap,
                 fieldName = KEY_TARGET,
-                promptName = "${KEY_EXECUTION}.${KEY_TARGET}",
+                promptName = "$KEY_EXECUTION.$KEY_TARGET",
                 expectedType = String::class
             )
             val target = executionInfoMap[KEY_TARGET] as String
@@ -572,7 +572,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                     validateTaskJsonField(
                         dataMap = value,
                         fieldName = KEY_TYPE,
-                        promptName = "${KEY_OUTPUT}.${key}.${KEY_TYPE}",
+                        promptName = "$KEY_OUTPUT.$key.$KEY_TYPE",
                         expectedType = String::class,
                         supportedFieldTypes = setOf(STRING, ARTIFACT, REPORT)
                     )
