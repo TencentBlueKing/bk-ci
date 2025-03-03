@@ -11,7 +11,7 @@ export interface VisitedSite {
 
 export interface providerConfig {
   api: string;
-  authTypeList: [];
+  credentialTypeList: [];
   createTime: number;
   updateTime: number;
   desc: string;
@@ -38,7 +38,7 @@ export interface repoConfigFromData {
   scmType: string;
   hosts: string;
   logoUrl: string;
-  authTypeList: [];
+  credentialTypeList: [];
   oauthType: string;
   oauthScmCode: string;
   mergeEnabled: boolean;

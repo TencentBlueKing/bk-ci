@@ -32,7 +32,7 @@ export default defineComponent({
       providerCode: 'TGIT',
       scmType: 'SCM_GIT',
       logoUrl: '',
-      authTypeList: [],
+      credentialTypeList: [],
       oauthType: 'NEW',
       oauthScmCode: '',
       mergeEnabled: false,
@@ -67,9 +67,10 @@ export default defineComponent({
     const initConfigFormData = ref({});
     const isFormDataChanged = computed(() => JSON.stringify(initConfigFormData.value) !== JSON.stringify(configFormData.value))
     const isCreate = computed(() => route.query?.action === 'create');
-    const curAuthTypeList = computed(() => providerList.value.find(i => i.providerCode === configFormData.value.providerCode)?.authTypeList || []);
-    const showPacSwitcher = computed(() => providerList.value.find(i => i.providerCode === configFormData.value.providerCode)?.pac);
-    const showWebHookSwitcher = computed(() => providerList.value.find(i => i.providerCode === configFormData.value.providerCode)?.webhook);
+    const curProviderConfig = computed(() => providerList.value.find(i => i.providerCode === configFormData.value.providerCode));
+    const curAuthTypeList = computed(() => curProviderConfig.value?.credentialTypeList || []);
+    const showPacSwitcher = computed(() => curProviderConfig.value?.pac);
+    const showWebHookSwitcher = computed(() => curProviderConfig.value?.webhook);
     const isNewOauthType = computed(() => configFormData.value.oauthType === 'NEW' || false)
     const logoFiles = computed(() => {
       const { logoUrl } = configFormData.value;
@@ -232,7 +233,7 @@ export default defineComponent({
       await getProviderList()
       if (!isCreate.value) {
         configFormData.value = curConfig.value as repoConfigFromData
-        configFormData.value.authTypeList = curConfig.value?.authTypeList?.map((i => i.id))
+        configFormData.value.credentialTypeList = curConfig.value?.credentialTypeList?.map((i => i.id))
       }
       initConfigFormData.value = deepCopy(configFormData.value)
     })
@@ -378,17 +379,17 @@ export default defineComponent({
                   />
               </bk-form-item>
               <bk-form-item
-                property="authTypeList"
+                property="credentialTypeList"
                 required
                 label={t('授权方式')}
               >
-                <bk-checkbox-group v-model={configFormData.value.authTypeList}>
+                <bk-checkbox-group v-model={configFormData.value.credentialTypeList}>
                   {
                     curAuthTypeList.value.map(auth => (
                       <bk-checkbox
                         label={auth?.id}
                       >
-                        {auth.value}
+                        {auth.name}
                       </bk-checkbox>
                     ))
                   }
