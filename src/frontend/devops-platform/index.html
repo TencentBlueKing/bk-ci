@@ -8,15 +8,12 @@
   <body>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
-    <script>
-      var DEVOPS_SITE_URL = '__BK_CI_PUBLIC_PATH__'
-    </script>
-    <script>
+    <script type="module">
       (function(){
         if (window.self !== window.top) {
             var script = document.createElement('script')
             script.type = 'text/javascript'
-            script.src = DEVOPS_SITE_URL + '/console/static/devops-utils.js'
+            script.src = import.meta.env.VITE_BK_COMMON_PREFIX + '/console/static/devops-utils.js'
             document.getElementsByTagName('head')[0].appendChild(script)
         }
       })()

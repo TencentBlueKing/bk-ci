@@ -129,51 +129,31 @@ export default defineComponent({
       }
     ]
 
-    const handleSubmit = () => {
-      if (isCreate.value) {
-        formRef.value.validate().then(async () => {
-          try {
-            isSubmitLoading.value = true
-            const res = await http.createRepoConfig(configFormData.value)
-            if (res) {
-              Message({
-                theme: 'success',
-                message: t('新增代码源成功')
-              })
-    
-              router.push({
-                name: 'Config'
-              })
-            }
-          }
-          catch (e) {
-            console.error(e)
-          } finally {
-            isSubmitLoading.value = false
-          }
-        });
-      } else {
-        formRef.value.validate().then(async () => {
-          try {
-            isSubmitLoading.value = true
-            const res = await http.updateRepoConfig(configFormData.value.scmCode, configFormData.value)
-            if (res) {
-              Message({
-                theme: 'success',
-                message: t('修改代码源成功')
-              })
-    
-              router.push({
-                name: 'Config'
-              })
-            }
-          }
-          catch (e) {
-            console.error(e)
-          } finally {
-            isSubmitLoading.value = false
-          }
-        });
+    const handleSubmit = async () => {
+      try {
+        await formRef.value.validate();
+
+        let res;
+        const successMessage = isCreate.value ? t('新增代码源成功') : t('修改代码源成功');
+        if (isCreate.value) {
+            res = await http.createRepoConfig(configFormData.value);
+        } else {
+            res = await http.updateRepoConfig(configFormData.value.scmCode, configFormData.value);
+        }
+        if (res) {
+            Message({
+              theme: 'success',
+              message: successMessage
+          });
+            router.push({
+              name: 'Config'
+            })
+        }
+      }
+      catch (e) {
+        console.error(e)
+      } finally {
+        isSubmitLoading.value = false
       }
     }
 
