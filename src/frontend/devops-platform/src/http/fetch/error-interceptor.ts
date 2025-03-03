@@ -1,6 +1,5 @@
 import { Message } from 'bkui-vue';
 import type { IFetchConfig } from './index';
-// import authModel from '@/common/auth-model';
 
 // 请求执行失败拦截器
 export default (error: any, config: IFetchConfig) => {
@@ -11,7 +10,6 @@ export default (error: any, config: IFetchConfig) => {
   switch (code) {
     // 用户登录状态失效
     case 401:
-      // authModel.showLoginModal(response);
       window.$toggleLoginDialog?.(true);
   }
   // 全局捕获错误给出提示

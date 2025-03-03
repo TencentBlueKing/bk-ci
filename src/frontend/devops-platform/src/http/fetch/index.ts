@@ -112,7 +112,6 @@ allMethods.forEach((method) => {
         try {
           const fetchUrl = getFetchUrl(url, method, payload);
           const response = await fetch(fetchUrl, fetchConfig);
-          window.$toggleLoginDialog?.(true);
           return await successInterceptor(response, fetchConfig);
         } catch (err) {
           return errorInterceptor(err, fetchConfig);
