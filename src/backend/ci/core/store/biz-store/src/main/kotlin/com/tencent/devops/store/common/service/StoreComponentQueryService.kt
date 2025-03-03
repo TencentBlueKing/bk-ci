@@ -129,5 +129,4 @@ interface StoreComponentQueryService {
         page: Int,
         pageSize: Int
     ): Result<Page<StoreVersionLogInfo>>
-
 }
