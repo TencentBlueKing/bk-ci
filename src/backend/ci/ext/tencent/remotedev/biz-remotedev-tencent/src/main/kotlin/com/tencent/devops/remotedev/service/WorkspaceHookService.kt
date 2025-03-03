@@ -177,7 +177,7 @@ class WorkspaceHookService @Autowired constructor(
         if (ip.isEmpty() || hooks.isEmpty()) {
             logger.warn("installHook|ip: $ip, hooks: $hooks")
         }
-        val actions = hooks.groupBy { it.executionType }.map { (executionType, group) ->
+        val actions = hooks.filter { it.enable }.groupBy { it.executionType }.map { (executionType, group) ->
             val executables = group.map { it.executableCommand() }
             Actions.Action(
                 type = Actions.Type.load(executionType).name.lowercase(),
