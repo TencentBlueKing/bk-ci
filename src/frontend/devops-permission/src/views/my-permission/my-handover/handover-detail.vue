@@ -265,10 +265,7 @@
         emit('success')
       }
     } catch (e: any) {
-      Message({
-        theme: 'error',
-        message: e.message || e
-      })
+      console.log(e);
     } finally {
       approvalLoading.value = false
 
