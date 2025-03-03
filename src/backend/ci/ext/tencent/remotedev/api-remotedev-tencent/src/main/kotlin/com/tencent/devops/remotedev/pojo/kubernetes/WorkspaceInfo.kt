@@ -14,5 +14,7 @@ data class WorkspaceInfo(
     @get:Schema(title = "对应pod是否可用，可能为null")
     val started: Boolean?,
     @get:Schema(title = "云区域ID，start 云桌面使用")
-    val regionId: Int? = null
+    val regionId: Int? = null,
+    @get:Schema(title = "主机名称vmName")
+    val vmName: String? = null
 )
