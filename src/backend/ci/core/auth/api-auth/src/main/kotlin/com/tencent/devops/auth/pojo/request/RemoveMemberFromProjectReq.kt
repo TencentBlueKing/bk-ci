@@ -19,4 +19,8 @@ data class RemoveMemberFromProjectReq(
             )
         }
     }
+
+    fun isNeedToHandover(): Boolean {
+        return handoverTo != null
+    }
 }
