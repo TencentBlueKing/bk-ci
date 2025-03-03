@@ -710,7 +710,7 @@ class WorkspaceService @Autowired constructor(
             RemotedevProject(
                 projectId = it.value1(),
                 projectName = detailMap[it.value1()]?.projectName ?: "",
-                remotedevManager = permissionService.getCacheManager(it.value1()).joinToString(";"),
+                remotedevManager = permissionService.getCacheManager(it.value1()).joinToString(";")
             )
         }
     }
