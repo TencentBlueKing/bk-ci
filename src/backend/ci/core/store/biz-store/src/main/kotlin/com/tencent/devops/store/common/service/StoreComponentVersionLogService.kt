@@ -33,6 +33,7 @@ abstract class StoreComponentVersionLogService {
         val HAS_TAG = setOf(StoreTypeEnum.ATOM)
         private val logger = LoggerFactory.getLogger(StoreComponentVersionLogService::class.java)
     }
+
     fun getStoreComponentVersionLogs(
         userId: String,
         storeCode: String,
@@ -82,8 +83,6 @@ abstract class StoreComponentVersionLogService {
                 emptyList()
             }
         }
-
-
         return Result(Page(count = count, page = page, pageSize = pageSize, records = versionLogInfos))
     }
 
@@ -112,7 +111,7 @@ abstract class StoreComponentVersionLogService {
                 DateTimeUtil.convertLocalDateTimeToDate(updateTime),
                 DateTimeUtil.YYYY_MM_DD
             )
-            "prod-v${version}-$updateTimeStr"
+            "prod-v$version-$updateTimeStr"
         } else {
             " "
         }
