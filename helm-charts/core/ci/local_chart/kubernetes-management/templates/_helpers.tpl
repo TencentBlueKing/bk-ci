@@ -1,7 +1,7 @@
 {{/*
 Return the mysql fullname
 */}}
-{{- define "bkci.mysql.fullname" -}}
+{{- define "k8sm.mysql.fullname" -}}
 {{- if .Values.mysql.fullnameOverride -}}
 {{- .Values.mysql.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
@@ -13,7 +13,7 @@ Return the mysql fullname
 {{/*
 Return the redis fullname
 */}}
-{{- define "bkci.redis.fullname" -}}
+{{- define "k8sm.redis.fullname" -}}
 {{- if .Values.redis.fullnameOverride -}}
 {{ $name := .Values.redis.fullnameOverride | trunc 63 | trimSuffix "-"}}
 {{- list $name "master" | join "-" -}}
@@ -26,18 +26,22 @@ Return the redis fullname
 {{/*
 MySQL addr
 */}}
-{{- define "bkci.mysqlAddr" -}}
+{{- define "k8sm.mysqlAddr" -}}
 {{- if eq .Values.mysql.enabled true -}}
-{{- include "bkci.mysql.fullname" . -}}:3306
+{{- include "k8sm.mysql.fullname" . -}}:3306
 {{- else -}}
-{{- .Values.externalMysql.host -}}:{{- .Values.externalMysql.port -}}
+  {{- if ne .Values.externalMysql.host "" }}
+    {{- .Values.externalMysql.host -}}:{{- .Values.externalMysql.port }}
+  {{- else -}}
+    {{- printf "%s-%s" .Release.Name "mysql" | trunc 63 | trimSuffix "-" -}}:3306
+  {{- end -}}
 {{- end -}}
 {{- end -}}
 
 {{/*
 MySQL username
 */}}
-{{- define "bkci.mysqlUsername" -}}
+{{- define "k8sm.mysqlUsername" -}}
 {{- if eq .Values.mysql.enabled true -}}
 root
 {{- else -}}
@@ -48,7 +52,7 @@ root
 {{/*
 MySQL password
 */}}
-{{- define "bkci.mysqlPassword" -}}
+{{- define "k8sm.mysqlPassword" -}}
 {{- if eq .Values.mysql.enabled true -}}
 {{- .Values.mysql.auth.rootPassword -}}
 {{- else -}}
@@ -59,18 +63,22 @@ MySQL password
 {{/*
 Redis host
 */}}
-{{- define "bkci.redisHost" -}}
+{{- define "k8sm.redisHost" -}}
 {{- if eq .Values.redis.enabled true -}}
-{{- include "bkci.redis.fullname" . -}}
+{{- include "k8sm.redis.fullname" . -}}
 {{- else -}}
-{{- .Values.externalRedis.host -}}
+  {{- if ne .Values.externalRedis.host "" }}
+    {{- .Values.externalRedis.host -}}
+  {{- else -}}
+    {{- printf "%s-%s-master" .Release.Name "redis" | trunc 63 | trimSuffix "-" -}}
+  {{- end -}}
 {{- end -}}
 {{- end -}}
 
 {{/*
 Redis port
 */}}
-{{- define "bkci.redisPort" -}}
+{{- define "k8sm.redisPort" -}}
 {{- if eq .Values.redis.enabled true -}}
 6379
 {{- else -}}
@@ -81,7 +89,7 @@ Redis port
 {{/*
 Redis password
 */}}
-{{- define "bkci.redisPassword" -}}
+{{- define "k8sm.redisPassword" -}}
 {{- if eq .Values.redis.enabled true -}}
 {{- .Values.redis.auth.password -}}
 {{- else -}}

@@ -632,12 +632,15 @@
 
                 try {
                     const res = await this.$store.dispatch('environment/requestNodeList', {
-                        projectId: this.projectId
+                        projectId: this.projectId,
+                        params: {
+                            page: -1
+                        }
                     })
 
                     this.nodeList.splice(0, this.nodeList.length)
 
-                    res.forEach(item => {
+                    res.records.forEach(item => {
                         item.isChecked = false
 
                         if (this.createEnvForm.envType === 'BUILD') {

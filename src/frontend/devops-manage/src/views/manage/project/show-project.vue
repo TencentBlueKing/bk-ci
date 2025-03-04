@@ -125,7 +125,7 @@ const fieldMap = [
   {
     current: 'centerName',
     after: 'afterCenterName',
-  },
+  }
 ];
 const propertiesFieldMap = [
   {
@@ -136,6 +136,10 @@ const propertiesFieldMap = [
     current: 'pipelineNameFormat',
     after: 'afterPipelineNameFormat',
   },
+  {
+    current: 'loggingLineLimit',
+    after: 'afterLoggingLineLimit'
+  }
 ]
 const fetchDiffProjectData = () => {
   http.requestDiffProjectData({
@@ -462,6 +466,24 @@ onMounted(async () => {
                         {{ t('本次更新：') }}
                       </p>
                       <span>{{ projectData.afterPipelineNameFormat }}</span>
+                    </div>
+                  </bk-form-item>
+                  <bk-form-item
+                    :label="t('构建日志归档阈值')"
+                    property="loggingLineLimit"
+                    :description="t('单个步骤(Step)日志达到阈值时，将压缩并归档到日志仓库。可下载日志文件到本地查看。')"
+                  >
+                    <span class="item-value">
+                      {{ projectData.properties.loggingLineLimit || '--' }}
+                      <span v-if="projectData.properties.loggingLineLimit">
+                        {{ t('万行') }}
+                      </span>
+                    </span>
+                    <div class="diff-content" v-if="projectData.afterLoggingLineLimit">
+                      <p class="update-title">
+                        {{ t('本次更新：') }}
+                      </p>
+                      <span>{{ `${projectData.afterLoggingLineLimit} ${t('万行')}` }}</span>
                     </div>
                   </bk-form-item>
                 </bk-form>

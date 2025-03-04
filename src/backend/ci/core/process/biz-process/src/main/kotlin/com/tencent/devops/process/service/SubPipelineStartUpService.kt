@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -42,6 +43,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.process.bean.PipelineUrlBean
@@ -52,6 +54,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.StartUpInfo
@@ -158,13 +161,18 @@ class SubPipelineStartUpService @Autowired constructor(
 
         val existPipelines = HashSet<String>()
         existPipelines.add(parentPipelineId)
+        val watcher = Watcher("subPipeline start up")
         try {
+            watcher.start("start check circular dependency")
             checkSub(atomCode, projectId = fixProjectId, pipelineId = callPipelineId, existPipelines = existPipelines)
         } catch (e: OperationException) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = ProcessMessageCode.ERROR_SUBPIPELINE_CYCLE_CALL,
                 language = I18nUtil.getLanguage(userId)
             )
+        } finally {
+            watcher.stop()
+            LogUtils.printCostTimeWE(watcher)
         }
 
         val subBuildId = subPipelineStartup(
@@ -185,17 +193,18 @@ class SubPipelineStartUpService @Autowired constructor(
             projectId = projectId,
             buildId = buildId,
             taskId = taskId,
-            subBuildId = subBuildId,
+            subBuildId = subBuildId.id,
             subProjectId = fixProjectId
         )
         if (runMode == SYNC_RUN_MODE) {
-            subPipelineStatusService.onStart(subBuildId)
+            subPipelineStatusService.onStart(subBuildId.id)
         }
 
         return Result(
             ProjectBuildId(
-                id = subBuildId,
-                projectId = fixProjectId
+                id = subBuildId.id,
+                projectId = fixProjectId,
+                buildNum = subBuildId.num
             )
         )
     }
@@ -214,22 +223,16 @@ class SubPipelineStartUpService @Autowired constructor(
         triggerUser: String? = null,
         runMode: String,
         parentExecuteCount: Int?
-    ): String {
-
-        val readyToBuildPipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                params = arrayOf(pipelineId),
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
-            )
+    ): BuildId {
+        val (readyToBuildPipelineInfo, resource, _) = pipelineRepositoryService.getBuildTriggerInfo(
+            projectId, pipelineId, null
+        )
         if (readyToBuildPipelineInfo.locked == true) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
         }
-        if (readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
-            )
-        }
+        if (readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
+        )
         val parentPipelineInfo = pipelineRepositoryService.getPipelineInfo(
             projectId = parentProjectId,
             pipelineId = parentPipelineId
@@ -250,15 +253,7 @@ class SubPipelineStartUpService @Autowired constructor(
 
         val startEpoch = System.currentTimeMillis()
         try {
-            val resource = pipelineRepositoryService.getPipelineResourceVersion(
-                projectId, pipelineId, readyToBuildPipelineInfo.version
-            ) ?: throw ErrorCodeException(
-                    statusCode = Response.Status.NOT_FOUND.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
-                )
-            val model = resource.model
-
-            val triggerContainer = model.getTriggerContainer()
+            val triggerContainer = resource.model.getTriggerContainer()
             // #6090 拨乱反正
             val params = buildParamCompatibilityTransformer.parseTriggerParam(
                 userId = userId, projectId = projectId, pipelineId = pipelineId,
@@ -326,17 +321,15 @@ class SubPipelineStartUpService @Autowired constructor(
                 pipelineParamMap = params,
                 channelCode = channelCode,
                 isMobile = isMobile,
-                model = model,
-                frequencyLimit = false,
-                versionName = resource.versionName,
-                yamlVersion = resource.yamlVersion
-            ).id
+                resource = resource,
+                frequencyLimit = false
+            )
             // 更新父流水线关联子流水线构建id
             pipelineTaskService.updateSubBuildId(
                 projectId = parentProjectId,
                 buildId = parentBuildId,
                 taskId = parentTaskId,
-                subBuildId = subBuildId,
+                subBuildId = subBuildId.id,
                 subProjectId = readyToBuildPipelineInfo.projectId
             )
             return subBuildId
@@ -344,13 +337,6 @@ class SubPipelineStartUpService @Autowired constructor(
             logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to start sub-pipeline($pipelineId)")
         }
     }
-
-    private fun getModel(projectId: String, pipelineId: String, version: Int? = null) =
-        pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, version)?.model
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
-            )
 
     /**
      * 解析子流水线启动参数
