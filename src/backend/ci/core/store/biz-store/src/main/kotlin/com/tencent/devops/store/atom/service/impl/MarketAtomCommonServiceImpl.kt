@@ -842,20 +842,14 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
 
     override fun getAtomSensitiveParams(props: String): List<String>? {
         val propsMap: Map<String, Any> = jacksonObjectMapper().readValue(props)
-        val params = mutableListOf<String>()
-        if (null != propsMap["input"]) {
-            val input = propsMap["input"] as? Map<*, *>
-            input?.forEach { inputIt ->
-                val paramKey = inputIt.key
-                if(inputIt.value is Map<*, *>) {
-                    val paramValueMap = inputIt.value as? Map<*, *>
-                    val isSensitive = paramValueMap?.get("isSensitive") as? Boolean
-                    if (isSensitive == true) {
-                        params.add(paramKey.toString())
+        return propsMap["input"]?.let { input ->
+                (input as? Map<*, *>)?.flatMap { (key, value) ->
+                    when {
+                        value is Map<*, *> && value["isSensitive"] == true -> listOf(key.toString())
+                        else -> emptyList()
                     }
                 }
-            }
-        }
-        return if (params.isEmpty()) { null } else params
+            }?.takeIf { it.isNotEmpty() }
     }
+
 }
