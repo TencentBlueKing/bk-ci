@@ -79,8 +79,6 @@ class TxMetricsServiceManageServiceImpl(
             val token = encryptPanelToken(publicKey, jsonData)
             // 生成eplus的跳转页面地址
             val serviceUrl = MessageFormat(panelUrl).format(arrayOf(panelFrom, token))
-            newWindow = true
-            newWindowUrl = serviceUrl
             iframeUrl = serviceUrl
             grayIframeUrl = serviceUrl
         }
