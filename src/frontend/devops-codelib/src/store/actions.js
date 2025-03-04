@@ -34,7 +34,8 @@ import {
     STORE_API_URL_PREFIX,
     TICKET_API_URL_PREFIX,
     TOGGLE_CODE_LIB_DIALOG,
-    UPDATE_CODE_LIB_MUTATION
+    UPDATE_CODE_LIB_MUTATION,
+    SET_PROVIDER_CONFIG
 } from './constants'
 const vue = new Vue()
 
@@ -44,7 +45,6 @@ const actions = {
     }) {
         try {
             const result = await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/config/`)
-            console.log(result)
             commit(SET_CODELIB_TYPES, result)
             return result.data
         } catch (error) {
@@ -212,12 +212,14 @@ const actions = {
         projectId,
         repositoryHashId,
         credentialTypes,
+        credentialType,
         permission,
         typeName,
         authType,
         svnType,
         codelib,
-        instance
+        instance,
+        scmCode = ''
     }) {
         try {
             commit(TOGGLE_CODE_LIB_DIALOG, {
@@ -247,8 +249,11 @@ const actions = {
                     credentialId: '',
                     projectName: '',
                     url: '',
+                    credentialTypes,
+                    credentialType,
                     authType,
-                    svnType
+                    svnType,
+                    scmCode
                 })
             }
         } catch (e) {
@@ -276,6 +281,28 @@ const actions = {
             replace: true,
             codelib
         })
+    },
+
+    async checkScmOAuth ({
+        commit,
+        state
+    }, {
+        projectId,
+        scmCode,
+        type
+    }) {
+        try {
+            const res = await vue.$ajax.get(`/repository/api/user/scm/repository/api/${projectId}/${scmCode}/listRepoBaseInfo`)
+            commit(SET_OAUTH_MUTATION, {
+                oAuth: res,
+                type
+            })
+            commit(DIALOG_LOADING_MUTATION, false)
+        } catch (e) {
+            commit(FETCH_ERROR, e, {
+                root: true
+            })
+        }
     },
     /**
      * git & github OAuth授权
@@ -623,6 +650,11 @@ const actions = {
         pipelineId
     }) {
         return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${eventId}/triggerReasonStatistics?pipelineId=${pipelineId}`)
+    },
+    setProviderConfig ({
+        commit
+    }, value) {
+        commit(SET_PROVIDER_CONFIG, value)
     }
 }
 

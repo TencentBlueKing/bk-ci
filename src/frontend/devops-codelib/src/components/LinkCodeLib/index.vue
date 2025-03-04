@@ -17,9 +17,9 @@
             <li
                 v-for="item in codelibTypes"
                 :key="item.scmType"
-                @click="createCodelib(item.scmType)"
+                @click="createCodelib(item.scmType, item.scmCode)"
                 :class="{
-                    'disabled-codelib-type': item.status !== 'OK'
+                    'disabled-codelib-type': item.status !== 'SUCCESS'
                 }"
             >
                 {{ item.name }}

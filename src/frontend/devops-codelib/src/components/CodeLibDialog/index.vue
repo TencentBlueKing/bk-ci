@@ -8,6 +8,7 @@
         :width="780"
         :padding="24"
         :quick-close="false"
+        :show-footer="showDialogFooter"
     >
         <h3
             slot="header"
@@ -47,6 +48,7 @@
     import TGit from './TGit'
     import Github from './Github'
     import Gitlab from './Gitlab'
+    import Custom from './Custom'
     import {
         isP4,
         isSvn,
@@ -54,11 +56,14 @@
         isTGit,
         isGithub,
         isGitLab,
+        isScmGit,
+        isScmSvn,
         getCodelibConfig,
         CODE_REPOSITORY_CACHE
     } from '../../config/'
     import { mapActions, mapState } from 'vuex'
     import { parsePathRegion } from '../../utils'
+    import dialogMixin from './mixin.js'
     export default {
         name: 'codelib-dialog',
         components: {
@@ -67,8 +72,10 @@
             SVN,
             TGit,
             Git,
-            P4
+            P4,
+            Custom
         },
+        mixins: [dialogMixin],
         props: {
             refreshCodelibList: {
                 type: Function,
@@ -93,13 +100,19 @@
                 'showCodelibDialog'
             ]),
             hasPower () {
-                return (
-                    (this.isTGit
-                        ? this.tgitOAuth.status
-                        : this.isGit
-                            ? this.gitOAuth.status
-                            : this.githubOAuth.status) !== 403
-                )
+                const oauthMap = {
+                    isTGit: this.tgitOAuth,
+                    isGit: this.gitOAuth,
+                    isGithub: this.githubOAuth,
+                    isScmGit: this.scmgitOAuth,
+                    isScmSvn: this.scmsvnOAuth
+                }
+                for (const [key, oauth] of Object.entries(oauthMap)) {
+                    if (this[key]) {
+                        return oauth?.status !== 403
+                    }
+                }
+                return false
             },
             showDialogFooter () {
                 return (this.hasPower && this.isOAUTH) || !this.isOAUTH
@@ -108,6 +121,12 @@
                 return this.$t('codelib.linkRepo', [
                     this.codelibConfig.label
                 ])
+            },
+            isScmGit () {
+                return isScmGit(this.codelibTypeName)
+            },
+            isScmSvn () {
+                return isScmSvn(this.codelibTypeName)
             },
             isGit () {
                 return isGit(this.codelibTypeName)
@@ -141,11 +160,6 @@
                     ? this.codelib['@type']
                     : ''
             },
-            codelibTypeConstants () {
-                return this.codelibTypeName
-                    .toLowerCase()
-                    .replace(/^\S*?([github|git|tgit])/i, '$1')
-            },
             comName () {
                 const comMap = {
                     Git: 'Git',
@@ -156,7 +170,7 @@
                     GitLab: 'Gitlab'
                 }
 
-                return comMap[this.codelibConfig.label]
+                return comMap[this.codelibConfig.label] || 'Custom'
             },
             
             projectId () {
@@ -175,6 +189,9 @@
             },
 
             isOAUTH () {
+                if (this.isScmGit || this.isScmSvn) {
+                    return this.codelib.credentialType === 'OAUTH'
+                }
                 return this.codelib.authType === 'OAUTH'
             }
         },
@@ -205,7 +222,13 @@
                 handler: async function (newVal, oldVal) {
                     if (newVal.authType === oldVal.authType && newVal['@type'] === oldVal['@type']) return
                     const { projectId, codelibTypeConstants } = this
-                    if (newVal.authType === 'OAUTH' && !this.hasValidate) {
+                    if (newVal['@type']?.startsWith('scm') && newVal.credentialType === 'OAUTH') {
+                        await this.checkScmOAuth({
+                            projectId,
+                            scmCode: newVal.scmCode,
+                            type: codelibTypeConstants
+                        })
+                    } else if (newVal.authType === 'OAUTH' && !this.hasValidate) {
                         await this.checkOAuth({
                             projectId,
                             type: codelibTypeConstants
@@ -217,6 +240,7 @@
         methods: {
             ...mapActions('codelib', [
                 'checkOAuth',
+                'checkScmOAuth',
                 'checkTGitOAuth',
                 'updateCodelib',
                 'createRepo',
