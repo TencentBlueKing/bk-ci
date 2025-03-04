@@ -851,5 +851,4 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 }
             }?.takeIf { it.isNotEmpty() }
     }
-
 }
