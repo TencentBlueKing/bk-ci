@@ -137,6 +137,14 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                 params = params
             )
         }
+        return Result(queryAtomRunInfos(projectCode, atomCodeList, filterAtomVersions))
+    }
+
+    private fun queryAtomRunInfos(
+        projectCode: String,
+        atomCodeList: List<String>,
+        atomVersions: Set<StoreVersion>
+    ): Map<String, AtomRunInfo> {
         // 2、根据插件代码和版本号查找插件运行时信息
         // 判断当前项目是否是插件的调试项目
         val testAtomCodes = storeProjectRelDao.getTestStoreCodes(
@@ -146,7 +154,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             storeCodeList = atomCodeList
         )?.map { it.value1() }
         val atomRunInfoMap = mutableMapOf<String, AtomRunInfo>()
-        filterAtomVersions.forEach { atomVersion ->
+        atomVersions.forEach { atomVersion ->
             val atomCode = atomVersion.storeCode
             val atomName = atomVersion.storeName
             val version = atomVersion.version
@@ -186,7 +194,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                 }
             }
         }
-        return Result(atomRunInfoMap)
+        return atomRunInfoMap
     }
 
     private fun handleAtomVersions(
@@ -229,6 +237,10 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             errorCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
             params = arrayOf(projectCode, atomName)
         )
+        val props = atomEnv.props
+        val sensitiveParams = props?.let {
+            marketAtomCommonService.getAtomSensitiveParams(props)
+        }
         val atomRunInfo = AtomRunInfo(
             atomCode = atomCode,
             atomName = atomEnv.atomName,
@@ -236,7 +248,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             initProjectCode = atomEnv.projectCode ?: "",
             jobType = atomEnv.jobType,
             buildLessRunFlag = atomEnv.buildLessRunFlag,
-            inputTypeInfos = marketAtomCommonService.generateInputTypeInfos(atomEnv.props)
+            inputTypeInfos = marketAtomCommonService.generateInputTypeInfos(atomEnv.props),
+            sensitiveParams = sensitiveParams?.joinToString(",")
         )
         if (!testFlag) {
             // 将db中的环境信息写入缓存
@@ -511,5 +524,23 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
+    }
+
+    override fun batchGetAtomSensitiveParamInfos(
+        projectCode: String,
+        atomVersions: Set<StoreVersion>
+    ): Map<String, String> {
+        val atomRunInfos = queryAtomRunInfos(
+            projectCode = projectCode,
+            atomCodeList = atomVersions.map { it.storeCode },
+            atomVersions = atomVersions
+        )
+        val atomSensitiveParamInfos = mutableMapOf<String, String>()
+        atomRunInfos.forEach { key, atomRunInfo ->
+            if (!atomRunInfo.sensitiveParams.isNullOrBlank()) {
+                atomSensitiveParamInfos[key] = atomRunInfo.sensitiveParams!!
+            }
+        }
+        return atomSensitiveParamInfos
     }
 }
