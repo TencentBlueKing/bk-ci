@@ -587,11 +587,11 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         fieldName: String,
         promptName: String,
         expectedType: KClass<T>,
-        require: Boolean = true,
+        required: Boolean = true,
         supportedFieldTypes: Set<String>? = null
     ) {
         val fieldValue = dataMap[fieldName]
-        if (require) {
+        if (required) {
             if (fieldValue == null || (fieldValue is String && fieldValue.isBlank())) {
                 throw ErrorCodeException(
                     errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
