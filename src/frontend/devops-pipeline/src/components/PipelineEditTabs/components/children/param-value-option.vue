@@ -205,8 +205,9 @@
             <request-selector
                 v-if="isBuildResourceParam(param.type)"
                 :popover-min-width="250"
-                :url="getBuildResourceUrl(param.containerType)"
-                param-id="name"
+                :url="getBuildResourceUrl"
+                param-id="displayName"
+                param-name="displayName"
                 :disabled="disabled"
                 name="defaultValue"
                 v-validate="{ required: valueRequired }"
@@ -248,7 +249,7 @@
             ></vuex-input>
         </form-field>
 
-        <template v-if="isBuildResourceParam(param.type)">
+        <!-- <template v-if="isBuildResourceParam(param.type)">
             <form-field
                 :hide-colon="true"
                 :label="$t('editPage.buildEnv')"
@@ -282,7 +283,7 @@
                     :value="param.containerType.buildType"
                 ></selector>
             </form-field>
-        </template>
+        </template> -->
 
         <template v-if="isArtifactoryParam(param.type)">
             <form-field
@@ -333,7 +334,7 @@
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import validMixins from '@/components/validMixins'
-    import { PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX, STORE_API_URL_PREFIX } from '@/store/constants'
+    import { PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX, ENVIRONMENT_API_URL_PREFIX } from '@/store/constants'
     import {
         CODE_LIB_OPTION,
         CODE_LIB_TYPE,
@@ -434,6 +435,9 @@
             },
             isRemoteSelect () {
                 return this.param?.payload?.type === 'remote'
+            },
+            getBuildResourceUrl () {
+                return `${ENVIRONMENT_API_URL_PREFIX}/user/envnode/${this.$route.params.projectId}/listNew?nodeType=THIRDPARTY&page=1&pageSize=100`
             }
         },
         created () {
@@ -484,14 +488,14 @@
             getBuildTypeList (os) {
                 return this.getBuildResourceTypeList(os)
             },
-            handleBuildResourceChange (name, value, param) {
-                const resetBuildType = name === 'os' ? { buildType: this.getBuildTypeList(value)[0].type } : {}
-                this.handleChange('containerType', Object.assign({
-                    ...param.containerType,
-                    [name]: value
-                }, resetBuildType))
-                this.handleChange('defaultValue', '')
-            },
+            // handleBuildResourceChange (name, value, param) {
+            //     const resetBuildType = name === 'os' ? { buildType: this.getBuildTypeList(value)[0].type } : {}
+            //     this.handleChange('containerType', Object.assign({
+            //         ...param.containerType,
+            //         [name]: value
+            //     }, resetBuildType))
+            //     this.handleChange('defaultValue', '')
+            // },
             setSelectorDefaultVal ({ type, defaultValue = '' }) {
                 if (typeof this.param.defaultValue === 'string' && (isMultipleParam(this.param.type) || isEnumParam(this.param.type))) { // 选项清除时，修改对应的默认值
                     const dv = this.param.defaultValue.split(',').filter(v => this.param.options.map(k => k.key).includes(v))
@@ -516,10 +520,6 @@
                     }).map(opt => ({ id: opt.key, name: opt.value }))
                     : []
                 this.optionList = final
-            },
-
-            getBuildResourceUrl ({ os, buildType }) {
-                return `/${STORE_API_URL_PREFIX}/user/pipeline/container/projects/${this.$route.params.projectId}/oss/${os}?buildType=${buildType}`
             },
 
             handleCodeTypeChange (name, value) {
