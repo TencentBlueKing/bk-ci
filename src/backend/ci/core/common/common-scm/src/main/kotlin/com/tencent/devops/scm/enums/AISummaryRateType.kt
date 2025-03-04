@@ -24,30 +24,12 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.scm.enums
 
-package com.tencent.devops.dispatch.api
-
-import com.tencent.devops.dispatch.pojo.AgentStartMonitor
-import io.swagger.v3.oas.annotations.tags.Tag
-import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
-
-@Tag(name = "SERVICE_AGENT", description = "服务-Agent")
-@Path("/service/dipsatch/jobs")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceDispatchJobResource {
-
-    @Operation(summary = "监控")
-    @POST
-    @Path("/monitor")
-    fun monitor(
-        @Parameter(description = "agent 事件", required = true)
-        agentStartMonitor: AgentStartMonitor
-    )
+/**
+ * 针对[AI 摘要]的评论类型
+ */
+enum class AISummaryRateType constructor(val value: String) {
+    UP("up"),
+    DOWN("down")
 }

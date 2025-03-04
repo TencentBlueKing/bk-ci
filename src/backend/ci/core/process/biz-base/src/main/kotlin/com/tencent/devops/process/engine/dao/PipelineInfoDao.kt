@@ -65,7 +65,8 @@ class PipelineInfoDao {
         canElementSkip: Boolean,
         taskCount: Int,
         id: Long? = null,
-        latestVersionStatus: VersionStatus? = VersionStatus.RELEASED
+        latestVersionStatus: VersionStatus? = VersionStatus.RELEASED,
+        pipelineDisable: Boolean? = null
     ): Int {
         val count = with(T_PIPELINE_INFO) {
             dslContext.insertInto(
@@ -84,7 +85,8 @@ class PipelineInfoDao {
                 ELEMENT_SKIP,
                 TASK_COUNT,
                 ID,
-                LATEST_VERSION_STATUS
+                LATEST_VERSION_STATUS,
+                LOCKED
             )
                 .values(
                     pipelineId,
@@ -99,7 +101,8 @@ class PipelineInfoDao {
                     if (canElementSkip) 1 else 0,
                     taskCount,
                     id,
-                    latestVersionStatus?.name
+                    latestVersionStatus?.name,
+                    pipelineDisable ?: false
                 )
                 .execute()
         }
@@ -194,7 +197,7 @@ class PipelineInfoDao {
                 .and(PIPELINE_ID.`in`(pipelineIds))
                 .and(CHANNEL.eq(channelCode.name))
                 .and(DELETE.eq(false))
-                .fetchOne(0, Int::class.java)!!
+                .fetchOne(0, Int::class.java) ?: 0
         }
     }
 
@@ -787,6 +790,27 @@ class PipelineInfoDao {
                 .orderBy(CREATE_TIME, PIPELINE_ID)
                 .limit((page - 1) * pageSize, pageSize)
                 .fetchInto(String::class.java)
+        }
+    }
+
+    fun listByPipelineIds(
+        dslContext: DSLContext,
+        projectId: String,
+        excludePipelineIds: List<String>,
+        channelCode: ChannelCode? = null,
+        limit: Int,
+        offset: Int
+    ): Result<TPipelineInfoRecord>? {
+        return with(T_PIPELINE_INFO) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.notIn(excludePipelineIds))
+                .and(DELETE.eq(false))
+                .let { if (channelCode == null) it else it.and(CHANNEL.eq(channelCode.name)) }
+                .orderBy(CREATE_TIME.desc(), PIPELINE_ID)
+                .limit(limit)
+                .offset(offset)
+                .fetch()
         }
     }
 

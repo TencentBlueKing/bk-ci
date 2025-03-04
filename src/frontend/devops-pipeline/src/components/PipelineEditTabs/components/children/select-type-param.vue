@@ -154,13 +154,13 @@
             .type-select {
                 flex: 1;
                 font-size: 14px;
-                line-height: 22px;
+                height: 42px;
+                line-height: 42px;
                 color: #63656E;
                 text-align: center;
             }
             .is-active {
                 color: #3A84FF;
-                padding: 9px 6px;
                 border-bottom: 2px solid #3A84FF;
             }
         }

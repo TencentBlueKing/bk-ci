@@ -250,6 +250,24 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         )
     }
 
+    override fun listLatestBuildPipelines(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<AgentBuildDetail>> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        return Result(
+            thirdPartyAgentService.listLatestBuildPipelines(
+                userId = userId,
+                projectId = projectId,
+                page = page,
+                pageSize = pageSize
+            )
+        )
+    }
+
     override fun listAgentActions(
         userId: String,
         projectId: String,

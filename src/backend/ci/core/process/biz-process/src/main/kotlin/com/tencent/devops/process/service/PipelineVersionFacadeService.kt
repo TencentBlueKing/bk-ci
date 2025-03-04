@@ -412,7 +412,8 @@ class PipelineVersionFacadeService @Autowired constructor(
                 pipelineId = pipelineId,
                 updateVersion = false,
                 versionStatus = versionStatus,
-                setting = targetSettings
+                setting = targetSettings,
+                dispatchPipelineUpdateEvent = false
             )
             if (versionStatus.isReleasing()) {
                 val existModel = pipelineRepositoryService.getPipelineResourceVersion(
@@ -444,7 +445,9 @@ class PipelineVersionFacadeService @Autowired constructor(
                 description = request.description?.takeIf { it.isNotBlank() } ?: draftVersion.description,
                 yaml = YamlWithVersion(versionTag = draftVersion.yamlVersion, yamlStr = draftVersion.yaml),
                 baseVersion = draftVersion.baseVersion,
-                yamlInfo = request.yamlInfo
+                yamlInfo = request.yamlInfo,
+                // 发布草稿是否禁用流水线以yaml的配置为准，如果为null表示为没有明确指出是否禁用流水线，将不会更改此设置。
+                pipelineDisable = draftVersion.yaml?.let { transferService.loadYaml(it).disablePipeline == true }
             )
             // 添加标签
             pipelineGroupService.addPipelineLabel(

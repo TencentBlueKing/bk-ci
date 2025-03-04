@@ -102,6 +102,7 @@ import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineContextService
+import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
@@ -147,7 +148,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     private val pipelineBuildTaskService: PipelineBuildTaskService,
     private val buildingHeartBeatUtils: BuildingHeartBeatUtils,
     private val redisOperation: RedisOperation,
-    private val pipelineProgressRateService: PipelineProgressRateService
+    private val pipelineProgressRateService: PipelineProgressRateService,
+    private val projectCacheService: ProjectCacheService
 ) {
 
     companion object {
@@ -204,6 +206,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         val asCodeSettings = pipelineAsCodeService.getPipelineAsCodeSettings(
             projectId = projectId, pipelineId = buildInfo.pipelineId
         )
+        val loggingLineLimit = projectCacheService.getLoggingLineLimit(projectId)
         Preconditions.checkNotNull(model) { NotFoundException("Build Model ($buildId) is not exist") }
 
         model!!.stages.forEachIndexed { index, s ->
@@ -272,7 +275,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         variablesWithType = variablesWithType,
                         timeoutMills = timeoutMills,
                         containerType = c.getClassType(),
-                        pipelineAsCodeSettings = asCodeSettings
+                        pipelineAsCodeSettings = asCodeSettings,
+                        loggingLineLimit = loggingLineLimit
                     )
                 }
             }
@@ -906,7 +910,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     buildId = buildId, taskId = result.taskId, actionType = ActionType.END,
                     containerHashId = task.containerHashId, jobId = task.jobId, stageId = task.stageId,
                     stepId = task.stepId, atomCode = task.atomCode, executeCount = task.executeCount,
-                    buildStatus = task.status.name, type = PipelineBuildStatusBroadCastEventType.BUILD_TASK_END
+                    buildStatus = buildStatus.name, type = PipelineBuildStatusBroadCastEventType.BUILD_TASK_END
                 )
             )
         }

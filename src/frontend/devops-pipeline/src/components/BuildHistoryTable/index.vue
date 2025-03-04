@@ -402,30 +402,56 @@
         <bk-dialog
             v-model="isShowMoreArtifactories"
             render-directive="if"
-            :width="640"
+            :width="900"
+            ext-cls="history-dialog"
             header-position="left"
             :title="`#${activeBuild && activeBuild.buildNum} - ${$t('history.artifactList')}`"
             @cancel="hideArtifactoriesPopup"
+            :style="{ '--dialog-top-translateY': `translateY(${dialogTopOffset}px)` }"
         >
-            <p class="artifactory-popup-header">
-                <bk-button
-                    text
-                    theme="primary"
-
-                    @click.stop="gotoArtifactoryList"
-                >
-                    <span class="go-outputs-btn">
-                        <logo
-                            name="tiaozhuan"
-                            size="18"
-                        />
-                        {{ $t("goOutputs") }}
-                    </span>
-                </bk-button>
-            </p>
+            <template slot="header">
+                <div class="artifactory-popup-header">
+                    <span class="header-title">{{ $t('history.artifactList') }}</span>
+                    <span
+                        class="pipeline-name"
+                        v-bk-tooltips="{ content: pipelineName }"
+                    >{{ $t('pipeline') }}: {{ pipelineName }}</span>
+                    <span class="build-num">{{ $t('buildNum') }}: {{ `#${activeBuild && activeBuild.buildNum}` }}</span>
+                    <bk-button
+                        text
+                        theme="primary"
+                        class="outputs-btn"
+                        @click.stop="gotoArtifactoryList"
+                    >
+                        <span class="go-outputs-btn">
+                            <logo
+                                name="tiaozhuan"
+                                size="14"
+                            />
+                            {{ $t("goOutputs") }}
+                        </span>
+                    </bk-button>
+                </div>
+            </template>
+            <!-- <p class="artifactory-popup-header">
+                    <bk-button
+                        text
+                        theme="primary"
+                        @click.stop="gotoArtifactoryList"
+                    >
+                        <span class="go-outputs-btn">
+                            <logo
+                                name="tiaozhuan"
+                                size="18"
+                            />
+                            {{ $t("goOutputs") }}
+                        </span>
+                    </bk-button>
+                </p> -->
             <ul
                 class="build-artifact-list-ul"
                 v-if="visibleIndex !== -1"
+                :style="{ 'max-height': `${ulMaxHeight}px` }"
             >
                 <li
                     v-for="artifactory in actifactories"
@@ -589,7 +615,8 @@
                 stoping: {},
                 isLoading: false,
                 tableColumnKeys: initSortedColumns,
-                tableHeight: null
+                tableHeight: null,
+                dialogTopOffset: null
             }
         },
         computed: {
@@ -628,6 +655,9 @@
             },
             canManualStartup () {
                 return this.pipelineInfo?.canManualStartup ?? true
+            },
+            pipelineName () {
+                return this.pipelineInfo?.pipelineName
             },
             executable () {
                 return !this.isCurPipelineLocked && ((this.canManualStartup && this.isReleasePipeline) || this.isDebug)
@@ -766,6 +796,12 @@
                     page,
                     pageSize
                 }
+            },
+            ulMaxHeight () {
+                return window.innerHeight * 0.8 - 167
+            },
+            dialogWidth () {
+                return window.innerWidth * 0.8
             }
         },
         watch: {
@@ -1008,6 +1044,13 @@
             },
             showArtifactoriesPopup (e, index = -1) {
                 this.visibleIndex = index
+
+                const ITEM_HEIGHT = 46
+                const DIALOG_EXTRA_HEIGHT = 167
+                const totalListHeight = this.actifactories.length * ITEM_HEIGHT
+                const listHeight = Math.min(totalListHeight, this.ulMaxHeight)
+                this.dialogTopOffset = -Math.round((listHeight + DIALOG_EXTRA_HEIGHT) / 2)
+
                 this.isShowMoreArtifactories = true
             },
             hideErrorInfoPopup () {
@@ -1399,12 +1442,39 @@
     grid-gap: 8px;
 }
 .artifactory-popup-header {
-    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    >span {
+        display: inline-block;
+        font-size: 14px;
+        color: #979BA5;
+    }
+    .header-title {
+        font-size: 20px;
+        color: #313238;
+        line-height: 28px;
+    }
+    .pipeline-name {
+        max-width: 300px;
+        padding-left: 9px;
+        margin-left: 9px;
+        border-left: 1px solid #979BA5;
+        @include ellipsis();
+    }
+    .build-num {
+        padding: 0 26px;
+    }
     .go-outputs-btn {
+        svg {
+            vertical-align: middle;
+        }
         display: grid;
         align-items: center;
         grid-gap: 6px;
         grid-auto-flow: column;
+        font-size: 14px;
+        color: #3A84FF;
     }
 }
 .build-artifact-list-ul {
@@ -1412,19 +1482,21 @@
     max-height: calc(100vh / 3);
     overflow: auto;
     > li {
-        height: 38px;
+        min-height: 38px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         border-bottom: 1px solid #EAEBF0;
         font-size: 12px;
+        padding: 8px 10px;
+        line-height: 20px;
         .build-artifact-name {
             display: grid;
             grid-gap: 6px;
             grid-auto-flow: column;
             align-items: center;
             .artifact-name-span {
-                @include ellipsis();
+                @include multiline-ellipsis();
             }
 
         }
@@ -1432,10 +1504,14 @@
             color: #C4C6CC;
         }
         .build-artifactory-operation {
+            max-width: 160px;
             display: grid;
-            grid-gap: 10px;
             grid-auto-flow: column;
             flex-shrink: 0;
+
+            .bk-button-text.bk-button-small {
+                padding: 0 10px !important;
+            }
         }
     }
 }
@@ -1460,6 +1536,13 @@
             -webkit-line-clamp: 3;
             overflow: hidden;
         }
+    }
+}
+
+.history-dialog{
+    .bk-dialog {
+        top: 50% !important;
+        transform: var(--dialog-top-translateY) !important;
     }
 }
 </style>
