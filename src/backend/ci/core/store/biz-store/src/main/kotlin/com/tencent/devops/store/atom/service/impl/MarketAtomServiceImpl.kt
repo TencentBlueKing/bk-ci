@@ -1213,11 +1213,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             )
             val props: Map<String, Any> = jacksonObjectMapper().readValue(propJsonStr)
             if (null != props["input"]) {
-                val input = props["input"] as Map<String, Any>
-                input.forEach { inputIt ->
+                val input = props["input"] as? Map<String, Any>
+                input?.forEach { inputIt ->
                     val paramKey = inputIt.key
-                    val paramValueMap = inputIt.value as Map<String, Any>
-                    val rely = paramValueMap["rely"]
+                    val paramValueMap = inputIt.value as? Map<String, Any>
+                    val rely = paramValueMap?.get("rely")
                     if (rely != null) {
                         itemMap[paramKey] = rely
                     }
@@ -1613,8 +1613,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     values = JsonUtil.toJson(atomRunInfo)
                 )
             }
-        } catch (ignored: Exception) {
-            logger.warn("updateAtomSensitiveCacheConfig atomCode:$atomCode |atomVersion:$atomVersion failed")
+        } catch (e: Exception) {
+            logger.warn("updateAtomSensitiveCacheConfig atomCode:$atomCode |atomVersion:$atomVersion failed", e)
         }
     }
 }
