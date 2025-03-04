@@ -38,10 +38,10 @@
                     </bk-select>
                     <span class="input-seg">=</span>
                     <bk-input
+                        v-model="parameter.value"
                         class="input-com"
                         :disabled="disabled"
                         :title="parameter.value"
-                        :value="parameter.value"
                         @change="(val) => handleChangeValue(val, index)"
                     />
                     <i
