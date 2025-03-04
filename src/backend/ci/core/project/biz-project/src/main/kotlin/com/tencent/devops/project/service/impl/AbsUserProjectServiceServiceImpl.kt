@@ -308,7 +308,7 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
 
     override fun getServiceUrl(userId: String, projectId: String?, serviceId: Long): Result<String> {
         val serviceResult = getService(userId, serviceId)
-        var serviceVO = getService(userId, serviceId).data ?: throw ErrorCodeException(
+        var serviceVO = serviceResult.data ?: throw ErrorCodeException(
             errorCode = serviceResult.code.toString(), defaultMessage = serviceResult.message
         )
         val beanName = "${serviceVO.code.uppercase()}_MANAGE_SERVICE"
