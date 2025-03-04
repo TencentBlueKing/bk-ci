@@ -1,39 +1,54 @@
 <template>
-    <section>
-        <div class="version">{{ $t('store.总版本数：') }}<span class="version-total font-dark">{{ total }}</span></div>
-        <ul
-            class="version-content"
-            @scroll="debouncedHandleScroll"
+    <bk-table
+        :data="versionList"
+        :pagination="pagination"
+        :outer-border="false"
+        :max-height="460"
+        v-bkloading="{ isLoading: isLoading }"
+        @page-change="handlePageChange"
+        @page-limit-change="handleLimitChange"
+    >
+        <bk-table-column
+            type="expand"
+            width="48"
         >
-            <li
-                v-for="item in versionList"
-                :key="item.version"
-                class="version-list"
-            >
-                <div>
-                    <span class="font-dark version-num">{{ item.version }}</span>
-                    <span class="version-tag">{{ item.tag }}</span>
+            <template slot-scope="{ row }">
+                <div class="version-log">
+                    <p>{{ $t('版本日志') }}</p>
+                    <span>{{ row.updateLog }}</span>
                 </div>
-                <div>
-                    <p class="version-light">{{ $t('store.最近更新时间') }}</p>
-                    <p>{{ item.lastUpdateTime }}</p>
-                </div>
-                <div v-if="item.updateLog">
-                    <p class="version-light">{{ $t('store.更新日志') }}</p>
-                    <p class="update-log">{{ item.updateLog }}</p>
-                </div>
-            </li>
-        </ul>
-        <div
-            class="test-dom"
-            v-bkloading="{ isLoading: isLoading }"
-        ></div>
-    </section>
+            </template>
+        </bk-table-column>
+        <bk-table-column
+            :label="$t('版本号')"
+            prop="version"
+        ></bk-table-column>
+        <bk-table-column
+            :label="$t('版本日志')"
+            prop="updateLog"
+        ></bk-table-column>
+        <bk-table-column
+            :label="$t('发布时间')"
+            prop="lastUpdateTime"
+            sortable
+        ></bk-table-column>
+        <bk-table-column
+            :label="$t('发布人')"
+            prop="Publisher"
+        ></bk-table-column>
+        <bk-table-column
+            label="Tag"
+            prop="tag"
+        ></bk-table-column>
+        <bk-table-column
+            :label="$t('包大小')"
+            prop="packageSize"
+        ></bk-table-column>
+    </bk-table>
 </template>
 
 <script>
     import api from '@/api'
-    import { debounce } from '@/utils/index'
 
     export default {
         props: {
@@ -44,10 +59,12 @@
         data () {
             return {
                 isLoading: false,
-                total: 0,
                 versionList: [],
-                page: 1,
-                pageSize: 10
+                pagination: {
+                    current: 1,
+                    count: 0,
+                    limit: 10
+                }
             }
         },
 
@@ -72,6 +89,8 @@
             currentTab: {
                 handler (currentVal) {
                     if (currentVal === this.name) {
+                        this.pagination.current = 1
+                        this.pagination.limit = 10
                         this.initVersionLog()
                     }
                 },
@@ -80,94 +99,50 @@
         },
 
         methods: {
-            initVersionLog () {
-                if (this.isLoading || (this.versionList.length >= this.total && this.total !== 0)) {
-                    return
-                }
-                this.isLoading = true
-                const params = {
-                    page: this.page,
-                    pageSize: this.pageSize
-                }
-                api.getVersionLogs(this.storeType, this.atomCode, params).then((res) => {
-                    this.total = res.count
-                    this.versionList = [...this.versionList, ...res.records]
-                }).catch((err) => {
-                    this.$bkMessage({ theme: 'error', message: err.message || err })
-                }).finally(() => {
+            async initVersionLog () {
+                try {
+                    this.isLoading = true
+                    const params = {
+                        page: this.pagination.current,
+                        pageSize: this.pagination.limit
+                    }
+                    const res = await api.getVersionLogs(this.storeType, this.atomCode, params)
+                    this.versionList = res.records
+                    this.pagination.count = res.count
+                } catch (error) {
+                    this.$bkMessage({ theme: 'error', message: error.message || error })
+                } finally {
                     this.isLoading = false
-                })
-            },
-            handleScroll (event) {
-                const { scrollTop, clientHeight, scrollHeight } = event.target
-                if (scrollTop + clientHeight >= scrollHeight - 5 && this.versionList.length < this.total) {
-                    this.page++
-                    this.initVersionLog()
                 }
             },
-            debouncedHandleScroll (event) {
-                debounce(() => this.handleScroll(event))
+            handlePageChange (page) {
+                this.pagination.current = page
+                this.initVersionLog()
+            },
+            handleLimitChange (limit) {
+                this.pagination.limit = limit
+                this.initVersionLog()
             }
         }
     }
 </script>
 
 <style lang="scss" scoped>
-  .font-dark {
-      color: #313238;
-  }
+.version-log {
+    padding: 24px 48px;
+    color: #4D4F56;
 
-  .version {
-      color: #979ba5;
-      font-size: 18px;
-      margin: 14px 0;
-      .version-total {
-          font-weight: 700;
-          font-size: 18px;
-      }
-  }
+    p {
+        font-weight: 700;
+        font-size: 14px;
+        line-height: 22px;
+    }
 
-  .version-content {
-      max-height: 400px;
-      overflow: auto;
-
-      &::-webkit-scrollbar-thumb {
-          background-color: #c4c6cc !important;
-          border-radius: 5px !important;
-          &:hover {
-              background-color: #979ba5 !important;
-          }
-      }
-      &::-webkit-scrollbar {
-          width: 5px !important;
-          height: 5px !important;
-      }
-
-      .version-list {
-          margin-bottom: 20px;
-    
-          .version-num {
-              font-weight: 700;
-              font-size: 16px;
-          }
-    
-          .version-tag {
-              color: #313238;
-              margin-left: 10px;
-          }
-    
-          div {
-            margin-top: 10px
-          }
-    
-          .version-light {
-            color: #979ba5;
-          }
-
-          .update-log {
-            white-space: pre-line;
-        }
-      }
-  }
-
+    span {
+        font-size: 12px;
+        line-height: 20px;
+        white-space: pre-line;
+        margin-top: 6px;
+    }
+}
 </style>
