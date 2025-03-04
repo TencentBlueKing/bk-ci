@@ -548,7 +548,8 @@ class WorkspaceService @Autowired constructor(
                     labels = it.labels,
                     createTime = it.createTime.timestamp(),
                     imageId = detail?.imageId ?: "",
-                    recordEnabled = !allWindows[it.workspaceName]?.enableRecordUser.isNullOrBlank()
+                    recordEnabled = !allWindows[it.workspaceName]?.enableRecordUser.isNullOrBlank(),
+                    vmName = allWindows[it.workspaceName]?.vmName
                 )
             )
         }
