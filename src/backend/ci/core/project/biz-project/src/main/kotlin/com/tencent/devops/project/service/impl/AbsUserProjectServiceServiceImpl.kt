@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.service.impl
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.redis.RedisOperation
@@ -231,7 +232,7 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
                     val status = it.status
                     val favor = favorServices.contains(it.id)
                     val code = it.englishName
-                    var serviceVO = ServiceVO(
+                    val serviceVO = ServiceVO(
                         id = it.id,
                         code = code,
                         name = I18nUtil.getCodeLanMessage(T_SERVICE_PREFIX + it.englishName).ifBlank {
@@ -259,12 +260,6 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
                         clusterType = it.clusterType,
                         docUrl = it.docUrl ?: ""
                     )
-                    val beanName = "${code.uppercase()}_MANAGE_SERVICE"
-                    if (SpringContextUtil.isBeanExist(beanName)) {
-                        // 对服务数据进行特殊处理
-                        val serviceManageService = SpringContextUtil.getBean(ServiceManageService::class.java, beanName)
-                        serviceVO = serviceManageService.doSpecBus(userId, serviceVO, projectId)
-                    }
                     services.add(serviceVO)
                 }
                 serviceListVO.add(
@@ -309,6 +304,20 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
                 }
             }
         }
+    }
+
+    override fun getServiceUrl(userId: String, projectId: String?, serviceId: Long): Result<String> {
+        val serviceResult = getService(userId, serviceId)
+        var serviceVO = getService(userId, serviceId).data ?: throw ErrorCodeException(
+            errorCode = serviceResult.code.toString(), defaultMessage = serviceResult.message
+        )
+        val beanName = "${serviceVO.code.uppercase()}_MANAGE_SERVICE"
+        if (SpringContextUtil.isBeanExist(beanName)) {
+            // 对服务数据进行特殊处理
+            val serviceManageService = SpringContextUtil.getBean(ServiceManageService::class.java, beanName)
+            serviceVO = serviceManageService.doSpecBus(userId, serviceVO, projectId)
+        }
+        return Result(data = serviceVO.iframeUrl)
     }
 
     companion object {
