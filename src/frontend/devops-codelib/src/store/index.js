@@ -24,6 +24,7 @@ const store = {
     actions,
     mutations,
     state: {
+        providerConfig: {},
         codelibTypes: [],
         codelibs: null,
         tickets: null,
@@ -42,6 +43,13 @@ const store = {
             project: []
         },
         tgitOAuth: {
+            project: []
+        },
+        scmgitOAuth: {
+            project: []
+        },
+        
+        scmsvnOAuth: {
             project: []
         },
         templateCodeLib: null
