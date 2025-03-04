@@ -990,6 +990,8 @@ gateway:
     targetMemory: 80
   cronjob:
     apiVersion: "batch/v1beta1"
+  cfs:
+    enabled: false
 
 
 # experience Deployment

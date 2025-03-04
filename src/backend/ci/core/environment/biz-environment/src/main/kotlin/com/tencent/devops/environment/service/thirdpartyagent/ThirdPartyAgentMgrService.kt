@@ -411,6 +411,50 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         )
     }
 
+    fun listLatestBuildPipelines(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Page<AgentBuildDetail> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: 100
+        val sqlLimit =
+            if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull) else null
+        val count = thirdPartyAgentDao.countProjectAgentId(
+            dslContext = dslContext,
+            projectId = projectId
+        )
+        val agentRecord /*map<agent hash id, node hash id>*/ = thirdPartyAgentDao.listProjectAgentId(
+            dslContext = dslContext,
+            projectId = projectId,
+            offset = sqlLimit?.offset ?: 0,
+            limit = sqlLimit?.limit ?: 100
+        )
+        val agentBuildPage = client.get(ServiceAgentResource::class).listLatestBuildPipelines(
+            agentIds = agentRecord.keys.toList()
+        )
+        val agentBuildDetails = agentBuildPage.map {
+            AgentBuildDetail(
+                nodeId = agentRecord[it.agentId] ?: "",
+                agentId = it.agentId,
+                projectId = it.projectId,
+                pipelineId = it.pipelineId,
+                pipelineName = it.pipelineName,
+                buildId = it.buildId,
+                buildNumber = it.buildNum,
+                vmSetId = it.vmSeqId,
+                taskName = it.taskName,
+                status = it.status,
+                createdTime = it.createdTime,
+                updatedTime = it.updatedTime,
+                workspace = it.workspace,
+                agentTask = null
+            )
+        }
+        return Page(page = pageNotNull, pageSize = pageSizeNotNull, count = count, records = agentBuildDetails)
+    }
+
     fun listAgentActions(
         user: String,
         projectId: String,
@@ -771,7 +815,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     ) ?: throw CustomException(
                         Response.Status.FORBIDDEN,
                         I18nUtil.getCodeLanMessage(THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST) +
-                                "($sharedProjectId:$sharedEnvId)"
+                            "($sharedProjectId:$sharedEnvId)"
                     )
                     envShareProjectDao.list(
                         dslContext = dslContext,
@@ -810,12 +854,12 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         if (sharedEnvRecord.isEmpty()) {
             logger.info(
                 "env name not exists, envName: $sharedEnvName, envId: $sharedEnvId, projectId：$projectId, " +
-                        "mainProjectId: $sharedProjectId"
+                    "mainProjectId: $sharedProjectId"
             )
             throw CustomException(
                 Response.Status.FORBIDDEN,
                 I18nUtil.getCodeLanMessage(ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV) +
-                        "($sharedProjectId:${sharedEnvName ?: sharedEnvId})"
+                    "($sharedProjectId:${sharedEnvName ?: sharedEnvId})"
             )
         }
         logger.info("sharedEnvRecord size: ${sharedEnvRecord.size}")
@@ -861,7 +905,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             throw CustomException(
                 Response.Status.FORBIDDEN,
                 I18nUtil.getCodeLanMessage(ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV) +
-                        "($sharedProjectId:$sharedEnvName)"
+                    "($sharedProjectId:$sharedEnvName)"
             )
         }
         logger.info("sharedThirdPartyAgents size: ${sharedThirdPartyAgents.size}")
@@ -1061,8 +1105,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         }
 
         if (!(AgentStatus.isImportException(status) ||
-                    AgentStatus.isUnImport(status) ||
-                    agentRecord.startRemoteIp.isNullOrBlank())
+                AgentStatus.isUnImport(status) ||
+                agentRecord.startRemoteIp.isNullOrBlank())
         ) {
             if (startInfo.hostIp != agentRecord.startRemoteIp) {
                 return AgentStatus.DELETE
@@ -1493,7 +1537,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         val now = LocalDateTime.now()
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            nodeDao.updateLastBuildTime(context, agent.nodeId, now)
+            nodeDao.updateLastBuildTime(context, pipelineId, agent.nodeId, now)
             agentPipelineRefDao.updateLastBuildTime(context, projectId, pipelineId, vmSeqId, agentLongId, now)
         }
     }

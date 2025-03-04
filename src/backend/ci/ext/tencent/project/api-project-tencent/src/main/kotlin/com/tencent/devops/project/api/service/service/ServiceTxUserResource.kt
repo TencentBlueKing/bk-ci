@@ -33,16 +33,16 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.project.pojo.FetchRemoteDevData
 import com.tencent.devops.project.pojo.user.UserDeptDetail
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
-import javax.ws.rs.Produces
 import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 

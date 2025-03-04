@@ -58,6 +58,11 @@ class ServiceAgentResourceImpl @Autowired constructor(
         )
     }
 
+    override fun listLatestBuildPipelines(agentIds: List<String>): List<AgentBuildInfo> {
+        return thirdPartyAgentService.listLatestBuildPipelines(
+            agentIds = agentIds
+        )
+    }
     override fun getDockerDebugUrl(
         userId: String,
         projectId: String,

@@ -536,49 +536,6 @@ class WindowsResourceConfigService @Autowired constructor(
         return curQuota + quota
     }
 
-    fun addProjectRemotedevManagerWithPermission(
-        userId: String,
-        projectId: String,
-        manager: String,
-        delete: Boolean?
-    ): Boolean {
-        permissionService.checkUserProjectManager(userId, projectId)
-        return addProjectRemotedevManager(userId, projectId, manager, delete)
-    }
-
-    fun addProjectRemotedevManager(
-        userId: String,
-        projectId: String,
-        manager: String,
-        delete: Boolean?
-    ): Boolean {
-        logger.info("addProjectTotalQuota|projectId|$projectId|manager|$manager|delete=$delete")
-        // 先获取当前项目的properties配置获取当前配额，再追加申请的配额，更新
-        val projectInfo = kotlin.runCatching {
-            client.get(ServiceProjectResource::class).get(projectId)
-        }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
-            .getOrElse { null }?.data ?: throw RemoteServiceException(
-            "not find project $projectId", HTTP_400
-        )
-        val projectProperties = projectInfo.properties
-        if (projectProperties?.remotedev == null || projectProperties.remotedev == false) {
-            logger.info("addProjectRemotedevManager|$projectId|not open remotedev")
-            return false
-        }
-        val oldManagers = projectProperties.remotedevManager?.split(";")
-            ?.filter { it.isNotBlank() }?.toMutableSet() ?: mutableSetOf()
-        if (delete == true) {
-            oldManagers.removeAll(manager.split(",").toSet())
-        } else {
-            oldManagers.addAll(manager.split(",").toSet())
-        }
-        return client.get(OPProjectResource::class).setProjectProperties(
-            userId = userId,
-            projectCode = projectId,
-            properties = projectProperties.copy(remotedevManager = oldManagers.joinToString(";"))
-        ).data == true
-    }
-
     fun createCheckSpecLimit(
         windowsType: String,
         projectId: String,

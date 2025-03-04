@@ -43,7 +43,8 @@ data class MarketBuildLessAtomElement(
     @get:Schema(title = "状态", required = false)
     override var status: String? = null,
     @get:Schema(title = "插件的唯一标识", required = true)
-    private val atomCode: String = "",
+    @get:JvmName("getAutoAtomCode")
+    var atomCode: String = "",
     @get:Schema(title = "插件版本", required = false)
     override var version: String = "1.*",
     @get:Schema(title = "用户自定义ID", required = false)
@@ -51,7 +52,7 @@ data class MarketBuildLessAtomElement(
     @get:Schema(title = "用户自定义环境变量（插件运行时写入环境）", required = false)
     override var customEnv: List<NameAndValue>? = null,
     @get:Schema(title = "插件参数数据", required = true)
-    val data: Map<String, Any> = mapOf()
+    var data: Map<String, Any> = mapOf()
 ) : Element(name, id, status) {
 
     companion object {

@@ -42,13 +42,14 @@ import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
 import com.tencent.devops.remotedev.pojo.image.ListImagesData
 import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
+import com.tencent.devops.remotedev.pojo.itsm.BKItsmCreateTicketReq
+import com.tencent.devops.remotedev.pojo.itsm.BKItsmCreateTicketRespData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.EnableRemotedevData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
-import com.tencent.devops.remotedev.pojo.project.UpdateRemotedevDataManagers
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
@@ -61,6 +62,7 @@ import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.resources.op.OpProjectWorkspaceResourceImpl
+import com.tencent.devops.remotedev.service.BKItsmService
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.RemotedevProjectService
@@ -124,7 +126,8 @@ class ServiceRemoteDevResourceImpl(
     private val cloneWorkspaceHandler: CloneWorkspaceHandler,
     private val workspaceHookService: WorkspaceHookService,
     private val configCacheService: ConfigCacheService,
-    private val remotedevProjectService: RemotedevProjectService
+    private val remotedevProjectService: RemotedevProjectService,
+    private val bkItsmService: BKItsmService
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -873,17 +876,6 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
-    override fun updateProjectRemotedevManager(userId: String, data: UpdateRemotedevDataManagers): Result<Boolean> {
-        return Result(
-            windowsResourceConfigService.addProjectRemotedevManagerWithPermission(
-                userId = userId,
-                projectId = data.projectId,
-                manager = data.managers.joinToString(";"),
-                delete = !data.add
-            )
-        )
-    }
-
     override fun fetchImages(userId: String, data: ListImagesData): Result<ListImagesResp?> {
         return Result(imageManageService.fetchImages(userId, data))
     }
@@ -900,6 +892,15 @@ class ServiceRemoteDevResourceImpl(
                 projectId = projectId,
                 imageId = imageId,
                 delaySeconds = delaySeconds
+            )
+        )
+    }
+
+    override fun createItsmTicket(userId: String, createReq: BKItsmCreateTicketReq): Result<BKItsmCreateTicketRespData> {
+        return Result(
+            bkItsmService.createDirectTicket(
+                createReq = createReq,
+                errorParam = userId
             )
         )
     }

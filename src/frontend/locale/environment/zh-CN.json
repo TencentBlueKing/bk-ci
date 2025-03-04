@@ -249,7 +249,9 @@
         "logoutHookTips": "退出云桌面，将执行如下已勾选的操作",
         "cleanCredentialsLabel": "清理凭据，包括 Git/SVN 凭据、浏览器缓存凭据 (Chrome、Microsoft Edge)",
         "ioaLoginLabel": "登录IOA",
-        "ioaLogoutLabel": "IOA注销登录"
+        "ioaLogoutLabel": "IOA注销登录",
+        "lastRunPipeline": "最近执行流水线",
+        "lastRunAs": "最近执行时间"
     },
     "nodeTypeMap": {
         "CC": "CC",
@@ -449,5 +451,8 @@
     "共X个节点": "共{0}个节点",
     "authManage": "权限管理",
     "advancedSetting": "高级设置",
-    "saveChange": "保存变更"
+    "saveChange": "保存变更",
+    "选择最近执行时间范围": "选择最近执行时间范围",
+    "导出": "导出",
+    "可以尝试 调整关键词 或": "可以尝试 调整关键词 或"
 }

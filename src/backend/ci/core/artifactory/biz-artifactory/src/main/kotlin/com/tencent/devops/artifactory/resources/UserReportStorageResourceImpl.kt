@@ -29,6 +29,7 @@ package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.user.UserReportStorageResource
 import com.tencent.devops.artifactory.service.ArchiveFileService
+import com.tencent.devops.common.archive.util.PathUtil
 import org.springframework.beans.factory.annotation.Autowired
 
 class UserReportStorageResourceImpl @Autowired constructor(
@@ -42,6 +43,13 @@ class UserReportStorageResourceImpl @Autowired constructor(
         elementId: String,
         path: String
     ) {
-        return archiveFileService.downloadReport(userId, projectId, pipelineId, buildId, elementId, path)
+        return archiveFileService.downloadReport(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            elementId = elementId,
+            path = PathUtil.getNormalizedPath(path)
+        )
     }
 }

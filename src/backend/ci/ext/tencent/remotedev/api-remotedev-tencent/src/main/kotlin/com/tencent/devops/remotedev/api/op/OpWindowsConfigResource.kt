@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -204,20 +204,5 @@ interface OpWindowsConfigResource {
         @Parameter(description = "配额", required = true)
         @PathParam("quota")
         quota: Int
-    ): Result<Boolean>
-
-    @Operation(summary = "设置云研发项目管理员")
-    @PUT
-    @Path("/add/{projectId}/manager")
-    fun addProjectRemotedevManager(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "管理员，多人用分号分隔", required = true)
-        @QueryParam("manager")
-        manager: String
     ): Result<Boolean>
 }

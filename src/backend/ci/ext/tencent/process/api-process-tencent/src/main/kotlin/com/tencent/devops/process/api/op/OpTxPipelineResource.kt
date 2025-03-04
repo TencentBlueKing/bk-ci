@@ -41,4 +41,19 @@ interface OpTxPipelineResource {
         @QueryParam("buildTimeoutDays")
         buildTimeoutDays: Long?
     ): Result<Int>
+
+    @Operation(summary = "修复流水线状态")
+    @PUT
+    @Path("/{projectId}/{pipelineId}/fixResourceVersion")
+    fun fixResourceVersion(
+        @Parameter(description = "流水线Id", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线Id", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "目标正式版本", required = false)
+        @QueryParam("version")
+        version: Int?
+    ): Result<Int>
 }

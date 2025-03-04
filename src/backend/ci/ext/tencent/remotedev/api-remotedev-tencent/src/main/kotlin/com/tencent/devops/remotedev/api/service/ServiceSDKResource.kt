@@ -80,7 +80,7 @@ interface ServiceSDKResource {
         @Parameter(description = "cdsToken", required = false)
         @QueryParam("cdiToken")
         cdiToken: String
-    ): Result<Pair<String/*当前实例id*/,String/*appId*/>?>
+    ): Result<Pair<String/*当前实例id*/, String/*appId*/>?>
 
     @Operation(summary = "根据实例Id，返回实例当前登陆人。若没人登陆返回null。")
     @GET

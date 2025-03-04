@@ -35,13 +35,12 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
-import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminData
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyListData
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -82,17 +81,6 @@ interface OpProjectWorkspaceResource {
         @Parameter(description = "查询参数")
         data: ProjectWorkspaceFetchData
     ): Result<Page<ProjectWorkspace>>
-
-    @Operation(summary = "批量获取指定项目的云桌面的云研发管理员和拥有者")
-    @POST
-    @Path("/fetchOwnerAndAdmin")
-    fun fetchOwnerAndAdmin(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "获取数据")
-        data: FetchOwnerAndAdminData
-    ): Result<Set<String>>
 
     @Operation(summary = "修改云研发机器在 CMDB 的属性")
     @POST

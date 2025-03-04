@@ -10,14 +10,16 @@ class AppExperienceSecurityResourceImpl constructor(
     val experienceSecurityService: ExperienceSecurityService
 ) : AppExperienceSecurityResource {
     override fun getClearSign(
-        openId: String,
-        nickName: String,
+        openId: String?,
+        nickName: String?,
+        openid: String?,
+        nickname: String?,
         avatar: String
     ): Result<String> {
         return Result(
             experienceSecurityService.getClearSign(
-                openId = openId,
-                nickName = nickName,
+                openId = openId ?: openid!!,
+                nickName = nickName ?: nickname!!,
                 avatar = avatar
             )
         )

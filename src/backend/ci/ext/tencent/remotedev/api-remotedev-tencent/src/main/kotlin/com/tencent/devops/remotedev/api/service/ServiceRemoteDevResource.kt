@@ -26,13 +26,14 @@ import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
 import com.tencent.devops.remotedev.pojo.image.ListImagesData
 import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
+import com.tencent.devops.remotedev.pojo.itsm.BKItsmCreateTicketReq
+import com.tencent.devops.remotedev.pojo.itsm.BKItsmCreateTicketRespData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.EnableRemotedevData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
-import com.tencent.devops.remotedev.pojo.project.UpdateRemotedevDataManagers
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
@@ -820,16 +821,6 @@ interface ServiceRemoteDevResource {
         data: EnableRemotedevData
     ): Result<Boolean>
 
-    @Operation(summary = "修改项目云研发管理员")
-    @POST
-    @Path("/update_project_remotedev_managers")
-    fun updateProjectRemotedevManager(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        data: UpdateRemotedevDataManagers
-    ): Result<Boolean>
-
     @Operation(summary = "获取镜像列表")
     @POST
     @Path("/images")
@@ -857,4 +848,15 @@ interface ServiceRemoteDevResource {
         @QueryParam("delaySeconds")
         delaySeconds: Int?
     ): Result<DeleteImageResp>
+
+    @Operation(summary = "创建ITSM单据流程")
+    @POST
+    @Path("/create_itsm_ticket")
+    fun createItsmTicket(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "请求参数", required = true)
+        createReq: BKItsmCreateTicketReq
+    ): Result<BKItsmCreateTicketRespData>
 }
