@@ -74,12 +74,8 @@ abstract class StoreComponentVersionLogService {
                 } else {
                     emptyList()
                 }
-            } catch (e: Exception) {
-                logger.error(
-                    "getStoreComponentVersionLogs error:${
-                        e.message
-                    }"
-                )
+            } catch (ignored: Throwable) {
+                logger.error("getStoreComponentVersionLogs error", ignored)
                 emptyList()
             }
         }
