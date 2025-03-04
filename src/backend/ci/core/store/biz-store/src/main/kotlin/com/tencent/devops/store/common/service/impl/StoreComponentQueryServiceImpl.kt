@@ -65,6 +65,7 @@ import com.tencent.devops.store.common.service.ClassifyService
 import com.tencent.devops.store.common.service.StoreCommentService
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreComponentQueryService
+import com.tencent.devops.store.common.service.StoreComponentVersionLogService
 import com.tencent.devops.store.common.service.StoreHonorService
 import com.tencent.devops.store.common.service.StoreIndexManageService
 import com.tencent.devops.store.common.service.StoreLabelService
@@ -95,6 +96,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
+import com.tencent.devops.store.pojo.common.version.StoreVersionLogInfo
 import com.tencent.devops.store.pojo.common.version.VersionModel
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -183,6 +185,9 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
 
     @Autowired
     lateinit var labelDao: LabelDao
+
+    @Autowired
+    lateinit var storeComponentVersionLogService: StoreComponentVersionLogService
 
     companion object {
         private val executor = Executors.newFixedThreadPool(30)
@@ -1085,5 +1090,24 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             }
             else -> str
         }
+    }
+
+    /**
+     * 根据组件id获取组件版本日志
+     */
+    override fun getStoreVersionLogs(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<StoreVersionLogInfo>> {
+        return storeComponentVersionLogService.getStoreComponentVersionLogs(
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType,
+            page = page,
+            pageSize = pageSize
+        )
     }
 }
