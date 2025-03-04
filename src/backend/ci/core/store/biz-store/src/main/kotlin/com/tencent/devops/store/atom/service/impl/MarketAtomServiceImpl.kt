@@ -1213,13 +1213,15 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             )
             val props: Map<String, Any> = jacksonObjectMapper().readValue(propJsonStr)
             if (null != props["input"]) {
-                val input = props["input"] as? Map<String, Any>
+                val input = props["input"] as? Map<*, *>
                 input?.forEach { inputIt ->
                     val paramKey = inputIt.key
-                    val paramValueMap = inputIt.value as? Map<String, Any>
-                    val rely = paramValueMap?.get("rely")
-                    if (rely != null) {
-                        itemMap[paramKey] = rely
+                    if (inputIt.value is Map<*, *>) {
+                        val paramValueMap = inputIt.value as? Map<*, *>
+                        val rely = paramValueMap?.get("rely")
+                        if (rely != null) {
+                            itemMap[paramKey.toString()] = rely
+                        }
                     }
                 }
             }

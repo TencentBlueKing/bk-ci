@@ -844,13 +844,15 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         val propsMap: Map<String, Any> = jacksonObjectMapper().readValue(props)
         val params = mutableListOf<String>()
         if (null != propsMap["input"]) {
-            val input = propsMap["input"] as? Map<String, Any>
+            val input = propsMap["input"] as? Map<*, *>
             input?.forEach { inputIt ->
                 val paramKey = inputIt.key
-                val paramValueMap = inputIt.value as? Map<String, Any>
-                val isSensitive = paramValueMap?.get("isSensitive") as? Boolean
-                if (isSensitive == true) {
-                    params.add(paramKey)
+                if(inputIt.value is Map<*, *>) {
+                    val paramValueMap = inputIt.value as? Map<*, *>
+                    val isSensitive = paramValueMap?.get("isSensitive") as? Boolean
+                    if (isSensitive == true) {
+                        params.add(paramKey.toString())
+                    }
                 }
             }
         }
