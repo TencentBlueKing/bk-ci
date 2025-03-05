@@ -24,11 +24,15 @@
                 >
                     {{ pipelineGroupType.label }}
                 </bk-tag>
-                <span>{{ currentViewName }}</span>
+                <ArchiveViewName v-if="isArchiveView" />
+                <span v-else>{{ currentViewName }}</span>
             </h5>
             <header class="pipeline-list-main-header">
                 <div class="pipeline-list-main-header-left-area">
-                    <bk-dropdown-menu trigger="click">
+                    <bk-dropdown-menu
+                        v-if="!isArchiveView"
+                        trigger="click"
+                    >
                         <bk-button
                             v-perm="{
                                 hasPermission: hasCreatePermission,
@@ -61,7 +65,10 @@
                             </li>
                         </ul>
                     </bk-dropdown-menu>
-                    <span v-bk-tooltips="noManagePermissionTips">
+                    <span
+                        v-if="!isArchiveView"
+                        v-bk-tooltips="noManagePermissionTips"
+                    >
                         <bk-button
                             v-perm="{
                                 hasPermission: !canNotMangeProjectedGroup,
@@ -86,6 +93,7 @@
                     <pipeline-searcher
                         v-if="allPipelineGroup.length"
                         v-model="filters"
+                        :is-archive-view="isArchiveView"
                     />
                     <bk-dropdown-menu
                         trigger="click"
@@ -227,11 +235,13 @@
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
     import { mapActions, mapState } from 'vuex'
     import PipelineSearcher from './PipelineSearcher'
+    import ArchiveViewName from '@/components/pipelineList/archiveViewName'
 
     import Logo from '@/components/Logo'
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
     import {
         ALL_PIPELINE_VIEW_ID,
+        ARCHIVE_VIEW_ID,
         DELETED_VIEW_ID
     } from '@/store/constants'
     import { ADD_TO_PIPELINE_GROUP, bus } from '@/utils/bus'
@@ -256,6 +266,7 @@
             PipelineSearcher,
             ImportPipelinePopup,
             PipelineGroupEditDialog,
+            ArchiveViewName,
             DisableDialog
         },
         mixins: [piplineActionMixin],
@@ -297,6 +308,9 @@
             },
             isDeleteView () {
                 return this.$route.params.viewId === DELETED_VIEW_ID
+            },
+            isArchiveView () {
+                return this.$route.params.viewId === ARCHIVE_VIEW_ID
             },
             isTableLayout () {
                 return this.isDeleteView || this.layout === TABLE_LAYOUT

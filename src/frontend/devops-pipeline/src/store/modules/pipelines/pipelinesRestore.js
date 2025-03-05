@@ -43,6 +43,13 @@ const actions = {
         return ajax.put(`${prefix}/pipelines/${projectId}/${pipelineId}/restore`).then(response => {
             return response.data
         })
+    },
+    requestArchivePipelineList ({ commit }, { projectId, ...query }) {
+        return ajax.get(`${prefix}/archive/projects/${projectId}/archived/pipelines/list`, {
+            params: query
+        }).then(response => {
+            return response.data
+        })
     }
 }
 
