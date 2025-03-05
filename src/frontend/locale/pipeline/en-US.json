@@ -1745,5 +1745,9 @@
   "monitorPac": "Monitor PAC",
   "groupLabel": "Group labels",
   "groupLabelTips": "Variables with the same label will be displayed in the same group in the view and execution preview interface",
-  "notGrouped": "Not grouped"
+  "notGrouped": "Not grouped",
+  "archive": {
+    "archiveLibrary": "存档库",
+    "batchArchiving": "批量归档"
+  }
 }

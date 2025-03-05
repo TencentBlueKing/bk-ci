@@ -1741,5 +1741,9 @@
   "monitorPac": "监听PAC",
   "groupLabel": "分组标签",
   "groupLabelTips": "拥有相同标签的变量，在查看和执行预览界面将在同一个分组下展示",
-  "notGrouped": "未分组"
+  "notGrouped": "未分组",
+  "archive": {
+    "archiveLibrary": "存档库",
+    "batchArchiving": "批量归档"
+  }
 }
