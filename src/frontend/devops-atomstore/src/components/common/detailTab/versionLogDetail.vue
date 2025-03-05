@@ -15,7 +15,7 @@
             <template slot-scope="{ row }">
                 <div class="version-log">
                     <p>{{ $t('版本日志') }}</p>
-                    <span>{{ row.updateLog }}</span>
+                    <span>{{ row.updateLog || '--' }}</span>
                 </div>
             </template>
         </bk-table-column>
@@ -26,7 +26,11 @@
         <bk-table-column
             :label="$t('版本日志')"
             prop="updateLog"
-        ></bk-table-column>
+        >
+            <template slot-scope="{ row }">
+                {{ row.updateLog || '--' }}
+            </template>
+        </bk-table-column>
         <bk-table-column
             :label="$t('发布时间')"
             prop="lastUpdateTime"
@@ -136,13 +140,13 @@
         font-weight: 700;
         font-size: 14px;
         line-height: 22px;
+        margin-bottom: 6px;
     }
 
     span {
         font-size: 12px;
         line-height: 20px;
         white-space: pre-line;
-        margin-top: 6px;
     }
 }
 </style>
