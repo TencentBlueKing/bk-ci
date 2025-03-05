@@ -1,9 +1,15 @@
 <template>
     <main class="pipeline-list-main">
-        <h5 class="current-pipeline-group-name">{{ currentViewName }}</h5>
+        <div class="current-pipeline-group-name">
+            <ArchiveViewName v-if="isArchiveView" />
+            <h5 v-else>
+                {{ currentViewName }}
+            </h5>
+        </div>
         <header class="pipeline-list-main-header">
             <div class="pipeline-list-main-header-left-area">
                 <bk-button
+                    v-if="!isArchiveView"
                     :disabled="!isSelected"
                     @click="togglePatchAddTo"
                 >
@@ -65,14 +71,18 @@
     import PipelineTableView from '@/components/pipelineList/PipelineTableView'
     import AddToGroupDialog from '@/views/PipelineList/AddToGroupDialog'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
+    import ArchiveViewName from '@/components/pipelineList/archiveViewName'
     import { mapActions, mapGetters } from 'vuex'
     import PipelineSearcher from './PipelineSearcher'
+    import { ARCHIVE_VIEW_ID } from '@/store/constants'
+
     export default {
         name: 'patch-manage-list',
         components: {
             PipelineSearcher,
             PipelineTableView,
             AddToGroupDialog,
+            ArchiveViewName,
             RemoveConfirmDialog
         },
         data () {
@@ -105,6 +115,9 @@
                     disabled: !this.isPacGroup,
                     delay: [300, 0]
                 }
+            },
+            isArchiveView () {
+                return this.$route.params.viewId === ARCHIVE_VIEW_ID
             }
         },
         mounted () {

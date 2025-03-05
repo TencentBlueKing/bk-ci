@@ -28,6 +28,10 @@
             value: {
                 type: Array,
                 default: () => ([])
+            },
+            isArchiveView: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -64,13 +68,6 @@
                         name: this.$t('creator')
 
                     },
-                    {
-                        id: PIPELINE_FILTER_VIEWIDS,
-                        name: this.$t('pipelineGroup'),
-                        default: true,
-                        multiable: true,
-                        children: this.allPipelineGroup.filter(item => item.viewType !== -1)
-                    },
                     ...this.tagGroupList.filter(item =>
                         Array.isArray(item.labels) && item.labels.length > 0
                     ).map(item => ({
@@ -81,6 +78,16 @@
                         children: item.labels
                     }))
                 ]
+                if (!this.isArchiveView) {
+                    originList.push({
+                        id: PIPELINE_FILTER_VIEWIDS,
+                        name: this.$t('pipelineGroup'),
+                        default: true,
+                        multiable: true,
+                        children: this.allPipelineGroup.filter(item => item.viewType !== -1)
+                    })
+                }
+
                 return originList.filter(item => !this.value[item.id])
             },
             tagGroupMap () {

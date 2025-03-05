@@ -65,6 +65,7 @@ export default {
         ...mapActions('pipelines', [
             'requestAllPipelinesListByFilter',
             'requestRecyclePipelineList',
+            'requestArchivePipelineList',
             'requestToggleCollect',
             'deletePipeline',
             'copyPipeline',
@@ -87,12 +88,11 @@ export default {
                         viewId
                     })
                 } else if (viewId === ARCHIVE_VIEW_ID) {
-                    console.log(111)
-                    // return this.requestRecyclePipelineList({
-                    //     projectId: this.$route.params.projectId,
-                    //     ...queryParams,
-                    //     viewId
-                    // })
+                    return this.requestArchivePipelineList({
+                        projectId: this.$route.params.projectId,
+                        ...queryParams,
+                        viewId
+                    })
                 } else {
                     this.$router.replace({
                         query: queryParams
