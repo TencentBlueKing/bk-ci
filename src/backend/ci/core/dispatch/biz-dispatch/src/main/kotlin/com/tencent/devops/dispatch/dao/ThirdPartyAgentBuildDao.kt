@@ -28,17 +28,19 @@
 package com.tencent.devops.dispatch.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.BuildJobType
 import com.tencent.devops.model.dispatch.tables.TDispatchThirdpartyAgentBuild
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.JSON
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 @Suppress("ALL")
@@ -286,6 +288,48 @@ class ThirdPartyAgentBuildDao {
                 .orderBy(CREATED_TIME.desc())
                 .limit(offset, limit)
                 .fetch()
+        }
+    }
+
+    fun listLatestBuildPipelines(
+        dslContext: DSLContext,
+        agentIds: List<String>
+    ): List<AgentBuildInfo> {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            val sub = dslContext.select(DSL.max(ID).`as`("max_id"))
+                .from(this).groupBy(AGENT_ID).asTable("sub")
+            return dslContext.select(
+                PROJECT_ID,
+                AGENT_ID,
+                PIPELINE_ID,
+                PIPELINE_NAME,
+                BUILD_ID,
+                BUILD_NUM,
+                VM_SEQ_ID,
+                TASK_NAME,
+                STATUS,
+                CREATED_TIME,
+                UPDATED_TIME,
+                WORKSPACE
+            ).from(this)
+                .join(sub).on(ID.eq(sub.field("max_id", Long::class.java)))
+                .orderBy(CREATED_TIME.desc())
+                .fetch().map {
+                    AgentBuildInfo(
+                        projectId = it.value1(),
+                        agentId = it.value2(),
+                        pipelineId = it.value3(),
+                        pipelineName = it.value4(),
+                        buildId = it.value5(),
+                        buildNum = it.value6(),
+                        vmSeqId = it.value7(),
+                        taskName = it.value8(),
+                        status = PipelineTaskStatus.toStatus(it.value9()).name,
+                        createdTime = it.value10().timestamp(),
+                        updatedTime = it.value11().timestamp(),
+                        workspace = it.value12() ?: ""
+                    )
+                }
         }
     }
 
