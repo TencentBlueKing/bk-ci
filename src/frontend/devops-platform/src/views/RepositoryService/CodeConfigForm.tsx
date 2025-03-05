@@ -233,11 +233,10 @@ export default defineComponent({
       await getProviderList()
       if (!isCreate.value) {
         configFormData.value = curConfig.value as repoConfigFromData
-        configFormData.value.credentialTypeList = curConfig.value?.credentialTypeList?.map((i => i.id))
+        configFormData.value.credentialTypeList = curConfig.value?.credentialTypeList?.map((i => i.credentialType))
       }
       initConfigFormData.value = deepCopy(configFormData.value)
     })
-
     return () => (
       <>
         <PlatformHeader>
@@ -387,18 +386,17 @@ export default defineComponent({
                   {
                     curAuthTypeList.value.map(auth => (
                       <bk-checkbox
-                        label={auth?.id}
+                        label={auth.credentialType}
                       >
                         {auth.name}
                       </bk-checkbox>
                     ))
                   }
-                
                 </bk-checkbox-group>
               </bk-form-item>
               <div class="ml-[150px] mb-[20px]">
                 {
-                  curAuthTypeList.value?.find(i => i.id === 'OAUTH') && (
+                  curAuthTypeList.value?.find(i => i.credentialType === 'OAUTH') && (
                     <div class="check-popper relative max-w-[710px] pt-[24px] pr-[120px] leading-[128px] border border-[#DCDEE5] bg-[#FAFBFD] mt-[10px]">
                       <bk-form-item
                         label={t('OAUTH类型')}
