@@ -1679,5 +1679,9 @@
   "noDraft": "暂无可删除的草稿",
   "isTaskTermination": "确认中止任务执行吗？",
   "pipelineNameConventions": "流水线命名规范：",
-  "addLabels": "添加标签"
+  "addLabels": "添加标签",
+  "archive": {
+    "archiveLibrary": "存档库",
+    "batchArchiving": "批量归档"
+  }
 }

@@ -25,6 +25,7 @@ import {
     ALL_PIPELINE_VIEW_ID,
     COLLECT_VIEW_ID,
     DELETED_VIEW_ID,
+    ARCHIVE_VIEW_ID,
     MY_PIPELINE_VIEW_ID,
     RECENT_USED_VIEW_ID,
     UNCLASSIFIED_PIPELINE_VIEW_ID
@@ -85,6 +86,13 @@ export default {
                         ...queryParams,
                         viewId
                     })
+                } else if (viewId === ARCHIVE_VIEW_ID) {
+                    console.log(111)
+                    // return this.requestRecyclePipelineList({
+                    //     projectId: this.$route.params.projectId,
+                    //     ...queryParams,
+                    //     viewId
+                    // })
                 } else {
                     this.$router.replace({
                         query: queryParams

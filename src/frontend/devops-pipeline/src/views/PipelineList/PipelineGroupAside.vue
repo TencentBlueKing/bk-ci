@@ -131,18 +131,22 @@
                 </template>
             </article>
         </div>
-        <footer
-            :class="['recycle-pipeline-group-footer', {
-                active: $route.params.viewId === DELETED_VIEW_ID
-            }]"
-            @click="goRecycleBin"
-        >
-            <logo
-                class="pipeline-group-item-icon"
-                name="delete"
-                size="16"
-            ></logo>
-            <span>{{ $t('restore.recycleBin') }}</span>
+        <footer class="recycle-pipeline-group-footer">
+            <div
+                v-for="(item,idx) in footerBtns"
+                :key="idx"
+                :class="['footer-item',{
+                    active: $route.params.viewId === item.viewId
+                }]"
+                @click="item.handler"
+            >
+                <logo
+                    class="pipeline-group-item-icon"
+                    :name="item.logo"
+                    size="16"
+                ></logo>
+                <span>{{ item.title }}</span>
+            </div>
         </footer>
         <bk-dialog
             v-model="isAddPipelineGroupDialogShow"
@@ -214,6 +218,7 @@
     import {
         CACHE_PIPELINE_GROUP_NAV_STATUS,
         DELETED_VIEW_ID,
+        ARCHIVE_VIEW_ID,
         UNCLASSIFIED_PIPELINE_VIEW_ID
     } from '@/store/constants'
     import {
@@ -324,6 +329,22 @@
                 const viewId = this.$route.params.viewId
                 const currentGroup = this.groupMap[viewId]
                 return currentGroup?.pipelineCountDetail ?? currentGroup.pipelineCount ?? 0
+            },
+            footerBtns () {
+                return [
+                    {
+                        logo: 'archive',
+                        title: this.$t('archive.archiveLibrary'),
+                        viewId: ARCHIVE_VIEW_ID,
+                        handler: this.goArchiveLibrary
+                    },
+                    {
+                        logo: 'delete',
+                        title: this.$t('restore.recycleBin'),
+                        viewId: DELETED_VIEW_ID,
+                        handler: this.goRecycleBin
+                    }
+                ]
             }
         },
         watch: {
@@ -356,6 +377,9 @@
             },
             goRecycleBin () {
                 this.switchViewId(DELETED_VIEW_ID)
+            },
+            goArchiveLibrary () {
+                this.switchViewId(ARCHIVE_VIEW_ID)
             },
             async refreshPipelineGroup () {
                 this.isLoading = true
@@ -661,9 +685,9 @@
         .recycle-pipeline-group-footer {
             display: flex;
             align-items: center;
-            height: 52px;
+            height: 56px;
             border-top: 1px solid #DCDEE5;
-            padding: 0 0 0 32px;
+            padding: 0 6px;
             cursor: pointer;
             font-size: 14px;
             width: 100%;
@@ -671,11 +695,25 @@
             &.expended {
                 width: 100%;
             }
-            &:hover,
-            &.active {
-                color: $primaryColor;
-                .pipeline-group-item-icon {
+            .footer-item {
+                flex: 1;
+                line-height: 32px;
+                padding: 2px 0;
+                
+                svg {
+                    vertical-align: middle;
+                }
+
+                &:hover,
+                &.active {
                     color: $primaryColor;
+                    .pipeline-group-item-icon {
+                        color: $primaryColor;
+                    }
+                }
+
+                &:last-child {
+                    border-left: 1px solid #DCDEE5;
                 }
             }
         }

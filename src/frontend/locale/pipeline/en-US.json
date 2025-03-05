@@ -1681,5 +1681,9 @@
   "noDraft": "No drafts available for deletion",
   "isTaskTermination": "Are you sure you want to terminate the task execution?",
   "pipelineNameConventions": "Pipeline Naming Conventions:",
-  "addLabels": "Add Label"
+  "addLabels": "Add Label",
+  "archive": {
+    "archiveLibrary": "存档库",
+    "batchArchiving": "批量归档"
+  }
 }
