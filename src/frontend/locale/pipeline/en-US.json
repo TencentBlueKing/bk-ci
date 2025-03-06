@@ -1244,6 +1244,7 @@
   "pipelineGroup": "Pipeline Groups",
   "patchManage": "Batch Operations",
   "searchPipelinePlaceholder": "Pipeline Name / Creator / Pipeline Group Name/ Label",
+  "searchPipelineArchivePlaceholder": "Pipeline Name / Creator / Label",
   "ownGroupName": "Pipeline Group",
   "latestExec": "Last Run",
   "addPipelineGroup": "New Pipeline Group",
@@ -1683,6 +1684,7 @@
   "pipelineNameConventions": "Pipeline Naming Conventions:",
   "addLabels": "Add Label",
   "archive": {
+    "archive": "Archive",
     "archiveLibrary": "Archive library",
     "batchArchiving": "Batch archiving",
     "tips": "Pipeline archiving is irreversible. After archiving:\n1. It can only be viewed, editing and execution are not supported\n2. It can be manually deleted, if not deleted, it will be automatically cleared after two years\n3. Archiving only retains pipeline orchestration and execution history, logs and artifacts are not included"
