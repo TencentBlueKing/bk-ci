@@ -1,4 +1,14 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v3.0.13](#v3013)
+  - [Changelog since v3.0.12](#changelog-since-v3012)
+
+- [v3.0.12](#v3012)
+  - [Changelog since v3.0.11](#changelog-since-v3011)
+
+- [v3.0.11](#v3011)
+  - [Changelog since v3.0.0](#changelog-since-v300)
+- [v3.0.1-v3.0.10]
+  - 因镜像版本与仓库版本没有统一,v3.0.1-v3.0.10已有镜像版本,但没有仓库版本,所以仓库这些版本直接跳过
 - [v3.0.0](#v300)
   - [Changelog since v2.1.0](#changelog-since-v210)
 - [v3.0.0-rc.1](#v300-rc1)
@@ -9,6 +19,48 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v3.0.13
+## 2025-02-12
+### Changelog since v3.0.12
+#### Added
+
+##### Uncategorized
+- [Added] feat: chart package issue that needs to be fixed [link](http://github.com/TencentBlueKing/bk-ci/issues/11105)
+
+# v3.0.12
+## 2025-01-08
+### Changelog since v3.0.11
+#### Fix
+
+##### Uncategorized
+- [Fixed] bug: fix the error when installing helm chart package in v3.0 version [link](http://github.com/TencentBlueKing/bk-ci/issues/11391)
+
+# v3.0.11
+## 2024-12-05
+### Changelog since v3.0.0
+#### New
+
+##### Uncategorized
+- [New] feat: Adjust the image of helm to support imageRegistry configuration [link](http://github.com/TencentBlueKing/bk-ci/issues/11171)
+- [New] feat: Interaction optimization when dependent services are not deployed [link](http://github.com/TencentBlueKing/bk-ci/issues/10612)
+- [New] feat: Support viewing version logs [link](http://github.com/TencentBlueKing/bk-ci/issues/10938)
+- [New] feat: Changes in Blue Whale 7.2 version [link](http://github.com/TencentBlueKing/bk-ci/issues/10558)
+- [New] Unify the style and content of the top bar drop-down box of the product [Link](http://github.com/TencentBlueKing/bk-ci/issues/10939)
+- [Added] feat: Remove the config ns configuration of the docker build plugin [Link](http://github.com/TencentBlueKing/bk-ci/issues/10926)
+- [Added] feat: Newly started PODs need to be warmed up [Link](http://github.com/TencentBlueKing/bk-ci/issues/10887)
+- [Added] feat: Allow workers to run in JDK17 [Link](http://github.com/TencentBlueKing/bk-ci/issues/10412)
+
+#### Fix
+
+##### Pipeline
+- [Fixed] [Devops - Review Committee has reviewed] [PAC] feat: Create/edit pipelines to support arranging pipelines in Code [Link](http://github.com/TencentBlueKing/bk-ci/issues/8125)
+
+##### Permission Center
+- [Fix] bug: Permission Management-Permission Renewal Data Synchronization [Link](http://github.com/TencentBlueKing/bk-ci/issues/11271)
+
+##### Uncategorized
+- [Fix] fix UnreachableCode [Link](http://github.com/TencentBlueKing/bk-ci/issues/11172)
+
 # v3.0.0
 ## 2024-09-10
 ### Changelog since v2.1.0

@@ -57,6 +57,96 @@ BEGIN
             ADD COLUMN `SIZE` varchar(32) DEFAULT NULL COMMENT '机型';
     END IF;
 
+	IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_NODE'
+                        AND COLUMN_NAME = 'LAST_BUILD_PIPELINE_ID') THEN
+    ALTER TABLE T_NODE
+            ADD COLUMN `LAST_BUILD_PIPELINE_ID` varchar(64) DEFAULT NULL COMMENT '最近构建流水线ID';
+    END IF;
+	
+    IF NOT EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_NODE'
+                     AND INDEX_NAME = 'DISPLAY_NAME') THEN
+    ALTER TABLE `T_NODE`
+        ADD INDEX `DISPLAY_NAME`(`DISPLAY_NAME`);
+    END IF;
+	
+    IF NOT EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_NODE'
+                     AND INDEX_NAME = 'OS_NAME') THEN
+    ALTER TABLE `T_NODE`
+        ADD INDEX `OS_NAME`(`OS_NAME`);
+    END IF;
+	
+    IF NOT EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_NODE'
+                     AND INDEX_NAME = 'NODE_STATUS') THEN
+    ALTER TABLE `T_NODE`
+        ADD INDEX `NODE_STATUS`(`NODE_STATUS`);
+    END IF;
+	
+    IF NOT EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_NODE'
+                     AND INDEX_NAME = 'NODE_TYPE') THEN
+    ALTER TABLE `T_NODE`
+        ADD INDEX `NODE_TYPE`(`NODE_TYPE`);
+    END IF;
+	
+    IF NOT EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_NODE'
+                     AND INDEX_NAME = 'CREATED_USER') THEN
+    ALTER TABLE `T_NODE`
+        ADD INDEX `CREATED_USER`(`CREATED_USER`);
+    END IF;
+	
+    IF NOT EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_NODE'
+                     AND INDEX_NAME = 'LAST_MODIFY_USER') THEN
+    ALTER TABLE `T_NODE`
+        ADD INDEX `LAST_MODIFY_USER`(`LAST_MODIFY_USER`);
+    END IF;
+	
+    IF NOT EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_NODE'
+                     AND INDEX_NAME = 'LAST_MODIFY_TIME') THEN
+    ALTER TABLE `T_NODE`
+        ADD INDEX `LAST_MODIFY_TIME`(`LAST_MODIFY_TIME`);
+    END IF;
+	
+    IF NOT EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_NODE'
+                     AND INDEX_NAME = 'LAST_BUILD_PIPELINE_ID') THEN
+    ALTER TABLE `T_NODE`
+        ADD INDEX `LAST_BUILD_PIPELINE_ID`(`LAST_BUILD_PIPELINE_ID`);
+    END IF;
+	
+    IF NOT EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_NODE'
+                     AND INDEX_NAME = 'LAST_BUILD_TIME') THEN
+    ALTER TABLE `T_NODE`
+        ADD INDEX `LAST_BUILD_TIME`(`LAST_BUILD_TIME`);
+    END IF;
+	
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

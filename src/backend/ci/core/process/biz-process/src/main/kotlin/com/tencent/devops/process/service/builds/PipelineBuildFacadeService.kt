@@ -42,6 +42,7 @@ import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -57,7 +58,6 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -125,12 +125,10 @@ import com.tencent.devops.process.pojo.pipeline.BuildRecordInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
-import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
-import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.util.TaskUtils
@@ -148,6 +146,7 @@ import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder
@@ -182,12 +181,14 @@ class PipelineBuildFacadeService(
     private val pipelineRedisService: PipelineRedisService,
     private val pipelineRetryFacadeService: PipelineRetryFacadeService,
     private val webhookBuildParameterService: WebhookBuildParameterService,
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService,
-    private val templateFacadeService: TemplateFacadeService
+    private val pipelineYamlFacadeService: PipelineYamlFacadeService
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
     private var cancelIntervalLimitTime: Int = 60 // 取消间隔时间为60秒
+
+    @Value("\${pipeline.build.retry.limit_days:28}")
+    private var retryLimitDays: Int = 28
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildFacadeService::class.java)
@@ -228,15 +229,13 @@ class PipelineBuildFacadeService(
                 )
             )
         }
-        pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                params = arrayOf(pipelineId)
-            )
-        val (resource, debug) = getModelAndBuildLevel(projectId, pipelineId, version)
-        val model = resource.model
-        val triggerContainer = model.getTriggerContainer()
+        val (pipeline, resource, debug) = pipelineRepositoryService.getBuildTriggerInfo(
+            projectId, pipelineId, null
+        )
+        if (pipeline.locked == true) {
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
+        }
+        val triggerContainer = resource.model.getTriggerContainer()
 
         var canManualStartup = false
         var canElementSkip = false
@@ -415,6 +414,15 @@ class PipelineBuildFacadeService(
             if (buildInfo.pipelineId != pipelineId) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT)
             }
+            buildInfo.startTime?.let {
+                // 判断当前时间是否超过最大重试时间
+                if (LocalDateTime.now().minusDays(retryLimitDays.toLong()).timestampmilli() - it > 0) {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_PIPELINE_RETRY_TIME_INVALID,
+                        params = arrayOf(retryLimitDays.toString())
+                    )
+                }
+            }
 
             // 运行中的task重试走全新的处理逻辑
             if (!buildInfo.isFinish()) {
@@ -425,30 +433,27 @@ class PipelineBuildFacadeService(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         buildId = buildId,
-                        executeCount = buildInfo.executeCount ?: 1,
+                        executeCount = buildInfo.executeCount,
                         resourceVersion = buildInfo.version,
                         taskId = taskId,
                         skipFailedTask = skipFailedTask
                     )
                 ) {
-                    return BuildId(buildId, buildInfo.executeCount ?: 1, projectId, pipelineId)
+                    return BuildId(buildId, buildInfo.executeCount, projectId, pipelineId)
                 }
 
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT)
             }
 
-            val readyToBuildPipelineInfo =
-                pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
-                    ?: throw ErrorCodeException(
-                        statusCode = Response.Status.NOT_FOUND.statusCode,
-                        errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                        params = arrayOf(buildId)
-                    )
+            val (readyToBuildPipelineInfo, resource, _) = pipelineRepositoryService.getBuildTriggerInfo(
+                projectId, pipelineId, buildInfo.version
+            )
             if (readyToBuildPipelineInfo.locked == true) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
             }
 
-            val model = buildDetailService.getBuildModel(projectId, buildId) ?: throw ErrorCodeException(
+            // TODO 重试的model需要被覆盖为上次构建的内容，未来需要替换为RECORD表数据
+            resource.model = buildDetailService.getBuildModel(projectId, buildId) ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
 
@@ -473,7 +478,7 @@ class PipelineBuildFacadeService(
                 }
                 // stage/job/task级重试
                 run {
-                    model.stages.forEach { s ->
+                    resource.model.stages.forEach { s ->
                         // stage 级重试
                         if (s.id == taskId) {
                             val stage = pipelineStageService.getStage(projectId, buildId, stageId = s.id) ?: run {
@@ -562,7 +567,7 @@ class PipelineBuildFacadeService(
             }
 
             // 重置因暂停而变化的element(需同时支持流水线重试和stage重试, task重试), model不在这保存，在startBuild中保存
-            pipelineTaskPauseService.resetElementWhenPauseRetry(projectId, buildId, model)
+            pipelineTaskPauseService.resetElementWhenPauseRetry(projectId, buildId, resource.model)
 
             // rebuild重试计数
             val retryCount = (paramMap[PIPELINE_RETRY_COUNT]?.value?.toString()?.toInt() ?: 0) + 1
@@ -582,9 +587,8 @@ class PipelineBuildFacadeService(
                 pipelineParamMap = paramMap,
                 channelCode = channelCode ?: ChannelCode.BS,
                 isMobile = isMobile,
-                model = model,
+                resource = resource,
                 signPipelineVersion = buildInfo.version,
-                yamlVersion = buildInfo.yamlVersion,
                 frequencyLimit = true,
                 handlePostFlag = false,
                 debug = buildInfo.debug,
@@ -628,24 +632,20 @@ class PipelineBuildFacadeService(
                 )
             )
         }
-        val readyToBuildPipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                params = arrayOf(pipelineId)
-            )
-        if (readyToBuildPipelineInfo.locked == true) {
-            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
-        }
+
         val startEpoch = System.currentTimeMillis()
         try {
-            val (resource, debug) = getModelAndBuildLevel(projectId, pipelineId, version)
-            val model = resource.model
+            val (readyToBuildPipelineInfo, resource, debug) = pipelineRepositoryService.getBuildTriggerInfo(
+                projectId, pipelineId, version
+            )
+            if (readyToBuildPipelineInfo.locked == true) {
+                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
+            }
 
             /**
              * 验证流水线参数构建启动参数
              */
-            val triggerContainer = model.getTriggerContainer()
+            val triggerContainer = resource.model.getTriggerContainer()
 
             if (startType == StartType.MANUAL && !debug) {
                 if (!readyToBuildPipelineInfo.canManualStartup) {
@@ -697,59 +697,16 @@ class PipelineBuildFacadeService(
                 pipelineParamMap = paramMap,
                 channelCode = channelCode,
                 isMobile = isMobile,
-                model = model,
+                resource = resource,
                 frequencyLimit = frequencyLimit,
                 buildNo = buildNo,
                 startValues = values,
                 triggerReviewers = triggerReviewers,
                 signPipelineVersion = version,
-                debug = debug,
-                versionName = resource.versionName,
-                yamlVersion = resource.yamlVersion
+                debug = debug
             )
         } finally {
             logger.info("[$pipelineId]|$userId|It take(${System.currentTimeMillis() - startEpoch})ms to start pipeline")
-        }
-    }
-
-    private fun getModelAndBuildLevel(projectId: String, pipelineId: String, version: Int?): Pair<PipelineResourceVersion, Boolean> {
-        if (version == null) {
-            val defaultVersion = pipelineRepositoryService.getPipelineResourceVersion(
-                projectId = projectId,
-                pipelineId = pipelineId
-            ) ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
-                params = arrayOf(pipelineId)
-            )
-            // 正式执行时，当前最新版本可能是草稿，则作为调试执行
-            return if (defaultVersion.status == VersionStatus.COMMITTING) {
-                Pair(defaultVersion, true)
-            } else {
-                Pair(defaultVersion, false)
-            }
-        } else {
-            val targetResource = pipelineRepositoryService.getPipelineResourceVersion(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                version = version
-            ) ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
-                params = arrayOf(version.toString())
-            )
-            return if (targetResource.status == VersionStatus.COMMITTING) {
-                Pair(targetResource, true)
-            } else {
-                val releaseVersion = pipelineRepositoryService.getPipelineResourceVersion(
-                    projectId = projectId,
-                    pipelineId = pipelineId
-                ) ?: throw ErrorCodeException(
-                    statusCode = Response.Status.NOT_FOUND.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
-                )
-                Pair(releaseVersion, false)
-            }
         }
     }
 
@@ -783,23 +740,24 @@ class PipelineBuildFacadeService(
                 )
             )
         }
-        val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId = pipelineId) ?: return null
-        if (pipeline.locked == true) {
-            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
-        }
-        if (pipeline.latestVersionStatus?.isNotReleased() == true) throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
-        )
+
         val startEpoch = System.currentTimeMillis()
         try {
-
-            val resource = getPipelineResourceVersion(projectId, pipelineId, pipeline.version)
-            val model = resource.model
+            // 定时触发不存在调试的情况
+            val (pipeline, resource, _) = pipelineRepositoryService.getBuildTriggerInfo(
+                projectId, pipelineId, null
+            )
+            if (pipeline.locked == true) {
+                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
+            }
+            if (pipeline.latestVersionStatus?.isNotReleased() == true) throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
+            )
 
             /**
              * 验证流水线参数构建启动参数
              */
-            val triggerContainer = model.getTriggerContainer()
+            val triggerContainer = resource.model.getTriggerContainer()
 
             val paramPamp = buildParamCompatibilityTransformer.parseTriggerParam(
                 userId = userId, projectId = projectId, pipelineId = pipelineId,
@@ -817,11 +775,9 @@ class PipelineBuildFacadeService(
                 pipelineParamMap = paramPamp,
                 channelCode = pipeline.channelCode,
                 isMobile = false,
-                model = model,
+                resource = resource,
                 signPipelineVersion = null,
-                frequencyLimit = false,
-                versionName = resource.versionName,
-                yamlVersion = resource.yamlVersion
+                frequencyLimit = false
             ).id
         } finally {
             logger.info("Timer| It take(${System.currentTimeMillis() - startEpoch})ms to start pipeline($pipelineId)")
@@ -855,24 +811,24 @@ class PipelineBuildFacadeService(
                 )
             )
         }
-        val readyToBuildPipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-            ?: return null
-        if (readyToBuildPipelineInfo.locked == true) {
-            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
-        }
-        if (readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
-        )
+
         val startEpoch = System.currentTimeMillis()
         try {
-
-            val resource = getPipelineResourceVersion(projectId, pipelineId, readyToBuildPipelineInfo.version)
-            val model = resource.model
+            // 定时触发不存在调试的情况
+            val (readyToBuildPipelineInfo, resource, _) = pipelineRepositoryService.getBuildTriggerInfo(
+                projectId, pipelineId, null
+            )
+            if (readyToBuildPipelineInfo.locked == true) {
+                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
+            }
+            if (readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
+            )
 
             /**
              * 验证流水线参数构建启动参数
              */
-            val triggerContainer = model.getTriggerContainer()
+            val triggerContainer = resource.model.getTriggerContainer()
 
             val pipelineParamMap = mutableMapOf<String, BuildParameters>()
             parameters.forEach { (key, value) ->
@@ -897,13 +853,11 @@ class PipelineBuildFacadeService(
                 pipelineParamMap = pipelineParamMap,
                 channelCode = readyToBuildPipelineInfo.channelCode,
                 isMobile = false,
-                model = model,
+                resource = resource,
                 signPipelineVersion = null,
                 frequencyLimit = false,
                 startValues = startValues,
-                triggerReviewers = triggerReviewers,
-                versionName = resource.versionName,
-                yamlVersion = resource.yamlVersion
+                triggerReviewers = triggerReviewers
             ).id
             if (buildId.isNotBlank()) {
                 webhookBuildParameterService.save(
