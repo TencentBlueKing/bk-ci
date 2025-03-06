@@ -242,7 +242,7 @@ class PermissionService @Autowired constructor(
 
     @Deprecated("use managers instead, 暂时保留")
     fun managersOld(projectId: String): List<String> {
-        logger.error("use managersOld instead, 暂时保留")
+        logger.warn("use managersOld instead, 暂时保留")
         val projectInfo = kotlin.runCatching {
             client.get(ServiceProjectResource::class).get(projectId)
         }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
