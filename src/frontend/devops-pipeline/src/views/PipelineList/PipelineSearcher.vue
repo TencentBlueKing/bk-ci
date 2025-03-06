@@ -2,7 +2,7 @@
     <search-select
         class="search-pipeline-input"
         :data="dropList"
-        :placeholder="$t('searchPipelinePlaceholder')"
+        :placeholder="placeholder"
         :values="initValues"
         @change="handleChange"
     >
@@ -68,6 +68,15 @@
                         name: this.$t('creator')
 
                     },
+                    ...(!this.isArchiveView
+                        ? [{
+                            id: PIPELINE_FILTER_VIEWIDS,
+                            name: this.$t('pipelineGroup'),
+                            default: true,
+                            multiable: true,
+                            children: this.allPipelineGroup.filter(item => item.viewType !== -1)
+                        }]
+                        : []),
                     ...this.tagGroupList.filter(item =>
                         Array.isArray(item.labels) && item.labels.length > 0
                     ).map(item => ({
@@ -78,16 +87,6 @@
                         children: item.labels
                     }))
                 ]
-                if (!this.isArchiveView) {
-                    originList.push({
-                        id: PIPELINE_FILTER_VIEWIDS,
-                        name: this.$t('pipelineGroup'),
-                        default: true,
-                        multiable: true,
-                        children: this.allPipelineGroup.filter(item => item.viewType !== -1)
-                    })
-                }
-
                 return originList.filter(item => !this.value[item.id])
             },
             tagGroupMap () {
@@ -111,6 +110,9 @@
                     PIPELINE_FILTER_VIEWIDS,
                     PIPELINE_FILTER_LABELS
                 ]
+            },
+            placeholder () {
+                return !this.isArchiveView ? this.$t('searchPipelinePlaceholder') : this.$t('searchPipelineArchivePlaceholder')
             }
         },
         watch: {
