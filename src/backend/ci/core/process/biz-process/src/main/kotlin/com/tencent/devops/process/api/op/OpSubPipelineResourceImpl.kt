@@ -25,19 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.controller
+package com.tencent.devops.process.api.op
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.api.ServiceDispatchJobResource
-import com.tencent.devops.dispatch.pojo.AgentStartMonitor
-import com.tencent.devops.dispatch.service.ThirdPartyAgentMonitorService
+import com.tencent.devops.process.service.pipeline.SubPipelineUpgradeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceDispatchJobResourceImpl @Autowired constructor(
-    val thirdPartyAgentMonitorService: ThirdPartyAgentMonitorService
-) : ServiceDispatchJobResource {
-    override fun monitor(agentStartMonitor: AgentStartMonitor) {
-        thirdPartyAgentMonitorService.monitor(agentStartMonitor)
+class OpSubPipelineResourceImpl @Autowired constructor(
+    private val subPipelineUpgradeService: SubPipelineUpgradeService
+) : OpSubPipelineRefResource {
+    override fun createSubPipelineRef(userId: String, projectId: String?, pipelineId: String?): Result<Boolean> {
+        if (!pipelineId.isNullOrBlank() && !projectId.isNullOrBlank()) {
+            subPipelineUpgradeService.createSubPipelineRef(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId
+            )
+        } else {
+            subPipelineUpgradeService.createAllSubPipelineRef(
+                projectId = projectId,
+                userId = userId
+            )
+        }
+        return Result(true)
+    }
+
+    override fun delSubPipelineRef(userId: String, projectId: String, pipelineId: String?): Result<Boolean> {
+        subPipelineUpgradeService.delSubPipelineRef(userId, projectId, pipelineId)
+        return Result(true)
     }
 }

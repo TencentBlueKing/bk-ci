@@ -246,7 +246,7 @@ class ProcessDao {
             } else {
                 baseStep.limit(totalHandleNum, handlePageSize)
             }
-            return baseStep.orderBy(BUILD_ID).fetch()
+            return baseStep.orderBy(BUILD_NUM).fetch()
         }
     }
 
@@ -268,7 +268,7 @@ class ProcessDao {
             return dslContext.select(BUILD_ID, CHANNEL, START_USER)
                 .from(this)
                 .where(conditions)
-                .orderBy(BUILD_ID).limit(limit).offset(offset).fetch()
+                .orderBy(BUILD_NUM).limit(limit).offset(offset).fetch()
         }
     }
 

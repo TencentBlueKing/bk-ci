@@ -1,8 +1,14 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v3.0.13](#v3013)
+   - [Changelog since v3.0.12](#changelog-since-v3012)
+
+- [v3.0.12](#v3012)
+   - [Changelog since v3.0.11](#changelog-since-v3011)
+
 - [v3.0.11](#v3011)
    - [Changelog since v3.0.0](#changelog-since-v300)
-- [v3.0.1-v3.0.11]
-   - 因镜像版本与仓库版本没有统一,v3.0.1-v3.0.11已有镜像版本,但没有仓库版本,所以仓库这些版本直接跳过
+- [v3.0.1-v3.0.10]
+   - 因镜像版本与仓库版本没有统一,v3.0.1-v3.0.10已有镜像版本,但没有仓库版本,所以仓库这些版本直接跳过
 - [v3.0.0](#v300)
   - [Changelog since v2.1.0](#changelog-since-v210)
 - [v3.0.0-rc.1](#v300-rc1)
@@ -13,6 +19,22 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v3.0.13
+## 2025-02-12
+### Changelog since v3.0.12
+#### 新增
+
+##### 未分类
+- [新增] feat: 需要修复的chart包问题 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11105)
+
+# v3.0.12
+## 2025-01-08
+### Changelog since v3.0.11
+#### 修复
+
+##### 未分类
+- [修复] bug: 修复v3.0版本打helm chart包时报错 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11391)
+
 # v3.0.11
 ## 2024-12-05
 ### Changelog since v3.0.0

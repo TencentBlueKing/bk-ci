@@ -349,15 +349,11 @@ class RbacPermissionResourceMemberService(
         projectCode: String,
         iamGroupId: Int
     ) {
-        val managerId = authResourceService.get(
+        val isGroupBelongToProject = authResourceGroupDao.isGroupBelongToProject(
+            dslContext = dslContext,
             projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode
-        ).relationId
-        val isGroupBelongToProject = getGroupInfoList(
-            resourceType = AuthResourceType.PROJECT.value,
-            managerId = managerId
-        ).map { it.id }.contains(iamGroupId)
+            groupId = iamGroupId.toString()
+        )
         if (!isGroupBelongToProject) {
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.ERROR_GROUP_NOT_BELONG_TO_PROJECT,
@@ -488,6 +484,8 @@ class RbacPermissionResourceMemberService(
 
     override fun roleCodeToIamGroupId(
         projectCode: String,
+        resourceType: String,
+        resourceCode: String,
         roleCode: String
     ): Int {
         return if (roleCode == BkAuthGroup.CI_MANAGER.value) {
@@ -502,8 +500,8 @@ class RbacPermissionResourceMemberService(
             authResourceGroupDao.get(
                 dslContext = dslContext,
                 projectCode = projectCode,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
                 groupCode = roleCode
             )?.relationId
         }?.toInt() ?: throw ErrorCodeException(
@@ -589,7 +587,7 @@ class RbacPermissionResourceMemberService(
         groupId: Int,
         memberRenewalDTO: GroupMemberRenewalDTO
     ): Boolean {
-        logger.info("renewal group member|$userId|$projectCode|$resourceType|$groupId")
+        logger.info("renewal group member|$userId|$projectCode|$resourceType|$groupId|${memberRenewalDTO.expiredAt}")
         val managerMemberGroupDTO = GroupMemberRenewApplicationDTO.builder()
             .groupIds(listOf(groupId))
             .expiredAt(memberRenewalDTO.expiredAt)

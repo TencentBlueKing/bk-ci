@@ -91,7 +91,6 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.HeartbeatResponse
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentAction
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
-import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentHeartbeatInfo
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentLink
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentStartInfo
@@ -109,15 +108,15 @@ import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpart
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import java.time.LocalDateTime
+import java.util.Date
+import javax.ws.rs.NotFoundException
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.Date
-import javax.ws.rs.NotFoundException
-import javax.ws.rs.core.Response
 
 @Service
 @Suppress("ALL")
@@ -410,6 +409,50 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             totalPages = agentBuildPage.totalPages,
             records = agentBuildDetails
         )
+    }
+
+    fun listLatestBuildPipelines(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Page<AgentBuildDetail> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: 100
+        val sqlLimit =
+            if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull) else null
+        val count = thirdPartyAgentDao.countProjectAgentId(
+            dslContext = dslContext,
+            projectId = projectId
+        )
+        val agentRecord /*map<agent hash id, node hash id>*/ = thirdPartyAgentDao.listProjectAgentId(
+            dslContext = dslContext,
+            projectId = projectId,
+            offset = sqlLimit?.offset ?: 0,
+            limit = sqlLimit?.limit ?: 100
+        )
+        val agentBuildPage = client.get(ServiceAgentResource::class).listLatestBuildPipelines(
+            agentIds = agentRecord.keys.toList()
+        )
+        val agentBuildDetails = agentBuildPage.map {
+            AgentBuildDetail(
+                nodeId = agentRecord[it.agentId] ?: "",
+                agentId = it.agentId,
+                projectId = it.projectId,
+                pipelineId = it.pipelineId,
+                pipelineName = it.pipelineName,
+                buildId = it.buildId,
+                buildNumber = it.buildNum,
+                vmSetId = it.vmSeqId,
+                taskName = it.taskName,
+                status = it.status,
+                createdTime = it.createdTime,
+                updatedTime = it.updatedTime,
+                workspace = it.workspace,
+                agentTask = null
+            )
+        }
+        return Page(page = pageNotNull, pageSize = pageSizeNotNull, count = count, records = agentBuildDetails)
     }
 
     fun listAgentActions(
@@ -772,7 +815,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     ) ?: throw CustomException(
                         Response.Status.FORBIDDEN,
                         I18nUtil.getCodeLanMessage(THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST) +
-                                "($sharedProjectId:$sharedEnvId)"
+                            "($sharedProjectId:$sharedEnvId)"
                     )
                     envShareProjectDao.list(
                         dslContext = dslContext,
@@ -811,12 +854,12 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         if (sharedEnvRecord.isEmpty()) {
             logger.info(
                 "env name not exists, envName: $sharedEnvName, envId: $sharedEnvId, projectId：$projectId, " +
-                        "mainProjectId: $sharedProjectId"
+                    "mainProjectId: $sharedProjectId"
             )
             throw CustomException(
                 Response.Status.FORBIDDEN,
                 I18nUtil.getCodeLanMessage(ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV) +
-                        "($sharedProjectId:${sharedEnvName ?: sharedEnvId})"
+                    "($sharedProjectId:${sharedEnvName ?: sharedEnvId})"
             )
         }
         logger.info("sharedEnvRecord size: ${sharedEnvRecord.size}")
@@ -862,7 +905,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             throw CustomException(
                 Response.Status.FORBIDDEN,
                 I18nUtil.getCodeLanMessage(ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV) +
-                        "($sharedProjectId:$sharedEnvName)"
+                    "($sharedProjectId:$sharedEnvName)"
             )
         }
         logger.info("sharedThirdPartyAgents size: ${sharedThirdPartyAgents.size}")
@@ -1062,8 +1105,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         }
 
         if (!(AgentStatus.isImportException(status) ||
-                    AgentStatus.isUnImport(status) ||
-                    agentRecord.startRemoteIp.isNullOrBlank())
+                AgentStatus.isUnImport(status) ||
+                agentRecord.startRemoteIp.isNullOrBlank())
         ) {
             if (startInfo.hostIp != agentRecord.startRemoteIp) {
                 return AgentStatus.DELETE
@@ -1306,7 +1349,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
 
             val agentId = HashUtil.decodeIdToLong(agentHashId)
             thirdPartyAgentHeartbeatUtils.saveNewHeartbeat(projectId, agentId, newHeartbeatInfo)
-            thirdPartyAgentHeartbeatUtils.heartbeat(projectId, agentHashId)
 
             HeartbeatResponse(
                 // 避免老的没有删除 master 校验的版本进程阻塞导致心跳异常
@@ -1329,120 +1371,120 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         }
     }
 
-    fun heartBeat(
-        projectId: String,
-        agentId: String,
-        secretKey: String,
-        heartbeatInfo: ThirdPartyAgentHeartbeatInfo?
-    ): AgentStatus {
-        logger.info("Agent($agentId) of project($projectId) heartbeat")
-        val slaveVersion = if (heartbeatInfo != null) {
-            heartbeatInfo.slaveVersion ?: ""
-        } else {
-            ""
-        }
-        val masterVersion = if (heartbeatInfo != null) {
-            heartbeatInfo.masterVersion ?: ""
-        } else {
-            ""
-        }
-        return dslContext.transactionResult { configuration ->
-            val context = DSL.using(configuration)
-            val agentRecord = getAgentRecord(context, agentId, secretKey)
-
-            if (agentRecord == null) {
-                logger.warn("The agent($agentId) is not exist")
-                return@transactionResult AgentStatus.DELETE
-            }
-
-            logger.info("agent ver: ${agentRecord.masterVersion}|$masterVersion|${agentRecord.version}|$slaveVersion")
-
-            // 心跳上报版本号，且版本跟数据库对不上时，更新数据库
-            if (slaveVersion.isNotBlank() && masterVersion.isNotBlank()) {
-                if (agentRecord.version != slaveVersion || agentRecord.masterVersion != masterVersion) {
-                    thirdPartyAgentDao.updateAgentVersion(
-                        dslContext = context,
-                        id = agentRecord.id,
-                        projectId = projectId,
-                        version = slaveVersion,
-                        masterVersion = masterVersion
-                    )
-                    // 同时更新T_NODE表中 构建机的agent版本字段
-                    nodeDao.updateDevopsAgentVersionByNodeId(
-                        dslContext = context,
-                        nodeId = agentRecord.nodeId,
-                        agentVersion = masterVersion
-                    )
-                }
-            }
-
-            val status = AgentStatus.fromStatus(agentRecord.status)
-            logger.info("Get the agent($agentId) status $status")
-
-            val agentStatus = when {
-                AgentStatus.isUnImport(status) -> {
-                    logger.info("Update the agent($agentId) to un-import ok")
-                    thirdPartyAgentDao.updateStatus(context, agentRecord.id, null, projectId, AgentStatus.UN_IMPORT_OK)
-                    AgentStatus.UN_IMPORT_OK
-                }
-
-                AgentStatus.isImportException(status) -> {
-                    logger.info("Update the agent($agentId) from exception to ok")
-                    agentDisconnectNotifyService?.online(
-                        projectId = agentRecord.projectId ?: "",
-                        ip = agentRecord.ip ?: "",
-                        hostname = agentRecord.hostname ?: "",
-                        createUser = agentRecord.createdUser ?: "",
-                        os = agentRecord.os ?: ""
-                    )
-                    thirdPartyAgentDao.updateStatus(context, agentRecord.id, null, projectId, AgentStatus.IMPORT_OK)
-                    thirdPartAgentService.addAgentAction(projectId, agentRecord.id, AgentAction.ONLINE)
-                    if (agentRecord.nodeId != null) {
-                        nodeDao.updateNodeStatus(context, setOf(agentRecord.nodeId), NodeStatus.NORMAL)
-                    }
-                    AgentStatus.IMPORT_OK
-                }
-
-                else -> {
-                    logger.info("Get the node id(${agentRecord.nodeId}) of agent($agentId)")
-                    if (agentRecord.nodeId != null) {
-                        val nodeRecord = nodeDao.get(context, projectId, agentRecord.nodeId)
-                        if (nodeRecord == null) {
-                            logger.warn("The node is not exist")
-                            return@transactionResult AgentStatus.DELETE
-                        }
-                        if (nodeRecord.nodeStatus == NodeStatus.ABNORMAL.name) {
-                            val count = nodeDao.updateNodeStatus(context, setOf(agentRecord.nodeId), NodeStatus.NORMAL)
-                            agentDisconnectNotifyService?.online(
-                                projectId = agentRecord.projectId ?: "",
-                                ip = agentRecord.ip ?: "",
-                                hostname = agentRecord.hostname ?: "",
-                                createUser = agentRecord.createdUser ?: "",
-                                os = agentRecord.os ?: ""
-                            )
-                            logger.info("Update the node status - $count of agent $agentId")
-                        }
-                    }
-                    status
-                }
-            }
-
-            if (status == AgentStatus.IMPORT_OK) {
-                // Check if exist in node table
-                if (agentRecord.nodeId == null) {
-                    return@transactionResult AgentStatus.DELETE
-                }
-                val nodeRecord = nodeDao.get(context, projectId, agentRecord.nodeId)
-                    ?: return@transactionResult AgentStatus.DELETE
-                if (nodeRecord.nodeStatus == NodeStatus.DELETED.name) {
-                    return@transactionResult AgentStatus.DELETE
-                }
-            }
-
-            thirdPartyAgentHeartbeatUtils.heartbeat(projectId, agentId)
-            agentStatus
-        }
-    }
+//    fun heartBeat(
+//        projectId: String,
+//        agentId: String,
+//        secretKey: String,
+//        heartbeatInfo: ThirdPartyAgentHeartbeatInfo?
+//    ): AgentStatus {
+//        logger.info("Agent($agentId) of project($projectId) heartbeat")
+//        val slaveVersion = if (heartbeatInfo != null) {
+//            heartbeatInfo.slaveVersion ?: ""
+//        } else {
+//            ""
+//        }
+//        val masterVersion = if (heartbeatInfo != null) {
+//            heartbeatInfo.masterVersion ?: ""
+//        } else {
+//            ""
+//        }
+//        return dslContext.transactionResult { configuration ->
+//            val context = DSL.using(configuration)
+//            val agentRecord = getAgentRecord(context, agentId, secretKey)
+//
+//            if (agentRecord == null) {
+//                logger.warn("The agent($agentId) is not exist")
+//                return@transactionResult AgentStatus.DELETE
+//            }
+//
+//            logger.info("agent ver: ${agentRecord.masterVersion}|$masterVersion|${agentRecord.version}|$slaveVersion")
+//
+//            // 心跳上报版本号，且版本跟数据库对不上时，更新数据库
+//            if (slaveVersion.isNotBlank() && masterVersion.isNotBlank()) {
+//                if (agentRecord.version != slaveVersion || agentRecord.masterVersion != masterVersion) {
+//                    thirdPartyAgentDao.updateAgentVersion(
+//                        dslContext = context,
+//                        id = agentRecord.id,
+//                        projectId = projectId,
+//                        version = slaveVersion,
+//                        masterVersion = masterVersion
+//                    )
+//                    // 同时更新T_NODE表中 构建机的agent版本字段
+//                    nodeDao.updateDevopsAgentVersionByNodeId(
+//                        dslContext = context,
+//                        nodeId = agentRecord.nodeId,
+//                        agentVersion = masterVersion
+//                    )
+//                }
+//            }
+//
+//            val status = AgentStatus.fromStatus(agentRecord.status)
+//            logger.info("Get the agent($agentId) status $status")
+//
+//            val agentStatus = when {
+//                AgentStatus.isUnImport(status) -> {
+//                    logger.info("Update the agent($agentId) to un-import ok")
+//                    thirdPartyAgentDao.updateStatus(context, agentRecord.id, null, projectId, AgentStatus.UN_IMPORT_OK)
+//                    AgentStatus.UN_IMPORT_OK
+//                }
+//
+//                AgentStatus.isImportException(status) -> {
+//                    logger.info("Update the agent($agentId) from exception to ok")
+//                    agentDisconnectNotifyService?.online(
+//                        projectId = agentRecord.projectId ?: "",
+//                        ip = agentRecord.ip ?: "",
+//                        hostname = agentRecord.hostname ?: "",
+//                        createUser = agentRecord.createdUser ?: "",
+//                        os = agentRecord.os ?: ""
+//                    )
+//                    thirdPartyAgentDao.updateStatus(context, agentRecord.id, null, projectId, AgentStatus.IMPORT_OK)
+//                    thirdPartAgentService.addAgentAction(projectId, agentRecord.id, AgentAction.ONLINE)
+//                    if (agentRecord.nodeId != null) {
+//                        nodeDao.updateNodeStatus(context, setOf(agentRecord.nodeId), NodeStatus.NORMAL)
+//                    }
+//                    AgentStatus.IMPORT_OK
+//                }
+//
+//                else -> {
+//                    logger.info("Get the node id(${agentRecord.nodeId}) of agent($agentId)")
+//                    if (agentRecord.nodeId != null) {
+//                        val nodeRecord = nodeDao.get(context, projectId, agentRecord.nodeId)
+//                        if (nodeRecord == null) {
+//                            logger.warn("The node is not exist")
+//                            return@transactionResult AgentStatus.DELETE
+//                        }
+//                        if (nodeRecord.nodeStatus == NodeStatus.ABNORMAL.name) {
+//                            val count = nodeDao.updateNodeStatus(context, setOf(agentRecord.nodeId), NodeStatus.NORMAL)
+//                            agentDisconnectNotifyService?.online(
+//                                projectId = agentRecord.projectId ?: "",
+//                                ip = agentRecord.ip ?: "",
+//                                hostname = agentRecord.hostname ?: "",
+//                                createUser = agentRecord.createdUser ?: "",
+//                                os = agentRecord.os ?: ""
+//                            )
+//                            logger.info("Update the node status - $count of agent $agentId")
+//                        }
+//                    }
+//                    status
+//                }
+//            }
+//
+//            if (status == AgentStatus.IMPORT_OK) {
+//                // Check if exist in node table
+//                if (agentRecord.nodeId == null) {
+//                    return@transactionResult AgentStatus.DELETE
+//                }
+//                val nodeRecord = nodeDao.get(context, projectId, agentRecord.nodeId)
+//                    ?: return@transactionResult AgentStatus.DELETE
+//                if (nodeRecord.nodeStatus == NodeStatus.DELETED.name) {
+//                    return@transactionResult AgentStatus.DELETE
+//                }
+//            }
+//
+//            thirdPartyAgentHeartbeatUtils.heartbeat(projectId, agentId)
+//            agentStatus
+//        }
+//    }
 
     fun getOs(userId: String, projectId: String, agentId: String): String {
         return thirdPartyAgentDao.getAgent(dslContext, HashUtil.decodeIdToLong(agentId))?.os ?: "LINUX"
@@ -1495,7 +1537,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         val now = LocalDateTime.now()
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            nodeDao.updateLastBuildTime(context, agent.nodeId, now)
+            nodeDao.updateLastBuildTime(context, pipelineId, agent.nodeId, now)
             agentPipelineRefDao.updateLastBuildTime(context, projectId, pipelineId, vmSeqId, agentLongId, now)
         }
     }

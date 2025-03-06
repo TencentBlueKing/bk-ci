@@ -249,13 +249,15 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
     }
 
     override fun updatePipelineNum(pipelineNumUpdateList: List<StoreStatisticPipelineNumUpdate>, storeType: Byte) {
-        dslContext.transaction { t ->
-            val context = DSL.using(t)
-            storeStatisticTotalDao.batchUpdatePipelineNum(
-                dslContext = context,
-                pipelineNumUpdateList = pipelineNumUpdateList,
-                storeType = storeType
-            )
+        pipelineNumUpdateList.forEach { pipelineNumUpdate ->
+            dslContext.transaction { t ->
+                val context = DSL.using(t)
+                storeStatisticTotalDao.updateStorePipelineNum(
+                    dslContext = context,
+                    pipelineNumUpdate = pipelineNumUpdate,
+                    storeType = storeType
+                )
+            }
         }
     }
 

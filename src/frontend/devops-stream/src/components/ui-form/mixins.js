@@ -63,6 +63,8 @@ export default {
         getResponseData (response, dataPath = 'data.records', defaultVal = []) {
             try {
                 switch (true) {
+                    case Array.isArray(response):
+                        return response
                     case Array.isArray(response.data):
                         return response.data
                     case response.data && response.data.record && Array.isArray(response.data.record):

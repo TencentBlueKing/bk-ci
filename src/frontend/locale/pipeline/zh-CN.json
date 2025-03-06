@@ -28,6 +28,7 @@
   "systemError": "系统运行错误",
   "thirdPartyError": "第三方系统错误",
   "pluginError": "插件执行错误",
+  "containerError": "构建机执行错误",
   "create": "创建",
   "createTime": "创建时间",
   "add": "新建",
