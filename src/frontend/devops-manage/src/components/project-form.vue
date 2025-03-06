@@ -13,7 +13,7 @@ import {
 } from 'bkui-vue/lib/icon';
 import IAMIframe from './IAM-Iframe';
 import { useI18n } from 'vue-i18n';
-import { Message, Popover, InfoBox, Alert } from 'bkui-vue';
+import { Message, Popover, InfoBox, Alert, Button } from 'bkui-vue';
 import http from '@/http/api';
 import DialectPopoverTable from "@/components/dialectPopoverTable.vue";
 import copyImg from "@/css/svg/copy.svg";
@@ -116,6 +116,7 @@ const pipelinePagination = ref({ count: 0, limit: 20, current: 1 });
 const initPipelineDialect = ref();
 const projectId = computed(() => projectData.value.englishName);
 const currentPipelineDialect = computed(() => projectData.value.properties.pipelineDialect);
+const infoBoxRef = ref();
 
 const getDepartment = async (type: string, id: any) => {
   deptLoading.value[type] = true;
@@ -295,14 +296,10 @@ const beforeChange = () => {
       const isClassic = currentPipelineDialect.value !== 'CLASSIC';
       const title = isClassic ? t('确认切换成“传统风格？') : t('确认切换成“制约风格？');
       const content = isClassic ? changeClassic() : changeConstrained();
-
-      InfoBox({
+      infoBoxRef.value = InfoBox({
         type: 'warning',
         width: 640,
         title: title,
-        confirmText: t('确认切换'),
-        cancelText: t('取消'),
-        confirmButtonTheme: 'danger',
         content: h('div', [
           content,
           h('div', { class: 'confirm-switch' }, [
@@ -329,18 +326,27 @@ const beforeChange = () => {
             })
           ])
         ]),
-        onConfirm: () => {
-          if (confirmSwitch.value === copyText) {
-            resolve(true);
-          } else {
-            resolve(false);
-            Message({ theme: 'error', message: t('请输入：我已明确变更风险且已确认变更无影响') });
-            confirmSwitch.value = '';
-          }
-        },
-        onCancel: () => {
-          resolve(false);
-        },
+        footer: () => h('div',{}, [
+          h(Button, {
+            disabled: !confirmSwitch.value,
+            theme: 'danger' ,
+            onClick() {
+              if (confirmSwitch.value === copyText) {
+                resolve(true);
+              } else {
+                resolve(false);
+                Message({ theme: 'error', message: t('请输入：我已明确变更风险且已确认变更无影响') });
+              }
+              infoBoxRef.value.hide()
+            },
+          }, t('确认切换')),
+          h(Button, {
+            onClick() {
+              resolve(false);
+              infoBoxRef.value.hide()
+            },
+          }, t('取消'))
+        ])
       });
     } else {
       resolve(true);
