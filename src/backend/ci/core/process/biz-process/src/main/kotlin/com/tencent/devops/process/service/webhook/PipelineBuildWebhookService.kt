@@ -519,9 +519,9 @@ class PipelineBuildWebhookService @Autowired constructor(
         val startParams = webhookCommit.params
 
         val repoName = webhookCommit.repoName
-
+        // 如果是分支版本的触发，此处一定要传指定的version号，按指定版本触发
         val (pipelineInfo, resource, _) = pipelineRepositoryService.getBuildTriggerInfo(
-            projectId, pipelineId, null
+            projectId, pipelineId, webhookCommit.version
         )
         if (pipelineInfo.locked == true) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
