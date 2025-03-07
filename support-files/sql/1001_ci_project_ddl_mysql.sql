@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS `T_FAVORITE` (
 ) ENGINE=InnoDB AUTO_INCREMENT=109 DEFAULT CHARSET=utf8 COMMENT='关注收藏表';
 
 -- ----------------------------
--- Table structure for T_PROJECTS
+-- Table structure for T_PROJECT
 -- ----------------------------
 
 CREATE TABLE IF NOT EXISTS `T_PROJECT` (
@@ -153,10 +153,13 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT` (
   `SUBJECT_SCOPES` text DEFAULT NULL COMMENT '最大可授权人员范围',
   `AUTH_SECRECY` int(10) DEFAULT b'0' COMMENT '项目性质,0-公开，1-保密,2-机密',
   `product_id` int(10) DEFAULT NULL comment '运营产品ID',
+  `tenant_english_name` varchar(32) DEFAULT (english_name) COMMENT '租户英文名',
+  `tenant_id` varchar(32) DEFAULT 'default' COMMENT '租户ID',
   PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `project_name` (`project_name`) USING BTREE,
+  UNIQUE KEY `project_name_tenant_id` (`project_name`,`tenant_id`) USING BTREE,
   UNIQUE KEY `project_id` (`project_id`) USING BTREE,
-  UNIQUE KEY `english_name` (`english_name`) USING BTREE
+  UNIQUE KEY `english_name` (`english_name`) USING BTREE,
+  UNIQUE KEY `tenant_id_tenant_english_name` (`tenant_id`,`tenant_english_name`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='项目信息表';
 
 -- ----------------------------

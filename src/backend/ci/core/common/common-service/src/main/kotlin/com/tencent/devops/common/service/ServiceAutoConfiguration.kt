@@ -32,6 +32,7 @@ import com.tencent.devops.common.service.filter.RequestChannelFilter
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.prometheus.BkTimedAspect
 import com.tencent.devops.common.service.prometheus.UndertowThreadMetrics
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.service.trace.TraceFilter
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import io.micrometer.core.instrument.MeterRegistry
@@ -80,4 +81,7 @@ class ServiceAutoConfiguration {
 
     @Bean
     fun undertowThreadMetrics() = UndertowThreadMetrics()
+
+    @Bean
+    fun tenantUtils() = TenantUtils()
 }

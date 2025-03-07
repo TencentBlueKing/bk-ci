@@ -55,6 +55,48 @@ BEGIN
          `UNI_INX_TTSC_CLUSTER_MODULE_NAME_TYPE` (`CLUSTER_NAME`,`MODULE_CODE`,`TABLE_NAME`,`TYPE`);
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                    FROM information_schema.COLUMNS
+                    WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PROJECT'
+                        AND COLUMN_NAME = 'tenant_english_name') THEN
+       ALTER TABLE T_PROJECT
+          ADD COLUMN `tenant_english_name` varchar(32) DEFAULT (english_name) COMMENT '租户英文名';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                    FROM information_schema.COLUMNS
+                    WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PROJECT'
+                        AND COLUMN_NAME = 'tenant_id') THEN
+       ALTER TABLE T_PROJECT
+          ADD COLUMN `tenant_id` varchar(32) DEFAULT 'default' COMMENT '租户ID';
+    END IF;
+
+    IF EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_PROJECT'
+                     AND INDEX_NAME = 'project_name') THEN
+      ALTER TABLE `T_PROJECT` DROP INDEX `project_name`;
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_PROJECT'
+                     AND INDEX_NAME = 'project_name_tenant_id') THEN
+      ALTER TABLE `T_PROJECT` ADD UNIQUE KEY `project_name_tenant_id` (`project_name`,`tenant_id`) ;
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_PROJECT'
+                     AND INDEX_NAME = 'tenant_id_tenant_english_name') THEN
+      ALTER TABLE `T_PROJECT` ADD UNIQUE KEY `tenant_id_tenant_english_name` (`tenant_id`,`tenant_english_name`);
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;
