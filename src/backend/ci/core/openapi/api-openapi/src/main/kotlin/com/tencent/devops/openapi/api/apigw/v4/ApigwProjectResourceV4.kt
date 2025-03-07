@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.openapi.api.apigw.v4
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_TENANT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
@@ -38,9 +39,9 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.PluginDetailsDisplayOrder
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -72,6 +73,9 @@ interface ApigwProjectResourceV4 {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @Parameter(description = "项目信息", required = true)
         projectCreateInfo: ProjectCreateInfo,
         @Parameter(description = "access_token")
@@ -92,6 +96,9 @@ interface ApigwProjectResourceV4 {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -143,7 +150,10 @@ interface ApigwProjectResourceV4 {
 
     @GET
     @Path("/project_name_validation")
-    @Operation(summary = "校验项目名称和项目英文名", tags = ["v4_app_project_name_validate", "v4_user_project_name_validate"])
+    @Operation(
+        summary = "校验项目名称和项目英文名",
+        tags = ["v4_app_project_name_validate", "v4_user_project_name_validate"]
+    )
     fun validate(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

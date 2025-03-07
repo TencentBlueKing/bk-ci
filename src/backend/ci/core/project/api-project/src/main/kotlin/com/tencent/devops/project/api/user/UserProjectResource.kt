@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.api.user
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_TENANT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
@@ -47,8 +48,6 @@ import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import org.glassfish.jersey.media.multipart.FormDataParam
 import java.io.InputStream
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
@@ -60,6 +59,8 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.glassfish.jersey.media.multipart.FormDataParam
 
 @Tag(name = "USER_PROJECT", description = "项目列表接口")
 @Path("/{apiType:user|desktop}/projects")
@@ -183,6 +184,9 @@ interface UserProjectResource {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @Parameter(description = "项目信息", required = true)
         projectCreateInfo: ProjectCreateInfo,
         @Parameter(description = "access_token")
@@ -197,6 +201,9 @@ interface UserProjectResource {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @Parameter(description = "项目ID", required = true)
         @PathParam("project_id")
         projectId: String,

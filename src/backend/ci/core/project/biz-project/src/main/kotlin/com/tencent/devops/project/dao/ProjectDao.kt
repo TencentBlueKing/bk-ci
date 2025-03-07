@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.db.utils.JooqUtils
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.model.project.tables.TProject
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
@@ -48,6 +49,9 @@ import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.util.ProjectUtils
+import java.net.URLDecoder
+import java.time.LocalDateTime
+import java.util.Locale
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -58,9 +62,6 @@ import org.jooq.Result
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.lower
 import org.springframework.stereotype.Repository
-import java.net.URLDecoder
-import java.time.LocalDateTime
-import java.util.Locale
 
 @Suppress("ALL")
 @Repository
@@ -324,7 +325,9 @@ class ProjectDao {
                 UPDATED_AT,
                 USE_BK,
                 APPROVAL_STATUS,
-                ENABLED
+                ENABLED,
+                TENANT_ID,
+                TENANT_ENGLISH_NAME
             )
                 .values(
                     paasProject.approval_status,
@@ -342,7 +345,7 @@ class ProjectDao {
                     paasProject.dept_id,
                     paasProject.dept_name,
                     paasProject.description,
-                    paasProject.english_name,
+                    TenantUtils.parseEnglishName(paasProject.tenant_id, paasProject.english_name),
                     paasProject.extra,
                     paasProject.is_offlined,
                     paasProject.is_secrecy,
@@ -355,7 +358,9 @@ class ProjectDao {
                     paasProject.updated_at?.time,
                     paasProject.use_bk,
                     ProjectApproveStatus.APPROVED.status,
-                    true
+                    true,
+                    paasProject.tenant_id,
+                    paasProject.english_name
                 )
                 .execute()
         }
@@ -409,11 +414,13 @@ class ProjectDao {
                 PROPERTIES,
                 SUBJECT_SCOPES,
                 AUTH_SECRECY,
-                PRODUCT_ID
+                PRODUCT_ID,
+                TENANT_ID,
+                TENANT_ENGLISH_NAME
             ).values(
                 projectCreateInfo.projectName,
                 projectId,
-                projectCreateInfo.englishName,
+                TenantUtils.parseEnglishName(projectCreateInfo.tenantId, projectCreateInfo.englishName),
                 projectCreateInfo.description,
                 projectCreateInfo.bgId,
                 projectCreateInfo.bgName,
@@ -440,7 +447,9 @@ class ProjectDao {
                 },
                 subjectScopesStr,
                 projectCreateInfo.authSecrecy ?: ProjectAuthSecrecyStatus.PUBLIC.value,
-                projectCreateInfo.productId
+                projectCreateInfo.productId,
+                projectCreateInfo.tenantId,
+                projectCreateInfo.englishName
             ).execute()
         }
     }
@@ -466,7 +475,10 @@ class ProjectDao {
                 .set(DEPT_ID, projectUpdateInfo.deptId)
                 .set(DEPT_NAME, projectUpdateInfo.deptName)
                 .set(DESCRIPTION, projectUpdateInfo.description)
-                .set(ENGLISH_NAME, projectUpdateInfo.englishName)
+                .set(
+                    ENGLISH_NAME,
+                    TenantUtils.parseEnglishName(projectUpdateInfo.tenantId, projectUpdateInfo.englishName)
+                )
                 .set(UPDATED_AT, LocalDateTime.now())
                 .set(UPDATOR, userId)
                 .set(APPROVAL_STATUS, approvalStatus)
@@ -474,6 +486,8 @@ class ProjectDao {
                 .set(SUBJECT_SCOPES, subjectScopesStr)
                 .set(PROJECT_TYPE, projectUpdateInfo.projectType)
                 .set(PRODUCT_ID, projectUpdateInfo.productId)
+                .set(TENANT_ID, projectUpdateInfo.tenantId)
+                .set(TENANT_ENGLISH_NAME, projectUpdateInfo.englishName)
             projectUpdateInfo.authSecrecy?.let { update.set(AUTH_SECRECY, it) }
             logoAddress?.let { update.set(LOGO_ADDR, logoAddress) }
             projectUpdateInfo.properties?.let { update.set(PROPERTIES, JsonUtil.toJson(it, false)) }

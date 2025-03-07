@@ -32,6 +32,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.model.project.tables.TProjectApproval
 import com.tencent.devops.model.project.tables.records.TProjectApprovalRecord
 import com.tencent.devops.project.pojo.ProjectApprovalInfo
@@ -39,9 +40,9 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 @Suppress("LongParameterList")
@@ -80,10 +81,12 @@ class ProjectApprovalDao {
                 PROJECT_TYPE,
                 PRODUCT_ID,
                 PRODUCT_NAME,
-                PROPERTIES
+                PROPERTIES,
+                TENANT_ID,
+                TENANT_ENGLISH_NAME
             ).values(
                 projectCreateInfo.projectName,
-                projectCreateInfo.englishName,
+                TenantUtils.parseEnglishName(projectCreateInfo.tenantId, projectCreateInfo.englishName),
                 projectCreateInfo.description,
                 projectCreateInfo.bgId,
                 projectCreateInfo.bgName,
@@ -107,7 +110,9 @@ class ProjectApprovalDao {
                 projectCreateInfo.productName,
                 projectCreateInfo.properties?.let {
                     JsonUtil.toJson(it, false)
-                }
+                },
+                projectCreateInfo.tenantId,
+                projectCreateInfo.englishName
             ).onDuplicateKeyUpdate()
                 .set(PROJECT_NAME, projectCreateInfo.projectName)
                 .set(DESCRIPTION, projectCreateInfo.description)
@@ -130,6 +135,7 @@ class ProjectApprovalDao {
                 .set(PROPERTIES, projectCreateInfo.properties?.let {
                     JsonUtil.toJson(it, false)
                 })
+                .set(TENANT_ID, projectCreateInfo.tenantId)
                 .execute()
         }
     }
@@ -139,7 +145,6 @@ class ProjectApprovalDao {
         userId: String,
         projectUpdateInfo: ProjectUpdateInfo,
         approvalStatus: Int,
-        subjectScopes: List<SubjectScopeInfo>,
         tipsStatus: Int
     ): Int {
         return with(TProjectApproval.T_PROJECT_APPROVAL) {
@@ -302,7 +307,8 @@ class ProjectApprovalDao {
                 projectType = projectType,
                 productId = productId,
                 productName = productName,
-                properties = properties?.let { JsonUtil.to(it, ProjectProperties::class.java) }
+                properties = properties?.let { JsonUtil.to(it, ProjectProperties::class.java) },
+                tenantId = tenantId
             )
         }
     }

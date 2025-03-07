@@ -102,7 +102,6 @@ class ProjectApprovalService @Autowired constructor(
             userId = userId,
             projectUpdateInfo = projectUpdateInfo,
             approvalStatus = approvalStatus,
-            subjectScopes = subjectScopes,
             tipsStatus = tipsStatus
         )
     }
@@ -282,7 +281,8 @@ class ProjectApprovalService @Autowired constructor(
                 kind = projectInfo.kind,
                 projectType = projectType ?: 0,
                 productId = projectApprovalInfo.productId,
-                properties = updateProjectProperties
+                properties = updateProjectProperties,
+                tenantId = projectInfo.tenantId
             )
         }
         val logoAddress = projectUpdateInfo.logoAddress

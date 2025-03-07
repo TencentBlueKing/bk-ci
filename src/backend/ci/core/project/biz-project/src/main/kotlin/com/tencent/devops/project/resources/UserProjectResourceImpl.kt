@@ -34,6 +34,7 @@ import com.tencent.devops.common.auth.api.ActionId.PROJECT_CREATE
 import com.tencent.devops.common.auth.api.ActionId.PROJECT_EDIT
 import com.tencent.devops.common.auth.api.ActionId.PROJECT_ENABLE
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.user.UserProjectResource
@@ -53,9 +54,9 @@ import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectService
+import java.io.InputStream
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
-import java.io.InputStream
 
 @RestResource
 class UserProjectResourceImpl @Autowired constructor(
@@ -136,8 +137,9 @@ class UserProjectResourceImpl @Autowired constructor(
     }
 
     @AuditEntry(actionId = PROJECT_CREATE)
-    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?): Result<Boolean> {
+    override fun create(userId: String, tenantId: String?, projectCreateInfo: ProjectCreateInfo, accessToken: String?): Result<Boolean> {
         // 创建项目
+        projectCreateInfo.tenantId = TenantUtils.getTenantId(tenantId)
         projectService.create(
             userId = userId,
             projectCreateInfo = projectCreateInfo,
@@ -152,10 +154,12 @@ class UserProjectResourceImpl @Autowired constructor(
     @AuditEntry(actionId = PROJECT_EDIT)
     override fun update(
         userId: String,
+        tenantId: String?,
         projectId: String,
         projectUpdateInfo: ProjectUpdateInfo,
         accessToken: String?
     ): Result<Boolean> {
+        projectUpdateInfo.tenantId = TenantUtils.getTenantId(tenantId)
         return Result(
             projectService.update(
                 userId = userId,

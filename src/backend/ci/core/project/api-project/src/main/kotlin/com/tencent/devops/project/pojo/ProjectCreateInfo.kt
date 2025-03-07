@@ -28,6 +28,7 @@
 package com.tencent.devops.project.pojo
 
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -74,5 +75,7 @@ data class ProjectCreateInfo(
     @get:Schema(title = "运营产品ID")
     val productId: Int? = null,
     @get:Schema(title = "运营产品名称")
-    val productName: String? = null
+    val productName: String? = null,
+    @get:Schema(title = "租户ID")
+    var tenantId: String = TenantUtils.getTenantId()
 )

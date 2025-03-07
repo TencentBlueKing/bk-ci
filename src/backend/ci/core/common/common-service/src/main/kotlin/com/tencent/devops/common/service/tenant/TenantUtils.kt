@@ -25,10 +25,18 @@ class TenantUtils : ApplicationContextAware, InitializingBean {
         }
 
         fun getTenantId(tenantId: String? = null): String {
-            return if (enableMultiTenantMode) {
-                tenantId ?: DEFAULT_TENANT_ID
+            return if (enableMultiTenantMode && !tenantId.isNullOrBlank()) {
+                tenantId
             } else {
                 DEFAULT_TENANT_ID
+            }
+        }
+
+        fun parseEnglishName(tenantId: String? = null, tenantEnglishName: String): String {
+            return if (enableMultiTenantMode && !tenantId.isNullOrBlank()) {
+                "$tenantId-$tenantEnglishName"
+            } else {
+                tenantEnglishName
             }
         }
     }
