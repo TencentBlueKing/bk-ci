@@ -196,6 +196,7 @@ export default {
                 }
                 : {}
             const isDynamicGroup = this.currentGroup?.viewType === 1
+            const isRunning = pipeline.latestBuildStatus === statusAlias.RUNNING
 
             return [
                 {
@@ -268,6 +269,20 @@ export default {
                     }]
                     : []),
                 {
+                    text: this.$t('archive.archive'),
+                    disable: isRunning,
+                    tooltips: isRunning ? this.$t('archive.unableToFile') : false,
+                    handler: this.archiveHandler,
+                    hasPermission: pipeline.permissions.canDelete,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId: pipeline.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: pipeline.pipelineId,
+                        action: RESOURCE_ACTION.CREATE
+                    }
+                },
+                {
                     text: this.$t('delete'),
                     handler: this.deleteHandler,
                     hasPermission: pipeline.permissions.canDelete,
@@ -335,6 +350,13 @@ export default {
                 activePipelineList: [pipeline]
             })
         },
+        archiveHandler (pipeline) {
+            this.updatePipelineActionState({
+                confirmType: 'archive',
+                isArchiveDialogShow: true,
+                activePipelineList: [pipeline]
+            })
+        },
         deleteHandler (pipeline) {
             this.updatePipelineActionState({
                 confirmType: 'delete',
@@ -371,6 +393,13 @@ export default {
             this.updatePipelineActionState({
                 isSaveAsTemplateShow: false,
                 activePipeline: null
+            })
+        },
+        closeArchiveDialog () {
+            this.updatePipelineActionState({
+                isArchiveDialogShow: false,
+                confirmType: '',
+                activePipelineList: []
             })
         },
 

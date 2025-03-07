@@ -54,7 +54,8 @@ const state = {
         isSaveAsTemplateShow: false,
         isCopyDialogShow: false,
         addToDialogShow: false,
-        isDisableDialogShow: false
+        isDisableDialogShow: false,
+        isArchiveDialogShow: false
     }
 }
 

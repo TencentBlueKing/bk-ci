@@ -220,6 +220,12 @@
             :pac-enabled="pipelineActionState.activePipeline?.yamlExist"
             @done="refresh"
         />
+        <archive-dialog
+            :is-archive-dialog-show="pipelineActionState.isArchiveDialogShow"
+            :pipeline-list="pipelineActionState.activePipelineList"
+            @done="refresh"
+            @cancel="closeArchiveDialog"
+        />
     </main>
 </template>
 <script>
@@ -236,6 +242,7 @@
     import { mapActions, mapState } from 'vuex'
     import PipelineSearcher from './PipelineSearcher'
     import ArchiveViewName from '@/components/pipelineList/archiveViewName'
+    import ArchiveDialog from '@/views/PipelineList/ArchiveDialog'
 
     import Logo from '@/components/Logo'
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
@@ -267,6 +274,7 @@
             ImportPipelinePopup,
             PipelineGroupEditDialog,
             ArchiveViewName,
+            ArchiveDialog,
             DisableDialog
         },
         mixins: [piplineActionMixin],
