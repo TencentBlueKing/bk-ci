@@ -1687,6 +1687,15 @@
     "archive": "Archive",
     "archiveLibrary": "Archive library",
     "batchArchiving": "Batch archiving",
-    "tips": "Pipeline archiving is irreversible. After archiving:\n1. It can only be viewed, editing and execution are not supported\n2. It can be manually deleted, if not deleted, it will be automatically cleared after two years\n3. Archiving only retains pipeline orchestration and execution history, logs and artifacts are not included"
+    "tips": "Pipeline archiving is irreversible. After archiving:\n1. It can only be viewed, editing and execution are not supported\n2. It can be manually deleted, if not deleted, it will be automatically cleared after two years\n3. Archiving only retains pipeline orchestration and execution history, logs and artifacts are not included",
+    "unableToFile": "The pipeline is running and cannot be archived",
+    "isArchiveConfirmedTitles": "Are you sure you want to archive the following {0} pipelines?",
+    "isArchiveConfirmedTitle": "Are you sure you want to archive the following pipelines?",
+    "archivePipelineSuccess": "Pipeline archived successfully",
+    "archivePipelineFail": "Pipeline archiving failed",
+    "archiveTips1": "After a pipeline is archived, it cannot be edited or executed, and {0}.",
+    "archiveTips2": "Archiving cannot be undone",
+    "archiveTips3": "Only users with {0} permission can view and delete.",
+    "archiveTips4": "「Manage archived pipelines」"
   }
 }

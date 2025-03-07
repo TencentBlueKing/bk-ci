@@ -50,6 +50,11 @@ const actions = {
         }).then(response => {
             return response.data
         })
+    },
+    migrateArchivePipelineList (_, { projectId, pipelineId }) {
+        return ajax.post(`${prefix}/archive/projects/${projectId}/pipelines/${pipelineId}/data/migrate?cancelFlag=false`).then(response => {
+            return response.data
+        })
     }
 }
 

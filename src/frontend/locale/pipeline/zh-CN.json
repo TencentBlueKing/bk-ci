@@ -1685,6 +1685,15 @@
     "archive": "归档",
     "archiveLibrary": "存档库",
     "batchArchiving": "批量归档",
-    "tips": "流水线归档操作不可逆，归档后：\n1. 只能查看，不支持编辑、执行\n2. 可以手动删除，若未删除，两年后将自动清理\n3. 归档仅保留流水线编排和执行历史，日志和制品不包含在内"
+    "tips": "流水线归档操作不可逆，归档后：\n1. 只能查看，不支持编辑、执行\n2. 可以手动删除，若未删除，两年后将自动清理\n3. 归档仅保留流水线编排和执行历史，日志和制品不包含在内",
+    "unableToFile": "流水线正在执行，无法归档",
+    "isArchiveConfirmedTitles": "确定归档以下 {0} 条流水线吗？",
+    "isArchiveConfirmedTitle": "确定归档以下流水线吗？",
+    "archivePipelineSuccess": "归档流水线成功",
+    "archivePipelineFail": "归档流水线失败",
+    "archiveTips1": "流水线归档后，将不能编辑和执行，也{0}。",
+    "archiveTips2": "不能取消归档",
+    "archiveTips3": "仅拥有{0}权限的用户可查看和删除。",
+    "archiveTips4": "「管理归档流水线」"
   }
 }

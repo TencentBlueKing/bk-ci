@@ -15,6 +15,12 @@
                 >
                     {{ $t('patchAddTo') }}
                 </bk-button>
+                <bk-button
+                    :disabled="!isSelected"
+                    @click="toggleArchive"
+                >
+                    {{ $t('archive.batchArchiving') }}
+                </bk-button>
                 <span v-bk-tooltips="notAllowPatchDeleteTips">
                     <bk-button
                         :disabled="!isSelected || isPacGroup"
@@ -64,6 +70,13 @@
             @done="refreshList"
             :pipeline-list="selected"
         />
+        <archive-dialog
+            type="archiveBatch"
+            :is-archive-dialog-show="isArchiveShow"
+            :pipeline-list="selected"
+            @cancel="toggleArchive"
+            @done="refreshList"
+        />
     </main>
 </template>
 
@@ -75,6 +88,7 @@
     import { mapActions, mapGetters } from 'vuex'
     import PipelineSearcher from './PipelineSearcher'
     import { ARCHIVE_VIEW_ID } from '@/store/constants'
+    import ArchiveDialog from '@/views/PipelineList/ArchiveDialog'
 
     export default {
         name: 'patch-manage-list',
@@ -83,6 +97,7 @@
             PipelineTableView,
             AddToGroupDialog,
             ArchiveViewName,
+            ArchiveDialog,
             RemoveConfirmDialog
         },
         data () {
@@ -92,6 +107,7 @@
                 addToDialogShow: false,
                 filters: restQuery,
                 isConfirmShow: false,
+                isArchiveShow: false,
                 tableHeight: null
             }
         },
@@ -147,6 +163,9 @@
                     this.$refs.pipelineTable?.clearSelection?.()
                 }
                 this.addToDialogShow = !this.addToDialogShow
+            },
+            toggleArchive () {
+                this.isArchiveShow = !this.isArchiveShow
             },
             handleSelectChange (selected) {
                 this.selected = selected
