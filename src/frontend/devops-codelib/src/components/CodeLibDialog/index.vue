@@ -220,7 +220,7 @@
             codelib: {
                 deep: true,
                 handler: async function (newVal, oldVal) {
-                    if (newVal.authType === oldVal.authType && newVal['@type'] === oldVal['@type']) return
+                    if (newVal.authType === oldVal.authType && newVal['@type'] === oldVal['@type'] && !this.isShow) return
                     const { projectId, codelibTypeConstants } = this
                     if (newVal['@type']?.startsWith('scm') && newVal.credentialType === 'OAUTH') {
                         await this.checkScmOAuth({

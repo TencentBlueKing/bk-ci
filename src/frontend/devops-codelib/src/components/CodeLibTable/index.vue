@@ -59,10 +59,15 @@
                             v-if="isListFlod"
                             class="mask"
                         ></div>
-                        <Icon
+                        <!-- <Icon
+                            v-if="codelibIconMap[props.row.type]"
                             class="codelib-logo"
                             :name="codelibIconMap[props.row.type]"
                             size="16"
+                        /> -->
+                        <img
+                            class="codelib-logo"
+                            :src="props.row.logoUrl"
                         />
                         <div
                             :class="{
@@ -343,7 +348,7 @@
         },
 
         computed: {
-            ...mapState('codelib', ['gitOAuth']),
+            ...mapState('codelib', ['gitOAuth', 'codelibTypes']),
 
             projectId () {
                 return this.$route.params.projectId
@@ -741,6 +746,8 @@
             right: 0;
         }
         .codelib-logo {
+            width: 16px;
+            height: 16px;
             flex-shrink: 0;
         }
         .codelib-name {

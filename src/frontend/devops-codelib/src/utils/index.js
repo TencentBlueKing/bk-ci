@@ -80,7 +80,7 @@ export function parsePathAlias (type, path, authType, svnType) {
             aliasIndex = 3
             break
         case isScmGit(type) && svnType === 'SSH':
-            reg = /^(git@)?([\-\.a-z0-9A-Z]+)\:(.*).git$/i
+            reg = /^(git@)([\-\.a-z0-9A-Z]+)\:(.*).git$/i
             msg = `${codelibLocaleObj.gitlabSshRule}`
             break
     }

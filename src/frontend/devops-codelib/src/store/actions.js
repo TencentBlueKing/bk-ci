@@ -289,10 +289,18 @@ const actions = {
     }, {
         projectId,
         scmCode,
-        type
+        type,
+        search = ''
+
     }) {
         try {
-            const res = await vue.$ajax.get(`/repository/api/user/scm/repository/api/${projectId}/${scmCode}/listRepoBaseInfo`)
+            const query = {
+                projectId,
+                scmCode,
+                search
+            }
+            const queryStr = Object.keys(query).filter(key => query[key]).map(key => `${key}=${query[key]}`).join('&')
+            const res = await vue.$ajax.get(`/repository/api/user/scm/repository/api/${projectId}/${scmCode}/listRepoBaseInfo?${queryStr}`)
             commit(SET_OAUTH_MUTATION, {
                 oAuth: res,
                 type
@@ -395,6 +403,18 @@ const actions = {
         repositoryType
     }) {
         return vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/getPacProjectId/?repoUrl=${repoUrl}&repositoryType=${repositoryType}`)
+    },
+
+    /**
+     * 刷新 scm git/svn 工蜂授权token
+     */
+    async refreshScmOauth ({ commit }, {
+        scmCode,
+        redirectUrl,
+        resetType = ''
+    }) {
+        const res = await vue.$ajax.post(`${REPOSITORY_API_URL_PREFIX}/user/repositories/oauth/reset?resetType=${resetType}&scmCode=${scmCode}&redirectUrl=${redirectUrl}&`)
+        return res
     },
 
     /**
