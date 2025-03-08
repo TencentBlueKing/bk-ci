@@ -11,7 +11,10 @@ export interface VisitedSite {
 
 export interface providerConfig {
   api: string;
-  credentialTypeList: [];
+  credentialTypeList: [{
+    credentialType: '',
+    name: ''
+  }];
   createTime: number;
   updateTime: number;
   desc: string;

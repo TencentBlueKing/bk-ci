@@ -67,10 +67,7 @@ export default defineComponent({
     const initConfigFormData = ref({});
     const isFormDataChanged = computed(() => JSON.stringify(initConfigFormData.value) !== JSON.stringify(configFormData.value))
     const isCreate = computed(() => route.query?.action === 'create');
-    const curProviderConfig = computed(() => providerList.value.find(i => i.providerCode === configFormData.value.providerCode));
-    const curAuthTypeList = computed(() => curProviderConfig.value?.credentialTypeList || []);
-    const showPacSwitcher = computed(() => curProviderConfig.value?.pac);
-    const showWebHookSwitcher = computed(() => curProviderConfig.value?.webhook);
+    const curProviderConfig = computed(() => providerList.value.find(i => i.providerCode === configFormData.value.providerCode) as providerConfig);
     const isNewOauthType = computed(() => configFormData.value.oauthType === 'NEW' || false)
     const logoFiles = computed(() => {
       const { logoUrl } = configFormData.value;
@@ -384,7 +381,7 @@ export default defineComponent({
               >
                 <bk-checkbox-group v-model={configFormData.value.credentialTypeList}>
                   {
-                    curAuthTypeList.value.map(auth => (
+                    curProviderConfig.value?.credentialTypeList?.map(auth => (
                       <bk-checkbox
                         label={auth.credentialType}
                       >
@@ -396,7 +393,7 @@ export default defineComponent({
               </bk-form-item>
               <div class="ml-[150px] mb-[20px]">
                 {
-                  curAuthTypeList.value?.find(i => i.credentialType === 'OAUTH') && (
+                  curProviderConfig.value?.credentialTypeList?.find(i => i.credentialType === 'OAUTH') && (
                     <div class="check-popper relative max-w-[710px] pt-[24px] pr-[120px] leading-[128px] border border-[#DCDEE5] bg-[#FAFBFD] mt-[10px]">
                       <bk-form-item
                         label={t('OAUTH类型')}
@@ -480,7 +477,7 @@ export default defineComponent({
                 }
               </div>
               {
-                showWebHookSwitcher.value && (
+                (curProviderConfig.value?.webhook && curProviderConfig.value?.webhookSecretType === 'APP') && (
                   <bk-form-item
                     label={t('Webhook 监听')}
                   >
@@ -504,7 +501,7 @@ export default defineComponent({
                 )
               }
               {
-                showPacSwitcher.value && (
+                curProviderConfig.value?.pac && (
                   <bk-form-item
                     label="PAC"
                   >

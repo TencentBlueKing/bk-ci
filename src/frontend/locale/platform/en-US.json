@@ -95,5 +95,7 @@
     "离开将会导致未保存信息丢失": "Your changes will be lost if you close without saving.",
     "确定": "Confirm",
     "由中/英文字符、下划线组成，不超过20个字符": "Consists of Chinese/English characters and underscores, up to 20 characters",
-    "由英文字母和下划线组成，不超过20个字符": "Consists of English letters and underscores, up to 20 characters"
+    "由英文字母和下划线组成，不超过20个字符": "Consists of English letters and underscores, up to 20 characters",
+    "如服务部署在devnet，则应启用代理，默认关闭": "If the service is deployed on devnet, the proxy should be enabled; it is disabled by default.",
+    "代理": "Proxy"
 }

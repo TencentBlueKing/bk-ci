@@ -1,6 +1,7 @@
 import http from '@/http/api';
 import { ref,  } from 'vue';
 import { defineStore } from 'pinia';
+import { repoConfigFromData } from '@/types/index';
 
 export default defineStore('userRepoConfigTable', () => {
   const curConfig = ref<repoConfigFromData>({});
