@@ -474,6 +474,12 @@
                     return '42px'
                 }
                 return getComputedStyle(this.$refs.errorPopup)?.height ?? '42px'
+            },
+            templateId () {
+                return this.execDetail?.templateInfo?.templateId
+            },
+            ruleIds () {
+                return this.curMatchRules?.flatMap(item => item.ruleList.map(rule => rule.ruleHashId)) || []
             }
         },
         watch: {
@@ -508,7 +514,14 @@
             loadI18nMessages(this.$i18n)
         },
         mounted () {
-            this.requestInterceptAtom(this.routerParams)
+            if (this.templateId) {
+                this.requestMatchTemplateRuleList({
+                    projectId: this.routerParams.projectId,
+                    templateId: this.templateId
+                })
+            } else {
+                this.requestInterceptAtom(this.routerParams)
+            }
             if (this.errorList?.length > 0) {
                 this.setScrollBarPostion()
             }
@@ -545,7 +558,7 @@
                 'requestPipelineExecDetail',
                 'pausePlugin'
             ]),
-            ...mapActions('common', ['requestInterceptAtom']),
+            ...mapActions('common', ['requestInterceptAtom', 'requestMatchTemplateRuleList']),
             ...mapActions('pipelines', ['requestRetryPipeline']),
             renderLabel (h, name) {
                 const panel = this.panels.find((panel) => panel.name === name)
@@ -665,7 +678,8 @@
                         ...this.routerParams,
                         buildId: this.routerParams.buildNo,
                         elementId,
-                        action
+                        action,
+                        ruleIds: this.ruleIds
                     }
                     const res = await this.reviewExcuteAtom(data)
                     if (res) {
