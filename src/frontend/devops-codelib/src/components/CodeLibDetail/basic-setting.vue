@@ -98,7 +98,7 @@
         <!-- PAC 模式 -->
         <div
             class="form-item"
-            v-if="isGit"
+            v-if="providerConfig.pacEnabled"
         >
             <div class="label">
                 {{ $t('codelib.PACmode') }}
@@ -169,14 +169,11 @@
                         v-if="syncStatus === 'SYNC'"
                     >
                         <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary">
-                            <div class="rotate rotate1"></div>
-                            <div class="rotate rotate2"></div>
-                            <div class="rotate rotate3"></div>
-                            <div class="rotate rotate4"></div>
-                            <div class="rotate rotate5"></div>
-                            <div class="rotate rotate6"></div>
-                            <div class="rotate rotate7"></div>
-                            <div class="rotate rotate8"></div>
+                            <bk-loading
+                                class="mr10"
+                                is-loading
+                                mode="spin"
+                            />
                         </div>
                         <span class="ml5">{{ $t('codelib.正在同步代码库流水线') }}</span>
                     </span>
@@ -199,54 +196,6 @@
                 </div>
             </div>
         </div>
-        <!-- 通用设置 -->
-        <!-- <div
-            class="form-item"
-            v-if="isGit"
-        >
-            <div class="label">
-                {{ $t('codelib.common') }}
-                <span
-                    v-if="!isEditing"
-                    @click="handleEditCommon">
-                    <Icon name="edit-line" size="14" class="edit-icon" />
-                </span>
-                <span v-else>
-                    <bk-button
-                        class="common-btn ml20 mr5"
-                        text
-                        @click="handleSaveCommon"
-                    >
-                        {{ $t('codelib.save') }}
-                    </bk-button>
-                    <bk-button
-                        class="common-btn"
-                        text
-                        @click="isEditing = false"
-                    >
-                        {{ $t('codelib.cancel') }}
-                    </bk-button>
-                </span>
-            </div>
-            <div class="content">
-                <div class="merge-request">
-                    {{ $t('codelib.blockingMergeRequest') }}
-                    <Icon name="help" size="14" class="help-icon" />
-                    <p v-if="!isEditing" class="request-result">{{ repoInfo.settings.enableMrBlock ? $t('codelib.yes') : $t('codelib.no') }}</p>
-                    <bk-radio-group
-                        class="common-radio-group"
-                        v-else
-                        v-model="repoInfo.settings.enableMrBlock">
-                        <bk-radio class="mr15" :value="true">
-                            {{ $t('codelib.yes') }}
-                        </bk-radio>
-                        <bk-radio :value="false">
-                            {{ $t('codelib.no') }}
-                        </bk-radio>
-                    </bk-radio-group>
-                </div>
-            </div>
-        </div> -->
         <!-- 历史信息 -->
         <div class="form-item">
             <div class="label">
@@ -293,14 +242,11 @@
                     v-if="hasCiFolder"
                     class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
                 >
-                    <div class="rotate rotate1"></div>
-                    <div class="rotate rotate2"></div>
-                    <div class="rotate rotate3"></div>
-                    <div class="rotate rotate4"></div>
-                    <div class="rotate rotate5"></div>
-                    <div class="rotate rotate6"></div>
-                    <div class="rotate rotate7"></div>
-                    <div class="rotate rotate8"></div>
+                    <bk-loading
+                        class="mr10"
+                        is-loading
+                        mode="spin"
+                    />
                 </div>
                 <div
                     v-else
@@ -393,6 +339,8 @@
             :is-t-git="isTGit"
             :is-git="isGit"
             :is-github="isGithub"
+            :is-scm-git="isScmGit"
+            :is-scm-svn="isScmSvn"
             :fetch-repo-detail="fetchRepoDetail"
             @updateList="updateList"
         />
@@ -474,7 +422,9 @@
         isGithub,
         isGitLab,
         isSvn,
-        isTGit
+        isTGit,
+        isScmGit,
+        isScmSvn
     } from '../../config/'
     import {
         mapState,
@@ -530,12 +480,6 @@
                 showClosePac: false,
                 showEnablePac: false,
                 showOauthDialog: false,
-                isP4: false,
-                isGit: false,
-                isSvn: false,
-                isTGit: false,
-                isGithub: false,
-                isGitLab: false,
                 codelibTypeConstants: '',
                 userId: '',
                 showSyncFailedDetail: false,
@@ -556,7 +500,8 @@
             ...mapState('codelib', [
                 'gitOAuth',
                 'githubOAuth',
-                'tgitOAuth'
+                'tgitOAuth',
+                'codelibTypes'
             ]),
             projectId () {
                 return this.$route.params.projectId
@@ -578,17 +523,38 @@
                             ? this.gitOAuth.status
                             : this.githubOAuth.status) !== 403
                 )
+            },
+            isScmGit () {
+                return isScmGit(this.type)
+            },
+            isScmSvn () {
+                return isScmSvn(this.type)
+            },
+            isGit () {
+                return isGit(this.type)
+            },
+            isTGit () {
+                return isTGit(this.type)
+            },
+            isGitLab () {
+                return isGitLab(this.type)
+            },
+            isSvn () {
+                return isSvn(this.type)
+            },
+            isP4 () {
+                return isP4(this.type)
+            },
+            isGithub () {
+                return isGithub(this.type)
+            },
+            providerConfig () {
+                return this.codelibTypes.find(i => i.scmCode === this.repoInfo.scmCode) || {}
             }
         },
         watch: {
             type: {
                 handler (val) {
-                    this.isP4 = isP4(val)
-                    this.isGit = isGit(val)
-                    this.isSvn = isSvn(val)
-                    this.isTGit = isTGit(val)
-                    this.isGithub = isGithub(val)
-                    this.isGitLab = isGitLab(val)
                     this.codelibTypeConstants = val.toLowerCase()
                         .replace(/^\S*?([github|git|tgit])/i, '$1')
                 },
@@ -1226,10 +1192,6 @@
                 font-size: 35px;
                 color: #3FC06D;
             }
-        }
-        .bk-spin-loading {
-            width: 30px;
-            height: 30px;
         }
         .rotate {
             height: 8px !important;

@@ -192,6 +192,9 @@ export default {
         portPlaceholder () {
             return this.placeholders.port[this.codelibConfig.label]
         },
+        isScmConfig () {
+            this.codelib.scmCode.includes('SCM_')
+        },
         selectComBindData () {
             const bindData = {
                 searchable: true,
@@ -200,6 +203,9 @@ export default {
             }
             if (this.isGit) {
                 bindData.remoteMethod = this.handleSearchCodeLib
+            }
+            if (this.isScmConfig) {
+                bindData.remoteMethod = this.handleSearchScmCodeLib
             }
             return bindData
         },
@@ -308,6 +314,7 @@ export default {
             'toggleCodelibDialog',
             'updateCodelib',
             'gitOAuth',
+            'checkScmOAuth',
             'checkOAuth',
             'checkTGitOAuth',
             'setTemplateCodelib',
@@ -319,6 +326,16 @@ export default {
             this.checkOAuth({
                 projectId,
                 type: codelibTypeConstants,
+                search
+            })
+        },
+
+        handleSearchScmCodeLib (search) {
+            const { projectId, codelibTypeConstants } = this
+            this.checkScmOAuth({
+                projectId,
+                type: codelibTypeConstants,
+                scmCode: this.codelib.scmCode,
                 search
             })
         },
@@ -372,8 +389,9 @@ export default {
         },
         addCredential () {
             const { projectId, codelibConfig } = this
+            const credentialType = this.isScmGit || this.isScmSvn ? this.codelib.credentialType : codelibConfig.addType
             window.open(
-                `/console/ticket/${projectId}/createCredential/${codelibConfig.addType}/true`,
+                `/console/ticket/${projectId}/createCredential/${credentialType}/true`,
                 '_blank'
             )
         },

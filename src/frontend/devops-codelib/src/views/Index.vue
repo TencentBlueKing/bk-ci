@@ -201,9 +201,9 @@
             const { sortType, sortBy } = this.$route.query
             this.sortType = sortType ?? localStorage.getItem('codelibSortType') ?? ''
             this.sortBy = sortBy ?? localStorage.getItem('codelibSortBy') ?? ''
-            this.init()
+            await this.init()
             this.projectList = this.$store.state.projectList
-            this.refreshCodelibList()
+            await this.refreshCodelibList()
             if (
                 this.$route.hash.includes('popupGit')
                 || this.$route.hash.includes('popupGithub')
@@ -222,6 +222,10 @@
                 this.$router.push({
                     query
                 })
+            } else if (this.$route.fullPath.includes('popupScm')) {
+                const scmCode = this.$route.query.scmCode
+                const scmType = this.codelibTypes.find(i => i.scmCode === scmCode)?.scmType
+                this.createCodelib(scmType, scmCode)
             } else if (!this.resetType && this.userId) {
                 const query = { ...this.$route.query }
                 delete query.userId
@@ -230,7 +234,6 @@
                 })
             }
         },
-
         methods: {
             ...mapActions([
                 'getPermRedirectUrl'
