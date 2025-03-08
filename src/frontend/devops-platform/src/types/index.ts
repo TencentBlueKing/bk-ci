@@ -53,7 +53,7 @@ export interface repoConfigFromData {
     clientId: string;
     webhookSecret: string;
     clientSecret: string;
-    proxyEnabled: string;
+    proxyEnabled: boolean;
   }
 }
 

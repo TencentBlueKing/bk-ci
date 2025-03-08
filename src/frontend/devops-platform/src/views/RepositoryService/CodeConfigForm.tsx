@@ -44,7 +44,7 @@ export default defineComponent({
         clientId: '',
         webhookSecret: '',
         clientSecret: '',
-        proxyEnabled: '',
+        proxyEnabled: false,
       }
     });
     const configFormDataRules = {
