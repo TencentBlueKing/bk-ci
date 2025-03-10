@@ -10,6 +10,8 @@ import {
     isTGit,
     isGithub,
     isGitLab,
+    isScmGit,
+    isScmSvn,
     getCodelibConfig
 } from '../../config/'
 import { parsePathAlias } from '../../utils'
@@ -53,33 +55,58 @@ export default {
             'fetchingCodelibDetail',
             'gitOAuth',
             'githubOAuth',
-            'tgitOAuth'
+            'tgitOAuth',
+            'scmgitOAuth',
+            'scmsvnOAuth',
+            'providerConfig'
         ]),
         hasPower () {
-            return (
-                (this.isTGit
-                    ? this.tgitOAuth.status
-                    : this.isGit
-                        ? this.gitOAuth.status
-                        : this.githubOAuth.status) !== 403
-            )
+            const oauthMap = {
+                isTGit: this.tgitOAuth,
+                isGit: this.gitOAuth,
+                isGithub: this.githubOAuth,
+                isScmGit: this.scmgitOAuth,
+                isScmSvn: this.scmsvnOAuth
+            }
+            for (const [key, oauth] of Object.entries(oauthMap)) {
+                if (this[key]) {
+                    return oauth.status !== 403
+                }
+            }
+            return false
         },
         oAuth () {
-            return this.isTGit
-                ? this.tgitOAuth
-                : this.isGit
-                    ? this.gitOAuth
-                    : this.githubOAuth
+            const oauthMap = {
+                isTGit: this.tgitOAuth,
+                isGit: this.gitOAuth,
+                isGithub: this.githubOAuth,
+                isScmGit: this.scmgitOAuth,
+                isScmSvn: this.scmsvnOAuth
+            }
+        
+            for (const [condition, method] of Object.entries(oauthMap)) {
+                if (this[condition]) {
+                    return method
+                }
+            }
+        
+            return {
+                project: []
+            }
         },
+        
         codelibTypeName () {
             return this.codelib && this.codelib['@type']
                 ? this.codelib['@type']
                 : ''
         },
         codelibTypeConstants () {
-            return this.codelibTypeName
-                .toLowerCase()
-                .replace(/^\S*?([github|git|tgit])/i, '$1')
+            const codelibTypes = this.isScmGit || this.isScmSvn
+                ? ['scmgit', 'scmsvn']
+                : ['github', 'git', 'tgit']
+
+            const regex = new RegExp(`^\\S*?(${codelibTypes.join('|')})`, 'i')
+            return this.codelibTypeName.toLowerCase().replace(regex, '$1')
         },
         codelibConfig () {
             return (
@@ -89,6 +116,12 @@ export default {
                     this.codelib.authType
                 ) || {}
             )
+        },
+        isScmGit () {
+            return isScmGit(this.codelibTypeName)
+        },
+        isScmSvn () {
+            return isScmSvn(this.codelibTypeName)
         },
         isGit () {
             return isGit(this.codelibTypeName)
@@ -159,6 +192,9 @@ export default {
         portPlaceholder () {
             return this.placeholders.port[this.codelibConfig.label]
         },
+        isScmConfig () {
+            this.codelib.scmCode.includes('SCM_')
+        },
         selectComBindData () {
             const bindData = {
                 searchable: true,
@@ -167,6 +203,9 @@ export default {
             }
             if (this.isGit) {
                 bindData.remoteMethod = this.handleSearchCodeLib
+            }
+            if (this.isScmConfig) {
+                bindData.remoteMethod = this.handleSearchScmCodeLib
             }
             return bindData
         },
@@ -215,6 +254,9 @@ export default {
             return rulesMap
         },
         isOAUTH () {
+            if (this.isScmGit || this.isScmSvn) {
+                return this.codelib.credentialType === 'OAUTH'
+            }
             return this.codelib.authType === 'OAUTH'
         },
         repositoryType () {
@@ -224,7 +266,9 @@ export default {
                 codeGit: 'CODE_GIT',
                 codeTGit: 'CODE_TGIT',
                 codeGitlab: 'CODE_GITLAB',
-                github: 'GITHUB'
+                github: 'GITHUB',
+                scmGit: 'SCM_GIT',
+                scmSvn: 'SCM_SVN'
             }
             return typeMap[this.codelibTypeName]
         }
@@ -270,6 +314,7 @@ export default {
             'toggleCodelibDialog',
             'updateCodelib',
             'gitOAuth',
+            'checkScmOAuth',
             'checkOAuth',
             'checkTGitOAuth',
             'setTemplateCodelib',
@@ -281,6 +326,16 @@ export default {
             this.checkOAuth({
                 projectId,
                 type: codelibTypeConstants,
+                search
+            })
+        },
+
+        handleSearchScmCodeLib (search) {
+            const { projectId, codelibTypeConstants } = this
+            this.checkScmOAuth({
+                projectId,
+                type: codelibTypeConstants,
+                scmCode: this.codelib.scmCode,
                 search
             })
         },
@@ -299,6 +354,20 @@ export default {
             this.$refs.form.clearError()
             this.urlErrMsg = ''
         },
+
+        authTypeChangeAsCustom (codelib) {
+            const authType = this.providerConfig.credentialTypeList.find(i => i.credentialType === codelib.credentialType).authType
+            Object.assign(codelib, {
+                authType,
+                svnType: authType,
+                aliasName: '',
+                credentialId: '',
+                url: ''
+            })
+            this.$refs.form.clearError()
+            this.urlErrMsg = ''
+        },
+        
         goToEditCre (index) {
             const { projectId, credentialList } = this
             const { credentialId } = credentialList[index]
@@ -312,7 +381,7 @@ export default {
             this.isLoadingTickets = true
             this.requestTickets({
                 projectId,
-                credentialTypes
+                credentialTypes: (this.isScmGit || this.isScmSvn) ? this.codelib.credentialType : credentialTypes
             })
         },
         refreshTicket (isShow) {
@@ -320,8 +389,9 @@ export default {
         },
         addCredential () {
             const { projectId, codelibConfig } = this
+            const credentialType = this.isScmGit || this.isScmSvn ? this.codelib.credentialType : codelibConfig.addType
             window.open(
-                `/console/ticket/${projectId}/createCredential/${codelibConfig.addType}/true`,
+                `/console/ticket/${projectId}/createCredential/${credentialType}/true`,
                 '_blank'
             )
         },
@@ -340,7 +410,7 @@ export default {
          * @params {String} repoUrl 仓库url
          */
         handleCheckPacProject (repoUrl) {
-            if (this.isGit && this.isOAUTH && repoUrl) {
+            if (this.providerConfig.pacEnabled && this.isOAUTH && repoUrl) {
                 this.checkPacProject({
                     repoUrl,
                     repositoryType: this.repositoryType
