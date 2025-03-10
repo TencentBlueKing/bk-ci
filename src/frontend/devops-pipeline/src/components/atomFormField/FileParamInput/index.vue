@@ -79,6 +79,7 @@
 <script>
     import VuexInput from '@/components/atomFormField/VuexInput'
     import FileUpload from '@/components/atomFormField/FileUpload'
+    import { randomString } from '@/utils/util'
 
     export default {
         components: {
@@ -118,6 +119,10 @@
             versionControl: {
                 type: Boolean,
                 default: false
+            },
+            randomString: {
+                type: String,
+                default: ''
             }
         },
         data () {
@@ -140,23 +145,17 @@
             }
         },
         methods: {
-            extractRandomString (path) {
-                const RANDOM_STRING_REGEX = /\/([A-Za-z0-9]{8})\//
-                const match = path.match(RANDOM_STRING_REGEX)
-                return match ? match[1] : null
-            },
             splitFilePath () {
                 this.enableVersionControl = this.versionControl
 
                 const lastSlashIndex = this.value.lastIndexOf('/')
                 this.fileDefaultVal.fileName = this.value.slice(lastSlashIndex + 1)
-                
-                const randomFile = this.extractRandomString(this.value)
 
-                if (this.enableVersionControl && randomFile) {
-                    const lastIndex = this.value.lastIndexOf('/', lastSlashIndex - 1)
-                    this.fileDefaultVal.randomFilePath = randomFile
-                    this.fileDefaultVal.directory = this.value.slice(0, lastIndex)
+                if (this.enableVersionControl && this.randomString) {
+                    this.fileDefaultVal.randomFilePath = this.randomString
+
+                    const randomStringIndex = this.value.indexOf(`/${this.randomString}/`)
+                    this.fileDefaultVal.directory = randomStringIndex !== -1 ? this.value.slice(0, randomStringIndex) : this.value.slice(0, lastSlashIndex)
                 } else {
                     this.fileDefaultVal.directory = this.value.slice(0, lastSlashIndex)
                 }
@@ -167,6 +166,7 @@
                     ? `${directory}/${randomFilePath}/${fileName}`
                     : `${directory}/${fileName}`
                 this.handleChange(this.name, path)
+                this.handleChange('randomStringInPath', this.fileDefaultVal.randomFilePath)
             },
             updatePathFromDirectory (value) {
                 this.fileDefaultVal.directory = value
@@ -182,25 +182,15 @@
                 }
 
                 if (this.enableVersionControl) {
-                    const uniqueStrings = new Set()
-                    this.fileDefaultVal.randomFilePath = this.generateUniqueRandomString(uniqueStrings)
+                    this.fileDefaultVal.randomFilePath = randomString(8)
                 }
                 this.updatePath()
             },
-            generateUniqueRandomString (existingStrings, length = 8) {
-                const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-                let result
-                do {
-                    result = Array.from({ length }, () =>
-                        characters.charAt(Math.floor(Math.random() * characters.length))
-                    ).join('')
-                } while (existingStrings.has(result))
-
-                existingStrings.add(result)
-                return result
-            },
             handleEnableVersionControl (value) {
                 this.enableVersionControl = value
+                if (!value) {
+                    this.fileDefaultVal.randomFilePath = ''
+                }
                 this.handleChange('enableVersionControl', value)
             }
         }
