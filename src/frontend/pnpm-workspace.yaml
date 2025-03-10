@@ -14,7 +14,7 @@ catalogs:
     vue-i18n: "~8.18.1"
   vue3:
     vue: "~3.4.31"
-    vue-i18n: "~9.1.10"
+    vue-i18n: "~9.14.3"
   webpack5:
     webpack: "~5.76.1"
   bkMagicVue:
