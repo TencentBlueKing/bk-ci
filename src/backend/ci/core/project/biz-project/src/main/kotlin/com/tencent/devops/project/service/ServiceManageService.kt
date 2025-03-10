@@ -25,27 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.resources
+package com.tencent.devops.project.service
 
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.user.UserProjectServiceResource
-import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.service.ServiceListVO
-import com.tencent.devops.project.service.UserProjectServiceService
+import com.tencent.devops.project.pojo.service.ServiceVO
 
-@RestResource
-class UserProjectServiceResourceImpl constructor(private val userProjectServiceService: UserProjectServiceService) :
-    UserProjectServiceResource {
+abstract class ServiceManageService {
 
-    override fun updateCollected(userId: String, serviceId: Long, collector: Boolean): Result<Boolean> {
-        return userProjectServiceService.updateCollected(userId, serviceId, collector)
-    }
-
-    override fun getServiceUrl(userId: String, projectId: String?, serviceId: Long): Result<String> {
-        return userProjectServiceService.getServiceUrl(userId, projectId, serviceId)
-    }
-
-    override fun getServiceList(userId: String, projectId: String?): Result<List<ServiceListVO>> {
-        return userProjectServiceService.listService(userId, projectId)
-    }
+    /**
+     * 处理特殊逻辑
+     * @param userId 用户ID
+     * @param serviceVO 服务bean
+     * @param projectId 项目ID
+     * @return ServiceVO
+     */
+    abstract fun doSpecBus(userId: String, serviceVO: ServiceVO, projectId: String? = null): ServiceVO
 }
