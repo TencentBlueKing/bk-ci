@@ -89,6 +89,7 @@ class OpNodeService @Autowired constructor(
         var count = 0
         var page = 1
         while (true) {
+            logger.info("Start to flush the last build pipeline, page $page")
             val limit = PageUtil.convertPageSizeToSQLLimit(page, 100)
             val nodes = opNodeDao.listAllNodes(dslContext, NodeType.THIRDPARTY, limit.limit, limit.offset)
             page += 1
@@ -112,6 +113,7 @@ class OpNodeService @Autowired constructor(
                 }
                 Thread.sleep(100)
             }
+            logger.info("Finish flushing the last build pipeline, page $page, count $count")
             if (nodes.size < limit.limit) {
                 break
             }
