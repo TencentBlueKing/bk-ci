@@ -25,9 +25,13 @@
     import validMixins from '../../validMixins'
     import atomMixin from '../atomMixin'
     import TimerCronTab from '@/components/atomFormField/TimerCrontab/'
+    import BranchParameterArray from '../../AtomFormComponent/BranchParameterArray/index'
+    import CodelibSelector from './CodelibSelector'
     export default {
         components: {
-            TimerCronTab
+            TimerCronTab,
+            BranchParameterArray,
+            CodelibSelector
         },
         mixins: [atomMixin, validMixins],
         created () {
