@@ -20,6 +20,12 @@
                     'is-diff-param': isDiffParam
                 }"
             />
+            <span
+                v-if="enableVersionControl"
+                :class="['random-generate', fileDefaultVal.randomFilePath ? '' : 'placeholder']"
+            >
+                /{{ fileDefaultVal.randomFilePath || $t('editPage.randomlyGenerate') }}/
+            </span>
             <vuex-input
                 class="file-name"
                 :disabled="disabled"
@@ -31,7 +37,8 @@
                 :placeholder="$t('editPage.fileNameTips')"
                 :value="fileDefaultVal.fileName"
                 :class="{
-                    'is-diff-param': isDiffParam
+                    'is-diff-param': isDiffParam,
+                    'border-left-none': !enableVersionControl
                 }"
             />
         </div>
@@ -53,12 +60,27 @@
                 @handle-change="(value) => uploadPathFromFileName(value)"
             />
         </div>
+        <div v-if="!flex">
+            <bk-checkbox
+                v-model="enableVersionControl"
+                @change="handleEnableVersionControl"
+            >
+                {{ $t('editPage.enableVersionControl') }}
+            </bk-checkbox>
+            <i
+                class="bk-icon icon-info-circle"
+                style="color: #63656e;"
+                v-bk-tooltips="{ content: $t('editPage.versionControlTip'), placement: 'bottom-start' }"
+            ></i>
+        </div>
     </section>
 </template>
 
 <script>
     import VuexInput from '@/components/atomFormField/VuexInput'
     import FileUpload from '@/components/atomFormField/FileUpload'
+    import { randomString } from '@/utils/util'
+
     export default {
         components: {
             VuexInput,
@@ -93,47 +115,83 @@
             flex: {
                 type: Boolean,
                 default: false
+            },
+            versionControl: {
+                type: Boolean,
+                default: false
+            },
+            randomString: {
+                type: String,
+                default: ''
             }
         },
         data () {
             return {
                 fileDefaultVal: {
                     directory: '',
-                    fileName: ''
+                    fileName: '',
+                    randomFilePath: ''
                 },
-                uploadFileName: ''
+                enableVersionControl: false
             }
         },
         watch: {
-            uploadFileName (val) {
-                this.updatePathFromFileName(val)
-            },
             value: {
-                handler () {
-                    this.splitFilePath()
-                },
+                handler: 'splitFilePath',
                 immediate: true
+            },
+            enableVersionControl () {
+                this.updatePath()
             }
         },
         methods: {
             splitFilePath () {
+                this.enableVersionControl = this.versionControl
+
                 const lastSlashIndex = this.value.lastIndexOf('/')
-                this.fileDefaultVal.directory = this.value.substr(0, lastSlashIndex)
-                this.fileDefaultVal.fileName = this.value.substr(lastSlashIndex + 1)
+                this.fileDefaultVal.fileName = this.value.slice(lastSlashIndex + 1)
+
+                if (this.enableVersionControl && this.randomString) {
+                    this.fileDefaultVal.randomFilePath = this.randomString
+
+                    const randomStringIndex = this.value.indexOf(`/${this.randomString}/`)
+                    this.fileDefaultVal.directory = randomStringIndex !== -1 ? this.value.slice(0, randomStringIndex) : this.value.slice(0, lastSlashIndex)
+                } else {
+                    this.fileDefaultVal.directory = this.value.slice(0, lastSlashIndex)
+                }
+            },
+            updatePath () {
+                const { directory, fileName, randomFilePath } = this.fileDefaultVal
+                const path = this.enableVersionControl && randomFilePath
+                    ? `${directory}/${randomFilePath}/${fileName}`
+                    : `${directory}/${fileName}`
+                this.handleChange(this.name, path)
+                this.handleChange('randomStringInPath', this.fileDefaultVal.randomFilePath)
             },
             updatePathFromDirectory (value) {
                 this.fileDefaultVal.directory = value
-                const val = `${this.fileDefaultVal.directory}/${this.fileDefaultVal.fileName}`
-                this.handleChange(this.name, val)
+                this.updatePath()
             },
             updatePathFromFileName (value) {
                 this.fileDefaultVal.fileName = value
-                const val = `${this.fileDefaultVal.directory}/${this.fileDefaultVal.fileName}`
-                this.handleChange(this.name, val)
+                this.updatePath()
             },
             uploadPathFromFileName (value) {
-                if (this.fileDefaultVal.fileName) return
-                this.uploadFileName = value
+                if (!this.fileDefaultVal.fileName) {
+                    this.fileDefaultVal.fileName = value
+                }
+
+                if (this.enableVersionControl) {
+                    this.fileDefaultVal.randomFilePath = randomString(8)
+                }
+                this.updatePath()
+            },
+            handleEnableVersionControl (value) {
+                this.enableVersionControl = value
+                if (!value) {
+                    this.fileDefaultVal.randomFilePath = ''
+                }
+                this.handleChange('enableVersionControl', value)
             }
         }
     }
@@ -142,6 +200,9 @@
 <style lang="scss" scoped>
     .file-param {
         width: 100%;
+    }
+    .display-flex {
+        display: flex;
     }
     .flex-column {
         display: flex;
@@ -158,15 +219,26 @@
             }
         }
     }
+    .border-left-none {
+        border-left: none;
+    }
     .file-input {
         width: 100%;
         display: flex;
         .path-input {
             border-radius: 2px 0 0 2px;
         }
+        .random-generate {
+            font-size: 12px;
+            color: #737987;
+            flex-shrink: 0;
+            padding: 0 10px;
+        }
+        .placeholder {
+            color: #c4c6cc;
+        }
         .file-name {
             border-radius: 0 2px 2px 0;
-            border-left: 0;
         }
     }
     .is-diff-param {
