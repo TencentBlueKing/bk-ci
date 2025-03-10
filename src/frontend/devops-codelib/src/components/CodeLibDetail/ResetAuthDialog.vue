@@ -412,6 +412,9 @@
 
             providerConfig () {
                 return this.codelibTypes.find(i => i.scmCode === this.newRepoInfo.scmCode) || {}
+            },
+            username () {
+                return this.$store.state?.user?.username || ''
             }
         },
         watch: {
@@ -546,9 +549,10 @@
                     this.newRepoInfo = {
                         ...this.newRepoInfo,
                         userName: val,
+                        authType: 'OAUTH',
+                        credentialType: 'OAUTH',
                         authIdentity: ''
                     }
-                    this.newRepoInfo.authType = 'OAUTH'
                     this.$nextTick(() => {
                         this.handleUpdateRepo()
                     })
@@ -612,10 +616,10 @@
                         })
                     })
                 } else if (this.isScmConfig) {
+                    const redirectUrl = `${window.location.href}&resetType=resetScmOauth&userId=${this.username}`
                     this.refreshScmOauth({
-                        redirectUrl: window.location.href,
-                        scmCode: this.newRepoInfo.scmCode,
-                        resetType: 'resetScmOauth'
+                        redirectUrl: encodeURIComponent(redirectUrl),
+                        scmCode: this.newRepoInfo.scmCode
                     }).then(res => {
                         window.location.href = res.url
                     })
@@ -660,7 +664,6 @@
                         theme: 'success',
                         message: this.$t('codelib.重置成功')
                     })
-                    this.fetchRepoDetail(this.newRepoInfo.repositoryHashId, false)
                     this.$emit('updateList')
                     this.isShow = false
                 }).catch((e) => {
@@ -673,7 +676,7 @@
                     const newQuery = { ...this.$route.query }
                     delete newQuery.resetType
                     delete newQuery.userId
-
+                    this.fetchRepoDetail(this.newRepoInfo.repositoryHashId, false)
                     this.$router.push({
                         query: {
                             ...newQuery
