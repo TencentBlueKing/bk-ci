@@ -230,7 +230,7 @@ class PipelineBuildFacadeService(
             )
         }
         val (pipeline, resource, debug) = pipelineRepositoryService.getBuildTriggerInfo(
-            projectId, pipelineId, null
+            projectId, pipelineId, version
         )
         if (pipeline.locked == true) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
