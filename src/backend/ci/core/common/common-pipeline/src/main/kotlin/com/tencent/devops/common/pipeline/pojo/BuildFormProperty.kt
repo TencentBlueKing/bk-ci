@@ -68,7 +68,7 @@ data class BuildFormProperty(
     @get:Schema(title = "开启文件版本管理", required = false)
     val enableVersionControl: Boolean? = null,
     @get:Schema(title = "随机生成目录名", required = false)
-    val randomStringInPath: Boolean? = null,
+    val randomStringInPath: String? = null,
     @get:Schema(title = "文件元数据", required = false)
     val properties: Map<String, String>?,
     @get:Schema(title = "元素标签", required = false)
