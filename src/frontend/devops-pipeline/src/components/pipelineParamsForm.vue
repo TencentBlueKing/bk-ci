@@ -129,7 +129,6 @@
         },
         computed: {
             paramList () {
-                this.originalParams = this.params
                 return this.originalParams.map(param => {
                     let restParam = {}
                     if (param.type !== STRING || param.type !== TEXTAREA) {
@@ -203,6 +202,14 @@
                 })
             }
         },
+        watch: {
+            params: {
+                handler (newParams) {
+                    this.originalParams = [...newParams]
+                },
+                immediate: true
+            }
+        },
         methods: {
             isArtifactoryParam,
             isObject,
@@ -268,13 +275,17 @@
                 if (isShow && isBuildResourceParam(param.type)) {
                     const itemList = this.originalParams.find(item => item.id === param.id && param.type === CONTAINER_TYPE)
                     if (itemList) {
-                        const { data } = await this.$ajax.get(`environment/api/user/envnode/${this.$route.params.projectId}/listNew?nodeType=THIRDPARTY&page=1&pageSize=100`)
-                        const list = data.records.map(item => ({
-                            key: item.displayName,
-                            value: item.displayName
-                        }))
-                        itemList.list = list
-                        itemList.options = list
+                        try {
+                            const { data } = await this.$ajax.get(`environment/api/user/envnode/${this.$route.params.projectId}/listNew?nodeType=THIRDPARTY&page=1&pageSize=100`)
+                            const list = data.records.map(item => ({
+                                key: item.displayName,
+                                value: item.displayName
+                            }))
+                            itemList.list = list
+                            itemList.options = list
+                        } catch (error) {
+                            console.log(error)
+                        }
                     }
                 }
             }
