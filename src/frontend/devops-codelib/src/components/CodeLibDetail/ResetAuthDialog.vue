@@ -27,156 +27,201 @@
             :label-width="165"
             :rules="rules"
         >
-            <!-- Github 重置授权 -->
-            <bk-form-item
-                v-if="isGithub"
-                :label="$t('codelib.authType')"
-                :required="true"
-                property="authType"
-            >
-                <bk-radio-group
-                    v-model="newRepoInfo.authType"
+            <template v-if="!isScmConfig">
+                <!-- Github 重置授权 -->
+                <bk-form-item
+                    v-if="isGithub"
+                    :label="$t('codelib.authType')"
+                    :required="true"
+                    property="authType"
                 >
-                    <bk-radio
-                        class="mr20"
-                        value="OAUTH"
+                    <bk-radio-group
+                        v-model="newRepoInfo.authType"
                     >
-                        OAUTH
-                    </bk-radio>
-                </bk-radio-group>
-
-                <div
-                    class="codelib-oauth"
-                    v-if="isOAUTH"
-                >
-                    <bk-button
-                        theme="primary"
-                        :loading="isSaveLoading"
-                        @click="openValidate"
-                    >
-                        {{ $t('codelib.oauthCert') }}
-                    </bk-button>
-                    
-                    <div class="oauth-tips">
-                        <p>{{ $t('codelib.如需重置，请先点击按钮授权。') }}</p>
-                        <p>{{ $t('codelib.此授权用于平台和 Github 进行交互，用于如下场景：') }}</p>
-                        <p>1.{{ $t('codelib.回写 Commit statuses 到 Github') }}</p>
-                        <p>2.{{ $t('codelib.流水线中 Checkout 代码') }}</p>
-                        <p>{{ $t('codelib.需拥有代码库 Push 权限') }}</p>
-                    </div>
-                </div>
-            </bk-form-item>
-
-            <!-- Git、 TGit 重置授权 -->
-            <bk-form-item
-                v-if="isGit || isTGit"
-                :label="$t('codelib.authType')"
-                :required="true"
-                property="authType"
-            >
-                <bk-radio-group
-                    v-model="newRepoInfo.authType"
-                >
-                    <template v-if="isGit">
                         <bk-radio
                             class="mr20"
                             value="OAUTH"
                         >
                             OAUTH
                         </bk-radio>
+                    </bk-radio-group>
+    
+                    <div
+                        class="codelib-oauth"
+                        v-if="isOAUTH"
+                    >
+                        <bk-button
+                            theme="primary"
+                            :loading="isSaveLoading"
+                            @click="openValidate"
+                        >
+                            {{ $t('codelib.oauthCert') }}
+                        </bk-button>
+                        
+                        <div class="oauth-tips">
+                            <p>{{ $t('codelib.如需重置，请先点击按钮授权。') }}</p>
+                            <p>{{ $t('codelib.此授权用于平台和 Github 进行交互，用于如下场景：') }}</p>
+                            <p>1.{{ $t('codelib.回写 Commit statuses 到 Github') }}</p>
+                            <p>2.{{ $t('codelib.流水线中 Checkout 代码') }}</p>
+                            <p>{{ $t('codelib.需拥有代码库 Push 权限') }}</p>
+                        </div>
+                    </div>
+                </bk-form-item>
+    
+                <!-- Git、 TGit 重置授权 -->
+                <bk-form-item
+                    v-if="isGit || isTGit"
+                    :label="$t('codelib.authType')"
+                    :required="true"
+                    property="authType"
+                >
+                    <bk-radio-group
+                        v-model="newRepoInfo.authType"
+                    >
+                        <template v-if="isGit">
+                            <bk-radio
+                                class="mr20"
+                                value="OAUTH"
+                            >
+                                OAUTH
+                            </bk-radio>
+                            <bk-radio
+                                class="mr20"
+                                value="SSH"
+                                :disabled="repoInfo.enablePac"
+                            >
+                                SSH
+                            </bk-radio>
+                            <bk-radio
+                                value="HTTP"
+                                :disabled="repoInfo.enablePac"
+                            >
+                                {{ $t('codelib.用户名+密码') }}
+                            </bk-radio>
+                        </template>
+                        <template v-else>
+                            <bk-radio
+                                value="HTTPS"
+                            >
+                                {{ $t('codelib.用户名+密码') }}
+                            </bk-radio>
+                        </template>
+                    </bk-radio-group>
+    
+                    <div
+                        class="codelib-oauth"
+                        v-if="isOAUTH"
+                    >
+                        <bk-button
+                            theme="primary"
+                            :loading="isSaveLoading"
+                            @click="openValidate"
+                        >
+                            {{ $t('codelib.oauthCert') }}
+                        </bk-button>
+                        <div
+                            class="oauth-tips"
+                        >
+                            <p>{{ $t('codelib.如需重置，请先点击按钮授权。') }}</p>
+                            <p>{{ $t('codelib.此授权用于平台和工蜂进行交互，用于如下场景：') }}</p>
+                            <p>1.{{ $t('codelib.注册 Webhook 到工蜂') }}</p>
+                            <p>2.{{ $t('codelib.回写提交检测状态到工蜂') }}</p>
+                            <p>3.{{ $t('codelib.流水线中 Checkout 代码') }}</p>
+                            <p>{{ $t('codelib.需拥有代码库 Devloper 及以上权限，建议使用公共账号授权') }}</p>
+                        </div>
+                    </div>
+                </bk-form-item>
+    
+                <!-- Gitlab 重置授权 -->
+                <bk-form-item
+                    v-if="isGitLab"
+                    :label="$t('codelib.authType')"
+                    :required="true"
+                    property="authType"
+                >
+                    <bk-radio-group
+                        v-model="newRepoInfo.authType"
+                    >
                         <bk-radio
                             class="mr20"
                             value="SSH"
-                            :disabled="repoInfo.enablePac"
                         >
                             SSH
                         </bk-radio>
                         <bk-radio
                             value="HTTP"
+                        >
+                            {{ $t('codelib.访问令牌') }}
+                        </bk-radio>
+                    </bk-radio-group>
+                </bk-form-item>
+                <!-- SVN 重置授权 -->
+                <bk-form-item
+                    v-if="isSvn"
+                    :label="$t('codelib.authType')"
+                    :required="true"
+                    property="svnType"
+                >
+                    <bk-radio-group
+                        v-model="newRepoInfo.svnType"
+                    >
+                        <bk-radio
+                            class="mr20"
+                            value="ssh"
+                        >
+                            SSH
+                        </bk-radio>
+                        <bk-radio
+                            value="http"
+                        >
+                            {{ $t('codelib.用户名+密码') }}
+                        </bk-radio>
+                    </bk-radio-group>
+                </bk-form-item>
+            </template>
+            <template v-else>
+                <bk-form-item
+                    :label="$t('codelib.authType')"
+                    :required="true"
+                    property="credentialType"
+                >
+                    <bk-radio-group
+                        v-model="newRepoInfo.credentialType"
+                    >
+                        <bk-radio
+                            v-for="auth in providerConfig.credentialTypeList"
+                            :key="auth.credentialType"
+                            class="mr20"
+                            :value="auth.credentialType"
                             :disabled="repoInfo.enablePac"
                         >
-                            {{ $t('codelib.用户名+密码') }}
+                            {{ auth.name }}
                         </bk-radio>
-                    </template>
-                    <template v-else>
-                        <bk-radio
-                            value="HTTPS"
-                        >
-                            {{ $t('codelib.用户名+密码') }}
-                        </bk-radio>
-                    </template>
-                </bk-radio-group>
-
-                <div
-                    class="codelib-oauth"
-                    v-if="isOAUTH"
-                >
-                    <bk-button
-                        theme="primary"
-                        :loading="isSaveLoading"
-                        @click="openValidate"
-                    >
-                        {{ $t('codelib.oauthCert') }}
-                    </bk-button>
+                    </bk-radio-group>
                     <div
-                        class="oauth-tips"
+                        class="codelib-oauth"
+                        v-if="isOAUTH"
                     >
-                        <p>{{ $t('codelib.如需重置，请先点击按钮授权。') }}</p>
-                        <p>{{ $t('codelib.此授权用于平台和工蜂进行交互，用于如下场景：') }}</p>
-                        <p>1.{{ $t('codelib.注册 Webhook 到工蜂') }}</p>
-                        <p>2.{{ $t('codelib.回写提交检测状态到工蜂') }}</p>
-                        <p>3.{{ $t('codelib.流水线中 Checkout 代码') }}</p>
-                        <p>{{ $t('codelib.需拥有代码库 Devloper 及以上权限，建议使用公共账号授权') }}</p>
+                        <bk-button
+                            theme="primary"
+                            :loading="isSaveLoading"
+                            @click="openValidate"
+                        >
+                            {{ $t('codelib.oauthCert') }}
+                        </bk-button>
+                        <div
+                            class="oauth-tips"
+                        >
+                            <p>{{ $t('codelib.如需重置，请先点击按钮授权。') }}</p>
+                            <p>{{ $t('codelib.此授权用于平台和工蜂进行交互，用于如下场景：') }}</p>
+                            <p>1.{{ $t('codelib.注册 Webhook 到工蜂') }}</p>
+                            <p>2.{{ $t('codelib.回写提交检测状态到工蜂') }}</p>
+                            <p>3.{{ $t('codelib.流水线中 Checkout 代码') }}</p>
+                            <p>{{ $t('codelib.需拥有代码库 Devloper 及以上权限，建议使用公共账号授权') }}</p>
+                        </div>
                     </div>
-                </div>
-            </bk-form-item>
-
-            <!-- Gitlab 重置授权 -->
-            <bk-form-item
-                v-if="isGitLab"
-                :label="$t('codelib.authType')"
-                :required="true"
-                property="authType"
-            >
-                <bk-radio-group
-                    v-model="newRepoInfo.authType"
-                >
-                    <bk-radio
-                        class="mr20"
-                        value="SSH"
-                    >
-                        SSH
-                    </bk-radio>
-                    <bk-radio
-                        value="HTTP"
-                    >
-                        {{ $t('codelib.访问令牌') }}
-                    </bk-radio>
-                </bk-radio-group>
-            </bk-form-item>
-            <!-- SVN 重置授权 -->
-            <bk-form-item
-                v-if="isSvn"
-                :label="$t('codelib.authType')"
-                :required="true"
-                property="svnType"
-            >
-                <bk-radio-group
-                    v-model="newRepoInfo.svnType"
-                >
-                    <bk-radio
-                        class="mr20"
-                        value="ssh"
-                    >
-                        SSH
-                    </bk-radio>
-                    <bk-radio
-                        value="http"
-                    >
-                        {{ $t('codelib.用户名+密码') }}
-                    </bk-radio>
-                </bk-radio-group>
-            </bk-form-item>
+                </bk-form-item>
+            </template>
             <template
                 v-if="!isOAUTH"
             >
@@ -290,7 +335,9 @@
             isTGit: Boolean,
             isGit: Boolean,
             isGithub: Boolean,
-            fetchRepoDetail: Function
+            fetchRepoDetail: Function,
+            isScmGit: Boolean,
+            isScmSvn: Boolean
         },
         data () {
             return {
@@ -312,13 +359,22 @@
         },
         computed: {
             ...mapState('codelib', [
-                'tickets'
+                'tickets',
+                'codelibTypes'
             ]),
             isOAUTH () {
+                if (this.isScmGit || this.isScmSvn) {
+                    return this.newRepoInfo.credentialType === 'OAUTH'
+                }
                 return this.newRepoInfo.authType === 'OAUTH'
             },
+
             projectId () {
                 return this.$route.params.projectId
+            },
+
+            isScmConfig () {
+                return this.newRepoInfo.scmType?.startsWith('SCM_')
             },
 
             codelibTypeName () {
@@ -351,7 +407,11 @@
                     SSH: this.$t('codelib.SSH地址'),
                     ssh: this.$t('codelib.SSH地址')
                 }
-                return titleMap[type]
+                return titleMap[type] || this.$t('codelib.address')
+            },
+
+            providerConfig () {
+                return this.codelibTypes.find(i => i.scmCode === this.newRepoInfo.scmCode) || {}
             }
         },
         watch: {
@@ -436,6 +496,32 @@
                 },
                 deep: true
             },
+
+            'newRepoInfo.credentialType': {
+                handler (val, oldVal) {
+                    const authType = this.providerConfig.credentialTypeList.find(i => i.credentialType === val)?.authType
+                    this.newRepoInfo.authType = authType
+                    if (this.isScmGit) {
+                        if ((val.includes('OAUTH') || val.includes('USERNAME_PASSWORD')) && oldVal?.includes('SSH')) {
+                            const { url } = this.newRepoInfo
+                            this.newRepoInfo.url = url.replace('com:', 'com/').replace('git@', 'https://')
+                        }
+                        if (val.includes('SSH') && (oldVal?.includes('OAUTH') || oldVal?.includes('USERNAME_PASSWORD'))) {
+                            const { url } = this.newRepoInfo
+                            if (url.startsWith('https://')) {
+                                this.newRepoInfo.url = url.replace('com/', 'com:').replace('https://', 'git@')
+                            } else {
+                                this.newRepoInfo.url = url.replace('com/', 'com:').replace('http://', 'git@')
+                            }
+                        }
+                    }
+                    if (oldVal) {
+                        this.newRepoInfo.credentialId = ''
+                    }
+                },
+                deep: true
+            },
+
             'newRepoInfo.svnType': {
                 handler (val) {
                     if (this.isSvn) {
@@ -474,7 +560,8 @@
                 'editRepo',
                 'requestTickets',
                 'refreshGitOauth',
-                'refreshGithubOauth'
+                'refreshGithubOauth',
+                'refreshScmOauth'
             ]),
             openValidate () {
                 const { scmType, id, page, limit, searchName } = this.$route.query
@@ -524,6 +611,14 @@
                             }
                         })
                     })
+                } else if (this.isScmConfig) {
+                    this.refreshScmOauth({
+                        redirectUrl: window.location.href,
+                        scmCode: this.newRepoInfo.scmCode,
+                        resetType: 'resetScmOauth'
+                    }).then(res => {
+                        window.location.href = res.url
+                    })
                 }
             },
 
@@ -532,7 +627,7 @@
                 this.isLoadingTickets = true
                 await this.requestTickets({
                     projectId,
-                    credentialTypes
+                    credentialTypes: this.isScmConfig ? this.newRepoInfo.credentialType : credentialTypes
                 })
                 this.isLoadingTickets = false
             },
@@ -547,8 +642,9 @@
             },
             addCredential () {
                 const { projectId, codelibConfig } = this
+                const credentialType = this.isScmConfig ? this.newRepoInfo.credentialType : codelibConfig.addType
                 window.open(
-                    `/console/ticket/${projectId}/createCredential/${codelibConfig.addType}/true`,
+                    `/console/ticket/${projectId}/createCredential/${credentialType}/true`,
                     '_blank'
                 )
             },

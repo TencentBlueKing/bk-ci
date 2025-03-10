@@ -27,7 +27,8 @@ import {
     SET_TICKETS_MUTATION,
     SET_T_GIT_OAUTH_MUTATION,
     TOGGLE_CODE_LIB_DIALOG,
-    UPDATE_CODE_LIB_MUTATION
+    UPDATE_CODE_LIB_MUTATION,
+    SET_PROVIDER_CONFIG
 } from './constants'
 const mutations = {
     [SET_CODELIB_TYPES]: (state, codelibTypes) => {
@@ -75,6 +76,9 @@ const mutations = {
     },
     [SET_TEMPLATE_CODELIB] (state, codelib) {
         Vue.set(state, 'templateCodeLib', codelib)
+    },
+    [SET_PROVIDER_CONFIG] (state, value) {
+        Vue.set(state, 'providerConfig', value)
     }
 }
 
