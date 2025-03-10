@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_WINDOWS` (
     `REGION_ID` int(11) NULL COMMENT '云区域ID',
     `ENABLE_RECORD_USER` varchar(1024) NULL COMMENT '开启云桌面录屏的人，有值等同于开启云桌面',
     `NODE_HASH_ID`       varchar(64) NULL COMMENT '环境管理节点哈希ID',
+    `VM_NAME` varchar(64) DEFAULT NULL COMMENT '主机名称',
     PRIMARY KEY (`ID`),
     UNIQUE `ukey`(`WORKSPACE_NAME`),
     KEY `ipKey`(`HOST_IP`),
