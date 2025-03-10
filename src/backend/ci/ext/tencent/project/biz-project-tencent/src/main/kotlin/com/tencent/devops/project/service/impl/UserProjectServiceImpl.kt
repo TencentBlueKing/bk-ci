@@ -33,6 +33,7 @@ import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.gray.Gray
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TServiceRecord
 import com.tencent.devops.project.constant.ProjectMessageCode.BK_CONTAINER_SERVICE
@@ -44,6 +45,7 @@ import com.tencent.devops.project.dao.ServiceTypeDao
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.service.ServiceListVO
 import com.tencent.devops.project.pojo.service.ServiceVO
+import com.tencent.devops.project.service.ServiceManageService
 import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -120,7 +122,7 @@ class UserProjectServiceImpl @Autowired constructor(
                         replaceMap = replaceMap
                     )
                     val code = it.englishName
-                    val serviceVO = ServiceVO(
+                    var serviceVO = ServiceVO(
                         id = it.id,
                         code = code,
                         name = I18nUtil.getCodeLanMessage(T_SERVICE_PREFIX + it.englishName)
@@ -156,6 +158,12 @@ class UserProjectServiceImpl @Autowired constructor(
                         clusterType = it.clusterType,
                         docUrl = it.docUrl ?: ""
                     )
+                    serviceVO = doServiceSpecBus(
+                        code = code,
+                        serviceVO = serviceVO,
+                        userId = userId,
+                        projectId = projectId
+                    )
                     services.add(serviceVO)
                 }
                 if (serviceListByTypeId != null) {
@@ -171,6 +179,22 @@ class UserProjectServiceImpl @Autowired constructor(
             return Result(code = 0, message = "OK", data = serviceListVO)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list services")
+        }
+    }
+
+    private fun doServiceSpecBus(
+        code: String,
+        serviceVO: ServiceVO,
+        userId: String,
+        projectId: String?
+    ): ServiceVO {
+        val beanName = "${code.uppercase()}_MANAGE_SERVICE"
+        return if (SpringContextUtil.isBeanExist(beanName)) {
+            // 对服务数据进行特殊处理
+            val serviceManageService = SpringContextUtil.getBean(ServiceManageService::class.java, beanName)
+            serviceManageService.doSpecBus(userId, serviceVO, projectId)
+        } else {
+            serviceVO
         }
     }
 
