@@ -44,6 +44,10 @@ class OpNodeResourceImpl @Autowired constructor(
         return Result(opNodeService.flushDisplayName())
     }
 
+    override fun flushLastBuildPipeline(): Result<Int> {
+        return Result(opNodeService.flushLastBuildPipeline())
+    }
+
     override fun list(page: Int, pageSize: Int, name: String?): Result<NodePage> {
         return Result(NodePage(opNodeService.countPage(name), opNodeService.listPage(page, pageSize, name)))
     }
