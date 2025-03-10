@@ -26,6 +26,7 @@
                     :disabled="disabled"
                     :placeholder="param.placeholder"
                     :is-diff-param="highlightChangedParam && param.isChanged"
+                    :version-control="param.enableVersionControl"
                 />
             </section>
             <span
