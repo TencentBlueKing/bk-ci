@@ -98,7 +98,7 @@ class WorkspaceWindowsDao {
         with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
             return dslContext.update(this)
                 .set(VM_NAME, vmName)
-                .where(WORKSPACE_NAME.equal(workspaceName)).execute()
+                .where(WORKSPACE_NAME.equal(workspaceName)).limit(1).execute()
         }
     }
 

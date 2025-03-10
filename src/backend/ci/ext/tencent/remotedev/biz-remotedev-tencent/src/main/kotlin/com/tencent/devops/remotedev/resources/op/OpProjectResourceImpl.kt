@@ -19,7 +19,7 @@ class OpProjectResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun updateVmName(userId: String, projects: List<String>): Result<Boolean> {
+    override fun updateVmName(userId: String, projects: Set<String>): Result<Boolean> {
         remotedevProjectService.updateVmName(projects)
         return Result(true)
     }

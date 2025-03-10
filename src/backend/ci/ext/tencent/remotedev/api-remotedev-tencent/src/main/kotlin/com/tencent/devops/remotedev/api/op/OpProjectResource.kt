@@ -58,6 +58,6 @@ interface OpProjectResource {
         userId: String,
         @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
-        projectId: List<String>
+        projectId: Set<String>
     ): Result<Boolean>
 }

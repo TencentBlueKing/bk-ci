@@ -117,7 +117,7 @@ class RemotedevProjectService @Autowired constructor(
         }
     }
 
-    fun updateVmName(projects: List<String>) {
+    fun updateVmName(projects: Set<String>) {
         projects.forEach { projectId ->
             logger.info("updateVmName|$projectId")
             workspaceDao.fetchProjectWorkspaceName(dslContext, projectId).parallelStream().forEach { workspaceName ->
