@@ -90,6 +90,18 @@ class WorkspaceWindowsDao {
         }
     }
 
+    fun updateVmName(
+        dslContext: DSLContext,
+        vmName: String?,
+        workspaceName: String
+    ): Int {
+        with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
+            return dslContext.update(this)
+                .set(VM_NAME, vmName)
+                .where(WORKSPACE_NAME.equal(workspaceName)).execute()
+        }
+    }
+
     fun countProjectIp(
         dslContext: DSLContext,
         projectId: String,

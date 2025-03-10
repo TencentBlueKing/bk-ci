@@ -48,4 +48,16 @@ interface OpProjectResource {
         @QueryParam("projectId")
         projectId: String?
     ): Result<Boolean>
+
+    @Operation(summary = "存量实例vmName")
+    @POST
+    @Path("/updateVmName")
+    fun updateVmName(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: List<String>
+    ): Result<Boolean>
 }
