@@ -567,7 +567,7 @@
                         const { resetType, userId } = this.$route.query
                         if (['checkGitOauth', 'checkTGitOauth', 'checkGithubOauth'].includes(resetType)) {
                             await this.handleTogglePacStatus()
-                        } else if (['resetGitOauth', 'resetTGitOauth', 'resetGithubOauth'].includes(resetType)) {
+                        } else if (['resetGitOauth', 'resetTGitOauth', 'resetGithubOauth', 'resetScmOauth'].includes(resetType)) {
                             this.userId = userId
                         }
                     }, 200)
