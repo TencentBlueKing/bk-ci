@@ -77,7 +77,7 @@
                     theme="primary"
                     @click="handleSaveVar"
                 >
-                    {{ editIndex === -1 ? $t('editPage.append') : $t('confirm') }}111
+                    {{ editIndex === -1 ? $t('editPage.append') : $t('confirm') }}
                 </bk-button>
                 <bk-button
                     style="margin-left: 8px;"
