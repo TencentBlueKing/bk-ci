@@ -66,12 +66,14 @@ class WorkspaceWindowsDao {
         dslContext: DSLContext,
         launchId: Int?,
         regionId: Int?,
+        vmName: String? = "",
         workspaceName: String
     ): Int {
         with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
             return dslContext.update(this)
                 .set(CUR_LAUNCH_ID, launchId)
                 .set(REGION_ID, regionId)
+                .set(VM_NAME, vmName)
                 .where(WORKSPACE_NAME.equal(workspaceName)).execute()
         }
     }
@@ -85,6 +87,18 @@ class WorkspaceWindowsDao {
             return dslContext.update(this)
                 .set(NODE_HASH_ID, nodeHashId)
                 .where(WORKSPACE_NAME.equal(workspaceName)).execute()
+        }
+    }
+
+    fun updateVmName(
+        dslContext: DSLContext,
+        vmName: String?,
+        workspaceName: String
+    ): Int {
+        with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
+            return dslContext.update(this)
+                .set(VM_NAME, vmName)
+                .where(WORKSPACE_NAME.equal(workspaceName)).limit(1).execute()
         }
     }
 

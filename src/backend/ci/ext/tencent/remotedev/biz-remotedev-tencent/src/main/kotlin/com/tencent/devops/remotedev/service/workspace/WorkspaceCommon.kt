@@ -147,6 +147,7 @@ class WorkspaceCommon @Autowired constructor(
             dslContext = dslContext,
             launchId = gameId.second.toInt(),
             regionId = workspaceInfo.regionId,
+            vmName = workspaceInfo.vmName,
             workspaceName = workspaceName
         )
     }
