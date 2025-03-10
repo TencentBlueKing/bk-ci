@@ -30,6 +30,7 @@ package com.tencent.devops.stream.service
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.environment.api.thirdpartyagent.UserThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
@@ -371,6 +372,7 @@ class StreamBasicSettingService @Autowired constructor(
         // sp1:根据gitProjectName调用project接口获取t_project信息  --先注释预留调用
         val bkProjectResult = client.get(ServiceProjectResource::class).getProjectByName(
             userId = userId,
+            tenantId = TenantUtils.getTenantId(),
             projectName = projectName
         ).data ?: return
 

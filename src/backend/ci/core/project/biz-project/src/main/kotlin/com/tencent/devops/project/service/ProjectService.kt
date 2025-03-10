@@ -210,7 +210,7 @@ interface ProjectService {
         checkPermission: Boolean = true
     )
 
-    fun searchProjectByProjectName(projectName: String, limit: Int, offset: Int): Page<ProjectVO>
+    fun searchProjectByProjectName(projectName: String, limit: Int, offset: Int, tenantId: String?): Page<ProjectVO>
 
     fun hasCreatePermission(userId: String): Boolean
 
@@ -233,7 +233,7 @@ interface ProjectService {
 
     fun relationIamProject(projectCode: String, relationId: String): Boolean
 
-    fun getProjectByName(projectName: String): ProjectVO?
+    fun getProjectByName(projectName: String, tenantId: String?): ProjectVO?
 
     fun updateProjectProperties(userId: String? = null, projectCode: String, properties: ProjectProperties): Boolean
 

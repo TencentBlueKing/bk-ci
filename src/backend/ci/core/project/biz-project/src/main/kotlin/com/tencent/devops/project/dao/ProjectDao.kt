@@ -36,7 +36,6 @@ import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.model.project.tables.TProject
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
-import com.tencent.devops.project.pojo.PaasProject
 import com.tencent.devops.project.pojo.ProjectCollation
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectOrganizationInfo
@@ -290,79 +289,6 @@ class ProjectDao {
     fun getByCnName(dslContext: DSLContext, projectName: String): TProjectRecord? {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this).where(PROJECT_NAME.eq(projectName)).fetchAny()
-        }
-    }
-
-    fun create(dslContext: DSLContext, paasProject: PaasProject): Int {
-        with(TProject.T_PROJECT) {
-            return dslContext.insertInto(
-                this,
-                APPROVAL_STATUS,
-                APPROVAL_TIME,
-                APPROVER,
-                BG_ID,
-                BG_NAME,
-                CC_APP_ID,
-                CENTER_ID,
-                CENTER_NAME,
-                CREATED_AT,
-                CREATOR,
-                DATA_ID,
-                DEPLOY_TYPE,
-                DEPT_ID,
-                DEPT_NAME,
-                DESCRIPTION,
-                ENGLISH_NAME,
-                EXTRA,
-                IS_OFFLINED,
-                IS_SECRECY,
-                KIND,
-                LOGO_ADDR,
-                PROJECT_ID,
-                PROJECT_NAME,
-                PROJECT_TYPE,
-                REMARK,
-                UPDATED_AT,
-                USE_BK,
-                APPROVAL_STATUS,
-                ENABLED,
-                TENANT_ID,
-                TENANT_ENGLISH_NAME
-            )
-                .values(
-                    paasProject.approval_status,
-                    paasProject.approval_time,
-                    paasProject.approver,
-                    paasProject.bg_id,
-                    paasProject.bg_name,
-                    paasProject.cc_app_id,
-                    paasProject.center_id,
-                    paasProject.center_name,
-                    paasProject.created_at.time,
-                    paasProject.creator,
-                    paasProject.data_id,
-                    paasProject.deploy_type,
-                    paasProject.dept_id,
-                    paasProject.dept_name,
-                    paasProject.description,
-                    TenantUtils.parseEnglishName(paasProject.tenant_id, paasProject.english_name),
-                    paasProject.extra,
-                    paasProject.is_offlined,
-                    paasProject.is_secrecy,
-                    paasProject.kind,
-                    paasProject.logo_addr,
-                    paasProject.project_id,
-                    paasProject.project_name,
-                    paasProject.project_type,
-                    paasProject.remark,
-                    paasProject.updated_at?.time,
-                    paasProject.use_bk,
-                    ProjectApproveStatus.APPROVED.status,
-                    true,
-                    paasProject.tenant_id,
-                    paasProject.english_name
-                )
-                .execute()
         }
     }
 
@@ -801,14 +727,22 @@ class ProjectDao {
     fun countByEnglishName(
         dslContext: DSLContext,
         englishNameList: List<String>,
-        searchName: String? = null
+        searchName: String? = null,
+        tenantId: String? = null
     ): Int {
         with(TProject.T_PROJECT) {
             return dslContext.selectCount().from(this)
                 .where(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
                 .and(ENGLISH_NAME.`in`(englishNameList))
                 .and(IS_OFFLINED.eq(false))
-                .let { if (null == searchName) it else it.and(PROJECT_NAME.like("%$searchName%")) }
+                .let {
+                    if (null == searchName) it else {
+                        it.and(PROJECT_NAME.like("%$searchName%"))
+                    }
+                    if (!TenantUtils.isMultiTenantMode()) it else {
+                        it.and(TENANT_ID.eq(tenantId))
+                    }
+                }
                 .fetchOne()!!.value1()
         }
     }
@@ -857,12 +791,14 @@ class ProjectDao {
         dslContext: DSLContext,
         projectName: String,
         channelCodes: List<String>,
+        tenantId: String,
         limit: Int,
         offset: Int
     ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_NAME.like("%$projectName%"))
+                .and(TENANT_ID.eq(tenantId))
                 .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
                 .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PUBLIC.value))
                 .and(CHANNEL.`in`(channelCodes))
@@ -873,11 +809,13 @@ class ProjectDao {
     fun countByProjectName(
         dslContext: DSLContext,
         projectName: String,
-        channelCodes: List<String>
+        channelCodes: List<String>,
+        tenantId: String
     ): Int {
         with(TProject.T_PROJECT) {
             return dslContext.selectCount().from(this)
                 .where(PROJECT_NAME.like("%$projectName%"))
+                .and(TENANT_ID.eq(tenantId))
                 .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
                 .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PUBLIC.value))
                 .and(CHANNEL.`in`(channelCodes))
@@ -928,10 +866,11 @@ class ProjectDao {
         }
     }
 
-    fun getProjectByName(dslContext: DSLContext, projectName: String): ProjectVO? {
+    fun getProjectByName(dslContext: DSLContext, projectName: String, tenantId: String): ProjectVO? {
         with(TProject.T_PROJECT) {
             val record = dslContext.selectFrom(this)
                 .where(PROJECT_NAME.eq(projectName))
+                .and(TENANT_ID.eq(tenantId))
                 .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
                 .fetchAny()
                 ?: return null

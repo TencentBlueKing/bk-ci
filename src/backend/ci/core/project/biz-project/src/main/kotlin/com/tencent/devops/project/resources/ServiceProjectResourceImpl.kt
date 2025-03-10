@@ -185,8 +185,8 @@ class ServiceProjectResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getProjectByName(userId: String, projectName: String): Result<ProjectVO?> {
-        return Result(projectService.getProjectByName(projectName))
+    override fun getProjectByName(userId: String, tenantId: String?, projectName: String): Result<ProjectVO?> {
+        return Result(projectService.getProjectByName(projectName, tenantId))
     }
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?): Result<Boolean> {
