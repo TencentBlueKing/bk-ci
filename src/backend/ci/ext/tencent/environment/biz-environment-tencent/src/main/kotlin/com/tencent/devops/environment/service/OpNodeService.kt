@@ -28,9 +28,14 @@
 package com.tencent.devops.environment.service
 
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.dispatch.api.ServiceAgentResource
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.job.CmdbNodeDao
+import com.tencent.devops.environment.dao.job.OPNodeDao
 import com.tencent.devops.environment.pojo.NodeDevCloudInfo
+import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.utils.NodeStringIdUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -39,9 +44,11 @@ import org.springframework.stereotype.Service
 
 @Service
 class OpNodeService @Autowired constructor(
+    private val client: Client,
     private val dslContext: DSLContext,
     private val nodeDao: NodeDao,
-    private val cmdbNodeDao: CmdbNodeDao
+    private val cmdbNodeDao: CmdbNodeDao,
+    private val opNodeDao: OPNodeDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(OpNodeService::class.java)
@@ -54,8 +61,10 @@ class OpNodeService @Autowired constructor(
         nodes.forEach {
             if (it.displayName.isNullOrBlank()) {
                 val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
-                logger.info("[${it.nodeId}|${it.nodeName}|${it.nodeType}|$nodeStringId]" +
-                                " Start to flush node display name")
+                logger.info(
+                    "[${it.nodeId}|${it.nodeName}|${it.nodeType}|$nodeStringId]" +
+                        " Start to flush node display name"
+                )
                 val count = nodeDao.updateDisplayName(
                     dslContext = dslContext,
                     nodeId = it.nodeId,
@@ -63,8 +72,10 @@ class OpNodeService @Autowired constructor(
                     userId = "system"
                 )
                 if (count != 1) {
-                    logger.warn("[${it.nodeId}|${it.nodeName}|${it.nodeType}|$nodeStringId]" +
-                                    " Fail to update the node display name - $count")
+                    logger.warn(
+                        "[${it.nodeId}|${it.nodeName}|${it.nodeType}|$nodeStringId]" +
+                            " Fail to update the node display name - $count"
+                    )
                     return@forEach
                 }
                 updateCnt++
@@ -72,6 +83,40 @@ class OpNodeService @Autowired constructor(
         }
         logger.info("Finish flushing the node display name - $updateCnt")
         return updateCnt
+    }
+
+    fun flushLastBuildPipeline(): Int {
+        var count = 0
+        var page = 1
+        while (true) {
+            val limit = PageUtil.convertPageSizeToSQLLimit(page, 100)
+            val nodes = opNodeDao.listAllNodes(dslContext, NodeType.THIRDPARTY, limit.limit, limit.offset)
+            page += 1
+            val thirdPartyAgentNodeIds = nodes.filter {
+                it.lastBuildPipelineId.isNullOrBlank()
+            }.map { it.nodeId }
+            if (thirdPartyAgentNodeIds.isNotEmpty()) {
+                val thirdPartyAgentMap = opNodeDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds)
+                    .associateBy({ HashUtil.encodeLongId(it.id) }, { it.nodeId })
+                val agentBuilds = client.get(ServiceAgentResource::class).listLatestBuildPipelines(
+                    agentIds = thirdPartyAgentMap.keys.toList()
+                )
+                agentBuilds.forEach {
+                    opNodeDao.updateLastBuildTime(
+                        dslContext = dslContext,
+                        pipelineId = it.pipelineId,
+                        nodeId = thirdPartyAgentMap[it.agentId] ?: return@forEach
+                    )
+                    count += 1
+                    Thread.sleep(10)
+                }
+                Thread.sleep(100)
+            }
+            if (nodes.size < limit.limit) {
+                break
+            }
+        }
+        return count
     }
 
     fun listPage(page: Int, pageSize: Int, nodeName: String?): List<NodeDevCloudInfo> {
