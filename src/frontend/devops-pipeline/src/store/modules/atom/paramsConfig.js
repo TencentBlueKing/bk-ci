@@ -171,10 +171,10 @@ export const DEFAULT_PARAM = {
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
         defaultValueLabelTips: 'defaultValueDesc',
-        containerType: {
-            os: 'LINUX',
-            buildType: 'DOCKER'
-        },
+        // containerType: {
+        //     os: 'LINUX',
+        //     buildType: 'DOCKER'
+        // },
         desc: '',
         options: [],
         type: CONTAINER_TYPE,

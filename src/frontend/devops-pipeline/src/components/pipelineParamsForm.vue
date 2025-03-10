@@ -26,6 +26,7 @@
                     :disabled="disabled"
                     :placeholder="param.placeholder"
                     :is-diff-param="highlightChangedParam && param.isChanged"
+                    :toggle-visible="(isShow) => toggleVisible(isShow, param)"
                 />
                 <span
                     class="meta-data"
@@ -85,6 +86,7 @@
         TEXTAREA,
         REPO_REF,
         getBranchOption,
+        isBuildResourceParam,
         isRepoParam
     } from '@/store/modules/atom/paramsConfig'
 
@@ -120,9 +122,15 @@
             },
             highlightChangedParam: Boolean
         },
+        data () {
+            return {
+                originalParams: []
+            }
+        },
         computed: {
             paramList () {
-                return this.params.map(param => {
+                this.originalParams = this.params
+                return this.originalParams.map(param => {
                     let restParam = {}
                     if (param.type !== STRING || param.type !== TEXTAREA) {
                         if (isRemoteType(param)) {
@@ -143,7 +151,7 @@
                         }
 
                         // codeLib 接口返回的数据没有匹配的默认值,导致回显失效，兼容加上默认值
-                        if (param.type === CODE_LIB) {
+                        if (param.type === CODE_LIB || param.type === CONTAINER_TYPE) {
                             const value = this.paramValues[param.id]
                             const listItemIndex = restParam.list && restParam.list.findIndex(i => i.value === value)
                             if (listItemIndex < 0 && value) {
@@ -255,6 +263,20 @@
             },
             showFileUploader (type) {
                 return isFileParam(type) && this.$route.path.indexOf('preview') > -1
+            },
+            async toggleVisible (isShow, param) {
+                if (isShow && isBuildResourceParam(param.type)) {
+                    const itemList = this.originalParams.find(item => item.id === param.id && param.type === CONTAINER_TYPE)
+                    if (itemList) {
+                        const { data } = await this.$ajax.get(`environment/api/user/envnode/${this.$route.params.projectId}/listNew?nodeType=THIRDPARTY&page=1&pageSize=100`)
+                        const list = data.records.map(item => ({
+                            key: item.displayName,
+                            value: item.displayName
+                        }))
+                        itemList.list = list
+                        itemList.options = list
+                    }
+                }
             }
         }
     }
