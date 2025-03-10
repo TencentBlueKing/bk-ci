@@ -57,7 +57,6 @@ interface OpProjectResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
-        @QueryParam("projectId")
         projectId: Set<String>
     ): Result<Boolean>
 }
