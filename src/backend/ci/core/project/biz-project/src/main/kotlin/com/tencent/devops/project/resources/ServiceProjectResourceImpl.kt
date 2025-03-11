@@ -268,10 +268,11 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun getProjectListByProductId(productId: Int): Result<List<ProjectBaseInfo>> {
+    override fun getProjectListByProductId(productId: Int, tenantId: String): Result<List<ProjectBaseInfo>> {
         return Result(
             projectService.getProjectListByProductId(
-                productId = productId
+                productId = productId,
+                tenantId = tenantId
             )
         )
     }

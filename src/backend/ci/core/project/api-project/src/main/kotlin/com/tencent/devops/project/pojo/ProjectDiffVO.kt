@@ -136,5 +136,7 @@ data class ProjectDiffVO(
     @get:Schema(title = "构建日志归档阈值(单位:万)")
     val loggingLineLimit: Int? = null,
     @get:Schema(title = "审批中构建日志归档阈值(单位:万)")
-    val afterLoggingLineLimit: Int? = null
+    val afterLoggingLineLimit: Int? = null,
+    @get:Schema(title = "租户ID")
+    val tenantId: String
 )

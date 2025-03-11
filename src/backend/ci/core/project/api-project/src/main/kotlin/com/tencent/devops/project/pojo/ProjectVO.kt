@@ -159,5 +159,7 @@ data class ProjectVO(
     @get:Schema(title = "是否可以查看")
     val canView: Boolean? = null,
     @get:Schema(title = "安装模板权限")
-    val pipelineTemplateInstallPerm: Boolean? = null
+    val pipelineTemplateInstallPerm: Boolean? = null,
+    @get:Schema(title = "租户ID")
+    val tenantId: String? = null
 )

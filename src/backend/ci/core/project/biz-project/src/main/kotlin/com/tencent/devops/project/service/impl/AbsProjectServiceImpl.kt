@@ -950,7 +950,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     projectName = it.value1(),
                     englishName = it.value2(),
                     permission = hasVisitPermissionProjectIds.contains(it.value2()),
-                    routerTag = buildRouterTag(it.value3())
+                    routerTag = buildRouterTag(it.value3()),
+                    tenantId = it.value4()
                 )
             )
         }
@@ -1082,7 +1083,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     JsonUtil.to(
                         properties, ProjectProperties::class.java
                     )
-                }?.remotedevManager
+                }?.remotedevManager,
+                tenantId = it.tenantId
             )
         }
     }
@@ -1584,10 +1586,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
     }
 
-    override fun getProjectListByProductId(productId: Int): List<ProjectBaseInfo> {
+    override fun getProjectListByProductId(productId: Int, tenantId: String): List<ProjectBaseInfo> {
         return projectDao.getProjectListByProductId(
             dslContext = dslContext,
-            productId = productId
+            productId = productId,
+            tenantId = TenantUtils.getTenantId(tenantId)
         ).map {
             ProjectBaseInfo(
                 id = it.value1(),

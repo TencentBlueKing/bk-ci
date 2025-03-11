@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
@@ -96,7 +97,8 @@ class SampleImageInitService @Autowired constructor(
                         projectName = imageInitRequest?.projectCode ?: "Demo",
                         englishName = projectCode,
                         description = imageInitRequest?.projectDesc ?: "demo project",
-                        enabled = false
+                        enabled = false,
+                        tenantId = TenantUtils.getTenantId()
                     ),
                     needAuth = false,
                     needValidate = true,

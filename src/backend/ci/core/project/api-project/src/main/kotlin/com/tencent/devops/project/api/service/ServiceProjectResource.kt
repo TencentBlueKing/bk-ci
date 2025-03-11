@@ -372,7 +372,10 @@ interface ServiceProjectResource {
     fun getProjectListByProductId(
         @Parameter(description = "产品ID", required = true)
         @QueryParam("productId")
-        productId: Int
+        productId: Int,
+        @Parameter(description = "租户ID", required = true)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String
     ): Result<List<ProjectBaseInfo>>
 
     @GET

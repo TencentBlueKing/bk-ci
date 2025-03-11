@@ -55,7 +55,6 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record1
-import org.jooq.Record3
 import org.jooq.Record4
 import org.jooq.Result
 import org.jooq.impl.DSL
@@ -613,9 +612,9 @@ class ProjectDao {
         authEnglishNameList: List<String>,
         offset: Int,
         limit: Int
-    ): Result<Record3<String, String, String>> {
+    ): Result<Record4<String, String, String, String>> {
         return with(TProject.T_PROJECT) {
-            dslContext.select(PROJECT_NAME, ENGLISH_NAME, ROUTER_TAG).from(this)
+            dslContext.select(PROJECT_NAME, ENGLISH_NAME, ROUTER_TAG, TENANT_ID).from(this)
                 .where(generateQueryProjectForApplyCondition())
                 .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PUBLIC.value))
                 .or(
@@ -779,11 +778,15 @@ class ProjectDao {
 
     fun getProjectListByProductId(
         dslContext: DSLContext,
-        productId: Int
+        productId: Int,
+        tenantId: String
     ): Result<Record4<Long, String, String, Boolean>> {
         return with(TProject.T_PROJECT) {
-            dslContext.select(ID, ENGLISH_NAME, PROJECT_NAME, ENABLED).from(this)
-                .where(PRODUCT_ID.eq(productId)).fetch()
+            dslContext.select(ID, ENGLISH_NAME, PROJECT_NAME, ENABLED)
+                .from(this)
+                .where(PRODUCT_ID.eq(productId))
+                .and(TENANT_ID.eq(tenantId))
+                .fetch()
         }
     }
 

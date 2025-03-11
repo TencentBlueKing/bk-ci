@@ -162,7 +162,8 @@ class ProjectApprovalService @Autowired constructor(
                 centerId = centerId?.toLong() ?: 0L,
                 centerName = centerName ?: "",
                 kind = kind ?: 0,
-                logoAddress = logoAddr
+                logoAddress = logoAddr,
+                tenantId = tenantId
             )
         }
         dslContext.transaction { configuration ->
@@ -396,7 +397,8 @@ class ProjectApprovalService @Autowired constructor(
                 centerId = centerId?.toLong() ?: 0L,
                 centerName = centerName ?: "",
                 kind = kind ?: 0,
-                logoAddress = logoAddr
+                logoAddress = logoAddr,
+                tenantId = tenantId
             )
         }
         create(

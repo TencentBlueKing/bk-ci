@@ -122,7 +122,8 @@ object ProjectUtils {
                 channelCode = channel,
                 productId = productId,
                 canView = viewPermission,
-                pipelineTemplateInstallPerm = pipelineTemplateInstallPerm
+                pipelineTemplateInstallPerm = pipelineTemplateInstallPerm,
+                tenantId = tenantId
             )
         }
     }
@@ -202,7 +203,8 @@ object ProjectUtils {
                 pipelineNameFormat = projectProperties?.pipelineNameFormat,
                 afterPipelineNameFormat = projectApprovalProperties?.pipelineNameFormat,
                 loggingLineLimit = projectProperties?.loggingLineLimit,
-                afterLoggingLineLimit = projectApprovalProperties?.loggingLineLimit
+                afterLoggingLineLimit = projectApprovalProperties?.loggingLineLimit,
+                tenantId = tenantId
             )
         }
     }

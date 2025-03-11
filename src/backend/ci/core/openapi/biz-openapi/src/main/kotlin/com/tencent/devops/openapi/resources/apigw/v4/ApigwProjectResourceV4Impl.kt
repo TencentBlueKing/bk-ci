@@ -185,11 +185,13 @@ class ApigwProjectResourceV4Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String?,
+        tenantId: String?,
         productId: Int
     ): Result<List<ProjectBaseInfo>> {
-        logger.info("getProjectListByProductId v4 |$appCode|$userId|$productId")
+        logger.info("getProjectListByProductId v4 |$appCode|$userId|$productId|$tenantId")
         return client.get(ServiceProjectResource::class).getProjectListByProductId(
-            productId = productId
+            productId = productId,
+            tenantId = TenantUtils.getTenantId(tenantId)
         )
     }
 

@@ -232,7 +232,8 @@ class StreamBasicSettingService @Autowired constructor(
                     centerName = "",
                     secrecy = false,
                     kind = 0,
-                    properties = ProjectProperties(PipelineAsCodeSettings(defaultEnable != false))
+                    properties = ProjectProperties(PipelineAsCodeSettings(defaultEnable != false)),
+                    tenantId = TenantUtils.getTenantId()
                 ),
                 needValidate = false,
                 needAuth = false,

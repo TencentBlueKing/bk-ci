@@ -238,6 +238,9 @@ interface ApigwProjectResourceV4 {
         @Parameter(description = "userId")
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String?,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String?,
         @Parameter(description = "产品ID", required = true)
         @QueryParam("productId")
         productId: Int
