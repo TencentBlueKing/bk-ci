@@ -75,4 +75,18 @@ interface UserProjectServiceResource {
         @QueryParam("collector")
         collector: Boolean
     ): Result<Boolean>
+
+    @GET
+    @Path("/services/{serviceId}/url/get")
+    @Operation(summary = "查询服务跳转地址")
+    fun getServiceUrl(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String?,
+        @Parameter(description = "服务ID", required = true)
+        @PathParam("serviceId")
+        serviceId: Long
+    ): Result<String>
 }
