@@ -29,55 +29,39 @@ package com.tencent.devops.process.pojo.pipeline
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "构建模型-ID")
-data class SubPipelineStartUpInfo(
+@SuppressWarnings("LongParameterList")
+@Schema(title = "流水线构建参数属性信息")
+open class PipelineBuildParamFormProp(
     @get:Schema(title = "参数key值", required = true)
-    override val key: String,
+    open val key: String,
     @get:Schema(title = "key值是否可以更改", required = true)
-    override val keyDisable: Boolean,
+    open val keyDisable: Boolean,
     @get:Schema(title = "key值前端组件类型", required = true)
-    override val keyType: String,
+    open val keyType: String,
     @get:Schema(title = "key值获取方式", required = true)
-    override val keyListType: String,
+    open val keyListType: String,
     @get:Schema(title = "key值获取路径", required = true)
-    override val keyUrl: String,
+    open val keyUrl: String,
     @get:Schema
-    override val keyUrlQuery: List<String>,
+    open val keyUrlQuery: List<String>,
     @get:Schema(title = "key值获取集合", required = true)
-    override val keyList: List<StartUpInfo>,
+    open val keyList: List<StartUpInfo>,
     @get:Schema(title = "key值是否多选", required = true)
-    override val keyMultiple: Boolean,
+    open val keyMultiple: Boolean,
     @get:Schema(title = "参数value值", required = true)
-    override val value: Any,
+    open val value: Any,
     @get:Schema(title = "value值是否可以更改", required = true)
-    override val valueDisable: Boolean,
+    open val valueDisable: Boolean,
     @get:Schema(title = "value值前端组件类型", required = true)
-    override val valueType: String,
+    open val valueType: String,
     @get:Schema(title = "value值获取方式", required = true)
-    override val valueListType: String,
+    open val valueListType: String,
     @get:Schema(title = "value值获取路径", required = true)
-    override val valueUrl: String,
+    open val valueUrl: String,
     @get:Schema
-    override val valueUrlQuery: List<String>,
+    open val valueUrlQuery: List<String>,
     @get:Schema(title = "value值获取集合", required = true)
-    override val valueList: List<StartUpInfo>,
+    open val valueList: List<StartUpInfo>,
     @get:Schema(title = "value值是否多选", required = true)
-    override val valueMultiple: Boolean
-) : PipelineBuildParamFormProp(
-    key = key,
-    keyDisable = keyDisable,
-    keyType = keyType,
-    keyListType = keyListType,
-    keyUrl = keyUrl,
-    keyUrlQuery = keyUrlQuery,
-    keyList = keyList,
-    keyMultiple = keyMultiple,
-    value = value,
-    valueDisable = valueDisable,
-    valueType = valueType,
-    valueListType = valueListType,
-    valueUrl = valueUrl,
-    valueUrlQuery = valueUrlQuery,
-    valueList = valueList,
-    valueMultiple = valueMultiple
+    open val valueMultiple: Boolean
 )

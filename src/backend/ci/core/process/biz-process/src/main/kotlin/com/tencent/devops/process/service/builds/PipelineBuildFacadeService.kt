@@ -124,7 +124,9 @@ import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.BuildRecordInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
+import com.tencent.devops.process.pojo.pipeline.PipelineBuildParamFormProp
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
+import com.tencent.devops.process.pojo.pipeline.StartUpInfo
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.PipelineTaskPauseService
@@ -285,42 +287,15 @@ class PipelineBuildFacadeService(
                 param.value = param.defaultValue
             }
         }
-
-        // #2902 默认增加构建信息
-        val params = mutableListOf<BuildFormProperty>()
-        if (!debug) params.add(
-            BuildFormProperty(
-                id = PIPELINE_BUILD_MSG,
-                required = true,
-                type = BuildFormPropertyType.STRING,
-                defaultValue = "",
-                value = "",
-                options = null,
-                desc = I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BUILD_MSG_DESC,
-                    language = I18nUtil.getLanguage(userId)
-                ),
-                repoHashId = null,
-                relativePath = null,
-                scmType = null,
-                containerType = null,
-                glob = null,
-                properties = null,
-                label = I18nUtil.getCodeLanMessage(messageCode = ProcessMessageCode.BUILD_MSG_LABEL),
-                placeholder = I18nUtil.getCodeLanMessage(messageCode = ProcessMessageCode.BUILD_MSG_MANUAL),
-                propertyType = BuildPropertyType.BUILD.name
-            )
+        // 构建参数
+        val params = getBuildManualParams(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            userId = userId,
+            triggerParams = triggerContainer.params,
+            checkPermission = false, // 已校验权限
+            debug = debug
         )
-        params.addAll(
-            filterParams(
-                userId = if (checkPermission) userId else null,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                params = triggerContainer.params
-            )
-        )
-
-        BuildPropertyCompatibilityTools.fix(params)
 
         val currentBuildNo = triggerContainer.buildNo?.apply {
             currentBuildNo = pipelineRepositoryService.getBuildNo(
@@ -2729,6 +2704,162 @@ class PipelineBuildFacadeService(
             errorCode = ProcessMessageCode.ERROR_RESTART_EXSIT,
             params = arrayOf(buildId)
         )
+    }
+
+    fun getBuildParamFormProp(
+        projectId: String,
+        pipelineId: String,
+        includeConst: Boolean?,
+        includeNotRequired: Boolean?,
+        userId: String,
+        version: Int?
+    ):List<PipelineBuildParamFormProp> {
+        val (pipeline, resource, debug) = pipelineRepositoryService.getBuildTriggerInfo(
+            projectId, pipelineId, version
+        )
+        val model = resource.model
+        val triggerContainer = model.getTriggerContainer()
+        val properties = getBuildManualParams(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            userId = userId,
+            debug = false,
+            checkPermission = true,
+            triggerParams = triggerContainer.params
+        )
+        val parameter = ArrayList<PipelineBuildParamFormProp>()
+        val prop = properties.filter {
+            val const = if (includeConst == false) { it.constant != true } else { true }
+            val required = if (includeNotRequired == false) { it.required } else { true }
+            const && required
+        }
+        for (item in prop) {
+            if (item.type == BuildFormPropertyType.MULTIPLE || item.type == BuildFormPropertyType.ENUM) {
+                val keyList = ArrayList<StartUpInfo>()
+                val valueList = ArrayList<StartUpInfo>()
+                val defaultValue = item.defaultValue.toString()
+                for (option in item.options!!) {
+                    valueList.add(
+                        StartUpInfo(
+                            option.key,
+                            option.value
+                        )
+                    )
+                }
+                val info = PipelineBuildParamFormProp(
+                    key = item.id,
+                    keyDisable = true,
+                    keyType = "input",
+                    keyListType = "",
+                    keyUrl = "",
+                    keyUrlQuery = ArrayList(),
+                    keyList = keyList,
+                    keyMultiple = false,
+                    value = if (item.type == BuildFormPropertyType.MULTIPLE) {
+                        if (defaultValue.isBlank()) {
+                            ArrayList()
+                        } else {
+                            defaultValue.split(",")
+                        }
+                    } else {
+                        defaultValue
+                    },
+                    valueDisable = false,
+                    valueType = "select",
+                    valueListType = "list",
+                    valueUrl = "",
+                    valueUrlQuery = ArrayList(),
+                    valueList = valueList,
+                    valueMultiple = item.type == BuildFormPropertyType.MULTIPLE
+                )
+                parameter.add(info)
+            } else {
+                val keyList = ArrayList<StartUpInfo>()
+                val valueList = ArrayList<StartUpInfo>()
+                val info = PipelineBuildParamFormProp(
+                    key = item.id,
+                    keyDisable = true,
+                    keyType = "input",
+                    keyListType = "",
+                    keyUrl = "",
+                    keyUrlQuery = ArrayList(),
+                    keyList = keyList,
+                    keyMultiple = false,
+                    value = item.defaultValue,
+                    valueDisable = false,
+                    valueType = "input",
+                    valueListType = "",
+                    valueUrl = "",
+                    valueUrlQuery = ArrayList(),
+                    valueList = valueList,
+                    valueMultiple = false
+                )
+                parameter.add(info)
+            }
+        }
+        return parameter
+    }
+
+    private fun getBuildManualParams(
+        projectId: String,
+        pipelineId: String,
+        userId: String?,
+        debug: Boolean,
+        checkPermission: Boolean,
+        triggerParams: List<BuildFormProperty>
+    ): List<BuildFormProperty> {
+        if (checkPermission) { // 不用校验查看权限，只校验执行权限
+            val permission = AuthPermission.EXECUTE
+            pipelinePermissionService.validPipelinePermission(
+                userId = userId!!,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = permission,
+                message = MessageUtil.getMessageByLocale(
+                    CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(
+                        userId, projectId, permission.getI18n(I18nUtil.getLanguage(userId)), pipelineId
+                    )
+                )
+            )
+        }
+        // #2902 默认增加构建信息
+        val params = mutableListOf<BuildFormProperty>()
+        if (!debug) params.add(
+            BuildFormProperty(
+                id = PIPELINE_BUILD_MSG,
+                required = true,
+                type = BuildFormPropertyType.STRING,
+                defaultValue = "",
+                value = "",
+                options = null,
+                desc = I18nUtil.getCodeLanMessage(
+                    messageCode = ProcessMessageCode.BUILD_MSG_DESC,
+                    language = I18nUtil.getLanguage(userId)
+                ),
+                repoHashId = null,
+                relativePath = null,
+                scmType = null,
+                containerType = null,
+                glob = null,
+                properties = null,
+                label = I18nUtil.getCodeLanMessage(messageCode = ProcessMessageCode.BUILD_MSG_LABEL),
+                placeholder = I18nUtil.getCodeLanMessage(messageCode = ProcessMessageCode.BUILD_MSG_MANUAL),
+                propertyType = BuildPropertyType.BUILD.name
+            )
+        )
+        params.addAll(
+            filterParams(
+                userId = if (checkPermission) userId else null,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                params = triggerParams
+            )
+        )
+
+        BuildPropertyCompatibilityTools.fix(params)
+        return params
     }
 
     private fun buildRestartPipeline(

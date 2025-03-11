@@ -36,6 +36,7 @@ import com.tencent.devops.process.pojo.BuildFormRepositoryValue
 import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
 import com.tencent.devops.common.pipeline.pojo.BuildParameterGroup
+import com.tencent.devops.process.pojo.pipeline.PipelineBuildParamFormProp
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -201,4 +202,28 @@ interface UserBuildParametersResource {
         @QueryParam("search")
         search: String?
     ): Result<List<BuildFormValue>>
+
+    @Operation(summary = "查询流水线启动参数信息[下拉选填充]")
+    @GET
+    @Path("/{projectId}/{pipelineId}/buildParamFormProp")
+    fun buildParamFormProp(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "是否包含常量", required = false, example = "")
+        @QueryParam("includeConst")
+        includeConst: Boolean? = true,
+        @Parameter(description = "是否包含非入参", required = false, example = "")
+        @QueryParam("includeNotRequired")
+        includeNotRequired: Boolean? = true,
+        @Parameter(description = "当前流水线版本", required = false, example = "")
+        @QueryParam("version")
+        version: Int? = null
+    ): Result<List<PipelineBuildParamFormProp>>
 }

@@ -461,77 +461,33 @@ class SubPipelineStartUpService @Autowired constructor(
         } else {
             userId
         }
-        val result = pipelineBuildFacadeService.buildManualStartupInfo(oauthUser, projectId, pipelineId, ChannelCode.BS)
-        val parameter = ArrayList<SubPipelineStartUpInfo>()
-        val prop = result.properties.filter {
-            val const = if (includeConst == false) { it.constant != true } else { true }
-            val required = if (includeNotRequired == false) { it.required } else { true }
-            const && required
-        }
-
-        for (item in prop) {
-            if (item.type == BuildFormPropertyType.MULTIPLE || item.type == BuildFormPropertyType.ENUM) {
-                val keyList = ArrayList<StartUpInfo>()
-                val valueList = ArrayList<StartUpInfo>()
-                val defaultValue = item.defaultValue.toString()
-                for (option in item.options!!) {
-                    valueList.add(
-                        StartUpInfo(
-                            option.key,
-                            option.value
-                        )
-                    )
-                }
-                val info = SubPipelineStartUpInfo(
-                    key = item.id,
-                    keyDisable = true,
-                    keyType = "input",
-                    keyListType = "",
-                    keyUrl = "",
-                    keyUrlQuery = ArrayList(),
-                    keyList = keyList,
-                    keyMultiple = false,
-                    value = if (item.type == BuildFormPropertyType.MULTIPLE) {
-                        if (defaultValue.isBlank()) {
-                            ArrayList()
-                        } else {
-                            defaultValue.split(",")
-                        }
-                    } else {
-                        defaultValue
-                    },
-                    valueDisable = false,
-                    valueType = "select",
-                    valueListType = "list",
-                    valueUrl = "",
-                    valueUrlQuery = ArrayList(),
-                    valueList = valueList,
-                    valueMultiple = item.type == BuildFormPropertyType.MULTIPLE
-                )
-                parameter.add(info)
-            } else {
-                val keyList = ArrayList<StartUpInfo>()
-                val valueList = ArrayList<StartUpInfo>()
-                val info = SubPipelineStartUpInfo(
-                    key = item.id,
-                    keyDisable = true,
-                    keyType = "input",
-                    keyListType = "",
-                    keyUrl = "",
-                    keyUrlQuery = ArrayList(),
-                    keyList = keyList,
-                    keyMultiple = false,
-                    value = item.defaultValue,
-                    valueDisable = false,
-                    valueType = "input",
-                    valueListType = "",
-                    valueUrl = "",
-                    valueUrlQuery = ArrayList(),
-                    valueList = valueList,
-                    valueMultiple = false
-                )
-                parameter.add(info)
-            }
+        val parameter = pipelineBuildFacadeService.getBuildParamFormProp(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            includeConst = includeConst,
+            includeNotRequired = includeNotRequired,
+            userId = oauthUser,
+            version = null
+        ).map {
+            // 将参数值平移到SubPipelineStartUpInfo中
+            SubPipelineStartUpInfo(
+                key = it.key,
+                keyDisable = it.keyDisable,
+                keyType = it.keyType,
+                keyListType = it.keyListType,
+                keyUrl = it.keyUrl,
+                keyUrlQuery = it.keyUrlQuery,
+                keyList = it.keyList,
+                keyMultiple = it.keyMultiple,
+                value = it.value,
+                valueDisable = it.valueDisable,
+                valueType = it.valueType,
+                valueListType = it.valueListType,
+                valueUrl = it.valueUrl,
+                valueUrlQuery = it.valueUrlQuery,
+                valueList = it.valueList,
+                valueMultiple = it.valueMultiple
+            )
         }
         return Result(parameter)
     }
