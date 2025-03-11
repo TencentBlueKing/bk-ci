@@ -148,8 +148,7 @@ class RbacProjectPermissionService(
             projectApprovalService.update(
                 userId = userId,
                 projectUpdateInfo = projectUpdateInfo,
-                approvalStatus = resourceUpdateInfo.approvalStatus,
-                subjectScopes = subjectScopes
+                approvalStatus = resourceUpdateInfo.approvalStatus
             )
         }
         try {

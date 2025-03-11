@@ -89,8 +89,7 @@ class ProjectApprovalService @Autowired constructor(
     fun update(
         userId: String,
         projectUpdateInfo: ProjectUpdateInfo,
-        approvalStatus: Int,
-        subjectScopes: List<SubjectScopeInfo>
+        approvalStatus: Int
     ): Int {
         val tipsStatus = when (approvalStatus) {
             ProjectApproveStatus.CREATE_PENDING.status -> ProjectTipsStatus.SHOW_CREATE_PENDING.status
