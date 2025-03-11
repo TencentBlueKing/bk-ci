@@ -166,6 +166,26 @@ export function extendParsePathAlias (type, path, authType, svnType) {
             msg = `${codelibLocaleObj.tgitRule}${type}${codelibLocaleObj.address}`
             nameMatchIndex = 2
             break
+        case isScmSvn(type) && svnType === 'SSH':
+            reg = /^svn\+ssh\:\/\/([\@\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)$/i
+            msg = `${codelibLocaleObj.svnSshRule}${type}${codelibLocaleObj.address}`
+            nameMatchIndex = 3
+            break
+        case isScmSvn(type) && (svnType === 'HTTPS' || svnType === 'OAUTH'):
+            reg = /^(http|https|svn)\:\/\/([\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)$/i
+            msg = `${codelibLocaleObj.httpRule}${type}${codelibLocaleObj.address}`
+            nameMatchIndex = 4
+            break
+        case isScmGit(type) && (svnType === 'HTTPS' || svnType === 'OAUTH'):
+            reg = /^https?\:\/\/([\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)\.git$/i
+            msg = `${codelibLocaleObj.httpOrHttpsRule}`
+            nameMatchIndex = 3
+            break
+        case isScmGit(type) && svnType === 'SSH':
+            reg = /^(git@)([\-\.a-z0-9A-Z]+)\:(.*).git$/i
+            msg = `${codelibLocaleObj.gitlabSshRule}`
+            nameMatchIndex = 3
+            break
     }
 
     const matchResult = path.match(reg)
