@@ -76,6 +76,7 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
                         try {
                             JsonUtil.to(str, CustomFileVersionControlInfo::class.java)
                         } catch (ignore: Throwable) {
+                            logger.warn("parseTriggerParam|CUSTOM_FILE|$projectId|$pipelineId|param=$param", ignore)
                             null
                         }
                     }
