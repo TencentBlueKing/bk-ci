@@ -622,6 +622,12 @@ class ExpertSupportService @Autowired constructor(
         if (!data.valid) {
             return data
         }
+        workspaceDao.updateWorkspaceStatus(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            status = WorkspaceStatus.EXPANDING
+        )
+
         workspaceOpHistoryDao.createWorkspaceHistory(
             dslContext = dslContext,
             workspaceName = workspaceName,
@@ -660,6 +666,12 @@ class ExpertSupportService @Autowired constructor(
             workspaceName = workspaceName,
             action = WorkspaceAction.EXPAND_DISK
         )?.actionMsg ?: ""
+
+        workspaceDao.updateWorkspaceStatus(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            status = WorkspaceStatus.RUNNING
+        )
 
         notifyControl.notify4UserAndCCRemoteDevManager(
             userIds = mutableSetOf(operator),

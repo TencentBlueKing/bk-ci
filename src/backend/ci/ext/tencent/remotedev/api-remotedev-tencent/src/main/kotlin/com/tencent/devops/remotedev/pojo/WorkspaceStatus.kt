@@ -61,7 +61,8 @@ enum class WorkspaceStatus {
     EXCEPTION_ABNORMAL_AFTER_RUNNING, // 20 异常 运行后异常
     EXCEPTION_ABNORMAL_AFTER_READY, // 21 异常 准备后异常
     EXCEPTION_CREATE_FAILED, // 22 异常 创建异常
-    CLONING; // 23 正在克隆
+    CLONING, // 23 正在克隆
+    EXPANDING;   // 24 磁盘扩容中
 
     enum class Types {
         USING {
@@ -122,7 +123,7 @@ enum class WorkspaceStatus {
     fun checkInUse() = !checkDeleted() && !checkException()
     fun checkInProcess() = this == RESTARTING || this == MAKING_IMAGE || this == REBUILDING ||
         this == STARTING || this == SLEEPING || this == DELETING || this == STOPPING || this == UPGRADING ||
-        this == CLONING
+        this == CLONING || this == EXPANDING
 
     /**
      * 当正在做某事时，不能新建任务去执行
@@ -130,7 +131,7 @@ enum class WorkspaceStatus {
     fun notOk2doNextAction() =
         this == STARTING || this == SLEEPING || this == DELETING || this == STOPPING ||
             this == RESTARTING || this == MAKING_IMAGE || this == REBUILDING || this == UPGRADING ||
-            this == CLONING
+            this == CLONING || this == EXPANDING
 
     companion object {
         fun load(index: Int): WorkspaceStatus {
@@ -169,6 +170,7 @@ fun WorkspaceStatus.display(): String {
         WorkspaceStatus.EXCEPTION_ABNORMAL_AFTER_READY -> "准备后异常"
         WorkspaceStatus.EXCEPTION_CREATE_FAILED -> "创建异常"
         WorkspaceStatus.CLONING -> "克隆中"
+        WorkspaceStatus.EXPANDING -> "磁盘扩容中"
     }
 }
 
