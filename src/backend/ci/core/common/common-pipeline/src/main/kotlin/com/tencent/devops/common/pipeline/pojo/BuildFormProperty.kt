@@ -98,3 +98,11 @@ data class BuildFormProperty(
     @get:Schema(title = "级联选择器属性", required = false)
     var cascadeProps: BuildCascadeProps? = null
 )
+
+@Schema(title = "构建模型-自定义路径拆分的版本控制信息")
+data class CustomFileVersionControlInfo(
+    @get:Schema(title = "完整目录", required = false)
+    var directory: String,
+    @get:Schema(title = "目录随机字符串", required = false)
+    var randomStringInPath: String,
+)
