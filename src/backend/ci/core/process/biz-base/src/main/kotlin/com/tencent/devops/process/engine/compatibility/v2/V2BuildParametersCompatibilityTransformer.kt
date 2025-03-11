@@ -72,9 +72,9 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
 //            }
                 param.type == BuildFormPropertyType.CUSTOM_FILE && param.enableVersionControl == true -> {
                     // 与前端约定，对于自定义文件路径需要，解析出版本控制信息
-                    val versionControlInfo = param.value?.let { str ->
+                    val versionControlInfo = paramValues[key]?.let { str ->
                         try {
-                            JsonUtil.to(str.toString(), CustomFileVersionControlInfo::class.java)
+                            JsonUtil.to(str, CustomFileVersionControlInfo::class.java)
                         } catch (ignore: Throwable) {
                             null
                         }
