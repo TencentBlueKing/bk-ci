@@ -29,6 +29,7 @@ package com.tencent.devops.process.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
@@ -44,6 +45,7 @@ import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineRemoteToken
 import com.tencent.devops.process.pojo.PipelineSortType
@@ -627,4 +629,34 @@ interface UserPipelineResource {
         @PathParam("projectId")
         projectId: String
     ): Result<PipelineCount>
+
+    @Operation(summary = "获取继承项目方言的流水线数量")
+    @GET
+    @Path("{projectId}/countInheritedDialectPipeline")
+    fun countInheritedDialectPipeline(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<Long>
+
+    @Operation(summary = "获取流水线列表根据流水线方言")
+    @GET
+    @Path("{projectId}/listInheritedDialectPipelines")
+    fun listInheritedDialectPipelines(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页多少条", required = false, example = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<SQLPage<PipelineIdAndName>>
 }

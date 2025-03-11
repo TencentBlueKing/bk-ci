@@ -5,6 +5,7 @@ import {
   STORE_PERFIX,
   USER_PERFIX,
   OPERATE_CHANNEL,
+  PIPELINES_PERFIX,
 } from './constants';
 import http from './fetch';
 export default {
@@ -373,5 +374,38 @@ export default {
   */
   getIsDirectRemove(projectId: string, groupId: number, params: any) {
     return http.DELETE(`${IAM_PERFIX}/member/${projectId}/single/${groupId}/${OPERATE_CHANNEL}/remove`, params);
-  }
+  },
+  /**
+   * 获取资源授权管理数量
+   */
+  getResourceType2CountOfHandover(params: any) {
+    return http.post(`${USER_PERFIX}/auth/handover/getResourceType2CountOfHandover`, params);
+  },
+  /**
+   * 获取交接单中授权相关
+   */
+  listAuthorizationsOfHandover(params: any) {
+    return http.post(`${USER_PERFIX}/auth/handover/listAuthorizationsOfHandover`, params);
+  },
+  /**
+   * 获取交接单中用户组相关
+   */
+  listGroupsOfHandover(params: any) {
+    return http.post(`${USER_PERFIX}/auth/handover/listGroupsOfHandover`, params);
+  },
+  /**
+   * 根据流水线方言获取流水线数量
+   */
+  countInheritedDialectPipeline(projectId: string) {
+    return http.get(`${PIPELINES_PERFIX}/${projectId}/countInheritedDialectPipeline`);
+  },
+  /**
+   * 根据流水线方言获取流水线列表
+   */
+  listInheritedDialectPipelines(projectId: string, params: any) {
+    const query = new URLSearchParams({
+      ...params,
+    }).toString();
+    return http.get(`${PIPELINES_PERFIX}/${projectId}/listInheritedDialectPipelines?${query}`);
+  },
 };

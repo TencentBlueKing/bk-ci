@@ -358,8 +358,8 @@
             errorList () {
                 return this.execDetail?.errorInfoList?.map((error, index) => ({
                 ...error,
-                errorTypeAlias: this.$t(errorTypeMap[error.errorType].title),
-                errorTypeConf: errorTypeMap[error.errorType]
+                errorTypeAlias: this.$t(errorTypeMap[error.errorType]?.title ?? errorTypeMap[0]?.title),
+                errorTypeConf: errorTypeMap[error.errorType] ?? errorTypeMap[0]
             }))
             },
             showErrorPopup () {

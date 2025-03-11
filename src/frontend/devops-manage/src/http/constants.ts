@@ -5,4 +5,6 @@ export const PROJECT_PERFIX = '/ms/project/api';
 export const IAM_PERFIX = '/ms/auth/api/user/auth/resource';
 export const ITSM_PERFIX = '/ms/auth/api/user/auth/itsm';
 export const USER_PERFIX = '/ms/auth/api/user';
+export const PIPELINES_PERFIX = 'ms/process/api/user/pipelines';
+
 export const OPERATE_CHANNEL = 'MANAGER';

@@ -256,6 +256,12 @@ spring:
       - index: 65
         name: T_PIPELINE_BUILD_HISTORY_DEBUG
         databaseShardingStrategy: SHARDING
+      - index: 66
+        name: T_PIPELINE_CALLBACK
+        databaseShardingStrategy: SHARDING
+      - index: 67
+        name: T_PIPELINE_SUB_REF
+        databaseShardingStrategy: SHARDING
 
 endpoints:
   metrics:
@@ -327,7 +333,7 @@ auth:
   accessToken:
     enabled: __BK_CI_API_TOKEN_ENABLED__
     secret: __BK_CI_API_TOKEN_SECRET__
-    expirationTime: __BK_CI_API_TOKEN_EXPIRED_MILLISECOND__
+    expirationTime: "__BK_CI_API_TOKEN_EXPIRED_MILLISECOND__"
   gateway:
     devopsToken: __BK_CI_DEVOPS_TOKEN__
 

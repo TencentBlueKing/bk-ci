@@ -64,6 +64,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
@@ -308,7 +309,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         useSubscriptionSettings: Boolean? = false,
         useConcurrencyGroup: Boolean? = false,
         description: String? = null,
-        yamlInfo: PipelineYamlVo? = null
+        yamlInfo: PipelineYamlVo? = null,
+        pipelineDisable: Boolean? = null
     ): DeployPipelineResult {
         val watcher =
             Watcher(id = "createPipeline|$projectId|$userId|$channelCode|$checkPermission|$instanceType|$fixPipelineId")
@@ -444,7 +446,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                     description = description,
                     yaml = yaml,
                     baseVersion = null,
-                    yamlInfo = yamlInfo
+                    yamlInfo = yamlInfo,
+                    pipelineDisable = pipelineDisable
                 )
                 pipelineId = result.pipelineId
                 watcher.stop()
@@ -601,7 +604,8 @@ class PipelineInfoFacadeService @Autowired constructor(
             versionStatus = versionStatus,
             branchName = branchName,
             description = description,
-            yamlInfo = yamlInfo
+            yamlInfo = yamlInfo,
+            pipelineDisable = newResource.setting.runLockType == PipelineRunLockType.LOCK
         )
     }
 
@@ -662,7 +666,8 @@ class PipelineInfoFacadeService @Autowired constructor(
             versionStatus = versionStatus,
             branchName = branchName,
             description = description,
-            yamlInfo = yamlInfo
+            yamlInfo = yamlInfo,
+            pipelineDisable = newResource.setting.runLockType == PipelineRunLockType.LOCK
         )
     }
 
@@ -995,7 +1000,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         branchName: String? = null,
         description: String? = null,
         baseVersion: Int? = null,
-        yamlInfo: PipelineYamlVo? = null
+        yamlInfo: PipelineYamlVo? = null,
+        pipelineDisable: Boolean? = null
     ): DeployPipelineResult {
         if (checkTemplate && templateService.isTemplatePipeline(projectId, pipelineId)) {
             throw ErrorCodeException(
@@ -1084,6 +1090,18 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
                 modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, model, param)
             }
+            val templateId = model.templateId
+
+            if (templateId != null) {
+                // 如果是根据模板创建的流水线需为model设置srcTemplateId
+                model.srcTemplateId = templateDao.getSrcTemplateId(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    templateId = templateId,
+                    type = TemplateType.CONSTRAINT.name
+                )
+            }
+
             val deployResult = pipelineRepositoryService.deployPipeline(
                 model = model,
                 projectId = projectId,
@@ -1098,7 +1116,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 description = description,
                 yaml = yaml,
                 baseVersion = baseVersion,
-                yamlInfo = yamlInfo
+                yamlInfo = yamlInfo,
+                pipelineDisable = pipelineDisable
             )
             // 审计
             ActionAuditContext.current()
@@ -1563,6 +1582,19 @@ class PipelineInfoFacadeService @Autowired constructor(
         if (!pipelineRepositoryService.updateLocked(userId, projectId, pipelineId, locked)) { // 可能重复操作，不打扰用户
             logger.warn("Locked Pipeline|$userId|$projectId|$pipelineId|locked=$locked, may be duplicated")
         }
+        operationLogService.addOperationLog(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = 0,
+            operationLogType = if (locked) {
+                OperationLogType.DISABLE_PIPELINE
+            } else {
+                OperationLogType.ENABLE_PIPELINE
+            },
+            params = "",
+            description = null
+        )
 
         return info
     }

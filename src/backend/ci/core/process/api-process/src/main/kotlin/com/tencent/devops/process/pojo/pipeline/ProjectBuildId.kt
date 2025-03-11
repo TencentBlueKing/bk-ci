@@ -34,5 +34,7 @@ data class ProjectBuildId(
     @get:Schema(title = "构建ID", required = true)
     val id: String,
     @get:Schema(title = "项目ID", required = true)
-    val projectId: String
+    val projectId: String,
+    @get:Schema(title = "构建序号", required = false)
+    val buildNum: Int? = null
 )

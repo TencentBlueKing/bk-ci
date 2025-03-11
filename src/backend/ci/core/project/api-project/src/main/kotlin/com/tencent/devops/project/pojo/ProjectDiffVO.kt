@@ -132,5 +132,9 @@ data class ProjectDiffVO(
     @get:Schema(title = "流水线命名格式")
     val pipelineNameFormat: String? = null,
     @get:Schema(title = "审批中流水线命名格式")
-    val afterPipelineNameFormat: String? = null
+    val afterPipelineNameFormat: String? = null,
+    @get:Schema(title = "构建日志归档阈值(单位:万)")
+    val loggingLineLimit: Int? = null,
+    @get:Schema(title = "审批中构建日志归档阈值(单位:万)")
+    val afterLoggingLineLimit: Int? = null
 )
