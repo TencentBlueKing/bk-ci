@@ -350,6 +350,7 @@ class RepositoryScmConfigService @Autowired constructor(
         repositoryScmConfigDao.delete(dslContext = dslContext, scmCode = scmCode)
     }
 
+    @Suppress("NestedBlockDepth")
     fun uploadLogo(
         userId: String,
         contentLength: Long,
