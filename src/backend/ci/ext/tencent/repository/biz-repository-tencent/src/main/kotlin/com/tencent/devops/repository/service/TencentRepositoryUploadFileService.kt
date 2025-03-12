@@ -21,9 +21,10 @@ class TencentRepositoryUploadFileService @Autowired constructor(
     private val client: Client
 ) : RepositoryUploadFileService {
 
-    override fun uploadFile(userId: String, file: File): String {
+    override fun uploadFile(userId: String, file: File, filePath: String): String {
         val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
-        OkhttpUtils.uploadFile("$serviceUrlPrefix/service/file/upload?userId=$userId", file).use { response ->
+        var serviceUrl = "$serviceUrlPrefix/service/file/upload?userId=$userId&fileRepoPath=$filePath"
+        OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
             val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.warn("$userId upload file:${file.name} fail,responseContent:$responseContent")
