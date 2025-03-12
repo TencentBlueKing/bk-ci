@@ -32,5 +32,5 @@ import java.io.File
  * 仓库上传文件服务
  */
 interface RepositoryUploadFileService {
-    fun uploadFile(userId: String, file: File): String
+    fun uploadFile(userId: String, file: File, filePath: String): String
 }

@@ -43,7 +43,7 @@ import java.io.File
 class DefaultRepositoryUploadFileService @Autowired constructor(
     private val client: Client
 ) : RepositoryUploadFileService {
-    override fun uploadFile(userId: String, file: File): String {
+    override fun uploadFile(userId: String, file: File, filePath: String): String {
         val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
         val logoUrl = CommonUtils.serviceUploadFile(
             userId = userId,
@@ -51,7 +51,8 @@ class DefaultRepositoryUploadFileService @Autowired constructor(
             file = file,
             fileChannelType = FileChannelTypeEnum.WEB_SHOW.name,
             staticFlag = true,
-            language = I18nUtil.getLanguage(userId)
+            language = I18nUtil.getLanguage(userId),
+            fileRepoPath = filePath
         ).data
         // 开源版如果logoUrl的域名和ci域名一样，则logoUrl无需带上域名，防止域名变更影响图片显示（logoUrl会存db）
         return logoUrl?.removePrefix(HomeHostUtil.innerServerHost()) ?: ""

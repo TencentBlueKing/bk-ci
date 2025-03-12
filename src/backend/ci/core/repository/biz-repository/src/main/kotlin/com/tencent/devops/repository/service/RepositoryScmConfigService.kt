@@ -427,7 +427,8 @@ class RepositoryScmConfigService @Autowired constructor(
                 output.close()
             }
         }
-        val logoUrl = uploadFileService.uploadFile(userId, file)
+        val filePath = "file/$fileType/${UUIDUtil.generate()}.$fileType"
+        val logoUrl = uploadFileService.uploadFile(userId, file, filePath)
         logger.info("uploadStoreLogo logoUrl is:$logoUrl")
         return RepositoryConfigLogoInfo(logoUrl)
     }
