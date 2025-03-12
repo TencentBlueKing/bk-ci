@@ -192,7 +192,7 @@ class TaskControl @Autowired constructor(
                                 taskParam.dispatchType is ThirdPartyAgentIDDispatchType)
                     ) {
                         // #11546 第三方构建机调度兜底
-                        loopDispatch(buildTask = buildTask, loopDelayMills = 3 * 60 * 1000)
+                        loopDispatch(buildTask = buildTask)
                     }
                 }
             } else {
@@ -242,17 +242,6 @@ class TaskControl @Autowired constructor(
             } else {
                 DEFAULT_DELAY
             }
-        // 将执行结果参数写回事件消息中，方便再次传递
-        taskParam.putAll(buildTask.taskParams)
-        delayMills = loopDelayMills
-        actionType = ActionType.REFRESH // 尝试刷新任务状态
-        pipelineEventDispatcher.dispatch(this)
-    }
-
-    /**
-     * 对于未结束的插件任务[buildTask]，进行循环消息投诉处理
-     */
-    private fun PipelineBuildAtomTaskEvent.loopDispatch(buildTask: PipelineBuildTask, loopDelayMills: Int) {
         // 将执行结果参数写回事件消息中，方便再次传递
         taskParam.putAll(buildTask.taskParams)
         delayMills = loopDelayMills

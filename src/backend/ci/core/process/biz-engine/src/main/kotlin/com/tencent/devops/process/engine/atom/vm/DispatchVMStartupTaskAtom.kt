@@ -55,6 +55,7 @@ import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
 import com.tencent.devops.process.engine.atom.parser.DispatchTypeBuilder
+import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineInfo
@@ -397,6 +398,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
 
                 try {
                     thirdPartyAgentRollBackMonitor(task)
+                    // 修改轮训时间
+                    task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = 3 * 60 * 1000
                 } catch (ignore: Exception) {
                     // 忽略掉因调用打印接口出错而导致调度失败的问题
                 }
