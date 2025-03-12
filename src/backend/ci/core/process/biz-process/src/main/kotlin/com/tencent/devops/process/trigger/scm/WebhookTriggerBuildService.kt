@@ -247,11 +247,9 @@ class WebhookTriggerBuildService @Autowired constructor(
             pipelineParamMap = convertBuildParameters(startParams),
             channelCode = pipelineInfo.channelCode,
             isMobile = false,
-            model = resource.model,
+            resource = resource,
             signPipelineVersion = resource.version,
-            frequencyLimit = false,
-            versionName = resource.versionName,
-            yamlVersion = resource.yamlVersion
+            frequencyLimit = false
         )
         logger.info(
             "trigger successfully by webhook|eventId:${context.eventId}|" +
