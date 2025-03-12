@@ -48,6 +48,15 @@ BEGIN
     END IF;
 
     IF NOT EXISTS(SELECT 1
+                        FROM information_schema.COLUMNS
+                        WHERE TABLE_SCHEMA = db
+                            AND TABLE_NAME = 'T_REPOSITORY'
+                            AND COLUMN_NAME = 'SCM_CODE') THEN
+        ALTER TABLE T_REPOSITORY
+            ADD COLUMN `SCM_CODE` varchar(64) default null comment '代码库标识';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
                     FROM information_schema.COLUMNS
                     WHERE TABLE_SCHEMA = db
                         AND TABLE_NAME = 'T_REPOSITORY_CODE_GIT'
