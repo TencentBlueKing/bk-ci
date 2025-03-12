@@ -61,7 +61,6 @@ class ExternalScmResourceImpl @Autowired constructor(
         secret: String?,
         sourceType: String?,
         traceId: String,
-        gitProjectId: String?,
         body: String
     ): Result<Boolean> {
         // 工蜂的测试请求,应该忽略

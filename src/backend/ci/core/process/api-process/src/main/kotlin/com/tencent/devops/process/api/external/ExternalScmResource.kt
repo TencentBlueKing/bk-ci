@@ -66,9 +66,6 @@ interface ExternalScmResource {
         @Parameter(description = "X-TRACE-ID")
         @HeaderParam("X-TRACE-ID")
         traceId: String,
-        @Parameter(description = "仓库项目ID")
-        @QueryParam("gitProjectId")
-        gitProjectId: String? = null,
         body: String
     ): Result<Boolean>
 
