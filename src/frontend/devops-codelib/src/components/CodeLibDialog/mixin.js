@@ -70,7 +70,7 @@ export default {
             }
             let hasPower = false
             let project = []
-            for (const [condition, oauth] of Object.entries(this.oauthMap)) {
+            for (const [condition, oauth] of Object.entries(oauthMap)) {
                 if (this[condition]) {
                     hasPower = oauth.status !== 403
                     project = oauth.project
