@@ -398,8 +398,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
 
                 try {
                     thirdPartyAgentRollBackMonitor(task)
-                    // 修改轮训时间
-                    task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = 3 * 60 * 1000
+                    // 修改轮训时间,3m30s方便命中dispath的3分钟频率
+                    task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = 3.5 * 60 * 1000
                 } catch (ignore: Exception) {
                     // 忽略掉因调用打印接口出错而导致调度失败的问题
                 }
