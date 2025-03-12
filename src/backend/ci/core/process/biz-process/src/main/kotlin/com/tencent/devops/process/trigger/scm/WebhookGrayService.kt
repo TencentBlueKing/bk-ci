@@ -27,8 +27,9 @@
 
 package com.tencent.devops.process.trigger.scm
 
-import com.google.common.cache.CacheBuilder
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.redis.RedisOperation
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
@@ -36,11 +37,11 @@ import java.util.concurrent.TimeUnit
  * scm 灰度策略服务类
  */
 @Service
-class WebhookGrayService constructor(
+class WebhookGrayService @Autowired constructor(
     private val redisOperation: RedisOperation
 ) {
 
-    private val grayRepoCache = CacheBuilder.newBuilder()
+    private val grayRepoCache = Caffeine.newBuilder()
         .maximumSize(MAX_SIZE)
         .expireAfterAccess(30, TimeUnit.SECONDS)
         .build<String, Boolean?>()
