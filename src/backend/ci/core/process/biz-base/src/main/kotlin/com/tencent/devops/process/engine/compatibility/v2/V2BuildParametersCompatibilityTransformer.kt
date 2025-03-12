@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory
 
 open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibilityTransformer {
 
-    @SuppressWarnings("ComplexMethod")
+    @SuppressWarnings("ComplexMethod", "NestedBlockDepth")
     override fun parseTriggerParam(
         userId: String,
         projectId: String,
@@ -79,7 +79,7 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
                             null
                         }
                     }
-                    if (versionControlInfo != null) {   // 有版本控制信息
+                    if (versionControlInfo != null) {
                         randomStringInPath = versionControlInfo.latestRandomStringInPath
                         versionControlInfo.directory
                     } else {
