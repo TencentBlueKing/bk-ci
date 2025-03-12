@@ -592,7 +592,6 @@ class RepositoryScmConfigService @Autowired constructor(
         }
     }
 
-
     companion object {
         const val SECRET_MIXER = "******"
         const val BYTES_PER_MB = 1024L * 1024L

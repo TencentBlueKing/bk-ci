@@ -47,7 +47,7 @@ class RepositoryCheckService @Autowired constructor(
     private val scmApiManager: ScmApiManager
 ) {
 
-    fun checkGitCredential(projectId: String, authRepository: AuthRepository) : ScmProviderRepository {
+    fun checkGitCredential(projectId: String, authRepository: AuthRepository): ScmProviderRepository {
         val scmConfig = repositoryScmConfigService.get(scmCode = authRepository.scmCode)
         val providerRepository = scmProviderRepositoryFactory.create(
             projectId = projectId,
@@ -65,7 +65,7 @@ class RepositoryCheckService @Autowired constructor(
         return providerRepository
     }
 
-    fun checkSvnCredential(projectId: String, authRepository: AuthRepository) : ScmProviderRepository {
+    fun checkSvnCredential(projectId: String, authRepository: AuthRepository): ScmProviderRepository {
         val scmConfig = repositoryScmConfigService.get(scmCode = authRepository.scmCode)
         val providerRepository = scmProviderRepositoryFactory.create(
             projectId = projectId,

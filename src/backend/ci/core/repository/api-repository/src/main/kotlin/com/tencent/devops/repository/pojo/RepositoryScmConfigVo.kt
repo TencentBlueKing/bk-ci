@@ -28,7 +28,6 @@
 package com.tencent.devops.repository.pojo
 
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.repository.pojo.enums.ScmConfigOauthType
 import com.tencent.devops.repository.pojo.enums.ScmConfigStatus
 import io.swagger.v3.oas.annotations.media.Schema

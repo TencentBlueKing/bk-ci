@@ -27,8 +27,6 @@
 
 package com.tencent.devops.repository.dao
 
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.model.repository.tables.TRepository
 import com.tencent.devops.model.repository.tables.TRepositoryCodeSvn
 import com.tencent.devops.model.repository.tables.records.TRepositoryCodeSvnRecord
 import com.tencent.devops.repository.pojo.UpdateRepositoryInfoRequest
@@ -157,7 +155,7 @@ class RepositoryCodeSvnDao {
         dslContext: DSLContext,
         repositoryId: Long,
         credentialType: String
-    ):Int {
+    ): Int {
         with(TRepositoryCodeSvn.T_REPOSITORY_CODE_SVN) {
             return dslContext.update(this)
                 .set(CREDENTIAL_TYPE, credentialType)

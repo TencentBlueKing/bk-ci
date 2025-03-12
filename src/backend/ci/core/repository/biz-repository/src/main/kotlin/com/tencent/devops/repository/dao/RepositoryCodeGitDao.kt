@@ -356,12 +356,12 @@ class RepositoryCodeGitDao {
         dslContext: DSLContext,
         repositoryId: Long,
         credentialType: String
-    ):Int {
+    ): Int {
         with(TRepositoryCodeGit.T_REPOSITORY_CODE_GIT) {
             return dslContext.update(this)
-                    .set(CREDENTIAL_TYPE, credentialType)
-                    .where(REPOSITORY_ID.eq(repositoryId))
-                    .execute()
+                .set(CREDENTIAL_TYPE, credentialType)
+                .where(REPOSITORY_ID.eq(repositoryId))
+                .execute()
         }
     }
 }

@@ -33,7 +33,6 @@ import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.process.engine.service.WebhookBuildParameterService
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import org.springframework.stereotype.Service
-import java.time.LocalDate
 
 /**
  * 流水线触发参数监听器
@@ -50,7 +49,7 @@ class WebhookTriggerParamListener(
             startParams?.let {
                 buildLogPrinter.addLines(
                     buildId = buildId!!.id,
-                    logMessages = it.map {entry ->
+                    logMessages = it.map { entry ->
                         LogMessage(
                             message = "${entry.key}=${entry.value}",
                             timestamp = System.currentTimeMillis(),
