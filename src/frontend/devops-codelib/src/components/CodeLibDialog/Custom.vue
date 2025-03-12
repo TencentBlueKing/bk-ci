@@ -27,7 +27,7 @@
 
             <div
                 class="codelib-oauth"
-                v-if="!hasPower && isOAUTH"
+                v-if="!oAuth.hasPower && isOAUTH"
             >
                 <bk-button
                     theme="primary"
@@ -45,7 +45,7 @@
                 </div>
             </div>
         </bk-form-item>
-        <template v-if="hasPower && isOAUTH">
+        <template v-if="oAuth.hasPower && isOAUTH">
             <bk-form-item
                 :label="$t('codelib.address')"
                 :required="true"

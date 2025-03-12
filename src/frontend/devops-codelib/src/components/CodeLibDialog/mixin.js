@@ -60,21 +60,6 @@ export default {
             'scmsvnOAuth',
             'providerConfig'
         ]),
-        hasPower () {
-            const oauthMap = {
-                isTGit: this.tgitOAuth,
-                isGit: this.gitOAuth,
-                isGithub: this.githubOAuth,
-                isScmGit: this.scmgitOAuth,
-                isScmSvn: this.scmsvnOAuth
-            }
-            for (const [key, oauth] of Object.entries(oauthMap)) {
-                if (this[key]) {
-                    return oauth.status !== 403
-                }
-            }
-            return false
-        },
         oAuth () {
             const oauthMap = {
                 isTGit: this.tgitOAuth,
@@ -83,18 +68,20 @@ export default {
                 isScmGit: this.scmgitOAuth,
                 isScmSvn: this.scmsvnOAuth
             }
-        
-            for (const [condition, method] of Object.entries(oauthMap)) {
+            let hasPower = false
+            let project = []
+            for (const [condition, oauth] of Object.entries(this.oauthMap)) {
                 if (this[condition]) {
-                    return method
+                    hasPower = oauth.status !== 403
+                    project = oauth.project
+                    break
                 }
             }
-        
             return {
-                project: []
+                hasPower,
+                project
             }
         },
-        
         codelibTypeName () {
             return this.codelib && this.codelib['@type']
                 ? this.codelib['@type']

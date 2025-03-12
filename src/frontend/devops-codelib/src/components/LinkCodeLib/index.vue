@@ -81,7 +81,10 @@
                 img {
                     width: 16px;
                     height: 16px;
-                    margin-right: 4px;
+                    margin-right: 12px;
+                }
+                .config-name {
+                    color: #313238;
                 }
                 .config-hosts {
                     color: #979BA5;

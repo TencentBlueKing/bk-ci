@@ -515,14 +515,27 @@
             repositoryType () {
                 return this.curRepo.type
             },
-            hasPower () {
-                return (
-                    (this.isTGit
-                        ? this.tgitOAuth.status
-                        : this.isGit
-                            ? this.gitOAuth.status
-                            : this.githubOAuth.status) !== 403
-                )
+            oAuth () {
+                const oauthMap = {
+                    isTGit: this.tgitOAuth,
+                    isGit: this.gitOAuth,
+                    isGithub: this.githubOAuth,
+                    isScmGit: this.scmgitOAuth,
+                    isScmSvn: this.scmsvnOAuth
+                }
+                let hasPower = false
+                let project = []
+                for (const [condition, oauth] of Object.entries(oauthMap)) {
+                    if (this[condition]) {
+                        hasPower = oauth.status !== 403
+                        project = oauth.project
+                        break
+                    }
+                }
+                return {
+                    hasPower,
+                    project
+                }
             },
             isScmGit () {
                 return isScmGit(this.type)
@@ -741,7 +754,7 @@
                         })
                     }
                 } else {
-                    if (!this.hasPower) {
+                    if (!this.oAuth.hasPower) {
                         this.showOauthDialog = true
                         return
                     }

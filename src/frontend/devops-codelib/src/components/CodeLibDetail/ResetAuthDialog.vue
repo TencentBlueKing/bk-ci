@@ -363,10 +363,8 @@
                 'codelibTypes'
             ]),
             isOAUTH () {
-                if (this.isScmGit || this.isScmSvn) {
-                    return this.newRepoInfo.credentialType === 'OAUTH'
-                }
-                return this.newRepoInfo.authType === 'OAUTH'
+                const prop = (this.isScmGit || this.isScmSvn) ? 'credentialType' : 'authType'
+                return this.newRepoInfo[prop] === 'OAUTH'
             },
 
             projectId () {
@@ -378,8 +376,8 @@
             },
 
             codelibTypeName () {
-                return this.newRepoInfo && this.newRepoInfo['@type']
-                    ? this.newRepoInfo['@type']
+                return this.newRepoInfo && this.newRepoInfo?.['@type']
+                    ? this.newRepoInfo?.['@type']
                     : ''
             },
 

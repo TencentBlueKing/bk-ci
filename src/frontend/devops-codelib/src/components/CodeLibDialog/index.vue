@@ -99,7 +99,8 @@
                 'githubOAuth',
                 'showCodelibDialog'
             ]),
-            hasPower () {
+            
+            oAuth () {
                 const oauthMap = {
                     isTGit: this.tgitOAuth,
                     isGit: this.gitOAuth,
@@ -107,15 +108,22 @@
                     isScmGit: this.scmgitOAuth,
                     isScmSvn: this.scmsvnOAuth
                 }
-                for (const [key, oauth] of Object.entries(oauthMap)) {
-                    if (this[key]) {
-                        return oauth?.status !== 403
+                let hasPower = false
+                let project = []
+                for (const [condition, oauth] of Object.entries(oauthMap)) {
+                    if (this[condition]) {
+                        hasPower = oauth.status !== 403
+                        project = oauth.project
+                        break
                     }
                 }
-                return false
+                return {
+                    hasPower,
+                    project
+                }
             },
             showDialogFooter () {
-                return (this.hasPower && this.isOAUTH) || !this.isOAUTH
+                return (this.oAuth.hasPower && this.isOAUTH) || !this.isOAUTH
             },
             title () {
                 return this.$t('codelib.linkRepo', [
@@ -249,7 +257,7 @@
             ]),
             
             async submitCodelib () {
-                if (this.isOAUTH && !this.hasPower) {
+                if (this.isOAUTH && !this.oAuth.hasPower) {
                     this.toggleCodelibDialog(false)
                     return
                 }

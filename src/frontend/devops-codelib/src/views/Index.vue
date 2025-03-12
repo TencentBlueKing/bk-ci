@@ -346,10 +346,20 @@
                 return `/markdown/${lang}/Devops${version}${url}`
             },
             async createCodelib (typeLabel, scmCode, isEdit) {
-                const providerConfig = this.codelibTypes.find(i => i.scmCode === scmCode)
-                const defaultCredentialType = providerConfig?.credentialTypeList[0]
-                this.setProviderConfig(providerConfig)
+                const codelibType = this.codelibTypes.find(type => type.scmType === typeLabel)
+                if (codelibType?.status === 'SUCCESS') {
+                    this.showUndeployDialog({
+                        title: this.$t('codelib.codelibUndeployTitle', [codelibType.name]),
+                        desc: this.$t(`codelib.${typeLabel.toLowerCase()}UndeployDesc`),
+                        link: `${DOCS_URL_PREFIX}${this.getDocUrl(codelibType.docUrl)}`
+                    })
+                    return
+                }
+
                 if (typeLabel?.startsWith('SCM_')) {
+                    const providerConfig = this.codelibTypes.find(i => i.scmCode === scmCode)
+                    const defaultCredentialType = providerConfig?.credentialTypeList[0]
+                    this.setProviderConfig(providerConfig)
                     const typeName = convertToCamelCase(typeLabel)
                     const CodelibDialog = {
                         showCodelibDialog: true,
@@ -362,15 +372,6 @@
                     }
                     this.toggleCodelibDialog(CodelibDialog)
                 } else {
-                    const codelibType = this.codelibTypes.find(type => type.scmType === typeLabel)
-                    if (codelibType?.status === 'DEPLOYING') {
-                        this.showUndeployDialog({
-                            title: this.$t('codelib.codelibUndeployTitle', [codelibType.name]),
-                            desc: this.$t(`codelib.${typeLabel.toLowerCase()}UndeployDesc`),
-                            link: `${DOCS_URL_PREFIX}${this.getDocUrl(codelibType.docUrl)}`
-                        })
-                        return
-                    }
                     const { credentialTypes, typeName } = getCodelibConfig(typeLabel)
                     const CodelibDialog = {
                         showCodelibDialog: true,
@@ -382,15 +383,12 @@
                     if (isGit(typeName) || isGithub(typeName)) {
                         Object.assign(CodelibDialog, { authType: 'OAUTH' })
                         if (isEdit) Object.assign(CodelibDialog, { repositoryHashId: this.$route.hash.split('-')[1] })
-                    }
-                    if (isTGit(typeName)) {
+                    } else if (isTGit(typeName)) {
                         Object.assign(CodelibDialog, { authType: 'HTTPS' })
                         if (isEdit) Object.assign(CodelibDialog, { repositoryHashId: this.$route.hash.split('-')[1] })
-                    }
-                    if (isGitLab(typeName) || isSvn(typeName)) {
+                    } else if (isGitLab(typeName) || isSvn(typeName)) {
                         Object.assign(CodelibDialog, { authType: 'SSH' })
-                    }
-                    if (isP4(typeName)) {
+                    } else if (isP4(typeName)) {
                         Object.assign(CodelibDialog, { authType: 'HTTP' })
                     }
                     this.toggleCodelibDialog(CodelibDialog)
