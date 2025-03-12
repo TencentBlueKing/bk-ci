@@ -47,6 +47,7 @@ import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.audit.ActionAuditContent
@@ -68,6 +69,7 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_CREATE_
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.dao.RepositoryGithubDao
+import com.tencent.devops.repository.dao.RepositoryScmConfigDao
 import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.CodeGitRepository
@@ -120,7 +122,8 @@ class RepositoryService @Autowired constructor(
     private val repositoryPermissionService: RepositoryPermissionService,
     private val githubService: IGithubService,
     private val client: Client,
-    private val repositoryGithubDao: RepositoryGithubDao
+    private val repositoryGithubDao: RepositoryGithubDao,
+    private val repositoryScmConfigDao: RepositoryScmConfigDao
 ) {
 
     @Value("\${repository.git.devopsPrivateToken}")
@@ -466,7 +469,8 @@ class RepositoryService @Autowired constructor(
                         userName = repo.userName,
                         credentialId = repo.credentialId,
                         authType = repo.authType,
-                        gitProjectId = -1L
+                        gitProjectId = -1L,
+                        credentialType = null
                     )
                 }
                 Result(gitProjectInfo)
@@ -602,6 +606,14 @@ class RepositoryService @Autowired constructor(
                 language = I18nUtil.getLanguage(userId)
             )
         )
+        ActionAuditContext.current()
+            .setInstanceId(repository.repositoryId.toString())
+            .setInstanceName(repository.aliasName)
+        return compose(repository)
+    }
+
+    fun serviceGetByHashId(projectId: String, repositoryConfig: RepositoryConfig): Repository {
+        val repository = getRepository(projectId, repositoryConfig)
         ActionAuditContext.current()
             .setInstanceId(repository.repositoryId.toString())
             .setInstanceName(repository.aliasName)
@@ -822,6 +834,8 @@ class RepositoryService @Autowired constructor(
                 repoDetailInfoMap.putAll(codeGitRepositoryService.getRepoDetailMap(repositoryIds))
             }
         }
+        val repoLogoMap = repositoryScmConfigDao.list(dslContext, limit = PageUtil.DEFAULT_PAGE_SIZE, offset = 0)
+                .associate { it.scmCode to it.logoUrl }
         val repositoryList = repositoryRecordList.map {
             val hasEditPermission = hasEditPermissionRepoList.contains(it.repositoryId)
             val hasDeletePermission = hasDeletePermissionRepoList.contains(it.repositoryId)
@@ -845,7 +859,9 @@ class RepositoryService @Autowired constructor(
                 createUser = it.userId,
                 updatedUser = it.updatedUser ?: it.userId,
                 atom = it.atom ?: false,
-                enablePac = it.enablePac
+                enablePac = it.enablePac,
+                scmCode = it.scmCode,
+                logoUrl = repoLogoMap[it.scmCode]
             )
         }
         return Pair(SQLPage(count, repositoryList), hasCreatePermission)

@@ -46,7 +46,8 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import com.tencent.devops.repository.service.CredentialService
+import com.tencent.devops.repository.pojo.enums.RepoCredentialType
+import com.tencent.devops.repository.service.RepoCredentialService
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.GitFileInfo
@@ -66,7 +67,7 @@ class CodeSvnRepositoryService @Autowired constructor(
     private val repositoryCodeSvnDao: RepositoryCodeSvnDao,
     private val dslContext: DSLContext,
     private val scmService: IScmService,
-    private val credentialService: CredentialService
+    private val credentialService: RepoCredentialService
 ) : CodeRepositoryService<CodeSvnRepository> {
     override fun repositoryType(): String {
         return CodeSvnRepository::class.java.name
@@ -84,7 +85,8 @@ class CodeSvnRepositoryService @Autowired constructor(
                 aliasName = repository.aliasName,
                 url = repository.getFormatURL(),
                 type = ScmType.CODE_SVN,
-                enablePac = repository.enablePac
+                enablePac = repository.enablePac,
+                scmCode = repository.scmCode
             )
             // 如果repository为null，则默认为TC
             repositoryCodeSvnDao.create(
@@ -93,8 +95,9 @@ class CodeSvnRepositoryService @Autowired constructor(
                 region = repository.region ?: CodeSvnRegion.TC,
                 projectName = SvnUtils.getSvnProjectName(repository.getFormatURL()),
                 userName = repository.userName,
-                privateToken = repository.credentialId,
-                svnType = repository.svnType
+                credentialId = repository.credentialId,
+                svnType = repository.svnType,
+                credentialType = repository.credentialType ?: RepoCredentialType.USERNAME_PASSWORD.name
             )
         }
         return repositoryId
@@ -139,7 +142,8 @@ class CodeSvnRepositoryService @Autowired constructor(
                 projectName = SvnUtils.getSvnProjectName(repository.getFormatURL()),
                 userName = repository.userName,
                 credentialId = repository.credentialId,
-                svnType = repository.svnType
+                svnType = repository.svnType,
+                credentialType = repository.credentialType ?: RepoCredentialType.USERNAME_PASSWORD.name
             )
         }
     }
@@ -161,7 +165,9 @@ class CodeSvnRepositoryService @Autowired constructor(
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
             svnType = record.svnType,
             enablePac = repository.enablePac,
-            yamlSyncStatus = repository.yamlSyncStatus
+            yamlSyncStatus = repository.yamlSyncStatus,
+            scmCode = repository.scmCode ?: ScmType.CODE_SVN.name,
+            credentialType = record.credentialType
         )
     }
 

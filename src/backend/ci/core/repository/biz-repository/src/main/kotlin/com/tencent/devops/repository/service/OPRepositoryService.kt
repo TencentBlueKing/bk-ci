@@ -29,10 +29,12 @@ package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.dao.RepoPipelineRefDao
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryCodeGitLabDao
+import com.tencent.devops.repository.dao.RepositoryCodeSvnDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.dao.RepositoryGithubDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
@@ -45,6 +47,7 @@ import com.tencent.devops.repository.service.scm.IScmOauthService
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.slf4j.LoggerFactory
@@ -68,8 +71,10 @@ class OPRepositoryService @Autowired constructor(
     private val gitOauthService: IGitOauthService,
     private val githubTokenService: GithubTokenService,
     private val githubRepositoryService: GithubRepositoryService,
-    private val credentialService: CredentialService,
-    private val repoPipelineRefDao: RepoPipelineRefDao
+    private val credentialService: RepoCredentialService,
+    private val repoPipelineRefDao: RepoPipelineRefDao,
+    private val codeSvnDao: RepositoryCodeSvnDao,
+    private val client: Client
 ) {
     fun addHashId() {
         val startTime = System.currentTimeMillis()
@@ -177,9 +182,9 @@ class OPRepositoryService @Autowired constructor(
         }
     }
 
-    fun updateGitProjectId(updateActions: List<() -> Unit>) {
+    fun updateAction(actionName: String, updateActions: List<() -> Unit>) {
         val startTime = System.currentTimeMillis()
-        logger.info("OPRepositoryService:begin updateGitProjectId-----------")
+        logger.info("OPRepositoryService:begin $actionName-----------")
         val threadPoolExecutor = ThreadPoolExecutor(
             1,
             1,
@@ -190,19 +195,19 @@ class OPRepositoryService @Autowired constructor(
             ThreadPoolExecutor.AbortPolicy()
         )
         threadPoolExecutor.submit {
-            logger.info("OPRepositoryService:begin updateGitProjectId threadPoolExecutor-----------")
+            logger.info("OPRepositoryService:begin $actionName threadPoolExecutor-----------")
             try {
                 updateActions.forEach {
                     it.invoke()
                 }
             } catch (ignored: Exception) {
-                logger.warn("OpRepositoryService：updateGitProjectId failed | $ignored ")
+                logger.warn("OpRepositoryService：$actionName failed | $ignored ")
             } finally {
                 threadPoolExecutor.shutdown()
             }
         }
-        logger.info("OPRepositoryService:finish updateGitProjectId-----------")
-        logger.info("updateGitProjectId time cost: ${System.currentTimeMillis() - startTime}")
+        logger.info("OPRepositoryService:finish $actionName-----------")
+        logger.info("$actionName time cost: ${System.currentTimeMillis() - startTime}")
     }
 
     fun updateGitLabProjectId() {
@@ -564,6 +569,120 @@ class OPRepositoryService @Autowired constructor(
             dslContext = dslContext
         )
         logger.info("end remove repository pipeline ref,change counts=[$counts]")
+    }
+
+    fun updateRepoCredentialType(projectId: String?, repoHashId: String?) {
+        var offset = 0
+        val limit = 100
+        logger.info("OPRepositoryService:begin updateRepoCredentialType")
+        // projectId to Map<credentialId, credentialType>
+        val credentialCache = mutableMapOf<String, MutableMap<String, String>>()
+        do {
+            // 获取仓库列表（仅刷新GIT/TGIT/SVN类型）
+            val repoList = repositoryDao.list(
+                dslContext = dslContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                repositoryTypes = listOf(
+                    ScmType.CODE_GIT.name,
+                    ScmType.CODE_TGIT.name,
+                    ScmType.CODE_SVN.name
+                ),
+                limit = limit,
+                offset = offset
+            )
+            // 移除过期缓存
+            val projectIds = repoList.groupBy { it.projectId }.keys
+            credentialCache.keys.subtract(projectIds).toSet().forEach {
+                logger.info("remove expired cache projectId=$it")
+                credentialCache.remove(it)
+            }
+            val repoProjectMap = repoList.associate { it.repositoryId to it.projectId }
+            // 仓库分类
+            val repoIdsMap = repoList.groupBy {
+                if (it.type == ScmType.CODE_SVN.name) "SVN" else "GIT"
+            }.mapValues { it.value.map { repoInfo -> repoInfo.repositoryId } }
+            val svnRepoList = codeSvnDao.list(
+                dslContext = dslContext,
+                repositoryIds = repoIdsMap["SVN"]?.toSet() ?: setOf()
+            )
+            val gitRepoList = codeGitDao.list(
+                dslContext = dslContext,
+                repositoryIds = repoIdsMap["GIT"]?.toSet() ?: setOf()
+            )?.filter { it.authType != RepoAuthType.OAUTH.name } ?: listOf()
+            // projectId to set(credentialId)
+            val credentialMap = svnRepoList.groupBy { repoProjectMap[it.repositoryId] }
+                    .mapValues { it.value.map { svnRepo -> svnRepo.credentialId }.toMutableSet() }
+                    .toMutableMap()
+            gitRepoList.forEach {
+                val repoProjectId = repoProjectMap[it.repositoryId]!!
+                if (credentialMap[repoProjectId] == null) {
+                    credentialMap[repoProjectId] = mutableSetOf()
+                }
+                credentialMap[repoProjectId]!!.add(it.credentialId)
+            }
+            // 缓存凭据类型
+            credentialMap.forEach {
+                val key = it.key!!
+                if (credentialCache[key] == null) {
+                    credentialCache[key] = mutableMapOf()
+                }
+                val credentialIds = it.value
+                        .filter { credentialId -> !credentialCache[key]!!.contains(credentialId) }
+                        .toSet()
+                credentialCache[key]!!.putAll(getCredentialType(key, credentialIds))
+            }
+            logger.info("svnRepoList=${svnRepoList.size}|gitRepoList=${gitRepoList.size}")
+            // 更新SVN仓库的凭据类型
+            svnRepoList.forEach {
+                val repoProjectId = repoProjectMap[it.repositoryId]!!
+                val credentialType = credentialCache[repoProjectId]?.get(it.credentialId)
+                if (credentialType.isNullOrBlank()) {
+                    logger.warn("skip|credentialType is null|projectId=$repoProjectId|credentialId=${it.credentialId}")
+                    return@forEach
+                }
+                val changeCount = codeSvnDao.updateCredentialType(
+                    dslContext = dslContext,
+                    repositoryId = it.repositoryId,
+                    credentialType = credentialCache[repoProjectId]?.get(it.credentialId) ?: ""
+                )
+                logger.info("update svn credential type|${it.repositoryId}|changeCount=$changeCount")
+            }
+            // 更新GIT仓库的凭据类型
+            gitRepoList.forEach {
+                val repoProjectId = repoProjectMap[it.repositoryId]!!
+                val credentialType = credentialCache[repoProjectId]?.get(it.credentialId)
+                if (credentialType.isNullOrBlank()) {
+                    logger.warn("skip|credentialType is null|projectId=$repoProjectId|credentialId=${it.credentialId}")
+                    return@forEach
+                }
+                val changeCount = codeGitDao.updateCredentialType(
+                    dslContext = dslContext,
+                    repositoryId = it.repositoryId,
+                    credentialType = credentialCache[repoProjectId]?.get(it.credentialId) ?: ""
+                )
+                logger.info("update git credential type|${it.repositoryId}|changeCount=$changeCount")
+            }
+
+            offset += limit
+            // 避免限流，增加一秒休眠时间
+            Thread.sleep(1 * 1000)
+        } while (repoList.size == 100)
+        logger.info("OPRepositoryService:end updateRepoCredentialType")
+    }
+
+    private fun getCredentialType(projectId: String, credentialIds: Set<String>): Map<String, String> {
+        val credentialInfos = try {
+            client.get(ServiceCredentialResource::class)
+                    .getCredentialByIds(
+                        projectId = projectId,
+                        credentialId = credentialIds
+                    ).data ?: setOf()
+        } catch (ignored: Exception) {
+            logger.warn("failed to get credential info, projectId=$projectId, credentialIds=$credentialIds", ignored)
+            setOf()
+        }
+        return credentialInfos.associate { it.credentialId to it.credentialType.name }
     }
 
     companion object {

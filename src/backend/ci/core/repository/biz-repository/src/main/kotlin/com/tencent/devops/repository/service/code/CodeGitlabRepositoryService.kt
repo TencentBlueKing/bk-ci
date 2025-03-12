@@ -42,7 +42,7 @@ import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import com.tencent.devops.repository.service.CredentialService
+import com.tencent.devops.repository.service.RepoCredentialService
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
@@ -59,7 +59,7 @@ class CodeGitlabRepositoryService @Autowired constructor(
     private val repositoryCodeGitLabDao: RepositoryCodeGitLabDao,
     private val dslContext: DSLContext,
     private val scmService: IScmService,
-    private val credentialService: CredentialService
+    private val credentialService: RepoCredentialService
 ) : CodeRepositoryService<CodeGitlabRepository> {
     override fun repositoryType(): String {
         return CodeGitlabRepository::class.java.name
@@ -77,7 +77,8 @@ class CodeGitlabRepositoryService @Autowired constructor(
                 aliasName = repository.aliasName,
                 url = repository.getFormatURL(),
                 type = ScmType.CODE_GITLAB,
-                enablePac = repository.enablePac
+                enablePac = repository.enablePac,
+                scmCode = repository.scmCode
             )
             // Git项目ID
             val gitProjectId: Long = getGitProjectId(
@@ -178,7 +179,8 @@ class CodeGitlabRepositoryService @Autowired constructor(
                 RepoAuthType.valueOf(record.authType)
             },
             enablePac = repository.enablePac,
-            yamlSyncStatus = repository.yamlSyncStatus
+            yamlSyncStatus = repository.yamlSyncStatus,
+            scmCode = repository.scmCode ?: ScmType.CODE_GITLAB.name
         )
     }
 
