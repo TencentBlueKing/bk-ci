@@ -37,7 +37,12 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.atom.AtomResponse
+import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.TaskAtomService
 import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
 import com.tencent.devops.process.engine.common.VMUtils.getStartVmLabel
@@ -128,7 +133,8 @@ class TaskControl @Autowired constructor(
             val runCondition = additionalOptions?.runCondition
             val failedEvenCancelFlag = runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
             if (actionType.isTerminate() ||
-                (actionType == ActionType.END && !failedEvenCancelFlag)) {
+                (actionType == ActionType.END && !failedEvenCancelFlag)
+            ) {
                 LOG.info("ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)|code=$errorCode")
                 // 区分终止还是用户手动取消, fastKill的行为本质还是用户的行为导致的取消
                 val buildStatus =
@@ -178,6 +184,16 @@ class TaskControl @Autowired constructor(
                 // 如果是要轮循的才需要定时消息轮循
                 if (!taskId.startsWith(getStartVmLabel())) {
                     loopDispatch(buildTask = buildTask)
+                } else {
+                    val taskParam =
+                        SpringContextUtil.getBean(IAtomTask::class.java, buildTask.taskAtom).getParamElement(buildTask)
+                    if (taskParam is VMBuildContainer &&
+                        (taskParam.dispatchType is ThirdPartyAgentEnvDispatchType ||
+                                taskParam.dispatchType is ThirdPartyAgentIDDispatchType)
+                    ) {
+                        // #11546 第三方构建机调度兜底
+                        loopDispatch(buildTask = buildTask, loopDelayMills = 3 * 60 * 1000)
+                    }
                 }
             } else {
                 pipelineBuildTaskService.finishTask(
@@ -226,6 +242,17 @@ class TaskControl @Autowired constructor(
             } else {
                 DEFAULT_DELAY
             }
+        // 将执行结果参数写回事件消息中，方便再次传递
+        taskParam.putAll(buildTask.taskParams)
+        delayMills = loopDelayMills
+        actionType = ActionType.REFRESH // 尝试刷新任务状态
+        pipelineEventDispatcher.dispatch(this)
+    }
+
+    /**
+     * 对于未结束的插件任务[buildTask]，进行循环消息投诉处理
+     */
+    private fun PipelineBuildAtomTaskEvent.loopDispatch(buildTask: PipelineBuildTask, loopDelayMills: Int) {
         // 将执行结果参数写回事件消息中，方便再次传递
         taskParam.putAll(buildTask.taskParams)
         delayMills = loopDelayMills
