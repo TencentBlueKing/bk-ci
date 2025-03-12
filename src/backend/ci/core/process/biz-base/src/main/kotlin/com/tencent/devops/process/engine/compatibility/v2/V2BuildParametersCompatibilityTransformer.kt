@@ -76,12 +76,11 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
                         try {
                             JsonUtil.to(str, CustomFileVersionControlInfo::class.java)
                         } catch (ignore: Throwable) {
-                            logger.warn("parseTriggerParam|CUSTOM_FILE|$projectId|$pipelineId|param=$param", ignore)
                             null
                         }
                     }
                     if (versionControlInfo != null) {   // 有版本控制信息
-                        randomStringInPath = versionControlInfo.randomStringInPath
+                        randomStringInPath = versionControlInfo.latestRandomStringInPath
                         versionControlInfo.directory
                     } else {
                         param.value ?: param.defaultValue
@@ -112,7 +111,7 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
                 readOnly = param.readOnly,
                 desc = param.desc,
                 defaultValue = param.defaultValue,
-                randomStringInPath = randomStringInPath
+                latestRandomStringInPath = randomStringInPath
             )
         }
 
