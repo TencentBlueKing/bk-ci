@@ -368,7 +368,8 @@ class StartCloudRemoteDevService @Autowired constructor(
             environmentHost = workspaceStatus.environmentIP,
             ready = true,
             started = true,
-            regionId = workspaceInfo.regionId
+            regionId = workspaceInfo.regionId,
+            vmName = workspaceStatus.name
         )
     }
 

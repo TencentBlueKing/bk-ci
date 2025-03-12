@@ -50,5 +50,7 @@ data class WorkspaceStartCloudDetail(
     @get:Schema(title = "实例别名")
     val displayName: String? = null,
     @get:Schema(title = "windows 地域配置")
-    val zoneConfig: WindowsResourceZoneConfig? = null
+    val zoneConfig: WindowsResourceZoneConfig? = null,
+    @get:Schema(title = "机型配置")
+    val winConfig: WindowsResourceTypeConfig? = null
 )

@@ -548,7 +548,8 @@ class WorkspaceService @Autowired constructor(
                     labels = it.labels,
                     createTime = it.createTime.timestamp(),
                     imageId = detail?.imageId ?: "",
-                    recordEnabled = !allWindows[it.workspaceName]?.enableRecordUser.isNullOrBlank()
+                    recordEnabled = !allWindows[it.workspaceName]?.enableRecordUser.isNullOrBlank(),
+                    vmName = allWindows[it.workspaceName]?.vmName
                 )
             )
         }
@@ -1211,6 +1212,7 @@ class WorkspaceService @Autowired constructor(
             workspace.createUserId
         }
         val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
+        val allConfig = windowsResourceConfigService.getAllType(true, null).associateBy { it.id!! }
         val defaultZoneConfig = windowsResourceConfigService.getAllZone()
             .associateBy { it.zoneShortName }
         val specZoneConfig = windowsResourceConfigService.getAllSpecZone().associateBy { it.zoneShortName }
@@ -1232,7 +1234,8 @@ class WorkspaceService @Autowired constructor(
             owner = owner,
             resourceId = resourceId,
             displayName = workspace.displayName,
-            zoneConfig = zone
+            zoneConfig = zone,
+            winConfig = allConfig[workspace.winConfigId?.toLong()]
         )
     }
 
