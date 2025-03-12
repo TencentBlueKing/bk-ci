@@ -347,7 +347,7 @@
             },
             async createCodelib (typeLabel, scmCode, isEdit) {
                 const codelibType = this.codelibTypes.find(type => type.scmType === typeLabel)
-                if (codelibType?.status === 'SUCCESS') {
+                if (codelibType?.status === 'DEPLOYING') {
                     this.showUndeployDialog({
                         title: this.$t('codelib.codelibUndeployTitle', [codelibType.name]),
                         desc: this.$t(`codelib.${typeLabel.toLowerCase()}UndeployDesc`),
