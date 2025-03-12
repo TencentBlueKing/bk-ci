@@ -86,6 +86,7 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
         relatedResourceCode: String?,
         action: String?,
         operateChannel: OperateChannel?,
+        uniqueManagerGroupsQueryFlag: Boolean?,
         start: Int,
         limit: Int
     ): Result<SQLPage<GroupDetailsInfoVo>> {
@@ -108,6 +109,7 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
                 relatedResourceCode = relatedResourceCode,
                 operateChannel = operateChannel,
                 action = action,
+                uniqueManagerGroupsQueryFlag = uniqueManagerGroupsQueryFlag,
                 start = start,
                 limit = limit
             )
