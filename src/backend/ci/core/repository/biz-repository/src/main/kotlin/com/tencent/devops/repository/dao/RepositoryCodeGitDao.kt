@@ -28,12 +28,16 @@
 package com.tencent.devops.repository.dao
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.model.repository.tables.TRepository
 import com.tencent.devops.model.repository.tables.TRepositoryCodeGit
 import com.tencent.devops.model.repository.tables.records.TRepositoryCodeGitRecord
+import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.RepoCondition
 import com.tencent.devops.repository.pojo.RepoOauthRefVo
 import com.tencent.devops.repository.pojo.UpdateRepositoryInfoRequest
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -50,7 +54,8 @@ class RepositoryCodeGitDao {
         userName: String,
         credentialId: String,
         authType: RepoAuthType?,
-        gitProjectId: Long
+        gitProjectId: Long,
+        credentialType: String
     ) {
         val now = LocalDateTime.now()
         with(TRepositoryCodeGit.T_REPOSITORY_CODE_GIT) {
@@ -63,7 +68,8 @@ class RepositoryCodeGitDao {
                 CREATED_TIME,
                 UPDATED_TIME,
                 AUTH_TYPE,
-                GIT_PROJECT_ID
+                GIT_PROJECT_ID,
+                CREDENTIAL_TYPE
             )
                 .values(
                     repositoryId,
@@ -73,7 +79,8 @@ class RepositoryCodeGitDao {
                     now,
                     now,
                     authType?.name,
-                    gitProjectId
+                    gitProjectId,
+                    credentialType
                 ).execute()
         }
     }
@@ -98,6 +105,101 @@ class RepositoryCodeGitDao {
         }
     }
 
+    fun listByCondition(
+        dslContext: DSLContext,
+        repoCondition: RepoCondition,
+        limit: Int,
+        offset: Int
+    ): List<CodeGitRepository> {
+        val t1 = TRepository.T_REPOSITORY
+        val t2 = TRepositoryCodeGit.T_REPOSITORY_CODE_GIT
+        val condition = buildCondition(t1, t2, repoCondition)
+
+        return dslContext.select(
+            t1.ALIAS_NAME,
+            t1.URL,
+            t2.CREDENTIAL_ID,
+            t2.PROJECT_NAME,
+            t2.USER_NAME,
+            t2.AUTH_TYPE,
+            t1.PROJECT_ID,
+            t1.REPOSITORY_ID,
+            t2.GIT_PROJECT_ID,
+            t1.ATOM,
+            t1.ENABLE_PAC,
+            t1.YAML_SYNC_STATUS,
+            t1.SCM_CODE,
+            t2.CREDENTIAL_TYPE
+        ).from(t1)
+            .leftJoin(t2)
+            .on(t1.REPOSITORY_ID.eq(t2.REPOSITORY_ID))
+            .where(condition)
+            .limit(limit)
+            .offset(offset)
+            .map {
+                CodeGitRepository(
+                    aliasName = it.value1(),
+                    url = it.value2(),
+                    credentialId = it.value3(),
+                    projectName = it.value4(),
+                    userName = it.value5(),
+                    authType = RepoAuthType.parse(it.value6()),
+                    projectId = it.value7(),
+                    repoHashId = HashUtil.encodeOtherLongId(it.value8()),
+                    gitProjectId = it.value9(),
+                    atom = it.value10(),
+                    enablePac = it.value11(),
+                    yamlSyncStatus = it.value12(),
+                    scmCode = it.value13(),
+                    credentialType = it.value14()
+                )
+            }
+    }
+
+    fun countByCondition(
+        dslContext: DSLContext,
+        repoCondition: RepoCondition
+    ): Long {
+        val t1 = TRepository.T_REPOSITORY
+        val t2 = TRepositoryCodeGit.T_REPOSITORY_CODE_GIT
+        val condition = buildCondition(t1, t2, repoCondition)
+        return dslContext.selectCount()
+            .from(t1)
+            .leftJoin(t2)
+            .on(t1.REPOSITORY_ID.eq(t2.REPOSITORY_ID))
+            .where(condition)
+            .fetchOne(0, Long::class.java) ?: 0L
+    }
+
+    private fun buildCondition(
+        t1: TRepository,
+        t2: TRepositoryCodeGit,
+        repoCondition: RepoCondition
+    ): MutableList<Condition> {
+        val conditions = mutableListOf<Condition>()
+        conditions.add(t1.IS_DELETED.eq(false))
+        with(repoCondition) {
+            if (!projectId.isNullOrEmpty()) {
+                conditions.add(t1.PROJECT_ID.eq(projectId))
+            }
+            if (!repoIds.isNullOrEmpty()) {
+                conditions.add(t1.REPOSITORY_ID.`in`(repoIds))
+            }
+            type?.let { conditions.add(t1.TYPE.eq(it.name)) }
+            if (!projectName.isNullOrEmpty()) {
+                conditions.add(t2.PROJECT_NAME.eq(projectName))
+            }
+            if (!oauthUserId.isNullOrEmpty()) {
+                conditions.add(t2.USER_NAME.eq(oauthUserId))
+            }
+            authType?.let { t2.AUTH_TYPE.eq(it.name) }
+            if (!scmCode.isNullOrEmpty()) {
+                conditions.add(t1.SCM_CODE.eq(scmCode))
+            }
+        }
+        return conditions
+    }
+
     fun edit(
         dslContext: DSLContext,
         repositoryId: Long,
@@ -105,7 +207,8 @@ class RepositoryCodeGitDao {
         userName: String,
         credentialId: String,
         authType: RepoAuthType?,
-        gitProjectId: Long?
+        gitProjectId: Long?,
+        credentialType: String?
     ) {
         val now = LocalDateTime.now()
         with(TRepositoryCodeGit.T_REPOSITORY_CODE_GIT) {
@@ -117,6 +220,9 @@ class RepositoryCodeGitDao {
                 .set(AUTH_TYPE, authType?.name ?: RepoAuthType.SSH.name)
             if (gitProjectId != null) {
                 updateSetStep.set(GIT_PROJECT_ID, gitProjectId)
+            }
+            if (!credentialType.isNullOrBlank()) {
+                updateSetStep.set(CREDENTIAL_TYPE, credentialType)
             }
             updateSetStep.where(REPOSITORY_ID.eq(repositoryId))
                 .execute()
@@ -244,5 +350,18 @@ class RepositoryCodeGitDao {
                     hashId = it.get(3).toString()
                 )
             }
+    }
+
+    fun updateCredentialType(
+        dslContext: DSLContext,
+        repositoryId: Long,
+        credentialType: String
+    ):Int {
+        with(TRepositoryCodeGit.T_REPOSITORY_CODE_GIT) {
+            return dslContext.update(this)
+                    .set(CREDENTIAL_TYPE, credentialType)
+                    .where(REPOSITORY_ID.eq(repositoryId))
+                    .execute()
+        }
     }
 }

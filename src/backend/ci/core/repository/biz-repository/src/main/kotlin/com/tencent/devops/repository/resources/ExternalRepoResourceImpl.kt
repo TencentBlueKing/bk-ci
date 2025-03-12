@@ -30,6 +30,7 @@ package com.tencent.devops.repository.resources
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ExternalRepoResource
 import com.tencent.devops.repository.sdk.tapd.service.ITapdOauthService
+import com.tencent.devops.repository.service.RepositoryOauthService
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.tgit.TGitOAuthService
 import org.springframework.beans.factory.annotation.Autowired
@@ -40,7 +41,8 @@ import javax.ws.rs.core.UriBuilder
 class ExternalRepoResourceImpl @Autowired constructor(
     private val gitOauthService: IGitOauthService,
     private val tapdService: ITapdOauthService,
-    private val tGitOAuthService: TGitOAuthService
+    private val tGitOAuthService: TGitOAuthService,
+    private val repositoryOauthService: RepositoryOauthService
 ) : ExternalRepoResource {
     override fun gitCallback(code: String, state: String): Response {
         val gitOauthCallback = gitOauthService.gitCallback(code, state)
@@ -61,5 +63,10 @@ class ExternalRepoResourceImpl @Autowired constructor(
             )
         ).build()
         return Response.temporaryRedirect(uri).build()
+    }
+
+    override fun scmCallback(scmCode: String, code: String, state: String): Response {
+        val redirectUrl = repositoryOauthService.oauthCallback(scmCode = scmCode, code = code, state = state)
+        return Response.temporaryRedirect(UriBuilder.fromUri(redirectUrl).build()).build()
     }
 }

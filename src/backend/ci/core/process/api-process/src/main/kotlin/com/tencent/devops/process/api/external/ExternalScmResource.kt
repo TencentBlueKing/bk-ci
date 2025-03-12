@@ -36,6 +36,7 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Tag(name = "EXTERNAL_CODE_SVN", description = "外部-CODE-SVN-资源")
@@ -65,6 +66,9 @@ interface ExternalScmResource {
         @Parameter(description = "X-TRACE-ID")
         @HeaderParam("X-TRACE-ID")
         traceId: String,
+        @Parameter(description = "仓库项目ID")
+        @QueryParam("gitProjectId")
+        gitProjectId: String? = null,
         body: String
     ): Result<Boolean>
 

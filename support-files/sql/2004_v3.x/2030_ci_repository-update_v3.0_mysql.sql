@@ -47,6 +47,24 @@ BEGIN
         ADD COLUMN `OPERATOR` varchar(64) DEFAULT NULL COMMENT '操作人';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                    FROM information_schema.COLUMNS
+                    WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_REPOSITORY_CODE_GIT'
+                        AND COLUMN_NAME = 'CREDENTIAL_TYPE') THEN
+    ALTER TABLE T_REPOSITORY_CODE_GIT
+        ADD COLUMN `CREDENTIAL_TYPE` varchar(64) DEFAULT NULL COMMENT '凭证类型';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                    FROM information_schema.COLUMNS
+                    WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_REPOSITORY_CODE_SVN'
+                        AND COLUMN_NAME = 'CREDENTIAL_TYPE') THEN
+    ALTER TABLE T_REPOSITORY_CODE_SVN
+        ADD COLUMN `CREDENTIAL_TYPE` varchar(64) DEFAULT NULL COMMENT '凭证类型';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

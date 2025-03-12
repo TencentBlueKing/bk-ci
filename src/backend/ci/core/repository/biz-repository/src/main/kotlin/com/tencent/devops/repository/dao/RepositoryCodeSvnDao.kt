@@ -27,6 +27,8 @@
 
 package com.tencent.devops.repository.dao
 
+import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.model.repository.tables.TRepository
 import com.tencent.devops.model.repository.tables.TRepositoryCodeSvn
 import com.tencent.devops.model.repository.tables.records.TRepositoryCodeSvnRecord
 import com.tencent.devops.repository.pojo.UpdateRepositoryInfoRequest
@@ -46,8 +48,9 @@ class RepositoryCodeSvnDao {
         region: CodeSvnRegion?,
         projectName: String,
         userName: String,
-        privateToken: String,
-        svnType: String?
+        credentialId: String,
+        svnType: String?,
+        credentialType: String
     ) {
         val now = LocalDateTime.now()
         with(TRepositoryCodeSvn.T_REPOSITORY_CODE_SVN) {
@@ -60,17 +63,19 @@ class RepositoryCodeSvnDao {
                 CREDENTIAL_ID,
                 CREATED_TIME,
                 UPDATED_TIME,
-                SVN_TYPE
+                SVN_TYPE,
+                CREDENTIAL_TYPE
             )
                 .values(
                     repositoryId,
                     region?.name ?: "",
                     projectName,
                     userName,
-                    privateToken,
+                    credentialId,
                     now,
                     now,
-                    svnType ?: ""
+                    svnType ?: "",
+                    credentialType
                 ).execute()
         }
     }
@@ -94,7 +99,8 @@ class RepositoryCodeSvnDao {
         projectName: String,
         userName: String,
         credentialId: String,
-        svnType: String?
+        svnType: String?,
+        credentialType: String
     ) {
         val now = LocalDateTime.now()
         with(TRepositoryCodeSvn.T_REPOSITORY_CODE_SVN) {
@@ -105,6 +111,7 @@ class RepositoryCodeSvnDao {
                 .set(UPDATED_TIME, now)
                 .set(CREDENTIAL_ID, credentialId)
                 .set(SVN_TYPE, svnType ?: "")
+                .set(CREDENTIAL_TYPE, credentialType)
                 .where(REPOSITORY_ID.eq(repositoryId))
                 .execute()
         }
@@ -141,6 +148,19 @@ class RepositoryCodeSvnDao {
                 baseStep.set(SVN_TYPE, updateRepositoryInfoRequest.svnType)
             }
             baseStep.set(UPDATED_TIME, LocalDateTime.now())
+                .where(REPOSITORY_ID.eq(repositoryId))
+                .execute()
+        }
+    }
+
+    fun updateCredentialType(
+        dslContext: DSLContext,
+        repositoryId: Long,
+        credentialType: String
+    ):Int {
+        with(TRepositoryCodeSvn.T_REPOSITORY_CODE_SVN) {
+            return dslContext.update(this)
+                .set(CREDENTIAL_TYPE, credentialType)
                 .where(REPOSITORY_ID.eq(repositoryId))
                 .execute()
         }

@@ -67,6 +67,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryVersionServic
 import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReq
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
@@ -79,11 +80,11 @@ import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
-import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -390,16 +391,20 @@ class PipelineVersionFacadeService @Autowired constructor(
                     )
                 }
                 pipelineYamlFacadeService.checkPushParam(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    version = draftVersion.version,
-                    versionName = branchName,
-                    repoHashId = yamlInfo.repoHashId,
-                    scmType = yamlInfo.scmType!!,
-                    filePath = filePath,
-                    content = draftVersion.yaml ?: "",
-                    targetAction = targetAction
+                    PipelineYamlFileReleaseReq(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        version = draftVersion.version,
+                        versionName = branchName,
+                        pipelineName = targetSettings.pipelineName,
+                        content = draftVersion.yaml ?: "",
+                        commitMessage = request.description ?: "update",
+                        repoHashId = yamlInfo.repoHashId,
+                        scmType = yamlInfo.scmType!!,
+                        filePath = yamlInfo.filePath,
+                        targetAction = targetAction
+                    )
                 )
             }
 
@@ -494,18 +499,21 @@ class PipelineVersionFacadeService @Autowired constructor(
                 val yamlInfo = request.yamlInfo!!
                 // #8161 如果调用代码库同步失败则有报错或提示
                 val pushResult = pipelineYamlFacadeService.pushYamlFile(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    version = draftVersion.version,
-                    versionName = branchName,
-                    pipelineName = targetSettings.pipelineName,
-                    content = draftVersion.yaml ?: "",
-                    commitMessage = request.description ?: "update",
-                    repoHashId = yamlInfo.repoHashId,
-                    scmType = yamlInfo.scmType!!,
-                    filePath = yamlInfo.filePath,
-                    targetAction = targetAction
+                    PipelineYamlFileReleaseReq(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        version = draftVersion.version,
+                        versionName = branchName,
+                        pipelineName = targetSettings.pipelineName,
+                        content = draftVersion.yaml ?: "",
+                        commitMessage = request.description ?: "update",
+                        repoHashId = yamlInfo.repoHashId,
+                        scmType = yamlInfo.scmType!!,
+                        filePath = yamlInfo.filePath,
+                        targetAction = targetAction
+                    )
+
                 )
                 targetUrl = pushResult.mrUrl
             }

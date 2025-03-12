@@ -29,6 +29,7 @@ package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.auth.api.AuthPlatformApi
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -59,7 +60,8 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
     private val serviceDao: ServiceDao,
     private val favoriteDao: FavoriteDao,
     private val gray: Gray,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val apiPlatformApi: AuthPlatformApi
 ) : UserProjectServiceService {
 
     override fun getService(userId: String, serviceId: Long): Result<ServiceVO> {
@@ -225,7 +227,12 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
                 val s = groupService[typeId]
 
                 s?.forEach {
-                    val status = it.status
+                    val status = when {
+                        it.englishName == SERVICE_ENGLISH_NAME_PLATFORM &&
+                                !apiPlatformApi.validateUserPlatformPermission(userId) -> SERVICE_ITEM_STATUS_PLANNING
+
+                        else -> it.status
+                    }
                     val favor = favorServices.contains(it.id)
                     services.add(
                         ServiceVO(
@@ -304,5 +311,8 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(AbsUserProjectServiceServiceImpl::class.java)
+        // 平台管理界面
+        const val SERVICE_ENGLISH_NAME_PLATFORM = "Platform"
+        const val SERVICE_ITEM_STATUS_PLANNING = "planning"
     }
 }

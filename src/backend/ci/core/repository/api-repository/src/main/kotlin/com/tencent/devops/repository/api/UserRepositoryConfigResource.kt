@@ -27,17 +27,35 @@
 
 package com.tencent.devops.repository.api
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.repository.pojo.RepositoryConfig
+import com.tencent.devops.repository.pojo.RepositoryConfigLogoInfo
+import com.tencent.devops.repository.pojo.RepositoryScmConfigReq
+import com.tencent.devops.repository.pojo.RepositoryScmConfigVo
+import com.tencent.devops.repository.pojo.RepositoryScmProviderVo
+import com.tencent.devops.repository.pojo.ScmConfigBaseInfo
+import com.tencent.devops.repository.pojo.enums.ScmConfigStatus
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.glassfish.jersey.media.multipart.FormDataParam
+import java.io.InputStream
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Tag(name = "USER_REPOSITORY_MANAGER", description = "用户-代码库配置")
+@Tag(name = "USER_REPOSITORY_MANAGER", description = "用户-源代码管理")
 @Path("/user/repositories/config")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -46,5 +64,116 @@ interface UserRepositoryConfigResource {
     @Operation(summary = "获取代码库配置列表")
     @GET
     @Path("/")
-    fun list(): Result<List<RepositoryConfig>>
+    fun list(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<ScmConfigBaseInfo>>
+
+    @Operation(summary = "获取代码库提供者")
+    @GET
+    @Path("/listProvider")
+    fun listProvider(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<RepositoryScmProviderVo>>
+
+    @Operation(summary = "获取代码库配置列表")
+    @GET
+    @Path("/listConfig")
+    fun listConfig(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "状态", required = false)
+        @QueryParam("status")
+        status: ScmConfigStatus?,
+        @Parameter(description = "排除的状态", required = false)
+        @QueryParam("status")
+        excludeStatus: ScmConfigStatus?,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页多少条", required = false, example = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<SQLPage<RepositoryScmConfigVo>>
+
+    @Operation(summary = "创建代码库配置")
+    @POST
+    @Path("/")
+    fun create(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        request: RepositoryScmConfigReq
+    ): Result<Boolean>
+
+    @Operation(summary = "编辑代码库配置")
+    @PUT
+    @Path("/{scmCode}")
+    fun edit(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "scmCode", required = true)
+        @PathParam("scmCode")
+        scmCode: String,
+        request: RepositoryScmConfigReq
+    ): Result<Boolean>
+
+    @Operation(summary = "启用代码库配置")
+    @PUT
+    @Path("/{scmCode}/enable")
+    fun enable(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "scmCode", required = true)
+        @PathParam("scmCode")
+        scmCode: String
+    ): Result<Boolean>
+
+    @Operation(summary = "禁用代码库配置")
+    @PUT
+    @Path("/{scmCode}/disable")
+    fun disable(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "scmCode", required = true)
+        @PathParam("scmCode")
+        scmCode: String
+    ): Result<Boolean>
+
+    @Operation(summary = "删除代码库配置")
+    @DELETE
+    @Path("/{scmCode}")
+    fun delete(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "scmCode", required = true)
+        @PathParam("scmCode")
+        scmCode: String
+    ): Result<Boolean>
+
+    @Operation(summary = "上传logo")
+    @POST
+    @Path("/uploadLogo")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    fun uploadLogo(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "contentLength", required = true)
+        @HeaderParam("content-length")
+        contentLength: Long,
+        @Parameter(description = "logo", required = true)
+        @FormDataParam("logo")
+        inputStream: InputStream,
+        @FormDataParam("logo")
+        disposition: FormDataContentDisposition
+    ): Result<RepositoryConfigLogoInfo?>
 }
