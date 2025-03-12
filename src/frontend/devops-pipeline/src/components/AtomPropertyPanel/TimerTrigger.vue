@@ -34,7 +34,6 @@
                             v-validate.initial="{ 'required': isShowBasicRule }"
                         />
                     </form-field>
-                    123
                 </div>
             </accordion>
     

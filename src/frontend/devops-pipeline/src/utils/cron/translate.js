@@ -1,7 +1,7 @@
 import translateCN from './translate-cn'
 import translateEN from './translate-en'
 import {
-    optimze,
+    optimize,
     parsetext
 } from './utils'
 
@@ -19,7 +19,7 @@ const print = (expression, locale) => {
     atoms.forEach((item, index) => {
         fieldMap[fieldList[index]] = parsetext(item)
     })
-    const ast = optimze(fieldMap)
+    const ast = optimize(fieldMap)
     return locale === 'zh-CN' ? translateCN(ast) : translateEN(ast)
 }
 

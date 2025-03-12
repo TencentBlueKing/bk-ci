@@ -20,8 +20,7 @@
                 return this.atom.version.startsWith('1.')
             },
             timerTriggerComponent () {
-                if (this.isTimerTriggerV1) return TimerTriggerV1
-                return TimerTriggerV2
+                return this.isTimerTriggerV1 ? TimerTriggerV1 : TimerTriggerV2
             }
         }
     }

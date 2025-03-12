@@ -1,6 +1,6 @@
 import Node from './Node'
 
-export const optimze = (fieldMap) => {
+export const optimize = (fieldMap) => {
     const isAllValue = node => node.length === 1
     && node[0].type === Node.TYPE_ENUM
     && (node[0].value === '*' || node[0].value === '?')

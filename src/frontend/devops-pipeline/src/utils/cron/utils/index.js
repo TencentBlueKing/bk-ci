@@ -1,2 +1,2 @@
 export * from './parsetext'
-export * from './optimze'
+export * from './optimize'
