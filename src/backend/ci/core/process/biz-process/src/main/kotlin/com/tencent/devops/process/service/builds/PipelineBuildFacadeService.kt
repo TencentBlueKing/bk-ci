@@ -280,7 +280,8 @@ class PipelineBuildFacadeService(
                     }
                 } ?: param.defaultValue
                 // 如果上次构建指定了最新的目录随机字符串，则填充到构建预览信息
-                param.latestRandomStringInPath = latestParam?.latestRandomStringInPath
+                param.latestRandomStringInPath =
+                    latestParam?.latestRandomStringInPath ?: param.randomStringInPath
             }
         } else {
             triggerContainer.params.forEach { param ->
