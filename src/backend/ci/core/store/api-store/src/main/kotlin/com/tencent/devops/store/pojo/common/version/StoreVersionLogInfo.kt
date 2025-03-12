@@ -11,6 +11,10 @@ data class StoreVersionLogInfo(
     @Schema(description = "最近更新时间")
     val lastUpdateTime: String?,
     @Schema(description = "更新日志")
-    val updateLog: String?
+    val updateLog: String?,
+    @Schema(description = "包大小")
+    val packageSize: String?,
+    @Schema(description = "发布人")
+    val publisher: String?
 
 )

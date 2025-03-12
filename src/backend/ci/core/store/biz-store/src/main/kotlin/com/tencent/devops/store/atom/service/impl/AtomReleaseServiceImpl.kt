@@ -28,6 +28,8 @@
 package com.tencent.devops.store.atom.service.impl
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
+import com.tencent.devops.artifactory.store.config.BkRepoStoreConfig
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.constant.DEPLOY
@@ -45,6 +47,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonSchemaUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
@@ -124,12 +127,14 @@ import com.tencent.devops.store.atom.service.AtomQualityService
 import com.tencent.devops.store.atom.service.AtomReleaseService
 import com.tencent.devops.store.atom.service.MarketAtomArchiveService
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
+import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreFileService
 import com.tencent.devops.store.common.service.StoreI18nMessageService
 import com.tencent.devops.store.common.service.StoreWebsocketService
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.common.utils.VersionUtils
+import okhttp3.Credentials
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -137,6 +142,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import java.util.Locale
 import java.time.LocalDateTime
+import java.util.concurrent.Executors
 
 @Suppress("ALL")
 abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseService {
@@ -187,12 +193,21 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     lateinit var storeWebsocketService: StoreWebsocketService
     @Autowired
     lateinit var storeFileService: StoreFileService
+    @Autowired
+    lateinit var bkRepoClient: BkRepoClient
+    @Autowired
+    lateinit var bkRepoStoreConfig: BkRepoStoreConfig
+
+    @Autowired
+    lateinit var storeInnerPipelineConfig: StoreInnerPipelineConfig
 
     @Value("\${store.defaultAtomErrorCodeLength:6}")
     private var defaultAtomErrorCodeLength: Int = 6
 
     @Value("\${store.defaultAtomErrorCodePrefix:8}")
     private lateinit var defaultAtomErrorCodePrefix: String
+
+    private val executorService = Executors.newFixedThreadPool(2)
 
     companion object {
         private val logger = LoggerFactory.getLogger(AtomReleaseServiceImpl::class.java)
@@ -1019,6 +1034,30 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val version = atomRecord.version
         val releaseFlag = atomStatus == AtomStatusEnum.RELEASED.status.toByte()
         val atomReleaseRecord = marketAtomVersionLogDao.getAtomVersion(dslContext, atomId)
+        executorService.execute {
+            //获取插件构建环境包路径
+            try {
+                val atomEnvRecords = marketAtomEnvInfoDao.getMarketAtomEnvInfosByAtomId(dslContext, atomId)
+
+                atomEnvRecords?.forEach {
+                    if (it.pkgPath != null) {
+                        val node = bkRepoClient.getStoreComponentPkgSize(
+                            authorization = Credentials.basic(
+                                bkRepoStoreConfig.bkrepoStoreUserName,
+                                bkRepoStoreConfig.bkrepoStorePassword
+                            ),
+                            repoName = BkRepoEnum.PLUGIN.repoName,
+                            projectId = storeInnerPipelineConfig.innerPipelineProject,
+                            fullPath = it.pkgPath!!
+                        )
+                        logger.info("getStoreComponentPkgSize, node:${node.size}")
+                    }
+                }
+            } catch (e: Exception) {
+                logger.error("getStoreComponentPkgSize error:${e}")
+            }
+
+        }
         return handleAtomRelease(
             userId = userId,
             releaseFlag = releaseFlag,
