@@ -105,6 +105,4 @@ class BkProcessDatabaseMigratingShardingAlgorithm : StandardShardingAlgorithm<St
     }
 
     override fun init(props: Properties?) = Unit
-
-
 }

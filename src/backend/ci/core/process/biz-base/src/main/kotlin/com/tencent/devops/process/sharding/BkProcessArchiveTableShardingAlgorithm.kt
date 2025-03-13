@@ -101,6 +101,4 @@ class BkProcessArchiveTableShardingAlgorithm : StandardShardingAlgorithm<String>
     }
 
     override fun init(props: Properties?) = Unit
-
-
 }

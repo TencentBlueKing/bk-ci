@@ -101,6 +101,4 @@ class BkMetricsTableShardingAlgorithm : StandardShardingAlgorithm<String> {
     }
 
     override fun init(props: Properties?) = Unit
-
-
 }
