@@ -153,9 +153,8 @@
 
                 if (this.enableVersionControl && this.randomString) {
                     this.fileDefaultVal.randomFilePath = this.randomString
-
-                    const randomStringIndex = this.value.indexOf(`/${this.randomString}/`)
-                    this.fileDefaultVal.directory = randomStringIndex !== -1 ? this.value.slice(0, randomStringIndex) : this.value.slice(0, lastSlashIndex)
+                    const randomStringLastIndex = this.value.lastIndexOf(`/${this.randomString}`)
+                    this.fileDefaultVal.directory = this.value.slice(0, randomStringLastIndex)
                 } else {
                     this.fileDefaultVal.directory = this.value.slice(0, lastSlashIndex)
                 }
@@ -165,8 +164,20 @@
                 const path = this.enableVersionControl && randomFilePath
                     ? `${directory}/${randomFilePath}/${fileName}`
                     : `${directory}/${fileName}`
-                this.handleChange(this.name, path)
-                this.handleChange('randomStringInPath', this.fileDefaultVal.randomFilePath)
+
+                // 执行页面randomFilePath改变，需要传json给后端去改变latestRandomStringInPath的值
+                const value = randomFilePath
+                    ? {
+                        directory: path,
+                        latestRandomStringInPath: randomFilePath
+                    }
+                    : path
+                const finalValue = this.flex ? value : path
+                this.handleChange(this.name, finalValue)
+
+                if (!this.flex) {
+                    this.handleChange('randomStringInPath', randomFilePath)
+                }
             },
             updatePathFromDirectory (value) {
                 this.fileDefaultVal.directory = value
