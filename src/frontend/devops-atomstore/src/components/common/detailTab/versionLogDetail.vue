@@ -38,7 +38,7 @@
         ></bk-table-column>
         <bk-table-column
             :label="$t('发布人')"
-            prop="Publisher"
+            prop="publisher"
         ></bk-table-column>
         <bk-table-column
             label="Tag"
