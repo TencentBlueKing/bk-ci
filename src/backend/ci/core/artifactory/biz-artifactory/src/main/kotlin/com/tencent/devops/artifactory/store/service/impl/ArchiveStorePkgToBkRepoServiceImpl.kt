@@ -227,7 +227,7 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
         return repoPrefixUrl
     }
 
-    override fun getStoreFileSize(filePath: String, storeType: StoreTypeEnum, repoName: String?): Long {
+    override fun getStoreFileSize(userId: String,filePath: String, storeType: StoreTypeEnum, repoName: String?): Long {
         val (projectId, authorization, repo) = getRepoStoreConfig(storeType)
         return try {
             bkRepoClient.getStoreComponentPkgSize(
@@ -235,6 +235,7 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
                 projectId = projectId,
                 repoName = repoName ?: repo,
                 fullPath = filePath,
+                userId=userId
             ).size
         } catch (ignored: NotFoundException) {
             logger.warn("file[$filePath] not exists")

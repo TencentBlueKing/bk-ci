@@ -127,7 +127,7 @@ class ArchiveStorePkgToLocalServiceImpl : ArchiveStorePkgServiceImpl() {
     }
 
 
-    override fun getStoreFileSize(filePath: String, storeType: StoreTypeEnum, repoName: String?): Long {
+    override fun getStoreFileSize(userId: String,filePath: String, storeType: StoreTypeEnum, repoName: String?): Long {
         if (filePath.contains("../")) {
             throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(filePath))
         }

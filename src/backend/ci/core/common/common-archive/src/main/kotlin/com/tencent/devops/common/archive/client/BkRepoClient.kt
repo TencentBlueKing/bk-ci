@@ -1227,11 +1227,12 @@ class BkRepoClient constructor(
         projectId: String,
         repoName: String,
         fullPath: String,
+        userId: String
     ): QueryNodeInfo {
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/detail/$projectId/$repoName/$fullPath"
         val request = Request.Builder()
             .url(url)
-            .header("Authorization", authorization).get().build()
+            .headers(getCommonHeaders(userId, projectId).toHeaders()).build()
         return doRequest(request).resolveResponse<Response<QueryNodeInfo>>()!!.data!!
 
     }

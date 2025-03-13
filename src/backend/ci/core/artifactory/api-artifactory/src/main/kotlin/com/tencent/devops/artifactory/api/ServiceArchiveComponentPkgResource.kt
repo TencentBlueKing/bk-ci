@@ -119,6 +119,9 @@ interface ServiceArchiveComponentPkgResource {
     @GET
     @Path("/types/{storeType}/file/size")
     fun getFileSize(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
