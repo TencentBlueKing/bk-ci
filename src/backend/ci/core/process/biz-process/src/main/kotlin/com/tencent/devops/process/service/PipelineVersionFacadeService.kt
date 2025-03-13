@@ -562,11 +562,11 @@ class PipelineVersionFacadeService @Autowired constructor(
                 val baseVersion = draftVersion.baseVersion?.let {
                     pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, it)
                 }
-                if (baseVersion == null || baseVersion.status != VersionStatus.BRANCH) throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
-                    params = arrayOf(draftVersion.baseVersion?.toString() ?: "")
-                )
-                Pair(VersionStatus.BRANCH_RELEASE, baseVersion.versionName)
+                if (baseVersion == null) {
+                    Pair(VersionStatus.DRAFT_RELEASE, null)
+                } else {
+                    Pair(VersionStatus.BRANCH_RELEASE, baseVersion.versionName)
+                }
             }
 
             // 提交到指定分支,需要判断是否是默认分支,如果是默认分支,则发布成正式版本

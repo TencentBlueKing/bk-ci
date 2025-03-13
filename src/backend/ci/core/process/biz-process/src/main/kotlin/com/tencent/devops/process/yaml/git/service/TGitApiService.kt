@@ -343,7 +343,10 @@ class TGitApiService @Autowired constructor(
             content = content,
             commitMessage = commitMessage
         )
-        val mrUrl = if (targetAction == CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE) {
+        val mrUrl = if (
+            targetAction == CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE ||
+            targetAction == CodeTargetAction.COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE
+        ) {
             createYamlMergeRequest(
                 userId = userId,
                 fileExists = fileExists,
