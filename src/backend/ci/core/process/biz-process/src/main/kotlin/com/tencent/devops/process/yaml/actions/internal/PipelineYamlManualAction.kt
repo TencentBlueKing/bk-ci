@@ -162,7 +162,8 @@ class PipelineYamlManualAction : BaseAction {
         content: String,
         commitMessage: String,
         targetAction: CodeTargetAction,
-        versionName: String?
+        versionName: String?,
+        targetBranch: String?
     ): PacGitPushResult {
         return api.pushYamlFile(
             userId = event().userId,
@@ -175,7 +176,8 @@ class PipelineYamlManualAction : BaseAction {
             targetAction = targetAction,
             pipelineId = pipelineId,
             pipelineName = pipelineName,
-            versionName = versionName
+            versionName = versionName,
+            targetBranch = targetBranch
         )
     }
 }
