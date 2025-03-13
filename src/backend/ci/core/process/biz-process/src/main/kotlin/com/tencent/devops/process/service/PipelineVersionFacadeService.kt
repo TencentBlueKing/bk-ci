@@ -562,7 +562,7 @@ class PipelineVersionFacadeService @Autowired constructor(
                 val baseVersion = draftVersion.baseVersion?.let {
                     pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, it)
                 }
-                if (baseVersion == null || baseVersion.status != VersionStatus.BRANCH) {
+                if (baseVersion == null) {
                     Pair(VersionStatus.DRAFT_RELEASE, null)
                 } else {
                     Pair(VersionStatus.BRANCH_RELEASE, baseVersion.versionName)
