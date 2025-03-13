@@ -18,4 +18,9 @@ class OpProjectResourceImpl @Autowired constructor(
         remotedevProjectService.migrateOldData(projectId)
         return Result(true)
     }
+
+    override fun updateVmName(userId: String, projects: Set<String>): Result<Boolean> {
+        remotedevProjectService.updateVmName(projects)
+        return Result(true)
+    }
 }

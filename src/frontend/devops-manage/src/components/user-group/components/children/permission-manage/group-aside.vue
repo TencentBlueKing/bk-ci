@@ -437,11 +437,15 @@ export default {
             break;
           case 'submit_add_group_perm':
           case 'submit_delete_group_perm':
-          case 'submit_edit_group_perm':
+          case 'submit_edit_group_perm': {
+            const groupId = data.data.id;
+            this.syncGroupPermissions(groupId)
+            break;
+          }
           case 'renewal_user_confirm':
           case 'renewal_template_confirm': {
             const groupId = data.data.id;
-            this.syncGroupPermissions(groupId)
+            this.syncGroupIAM(groupId)
             break;
           }
         }

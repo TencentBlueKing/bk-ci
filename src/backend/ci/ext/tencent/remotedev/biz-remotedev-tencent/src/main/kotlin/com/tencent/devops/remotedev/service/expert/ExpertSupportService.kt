@@ -10,8 +10,8 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.audit.TencentActionAuditContent
-import com.tencent.devops.common.auth.api.TencentResourceTypeId
 import com.tencent.devops.common.auth.api.TencentActionId
+import com.tencent.devops.common.auth.api.TencentResourceTypeId
 import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -58,10 +58,10 @@ import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.service.BKNodemanService
 import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.client.StartCloudClient
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_EXPORT_CONFIG_INFO
 import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_QUERY_CGS_PWD
-import com.tencent.devops.remotedev.service.client.StartCloudClient
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import java.time.Duration
@@ -157,10 +157,10 @@ class ExpertSupportService @Autowired constructor(
             owner = sharedInfo.firstOrNull { it.type == AssignType.OWNER }?.sharedUser
             viewers = sharedInfo.filter { it.type == AssignType.VIEWER }.map { it.sharedUser }.toSet().ifEmpty { null }
         }
-
+        val projectManager = permissionService.managers(data.projectId).toSet()
         val recordInfo = SupRecordInfo(
             requestIp = requestIp,
-            projectManager = projectInfo.properties?.remotedevManager?.split(";")?.toSet(),
+            projectManager = projectManager,
             clientVersion = clientVersion,
             machineStatus = record.status.name,
             cdsVersion = null,
@@ -246,7 +246,7 @@ class ExpertSupportService @Autowired constructor(
                     ""
                 }
 
-                "managers" -> newParam[k] = projectInfo.properties?.remotedevManager ?: ""
+                "managers" -> newParam[k] = projectManager.joinToString(separator = ";")
                 "requestIp" -> newParam[k] = requestIp ?: ""
                 "displayName" -> newParam[k] = record.displayName
 
@@ -294,11 +294,6 @@ class ExpertSupportService @Autowired constructor(
         val requestIp = attributes?.request?.getHeader("X-Forwarded-For")?.split(",")
             ?.firstOrNull { it.isNotBlank() }?.trim()
         val clientVersion = attributes?.request?.getHeader("Bk-Ci-Client-Version")
-        val projectInfo = kotlin.runCatching {
-            client.get(ServiceProjectResource::class).get(data.projectId)
-        }.onFailure {
-            logger.warn("get project ${data.projectId} info error|${it.message}")
-        }.getOrElse { null }?.data
         val owner: String?
         var viewers: Set<String>? = null
         if (record.ownerType == WorkspaceOwnerType.PERSONAL) {
@@ -325,7 +320,7 @@ class ExpertSupportService @Autowired constructor(
 
         val info = SupRecordInfo(
             requestIp = requestIp,
-            projectManager = projectInfo?.properties?.remotedevManager?.split(";")?.toSet(),
+            projectManager = permissionService.managers(data.projectId).toSet(),
             clientVersion = clientVersion,
             machineStatus = record.status.name,
             cdsVersion = cgsStatus?.cgsVersion,
@@ -653,21 +648,12 @@ class ExpertSupportService @Autowired constructor(
             return
         }.getOrThrow()
 
-        val owner = permissionService.getWorkspaceOwner(workspaceName)
+        val cc = permissionService.getWorkspaceOwner(workspaceName).toMutableSet()
         val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName) ?: run {
             logger.warn("expandDiskCallback workspace is null $workspaceName")
             return
         }
-        val projectId = workspace.projectId
-        val cc = kotlin.runCatching {
-            client.get(ServiceProjectResource::class)
-                .listByProjectCodeList(listOf(projectId))
-        }.onFailure {
-            logger.warn("expandDiskCallback get project $projectId info error|${it.message}")
-        }.getOrElse { null }?.data?.map {
-            it.properties?.remotedevManager?.split(";")?.toSet() ?: emptySet()
-        }?.flatten()?.toMutableSet() ?: mutableSetOf()
-        cc.addAll(owner)
+        cc.addAll(permissionService.managers(workspace.projectId))
 
         val dSize = workspaceOpHistoryDao.fetchLastOp(
             dslContext = dslContext,
@@ -681,7 +667,7 @@ class ExpertSupportService @Autowired constructor(
             projectId = null,
             notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
             bodyParams = mutableMapOf(
-                "projectId" to projectId,
+                "projectId" to workspace.projectId,
                 "operator" to operator,
                 "taskStatus" to (taskInfo.status?.name ?: ""),
                 "taskLogs" to taskInfo.logs.joinToString(";"),
@@ -785,21 +771,12 @@ class ExpertSupportService @Autowired constructor(
             return
         }.getOrThrow()
 
-        val owner = permissionService.getWorkspaceOwner(workspaceName)
+        val cc = permissionService.getWorkspaceOwner(workspaceName).toMutableSet()
         val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName) ?: run {
             logger.warn("createDiskCallback workspace is null $workspaceName")
             return
         }
-        val projectId = workspace.projectId
-        val cc = kotlin.runCatching {
-            client.get(ServiceProjectResource::class)
-                .listByProjectCodeList(listOf(projectId))
-        }.onFailure {
-            logger.warn("createDiskCallback get project $projectId info error|${it.message}")
-        }.getOrElse { null }?.data?.map {
-            it.properties?.remotedevManager?.split(";")?.toSet() ?: emptySet()
-        }?.flatten()?.toMutableSet() ?: mutableSetOf()
-        cc.addAll(owner)
+        cc.addAll(permissionService.managers(workspace.projectId))
 
         val dSize = workspaceOpHistoryDao.fetchLastOp(
             dslContext = dslContext,
@@ -813,7 +790,7 @@ class ExpertSupportService @Autowired constructor(
             projectId = null,
             notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
             bodyParams = mutableMapOf(
-                "projectId" to projectId,
+                "projectId" to workspace.projectId,
                 "operator" to operator,
                 "taskStatus" to (taskInfo.status?.name ?: ""),
                 "taskLogs" to taskInfo.logs.joinToString(";"),

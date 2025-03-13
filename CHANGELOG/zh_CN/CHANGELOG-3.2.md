@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v3.2.0-rc.3](#v320-rc3)
+   - [Changelog since v3.2.0-rc.2](#changelog-since-v320-rc2)
+
 - [v3.2.0-rc.2](#v320-rc2)
    - [Changelog since v3.2.0-rc.1](#changelog-since-v320-rc1)
 
@@ -10,6 +13,52 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v3.2.0-rc.3
+## 2025-03-07
+### Changelog since v3.2.0-rc.2
+#### 新增
+
+##### 流水线
+- [新增] feat：项目级别的变量语法风格设置增加风险提示和风险确认 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11407)
+- [新增] feat：执行历史界面制品列表UI优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11012)
+- [新增] feat：保存流水线时，校验是否有子流水线循环依赖 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10479)
+- [新增] feat: APP的manualStartupInfo新增url处理 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11475)
+- [新增] feat：流水线变量面板，上下滚动时固定顶部操作区域 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11378)
+
+##### 环境管理
+- [新增] feat：环境-节点管理列表增加执行信息并支持排序 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11444)
+- [新增] feat: environment的redis迁移 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11464)
+- [新增] feat：环境-节点管理列表支持按照状态等字段搜索 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11445)
+
+##### 调度
+- [新增] feat: 优化agent等待日志打印逻辑 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11504)
+
+##### 网关
+- [新增] feat: 将tag的缓存有效期从5s改为60s [链接](http://github.com/TencentBlueKing/bk-ci/issues/11508)
+
+#### 优化
+
+##### 流水线
+- [优化] pref:流水线构建重试时增加时间限制 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11478)
+- [优化] pref: 新详情页接口的stage审核状态与日志行数计算优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11507)
+
+##### 研发商店
+- [优化] pref:优化研发商店组件下架逻辑 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11308)
+
+#### 修复
+
+##### 流水线
+- [修复] 流水线插件参数字段长度限制为1024字符问题修复 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11520)
+- [修复] bug: 修复T_PIPELINE_WEBHOOK表中PROJECT_NAME字段异常的值 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11449)
+- [修复] bug: 流水线版本管理与触发的并发问题 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11490)
+- [修复] bug: 通过api保存的新版本可能覆盖旧版本 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11418)
+
+##### 研发商店
+- [修复] bug: 当被替换插件参数发生变化时，插件替换工具不一定能兼容 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11486)
+
+##### 未分类
+- [修复] bug：文件通用下载接口的文件路径参数校验加强 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11501)
+
 # v3.2.0-rc.2
 ## 2025-02-21
 ### Changelog since v3.2.0-rc.1

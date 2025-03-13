@@ -491,6 +491,13 @@ class ThirdPartyAgentService @Autowired constructor(
         return Page(pageNotNull, pageSizeNotNull, agentBuildCount, agentBuilds)
     }
 
+    fun listLatestBuildPipelines(agentIds: List<String>): List<AgentBuildInfo> {
+        return thirdPartyAgentBuildDao.listLatestBuildPipelines(
+            dslContext = dslContext,
+            agentIds = agentIds
+        )
+    }
+
     private fun finishBuild(record: TDispatchThirdpartyAgentBuildRecord, success: Boolean) {
         logger.info(
             "Finish the third party agent(${record.agentId}) build(${record.buildId}) " +

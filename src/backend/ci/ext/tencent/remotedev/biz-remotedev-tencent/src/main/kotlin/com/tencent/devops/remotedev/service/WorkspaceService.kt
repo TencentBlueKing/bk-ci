@@ -213,10 +213,10 @@ class WorkspaceService @Autowired constructor(
             workspaceName != null -> workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ip != null -> workspaceJoinDao.fetchWindowsWorkspacesSimple(
                 dslContext, sip = ip, notStatus = listOf(
-                WorkspaceStatus.PREPARING,
-                WorkspaceStatus.DELETED,
-                WorkspaceStatus.DELIVERING_FAILED
-            ),
+                    WorkspaceStatus.PREPARING,
+                    WorkspaceStatus.DELETED,
+                    WorkspaceStatus.DELIVERING_FAILED
+                ),
                 checkField = listOf(TWorkspace.T_WORKSPACE.PROJECT_ID)
             ).firstOrNull()
 
@@ -551,7 +551,8 @@ class WorkspaceService @Autowired constructor(
                     labels = it.labels,
                     createTime = it.createTime.timestamp(),
                     imageId = detail?.imageId ?: "",
-                    recordEnabled = !allWindows[it.workspaceName]?.enableRecordUser.isNullOrBlank()
+                    recordEnabled = !allWindows[it.workspaceName]?.enableRecordUser.isNullOrBlank(),
+                    vmName = allWindows[it.workspaceName]?.vmName
                 )
             )
         }
@@ -715,7 +716,7 @@ class WorkspaceService @Autowired constructor(
             RemotedevProject(
                 projectId = it.value1(),
                 projectName = detailMap[it.value1()]?.projectName ?: "",
-                remotedevManager = detailMap[it.value1()]?.properties?.remotedevManager ?: ""
+                remotedevManager = permissionService.getCacheManager(it.value1()).joinToString(";")
             )
         }
     }
@@ -744,7 +745,7 @@ class WorkspaceService @Autowired constructor(
             RemotedevProjectNew(
                 projectId = it.englishName,
                 projectName = it.projectName,
-                remotedevManager = it.remotedevManager ?: "",
+                remotedevManager = permissionService.getCacheManager(it.englishName).joinToString(";"),
                 monitorUrl = "$projectMonitorUrl?orgName=${projectAndBizs[it.englishName] ?: ""}"
             )
         }
@@ -1137,8 +1138,9 @@ class WorkspaceService @Autowired constructor(
         }
         val normalStatuses = setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.DISTRIBUTING)
         return data.map { it ->
-            val normalNodeCount = it.nodeHashIds?.count { workspaceStatus[it] in normalStatuses && cgsStatus?.get(node2HostMap[it]) == ComputerStatusEnum.NORMAL.status }
-                ?: 0
+            val normalNodeCount =
+                it.nodeHashIds?.count { workspaceStatus[it] in normalStatuses && cgsStatus?.get(node2HostMap[it]) == ComputerStatusEnum.NORMAL.status }
+                    ?: 0
             val abnormalNodeCount = (it.nodeHashIds?.size ?: 0) - normalNodeCount
             WorkspaceEnv(
                 projectId = it.projectId,
@@ -1215,6 +1217,7 @@ class WorkspaceService @Autowired constructor(
             workspace.createUserId
         }
         val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
+        val allConfig = windowsResourceConfigService.getAllType(true, null).associateBy { it.id!! }
         val defaultZoneConfig = windowsResourceConfigService.getAllZone()
             .associateBy { it.zoneShortName }
         val specZoneConfig = windowsResourceConfigService.getAllSpecZone().associateBy { it.zoneShortName }
@@ -1236,7 +1239,8 @@ class WorkspaceService @Autowired constructor(
             owner = owner,
             resourceId = resourceId,
             displayName = workspace.displayName,
-            zoneConfig = zone
+            zoneConfig = zone,
+            winConfig = allConfig[workspace.winConfigId?.toLong()]
         )
     }
 
@@ -1379,10 +1383,10 @@ class WorkspaceService @Autowired constructor(
         logger.info("$userId modifyWorkspaceDisplayName $ip|$displayName")
         val record = workspaceJoinDao.fetchWindowsWorkspacesSimple(
             dslContext, sip = ip, notStatus = listOf(
-            WorkspaceStatus.PREPARING,
-            WorkspaceStatus.DELETED,
-            WorkspaceStatus.DELIVERING_FAILED
-        ),
+                WorkspaceStatus.PREPARING,
+                WorkspaceStatus.DELETED,
+                WorkspaceStatus.DELIVERING_FAILED
+            ),
             checkField = listOf(TWorkspace.T_WORKSPACE.NAME)
         ).ifEmpty {
             logger.warn("$ip fetchWorkspaceByIp not found")

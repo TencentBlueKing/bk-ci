@@ -975,11 +975,10 @@
                                 message = '新增体验成功'
                                 theme = 'success'
                             } else {
-                                const resourceCode = params.path.split('/')[1] || ''
                                 this.handleNoPermission({
                                     projectId: this.projectId,
                                     resourceType: PIPELINE_RESOURCE_TYPE,
-                                    resourceCode,
+                                    resourceCode: this.curPipelineId,
                                     action: PIPELINE_RESOURCE_ACTION.EXECUTE
                                 })
                             }

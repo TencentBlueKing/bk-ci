@@ -114,6 +114,9 @@ interface UserAuthResourceGroupResource {
         @QueryParam("operateChannel")
         @Parameter(description = "操作渠道")
         operateChannel: OperateChannel?,
+        @QueryParam("uniqueManagerGroupsQueryFlag")
+        @Parameter(description = "唯一管理员组查询标识")
+        uniqueManagerGroupsQueryFlag: Boolean?,
         @Parameter(description = "起始位置,从0开始")
         @QueryParam("start")
         start: Int,

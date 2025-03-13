@@ -33,6 +33,7 @@ import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.gray.Gray
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TServiceRecord
 import com.tencent.devops.project.constant.ProjectMessageCode.BK_CONTAINER_SERVICE
@@ -44,6 +45,7 @@ import com.tencent.devops.project.dao.ServiceTypeDao
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.service.ServiceListVO
 import com.tencent.devops.project.pojo.service.ServiceVO
+import com.tencent.devops.project.service.ServiceManageService
 import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -119,43 +121,50 @@ class UserProjectServiceImpl @Autowired constructor(
                         userId = userId,
                         replaceMap = replaceMap
                     )
-                    services.add(
-                        ServiceVO(
-                            id = it.id,
-                            name = I18nUtil.getCodeLanMessage(T_SERVICE_PREFIX + it.englishName)
-                                .ifBlank { it.name },
-                            link = it.link ?: "",
-                            linkNew = it.linkNew ?: "",
-                            status = getPermStatus(it),
-                            injectType = it.injectType ?: "",
-                            iframeUrl = replaceUrl(
-                                url = genUrl(url = it.iframeUrl, grayUrl = it.grayIframeUrl, projectId = projectId),
-                                replaceMap = replaceMap
-                            ),
-                            grayIframeUrl = replaceUrl(url = it.grayIframeUrl ?: "", replaceMap = replaceMap),
-                            cssUrl = replaceUrl(
-                                url = genUrl(url = it.cssUrl, grayUrl = it.grayCssUrl, projectId = projectId),
-                                replaceMap = replaceMap
-                            ),
-                            jsUrl = replaceUrl(
-                                url = genUrl(url = it.jsUrl, grayUrl = it.grayJsUrl, projectId = projectId),
-                                replaceMap = replaceMap
-                            ),
-                            grayCssUrl = replaceUrl(url = it.grayCssUrl ?: "", replaceMap = replaceMap),
-                            grayJsUrl = replaceUrl(url = it.grayJsUrl ?: "", replaceMap = replaceMap),
-                            showProjectList = it.showProjectList ?: false,
-                            showNav = it.showNav ?: false,
-                            projectIdType = it.projectIdType ?: "",
-                            collected = favor,
-                            weigHt = it.weight ?: 0,
-                            logoUrl = replaceUrl(url = it.logoUrl ?: "", replaceMap = replaceMap),
-                            webSocket = it.webSocket,
-                            newWindow = newWindow,
-                            newWindowUrl = newWindowUrl,
-                            clusterType = it.clusterType,
-                            docUrl = it.docUrl ?: ""
-                        )
+                    val code = it.englishName
+                    var serviceVO = ServiceVO(
+                        id = it.id,
+                        code = code,
+                        name = I18nUtil.getCodeLanMessage(T_SERVICE_PREFIX + it.englishName)
+                            .ifBlank { it.name },
+                        link = it.link ?: "",
+                        linkNew = it.linkNew ?: "",
+                        status = getPermStatus(it),
+                        injectType = it.injectType ?: "",
+                        iframeUrl = replaceUrl(
+                            url = genUrl(url = it.iframeUrl, grayUrl = it.grayIframeUrl, projectId = projectId),
+                            replaceMap = replaceMap
+                        ),
+                        grayIframeUrl = replaceUrl(url = it.grayIframeUrl ?: "", replaceMap = replaceMap),
+                        cssUrl = replaceUrl(
+                            url = genUrl(url = it.cssUrl, grayUrl = it.grayCssUrl, projectId = projectId),
+                            replaceMap = replaceMap
+                        ),
+                        jsUrl = replaceUrl(
+                            url = genUrl(url = it.jsUrl, grayUrl = it.grayJsUrl, projectId = projectId),
+                            replaceMap = replaceMap
+                        ),
+                        grayCssUrl = replaceUrl(url = it.grayCssUrl ?: "", replaceMap = replaceMap),
+                        grayJsUrl = replaceUrl(url = it.grayJsUrl ?: "", replaceMap = replaceMap),
+                        showProjectList = it.showProjectList ?: false,
+                        showNav = it.showNav ?: false,
+                        projectIdType = it.projectIdType ?: "",
+                        collected = favor,
+                        weigHt = it.weight ?: 0,
+                        logoUrl = replaceUrl(url = it.logoUrl ?: "", replaceMap = replaceMap),
+                        webSocket = it.webSocket,
+                        newWindow = newWindow,
+                        newWindowUrl = newWindowUrl,
+                        clusterType = it.clusterType,
+                        docUrl = it.docUrl ?: ""
                     )
+                    serviceVO = doServiceSpecBus(
+                        code = code,
+                        serviceVO = serviceVO,
+                        userId = userId,
+                        projectId = projectId
+                    )
+                    services.add(serviceVO)
                 }
                 if (serviceListByTypeId != null) {
                     serviceListVO.add(
@@ -170,6 +179,22 @@ class UserProjectServiceImpl @Autowired constructor(
             return Result(code = 0, message = "OK", data = serviceListVO)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list services")
+        }
+    }
+
+    private fun doServiceSpecBus(
+        code: String,
+        serviceVO: ServiceVO,
+        userId: String,
+        projectId: String?
+    ): ServiceVO {
+        val beanName = "${code.uppercase()}_MANAGE_SERVICE"
+        return if (SpringContextUtil.isBeanExist(beanName)) {
+            // 对服务数据进行特殊处理
+            val serviceManageService = SpringContextUtil.getBean(ServiceManageService::class.java, beanName)
+            serviceManageService.doSpecBus(userId, serviceVO, projectId)
+        } else {
+            serviceVO
         }
     }
 

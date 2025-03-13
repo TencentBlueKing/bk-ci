@@ -65,11 +65,18 @@ class StoreBaseQueryDao {
     fun getMaxVersionComponentByCode(
         dslContext: DSLContext,
         storeCode: String,
-        storeType: StoreTypeEnum
+        storeType: StoreTypeEnum,
+        status: StoreStatusEnum? = null
     ): TStoreBaseRecord? {
         return with(TStoreBase.T_STORE_BASE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
+            conditions.add(STORE_CODE.eq(storeCode))
+            if (status != null) {
+                conditions.add(STATUS.eq(status.name))
+            }
             dslContext.selectFrom(this)
-                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .where(conditions)
                 .orderBy(
                     JooqUtils.subStr(
                         str = VERSION,

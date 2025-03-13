@@ -1,36 +1,46 @@
 <template>
     <div class="variable-container">
-        <bk-alert
-            v-if="editable"
-            type="info"
-            :title="$t('newui.pipelineParam.useTips')"
-            closable
-        ></bk-alert>
-        <div class="operate-row">
-            <template v-if="editable">
-                <bk-button
-                    class="var-btn"
-                    v-enStyle="'min-width:100px'"
-                    @click="handleAdd"
-                >
-                    {{ $t('newui.pipelineParam.addVar') }}
-                </bk-button>
-                <bk-button
-                    class="var-btn"
-                    v-enStyle="'min-width:100px'"
-                    @click="handleAdd('constant')"
-                >
-                    {{ $t('newui.pipelineParam.addConst') }}
-                </bk-button>
-            </template>
-            <bk-input
-                v-model="searchStr"
-                :clearable="true"
-                :placeholder="$t('newui.pipelineParam.searchPipelineVar')"
-                :right-icon="'bk-icon icon-search'"
-            />
+        <div
+            class="container-top"
+        >
+            <bk-alert
+                v-if="editable"
+                type="info"
+                :title="$t('newui.pipelineParam.useTips')"
+                closable
+                @close="alertClose"
+            ></bk-alert>
+            <div class="operate-row">
+                <template v-if="editable">
+                    <bk-button
+                        class="var-btn"
+                        v-enStyle="'min-width:100px'"
+                        @click="handleAdd"
+                    >
+                        {{ $t('newui.pipelineParam.addVar') }}
+                    </bk-button>
+                    <bk-button
+                        class="var-btn"
+                        v-enStyle="'min-width:100px'"
+                        @click="handleAdd('constant')"
+                    >
+                        {{ $t('newui.pipelineParam.addConst') }}
+                    </bk-button>
+                </template>
+                <bk-input
+                    v-model="searchStr"
+                    :clearable="true"
+                    :placeholder="$t('newui.pipelineParam.searchPipelineVar')"
+                    :right-icon="'bk-icon icon-search'"
+                />
+            </div>
         </div>
-        <template v-if="!showSlider">
+
+        <div
+            class="container-bottom"
+            :style="{ marginTop: `${offsetData}px` }"
+            v-if="!showSlider"
+        >
             <param-group
                 v-for="group in pipelineParamGroups"
                 :editable="editable"
@@ -43,7 +53,7 @@
                 :handle-update="handleUpdate"
                 :handle-sort="handleSort"
             />
-        </template>
+        </div>
 
         <div
             v-else-if="editable"
@@ -123,10 +133,14 @@
                 sliderEditItem: {},
                 searchStr: '',
                 confirmMsg: this.$t('editPage.closeConfirmMsg'),
-                cancelText: this.$t('cancel')
+                cancelText: this.$t('cancel'),
+                isAlertTips: true
             }
         },
         computed: {
+            offsetData () {
+                return this.editable && this.isAlertTips ? 98 : 63
+            },
             versions () {
                 return this.params.filter(p => allVersionKeyList.includes(p.id))
             },
@@ -253,6 +267,9 @@
                 } else {
                     close()
                 }
+            },
+            alertClose () {
+                this.isAlertTips = false
             }
         }
     }
@@ -261,6 +278,37 @@
 <style lang="scss">
     @import "@/scss/mixins/ellipsis.scss";
     .variable-container {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+
+        .container-top {
+            position: absolute;
+            width: 100%;
+        }
+
+        .container-bottom {
+            width: 100%;
+            position: absolute;
+            height: calc(100% - 89px);
+            overflow-y: auto;
+        }
+        
+        .current-edit-param-item {
+            position: fixed;
+            top: 48px;
+
+            .edit-var-content {
+                height: calc(100% - 138px);
+            }
+
+            .edit-var-footer {
+                bottom: 48px;
+                background-color: #fff;
+            }
+        }
+
         .circle {
             width: 10px;
             height: 10px;

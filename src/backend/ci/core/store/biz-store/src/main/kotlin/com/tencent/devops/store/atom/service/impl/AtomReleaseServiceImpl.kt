@@ -1223,8 +1223,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 atomCode = atomCode,
                 atomId = atomRecord.id,
                 userId = userId,
-                reason = reason,
-                version = version
+                reason = reason
             )
         }
     }
@@ -1234,55 +1233,57 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         atomCode: String,
         atomId: String,
         userId: String,
-        reason: String?,
-        version: String
+        reason: String?
     ) {
-        // 查找插件最近二个已经发布的版本
-        val releaseAtomRecords = marketAtomDao.getReleaseAtomsByCode(context, atomCode, 2)
-        if (null != releaseAtomRecords && releaseAtomRecords.size > 0) {
+        marketAtomDao.updateAtomInfoById(
+            dslContext = context,
+            atomId = atomId,
+            userId = userId,
+            updateAtomInfo = UpdateAtomInfo(
+                atomStatus = AtomStatusEnum.UNDERCARRIAGED.status.toByte(),
+                atomStatusMsg = reason,
+                latestFlag = false
+            )
+        )
+        redisOperation.delete(StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode))
+        // 获取插件已发布版本数量
+        val releaseCount = marketAtomDao.countReleaseAtomByCode(context, atomCode)
+        val tmpAtomId = if (releaseCount > 0) {
+            // 获取已发布最大版本的插件记录
+            val maxReleaseVersionRecord = marketAtomDao.getMaxVersionAtomByCode(
+                dslContext = context,
+                atomCode = atomCode,
+                atomStatus = AtomStatusEnum.RELEASED
+            )
+            maxReleaseVersionRecord?.let {
+                // 处理插件缓存(保证用户用到当前大版本中已发布的版本)
+                marketAtomCommonService.handleAtomCache(
+                    atomId = maxReleaseVersionRecord.id,
+                    atomCode = atomCode,
+                    version = maxReleaseVersionRecord.version,
+                    releaseFlag = false
+                )
+            }
+            maxReleaseVersionRecord?.id
+        } else {
+            // 获取已下架最大版本的插件记录
+            val maxUndercarriagedVersionRecord = marketAtomDao.getMaxVersionAtomByCode(
+                dslContext = context,
+                atomCode = atomCode,
+                atomStatus = AtomStatusEnum.UNDERCARRIAGED
+            )
+            maxUndercarriagedVersionRecord?.id
+        }
+        if (null != tmpAtomId) {
+            marketAtomDao.cleanLatestFlag(context, atomCode)
             marketAtomDao.updateAtomInfoById(
                 dslContext = context,
-                atomId = atomId,
+                atomId = tmpAtomId,
                 userId = userId,
                 updateAtomInfo = UpdateAtomInfo(
-                    atomStatus = AtomStatusEnum.UNDERCARRIAGED.status.toByte(),
-                    atomStatusMsg = reason,
-                    latestFlag = false
+                    latestFlag = true
                 )
             )
-            redisOperation.delete(StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode))
-            val newestReleaseAtomRecord = releaseAtomRecords[0]
-            if (newestReleaseAtomRecord.id == atomId) {
-                var tmpAtomId: String? = null
-                if (releaseAtomRecords.size == 1) {
-                    val newestUndercarriagedAtom =
-                        marketAtomDao.getNewestUndercarriagedAtomsByCode(context, atomCode)
-                    if (null != newestUndercarriagedAtom) {
-                        tmpAtomId = newestUndercarriagedAtom.id
-                    }
-                } else {
-                    // 把前一个发布的版本的latestFlag置为true
-                    val tmpAtomRecord = releaseAtomRecords[1]
-                    tmpAtomId = tmpAtomRecord.id
-                    // 处理插件缓存(保证用户用到当前大版本中已发布的版本)
-                    marketAtomCommonService.handleAtomCache(
-                        atomId = tmpAtomId,
-                        atomCode = atomCode,
-                        version = tmpAtomRecord.version,
-                        releaseFlag = false
-                    )
-                }
-                if (null != tmpAtomId) {
-                    marketAtomDao.updateAtomInfoById(
-                        dslContext = context,
-                        atomId = tmpAtomId,
-                        userId = userId,
-                        updateAtomInfo = UpdateAtomInfo(
-                            latestFlag = true
-                        )
-                    )
-                }
-            }
         }
     }
 

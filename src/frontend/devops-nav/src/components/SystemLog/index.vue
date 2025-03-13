@@ -94,15 +94,19 @@
         },
         methods: {
             async fetchData () {
-                const requestHandler = this.$i18n.locale === 'en-US' ? 'fetchVersionsLogListEn' : 'fetchVersionsLogList'
-                const res = await this.$store.dispatch(requestHandler)
-                this.list = res.data || []
+                try {
+                    const requestHandler = this.$i18n.locale === 'en-US' ? 'fetchVersionsLogListEn' : 'fetchVersionsLogList'
+                    const res = await this.$store.dispatch(requestHandler)
+                    this.list = res.data || []
 
-                this.latestVerSion = (this.list.length && this.list[0].version) || ''
-                const curVerSion = localStorage.getItem('bk_latest_version')
-                if (res.dialogVisible && curVerSion !== this.latestVerSion && this.list.length) {
-                    localStorage.setItem('bk_latest_version', this.latestVerSion)
-                    this.toggleShowLog(true)
+                    this.latestVerSion = (this.list.length && this.list[0].version) || ''
+                    const curVerSion = localStorage.getItem('bk_latest_version')
+                    if (res.dialogVisible && curVerSion !== this.latestVerSion && this.list.length) {
+                        localStorage.setItem('bk_latest_version', this.latestVerSion)
+                        this.toggleShowLog(true)
+                    }
+                } catch (error) {
+                    console.log(error)
                 }
             },
             handleTabChange (index) {

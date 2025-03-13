@@ -576,11 +576,6 @@ class StoreReleaseServiceImpl @Autowired constructor(
         val storeId = baseRecord.id
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            // 查找插件最近二个已经发布的版本
-            val releaseRecords = storeBaseQueryDao.getReleaseComponentsByCode(context, storeCode, storeType, 2)
-            if (releaseRecords.isNullOrEmpty()) {
-                return@transaction
-            }
             storeBaseManageDao.updateStoreBaseInfo(
                 dslContext = dslContext,
                 updateStoreBaseDataPO = UpdateStoreBaseDataPO(
@@ -591,33 +586,42 @@ class StoreReleaseServiceImpl @Autowired constructor(
                     modifier = userId
                 )
             )
-            if (releaseRecords[0].id == storeId) {
-                var tmpStoreId: String? = null
-                if (releaseRecords.size == 1) {
-                    val newestUndercarriagedRecord = storeBaseQueryDao.getNewestComponentByCode(
-                        dslContext = context,
-                        storeCode = storeCode,
-                        storeType = storeType,
-                        status = StoreStatusEnum.UNDERCARRIAGED
+            // 获取插件已发布版本数量
+            val releaseCount = storeBaseQueryDao.countByCondition(
+                dslContext = context,
+                storeType = storeType,
+                storeCode = storeCode,
+                status = StoreStatusEnum.RELEASED
+            )
+            val tmpStoreId = if (releaseCount > 0) {
+                // 获取已发布最大版本的插件记录
+                val maxReleaseVersionRecord = storeBaseQueryDao.getMaxVersionComponentByCode(
+                    dslContext = context,
+                    storeType = storeType,
+                    storeCode = storeCode,
+                    status = StoreStatusEnum.RELEASED
+                )
+                maxReleaseVersionRecord?.id
+            } else {
+                // 获取已下架最大版本的插件记录
+                val maxUndercarriagedVersionRecord = storeBaseQueryDao.getMaxVersionComponentByCode(
+                    dslContext = context,
+                    storeType = storeType,
+                    storeCode = storeCode,
+                    status = StoreStatusEnum.UNDERCARRIAGED
+                )
+                maxUndercarriagedVersionRecord?.id
+            }
+            if (null != tmpStoreId) {
+                storeBaseManageDao.cleanLatestFlag(context, storeCode, storeType)
+                storeBaseManageDao.updateStoreBaseInfo(
+                    dslContext = context,
+                    updateStoreBaseDataPO = UpdateStoreBaseDataPO(
+                        id = tmpStoreId,
+                        latestFlag = true,
+                        modifier = userId
                     )
-                    if (null != newestUndercarriagedRecord) {
-                        tmpStoreId = newestUndercarriagedRecord.id
-                    }
-                } else {
-                    // 把前一个发布的版本的latestFlag置为true
-                    val tmpStoreRecord = releaseRecords[1]
-                    tmpStoreId = tmpStoreRecord.id
-                }
-                tmpStoreId?.let {
-                    storeBaseManageDao.updateStoreBaseInfo(
-                        dslContext = dslContext,
-                        updateStoreBaseDataPO = UpdateStoreBaseDataPO(
-                            id = tmpStoreId,
-                            latestFlag = true,
-                            modifier = userId
-                        )
-                    )
-                }
+                )
             }
         }
     }
