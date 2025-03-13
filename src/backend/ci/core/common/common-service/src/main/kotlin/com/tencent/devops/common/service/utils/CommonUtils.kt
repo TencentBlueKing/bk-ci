@@ -291,4 +291,22 @@ object CommonUtils {
             SpringContextUtil.getBean(DSLContext::class.java)
         }
     }
+
+    /**
+     * 根据指定前后缀、长度生成数字
+     * @param prefix 前缀
+     * @param suffix 后缀
+     * @param totalLength 长度
+     * @return 数字
+     */
+    fun generateNumber(
+        prefix: Int, suffix: Int, totalLength: Int
+    ): Long {
+        val baseLength = prefix.toString().length + suffix.toString().length
+        if (totalLength <= baseLength) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
+        }
+        val zerosCount = totalLength - baseLength
+        return "$prefix${"0".repeat(zerosCount)}$suffix".toLong()
+    }
 }

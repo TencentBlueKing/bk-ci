@@ -64,6 +64,7 @@ enum class StoreStatusEnum {
                 CHECKING.name,
                 CHECK_FAIL.name,
                 TESTING.name,
+                EDITING.name,
                 AUDITING.name
             )
         }

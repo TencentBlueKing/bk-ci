@@ -27,7 +27,6 @@
 
 package com.tencent.devops.store.common.dao
 
-import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.KEY_PIPELINE_ID
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.db.utils.JooqUtils
@@ -61,47 +60,6 @@ import java.time.LocalDateTime
 @Suppress("TooManyFunctions")
 @Repository
 class StoreBaseQueryDao {
-
-    fun getMaxVersionComponentByCode(
-        dslContext: DSLContext,
-        storeCode: String,
-        storeType: StoreTypeEnum,
-        status: StoreStatusEnum? = null
-    ): TStoreBaseRecord? {
-        return with(TStoreBase.T_STORE_BASE) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
-            conditions.add(STORE_CODE.eq(storeCode))
-            if (status != null) {
-                conditions.add(STATUS.eq(status.name))
-            }
-            dslContext.selectFrom(this)
-                .where(conditions)
-                .orderBy(
-                    JooqUtils.subStr(
-                        str = VERSION,
-                        delim = ".",
-                        count = 1
-                    ).plus(0).desc(),
-                    JooqUtils.subStr(
-                        str = JooqUtils.subStr(
-                            str = VERSION,
-                            delim = ".",
-                            count = -2
-                        ),
-                        delim = ".",
-                        count = 1
-                    ).plus(0).desc(),
-                    JooqUtils.subStr(
-                        str = VERSION,
-                        delim = ".",
-                        count = -1
-                    ).plus(0).desc()
-                )
-                .limit(1)
-                .fetchOne()
-        }
-    }
 
     fun getNewestComponentByCode(
         dslContext: DSLContext,
@@ -246,11 +204,31 @@ class StoreBaseQueryDao {
         }
     }
 
+    fun getMaxBusNumByCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        version: String? = null
+    ): Int? {
+        return with(TStoreBase.T_STORE_BASE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
+            conditions.add(STORE_CODE.eq(storeCode))
+            if (!version.isNullOrBlank()) {
+                conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
+            }
+            dslContext.select(DSL.max(BUS_NUM)).from(this)
+                .where(conditions)
+                .fetchOne(0, Int::class.java)
+        }
+    }
+
     fun countByCondition(
         dslContext: DSLContext,
         storeType: StoreTypeEnum,
         name: String? = null,
         storeCode: String? = null,
+        version: String? = null,
         status: StoreStatusEnum? = null,
         classifyId: String? = null
     ): Int {
@@ -262,6 +240,9 @@ class StoreBaseQueryDao {
             }
             if (!storeCode.isNullOrBlank()) {
                 conditions.add(STORE_CODE.eq(storeCode))
+            }
+            if (!version.isNullOrBlank()) {
+                conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
             }
             status?.let {
                 conditions.add(STATUS.eq(status.name))
@@ -473,16 +454,10 @@ class StoreBaseQueryDao {
         val tStoreMember = TStoreMember.T_STORE_MEMBER
         val conditions = mutableListOf<Condition>()
         conditions.add(tStoreBase.STORE_TYPE.eq(storeType.type.toByte()))
-        val statusList = StoreStatusEnum.values().map { it.name }.toMutableList()
-        statusList.removeAll(StoreStatusEnum.getProcessingStatusList())
-        statusList.add(StoreStatusEnum.INIT.name)
-        conditions.add(
-            tStoreBase.STATUS.`in`(statusList)
-                .or(tStoreBase.LATEST_FLAG.eq(true).and(tStoreBase.VERSION.eq(INIT_VERSION)))
-        )
         if (null != storeName) {
             conditions.add(tStoreBase.NAME.contains(storeName))
         }
+        conditions.add(tStoreBase.LATEST_FLAG.eq(true))
         conditions.add(tStoreMember.STORE_TYPE.eq(storeType.type.toByte()))
         conditions.add(tStoreMember.USERNAME.eq(userId))
         return conditions
