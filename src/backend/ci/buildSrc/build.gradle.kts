@@ -17,8 +17,8 @@ repositories {
 
 // 依赖插件
 dependencies {
-    implementation("nu.studer:gradle-jooq-plugin:8.2.3")
-    implementation("com.github.johnrengelman:shadow:7.1.2")
+    implementation("nu.studer.jooq:nu.studer.jooq.gradle.plugin:8.2.3")
+    implementation("com.github.johnrengelman.shadow:com.github.johnrengelman.shadow.gradle.plugin:7.1.2")
     implementation("com.google.cloud.tools:jib-gradle-plugin:3.3.1")
     implementation("com.github.jk1:gradle-license-report:2.1")
     implementation("com.mysql:mysql-connector-j:8.3.0")
