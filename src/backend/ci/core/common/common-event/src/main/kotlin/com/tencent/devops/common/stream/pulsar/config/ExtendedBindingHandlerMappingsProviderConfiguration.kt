@@ -42,7 +42,9 @@ import org.springframework.context.annotation.Primary
 import org.springframework.messaging.converter.CompositeMessageConverter
 
 @Configuration
-@AutoConfigureAfter(name = ["org.springframework.cloud.function.context.config.ContextFunctionCatalogAutoConfiguration"])
+@AutoConfigureAfter(
+    name = ["org.springframework.cloud.function.context.config.ContextFunctionCatalogAutoConfiguration"]
+)
 class ExtendedBindingHandlerMappingsProviderConfiguration {
     @Bean
     fun pulsarExtendedPropertiesDefaultMappingsProvider(): MappingsProvider {
