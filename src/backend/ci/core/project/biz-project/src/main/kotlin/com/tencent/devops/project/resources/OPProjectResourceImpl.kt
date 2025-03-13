@@ -41,7 +41,7 @@ import com.tencent.devops.project.service.OpProjectService
 import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ProjectTagService
 import org.springframework.beans.factory.annotation.Autowired
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletRequest
 
 @Suppress("ALL")
 @RestResource

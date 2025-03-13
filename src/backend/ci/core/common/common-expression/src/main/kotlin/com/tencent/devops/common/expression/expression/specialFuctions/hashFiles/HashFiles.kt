@@ -33,7 +33,7 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.security.MessageDigest
-import javax.xml.bind.DatatypeConverter
+import jakarta.xml.bind.DatatypeConverter
 
 @Suppress("NestedBlockDepth")
 class HashFiles(

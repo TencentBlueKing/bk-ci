@@ -8,18 +8,26 @@ set service_name=devops_agent_%agent_id%
 
 echo work_dir %work_dir%
 
-IF EXIST jdk17 (
-    echo "jdk17 already exists, skip unzip"
+IF EXIST "jdk17.zip" (
+    IF EXIST jdk17 (
+        echo "jdk17 already exists, skip unzip"
+    ) else (
+        echo "unzip jdk17"
+        Call :UnZipFile "%~dp0jdk17\" "%~dp0jdk17.zip"
+    )
 ) else (
-    echo "unzip jdk17"
-    Call :UnZipFile "%~dp0jdk17\" "%~dp0jdk17.zip"
+    echo "'jdk17.zip' is not exist"
 )
 
-IF EXIST jdk (
-    echo "jdk already exists, skip unzip"
+IF EXIST "jre.zip" (
+    IF EXIST jdk (
+        echo "jdk already exists, skip unzip"
+    ) else (
+        echo "unzip jdk"
+        Call :UnZipFile "%~dp0jdk\" "%~dp0jre.zip"
+    )
 ) else (
-    echo "unzip jdk"
-    Call :UnZipFile "%~dp0jdk\" "%~dp0jre.zip"
+    echo "'jre.zip' is not exist"
 )
 
 

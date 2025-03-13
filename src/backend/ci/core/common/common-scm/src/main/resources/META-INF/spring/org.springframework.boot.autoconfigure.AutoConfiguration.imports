@@ -1,0 +1,3 @@
+com.tencent.devops.scm.config.GitConfig
+com.tencent.devops.scm.config.SVNConfig
+com.tencent.devops.scm.config.P4Config

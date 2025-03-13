@@ -61,6 +61,7 @@ class ServiceQualityAuthResourceImpl @Autowired constructor(
                     token = token
                 )
             }
+            else -> {}
         }
         return null
     }
@@ -86,6 +87,7 @@ class ServiceQualityAuthResourceImpl @Autowired constructor(
                     token = token
                 )
             }
+            else -> {}
         }
         return null
     }

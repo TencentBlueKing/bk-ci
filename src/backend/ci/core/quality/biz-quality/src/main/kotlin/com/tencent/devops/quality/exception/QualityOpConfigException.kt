@@ -28,7 +28,7 @@
 package com.tencent.devops.quality.exception
 
 import com.tencent.devops.common.api.exception.CustomException
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 class QualityOpConfigException(
     message: String

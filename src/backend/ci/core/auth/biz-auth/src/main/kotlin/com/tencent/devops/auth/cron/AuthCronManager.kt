@@ -51,7 +51,7 @@ import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupConfigReco
 import com.tencent.devops.model.auth.tables.records.TAuthResourceTypeRecord
 import java.time.LocalDateTime
 import java.util.concurrent.Executors
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

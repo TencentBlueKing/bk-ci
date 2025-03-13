@@ -12,11 +12,11 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.service.ServiceI18nMessageResource
 import com.tencent.devops.common.web.utils.I18nUtil
-import javax.ws.rs.container.ResourceInfo
-import javax.ws.rs.core.Context
-import javax.ws.rs.ext.Provider
-import javax.ws.rs.ext.WriterInterceptor
-import javax.ws.rs.ext.WriterInterceptorContext
+import jakarta.ws.rs.container.ResourceInfo
+import jakarta.ws.rs.core.Context
+import jakarta.ws.rs.ext.Provider
+import jakarta.ws.rs.ext.WriterInterceptor
+import jakarta.ws.rs.ext.WriterInterceptorContext
 import org.apache.commons.collections4.ListUtils
 import org.slf4j.LoggerFactory
 import org.springframework.core.annotation.AnnotationUtils
