@@ -519,11 +519,10 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
 
             else -> throw ErrorCodeException(errorCode = StoreMessageCode.STORE_RELEASE_STEPS_ERROR)
         }
-        if (checkFlag) {
+        if (!checkFlag) {
             logger.warn("$storeType[$storeCode]| invalid version: $version")
             throw ErrorCodeException(
-                errorCode = StoreMessageCode.STORE_VERSION_IS_INVALID,
-                params = arrayOf(version)
+                errorCode = StoreMessageCode.STORE_VERSION_IS_INVALID, params = arrayOf(version)
             )
         }
         // 判断最近一个版本的状态，如果不是首次发布，则只有处于终态的组件状态才允许添加新的版本
