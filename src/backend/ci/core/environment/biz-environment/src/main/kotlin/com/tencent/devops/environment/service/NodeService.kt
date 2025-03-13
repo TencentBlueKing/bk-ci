@@ -251,28 +251,32 @@ class NodeService @Autowired constructor(
             collation = collation
         ).toLong()
         val nodes = formatNodeWithPermissions(userId, projectId, nodeRecordList)
-
-        val agentBuilds = client.get(ServiceAgentResource::class).listLatestBuildPipelines(
-            agentIds = nodes.mapNotNull { it.agentHashId }
-        ).associateBy { it.agentId }
-        nodes.forEach {
-            it.latestBuildDetail = agentBuilds[it.agentHashId]?.let { build ->
-                AgentBuildDetail(
-                    nodeId = it.nodeId,
-                    agentId = build.agentId,
-                    projectId = build.projectId,
-                    pipelineId = build.pipelineId,
-                    pipelineName = build.pipelineName,
-                    buildId = build.buildId,
-                    buildNumber = build.buildNum,
-                    vmSetId = build.vmSeqId,
-                    taskName = build.taskName,
-                    status = build.status,
-                    createdTime = build.createdTime,
-                    updatedTime = build.updatedTime,
-                    workspace = build.workspace,
-                    agentTask = null
+        if (-1 != page) {
+            val nodesMap = nodes.associateBy { it.agentHashId }
+            val agentIds = nodesMap.keys.mapNotNull { it }
+            agentIds.chunked(100).forEach { agentHashIds ->
+                val agentBuilds = client.get(ServiceAgentResource::class).listLatestBuildPipelines(
+                    agentIds = agentHashIds
                 )
+                agentBuilds.forEach build@{ build ->
+                    val node = nodesMap[build.agentId] ?: return@build
+                    node.latestBuildDetail = AgentBuildDetail(
+                        nodeId = node.nodeId,
+                        agentId = build.agentId,
+                        projectId = build.projectId,
+                        pipelineId = build.pipelineId,
+                        pipelineName = build.pipelineName,
+                        buildId = build.buildId,
+                        buildNumber = build.buildNum,
+                        vmSetId = build.vmSeqId,
+                        taskName = build.taskName,
+                        status = build.status,
+                        createdTime = build.createdTime,
+                        updatedTime = build.updatedTime,
+                        workspace = build.workspace,
+                        agentTask = null
+                    )
+                }
             }
         }
         val records = if (sortType == null) NodeUtils.sortByUser(nodes = nodes, userId = userId) else nodes
