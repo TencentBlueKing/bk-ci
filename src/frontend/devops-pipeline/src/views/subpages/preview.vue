@@ -16,12 +16,15 @@
                     'exec-version-is-disabled': !pacEnabled
                 }"
                 :value="executeVersion"
-                v-bk-tooltips="execVersionSelectorDisableTips"
                 @change="handleExecuteVersionChange"
                 :include-draft="false"
                 :show-extension="false"
                 refresh-list-on-expand
                 build-only
+            />
+            <i
+                class="bk-icon icon-info-circle"
+                v-bk-tooltips="execVersionSelectorDisableTips"
             />
         </div>
         <bk-alert
@@ -280,7 +283,6 @@
             ]),
             execVersionSelectorDisableTips () {
                 return {
-                    disabled: this.pacEnabled,
                     theme: 'light',
                     content: this.$t('preview.versionSelectorDisableTips')
                 }
@@ -661,6 +663,11 @@ $header-height: 36px;
             background-color: #fafbfd;
             cursor: not-allowed;
             border-color: #dcdee5;
+        }
+        > .icon-info-circle {
+            display: block;
+            margin-left: 8px;
+            cursor: pointer;
         }
 
     }
