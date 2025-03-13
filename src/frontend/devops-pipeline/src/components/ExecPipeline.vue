@@ -514,14 +514,11 @@
             loadI18nMessages(this.$i18n)
         },
         mounted () {
-            if (this.templateId) {
-                this.requestMatchTemplateRuleList({
-                    projectId: this.routerParams.projectId,
-                    templateId: this.templateId
-                })
-            } else {
-                this.requestInterceptAtom(this.routerParams)
-            }
+            this.requestMatchTemplateRuleList({
+                projectId: this.routerParams.projectId,
+                templateId: this.templateId
+            })
+            this.requestInterceptAtom(this.routerParams)
             if (this.errorList?.length > 0) {
                 this.setScrollBarPostion()
             }
