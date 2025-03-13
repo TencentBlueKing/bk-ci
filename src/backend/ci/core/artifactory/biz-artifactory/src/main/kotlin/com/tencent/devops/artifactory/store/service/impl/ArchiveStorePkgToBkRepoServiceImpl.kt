@@ -227,7 +227,31 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
         return repoPrefixUrl
     }
 
+    override fun getStoreFileSize(filePath: String, storeType: StoreTypeEnum, repoName: String?): Long {
+        val (projectId, authorization, repo) = getRepoStoreConfig(storeType)
+        return try {
+            bkRepoClient.getStoreComponentPkgSize(
+                authorization = authorization,
+                projectId = projectId,
+                repoName = repoName ?: repo,
+                fullPath = filePath,
+            ).size
+        } catch (ignored: NotFoundException) {
+            logger.warn("file[$filePath] not exists")
+            0
+        } catch (ignored: RemoteServiceException) {
+            logger.warn("download file[$filePath] error: $ignored")
+            0
+        } catch (ignored: Exception) {
+            logger.warn("getStoreFileSize error: $ignored")
+            0
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ArchiveStorePkgToBkRepoServiceImpl::class.java)
     }
+
+
+    abstract fun getRepoStoreConfig(storeType: StoreTypeEnum):Triple <String, String,String>
 }

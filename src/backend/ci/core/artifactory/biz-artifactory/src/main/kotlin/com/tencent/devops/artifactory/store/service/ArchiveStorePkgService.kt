@@ -49,6 +49,12 @@ interface ArchiveStorePkgService {
      */
     fun getStoreFileContent(filePath: String, storeType: StoreTypeEnum, repoName: String? = null): String
 
+
+    /**
+     * 获取组件相关文件大小
+     */
+    fun getStoreFileSize(filePath: String, storeType: StoreTypeEnum, repoName: String? = null): Long
+
     /**
      * 删除组件包
      */
