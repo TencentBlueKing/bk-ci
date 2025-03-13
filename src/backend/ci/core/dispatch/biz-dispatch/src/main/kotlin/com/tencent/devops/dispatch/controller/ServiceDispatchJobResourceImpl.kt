@@ -25,29 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.api
+package com.tencent.devops.dispatch.controller
 
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.api.ServiceDispatchJobResource
 import com.tencent.devops.dispatch.pojo.AgentStartMonitor
-import io.swagger.v3.oas.annotations.tags.Tag
-import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.Parameter
-import jakarta.ws.rs.Consumes
-import jakarta.ws.rs.POST
-import jakarta.ws.rs.Path
-import jakarta.ws.rs.Produces
-import jakarta.ws.rs.core.MediaType
+import com.tencent.devops.dispatch.service.ThirdPartyAgentMonitorService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Tag(name = "SERVICE_AGENT", description = "服务-Agent")
-@Path("/service/dipsatch/jobs")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceDispatchJobResource {
-
-    @Operation(summary = "监控")
-    @POST
-    @Path("/monitor")
-    fun monitor(
-        @Parameter(description = "agent 事件", required = true)
-        agentStartMonitor: AgentStartMonitor
-    )
+@RestResource
+class ServiceDispatchJobResourceImpl @Autowired constructor(
+    val thirdPartyAgentMonitorService: ThirdPartyAgentMonitorService
+) : ServiceDispatchJobResource {
+    override fun monitor(agentStartMonitor: AgentStartMonitor) {
+        thirdPartyAgentMonitorService.tryRollBackQueueMonitor(agentStartMonitor)
+    }
 }
