@@ -154,12 +154,13 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
         val initBusNum = CommonUtils.generateNumber(majorVersion, 1, STORE_BUS_NUM_LEN).toInt()
         // 生成当前组件版本的业务号
         val busNum = when {
-            maxBusNum != null -> handleExistingBusNum(
+            maxBusNum != null && maxBusNum >= initBusNum -> handleExistingBusNum(
                 maxBusNum = maxBusNum,
                 majorVersion = majorVersion,
                 isVersionUpdate = isVersionUpdate,
                 initBusNum = initBusNum
             )
+
             else -> handleNewBusNum(
                 storeType = storeType,
                 storeCode = storeCode,
@@ -168,7 +169,7 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
                 majorVersion = majorVersion
             )
         }
-        if (busNum != initBusNum) {
+        if (busNum == initBusNum) {
             // 首个版本的latestFlag置为true
             latestFlag = true
         }
@@ -255,7 +256,7 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
         initBusNum: Int
     ): Int {
         return if (isVersionUpdate) {
-            CommonUtils.generateNumber(majorVersion, maxBusNum - initBusNum + 1, STORE_BUS_NUM_LEN).toInt()
+            CommonUtils.generateNumber(majorVersion, maxBusNum - initBusNum + 2, STORE_BUS_NUM_LEN).toInt()
         } else {
             maxBusNum
         }
@@ -268,7 +269,12 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
         isVersionUpdate: Boolean,
         majorVersion: Int
     ): Int {
-        val count = storeBaseQueryDao.countByCondition(dslContext, storeType, storeCode, version)
+        val count = storeBaseQueryDao.countByCondition(
+            dslContext = dslContext,
+            storeType = storeType,
+            storeCode = storeCode,
+            version = version
+        )
         val suffix = if (isVersionUpdate) count + 1 else count
         return CommonUtils.generateNumber(majorVersion, suffix, 6).toInt()
     }
