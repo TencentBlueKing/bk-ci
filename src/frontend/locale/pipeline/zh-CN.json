@@ -633,7 +633,8 @@
     "majorVersion": "主版本",
     "minorVersion": "特性版本",
     "fixVersion": "修正版本",
-    "paramsInvalidMsg": "流水线执行参数出错"
+    "paramsInvalidMsg": "流水线执行参数出错",
+    "versionSelectorDisableTips": " 1. 存在 PAC 分支版本时，可选择分支版本执行<br/>2. 没有 PAC 分支版本时，始终执行当前最新版本"
   },
   "details": {
     "executorInfo": "{0} {1}触发于 {2}",

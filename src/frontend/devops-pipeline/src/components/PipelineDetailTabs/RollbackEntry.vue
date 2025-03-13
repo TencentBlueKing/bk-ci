@@ -129,7 +129,7 @@
             isRollback () {
                 const { baseVersion, releaseVersion } = (this.pipelineInfo ?? {})
                 const isReleaseVersion = this.version === releaseVersion
-                return !(this.isActiveDraft || baseVersion === this.version || (isReleaseVersion && !this.hasDraftPipeline))
+                return !(this.isActiveDraft || baseVersion === this.version || this.isActiveBranchVersion || (isReleaseVersion && !this.hasDraftPipeline))
             },
             operateName () {
                 return this.isRollback

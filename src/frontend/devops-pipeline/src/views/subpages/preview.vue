@@ -12,7 +12,11 @@
             </span>
             <VersionSelector
                 :editable="pacEnabled"
+                :class="{
+                    'exec-version-is-disabled': !pacEnabled
+                }"
                 :value="executeVersion"
+                v-bk-tooltips="execVersionSelectorDisableTips"
                 @change="handleExecuteVersionChange"
                 :include-draft="false"
                 :show-extension="false"
@@ -274,6 +278,13 @@
             ...mapState('atom', [
                 'pipelineInfo'
             ]),
+            execVersionSelectorDisableTips () {
+                return {
+                    disabled: this.pacEnabled,
+                    theme: 'light',
+                    content: this.$t('preview.versionSelectorDisableTips')
+                }
+            },
             executeVersion () {
                 return this.$route.params.version ? parseInt(this.$route.params.version) : this.pipelineInfo?.releaseVersion
             },
@@ -645,6 +656,13 @@ $header-height: 36px;
             border: 1px solid #C4C6CC;
             border-radius: 0 2px 2px 0;
         }
+
+        .exec-version-is-disabled .pipeline-version-dropmenu-trigger {
+            background-color: #fafbfd;
+            cursor: not-allowed;
+            border-color: #dcdee5;
+        }
+
     }
 
     @for $i from 1 through 6 {
