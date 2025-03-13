@@ -87,7 +87,8 @@
         computed: {
             ...mapState('atom', [
                 'commonParams',
-                'triggerParams'
+                'triggerParams',
+                'editingElementPos'
             ]),
             ...mapGetters('atom', [
                 'allPipelineParams'
@@ -225,25 +226,18 @@
             },
 
             async initCopilotMonaco () {
-                const [monaco, { GongfengMonacoEditor, ReleaseChannel }, accessToken] = await Promise.all([
-                import(
-                    /* webpackMode: "lazy" */
-                    /* webpackPrefetch: true */
-                    /* webpackPreload: true */
-                    /* webpackChunkName: "monaco-editor" */
-                    'monaco-editor'
-                ),
-                import(
-                    /* webpackMode: "lazy" */
-                    /* webpackPrefetch: true */
-                    /* webpackPreload: true */
-                    /* webpackChunkName: "monaco-editor" */
-                    '@tencent/gongfeng-copilot-monaco'
-                ),
-                this.getAccessToken(false)
+                const [monaco, accessToken] = await Promise.all([
+                    import(
+                        /* webpackMode: "lazy" */
+                        /* webpackPrefetch: true */
+                        /* webpackPreload: true */
+                        /* webpackChunkName: "monaco-editor" */
+                        'monaco-editor'
+                    ),
+                    this.getAccessToken(false)
                 ])
                 this.monaco = monaco
-                this.gongfengEditor = new GongfengMonacoEditor(this.monaco, {
+                this.gongfengEditor = window.GongfengMonacoEditor.create(this.monaco, {
                     app: {
                         name: 'bkci',
                         // 接入方版本号
@@ -251,7 +245,7 @@
                     },
 
                     // env: ReleaseChannel.INSIDER,
-                    env: ReleaseChannel.PRODUCTION,
+                    env: 'production',
                     brandPaddingRight: 32,
                     authenticatedSession: {
                         accessToken,
@@ -278,9 +272,20 @@
                 this.registryCopilotContext()
             },
             registryCopilotContext () {
+                const [pipelineId, elementId, elementName, version, jobId, stepId] = this.parentElementAlias.split(':')
                 this.gongfengEditor.registerContextDefinition(this.editor, {
                     variables: this.pipelineParams,
-                    workspace: this.parentElementAlias
+                    workspace: [
+                        pipelineId, elementId, elementName, version
+                    ].join(':'),
+                    options: {
+                        ...this.editingElementPos,
+                        projectId: this.$route.params.projectId,
+                        pipelineId,
+                        version,
+                        jobId,
+                        stepId
+                    }
                 })
             }
         }
