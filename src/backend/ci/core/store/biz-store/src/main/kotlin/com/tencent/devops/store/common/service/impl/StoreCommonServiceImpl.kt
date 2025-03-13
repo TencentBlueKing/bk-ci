@@ -485,18 +485,13 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
             ReleaseTypeEnum.COMPATIBILITY_FIX -> {
                 reqVersionParts.major == dbVersionParts.major &&
                         reqVersionParts.minor == dbVersionParts.minor &&
-                        if (reqVersionParts.suffix == null) {
-                            // 如果版本号为三部分，则要求修正号要递增
-                            reqVersionParts.patch > dbVersionParts.patch
-                        } else {
-                            // 如果版本号超过三部分，则要求请求版本号在数据库中不存在
-                            storeBaseQueryDao.countByCondition(
-                                dslContext = dslContext,
-                                storeCode = storeCode,
-                                storeType = storeType,
-                                version = version
-                            ) < 1
-                        }
+                        validatePatchVersion(
+                            reqVersionParts = reqVersionParts,
+                            compareVersionParts = dbVersionParts,
+                            storeCode = storeCode,
+                            storeType = storeType,
+                            version = version
+                        )
             }
 
             ReleaseTypeEnum.CANCEL_RE_RELEASE -> {
@@ -513,18 +508,13 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
                 val hisVersionParts = parseVersion(historyVersion)
                 reqVersionParts.major == hisVersionParts.major &&
                         reqVersionParts.minor >= hisVersionParts.minor &&
-                        if (reqVersionParts.suffix == null) {
-                            // 如果版本号为三部分，则要求修正号要递增
-                            reqVersionParts.patch > hisVersionParts.patch
-                        } else {
-                            // 如果版本号超过三部分，则要求请求版本号在数据库中不存在
-                            storeBaseQueryDao.countByCondition(
-                                dslContext = dslContext,
-                                storeCode = storeCode,
-                                storeType = storeType,
-                                version = version
-                            ) < 1
-                        }
+                        validatePatchVersion(
+                            reqVersionParts = reqVersionParts,
+                            compareVersionParts = hisVersionParts,
+                            storeCode = storeCode,
+                            storeType = storeType,
+                            version = version
+                        )
             }
 
             else -> throw ErrorCodeException(errorCode = StoreMessageCode.STORE_RELEASE_STEPS_ERROR)
@@ -538,6 +528,27 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
         }
         // 判断最近一个版本的状态，如果不是首次发布，则只有处于终态的组件状态才允许添加新的版本
         checkAddVersionCondition(dbVersion = dbVersion, releaseType = releaseType, dbStatus = dbStatus, name = name)
+    }
+
+    private fun validatePatchVersion(
+        reqVersionParts: VersionParts,
+        compareVersionParts: VersionParts,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        version: String
+    ): Boolean {
+        if (reqVersionParts.major != compareVersionParts.major || reqVersionParts.minor != compareVersionParts.minor) {
+            return false
+        }
+        return if (reqVersionParts.suffix == null) {
+            // 如果版本号为三部分，则要求修正号要递增
+            reqVersionParts.patch > compareVersionParts.patch
+        } else {
+            // 如果版本号超过三部分且补丁版本号一样，则要求请求版本号在数据库中不存在
+            (reqVersionParts.patch > compareVersionParts.patch) || storeBaseQueryDao.countByCondition(
+                dslContext = dslContext, storeCode = storeCode, storeType = storeType, version = version
+            ) < 1
+        }
     }
 
     private fun checkAddVersionCondition(
