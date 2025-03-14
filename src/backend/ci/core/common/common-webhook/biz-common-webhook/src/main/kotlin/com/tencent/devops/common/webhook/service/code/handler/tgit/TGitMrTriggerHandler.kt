@@ -315,8 +315,7 @@ class TGitMrTriggerHandler(
                 changeFiles = changeFiles.toSet(),
                 enableThirdFilter = enableThirdFilter,
                 thirdUrl = thirdUrl,
-                thirdSecretToken = thirdSecretToken,
-                gitScmService = gitScmService,
+                secretToken = gitScmService.getCredential(projectId, thirdSecretToken),
                 callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry,
                 failedReason = I18Variable(code = WebhookI18nConstants.THIRD_FILTER_NOT_MATCH).toJsonStr(),
                 eventType = getEventType().name

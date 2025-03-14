@@ -27,12 +27,12 @@
 
 package com.tencent.devops.repository.service.oauth2
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.repository.dao.GithubTokenDao
-import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.oauth.GithubTokenType
-import com.tencent.devops.repository.pojo.oauth.Oauth2AccessToken
+import com.tencent.devops.repository.pojo.oauth.OauthTokenInfo
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -50,29 +50,62 @@ class CodeGithubOauth2TokenStoreService @Autowired constructor(
     @Value("\${aes.github:#{null}}")
     private val aesKey = ""
 
+    // 兼容历史数据,直接用scmType的值代替scmCode
     override fun support(scmCode: String): Boolean {
-        return scmCode == GithubRepository.SCM_CODE
+        return scmCode == ScmType.GITHUB.name
     }
 
-    override fun get(userId: String, scmCode: String): Oauth2AccessToken? {
+    override fun get(userId: String, scmCode: String): OauthTokenInfo? {
         return githubTokenDao.getOrNull(
             dslContext = dslContext,
             userId = userId,
             githubTokenType = GithubTokenType.GITHUB_APP
         )?.let {
-            Oauth2AccessToken(
-                BkCryptoUtil.decryptSm4OrAes(aesKey, it.accessToken),
-                it.tokenType,
-                null,
-                null,
-                it.createTime.timestampmilli(),
-                it.userId,
-                it.operator
+            OauthTokenInfo(
+                accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.accessToken),
+                tokenType = it.tokenType,
+                expiresIn = null,
+                refreshToken = null,
+                createTime = it.createTime.timestampmilli(),
+                userId = it.userId,
+                operator = it.operator
             )
         }
     }
 
+    override fun store(scmCode: String, oauthTokenInfo: OauthTokenInfo) {
+        with(oauthTokenInfo) {
+            val encryptedAccessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, accessToken)
+            val record = githubTokenDao.getOrNull(
+                dslContext = dslContext,
+                userId = userId,
+                githubTokenType = GithubTokenType.GITHUB_APP
+            )
+            if (record == null) {
+                githubTokenDao.create(
+                    dslContext,
+                    userId = userId,
+                    accessToken = encryptedAccessToken,
+                    tokenType = tokenType,
+                    scope = "",
+                    githubTokenType = GithubTokenType.GITHUB_APP,
+                    operator = operator ?: userId
+                )
+            } else {
+                githubTokenDao.update(
+                    dslContext,
+                    userId = userId,
+                    accessToken = encryptedAccessToken,
+                    tokenType = tokenType,
+                    scope = "",
+                    githubTokenType = GithubTokenType.GITHUB_APP,
+                    operator = operator ?: userId
+                )
+            }
+        }
+    }
+
     override fun delete(userId: String, scmCode: String) {
-        githubTokenDao.delete(dslContext, userId)
+        githubTokenDao.delete(dslContext = dslContext, userId = userId)
     }
 }

@@ -43,7 +43,10 @@ class PipelineYamlBranchFileDao {
         projectId: String,
         repoHashId: String,
         branch: String,
-        filePath: String
+        filePath: String,
+        commitId: String,
+        blobId: String,
+        commitTime: LocalDateTime
     ) {
         val now = LocalDateTime.now()
         with(TPipelineYamlBranchFile.T_PIPELINE_YAML_BRANCH_FILE) {
@@ -54,15 +57,27 @@ class PipelineYamlBranchFileDao {
                 BRANCH,
                 FILE_PATH,
                 FILE_PATH_MD5,
-                CREATE_TIME
+                CREATE_TIME,
+                UPDATE_TIME,
+                COMMIT_ID,
+                BLOB_ID,
+                COMMIT_TIME
             ).values(
                 projectId,
                 repoHashId,
                 branch,
                 filePath,
                 DigestUtils.md5Hex(filePath),
-                now
-            ).onDuplicateKeyIgnore()
+                now,
+                now,
+                commitId,
+                blobId,
+                commitTime
+            ).onDuplicateKeyUpdate()
+                .set(UPDATE_TIME, now)
+                .set(COMMIT_ID, commitId)
+                .set(BLOB_ID, blobId)
+                .set(COMMIT_TIME, commitTime)
                 .execute()
         }
     }
@@ -87,15 +102,19 @@ class PipelineYamlBranchFileDao {
         projectId: String,
         repoHashId: String,
         branch: String,
-        filePath: String
+        filePath: String,
+        includeDeleted: Boolean = false
     ): TPipelineYamlBranchFileRecord? {
-        return with(TPipelineYamlBranchFile.T_PIPELINE_YAML_BRANCH_FILE) {
-            dslContext.selectFrom(this)
+        with(TPipelineYamlBranchFile.T_PIPELINE_YAML_BRANCH_FILE) {
+            val query = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .and(BRANCH.eq(branch))
                 .and(FILE_PATH_MD5.eq(DigestUtils.md5Hex(filePath)))
-                .fetchOne()
+            if (!includeDeleted) {
+                query.and(DELETED.eq(false))
+            }
+            return query.fetchOne()
         }
     }
 
@@ -123,6 +142,26 @@ class PipelineYamlBranchFileDao {
     ) {
         with(TPipelineYamlBranchFile.T_PIPELINE_YAML_BRANCH_FILE) {
             dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPO_HASH_ID.eq(repoHashId))
+                .and(BRANCH.eq(branch))
+                .and(FILE_PATH_MD5.eq(DigestUtils.md5Hex(filePath)))
+                .execute()
+        }
+    }
+
+    fun softDelete(
+        dslContext: DSLContext,
+        projectId: String,
+        repoHashId: String,
+        branch: String,
+        filePath: String
+    ) {
+        val now = LocalDateTime.now()
+        with(TPipelineYamlBranchFile.T_PIPELINE_YAML_BRANCH_FILE) {
+            dslContext.update(this)
+                .set(DELETED, true)
+                .set(UPDATE_TIME, now)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .and(BRANCH.eq(branch))

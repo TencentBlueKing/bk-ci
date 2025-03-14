@@ -30,7 +30,7 @@ class PipelineYamlViewService(
         userId: String,
         projectId: String,
         repoHashId: String,
-        gitProjectName: String,
+        repoFullName: String,
         directoryList: Set<String>
     ) {
         PipelineYamlViewLock(
@@ -57,7 +57,7 @@ class PipelineYamlViewService(
                     userId = userId,
                     projectId = projectId,
                     repoHashId = repoHashId,
-                    gitProjectName = gitProjectName,
+                    repoFullName = repoFullName,
                     directory = directory
                 )
             }
@@ -68,10 +68,10 @@ class PipelineYamlViewService(
         userId: String,
         projectId: String,
         repoHashId: String,
-        gitProjectName: String,
+        repoFullName: String,
         directory: String
     ) {
-        val path = gitProjectName.substringAfterLast("/")
+        val path = repoFullName.substringAfterLast("/")
         val name = if (directory == Constansts.ciFileDirectoryName) {
             path
         } else {
