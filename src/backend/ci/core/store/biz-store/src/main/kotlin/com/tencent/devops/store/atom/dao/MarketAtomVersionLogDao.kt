@@ -106,4 +106,12 @@ class MarketAtomVersionLogDao {
                 .execute()
         }
     }
+
+
+    fun updateAtomVersionByAtomId(dslContext: DSLContext, atomId: String, size: String) {
+        with(TAtomVersionLog.T_ATOM_VERSION_LOG) {
+            dslContext.update(this)
+                .set(PACKAGE_SIZE, size).where(ATOM_ID.eq(atomId)).execute()
+        }
+    }
 }

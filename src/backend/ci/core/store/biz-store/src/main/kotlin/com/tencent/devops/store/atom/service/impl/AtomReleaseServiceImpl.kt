@@ -76,7 +76,6 @@ import com.tencent.devops.store.atom.service.AtomQualityService
 import com.tencent.devops.store.atom.service.AtomReleaseService
 import com.tencent.devops.store.atom.service.MarketAtomArchiveService
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
-import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.dao.StoreErrorCodeInfoDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
@@ -1024,23 +1023,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val version = atomRecord.version
         val releaseFlag = atomStatus == AtomStatusEnum.RELEASED.status.toByte()
         val atomReleaseRecord = marketAtomVersionLogDao.getAtomVersion(dslContext, atomId)
-        executorService.execute {
-            //获取插件构建环境包路径
-            try {
-                val atomEnvRecords = marketAtomEnvInfoDao.getMarketAtomEnvInfosByAtomId(dslContext, atomId)
-
-                atomEnvRecords?.forEach {
-                    if (it.pkgPath != null) {
-                        val nodeSize = client.get(ServiceArchiveComponentPkgResource::class)
-                            .getFileSize(userId, StoreTypeEnum.ATOM, it.pkgPath!!).data
-                        logger.info("getStoreComponentPkgSize, node:${nodeSize}")
-                    }
-                }
-            } catch (e: Exception) {
-                logger.error("getStoreComponentPkgSize error:${e}")
-            }
-
-        }
+        executorService.execute { saveAtomSize(atomId) }
         return handleAtomRelease(
             userId = userId,
             releaseFlag = releaseFlag,
@@ -1487,6 +1470,34 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     atomId = latestTestVersionId ?: ""
                 )
             }
+        }
+    }
+
+
+    private fun saveAtomSize(atomId: String) {
+        val list = mutableListOf<Long>()
+        try {
+            val atomEnvRecords = marketAtomEnvInfoDao.getMarketAtomEnvInfosByAtomId(dslContext, atomId)
+            val totalRecords = atomEnvRecords?.size ?: 0
+
+            atomEnvRecords?.mapNotNull { record ->
+                record.pkgPath?.let { pkgPath ->
+                    val nodeSize = client.get(ServiceArchiveComponentPkgResource::class)
+                        .getFileSize(StoreTypeEnum.ATOM, pkgPath).data ?: 0L
+                    logger.info("getStoreComponentPkgSize, node:$nodeSize")
+                    if (nodeSize > 0) nodeSize else null
+                }
+            }?.let { sizes -> list.addAll(sizes) }
+
+            //都成功时才存储
+            if (list.isNotEmpty() && list.size == totalRecords) {
+                val size = list.joinToString(", ") { byte ->
+                    String.format("%.2f MB", byte / (1024.0 * 1024.0))
+                }
+                marketAtomVersionLogDao.updateAtomVersionByAtomId(dslContext, atomId, size)
+            }
+        } catch (ignore: Exception) {
+            logger.error("saveAtomSize error for atomId: $atomId, error: ${ignore.message}", ignore)
         }
     }
 }
