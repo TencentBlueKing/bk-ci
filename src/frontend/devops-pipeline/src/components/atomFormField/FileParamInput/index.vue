@@ -137,7 +137,20 @@
         },
         watch: {
             value: {
-                handler: 'splitFilePath',
+                handler: function (newValue) {
+                    this.enableVersionControl = this.versionControl
+
+                    const lastSlashIndex = newValue.lastIndexOf('/')
+                    this.fileDefaultVal.fileName = newValue.slice(lastSlashIndex + 1)
+
+                    if (this.enableVersionControl && this.randomString) {
+                        this.fileDefaultVal.randomFilePath = this.randomString
+                        const randomStringLastIndex = newValue.lastIndexOf(`/${this.randomString}`)
+                        this.fileDefaultVal.directory = newValue.slice(0, randomStringLastIndex)
+                    } else {
+                        this.fileDefaultVal.directory = newValue.slice(0, lastSlashIndex)
+                    }
+                },
                 immediate: true
             },
             enableVersionControl () {
@@ -145,20 +158,6 @@
             }
         },
         methods: {
-            splitFilePath () {
-                this.enableVersionControl = this.versionControl
-
-                const lastSlashIndex = this.value.lastIndexOf('/')
-                this.fileDefaultVal.fileName = this.value.slice(lastSlashIndex + 1)
-
-                if (this.enableVersionControl && this.randomString) {
-                    this.fileDefaultVal.randomFilePath = this.randomString
-                    const randomStringLastIndex = this.value.lastIndexOf(`/${this.randomString}`)
-                    this.fileDefaultVal.directory = this.value.slice(0, randomStringLastIndex)
-                } else {
-                    this.fileDefaultVal.directory = this.value.slice(0, lastSlashIndex)
-                }
-            },
             updatePath () {
                 const { directory, fileName, randomFilePath } = this.fileDefaultVal
                 const path = this.enableVersionControl && randomFilePath
