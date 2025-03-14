@@ -31,7 +31,7 @@ import com.tencent.devops.common.auth.api.AuthPlatformApi
 import org.springframework.beans.factory.annotation.Value
 
 class MockAuthPlatformApi : AuthPlatformApi {
-    @Value("auth:platform:manager:")
+    @Value("\${auth.platform.manager:}")
     val platformManager = ""
 
     override fun validateUserPlatformPermission(user: String): Boolean {
