@@ -1,10 +1,12 @@
 package com.tencent.devops.remotedev.resources.user
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserInfoResource
 import com.tencent.devops.remotedev.pojo.TrustDeviceInfo
 import com.tencent.devops.remotedev.pojo.TrustDeviceTokenGetData
+import com.tencent.devops.remotedev.pojo.userinfo.FaceRecognition
 import com.tencent.devops.remotedev.pojo.userinfo.FaceRecognitionData
 import com.tencent.devops.remotedev.pojo.userinfo.FaceRecognitionResult
 import com.tencent.devops.remotedev.pojo.userinfo.UserInfoAuthCheck
@@ -31,6 +33,10 @@ class UserInfoResourceImpl @Autowired constructor(
         data: UserInfoCheckData
     ): Result<UserInfoCheckResult> {
         val res = userInfoCertService.multipleCert(data)
+        // 产品要求：集团员工跳过人脸识别
+        if (userId != null && !UserUtil.isTaiUser(userId)) {
+           res.faceRecognition = FaceRecognition(0, "", false)
+        }
         if (userId != null && deviceId != null && token != null) {
             if (trustDeviceService.checkTrustDevice(userId, deviceId, token)) {
                 return Result(res.copy(moa = UserInfoMoaCheckConfig(false)))
