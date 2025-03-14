@@ -1496,7 +1496,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 }
                 marketAtomVersionLogDao.updateAtomVersionByAtomId(dslContext, atomId, size)
             }
-        } catch (ignore: Exception) {
+        } catch (ignore: Throwable) {
             logger.error("saveAtomSize error for atomId: $atomId, error: ${ignore.message}", ignore)
         }
     }

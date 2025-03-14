@@ -39,6 +39,7 @@ import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.jooq.Record1
 import org.jooq.Record18
 import org.jooq.Result
 import org.jooq.SelectJoinStep
@@ -335,5 +336,14 @@ class MarketAtomEnvInfoDao {
             .on(tAtomEnvInfo.ATOM_ID.eq(tAtom.ID))
             .where(tAtom.ATOM_CODE.eq(atomCode).and(tAtom.VERSION.eq(version)))
             .fetchOne(0, String::class.java)
+    }
+
+
+    fun selectAtomEnvInfoByAtomIds(dslContext: DSLContext, atomIds: Result<Record1<String>>): Result<TAtomEnvInfoRecord> {
+        with(TAtomEnvInfo.T_ATOM_ENV_INFO) {
+            return dslContext.selectFrom(this)
+                .where(ATOM_ID.`in`(atomIds)).fetch()
+
+        }
     }
 }
