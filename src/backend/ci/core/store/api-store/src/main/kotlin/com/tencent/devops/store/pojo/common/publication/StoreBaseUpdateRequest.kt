@@ -55,7 +55,7 @@ data class StoreBaseUpdateRequest(
     @get:Schema(title = "描述", required = false)
     val description: String? = null,
     @get:Schema(title = "版本信息", required = true)
-    @Valid
+    @field:Valid
     val versionInfo: VersionModel,
     @get:Schema(title = "标签列表", required = false)
     val labelIdList: ArrayList<String>? = null,

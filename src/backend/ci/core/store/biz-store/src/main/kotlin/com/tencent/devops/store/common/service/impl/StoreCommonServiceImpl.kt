@@ -465,7 +465,7 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
             StoreStatusEnum.COMMITTING.name,
             StoreStatusEnum.GROUNDING_SUSPENSION.name
         )
-        if (releaseType == ReleaseTypeEnum.NEW && opBaseRecord.latestFlag && dbStatus !in validStatusList) {
+        if (releaseType == ReleaseTypeEnum.NEW && dbStatus !in validStatusList) {
             throw ErrorCodeException(errorCode = StoreMessageCode.STORE_RELEASE_STEPS_ERROR)
         }
 
