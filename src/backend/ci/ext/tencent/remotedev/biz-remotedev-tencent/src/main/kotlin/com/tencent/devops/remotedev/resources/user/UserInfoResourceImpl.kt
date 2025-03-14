@@ -35,7 +35,7 @@ class UserInfoResourceImpl @Autowired constructor(
         val res = userInfoCertService.multipleCert(data)
         // 产品要求：集团员工跳过人脸识别
         if (userId != null && !UserUtil.isTaiUser(userId)) {
-           res.faceRecognition = FaceRecognition(0, "", false)
+            res.faceRecognition = FaceRecognition(0, "", false)
         }
         if (userId != null && deviceId != null && token != null) {
             if (trustDeviceService.checkTrustDevice(userId, deviceId, token)) {
