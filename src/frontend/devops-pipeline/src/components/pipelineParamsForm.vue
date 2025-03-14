@@ -27,7 +27,7 @@
                     :placeholder="param.placeholder"
                     :is-diff-param="highlightChangedParam && param.isChanged"
                     :version-control="param.enableVersionControl"
-                    :random-string="param.latestRandomStringInPath"
+                    :random-string="param.latestRandomStringInPath || param.randomStringInPath"
                 />
             </section>
             <span

@@ -284,6 +284,7 @@
                                                     :value="param.defaultValue"
                                                     :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                                     :version-control="param.enableVersionControl"
+                                                    :random-string="param.randomStringInPath"
                                                 />
                                             </bk-form-item>
                                         </template>
