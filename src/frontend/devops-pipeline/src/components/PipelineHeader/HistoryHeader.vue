@@ -48,7 +48,7 @@
                 {{ $t("diff") }}
             </VersionDiffEntry>
             <RollbackEntry
-                v-if="showRollback && isReleasePipeline"
+                v-if="showRollback && (isReleasePipeline || onlyBranchPipeline)"
                 :text="false"
                 :has-permission="canEdit"
                 :version="currentVersion"
@@ -197,7 +197,7 @@
                 return this.pipelineInfo?.permissions?.canExecute ?? true
             },
             executable () {
-                return (!this.isCurPipelineLocked && this.canManualStartup && this.isReleasePipeline) || this.isActiveDraftVersion
+                return (!this.isCurPipelineLocked && this.canManualStartup && this.editAndExecutable) || this.isActiveDraftVersion
             },
             canManualStartup () {
                 return this.pipelineInfo?.canManualStartup ?? true

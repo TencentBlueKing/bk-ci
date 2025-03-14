@@ -117,7 +117,6 @@
 <script>
     import ModeSwitch from '@/components/ModeSwitch'
     import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry.vue'
-    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
@@ -262,6 +261,7 @@
                 'setPipelineEditing',
                 'saveDraftPipeline',
                 'setSaveStatus',
+                'requestPipelineSummary',
                 'updateContainer'
             ]),
             ...mapActions('pipelines', [
@@ -320,7 +320,7 @@
                     this.formatParams(pipeline)
 
                     // 请求执行构建
-                    const { data: { version, versionName } } = await this.saveDraftPipeline({
+                    await this.saveDraftPipeline({
                         projectId,
                         pipelineId,
                         baseVersion: this.pipelineInfo?.baseVersion,
@@ -340,15 +340,7 @@
                     })
                     this.setPipelineEditing(false)
 
-                    this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
-                        canDebug: true,
-                        canRelease: true,
-                        baseVersion: this.pipelineInfo?.baseVersion ?? this.pipelineInfo?.releaseVersion ?? this.pipelineInfo?.version,
-                        baseVersionName: this.pipelineInfo?.baseVersionName ?? this.pipelineInfo?.releaseVersionName ?? this.pipelineInfo?.versionName,
-                        baseVersionStatus: this.pipelineInfo?.baseVersionStatus ?? this.pipelineInfo?.latestVersionStatus,
-                        version,
-                        versionName
-                    })
+                    await this.requestPipelineSummary(this.$route.params)
 
                     this.$bkMessage({
                         theme: 'success',
@@ -403,12 +395,7 @@
                     })
 
                     // 删除草稿时需要更新pipelineInfo
-                    this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
-                        version: this.pipelineInfo?.releaseVersion,
-                        versionName: this.pipelineInfo?.releaseVersionName,
-                        canDebug: false,
-                        canRelease: false
-                    })
+                    await this.requestPipelineSummary(this.$route.params)
                     this.$showTips({
                         message: this.$t('delete') + this.$t('version') + this.$t('success'),
                         theme: 'success'

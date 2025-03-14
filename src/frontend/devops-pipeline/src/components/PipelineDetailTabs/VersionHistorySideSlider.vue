@@ -331,9 +331,7 @@
                                 theme: 'success'
                             })
 
-                            if (row.isDraft) { // 删除草稿时需要更新pipelineInfo
-                                this.requestPipelineSummary(this.$route.params)
-                            }
+                            this.requestPipelineSummary(this.$route.params)
                         } catch (err) {
                             this.$showTips({
                                 message: err.message || err,
