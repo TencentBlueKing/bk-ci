@@ -80,7 +80,7 @@
     "代码源接入后，用户可以关联对应的代码库到平台入口": "After code source integration, users can associate the corresponding repository to the platform entry",
     "OAUTH 授权时和代码库提供方交互鉴权所需的client_id": "client_id required for authentication interaction with the repository provider during OAUTH authorization",
     "OAUTH授权时和代码库提供方交互鉴权所需的client_secret": "client_secret required for authentication interaction with the repository provider during OAUTH authorization",
-    "由中/英文字符、下划线组成，不超过20个字符，如工蜂、GitHub": "Consists of Chinese/English characters and underscores, not exceeding 20 characters, such as Gongfeng, GitHub",
+    "由中/英文字符、下划线、空格组成，不超过20个字符，如工蜂、GitHub": "Consists of Chinese/English characters, underscores, and spaces, not exceeding 20 characters, such as 工蜂, GitHub.",
     "请上传png、jpg、尺寸为大于128*128的正方形Logo，大小不超过2M": "Please upload a png or jpg square logo with dimensions greater than 128*128, and size not exceeding 2M",
     "由英文字母和下划线组成，不超过20个字符，作为平台服务内交互的唯一标识，如GIT、TGIT": "Consists of English letters and underscores, not exceeding 20 characters, serving as a unique identifier for platform service interaction, such as GIT, TGIT",
     "Pipeline AsCode（PAC）模式下，可以使用代码库.ci目录下的YAML文件编排流水线，且YAML文件变更将自动同步到对应的蓝盾流水线。": "In Pipeline AsCode (PAC) mode, YAML files in the .ci directory of the repository can be used to arrange the pipeline, and changes to the YAML files will automatically sync to the corresponding Blue Shield pipeline.",

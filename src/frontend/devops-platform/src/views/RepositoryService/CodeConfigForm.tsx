@@ -50,7 +50,7 @@ export default defineComponent({
     const configFormDataRules = {
       name: [
         {
-          validator: value => /^[\u4e00-\u9fa5\w]{1,20}$/.test(value),
+          validator: value => /^[\u4e00-\u9fa5\w ]{1,20}$/.test(value),
           message: t('由中/英文字符、下划线组成，不超过20个字符'),
           trigger: 'change'
         }
@@ -226,6 +226,10 @@ export default defineComponent({
       }
     }
 
+    const handleChangeName = (value) => {
+      configFormData.value.name = value.trim();
+    }
+
     onMounted(async () => {
       await getProviderList()
       if (!isCreate.value) {
@@ -291,8 +295,9 @@ export default defineComponent({
                 >
                   <bk-input
                     v-model={configFormData.value.name}
-                    placeholder={t('由中/英文字符、下划线组成，不超过20个字符，如工蜂、GitHub')}
+                    placeholder={t('由中/英文字符、下划线、空格组成，不超过20个字符，如工蜂、GitHub')}
                     clearable
+                    onInput={handleChangeName}
                   />
                 </bk-form-item>
                 <bk-form-item
@@ -365,8 +370,7 @@ export default defineComponent({
               <p class="h-[44px] text-[14px] font-bold text-[#4D4F56]">{t('高级设置')}</p>
               <bk-form-item
                 property="props.apiUrl"
-                label={'api url'}
-                required
+                label={'API URL'}
               >
                   <bk-input
                     class="max-w-[710px]"
