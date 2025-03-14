@@ -99,7 +99,7 @@
                         'disabled': pipeline.disabled
                     }"
                     v-bk-tooltips="pipeline.tooltips"
-                    @click.stop="exec"
+                    @click.stop="execPipeline(pipeline)"
                 >
                     <logo
                         v-if="pipeline.lock"
@@ -233,14 +233,14 @@
 
 <script>
     import Logo from '@/components/Logo'
-    import ExtMenu from '@/components/pipelineList/extMenu'
-    import PipelineStatusIcon from '@/components/PipelineStatusIcon'
-    import { RECENT_USED_VIEW_ID } from '@/store/constants'
-    import {
-        handlePipelineNoPermission,
-        RESOURCE_ACTION
-    } from '@/utils/permission'
-    import { statusColorMap } from '@/utils/pipelineStatus'
+import ExtMenu from '@/components/pipelineList/extMenu'
+import PipelineStatusIcon from '@/components/PipelineStatusIcon'
+import { RECENT_USED_VIEW_ID } from '@/store/constants'
+import {
+handlePipelineNoPermission,
+RESOURCE_ACTION
+} from '@/utils/permission'
+import { statusColorMap } from '@/utils/pipelineStatus'
 
     export default {
         components: {
@@ -296,10 +296,6 @@
 
         },
         methods: {
-            exec () {
-                if (this.pipeline?.disabled || !this.pipeline?.executeable) return
-                this.execPipeline(this.pipeline)
-            },
             applyPermission (pipeline) {
                 handlePipelineNoPermission({
                     projectId: this.projectId,
