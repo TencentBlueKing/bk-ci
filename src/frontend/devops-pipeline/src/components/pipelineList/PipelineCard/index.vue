@@ -66,7 +66,7 @@
             </aside>
             <aside class="bk-pipeline-card-header-right-aside">
                 <span
-                    v-if="!pipeline.released"
+                    v-if="!executeable"
                     class="bk-pipeline-card-trigger-btn"
                     @click="goPipeline(pipeline)"
                     v-perm="{
@@ -99,7 +99,7 @@
                         'disabled': pipeline.disabled
                     }"
                     v-bk-tooltips="pipeline.tooltips"
-                    @click.stop="exec"
+                    @click.stop="execPipeline(pipeline)"
                 >
                     <logo
                         v-if="pipeline.lock"
@@ -272,6 +272,9 @@
             }
         },
         computed: {
+            executeable () {
+                return this.pipeline.released || this.pipeline.onlyBranchVersion
+            },
             latestBuildNum () {
                 return this.pipeline.latestBuildNum ? `#${this.pipeline.latestBuildNum}` : '--'
             },
@@ -290,13 +293,9 @@
             projectId () {
                 return this.$route.params.projectId
             }
-            
+
         },
         methods: {
-            exec () {
-                if (this.pipeline?.disabled || !this.pipeline?.released) return
-                this.execPipeline(this.pipeline)
-            },
             applyPermission (pipeline) {
                 handlePipelineNoPermission({
                     projectId: this.projectId,

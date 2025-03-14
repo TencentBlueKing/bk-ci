@@ -233,6 +233,25 @@
                             </bk-radio>
                         </bk-radio-group>
                     </bk-form-item>
+                    <bk-form-item
+                        v-if="isCommitToBranch"
+                        :label="$t('targetBranch')"
+                    >
+                        <bk-select
+                            v-model="releaseParams.targetBranch"
+                            :placeholder="$t('editPage.selectBranchTips')"
+                            searchable
+                            :remote-method="handleBranchSerach"
+                        >
+                            <bk-option
+                                v-for="branch in branchList"
+                                :key="branch"
+                                :id="branch"
+                                :name="branch"
+                            >
+                            </bk-option>
+                        </bk-select>
+                    </bk-form-item>
                 </div>
             </bk-form>
             <div
@@ -304,12 +323,11 @@
 </template>
 
 <script>
+    import Logo from '@/components/Logo'
     import PacTag from '@/components/PacTag.vue'
     import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
-    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
-    import { VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
+    import { TARGET_ACTION_ENUM, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
-    import Logo from '@/components/Logo'
 
     export default {
         components: {
@@ -341,6 +359,7 @@
                 refreshing: false,
                 filePathDir: '.ci/',
                 newReleaseVersionName: '--',
+                branchList: [],
                 scrollLoadmoreConf: {
                     isLoading: false,
                     page: 1,
@@ -351,6 +370,7 @@
                 isInitPacRepo: false,
                 releaseParams: {
                     enablePac: false,
+                    targetBranch: '',
                     scmType: '',
                     description: '',
                     repoHashId: '',
@@ -382,6 +402,9 @@
             },
             isTemplatePipeline () {
                 return this.pipelineInfo?.instanceFromTemplate ?? false
+            },
+            isCommitToBranch () {
+                return this.releaseParams.targetAction === TARGET_ACTION_ENUM.COMMIT_TO_BRANCH
             },
             viewNames () {
                 return this.pipelineInfo?.viewNames || []
@@ -424,10 +447,17 @@
             },
             targetActionOptions () {
                 return [
-                    'COMMIT_TO_MASTER',
-                    this.isDraftBaseBranchVersion
-                        ? 'PUSH_BRANCH_AND_REQUEST_MERGE'
-                        : 'CHECKOUT_BRANCH_AND_REQUEST_MERGE'
+                    ...(
+                        this.isDraftBaseBranchVersion
+                            ? [
+                                TARGET_ACTION_ENUM.COMMIT_TO_SOURCE_BRANCH,
+                                TARGET_ACTION_ENUM.COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE
+                                // 提交到指定分支
+                            ]
+                            : [TARGET_ACTION_ENUM.CHECKOUT_BRANCH_AND_REQUEST_MERGE]
+                    ),
+                    TARGET_ACTION_ENUM.COMMIT_TO_MASTER,
+                    TARGET_ACTION_ENUM.COMMIT_TO_BRANCH
                 ]
             },
             hasPacSupportScmTypeList () {
@@ -439,6 +469,13 @@
                     return manualAtom?.additionalOptions?.enable
                 } catch (error) {
                     return false
+                }
+            },
+            prefetchParams () {
+                return {
+                    targetBranch: this.releaseParams.targetBranch,
+                    targetAction: this.releaseParams.targetAction,
+                    repoHashId: this.releaseParams.repoHashId
                 }
             }
         },
@@ -482,6 +519,30 @@
                     }
                 },
                 immediate: true
+            },
+            isCommitToBranch: {
+                handler: function (val) {
+                    if (val) {
+                        this.fetchBranchList()
+                    }
+                },
+                immediate: true
+            },
+            'releaseParams.repoHashId': {
+                handler: function (val) {
+                    if (this.isCommitToBranch) {
+                        this.releaseParams.targetBranch = ''
+                        this.$nextTick(() => {
+                            this.fetchBranchList()
+                        })
+                    }
+                }
+            },
+            prefetchParams: {
+                deep: true,
+                handler: function (val) {
+                    this.prefetchReleaseVersion(val)
+                }
             }
         },
         mounted () {
@@ -494,39 +555,32 @@
         methods: {
             ...mapActions('atom', [
                 'releaseDraftPipeline',
+                'requestPipelineSummary',
                 'setSaveStatus',
-                'prefetchPipelineVersion'
+                'prefetchPipelineVersion',
+                'requestScmBranchList'
             ]),
             ...mapActions('common', ['isPACOAuth', 'getSupportPacScmTypeList', 'getPACRepoList']),
             async init () {
                 try {
                     this.isLoading = true
-                    const enablePac = this.releaseParams.enablePac
-                    const params = {
-                        projectId: this.$route.params.projectId,
-                        pipelineId: this.$route.params.pipelineId
-                    }
-                    const results = await Promise.all([
+                    const { enablePac } = this.releaseParams
+                    await Promise.all([
                         ...(enablePac
                             ? [
                                 this.getSupportPacScmTypeList()
                             ]
                             : []
                         ),
-                        this.prefetchPipelineVersion({
-                            ...params,
-                            version: this.version
-                        })
+                        this.prefetchReleaseVersion(this.prefetchParams)
                     ])
 
-                    const newReleaseVersion = results[enablePac ? 1 : 0]
-                    this.newReleaseVersionName = newReleaseVersion?.newVersionName || '--'
                     if (enablePac && this.hasPacSupportScmTypeList) {
                         this.releaseParams.scmType = this.pacSupportScmTypeList[0]?.id
                         this.$nextTick(() => {
                             this.fetchPacEnableCodelibList(true)
                             if (this.isDraftBaseBranchVersion) {
-                                this.releaseParams.targetAction = 'PUSH_BRANCH_AND_REQUEST_MERGE'
+                                this.releaseParams.targetAction = TARGET_ACTION_ENUM.COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE
                             }
                         })
                     }
@@ -539,6 +593,26 @@
                     })
                 } finally {
                     this.isLoading = false
+                }
+            },
+            async prefetchReleaseVersion (params) {
+                try {
+                    if (!this.version || (params.targetAction === TARGET_ACTION_ENUM.COMMIT_TO_BRANCH && !params.targetBranch)) {
+                        return
+                    }
+                    const newReleaseVersion = await this.prefetchPipelineVersion({
+                        ...this.$route.params,
+                        version: this.version,
+                        ...params
+                    })
+                    this.newReleaseVersionName = newReleaseVersion?.newVersionName || '--'
+                } catch (error) {
+                    this.handleError(error, {
+                        projectId: this.$route.params.projectId,
+                        resourceCode: this.$route.params.pipelineId,
+                        resourceType: 'pipeline',
+                        action: this.$permissionResourceAction.EDIT
+                    })
                 }
             },
             async fetchPacEnableCodelibList (init = false) {
@@ -589,6 +663,21 @@
                     this.fetchPacEnableCodelibList(true)
                 }
             },
+            async fetchBranchList (search) {
+                try {
+                    const res = await this.requestScmBranchList({
+                        projectId: this.$route.params.projectId,
+                        repositoryHashId: this.releaseParams.repoHashId,
+                        search
+                    })
+                    this.branchList = Array.from(new Set(res.data))
+                } catch (error) {
+                    console.error(error)
+                }
+            },
+            handleBranchSerach (keyword) {
+                return this.fetchBranchList(keyword)
+            },
             handlePacEnableChange (val) {
                 this.showPacCodelibSetting = val
             },
@@ -610,7 +699,7 @@
                         ...rest
                     } = this.releaseParams
                     const {
-                        data: { yamlInfo, version, versionName, versionNum, targetUrl, updateBuildNo }
+                        data: { versionName, targetUrl, updateBuildNo }
                     } = await this.releaseDraftPipeline({
                         projectId,
                         pipelineId,
@@ -633,37 +722,7 @@
                         }
                     })
 
-                    this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
-                        ...(!targetAction || targetAction === 'COMMIT_TO_MASTER'
-                            ? {
-                                version,
-                                versionName,
-                                releaseVersion: version,
-                                releaseVersionName: versionName,
-                                versionNum,
-                                baseVersion: version,
-                                baseVersionName: versionName,
-                                latestVersionStatus: VERSION_STATUS_ENUM.RELEASED,
-                                pipelineName: this.pipelineName,
-                                canManualStartup: this.canManualStartup
-                            }
-                            : {}),
-                        ...(
-                            this.pipelineInfo?.latestVersionStatus === VERSION_STATUS_ENUM.BRANCH
-                                ? {
-                                    releaseVersion: version,
-                                    releaseVersionName: versionName
-                                }
-                                : {}
-                        ),
-                        canDebug: false,
-                        canRelease: false,
-                        pipelineAsCodeSettings: {
-                            ...(this.pipelineInfo.pipelineAsCodeSettings ?? {}),
-                            enable: rest.enablePac
-                        },
-                        yamlInfo
-                    })
+                    await this.requestPipelineSummary(this.$route.params)
 
                     const tipsI18nKey = this.releaseParams.enablePac
                         ? 'pacPipelineReleaseTips'
@@ -672,8 +731,8 @@
                     const isPacMR
                         = this.releaseParams.enablePac
                             && [
-                                'CHECKOUT_BRANCH_AND_REQUEST_MERGE',
-                                'PUSH_BRANCH_AND_REQUEST_MERGE'
+                                TARGET_ACTION_ENUM.CHECKOUT_BRANCH_AND_REQUEST_MERGE,
+                                TARGET_ACTION_ENUM.COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE
                             ].includes(this.releaseParams.targetAction)
                     const h = this.$createElement
                     const instance = this.$bkInfo({
@@ -1054,7 +1113,12 @@
         }
 
         .pac-pipeline-dest-branch-radio {
-            margin-right: 24px;
+            display: flex;
+            margin-bottom: 8px;
+            .bk-radio-text {
+                @include ellipsis();
+                flex: 1;
+            }
         }
     }
 }
@@ -1200,7 +1264,7 @@
         padding: 6px 10px;
         font-size: 14px;
         border-radius: 2px;
-        
+
         span {
             margin-left: 10px;
         }

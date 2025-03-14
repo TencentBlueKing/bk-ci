@@ -39,7 +39,7 @@
             class="pipeline-history-right-aside"
         >
             <VersionDiffEntry
-                v-if="!isTemplatePipeline && !isReleaseVersion"
+                v-if="!isTemplatePipeline && !editAndExecutable"
                 :text="false"
                 outline
                 :version="currentVersion"
@@ -48,7 +48,7 @@
                 {{ $t("diff") }}
             </VersionDiffEntry>
             <RollbackEntry
-                v-if="showRollback && isReleasePipeline"
+                v-if="showRollback && (isReleasePipeline || onlyBranchPipeline)"
                 :text="false"
                 :has-permission="canEdit"
                 :version="currentVersion"
@@ -58,6 +58,8 @@
                 :version-name="activePipelineVersion?.versionName"
                 :draft-base-version-name="draftBaseVersionName"
                 :is-active-draft="activePipelineVersion?.isDraft"
+                :is-active-branch-version="isActiveBranchVersion"
+                :draft-creator="activePipelineVersion?.creator"
             >
                 {{ operateName }}
             </RollbackEntry>
@@ -79,7 +81,7 @@
             >
                 {{ $t("edit") }}
             </bk-button>
-            <template v-if="isReleaseVersion">
+            <template v-if="editAndExecutable">
                 <span v-bk-tooltips="tooltip">
                     <bk-button
                         :disabled="!executable"
@@ -161,8 +163,14 @@
                 pipelineHistoryViewable: 'atom/pipelineHistoryViewable',
                 onlyBranchPipeline: 'atom/onlyBranchPipeline'
             }),
+            editAndExecutable () {
+                return this.isReleaseVersion || this.activePipelineVersion?.isBranchVersion
+            },
+            isActiveBranchVersion () {
+                return this.activePipelineVersion?.isBranchVersion ?? false
+            },
             showRollback () {
-                return this.isReleaseVersion || !this.pipelineInfo?.baseVersion || this.activePipelineVersion?.baseVersion !== this.pipelineInfo?.baseVersion
+                return this.editAndExecutable || !this.pipelineInfo?.baseVersion || this.activePipelineVersion?.baseVersion !== this.pipelineInfo?.baseVersion
             },
             currentVersion () {
                 return this.$route.params.version ? parseInt(this.$route.params.version) : this.releaseVersion
@@ -189,14 +197,14 @@
                 return this.pipelineInfo?.permissions?.canExecute ?? true
             },
             executable () {
-                return (!this.isCurPipelineLocked && this.canManualStartup && this.isReleasePipeline) || this.isActiveDraftVersion
+                return (!this.isCurPipelineLocked && this.canManualStartup && this.editAndExecutable) || this.isActiveDraftVersion
             },
             canManualStartup () {
                 return this.pipelineInfo?.canManualStartup ?? true
             },
             operateName () {
                 switch (true) {
-                    case this.isReleaseVersion:
+                    case this.editAndExecutable:
                         return this.$t('edit')
                     case this.pipelineInfo?.baseVersion && this.activePipelineVersion?.version === this.pipelineInfo?.baseVersion:
                         return this.$t('editCurDraft')
