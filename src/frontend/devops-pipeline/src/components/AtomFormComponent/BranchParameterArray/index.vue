@@ -43,11 +43,8 @@
         },
         mixins: [mixins],
         props: {
-            repoHashId: {
-                type: String
-            },
-            repositoryType: {
-                type: String
+            element: {
+                type: Object
             }
         },
         data () {
@@ -61,6 +58,12 @@
         computed: {
             projectId () {
                 return this.$route.params.projectId
+            },
+            repoHashId () {
+                return this.element?.repoHashId || ''
+            },
+            repositoryType () {
+                return this.element?.repositoryType || ''
             }
         },
         watch: {
@@ -71,16 +74,19 @@
              */
             repoHashId: {
                 handler (val) {
+                    this.getBranchesList()
                     this.handleChange(this.name, [])
                     this.curValue = ['']
-                }
+                },
+                deep: true
             },
 
             repositoryType: {
                 handler (val) {
                     this.handleChange(this.name, [])
                     this.curValue = ['']
-                }
+                },
+                deep: true
             }
         },
         created () {

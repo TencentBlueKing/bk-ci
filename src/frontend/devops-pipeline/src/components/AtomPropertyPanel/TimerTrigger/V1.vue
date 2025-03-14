@@ -125,12 +125,10 @@
                 >
                     <BranchParameterArray
                         name="branches"
-                        :repository-type="element['repositoryType']"
+                        :element="element"
                         :disabled="disabled"
-                        :repo-hash-id="element['repoHashId']"
                         :value="element['branches']"
                         :handle-change="handleUpdateElement"
-                        :key="element['repoHashId']"
                     >
                     </BranchParameterArray>
                 </form-field>

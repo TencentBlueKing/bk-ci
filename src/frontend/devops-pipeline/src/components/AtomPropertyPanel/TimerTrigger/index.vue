@@ -1,5 +1,6 @@
 <template>
     <div>
+        {{ $attrs.element }}
         <component
             :is="timerTriggerComponent"
             v-bind="$attrs"

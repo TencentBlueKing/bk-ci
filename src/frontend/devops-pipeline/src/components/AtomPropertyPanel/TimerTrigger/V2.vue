@@ -10,11 +10,12 @@
             >
                 <component
                     :is="obj.component"
+                    v-bind="obj"
                     :name="key"
                     :value="element[key]"
                     :element="element"
                     :disabled="disabled"
-                    v-bind="obj"
+                    :handle-change="handleChange"
                 />
             </form-field>
         </template>
@@ -34,8 +35,18 @@
             CodelibSelector
         },
         mixins: [atomMixin, validMixins],
-        created () {
-            console.log(this.atomPropsModel, 'atomPropsModel')
+        methods: {
+            updateProps (newParam) {
+                this.updateAtom({
+                    element: this.element,
+                    newParam
+                })
+            },
+            handleChange (name, value) {
+                this.updateProps({
+                    [name]: value
+                })
+            }
         }
     }
 </script>
