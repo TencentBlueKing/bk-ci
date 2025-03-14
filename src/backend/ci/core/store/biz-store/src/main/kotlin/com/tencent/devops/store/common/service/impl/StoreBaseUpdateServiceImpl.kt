@@ -150,7 +150,6 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
         val normalizedVersion = VersionUtils.convertLatestVersion(version)
         // 获取当前大版本下最大序号
         val maxBusNum = storeBaseQueryDao.getMaxBusNumByCode(dslContext, storeCode, storeType, normalizedVersion)
-        var latestFlag = false
         val initBusNum = CommonUtils.generateNumber(majorVersion, 1, STORE_BUS_NUM_LEN).toInt()
         // 生成当前组件版本的业务号
         val busNum = when {
@@ -169,7 +168,9 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
                 majorVersion = majorVersion
             )
         }
-        if (busNum == initBusNum) {
+        var latestFlag = false
+        val firstVersion = storeBaseQueryDao.getFirstVersion(dslContext, storeCode, storeType)
+        if (version == firstVersion) {
             // 首个版本的latestFlag置为true
             latestFlag = true
         }
