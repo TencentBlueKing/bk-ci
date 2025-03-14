@@ -842,6 +842,8 @@ class RepositoryService @Autowired constructor(
             val hasUsePermission = hasUsePermissionRepoList.contains(it.repositoryId)
             val hasViewPermission = hasViewPermissionRepoList.contains(it.repositoryId)
             val repoDetailInfo = repoDetailInfoMap[it.repositoryId]
+            // 兼容老数据
+            val scmCode = it.scmCode ?: it.type
             RepositoryInfoWithPermission(
                 repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
                 aliasName = it.aliasName,
@@ -860,8 +862,8 @@ class RepositoryService @Autowired constructor(
                 updatedUser = it.updatedUser ?: it.userId,
                 atom = it.atom ?: false,
                 enablePac = it.enablePac,
-                scmCode = it.scmCode,
-                logoUrl = repoLogoMap[it.scmCode]
+                scmCode = scmCode,
+                logoUrl = repoLogoMap[scmCode]
             )
         }
         return Pair(SQLPage(count, repositoryList), hasCreatePermission)
