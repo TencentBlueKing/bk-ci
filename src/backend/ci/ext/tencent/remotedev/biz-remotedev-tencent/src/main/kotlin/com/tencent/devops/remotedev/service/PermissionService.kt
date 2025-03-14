@@ -49,7 +49,6 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceUserResource
-import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
@@ -242,14 +241,12 @@ class PermissionService @Autowired constructor(
 
     @Deprecated("use managers instead, 暂时保留")
     fun managersOld(projectId: String): List<String> {
-        logger.error("use managersOld instead, 暂时保留")
+        logger.warn("use managersOld instead, 暂时保留|$projectId")
         val projectInfo = kotlin.runCatching {
             client.get(ServiceProjectResource::class).get(projectId)
         }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
-            .getOrElse { null }?.data ?: throw ErrorCodeException(
-            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
-        )
-        return projectInfo.properties?.remotedevManager?.split(";") ?: emptyList()
+            .getOrElse { null }?.data
+        return projectInfo?.properties?.remotedevManager?.split(";") ?: emptyList()
     }
 
     fun managers(projectId: String): List<String> {

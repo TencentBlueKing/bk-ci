@@ -54,6 +54,7 @@ class ServiceProjectService @Autowired constructor(
                 serviceList.add(
                     ServiceVO(
                         id = serviceRecode.id ?: 0,
+                        code = serviceRecode.englishName,
                         name = I18nUtil.getCodeLanMessage(T_SERVICE_PREFIX + serviceRecode.englishName)
                             .ifBlank { serviceRecode.name },
                         link = serviceRecode.link ?: "",

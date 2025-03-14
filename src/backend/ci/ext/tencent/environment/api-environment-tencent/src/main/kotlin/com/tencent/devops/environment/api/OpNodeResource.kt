@@ -52,6 +52,11 @@ interface OpNodeResource {
     @Path("/flushDisplayName")
     fun flushDisplayName(): Result<Int>
 
+    @Operation(summary = "刷所有最近执行的流水线")
+    @PUT
+    @Path("/flushLastBuildPipeline")
+    fun flushLastBuildPipeline(): Result<Int>
+
     @Operation(summary = "节点列表（分页）")
     @GET
     @Path("/list")
