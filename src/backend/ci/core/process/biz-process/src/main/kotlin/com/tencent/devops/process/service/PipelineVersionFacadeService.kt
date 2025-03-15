@@ -409,7 +409,8 @@ class PipelineVersionFacadeService @Autowired constructor(
                 pipelineId = pipelineId,
                 updateVersion = false,
                 versionStatus = versionStatus,
-                setting = targetSettings
+                setting = targetSettings,
+                dispatchPipelineUpdateEvent = false
             )
             if (versionStatus.isReleasing()) {
                 val existModel = pipelineRepositoryService.getPipelineResourceVersion(
