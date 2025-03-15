@@ -160,7 +160,7 @@
 
                 this.isLoading = true
                 this.$ajax.get(url).then((res) => {
-                    this.subParamsKeyList = res.data || []
+                    this.subParamsKeyList = res.data?.properties || res.data || []
                 }).catch(e => this.$showTips({ message: e.message, theme: 'error' })).finally(() => (this.isLoading = false))
             }
         }

@@ -43,11 +43,8 @@
         },
         mixins: [mixins],
         props: {
-            repoHashId: {
-                type: String
-            },
-            repositoryType: {
-                type: String
+            element: {
+                type: Object
             }
         },
         data () {
@@ -61,6 +58,12 @@
         computed: {
             projectId () {
                 return this.$route.params.projectId
+            },
+            repoHashId () {
+                return this.element?.repoHashId || ''
+            },
+            repositoryType () {
+                return this.element?.repositoryType || ''
             }
         },
         watch: {
@@ -70,17 +73,22 @@
              * 2.获取分支列表
              */
             repoHashId: {
-                handler (val) {
+                handler (val, oldVal) {
+                    if (val === oldVal) return
+                    this.getBranchesList()
                     this.handleChange(this.name, [])
                     this.curValue = ['']
-                }
+                },
+                deep: true
             },
 
             repositoryType: {
-                handler (val) {
+                handler (val, oldVal) {
+                    if (val === oldVal) return
                     this.handleChange(this.name, [])
                     this.curValue = ['']
-                }
+                },
+                deep: true
             }
         },
         created () {
