@@ -147,7 +147,6 @@
                 let i = 5
                 this.nextTime = []
                 while (i > 0) {
-                    console.log(prettyDateTimeFormat(interval.next().toString()))
                     this.nextTime.push(prettyDateTimeFormat(interval.next().toString()))
                     i -= 1
                 }

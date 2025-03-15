@@ -73,7 +73,8 @@
              * 2.获取分支列表
              */
             repoHashId: {
-                handler (val) {
+                handler (val, oldVal) {
+                    if (val === oldVal) return
                     this.getBranchesList()
                     this.handleChange(this.name, [])
                     this.curValue = ['']
@@ -82,7 +83,8 @@
             },
 
             repositoryType: {
-                handler (val) {
+                handler (val, oldVal) {
+                    if (val === oldVal) return
                     this.handleChange(this.name, [])
                     this.curValue = ['']
                 },
