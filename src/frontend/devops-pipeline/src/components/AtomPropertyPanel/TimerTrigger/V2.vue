@@ -3,8 +3,10 @@
         <template v-for="(obj, key) in atomPropsModel">
             <form-field
                 v-if="!obj.hidden && rely(obj, element)"
+                :class="{ 'changed-prop': atomVersionChangedKeys.includes(key) }"
                 :key="key"
                 v-bind="obj"
+                :required="obj.required"
                 :is-error="errors.has(key)"
                 :error-msg="errors.first(key)"
             >

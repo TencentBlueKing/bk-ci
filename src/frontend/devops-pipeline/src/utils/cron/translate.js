@@ -23,4 +23,4 @@ const print = (expression, locale) => {
     return locale === 'zh-CN' ? translateCN(ast) : translateEN(ast)
 }
 
-export default expression => print(expression)
+export default print

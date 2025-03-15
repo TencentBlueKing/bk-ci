@@ -76,7 +76,7 @@
 </template>
 <script>
     import CronExpression from 'cron-parser-custom'
-    import { debounce, prettyDateTimeFormat } from '@/utils/util'
+    import { prettyDateTimeFormat } from '@/utils/util'
     import Translate from '@/utils/cron/translate'
     import renderTextCn from './components/render-text-cn.vue'
     import renderTextEn from './components/render-text-en.vue'
@@ -98,8 +98,16 @@
         name: '',
         props: {
             value: {
-                type: Array,
-                default: ['2', '12', '*', '*', '1']
+                type: String,
+                default: ['*', '*', '*', '*', '*']
+            },
+            name: {
+                type: String,
+                default: ''
+            },
+            handleChange: {
+                type: Function,
+                default: () => {}
             }
         },
         data () {
@@ -200,15 +208,14 @@
              * @desc 输入框输入
              * @param {Object} event 输入框input事件
              */
-            handleInput: debounce(function (event) {
+            handleInput (event) {
                 const $target = event.target
                 const value = $target.value?.trim()
                 this.nativeValue = value
 
                 try {
                     this.checkAndTranslate(value)
-                    this.$emit('change', value)
-                    this.$emit('input', value)
+                    this.handleChange(this.name, value?.split(' '))
                 } catch (error) {
                     this.parseValue = []
                     this.nextTime = []
@@ -223,10 +230,9 @@
                         this.errorField = error.message
                     }
                     this.isError = true
-                    this.$emit('change', '')
-                    this.$emit('input', '')
+                    this.handleChange(this.name, [])
                 }
-            }, 100),
+            },
             /**
              * @desc 展示下次执行时间列表
              */
