@@ -181,7 +181,8 @@ class PipelineRepositoryVersionService(
         excludeVersion: Int?,
         versionName: String?,
         creator: String?,
-        description: String?
+        description: String?,
+        buildOnly: Boolean? = false
     ): Pair<Int, MutableList<PipelineVersionSimple>> {
         if (pipelineInfo == null) {
             return Pair(0, mutableListOf())
@@ -194,7 +195,8 @@ class PipelineRepositoryVersionService(
             includeDraft = false,
             versionName = versionName,
             creator = creator,
-            description = description
+            description = description,
+            buildOnly = buildOnly
         )
         val result = pipelineResourceVersionDao.listPipelineVersion(
             dslContext = dslContext,
@@ -207,7 +209,8 @@ class PipelineRepositoryVersionService(
             includeDraft = false,
             excludeVersion = excludeVersion,
             offset = offset,
-            limit = limit
+            limit = limit,
+            buildOnly = buildOnly
         ).toMutableList()
 
         // #8161 当过滤草稿时查到空结果是正常的，只在不过滤草稿时兼容老数据的版本表无记录

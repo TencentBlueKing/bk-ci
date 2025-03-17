@@ -464,7 +464,9 @@
     },
     "editStoreTemplateTips": "研发商店模板不支持编辑",
     "lastModifiedDate": "更新时间",
-    "lastModifiedBy": "更新人"
+    "lastModifiedBy": "更新人",
+    "templateCoverWarning": "草稿即将覆盖警告",
+    "templateCoverWarningDesc": "{0} 编辑的草稿（从{1}创建）尚未发布。编辑分支版本将覆盖尚未发布的草稿，请确认是否继续"
   },
   "newlist": {
     "exportYamlTip": "PreCI 是蓝盾 DevOps 为开发者在 CI 之前的研发活动所提供的一套解决方案，能在提交代码之前尽早发现问题，提升代码质量。包括 IDE 插件和命令行工具。",
@@ -634,7 +636,8 @@
     "majorVersion": "主版本",
     "minorVersion": "特性版本",
     "fixVersion": "修正版本",
-    "paramsInvalidMsg": "流水线执行参数出错"
+    "paramsInvalidMsg": "流水线执行参数出错",
+    "versionSelectorDisableTips": " 1. 存在 PAC 分支版本时，可选择分支版本执行<br/>2. 没有 PAC 分支版本时，始终执行当前最新版本"
   },
   "details": {
     "executorInfo": "{0} {1}触发于 {2}",
@@ -1499,7 +1502,9 @@
   "pipelineSetting": "流水线设置",
   "COMMIT_TO_MASTER": "提交到默认分支",
   "CHECKOUT_BRANCH_AND_REQUEST_MERGE": "新增分支并创建 MR 到默认分支",
-  "PUSH_BRANCH_AND_REQUEST_MERGE": "提交到【{0}】分支并创建 MR",
+  "COMMIT_TO_SOURCE_BRANCH": "提交到 {0} 分支",
+  "COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE": "提交到 {0} 分支并创建 MR",
+  "COMMIT_TO_BRANCH": "提交到指定分支",
   "atomModel": "插件设置",
   "previewYaml": "预览YAML",
   "applyToYaml": "应用",
