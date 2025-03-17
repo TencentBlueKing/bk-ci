@@ -332,7 +332,6 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         val list = mutableListOf<Long>()
         val totalRecords = atomEnvRecords.size
         try {
-
             atomEnvRecords.mapNotNull { record ->
                 record.pkgPath?.let { pkgPath ->
                     val nodeSize = client.get(ServiceArchiveComponentPkgResource::class)
@@ -341,7 +340,7 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
                     if (nodeSize > 0) nodeSize else null
                 }
             }.let { sizes -> list.addAll(sizes) }
-            //都成功时才存储
+            // 都成功时才存储
             if (list.isNotEmpty() && list.size == totalRecords) {
                 val size = list.joinToString(", ") { byte ->
                     String.format("%.2f MB", byte / (1024.0 * 1024.0))

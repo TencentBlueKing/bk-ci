@@ -259,7 +259,7 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
         }
     }
 
-    abstract fun getRepoStoreConfig(storeType: StoreTypeEnum):Triple <String, String,String>
+    abstract fun getRepoStoreConfig(storeType: StoreTypeEnum): Triple<String, String, String>
 
     companion object {
         private val logger = LoggerFactory.getLogger(ArchiveStorePkgToBkRepoServiceImpl::class.java)

@@ -90,8 +90,6 @@ class SampleArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgToBkRepoServiceI
             Credentials.basic(bkRepoStoreConfig.bkrepoStoreUserName, bkRepoStoreConfig.bkrepoStorePassword),
             repoName
         )
-
-
     }
 
     override fun deleteStorePkg(userId: String, storeCode: String, storeType: StoreTypeEnum) {

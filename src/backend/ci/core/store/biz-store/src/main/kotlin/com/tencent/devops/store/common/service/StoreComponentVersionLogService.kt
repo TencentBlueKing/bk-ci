@@ -103,7 +103,7 @@ abstract class StoreComponentVersionLogService {
     private fun createStoreVersionLogInfo(
         record: Record,
         storeType: StoreTypeEnum,
-        //todo 目前先查询t_atom等表的包大小  暂时不查迁移到T_STORE_BASE表，这个等后续迁移了历史数据再做调整
+        // todo 目前先查询t_atom等表的包大小  暂时不查迁移到T_STORE_BASE表，这个等后续迁移了历史数据再做调整
         sizeFlag: Boolean = true
     ): StoreVersionLogInfo {
         return StoreVersionLogInfo(

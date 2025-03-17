@@ -137,7 +137,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import java.time.LocalDateTime
-import java.util.*
+import java.util.Locale
 import java.util.concurrent.Executors
 
 @Suppress("ALL")
@@ -1490,7 +1490,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             )
         }
     }
-
 
     private fun saveAtomSize(atomId: String) {
         val list = mutableListOf<Long>()
