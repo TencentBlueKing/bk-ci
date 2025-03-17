@@ -107,14 +107,15 @@ class WebhookRequestService(
         // 如果整个仓库都开启灰度，则全部走新逻辑
         if (grayService.isGrayRepo(scmType.name, matcher.getRepoName())) {
             handleGrayRequest(scmType.name, matcher.getRepoName(), request)
-            return
+        } else {
+            webhookTriggerService.trigger(
+                scmType = scmType,
+                matcher = matcher,
+                requestId = requestId,
+                eventTime = eventTime
+            )
         }
-        webhookTriggerService.trigger(
-            scmType = scmType,
-            matcher = matcher,
-            requestId = requestId,
-            eventTime = eventTime
-        )
+
         // 如果pac开启灰度,也走新逻辑,会在新逻辑中判断旧的触发会不会运行
         if (grayService.isPacGrayRepo(scmType.name, matcher.getRepoName())) {
             handleGrayRequest(scmType.name, matcher.getRepoName(), request)
