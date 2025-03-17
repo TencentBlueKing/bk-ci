@@ -26,7 +26,6 @@
                     :disabled="disabled"
                     :placeholder="param.placeholder"
                     :is-diff-param="highlightChangedParam && param.isChanged"
-                    :toggle-visible="(isShow) => toggleVisible(isShow, param)"
                 />
                 <span
                     class="meta-data"
@@ -150,7 +149,7 @@
                         }
 
                         // codeLib 接口返回的数据没有匹配的默认值,导致回显失效，兼容加上默认值
-                        if (param.type === CODE_LIB || param.type === CONTAINER_TYPE) {
+                        if (param.type === CODE_LIB || isBuildResourceParam(param.type)) {
                             const value = this.paramValues[param.id]
                             const listItemIndex = restParam.list && restParam.list.findIndex(i => i.value === value)
                             if (listItemIndex < 0 && value) {
@@ -158,6 +157,13 @@
                                     key: value,
                                     value: value
                                 })
+                            }
+                            if (isBuildResourceParam(param.type)) {
+                                restParam.toggleVisible = (isShow) => {
+                                    if (isShow) {
+                                        this.fetchBuildResourceList(param)
+                                    }
+                                }
                             }
                         }
                     }
@@ -271,21 +277,19 @@
             showFileUploader (type) {
                 return isFileParam(type) && this.$route.path.indexOf('preview') > -1
             },
-            async toggleVisible (isShow, param) {
-                if (isShow && isBuildResourceParam(param.type)) {
-                    const itemList = this.originalParams.find(item => item.id === param.id && param.type === CONTAINER_TYPE)
-                    if (itemList) {
-                        try {
-                            const { data } = await this.$ajax.get(`environment/api/user/envnode/${this.$route.params.projectId}/listNew?nodeType=THIRDPARTY&page=1&pageSize=100`)
-                            const list = data.records.map(item => ({
-                                key: item.displayName,
-                                value: item.displayName
-                            }))
-                            itemList.list = list
-                            itemList.options = list
-                        } catch (error) {
-                            console.log(error)
-                        }
+            async fetchBuildResourceList (param) {
+                const itemList = this.originalParams.find(item => item.id === param.id && param.type === CONTAINER_TYPE)
+                if (itemList) {
+                    try {
+                        const { data } = await this.$ajax.get(`environment/api/user/envnode/${this.$route.params.projectId}/listNew?nodeType=THIRDPARTY&page=1&pageSize=100`)
+                        const list = data.records.map(item => ({
+                            key: item.displayName,
+                            value: item.displayName
+                        }))
+                        itemList.list = list
+                        itemList.options = list
+                    } catch (error) {
+                        console.log(error)
                     }
                 }
             }
