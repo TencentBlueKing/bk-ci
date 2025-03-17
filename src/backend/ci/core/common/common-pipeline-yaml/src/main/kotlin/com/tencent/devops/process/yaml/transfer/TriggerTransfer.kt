@@ -738,7 +738,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                         newExpression = timer.newExpression,
                         advanceExpression = timer.advanceExpression,
                         noScm = timer.always != true,
-                        startParams = timer.startParams?.let{
+                        startParams = timer.startParams?.let {
                             val params = it.map { entry ->
                                 mapOf(
                                     "key" to entry.key,

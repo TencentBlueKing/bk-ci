@@ -2713,7 +2713,7 @@ class PipelineBuildFacadeService(
         includeNotRequired: Boolean?,
         userId: String,
         version: Int?
-    ):List<PipelineBuildParamFormProp> {
+    ): List<PipelineBuildParamFormProp> {
         val (pipeline, resource, debug) = pipelineRepositoryService.getBuildTriggerInfo(
             projectId, pipelineId, version
         )
@@ -2729,8 +2729,16 @@ class PipelineBuildFacadeService(
         )
         val parameter = ArrayList<PipelineBuildParamFormProp>()
         val prop = properties.filter {
-            val const = if (includeConst == false) { it.constant != true } else { true }
-            val required = if (includeNotRequired == false) { it.required } else { true }
+            val const = if (includeConst == false) {
+                it.constant != true
+            } else {
+                true
+            }
+            val required = if (includeNotRequired == false) {
+                it.required
+            } else {
+                true
+            }
             const && required
         }
         for (item in prop) {
