@@ -177,8 +177,8 @@
                 :required="valueRequired"
                 :disabled="disabled"
                 :value="param.defaultValue"
-                :version-control="param.enableVersionControl"
-                :random-string="param.randomStringInPath"
+                :enable-version-control="param.enableVersionControl"
+                :random-sub-path="param.randomStringInPath"
                 :handle-change="handleChange"
             />
             <vuex-textarea

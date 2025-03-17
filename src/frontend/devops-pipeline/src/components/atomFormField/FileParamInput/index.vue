@@ -9,33 +9,33 @@
             <vuex-input
                 class="path-input"
                 :disabled="disabled"
-                :handle-change="(name, value) => updatePathFromDirectory(value)"
-                name="path"
+                :handle-change="updatePath"
+                name="directory"
                 v-validate="{ required: required }"
                 :data-vv-scope="'pipelineParam'"
                 :click-unfold="true"
                 :placeholder="$t('editPage.filePathTips')"
-                :value="fileDefaultVal.directory"
+                :value="directory"
                 :class="{
                     'is-diff-param': isDiffParam
                 }"
             />
             <span
                 v-if="enableVersionControl"
-                :class="['random-generate', fileDefaultVal.randomFilePath ? '' : 'placeholder']"
+                :class="['random-generate', randomFilePath ? '' : 'placeholder']"
             >
-                /{{ fileDefaultVal.randomFilePath || $t('editPage.randomlyGenerate') }}/
+                /{{ randomFilePath || $t('editPage.randomlyGenerate') }}/
             </span>
             <vuex-input
                 class="file-name"
                 :disabled="disabled"
-                :handle-change="(name, value) => updatePathFromFileName(value)"
+                :handle-change="updatePath"
                 name="fileName"
                 v-validate="{ required: required }"
                 :data-vv-scope="'pipelineParam'"
                 :click-unfold="true"
                 :placeholder="$t('editPage.fileNameTips')"
-                :value="fileDefaultVal.fileName"
+                :value="fileName"
                 :class="{
                     'is-diff-param': isDiffParam,
                     'border-left-none': !enableVersionControl
@@ -57,12 +57,12 @@
             <file-upload
                 name="fileName"
                 :file-path="value"
-                @handle-change="(value) => uploadPathFromFileName(value)"
+                @handle-change="uploadPathFromFileName"
             />
         </div>
         <div v-if="!flex">
             <bk-checkbox
-                v-model="enableVersionControl"
+                :value="enableVersionControl"
                 @change="handleEnableVersionControl"
             >
                 {{ $t('editPage.enableVersionControl') }}
@@ -77,8 +77,8 @@
 </template>
 
 <script>
-    import VuexInput from '@/components/atomFormField/VuexInput'
     import FileUpload from '@/components/atomFormField/FileUpload'
+    import VuexInput from '@/components/atomFormField/VuexInput'
     import { randomString } from '@/utils/util'
 
     export default {
@@ -116,92 +116,79 @@
                 type: Boolean,
                 default: false
             },
-            versionControl: {
+            enableVersionControl: {
                 type: Boolean,
                 default: false
             },
-            randomString: {
+            randomSubPath: {
                 type: String,
                 default: ''
             }
         },
         data () {
+            const that = this
             return {
-                fileDefaultVal: {
-                    directory: '',
-                    fileName: '',
-                    randomFilePath: ''
-                },
-                enableVersionControl: false
+                directory: '',
+                fileName: '',
+                randomFilePath: that.randomSubPath
             }
         },
         watch: {
             value: {
                 handler: function (newValue) {
-                    this.enableVersionControl = this.versionControl
+                    const lastSlashIndex = newValue?.lastIndexOf('/')
+                    
+                    this.fileName = newValue.slice(lastSlashIndex + 1)
 
-                    const lastSlashIndex = newValue.lastIndexOf('/')
-                    this.fileDefaultVal.fileName = newValue.slice(lastSlashIndex + 1)
-
-                    if (this.enableVersionControl && this.randomString) {
-                        this.fileDefaultVal.randomFilePath = this.randomString
-                        const randomStringLastIndex = newValue.lastIndexOf(`/${this.randomString}`)
-                        this.fileDefaultVal.directory = newValue.slice(0, randomStringLastIndex)
+                    if (this.enableVersionControl && this.randomFilePath) {
+                        this.randomFilePath = this.randomSubPath
+                        const randomStringLastIndex = newValue.lastIndexOf(`/${this.randomFilePath}`)
+                        this.directory = newValue.slice(0, randomStringLastIndex)
                     } else {
-                        this.fileDefaultVal.directory = newValue.slice(0, lastSlashIndex)
+                        this.directory = newValue.slice(0, lastSlashIndex)
                     }
                 },
                 immediate: true
-            },
-            enableVersionControl () {
-                this.updatePath()
             }
         },
         methods: {
-            updatePath () {
-                const { directory, fileName, randomFilePath } = this.fileDefaultVal
-                const path = this.enableVersionControl && randomFilePath
-                    ? `${directory}/${randomFilePath}/${fileName}`
-                    : `${directory}/${fileName}`
+            updatePath (name, value, newFile = false) {
+                if (newFile && this.enableVersionControl) {
+                    this.randomFilePath = randomString(8)
+                }
+                this[name] = value
 
-                // 执行页面randomFilePath改变，需要传json给后端去改变latestRandomStringInPath的值
-                const value = randomFilePath
+                const path = [
+                    this.directory,
+                    ...(this.randomFilePath ? [this.randomFilePath] : []),
+                    this.fileName
+                ].join('/')
+
+                // 执行页面需要传json给后端去改变latestRandomStringInPath的值
+                const finalValue = this.flex && this.enableVersionControl
                     ? {
                         directory: path,
-                        latestRandomStringInPath: randomFilePath
+                        latestRandomStringInPath: this.randomFilePath
                     }
                     : path
-                const finalValue = this.flex ? value : path
                 this.handleChange(this.name, finalValue)
 
                 if (!this.flex) {
-                    this.handleChange('randomStringInPath', randomFilePath)
+                    this.handleChange('randomStringInPath', this.randomFilePath)
                 }
-            },
-            updatePathFromDirectory (value) {
-                this.fileDefaultVal.directory = value
-                this.updatePath()
-            },
-            updatePathFromFileName (value) {
-                this.fileDefaultVal.fileName = value
-                this.updatePath()
             },
             uploadPathFromFileName (value) {
-                if (!this.fileDefaultVal.fileName) {
-                    this.fileDefaultVal.fileName = value
+                if (!this.fileName) {
+                    this.fileName = value
                 }
-
-                if (this.enableVersionControl) {
-                    this.fileDefaultVal.randomFilePath = randomString(8)
-                }
-                this.updatePath()
+                this.updatePath('fileName', this.fileName, true)
             },
             handleEnableVersionControl (value) {
-                this.enableVersionControl = value
-                if (!value) {
-                    this.fileDefaultVal.randomFilePath = ''
+                if (!this.flex && !value) {
+                    this.randomFilePath = ''
                 }
                 this.handleChange('enableVersionControl', value)
+                this.updatePath('enableVersionControl', value)
             }
         }
     }
