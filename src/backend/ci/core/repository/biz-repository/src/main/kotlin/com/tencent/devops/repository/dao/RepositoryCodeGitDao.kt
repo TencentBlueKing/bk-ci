@@ -150,7 +150,7 @@ class RepositoryCodeGitDao {
                     atom = it.value10(),
                     enablePac = it.value11(),
                     yamlSyncStatus = it.value12(),
-                    scmCode = it.value13(),
+                    scmCode = it.value13() ?: ScmType.CODE_GIT.name,
                     credentialType = it.value14()
                 )
             }
