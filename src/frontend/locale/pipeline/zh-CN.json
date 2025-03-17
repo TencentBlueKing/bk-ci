@@ -1694,5 +1694,5 @@
   "addParam": "添加参数",
   "selectRepo": "选择代码库",
   "enterAlias": "输入别名",
-  "monitorPac": "选择代监听PAC码库"
+  "monitorPac": "监听PAC"
 }
