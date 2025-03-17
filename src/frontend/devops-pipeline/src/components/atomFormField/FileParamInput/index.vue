@@ -136,16 +136,17 @@
         watch: {
             value: {
                 handler: function (newValue) {
-                    const lastSlashIndex = newValue?.lastIndexOf('/')
+                    const currentValue = newValue.directory ?? newValue
+                    const lastSlashIndex = currentValue?.lastIndexOf('/')
                     
-                    this.fileName = newValue.slice(lastSlashIndex + 1)
+                    this.fileName = currentValue.slice(lastSlashIndex + 1)
 
                     if (this.enableVersionControl && this.randomFilePath) {
                         this.randomFilePath = this.randomSubPath
-                        const randomStringLastIndex = newValue.lastIndexOf(`/${this.randomFilePath}`)
-                        this.directory = newValue.slice(0, randomStringLastIndex)
+                        const randomStringLastIndex = currentValue.lastIndexOf(`/${this.randomFilePath}`)
+                        this.directory = currentValue.slice(0, randomStringLastIndex)
                     } else {
-                        this.directory = newValue.slice(0, lastSlashIndex)
+                        this.directory = currentValue.slice(0, lastSlashIndex)
                     }
                 },
                 immediate: true
