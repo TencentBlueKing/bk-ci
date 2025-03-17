@@ -99,7 +99,7 @@
         props: {
             value: {
                 type: String,
-                default: ['*', '*', '*', '*', '*']
+                default: ['* * * * *']
             },
             name: {
                 type: String,
