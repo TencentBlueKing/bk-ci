@@ -177,11 +177,15 @@ class ImageCommonDao : AbstractStoreCommonDao() {
     ): Result<Record5<String, String, LocalDateTime, String, String>>? {
         val image = TImage.T_IMAGE
         val imageLog = TImageVersionLog.T_IMAGE_VERSION_LOG
-        val baseStep = dslContext.select(image.VERSION, imageLog.CONTENT, image.UPDATE_TIME,imageLog.MODIFIER,image.IMAGE_SIZE)
-            .from(image)
-            .join(imageLog)
-            .on(image.ID.eq(imageLog.IMAGE_ID))
-            .where(image.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()).and(image.IMAGE_CODE.eq(storeCode)).and(image.IMAGE_SIZE.isNotNull))
+        val baseStep =
+            dslContext.select(image.VERSION, imageLog.CONTENT, image.UPDATE_TIME, imageLog.MODIFIER, image.IMAGE_SIZE)
+                .from(image)
+                .join(imageLog)
+                .on(image.ID.eq(imageLog.IMAGE_ID))
+                .where(
+                    image.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()).and(image.IMAGE_CODE.eq(storeCode))
+                        .and(image.IMAGE_SIZE.isNotNull)
+                ).orderBy(imageLog.UPDATE_TIME.desc())
 
         baseStep.limit((page - 1) * pageSize, pageSize)
         return baseStep.fetch()

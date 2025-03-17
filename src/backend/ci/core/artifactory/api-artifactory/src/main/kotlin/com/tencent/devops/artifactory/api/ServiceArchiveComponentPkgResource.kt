@@ -114,7 +114,6 @@ interface ServiceArchiveComponentPkgResource {
         repoName: String? = null
     ): Result<String>
 
-
     @Operation(summary = "获取组件包文件大小")
     @GET
     @Path("/types/{storeType}/file/size")

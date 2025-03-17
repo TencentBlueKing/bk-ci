@@ -241,18 +241,27 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
             logger.warn("File not found: filePath=[$filePath], storeType=[$storeType]")
             0
         } catch (ignored: RemoteServiceException) {
-            logger.error("Failed to get file size: filePath=[$filePath], storeType=[$storeType],error=${ignored.message}")
+            logger.error(
+                "Failed to get file size: " +
+                        "filePath=[$filePath], " +
+                        "storeType=[$storeType], " +
+                        "error=${ignored.message}"
+            )
             0
         } catch (ignored: Exception) {
-            logger.error("Unexpected error when getting file size: filePath=[$filePath], storeType=[$storeType], error=${ignored.message}")
+            logger.error(
+                "Unexpected error when getting file size:" +
+                        "filePath=[$filePath], " +
+                        "storeType=[$storeType], " +
+                        "error=${ignored.message}"
+            )
             0
         }
     }
 
+    abstract fun getRepoStoreConfig(storeType: StoreTypeEnum):Triple <String, String,String>
+
     companion object {
         private val logger = LoggerFactory.getLogger(ArchiveStorePkgToBkRepoServiceImpl::class.java)
     }
-
-
-    abstract fun getRepoStoreConfig(storeType: StoreTypeEnum):Triple <String, String,String>
 }

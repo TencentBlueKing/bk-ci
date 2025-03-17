@@ -34,7 +34,6 @@ abstract class StoreComponentVersionLogService {
         private val logger = LoggerFactory.getLogger(StoreComponentVersionLogService::class.java)
     }
 
-
     fun getStoreComponentVersionLogs(
         storeCode: String,
         storeType: StoreTypeEnum,
@@ -70,7 +69,6 @@ abstract class StoreComponentVersionLogService {
         return fetchLogs(storeCode = storeCode, storeType = storeType, page = page, pageSize = pageSize, count = count)
     }
 
-
     private fun fetchLogs(
         dao: AbstractStoreCommonDao? = null,
         storeCode: String,
@@ -87,18 +85,14 @@ abstract class StoreComponentVersionLogService {
                 page = page,
                 pageSize = pageSize
             )?.map { createStoreVersionLogInfo(record = it, storeType = storeType, sizeFlag = false) }
-
         } else {
-
             dao.getStoreComponentVersionLogs(
                 dslContext = dslContext,
                 storeCode = storeCode,
                 page = page,
                 pageSize = pageSize
             )?.map { createStoreVersionLogInfo(record = it, storeType = storeType) }
-
         }
-
         return Result(Page(count = count, page = page, pageSize = pageSize, records = versionLogInfos ?: emptyList()))
     }
 
@@ -141,7 +135,6 @@ abstract class StoreComponentVersionLogService {
         }
     }
 
-
     private fun getPackageSize(record: Record, storeType: StoreTypeEnum): String {
         return when (storeType) {
             StoreTypeEnum.ATOM -> {
@@ -155,7 +148,6 @@ abstract class StoreComponentVersionLogService {
                 } else {
                     ""
                 }
-
             }
 
             else -> {
@@ -163,6 +155,4 @@ abstract class StoreComponentVersionLogService {
             }
         }
     }
-
-
 }

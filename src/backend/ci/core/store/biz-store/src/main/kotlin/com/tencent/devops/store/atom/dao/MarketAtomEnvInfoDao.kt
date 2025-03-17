@@ -338,12 +338,13 @@ class MarketAtomEnvInfoDao {
             .fetchOne(0, String::class.java)
     }
 
-
-    fun selectAtomEnvInfoByAtomIds(dslContext: DSLContext, atomIds: Result<Record1<String>>): Result<TAtomEnvInfoRecord> {
+    fun selectAtomEnvInfoByAtomIds(
+        dslContext: DSLContext,
+        atomIds: Result<Record1<String>>
+    ): Result<TAtomEnvInfoRecord> {
         with(TAtomEnvInfo.T_ATOM_ENV_INFO) {
             return dslContext.selectFrom(this)
                 .where(ATOM_ID.`in`(atomIds)).fetch()
-
         }
     }
 }
