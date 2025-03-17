@@ -130,7 +130,7 @@ open class PipelineTimerUpgradeService @Autowired constructor(
                                 pipelineId = pipelineId,
                                 taskId = timerTriggerElement.id ?: "",
                                 userId = lastModifyUser,
-                                startParam = timerTriggerElement.startParams,
+                                startParam = timerTriggerElement.convertStartParams(),
                                 crontabExpressionJson = crontab
                             )
                         }
@@ -180,7 +180,7 @@ open class PipelineTimerUpgradeService @Autowired constructor(
                 branchs = element.branches?.toSet(),
                 noScm = element.noScm,
                 taskId = element.id ?: "",
-                startParam = element.startParams
+                startParam = element.convertStartParams()
             )
         }
     }
