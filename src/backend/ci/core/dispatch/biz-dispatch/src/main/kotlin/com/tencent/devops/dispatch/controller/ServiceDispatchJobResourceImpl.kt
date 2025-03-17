@@ -25,38 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.dispatch.controller
 
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.pipeline.enums.CodeTargetAction
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.api.ServiceDispatchJobResource
+import com.tencent.devops.dispatch.pojo.AgentStartMonitor
+import com.tencent.devops.dispatch.service.ThirdPartyAgentMonitorService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Schema(title = "流水线yaml文件发布请求")
-data class PipelineYamlFileReleaseReq(
-    @get:Schema(title = "用户ID", required = true)
-    val userId: String,
-    @get:Schema(title = "项目ID", required = true)
-    val projectId: String,
-    @get:Schema(title = "流水线ID", required = true)
-    val pipelineId: String,
-    @get:Schema(title = "流水线名称", required = true)
-    val pipelineName: String,
-    @get:Schema(title = "流水线版本", required = true)
-    val version: Int,
-    @get:Schema(title = "流水线版本名称", required = true)
-    val versionName: String?,
-    @get:Schema(title = "代码库hashId", required = true)
-    val repoHashId: String,
-    @get:Schema(title = "代码库类型", required = true)
-    val scmType: ScmType,
-    @get:Schema(title = "文件路径", required = true)
-    val filePath: String,
-    @get:Schema(title = "文件内容", required = true)
-    val content: String,
-    @get:Schema(title = "提交信息", required = true)
-    val commitMessage: String,
-    @get:Schema(title = "提交类型", required = true)
-    val targetAction: CodeTargetAction,
-    @get:Schema(title = "目标分支", required = true)
-    val targetBranch: String? = null
-)
+@RestResource
+class ServiceDispatchJobResourceImpl @Autowired constructor(
+    val thirdPartyAgentMonitorService: ThirdPartyAgentMonitorService
+) : ServiceDispatchJobResource {
+    override fun monitor(agentStartMonitor: AgentStartMonitor) {
+        thirdPartyAgentMonitorService.tryRollBackQueueMonitor(agentStartMonitor)
+    }
+}

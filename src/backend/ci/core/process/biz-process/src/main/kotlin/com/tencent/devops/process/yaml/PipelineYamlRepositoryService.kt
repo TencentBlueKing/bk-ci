@@ -488,7 +488,8 @@ class PipelineYamlRepositoryService @Autowired constructor(
         filePath: String,
         content: String,
         commitMessage: String,
-        targetAction: CodeTargetAction
+        targetAction: CodeTargetAction,
+        targetBranch: String?
     ): PacGitPushResult {
         val repoHashId = action.data.setting.repoHashId
         val webhooks = getWebhooks(
@@ -510,7 +511,8 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 content = content,
                 commitMessage = commitMessage,
                 targetAction = targetAction,
-                versionName = versionName
+                versionName = versionName,
+                targetBranch = targetBranch
             )
             createOrUpdateYamlPipeline(
                 userId = userId,
