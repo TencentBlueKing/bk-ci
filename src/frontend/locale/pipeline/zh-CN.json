@@ -1691,5 +1691,8 @@
   },
   "enterRepoAlias": "请输入代码库别名",
   "pacRepoNotSet": "将自动监听所属PAC代码库，无需设置",
-  "addParam": "添加参数"
+  "addParam": "添加参数",
+  "selectRepo": "选择代码库",
+  "enterAlias": "输入别名",
+  "monitorPac": "选择代监听PAC码库"
 }

@@ -9,25 +9,13 @@
     >
         <div class="time-describe">
             <span
-                class="time-text minute"
-                @click="handleTimeTextChange('minute')"
-            >{{ $t('cron.分') }}</span>
-            <span
-                class="time-text hour"
-                @click="handleTimeTextChange('hour')"
-            >{{ $t('cron.时') }}</span>
-            <span
-                class="time-text dayOfMonth"
-                @click="handleTimeTextChange('dayOfMonth')"
-            >{{ $t('cron.日') }}</span>
-            <span
-                class="time-text month"
-                @click="handleTimeTextChange('month')"
-            >{{ $t('cron.月') }}</span>
-            <span
-                class="time-text dayOfWeek"
-                @click="handleTimeTextChange('dayOfWeek')"
-            >{{ $t('cron.周') }}</span>
+                v-for="item in timeMap"
+                :key="item.key"
+                :class="['time-text', item.key]"
+                @click="handleTimeTextChange(item.key)"
+            >
+                {{ item.label }}
+            </span>
         </div>
         <div class="time-input">
             <input
@@ -127,6 +115,30 @@
             },
             renderText () {
                 return this.curLocale === 'zh-CN' ? renderTextCn : renderTextEn
+            },
+            timeMap () {
+                return [
+                    {
+                        label: this.$t('cron.分'),
+                        key: 'minute'
+                    },
+                    {
+                        label: this.$t('cron.时'),
+                        key: 'hour'
+                    },
+                    {
+                        label: this.$t('cron.日'),
+                        key: 'dayOfMonth'
+                    },
+                    {
+                        label: this.$t('cron.月'),
+                        key: 'month'
+                    },
+                    {
+                        label: this.$t('cron.周'),
+                        key: 'dayOfWeek'
+                    }
+                ]
             }
         },
         mounted () {
@@ -163,12 +175,12 @@
                 if (!this.nativeValue) {
                     return
                 }
-                const timeItem = this.nativeValue.join('')
+                const timeItem = this.nativeValue
                 const index = labelIndexMap[label]
                 if (timeItem.length < index) {
                     return
                 }
-                const preStrLength = timeItem.slice(0, index).join('').length + index
+                const preStrLength = timeItem.slice(0, index).length + index
                 const endPosition = preStrLength + timeItem[index].length
                 setTimeout(() => {
                     this.selectIndex = label

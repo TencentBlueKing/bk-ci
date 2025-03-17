@@ -1693,5 +1693,8 @@
   },
   "enterRepoAlias": "Please enter the repository alias",
   "pacRepoNotSet": "The associated PAC repository will be automatically monitored, no need to set it",
-  "addParam": "Add"
+  "addParam": "Add",
+  "selectRepo": "Select Repository",
+  "enterAlias": "Enter Alias",
+  "monitorPac": "Monitor PAC"
 }

@@ -78,15 +78,15 @@
                 return [
                     {
                         value: 'ID',
-                        label: '选择代码库'
+                        label: this.$t('selectRepo')
                     },
                     {
                         value: 'NAME',
-                        label: '输入别名'
+                        label: this.$t('enterAlias')
                     },
                     {
                         value: 'SELF',
-                        label: '监听PAC'
+                        label: this.$t('monitorPac')
                     }
                 ]
             }
