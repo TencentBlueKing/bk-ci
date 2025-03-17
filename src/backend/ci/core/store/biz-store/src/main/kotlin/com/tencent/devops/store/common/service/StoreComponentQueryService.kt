@@ -123,7 +123,6 @@ interface StoreComponentQueryService {
      * 根据组件id获取组件版本发布日志
      */
     fun getStoreVersionLogs(
-        userId: String,
         storeCode: String,
         storeType: StoreTypeEnum,
         page: Int,

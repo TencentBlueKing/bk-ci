@@ -44,7 +44,7 @@ import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.Record3
+import org.jooq.Record4
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -174,14 +174,14 @@ class ImageCommonDao : AbstractStoreCommonDao() {
         storeCode: String,
         page: Int,
         pageSize: Int
-    ): Result<Record3<String, String, LocalDateTime>>? {
+    ): Result<Record4<String, String, LocalDateTime, String>>? {
         val image = TImage.T_IMAGE
         val imageLog = TImageVersionLog.T_IMAGE_VERSION_LOG
-        val baseStep = dslContext.select(image.VERSION, imageLog.CONTENT, image.UPDATE_TIME)
+        val baseStep = dslContext.select(image.VERSION, imageLog.CONTENT, image.UPDATE_TIME,image.IMAGE_SIZE)
             .from(image)
             .join(imageLog)
             .on(image.ID.eq(imageLog.IMAGE_ID))
-            .where(image.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()).and(image.IMAGE_CODE.eq(storeCode)))
+            .where(image.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()).and(image.IMAGE_CODE.eq(storeCode)).and(image.IMAGE_SIZE.isNotNull))
 
         baseStep.limit((page - 1) * pageSize, pageSize)
         return baseStep.fetch()

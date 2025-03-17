@@ -90,7 +90,7 @@ abstract class AbstractStoreCommonDao {
         storeCode: String,
         page: Int,
         pageSize: Int
-    ): Result<Record3<String, String, LocalDateTime>>?
+    ): Result<out Record>?
 
 
     abstract fun countStoreComponentVersionLogs(

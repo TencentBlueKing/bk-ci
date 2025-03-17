@@ -1096,14 +1096,12 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
      * 根据组件id获取组件版本日志
      */
     override fun getStoreVersionLogs(
-        userId: String,
         storeCode: String,
         storeType: StoreTypeEnum,
         page: Int,
         pageSize: Int
     ): Result<Page<StoreVersionLogInfo>> {
         return storeComponentVersionLogService.getStoreComponentVersionLogs(
-            userId = userId,
             storeCode = storeCode,
             storeType = storeType,
             page = page,

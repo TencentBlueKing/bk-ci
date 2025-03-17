@@ -222,14 +222,12 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
     }
 
     override fun getStoreVersionLogs(
-        userId: String,
         storeCode: String,
         storeType: StoreTypeEnum,
         page: Int,
         pageSize: Int
     ): Result<Page<StoreVersionLogInfo>> {
         return storeComponentQueryService.getStoreVersionLogs(
-            userId = userId,
             storeCode = storeCode,
             storeType = storeType,
             page = page,

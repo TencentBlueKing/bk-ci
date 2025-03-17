@@ -51,7 +51,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.Record3
+import org.jooq.Record5
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -208,10 +208,10 @@ class AtomCommonDao : AbstractStoreCommonDao() {
         storeCode: String,
         page: Int,
         pageSize: Int
-    ): Result<Record3<String, String, LocalDateTime>>? {
+    ): Result<Record5<String, String, LocalDateTime, String, String>>? {
         val atom = TAtom.T_ATOM
         val atomVersionLog = TAtomVersionLog.T_ATOM_VERSION_LOG
-        val baseStep = dslContext.select(atom.VERSION, atomVersionLog.CONTENT, atom.UPDATE_TIME)
+        val baseStep = dslContext.select(atom.VERSION, atomVersionLog.CONTENT, atom.UPDATE_TIME,atomVersionLog.MODIFIER,atomVersionLog.PACKAGE_SIZE)
             .from(atom)
             .join(atomVersionLog)
             .on(atom.ID.eq(atomVersionLog.ATOM_ID))

@@ -10,7 +10,7 @@ import com.tencent.devops.store.common.dao.StoreVersionLogDao
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreVersionLogInfo
 import org.jooq.DSLContext
-import org.jooq.Record3
+import org.jooq.Record
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.LocalDateTime
@@ -34,52 +34,72 @@ abstract class StoreComponentVersionLogService {
         private val logger = LoggerFactory.getLogger(StoreComponentVersionLogService::class.java)
     }
 
+
     fun getStoreComponentVersionLogs(
-        userId: String,
         storeCode: String,
         storeType: StoreTypeEnum,
         page: Int,
         pageSize: Int
     ): Result<Page<StoreVersionLogInfo>> {
-        var count: Long
 
-        count =
-            storeVersionLogDao.countStoreComponentVersionLogs(
+        var count = storeVersionLogDao.countStoreComponentVersionLogs(dslContext, storeCode, storeType.type.toByte())
+
+        if (count == 0L) {
+            val commonDao: AbstractStoreCommonDao
+            try {
+                commonDao = getStoreCommonDao(storeType.name)
+            } catch (ignore: Throwable) {
+                logger.error("getStoreCommonDao error: ${ignore.message}, storeType: $storeType", ignore)
+                return Result(Page(count = 0, page = page, pageSize = pageSize, records = emptyList()))
+            }
+
+            count = commonDao.countStoreComponentVersionLogs(dslContext, storeCode)
+            if (count == 0L) {
+                return Result(Page(count = 0, page = page, pageSize = pageSize, records = emptyList()))
+            }
+            return fetchLogs(
+                dao = commonDao,
+                storeCode = storeCode,
+                storeType = storeType,
+                page = page,
+                pageSize = pageSize,
+                count = count
+            )
+        }
+
+        return fetchLogs(storeCode = storeCode, storeType = storeType, page = page, pageSize = pageSize, count = count)
+    }
+
+
+    private fun fetchLogs(
+        dao: AbstractStoreCommonDao? = null,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        page: Int,
+        pageSize: Int,
+        count: Long
+    ): Result<Page<StoreVersionLogInfo>> {
+        val versionLogInfos = if (dao == null) {
+            storeVersionLogDao.getStoreComponentVersionLogs(
                 dslContext = dslContext,
                 storeCode = storeCode,
-                storeType = storeType.type.toByte()
-            )
+                storeType = storeType.type.toByte(),
+                page = page,
+                pageSize = pageSize
+            )?.map { createStoreVersionLogInfo(record = it, storeType = storeType, sizeFlag = false) }
 
-        val versionLogInfos = if (count > 0) {
-
-            storeVersionLogDao.getStoreComponentVersionLogs(
-                dslContext,
-                storeCode,
-                storeType.type.toByte(),
-                page,
-                pageSize
-            )?.map { createStoreVersionLogInfo(it, storeType) } ?: emptyList()
         } else {
-            try {
-                count =
-                    getStoreCommonDao(storeType.name).countStoreComponentVersionLogs(dslContext, storeCode)
-                if (count > 0) {
 
-                    getStoreCommonDao(storeType.name).getStoreComponentVersionLogs(
-                        dslContext,
-                        storeCode,
-                        page,
-                        pageSize
-                    )?.map { createStoreVersionLogInfo(it, storeType) } ?: emptyList()
-                } else {
-                    emptyList()
-                }
-            } catch (ignored: Throwable) {
-                logger.error("getStoreComponentVersionLogs error", ignored)
-                emptyList()
-            }
+            dao.getStoreComponentVersionLogs(
+                dslContext = dslContext,
+                storeCode = storeCode,
+                page = page,
+                pageSize = pageSize
+            )?.map { createStoreVersionLogInfo(record = it, storeType = storeType) }
+
         }
-        return Result(Page(count = count, page = page, pageSize = pageSize, records = versionLogInfos))
+
+        return Result(Page(count = count, page = page, pageSize = pageSize, records = versionLogInfos ?: emptyList()))
     }
 
     private fun getStoreCommonDao(storeType: String): AbstractStoreCommonDao {
@@ -87,17 +107,25 @@ abstract class StoreComponentVersionLogService {
     }
 
     private fun createStoreVersionLogInfo(
-        record: Record3<String, String, LocalDateTime>,
-        storeType: StoreTypeEnum
+        record: Record,
+        storeType: StoreTypeEnum,
+        //todo 目前先查询t_atom等表的包大小  暂时不查迁移到T_STORE_BASE表，这个等后续迁移了历史数据再做调整
+        sizeFlag: Boolean = true
     ): StoreVersionLogInfo {
         return StoreVersionLogInfo(
-            version = record.value1(),
-            updateLog = record.value2(),
+            version = record.get("VERSION") as String,
+            updateLog = record.get("CONTENT") as? String,
             lastUpdateTime = DateTimeUtil.formatDate(
-                DateTimeUtil.convertLocalDateTimeToDate(record.value3()),
+                DateTimeUtil.convertLocalDateTimeToDate(record.get("UPDATE_TIME") as LocalDateTime),
                 DateTimeUtil.YYYY_MM_DD_HH_MM_SS
             ),
-            tag = generateTag(storeType, record.value1(), record.value3())
+            tag = generateTag(
+                storeType = storeType,
+                version = record.get("VERSION") as String,
+                updateTime = record.get("UPDATE_TIME") as LocalDateTime
+            ),
+            packageSize = if (sizeFlag) getPackageSize(record = record, storeType = storeType) else "",
+            publisher = record.get("MODIFIER") as String
         )
     }
 
@@ -112,4 +140,29 @@ abstract class StoreComponentVersionLogService {
             " "
         }
     }
+
+
+    private fun getPackageSize(record: Record, storeType: StoreTypeEnum): String {
+        return when (storeType) {
+            StoreTypeEnum.ATOM -> {
+                record.get("PACKAGE_SIZE") as String
+            }
+
+            StoreTypeEnum.IMAGE -> {
+                val size = record.get("IMAGE_SIZE") as String
+                if (size.isNotEmpty()) {
+                    String.format("%.2f MB", size.toLong() / (1024.0 * 1024.0))
+                } else {
+                    ""
+                }
+
+            }
+
+            else -> {
+                ""
+            }
+        }
+    }
+
+
 }

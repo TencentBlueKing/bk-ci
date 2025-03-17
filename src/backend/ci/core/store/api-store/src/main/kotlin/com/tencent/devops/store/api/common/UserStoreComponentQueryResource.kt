@@ -326,9 +326,6 @@ interface UserStoreComponentQueryResource {
     @GET
     @Path("/types/{storeType}/codes/{storeCode}/version/logs/get")
     fun getStoreVersionLogs(
-        @Parameter(description = "userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @Parameter(description = "组件代码", required = true)
         @PathParam("storeCode")
         storeCode: String,
