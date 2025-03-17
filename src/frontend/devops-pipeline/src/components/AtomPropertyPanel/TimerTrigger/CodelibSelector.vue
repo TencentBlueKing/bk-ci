@@ -36,7 +36,7 @@
             :value="element['repoName']"
             :disabled="repositoryType === 'SELF'"
             :key="repositoryType"
-            :placeholder="repositoryType === 'SELF' ? '将自动监听所属PAC代码库，无需设置' : '请输入代码库别名'"
+            :placeholder="repositoryType === 'SELF' ? $t('pacRepoNotSet') : $t('enterRepoAlias')"
             class="input-selector"
             name="repoName"
             :handle-change="handleChange"

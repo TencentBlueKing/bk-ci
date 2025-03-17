@@ -1690,5 +1690,8 @@
     "月": "Month",
     "下次：": "Next:",
     "小时": "Hour"
-  }
+  },
+  "enterRepoAlias": "Please enter the repository alias",
+  "pacRepoNotSet": "The associated PAC repository will be automatically monitored, no need to set it",
+  "addParam": "Add"
 }

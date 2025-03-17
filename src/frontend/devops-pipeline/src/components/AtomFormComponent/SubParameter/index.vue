@@ -8,7 +8,7 @@
                 @click="addParam"
             >
                 <i class="devops-icon icon-plus-circle"></i>
-                添加参数
+                {{ $t('addParam') }}
             </span>
         </label>
         <div class="sub-params-desc">{{ desc }}</div>
