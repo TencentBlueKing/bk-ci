@@ -145,11 +145,11 @@ abstract class StoreComponentVersionLogService {
     private fun getPackageSize(record: Record, storeType: StoreTypeEnum): String {
         return when (storeType) {
             StoreTypeEnum.ATOM -> {
-                record.get("PACKAGE_SIZE") as String
+                record.get("PACKAGE_SIZE") as? String ?: ""
             }
 
             StoreTypeEnum.IMAGE -> {
-                val size = record.get("IMAGE_SIZE") as String
+                val size = record.get("IMAGE_SIZE") as? String ?: ""
                 if (size.isNotEmpty()) {
                     String.format("%.2f MB", size.toLong() / (1024.0 * 1024.0))
                 } else {

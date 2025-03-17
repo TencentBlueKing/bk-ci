@@ -37,7 +37,7 @@ import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.Record3
+import org.jooq.Record4
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -156,9 +156,9 @@ class TemplateCommonDao : AbstractStoreCommonDao() {
         storeCode: String,
         page: Int,
         pageSize: Int
-    ): Result<Record3<String, String, LocalDateTime>>? {
+    ): Result<Record4<String, String, LocalDateTime, String>>? {
         return with(TTemplate.T_TEMPLATE) {
-            val baseStep = dslContext.select(VERSION, PUB_DESCRIPTION, UPDATE_TIME).from(this)
+            val baseStep = dslContext.select(VERSION, PUB_DESCRIPTION, UPDATE_TIME,MODIFIER).from(this)
                 .where(TEMPLATE_CODE.eq(storeCode))
                 .and(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte()).and(TEMPLATE_CODE.eq(storeCode)))
             baseStep.limit((page - 1) * pageSize, pageSize).fetch()

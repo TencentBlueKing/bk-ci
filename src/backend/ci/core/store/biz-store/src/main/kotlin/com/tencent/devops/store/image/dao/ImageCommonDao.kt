@@ -44,7 +44,7 @@ import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.Record4
+import org.jooq.Record5
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -174,10 +174,10 @@ class ImageCommonDao : AbstractStoreCommonDao() {
         storeCode: String,
         page: Int,
         pageSize: Int
-    ): Result<Record4<String, String, LocalDateTime, String>>? {
+    ): Result<Record5<String, String, LocalDateTime, String, String>>? {
         val image = TImage.T_IMAGE
         val imageLog = TImageVersionLog.T_IMAGE_VERSION_LOG
-        val baseStep = dslContext.select(image.VERSION, imageLog.CONTENT, image.UPDATE_TIME,image.IMAGE_SIZE)
+        val baseStep = dslContext.select(image.VERSION, imageLog.CONTENT, image.UPDATE_TIME,image.MODIFIER,image.IMAGE_SIZE)
             .from(image)
             .join(imageLog)
             .on(image.ID.eq(imageLog.IMAGE_ID))
