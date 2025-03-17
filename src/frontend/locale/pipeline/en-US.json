@@ -40,6 +40,7 @@
   "systemError": "SYSTEM",
   "thirdPartyError": "THIRD_PARTY",
   "pluginError": "PLUGIN",
+  "containerError": "AGENT",
   "createTime": "Create time",
   "retry": "Retry",
   "resume": "Continue",
@@ -462,7 +463,9 @@
     },
     "editStoreTemplateTips": "The development store template does not support editing",
     "lastModifiedDate": "Last Modified on",
-    "lastModifiedBy": "Updater"
+    "lastModifiedBy": "Updater",
+    "templateCoverWarning": "Draft Overwrite Warning",
+    "templateCoverWarningDesc": "The draft edited by {0} (created from {1}) has not been published yet. Editing the branch version will overwrite the unpublished draft. Please confirm if you want to continue."
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
@@ -635,7 +638,8 @@
     "majorVersion": "Major Version",
     "minorVersion": "Feature Version",
     "fixVersion": "Fix Version",
-    "paramsInvalidMsg": "Params Invalid"
+    "paramsInvalidMsg": "Params Invalid",
+    "versionSelectorDisableTips": "1. When a PAC branch version exists, you can choose to execute the branch version.<br/>2. When there is no PAC branch version, the latest current version will always be executed."
   },
   "details": {
     "pipelineVersionDiffTips": "The pipeline config version has changed",
@@ -1486,7 +1490,9 @@
   "pipelineSetting": "Pipeline Settings",
   "COMMIT_TO_MASTER": "Commit to Default Branch",
   "CHECKOUT_BRANCH_AND_REQUEST_MERGE": "Add New Branch and Create MR to Default Branch",
-  "PUSH_BRANCH_AND_REQUEST_MERGE": "Commit to Branch【{0}】and Create MR",
+  "COMMIT_TO_SOURCE_BRANCH": "Commit to Source Branch {0}",
+  "COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE": "Commit to Source Branch {0} and Create MR",
+  "COMMIT_TO_BRANCH": "Commit to Branch",
   "atomModel": "Plugin Settings",
   "previewYaml": "Preview YAML",
   "applyToYaml": "Apply",

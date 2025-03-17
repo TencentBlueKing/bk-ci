@@ -71,7 +71,8 @@ class DefaultModelCheckPluginTest : TestBase() {
         pipelineCommonSettingConfig = pipelineCommonSettingConfig,
         stageCommonSettingConfig = stageCommonSettingConfig,
         jobCommonSettingConfig = jobCommonSettingConfig,
-        taskCommonSettingConfig = taskCommonSettingConfig
+        taskCommonSettingConfig = taskCommonSettingConfig,
+        elementBizPluginServices = listOf()
     )
     private val serviceMarketAtomResource: ServiceMarketAtomResource = mockk()
     private val serviceAtomResource: ServiceAtomResource = mockk()
