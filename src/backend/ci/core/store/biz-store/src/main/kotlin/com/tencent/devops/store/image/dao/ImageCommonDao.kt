@@ -177,7 +177,7 @@ class ImageCommonDao : AbstractStoreCommonDao() {
     ): Result<Record5<String, String, LocalDateTime, String, String>>? {
         val image = TImage.T_IMAGE
         val imageLog = TImageVersionLog.T_IMAGE_VERSION_LOG
-        val baseStep = dslContext.select(image.VERSION, imageLog.CONTENT, image.UPDATE_TIME,image.MODIFIER,image.IMAGE_SIZE)
+        val baseStep = dslContext.select(image.VERSION, imageLog.CONTENT, image.UPDATE_TIME,imageLog.MODIFIER,image.IMAGE_SIZE)
             .from(image)
             .join(imageLog)
             .on(image.ID.eq(imageLog.IMAGE_ID))
