@@ -133,6 +133,5 @@ interface ServiceMarketAtomArchiveResource {
     @Operation(summary = "批量更新存量插件包大小")
     @PUT
     @Path("/atoms/sizes/update")
-    fun updateAtomsSizes(
-    ): Result<Boolean>
+    fun updateAtomsSizes(): Result<Boolean>
 }
