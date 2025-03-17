@@ -1507,17 +1507,25 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 }
             }?.let { sizes -> list.addAll(sizes) }
 
-            //都成功时才存储
+            // 都成功时才存储
             if (list.isNotEmpty() && list.size == totalRecords) {
                 val size = list.joinToString(", ") { byte ->
                     String.format("%.2f MB", byte / (1024.0 * 1024.0))
                 }
                 marketAtomVersionLogDao.updateAtomVersionByAtomId(dslContext, atomId, size)
-            }else{
-                logger.warn("Not all sizes were collected for atomId: $atomId, collected: ${list.size}, expected: $totalRecords")
+            } else {
+                logger.warn(
+                    "Not all sizes were collected for atomId: $atomId, " +
+                            "collected: ${list.size}," +
+                            " expected: $totalRecords"
+                )
             }
         } catch (ignore: Throwable) {
-            logger.error("saveAtomSize error for atomId: $atomId, error: ${ignore.message}", ignore)
+            logger.error(
+                "saveAtomSize error for atomId: $atomId, " +
+                        "error: ${ignore.message}",
+                ignore
+            )
         }
     }
 }
