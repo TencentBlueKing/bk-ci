@@ -158,7 +158,7 @@ class TemplateCommonDao : AbstractStoreCommonDao() {
         pageSize: Int
     ): Result<Record4<String, String, LocalDateTime, String>>? {
         return with(TTemplate.T_TEMPLATE) {
-            val baseStep = dslContext.select(VERSION, PUB_DESCRIPTION, UPDATE_TIME,MODIFIER).from(this)
+            val baseStep = dslContext.select(VERSION, PUB_DESCRIPTION.`as`("CONTENT"), UPDATE_TIME,MODIFIER).from(this)
                 .where(TEMPLATE_CODE.eq(storeCode))
                 .and(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte()).and(TEMPLATE_CODE.eq(storeCode)))
             baseStep.limit((page - 1) * pageSize, pageSize).fetch()

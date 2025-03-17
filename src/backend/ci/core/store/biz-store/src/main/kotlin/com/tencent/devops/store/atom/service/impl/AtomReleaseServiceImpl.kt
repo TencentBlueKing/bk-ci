@@ -1495,6 +1495,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     String.format("%.2f MB", byte / (1024.0 * 1024.0))
                 }
                 marketAtomVersionLogDao.updateAtomVersionByAtomId(dslContext, atomId, size)
+            }else{
+                logger.warn("Not all sizes were collected for atomId: $atomId, collected: ${list.size}, expected: $totalRecords")
             }
         } catch (ignore: Throwable) {
             logger.error("saveAtomSize error for atomId: $atomId, error: ${ignore.message}", ignore)

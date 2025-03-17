@@ -302,10 +302,9 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         return Result(true)
     }
 
-    override fun updateAtomSize(): Result<Boolean> {
+    override fun updateAtomsSizes() {
         var offset = 0L
         val bathSize = 100L
-        var successFlag = true
         try {
             val count = atomDao.countAtom(dslContext)
             while (offset < count) {
@@ -322,16 +321,17 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
                 }
             }
         } catch (ignored: Throwable) {
-            logger.error("batchSaveAtomSize error: ${ignored.message}", ignored)
-            successFlag = false
+            logger.error(
+                "Error during batch update of atom sizes at offset $offset with batch size $bathSize: ${ignored.message}",
+                ignored
+            )
         }
-        return Result(successFlag)
     }
 
     private fun saveAtomSize(atomId: String, atomEnvRecords: List<TAtomEnvInfoRecord>) {
         val list = mutableListOf<Long>()
+        val totalRecords = atomEnvRecords.size
         try {
-            val totalRecords = atomEnvRecords.size
 
             atomEnvRecords.mapNotNull { record ->
                 record.pkgPath?.let { pkgPath ->
@@ -341,20 +341,20 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
                     if (nodeSize > 0) nodeSize else null
                 }
             }.let { sizes -> list.addAll(sizes) }
-
             //都成功时才存储
             if (list.isNotEmpty() && list.size == totalRecords) {
                 val size = list.joinToString(", ") { byte ->
                     String.format("%.2f MB", byte / (1024.0 * 1024.0))
                 }
                 marketAtomVersionLogDao.updateAtomVersionByAtomId(dslContext, atomId, size)
+            } else {
+                logger.warn("Not all sizes were collected for atomId: $atomId, collected: ${list.size}, expected: $totalRecords")
             }
         } catch (ignore: Throwable) {
-            throw RuntimeException(
-                "saveAtomSize error for atomId: $atomId, error: ${ignore.message}",
+            logger.error(
+                "Error saving atom size for atomId: $atomId, collected sizes: ${list.size} of $totalRecords, error: ${ignore.message}",
                 ignore
             )
         }
-
     }
 }

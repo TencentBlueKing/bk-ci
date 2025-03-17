@@ -30,10 +30,11 @@ package com.tencent.devops.store.atom.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomArchiveResource
+import com.tencent.devops.store.atom.service.MarketAtomArchiveService
+import com.tencent.devops.store.common.utils.ThreadPoolUtil
 import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
-import com.tencent.devops.store.atom.service.MarketAtomArchiveService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -98,7 +99,10 @@ class ServiceMarketAtomArchiveResourceImpl @Autowired constructor(
         return marketAtomArchiveService.updateAtomPkgInfo(userId, atomId, projectCode, atomPkgInfoUpdateRequest)
     }
 
-    override fun updateAtomSize(): Result<Boolean> {
-       return marketAtomArchiveService.updateAtomSize()
+    override fun updateAtomsSizes(): Result<Boolean> {
+        ThreadPoolUtil.submitAction(actionTitle = "updateAtomsSizes", action = {
+            marketAtomArchiveService.updateAtomsSizes()
+        })
+        return Result(true)
     }
 }

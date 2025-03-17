@@ -82,5 +82,5 @@ interface MarketAtomArchiveService {
         atomPkgInfoUpdateRequest: AtomPkgInfoUpdateRequest
     ): Result<Boolean>
 
-    fun updateAtomSize(): Result<Boolean>
+    fun updateAtomsSizes()
 }

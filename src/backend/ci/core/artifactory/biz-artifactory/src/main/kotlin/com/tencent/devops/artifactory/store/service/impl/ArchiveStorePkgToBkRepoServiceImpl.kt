@@ -235,16 +235,16 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
                 projectId = projectId,
                 repoName = repoName ?: repo,
                 fullPath = filePath,
-                userId=BKREPO_DEFAULT_USER
+                userId = BKREPO_DEFAULT_USER
             ).size
         } catch (ignored: NotFoundException) {
-            logger.warn("file[$filePath] not exists")
+            logger.warn("File not found: filePath=[$filePath], storeType=[$storeType]")
             0
         } catch (ignored: RemoteServiceException) {
-            logger.warn("download file[$filePath] error: $ignored")
+            logger.error("Failed to get file size: filePath=[$filePath], storeType=[$storeType],error=${ignored.message}")
             0
         } catch (ignored: Exception) {
-            logger.warn("getStoreFileSize error: $ignored")
+            logger.error("Unexpected error when getting file size: filePath=[$filePath], storeType=[$storeType], error=${ignored.message}")
             0
         }
     }
