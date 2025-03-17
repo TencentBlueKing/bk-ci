@@ -102,7 +102,7 @@
         },
         methods: {
             initData () {
-                let values = this.atomValue[this.name] || []
+                let values = this.atomValue[this.name] || this.value || []
                 if (!Array.isArray(values)) values = JSON.parse(values)
                 this.parameters = values.map(i => {
                     return {
