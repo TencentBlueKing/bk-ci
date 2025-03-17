@@ -163,7 +163,7 @@
                 if (!this.nativeValue) {
                     return
                 }
-                const timeItem = this.nativeValue.split(' ')
+                const timeItem = this.nativeValue.join('')
                 const index = labelIndexMap[label]
                 if (timeItem.length < index) {
                     return
@@ -214,7 +214,7 @@
 
                 try {
                     this.checkAndTranslate(value)
-                    this.handleChange(this.name, value?.split(' '))
+                    this.handleChange(this.name, [value])
                 } catch (error) {
                     this.parseValue = []
                     this.nextTime = []
