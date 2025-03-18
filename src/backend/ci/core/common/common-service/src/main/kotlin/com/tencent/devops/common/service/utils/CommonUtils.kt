@@ -304,7 +304,6 @@ object CommonUtils {
         suffix: Int,
         totalLength: Int
     ): Long {
-        val baseLength = prefix.toString().length + suffix.toString().length
         if (prefix < 0) {
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
@@ -317,6 +316,9 @@ object CommonUtils {
                 params = arrayOf("suffix must be non-negative")
             )
         }
+        val prefixStr = prefix.toString()
+        val suffixStr = suffix.toString()
+        val baseLength = prefixStr.length + suffixStr.length
         if (totalLength < baseLength || totalLength > 19) {
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
@@ -324,6 +326,14 @@ object CommonUtils {
             )
         }
         val zerosCount = totalLength - baseLength
-        return "$prefix${"0".repeat(zerosCount)}$suffix".toLong()
+        val numberStr = "$prefixStr${"0".repeat(zerosCount)}$suffixStr"
+        return try {
+            numberStr.toLong()
+        } catch (e: NumberFormatException) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+                params = arrayOf("the generated value exceeds the maximum value of the Long type")
+            )
+        }
     }
 }

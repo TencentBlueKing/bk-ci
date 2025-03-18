@@ -224,14 +224,15 @@ class StoreBaseQueryDao {
         version: String? = null
     ): Long? {
         return with(TStoreBase.T_STORE_BASE) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
-            conditions.add(STORE_CODE.eq(storeCode))
-            if (!version.isNullOrBlank()) {
-                if (VersionUtils.isLatestVersion(version)) {
-                    conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
-                } else {
-                    conditions.add(VERSION.eq(version))
+            val conditions = mutableListOf<Condition>().apply {
+                add(STORE_TYPE.eq(storeType.type.toByte()))
+                add(STORE_CODE.eq(storeCode))
+                version?.takeIf { it.isNotBlank() }?.let { v ->
+                    if (VersionUtils.isLatestVersion(v)) {
+                        add(VERSION.like(VersionUtils.generateQueryVersion(v)))
+                    } else {
+                        add(VERSION.eq(v))
+                    }
                 }
             }
             dslContext.select(DSL.max(BUS_NUM)).from(this)
