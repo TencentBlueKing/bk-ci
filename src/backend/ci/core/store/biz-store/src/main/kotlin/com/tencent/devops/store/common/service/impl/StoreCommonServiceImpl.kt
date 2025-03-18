@@ -229,7 +229,6 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
         )
     }
 
-
     /**
      * 获取正确的升级版本号
      */
@@ -261,8 +260,8 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
                 val reqPatch = reqVersionParts.patch
                 val reqSuffix = reqVersionParts.suffix
                 listOf(
-                    "${reqMajor}.${reqMinor}.${reqPatch + 1}".appendIfNotEmpty(reqSuffix),
-                    "${reqMajor}.${reqMinor + 1}.0".appendIfNotEmpty(reqSuffix)
+                    "$reqMajor.$reqMinor.${reqPatch + 1}".appendIfNotEmpty(reqSuffix),
+                    "$reqMajor.${reqMinor + 1}.0".appendIfNotEmpty(reqSuffix)
                 )
             }
 
