@@ -343,7 +343,8 @@ class PipelineYamlFacadeService @Autowired constructor(
                 repoHashId = repoHashId,
                 filePath = filePath,
                 targetAction = targetAction,
-                versionName = versionName
+                versionName = versionName,
+                targetBranch = targetBranch
             )
             val setting = PacRepoSetting(repository = repository)
             val event = PipelineYamlManualEvent(
@@ -385,7 +386,8 @@ class PipelineYamlFacadeService @Autowired constructor(
                 repoHashId = repoHashId,
                 filePath = filePath,
                 targetAction = targetAction,
-                versionName = versionName
+                versionName = versionName,
+                targetBranch = targetBranch
             )
             try {
                 val setting = PacRepoSetting(repository = repository)
@@ -415,7 +417,8 @@ class PipelineYamlFacadeService @Autowired constructor(
                     filePath = filePath,
                     content = content,
                     commitMessage = commitMessage,
-                    targetAction = targetAction
+                    targetAction = targetAction,
+                    targetBranch = targetBranch
                 )
                 return PipelineYamlFileReleaseResult(
                     projectId = projectId,
@@ -440,7 +443,8 @@ class PipelineYamlFacadeService @Autowired constructor(
                 repoHashId = repoHashId,
                 filePath = filePath,
                 targetAction = targetAction,
-                versionName = versionName
+                versionName = versionName,
+                targetBranch = targetBranch
             )
             val repository = client.get(ServiceRepositoryResource::class).get(
                 projectId = projectId,
@@ -483,7 +487,8 @@ class PipelineYamlFacadeService @Autowired constructor(
                 repoHashId = repoHashId,
                 filePath = filePath,
                 targetAction = targetAction,
-                versionName = versionName
+                versionName = versionName,
+                targetBranch = targetBranch
             )
             return pipelineYamlFileManager.releaseYamlFile(yamlFileReleaseReq = yamlFileReleaseReq)
         }
@@ -496,7 +501,8 @@ class PipelineYamlFacadeService @Autowired constructor(
         repoHashId: String,
         filePath: String,
         targetAction: CodeTargetAction,
-        versionName: String?
+        versionName: String?,
+        targetBranch: String?
     ) {
         if (content.isBlank()) {
             throw ErrorCodeException(
@@ -511,10 +517,20 @@ class PipelineYamlFacadeService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_YAML_FILE_NAME_FORMAT
             )
         }
-        if (targetAction != CodeTargetAction.COMMIT_TO_MASTER && versionName.isNullOrBlank()) {
+        if (
+            (targetAction != CodeTargetAction.COMMIT_TO_MASTER &&
+                    targetAction != CodeTargetAction.COMMIT_TO_BRANCH) &&
+            versionName.isNullOrBlank()
+        ) {
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_NULL,
                 params = arrayOf("versionName")
+            )
+        }
+        if (targetAction == CodeTargetAction.COMMIT_TO_BRANCH && targetBranch.isNullOrBlank()) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                params = arrayOf("targetBranch")
             )
         }
         pipelineYamlService.getPipelineYamlInfo(

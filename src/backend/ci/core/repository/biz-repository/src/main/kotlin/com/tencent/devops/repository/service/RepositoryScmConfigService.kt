@@ -546,10 +546,12 @@ class RepositoryScmConfigService @Autowired constructor(
         val apiUrl = providerProperties.httpClientProperties?.apiUrl
         val webUrl = providerProperties.oauth2ClientProperties?.webUrl
         val clientId = providerProperties.oauth2ClientProperties?.clientId
+        val proxyEnabled = providerProperties.proxyEnabled
         return ScmConfigProps(
             apiUrl = apiUrl,
             webUrl = webUrl,
             clientId = clientId,
+            proxyEnabled = proxyEnabled,
             clientSecret = SECRET_MIXER,
             webhookSecret = SECRET_MIXER
         )
