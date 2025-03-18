@@ -305,7 +305,7 @@ object CommonUtils {
         totalLength: Int
     ): Long {
         val baseLength = prefix.toString().length + suffix.toString().length
-        if (totalLength < baseLength) {
+        if (prefix < 0 || suffix < 0 || totalLength < baseLength) {
             throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
         }
         val zerosCount = totalLength - baseLength
