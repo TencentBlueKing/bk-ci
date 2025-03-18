@@ -386,7 +386,7 @@
                 'pipelineSetting'
             ]),
             ...mapState('pipelines', ['isManage']),
-            ...mapGetters('atom', ['pacEnabled', 'yamlInfo']),
+            ...mapGetters('atom', ['pacEnabled', 'yamlInfo', 'isTemplate']),
             ...mapState('common', ['pacSupportScmTypeList']),
             pacDesc () {
                 return {
@@ -555,16 +555,28 @@
         methods: {
             ...mapActions('atom', [
                 'releaseDraftPipeline',
+                'releaseDraftTemplate',
                 'requestPipelineSummary',
                 'setSaveStatus',
                 'prefetchPipelineVersion',
-                'requestScmBranchList'
+                'requestScmBranchList',
+                'prefetchTemplateVersion'
             ]),
             ...mapActions('common', ['isPACOAuth', 'getSupportPacScmTypeList', 'getPACRepoList']),
+            errorHandler (error) {
+                const resourceType = this.isTemplate ? 'template' : 'pipeline'
+                this.handleError(error, {
+                    projectId: this.$route.params.projectId,
+                    resourceCode: this.$route.params[`${resourceType}Id`],
+                    resourceType: resourceType,
+                    action: this.$permissionResourceAction.EDIT
+                })
+            },
             async init () {
                 try {
                     this.isLoading = true
-                    const { enablePac } = this.releaseParams
+                    const enablePac = this.releaseParams.enablePac
+
                     await Promise.all([
                         ...(enablePac
                             ? [
@@ -585,34 +597,26 @@
                         })
                     }
                 } catch (error) {
-                    this.handleError(error, {
-                        projectId: this.$route.params.projectId,
-                        resourceCode: this.$route.params.pipelineId,
-                        resourceType: 'pipeline',
-                        action: this.$permissionResourceAction.EDIT
-                    })
+                    this.errorHandler(error)
                 } finally {
                     this.isLoading = false
                 }
             },
+
             async prefetchReleaseVersion (params) {
                 try {
                     if (!this.version || (params.targetAction === TARGET_ACTION_ENUM.COMMIT_TO_BRANCH && !params.targetBranch)) {
                         return
                     }
-                    const newReleaseVersion = await this.prefetchPipelineVersion({
+                    const prefetchFn = this.isTemplate ? this.prefetchTemplateVersion : this.prefetchPipelineVersion
+                    const newReleaseVersion = await prefetchFn({
                         ...this.$route.params,
                         version: this.version,
                         ...params
                     })
                     this.newReleaseVersionName = newReleaseVersion?.newVersionName || '--'
                 } catch (error) {
-                    this.handleError(error, {
-                        projectId: this.$route.params.projectId,
-                        resourceCode: this.$route.params.pipelineId,
-                        resourceType: 'pipeline',
-                        action: this.$permissionResourceAction.EDIT
-                    })
+                    this.errorHandler(error)
                 }
             },
             async fetchPacEnableCodelibList (init = false) {
@@ -682,7 +686,7 @@
                 this.showPacCodelibSetting = val
             },
             async releasePipeline () {
-                const { pipelineId, projectId } = this.$route.params
+                const releaseFn = this.isTemplate ? this.releaseDraftTemplate : this.releaseDraftPipeline
                 try {
                     if (this.releasing) return
                     this.releasing = true
@@ -700,9 +704,8 @@
                     } = this.releaseParams
                     const {
                         data: { versionName, targetUrl, updateBuildNo }
-                    } = await this.releaseDraftPipeline({
-                        projectId,
-                        pipelineId,
+                    } = await releaseFn({
+                        ...this.$route.params,
                         version: this.version,
                         params: {
                             ...rest,
@@ -866,8 +869,7 @@
                                                             this.$router.push({
                                                                 name: 'pipelinesHistory',
                                                                 params: {
-                                                                    projectId,
-                                                                    pipelineId,
+                                                                    ...this.$route.params,
                                                                     type: 'pipeline',
                                                                     isDirectShowVersion: true,
                                                                     version: this.pipelineInfo?.releaseVersion
@@ -888,8 +890,7 @@
                                                     !updateBuildNo && this.$router.push({
                                                         name: 'pipelinesHistory',
                                                         params: {
-                                                            projectId,
-                                                            pipelineId,
+                                                            ...this.$route.params,
                                                             type: 'pipeline',
                                                             version: this.pipelineInfo?.releaseVersion
                                                         }
@@ -909,11 +910,7 @@
                     if (e.state === 'error') {
                         e.message = e.content
                     }
-                    this.handleError(e, {
-                        projectId,
-                        resourceCode: pipelineId,
-                        action: this.$permissionResourceAction.EDIT
-                    })
+                    this.errorHandler(e)
                     return {
                         code: e.code,
                         message: e.message

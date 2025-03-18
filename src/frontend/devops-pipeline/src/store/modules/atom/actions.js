@@ -24,7 +24,7 @@ import {
     STORE_API_URL_PREFIX,
     UPDATE_PIPELINE_MODE
 } from '@/store/constants'
-import { UI_MODE, CODE_MODE } from '@/utils/pipelineConst'
+import { CODE_MODE, UI_MODE } from '@/utils/pipelineConst'
 import request from '@/utils/request'
 import { hashID, randomString } from '@/utils/util'
 import { areDeeplyEqual } from '../../../utils/util'
@@ -47,12 +47,12 @@ import {
     SELECT_PIPELINE_VERSION,
     SET_ATOMS,
     SET_ATOMS_CLASSIFY,
+    SET_ATOMS_OUTPUT_MAP,
     SET_ATOM_EDITING,
     SET_ATOM_MODAL,
     SET_ATOM_MODAL_FETCHING,
     SET_ATOM_PAGE_OVER,
     SET_ATOM_VERSION_LIST,
-    SET_ATOMS_OUTPUT_MAP,
     SET_COMMEND_ATOM_COUNT,
     SET_COMMEND_ATOM_PAGE_OVER,
     SET_COMMON_PARAMS,
@@ -923,10 +923,13 @@ export default {
             return response.data
         })
     },
-    saveDraftPipeline ({ commit }, { projectId, ...draftPipeline }) {
+    saveDraftPipeline (_, { projectId, ...draftPipeline }) {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/saveDraft`, draftPipeline)
     },
-    releaseDraftPipeline ({ commit }, { projectId, pipelineId, version, params }) {
+    saveDraftTemplate (_, { projectId, templateId, ...draftTemplate }) {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/saveDraft`, draftTemplate)
+    },
+    releaseDraftPipeline (_, { projectId, pipelineId, version, params }) {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/releaseVersion/${version}`, params)
     },
     async prefetchPipelineVersion ({ commit }, { projectId, pipelineId, version, ...params }) {
@@ -934,6 +937,9 @@ export default {
             params
         })
         return res.data
+    },
+    releaseDraftTemplate (_, { projectId, templateId, version, ...params }) {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/releaseVersion/${version}`, params)
     },
     yamlNavToPipelineModel ({ commit }, { projectId, body, ...params }) {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}/position`, {

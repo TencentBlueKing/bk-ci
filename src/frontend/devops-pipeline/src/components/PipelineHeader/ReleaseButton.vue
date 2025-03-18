@@ -6,16 +6,7 @@
                 'publish-diabled': !canRelease
             }]"
             @click="showReleaseSlider"
-            v-perm="{
-                hasPermission: canEdit,
-                disablePermissionApi: true,
-                permissionData: {
-                    projectId,
-                    resourceType: 'pipeline',
-                    resourceCode: pipelineId,
-                    action: RESOURCE_ACTION.EDIT
-                }
-            }"
+            v-perm="permObj"
         >
             <i class="devops-icon icon-check-small" />
             {{ $t('release') }}
@@ -43,7 +34,7 @@
                 type: String,
                 required: true
             },
-            pipelineId: {
+            id: {
                 type: String,
                 required: true
             },
@@ -64,7 +55,8 @@
                 'showVariable'
             ]),
             ...mapGetters({
-                draftBaseVersionName: 'atom/getDraftBaseVersionName'
+                draftBaseVersionName: 'atom/getDraftBaseVersionName',
+                isTemplate: 'atom/isTemplate'
             }),
             disableTooltips () {
                 return {
@@ -77,6 +69,18 @@
             },
             currentVersion () {
                 return this.pipelineInfo?.version ?? ''
+            },
+            permObj () {
+                return {
+                    hasPermission: this.canEdit,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId: this.projectId,
+                        resourceType: this.isTemplate ? 'template' : 'pipeline',
+                        resourceCode: this.id,
+                        action: RESOURCE_ACTION.EDIT
+                    }
+                }
             }
         },
         methods: {

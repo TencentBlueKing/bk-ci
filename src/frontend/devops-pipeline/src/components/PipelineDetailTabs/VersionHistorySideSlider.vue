@@ -254,7 +254,7 @@
             ...mapActions({
                 requestPipelineSummary: 'atom/requestPipelineSummary',
                 requestPipelineVersionList: 'pipelines/requestPipelineVersionList',
-                requestTemplateVersionList: 'pipelines/requestTemplateVersionList'
+                requestTemplateVersionList: 'pipelines/requestTemplateVersionList',
                 deletePipelineVersion: 'pipelines/deletePipelineVersion'
             }),
             handleShown () {

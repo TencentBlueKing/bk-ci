@@ -108,7 +108,7 @@
             <release-button
                 :can-release="canRelease && !isEditing"
                 :project-id="projectId"
-                :pipeline-id="pipelineId"
+                :id="pipelineId"
             />
         </aside>
     </div>

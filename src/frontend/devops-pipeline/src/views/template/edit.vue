@@ -18,7 +18,11 @@
                     >
                         {{ $t('save') }}
                     </bk-button>
-                    <ReleaseButton />
+                    <ReleaseButton
+                        :can-release="canRelease && !isEditing"
+                        :project-id="projectId"
+                        :id="templateId"
+                    />
                 </aside>
             </header>
             <Edit
@@ -66,6 +70,7 @@
                 'isEditing'
             ]),
             ...mapState('atom', [
+                'saveStatus',
                 'pipeline',
                 'pipelineInfo',
                 'pipelineWithoutTrigger',
@@ -74,6 +79,9 @@
             ...mapState([
                 'fetchError'
             ]),
+            canRelease () {
+                return (this.pipelineInfo?.canRelease ?? false) && !this.saveStatus
+            },
             projectId () {
                 return this.$route.params.projectId
             },
@@ -126,6 +134,7 @@
             // TODO: 优化
             ...mapActions('atom', [
                 'setPipeline',
+                'saveDraftTemplate',
                 'setPipelineEditing',
                 'setAtomEditing',
                 'requestPipeline',
@@ -167,13 +176,11 @@
                 try {
                     this.isSaving = true
 
-                    const { data } = await this.$ajax.put(`/process/api/user/pipeline/template/v2/${this.projectId}/${this.templateId}/saveDraft`, {
+                    const { data } = await this.saveDraftTemplate({
                         projectId: this.projectId,
                         templateId: this.templateId,
                         model: pipeline,
                         templateSetting: this.pipelineSetting,
-                        name: pipeline?.name,
-                        desc: pipeline?.desc,
                         baseVersion: this.currentVersionId
                     })
                     if (data) {
