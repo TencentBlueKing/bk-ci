@@ -222,17 +222,21 @@ class StoreBaseQueryDao {
         storeCode: String,
         storeType: StoreTypeEnum,
         version: String? = null
-    ): Int? {
+    ): Long? {
         return with(TStoreBase.T_STORE_BASE) {
             val conditions = mutableListOf<Condition>()
             conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
             conditions.add(STORE_CODE.eq(storeCode))
             if (!version.isNullOrBlank()) {
-                conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
+                if (VersionUtils.isLatestVersion(version)) {
+                    conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
+                } else {
+                    conditions.add(VERSION.eq(version))
+                }
             }
             dslContext.select(DSL.max(BUS_NUM)).from(this)
                 .where(conditions)
-                .fetchOne(0, Int::class.java)
+                .fetchOne()?.get(0, Long::class.java)
         }
     }
 

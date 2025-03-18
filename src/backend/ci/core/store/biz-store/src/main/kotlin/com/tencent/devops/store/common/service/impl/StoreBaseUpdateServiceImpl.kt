@@ -150,7 +150,7 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
         val normalizedVersion = VersionUtils.convertLatestVersion(version)
         // 获取当前大版本下最大序号
         val maxBusNum = storeBaseQueryDao.getMaxBusNumByCode(dslContext, storeCode, storeType, normalizedVersion)
-        val initBusNum = CommonUtils.generateNumber(majorVersion, 1, STORE_BUS_NUM_LEN).toInt()
+        val initBusNum = CommonUtils.generateNumber(majorVersion, 1, STORE_BUS_NUM_LEN)
         // 生成当前组件版本的业务号
         val busNum = when {
             maxBusNum != null && maxBusNum >= initBusNum -> handleExistingBusNum(
@@ -255,13 +255,13 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
     }
 
     private fun handleExistingBusNum(
-        maxBusNum: Int,
+        maxBusNum: Long,
         majorVersion: Int,
         isVersionUpdate: Boolean,
-        initBusNum: Int
-    ): Int {
+        initBusNum: Long
+    ): Long {
         return if (isVersionUpdate) {
-            CommonUtils.generateNumber(majorVersion, maxBusNum - initBusNum + 2, STORE_BUS_NUM_LEN).toInt()
+            CommonUtils.generateNumber(majorVersion, (maxBusNum - initBusNum + 2).toInt(), STORE_BUS_NUM_LEN)
         } else {
             maxBusNum
         }
@@ -273,7 +273,7 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
         version: String,
         isVersionUpdate: Boolean,
         majorVersion: Int
-    ): Int {
+    ): Long {
         val count = storeBaseQueryDao.countByCondition(
             dslContext = dslContext,
             storeType = storeType,
@@ -281,7 +281,7 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
             version = version
         )
         val suffix = if (isVersionUpdate) count + 1 else count
-        return CommonUtils.generateNumber(majorVersion, suffix, 6).toInt()
+        return CommonUtils.generateNumber(majorVersion, suffix, 6)
     }
 
     private fun getStoreSpecBusService(storeType: StoreTypeEnum): StoreReleaseSpecBusService {
