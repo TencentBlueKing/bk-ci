@@ -22,9 +22,9 @@
             />
             <span
                 v-if="enableVersionControl"
-                :class="['random-generate', randomFilePath ? '' : 'placeholder']"
+                :class="['random-generate', randomSubPath ? '' : 'placeholder']"
             >
-                /{{ randomFilePath || $t('editPage.randomlyGenerate') }}/
+                /{{ randomSubPath || $t('editPage.randomlyGenerate') }}/
             </span>
             <vuex-input
                 class="file-name"
@@ -126,11 +126,9 @@
             }
         },
         data () {
-            const that = this
             return {
                 directory: '',
-                fileName: '',
-                randomFilePath: that.randomSubPath
+                fileName: ''
             }
         },
         watch: {
@@ -141,9 +139,8 @@
                     
                     this.fileName = currentValue.slice(lastSlashIndex + 1)
 
-                    if (this.enableVersionControl && this.randomFilePath) {
-                        this.randomFilePath = this.randomSubPath
-                        const randomStringLastIndex = currentValue.lastIndexOf(`/${this.randomFilePath}`)
+                    if (this.enableVersionControl && this.randomSubPath) {
+                        const randomStringLastIndex = currentValue.lastIndexOf(`/${this.randomSubPath}`)
                         this.directory = currentValue.slice(0, randomStringLastIndex)
                     } else {
                         this.directory = currentValue.slice(0, lastSlashIndex)
@@ -154,14 +151,15 @@
         },
         methods: {
             updatePath (name, value, newFile = false) {
+                let randomFilePath = this.randomSubPath
                 if (newFile && this.enableVersionControl) {
-                    this.randomFilePath = randomString(8)
+                    randomFilePath = randomString(8)
                 }
                 this[name] = value
 
                 const path = [
                     this.directory,
-                    ...(this.randomFilePath ? [this.randomFilePath] : []),
+                    ...(randomFilePath ? [randomFilePath] : []),
                     this.fileName
                 ].join('/')
 
@@ -169,13 +167,13 @@
                 const finalValue = this.flex && this.enableVersionControl
                     ? {
                         directory: path,
-                        latestRandomStringInPath: this.randomFilePath
+                        latestRandomStringInPath: randomFilePath
                     }
                     : path
                 this.handleChange(this.name, finalValue)
 
                 if (!this.flex) {
-                    this.handleChange('randomStringInPath', this.randomFilePath)
+                    this.handleChange('randomStringInPath', randomFilePath)
                 }
             },
             uploadPathFromFileName (value) {
@@ -186,7 +184,7 @@
             },
             handleEnableVersionControl (value) {
                 if (!this.flex && !value) {
-                    this.randomFilePath = ''
+                    this.handleChange('randomStringInPath', '')
                 }
                 this.handleChange('enableVersionControl', value)
                 this.updatePath('enableVersionControl', value)
