@@ -1060,20 +1060,15 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             dslContext = dslContext,
             storeId = storeId,
             fieldName = KEY_URL_SCHEME
-        )?.get(0)?.fieldValue
-        val extData = if (extDataResult.isEmpty() && urlScheme.isNullOrBlank()) {
-            null
-        } else {
-            mutableMapOf<String, Any>()
-        }
-        extData?.let {
-            urlScheme?.let {
-                extData[KEY_URL_SCHEME] = urlScheme
+        )?.getOrNull(0)?.fieldValue
+        val extData = if (extDataResult.isNotEmpty || !urlScheme.isNullOrBlank()) {
+            mutableMapOf<String, Any>().apply {
+                urlScheme?.let { put(KEY_URL_SCHEME, it) }
+                extDataResult.forEach { record ->
+                    put(record.fieldName, formatJson(record.fieldValue))
+                }
             }
-            extDataResult.forEach { record ->
-                extData[record.fieldName] = formatJson(record.fieldValue)
-            }
-        }
+        } else null
         return extData
     }
 
