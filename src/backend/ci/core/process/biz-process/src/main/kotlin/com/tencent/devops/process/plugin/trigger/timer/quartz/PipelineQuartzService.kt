@@ -93,7 +93,8 @@ class PipelineQuartzService @Autowired constructor(
             list.forEach { timer ->
                 logger.info("TIMER_RELOAD| load crontab($timer)")
                 timer.crontabExpressions.forEach { crontab ->
-                    addJob(projectId = timer.projectId,
+                    addJob(
+                        projectId = timer.projectId,
                         pipelineId = timer.pipelineId,
                         crontab = crontab,
                         taskId = timer.taskId
@@ -109,7 +110,7 @@ class PipelineQuartzService @Autowired constructor(
     fun addJob(projectId: String, pipelineId: String, crontab: String, taskId: String) {
         try {
             val md5 = DigestUtils.md5Hex(crontab)
-            val comboKey = if (taskId.isEmpty()) {
+            val comboKey = if (taskId.isBlank()) {
                 "${pipelineId}_${md5}_$projectId"
             } else {
                 "${pipelineId}_${md5}_${projectId}_$taskId"

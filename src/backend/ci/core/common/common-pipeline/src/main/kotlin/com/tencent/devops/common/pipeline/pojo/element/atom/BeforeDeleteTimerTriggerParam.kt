@@ -29,9 +29,15 @@ package com.tencent.devops.common.pipeline.pojo.element.atom
 
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 
-open class BeforeDeleteParam(
-    open val userId: String,
-    open val projectId: String,
-    open val pipelineId: String,
-    open val channelCode: ChannelCode = ChannelCode.BS
+data class BeforeDeleteTimerTriggerParam(
+    override val userId: String,
+    override val projectId: String,
+    override val pipelineId: String,
+    override val channelCode: ChannelCode,
+    val deleteTimerBranch: Boolean = false
+): BeforeDeleteParam(
+    userId,
+    projectId,
+    pipelineId,
+    channelCode
 )

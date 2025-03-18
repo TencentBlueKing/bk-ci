@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
+import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteTimerTriggerParam
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMER_TRIGGER_SVN_BRANCH_NOT_EMPTY
@@ -84,6 +85,13 @@ class TimerTriggerElementBizPlugin constructor(
                 errorCode = ERROR_TIMER_TRIGGER_SVN_BRANCH_NOT_EMPTY
             )
         }
+        // 删除旧的定时器任务, taskId未补充完整时, 保存流水线可能生成重复的定时任务
+        pipelineTimerService.deleteTimer(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            userId = userId,
+            taskId = ""
+        )
         if (crontabExpressions.isNotEmpty()) {
             val result = pipelineTimerService.saveTimer(
                 projectId = projectId,
@@ -110,9 +118,13 @@ class TimerTriggerElementBizPlugin constructor(
     }
 
     override fun beforeDelete(element: TimerTriggerElement, param: BeforeDeleteParam) {
+        param as BeforeDeleteTimerTriggerParam
         if (param.pipelineId.isNotBlank()) {
             pipelineTimerService.deleteTimer(param.projectId, param.pipelineId, param.userId, element.id ?: "")
-            pipelineTimerService.deleteTimerBranch(projectId = param.projectId, pipelineId = param.pipelineId)
+            if (param.deleteTimerBranch) {
+                logger.info("[${param.projectId}]|[${param.pipelineId}]| Delete pipeline timer branch")
+                pipelineTimerService.deleteTimerBranch(projectId = param.projectId, pipelineId = param.pipelineId)
+            }
         }
     }
 

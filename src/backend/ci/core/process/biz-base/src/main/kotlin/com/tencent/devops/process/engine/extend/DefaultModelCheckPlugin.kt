@@ -45,10 +45,12 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
+import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteTimerTriggerParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementBatchCheckParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ElementHolder
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -520,7 +522,8 @@ open class DefaultModelCheckPlugin constructor(
     private fun deletePrepare(sourceModel: Model?, originElement: Element, param: BeforeDeleteParam) {
         if (sourceModel == null || !sourceModel.elementExist(originElement)) {
             logger.info("The element(${originElement.name}/${originElement.id}) is delete")
-            ElementBizRegistrar.getPlugin(originElement)?.beforeDelete(originElement, param)
+            val enrichParam = enrichBeforeDeleteParam(sourceModel, originElement, param)
+            ElementBizRegistrar.getPlugin(originElement)?.beforeDelete(originElement, enrichParam)
         } else {
             logger.info("The element(${originElement.name}/${originElement.id}) is not delete")
         }
@@ -669,4 +672,33 @@ open class DefaultModelCheckPlugin constructor(
         JobRunCondition.CUSTOM_VARIABLE_MATCH,
         JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
     )
+
+    /**
+     * 增强参数信息
+     * @param sourceModel 已经编辑过的model
+     */
+    private fun enrichBeforeDeleteParam(
+        sourceModel: Model?,
+        originElement: Element,
+        param: BeforeDeleteParam
+    ) : BeforeDeleteParam {
+        return when(originElement) {
+            is TimerTriggerElement -> {
+                BeforeDeleteTimerTriggerParam(
+                    userId = param.userId,
+                    projectId = param.projectId,
+                    pipelineId = param.pipelineId,
+                    channelCode = param.channelCode,
+                    deleteTimerBranch = cleanTimerBranch(sourceModel)
+                )
+            }
+            else -> param
+        }
+    }
+
+    /**
+     * model中不存在定时触发器时，需要清理定时分支相关信息
+     */
+    private fun cleanTimerBranch(model: Model?) = model?.getTriggerContainer()
+            ?.elements?.find { it is TimerTriggerElement } == null
 }

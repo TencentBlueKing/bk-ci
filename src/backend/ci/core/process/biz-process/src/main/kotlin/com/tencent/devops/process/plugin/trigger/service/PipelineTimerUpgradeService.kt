@@ -65,7 +65,8 @@ open class PipelineTimerUpgradeService @Autowired constructor(
                     pipelineId = pipelineId
                 )
                 if (model == null) {
-                    logger.warn("model is null|projectId=$projectId|pipelineId=$pipelineId")
+                    val deleteCount = pipelineTimerService.cleanTimer(projectId, pipelineId)
+                    logger.warn("model is null|deleted $deleteCount timer tasks|$projectId|$pipelineId")
                     return@parseModel
                 }
                 val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
@@ -134,6 +135,15 @@ open class PipelineTimerUpgradeService @Autowired constructor(
                                 crontabExpressionJson = crontab
                             )
                         }
+                    }
+
+                    timerTriggerElements.isEmpty() -> {
+                        // 没有定时触发器，清空定时任务
+                        val deleteCount = pipelineTimerService.cleanTimer(projectId, pipelineId)
+                        logger.info(
+                            "timer trigger element is empty, deleted $deleteCount timer tasks" +
+                                    "|$projectId|${pipelineId}"
+                        )
                     }
 
                     else -> {

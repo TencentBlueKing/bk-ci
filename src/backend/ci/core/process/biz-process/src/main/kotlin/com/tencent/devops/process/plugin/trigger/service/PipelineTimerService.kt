@@ -125,11 +125,15 @@ open class PipelineTimerService @Autowired constructor(
         }
     }
 
-    open fun deleteTimer(projectId: String, pipelineId: String, userId: String, taskId: String): Result<Boolean> {
+    open fun deleteTimer(projectId: String, pipelineId: String, userId: String, taskId: String?): Result<Boolean> {
         var count = 0
-        val timerRecord = pipelineTimerDao.get(dslContext, projectId, pipelineId, taskId)
+        val timerRecord = pipelineTimerDao.get(dslContext, projectId, pipelineId, taskId ?: "")
         if (timerRecord != null) {
-            count = pipelineTimerDao.delete(dslContext, projectId, pipelineId, taskId)
+            count = pipelineTimerDao.delete(dslContext, projectId, pipelineId, timerRecord.taskId)
+            if (taskId.isNullOrBlank()) {
+                // 删除旧的定时任务信息
+                logger.info("clean the old timer record|$projectId|$pipelineId|$taskId|changeCount[$count]")
+            }
             // 终止定时器
             pipelineEventDispatcher.dispatch(
                 PipelineTimerChangeEvent(
@@ -154,8 +158,41 @@ open class PipelineTimerService @Autowired constructor(
         )
     }
 
-    open fun get(projectId: String, pipelineId: String, taskId: String): PipelineTimer? {
-        val timerRecord = pipelineTimerDao.get(dslContext, projectId, pipelineId, taskId) ?: return null
+    open fun get(projectId: String, pipelineId: String, taskId: String?): PipelineTimer? {
+        val timerRecord = if (taskId.isNullOrBlank()) {
+            // 如果taskId为空或空白，则尝试获取指定项目和流水线的定时器记录
+            pipelineTimerDao.get(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                taskId = ""
+            ) ?: pipelineTimerDao.get(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId
+            ).let {
+                if (it.size <= 1) {
+                    it.firstOrNull()
+                } else {
+                    // 存在多条匹配的数据，无法判读取哪条，跳过
+                    logger.warn("skipping|multiple records exist|$projectId|$pipelineId")
+                    null
+                }
+            }
+        } else {
+            // 如果taskId不为空，则尝试获取指定taskId的定时器记录
+            pipelineTimerDao.get(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                taskId = taskId
+            ) ?: pipelineTimerDao.get(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                taskId = ""
+            )
+        } ?: return null
         return convert(timerRecord)
     }
 
@@ -293,5 +330,16 @@ open class PipelineTimerService @Autowired constructor(
             )
             return Result(true)
         } else Result(false)
+    }
+
+    fun cleanTimer(
+        projectId: String,
+        pipelineId: String
+    ) :Int {
+        return pipelineTimerDao.delete(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            projectId = projectId
+        )
     }
 }

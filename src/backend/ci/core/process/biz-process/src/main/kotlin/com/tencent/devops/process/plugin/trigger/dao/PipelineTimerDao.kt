@@ -95,6 +95,20 @@ open class PipelineTimerDao {
         }
     }
 
+    fun get(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): Result<TPipelineTimerRecord> {
+        return with(T_PIPELINE_TIMER) {
+            val conditions = mutableListOf(PROJECT_ID.eq(projectId), PIPELINE_ID.eq(pipelineId))
+            dslContext.selectFrom(this)
+                    .where(conditions)
+                    .orderBy(CREATE_TIME)
+                    .fetch()
+        }
+    }
+
     open fun get(dslContext: DSLContext, projectId: String, pipelineId: String, taskId: String): TPipelineTimerRecord? {
         return with(T_PIPELINE_TIMER) {
             dslContext.selectFrom(this)
