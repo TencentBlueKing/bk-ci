@@ -416,45 +416,6 @@
                                         ></selector>
                                     </bk-form-item>
 
-                                    <!-- <template v-if="isBuildResourceParam(param.type)">
-                                        <bk-form-item
-                                            label-width="auto"
-                                            :label="$t('editPage.buildEnv')"
-                                            :is-error="errors.has(`param-${param.id}.os`)"
-                                            :error-msg="errors.first(`param-${param.id}.os`)"
-                                        >
-                                            <selector
-                                                :popover-min-width="510"
-                                                :disabled="disabled"
-                                                :list="baseOSList"
-                                                :handle-change="(name, value) => handleBuildResourceChange(name, value, index, param)"
-                                                name="os"
-                                                :data-vv-scope="`param-${param.id}`"
-                                                placeholder=""
-                                                :value="param.containerType.os"
-                                            ></selector>
-                                        </bk-form-item>
-
-                                        <bk-form-item
-                                            label-width="auto"
-                                            :label="$t('editPage.addMetaData')"
-                                            :is-error="errors.has(`param-${param.id}.buildType`)"
-                                            :error-msg="errors.first(`param-${param.id}.buildType`)"
-                                        >
-                                            <selector
-                                                :popover-min-width="510"
-                                                :disabled="disabled"
-                                                :list="getBuildTypeList(param.containerType.os)"
-                                                setting-key="type"
-                                                :handle-change="(name, value) => handleBuildResourceChange(name, value, index, param)"
-                                                name="buildType"
-                                                :data-vv-scope="`param-${param.id}`"
-                                                placeholder=""
-                                                :value="param.containerType.buildType"
-                                            ></selector>
-                                        </bk-form-item>
-                                    </template> -->
-
                                     <bk-form-item
                                         label-width="auto"
                                         v-if="isArtifactoryParam(param.type)"
@@ -903,10 +864,6 @@
                 })
                 this.handleUpdateParam(key, properties, index)
             },
-
-            // getBuildResourceUrl ({ os, buildType }) {
-            //     return `/${STORE_API_URL_PREFIX}/user/pipeline/container/projects/${this.$route.params.projectId}/oss/${os}?buildType=${buildType}`
-            // },
 
             handleCodeTypeChange (name, value, index) {
                 this.handleUpdateParam(name, value, index)

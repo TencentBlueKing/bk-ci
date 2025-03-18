@@ -121,14 +121,9 @@
             },
             highlightChangedParam: Boolean
         },
-        data () {
-            return {
-                originalParams: []
-            }
-        },
         computed: {
             paramList () {
-                return this.originalParams.map(param => {
+                return this.params.map(param => {
                     let restParam = {}
                     if (param.type !== STRING || param.type !== TEXTAREA) {
                         if (isRemoteType(param)) {
@@ -208,14 +203,6 @@
                 })
             }
         },
-        watch: {
-            params: {
-                handler (newParams) {
-                    this.originalParams = [...newParams]
-                },
-                immediate: true
-            }
-        },
         methods: {
             isArtifactoryParam,
             isObject,
@@ -278,19 +265,16 @@
                 return isFileParam(type) && this.$route.path.indexOf('preview') > -1
             },
             async fetchBuildResourceList (param) {
-                const itemList = this.originalParams.find(item => item.id === param.id && param.type === CONTAINER_TYPE)
-                if (itemList) {
-                    try {
-                        const { data } = await this.$ajax.get(`environment/api/user/envnode/${this.$route.params.projectId}/listNew?nodeType=THIRDPARTY&page=1&pageSize=100`)
-                        const list = data.records.map(item => ({
-                            key: item.displayName,
-                            value: item.displayName
-                        }))
-                        itemList.list = list
-                        itemList.options = list
-                    } catch (error) {
-                        console.log(error)
-                    }
+                try {
+                    const { data } = await this.$ajax.get(`environment/api/user/envnode/${this.$route.params.projectId}/listNew?nodeType=THIRDPARTY&page=1&pageSize=100`)
+                    const list = data.records.map(item => ({
+                        key: item.displayName,
+                        value: item.displayName
+                    }))
+                    param.list = list
+                    param.options = list
+                } catch (error) {
+                    console.log(error)
                 }
             }
         }
