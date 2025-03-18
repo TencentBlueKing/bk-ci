@@ -375,6 +375,8 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         StoreCodeLock(redisOperation, handlerRequest.storeType, handlerRequest.storeCode).use { lock ->
             if (lock.tryLock()) {
                 StoreDeleteHandlerChain(handlerList).handleRequest(handlerRequest)
+            } else {
+                throw ErrorCodeException(errorCode = CommonMessageCode.LOCK_FAIL)
             }
         }
         return Result(

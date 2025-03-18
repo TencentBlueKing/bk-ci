@@ -143,6 +143,8 @@ class StoreReleaseServiceImpl @Autowired constructor(
         StoreCodeLock(redisOperation, storeType.name, storeCode).use { lock ->
             if (lock.tryLock()) {
                 StoreCreateHandlerChain(handlerList).handleRequest(storeCreateRequest)
+            } else {
+                throw ErrorCodeException(errorCode = CommonMessageCode.LOCK_FAIL)
             }
         }
         val storeId = bkStoreContext[KEY_STORE_ID]?.toString()
@@ -170,6 +172,8 @@ class StoreReleaseServiceImpl @Autowired constructor(
         StoreCodeLock(redisOperation, storeType.name, storeCode).use { lock ->
             if (lock.tryLock()) {
                 StoreUpdateHandlerChain(handlerList).handleRequest(storeUpdateRequest)
+            } else {
+                throw ErrorCodeException(errorCode = CommonMessageCode.LOCK_FAIL)
             }
         }
         val storeId = bkStoreContext[KEY_STORE_ID]?.toString()

@@ -305,8 +305,23 @@ object CommonUtils {
         totalLength: Int
     ): Long {
         val baseLength = prefix.toString().length + suffix.toString().length
-        if (prefix < 0 || suffix < 0 || totalLength < baseLength) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
+        if (prefix < 0) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+                params = arrayOf("prefix must be non-negative")
+            )
+        }
+        if (suffix < 0) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+                params = arrayOf("suffix must be non-negative")
+            )
+        }
+        if (totalLength < baseLength || totalLength > 19) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+                params = arrayOf("totalLength must be between $baseLength and 19")
+            )
         }
         val zerosCount = totalLength - baseLength
         return "$prefix${"0".repeat(zerosCount)}$suffix".toLong()
