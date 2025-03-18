@@ -169,8 +169,12 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
             )
         }
         var latestFlag = false
-        val firstVersion = storeBaseQueryDao.getFirstVersion(dslContext, storeCode, storeType)
-        if (version == firstVersion) {
+        val count = storeBaseQueryDao.countByCondition(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType
+        )
+        if (!isVersionUpdate && count < 2) {
             // 首个版本的latestFlag置为true
             latestFlag = true
         }

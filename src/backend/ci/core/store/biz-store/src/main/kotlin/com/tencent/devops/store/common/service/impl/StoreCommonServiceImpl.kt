@@ -517,7 +517,7 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
                         )
             }
 
-            else -> throw ErrorCodeException(errorCode = StoreMessageCode.STORE_RELEASE_STEPS_ERROR)
+            else -> true
         }
         if (!checkFlag) {
             logger.warn("$storeType[$storeCode]| invalid version: $version")

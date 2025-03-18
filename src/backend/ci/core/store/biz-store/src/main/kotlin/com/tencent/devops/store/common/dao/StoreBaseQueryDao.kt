@@ -203,17 +203,17 @@ class StoreBaseQueryDao {
         }
     }
 
-    fun getFirstVersion(
+    fun getFirstComponent(
         dslContext: DSLContext,
         storeCode: String,
         storeType: StoreTypeEnum
-    ): String? {
+    ): TStoreBaseRecord? {
         return with(TStoreBase.T_STORE_BASE) {
-            dslContext.select(ID).from(this)
+            dslContext.selectFrom(this)
                 .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
                 .orderBy(CREATE_TIME.asc())
                 .limit(1)
-                .fetchOne(0, String::class.java)
+                .fetchOne()
         }
     }
 
