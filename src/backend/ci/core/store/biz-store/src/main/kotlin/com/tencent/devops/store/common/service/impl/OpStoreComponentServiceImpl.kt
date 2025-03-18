@@ -98,11 +98,9 @@ class OpStoreComponentServiceImpl @Autowired constructor(
         )
         val releaseType = ReleaseTypeEnum.getReleaseTypeObj(releaseRecord.releaseType.toInt())!!
         val version = record.version
-        val firstVersion = storeBaseQueryDao.getFirstVersion(
-            dslContext,
-            storeCode,
-            storeType
-        )
+        val firstVersion = storeBaseQueryDao.getFirstComponent(
+            dslContext = dslContext, storeCode = storeCode, storeType = storeType
+        )?.version
         val latestFlag = when {
             releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE || version == firstVersion -> {
                 // 历史大版本下的小版本更新或者首个版本上架审核时，不更新latestFlag
