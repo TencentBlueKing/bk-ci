@@ -151,11 +151,12 @@
         },
         methods: {
             updatePath (name, value, newFile = false) {
-                let randomFilePath = this.randomSubPath
+                this[name] = value
+                let randomFilePath = this.enableVersionControl ? this.randomSubPath : ''
+
                 if (newFile && this.enableVersionControl) {
                     randomFilePath = randomString(8)
                 }
-                this[name] = value
 
                 const path = [
                     this.directory,
@@ -183,9 +184,6 @@
                 this.updatePath('fileName', this.fileName, true)
             },
             handleEnableVersionControl (value) {
-                if (!this.flex && !value) {
-                    this.handleChange('randomStringInPath', '')
-                }
                 this.handleChange('enableVersionControl', value)
                 this.updatePath('enableVersionControl', value)
             }

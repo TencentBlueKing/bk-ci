@@ -171,7 +171,7 @@
                         const paramValue = this.paramValues[param.id]
                         const newRandomString = paramValue?.latestRandomStringInPath
                         const defaultRandomString = param.latestRandomStringInPath ?? param.randomStringInPath
-                        restParam.latestRandomStringInPath = newRandomString || defaultRandomString
+                        restParam.latestRandomStringInPath = newRandomString ?? defaultRandomString
                         restParam.value = typeof paramValue === 'object' ? paramValue?.directory : paramValue
                     }
                     return {
