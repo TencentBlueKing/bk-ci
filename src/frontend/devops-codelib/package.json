@@ -42,7 +42,7 @@
     "eslint-plugin-standard": "^5.0.0",
     "eslint-plugin-vue": "6.2.2",
     "html-webpack-plugin": "^5.3.2",
-    "lodash": "^4.17.21",
+    "lodash-es": "^4.17.21",
     "mini-css-extract-plugin": "2.4.2",
     "sass": "^1.42.1",
     "sass-loader": "^12.1.0",

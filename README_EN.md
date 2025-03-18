@@ -34,8 +34,8 @@ bk-ci provides seven core services, namely Process, CodeCheck, Repository, Ticke
 
 ## Features
 
-- Continuous integration and continuous delivery: Due to the scalability of the framework, bk-ci can not only be used in simple CI scenarios, but also as the continuous delivery center of all the projects of the enterprise.
-- What you see is what you get: bk-ci provides flexible and visualized pipelines for you to orchestrate. Move your fingers and you can describe the R&D process here.
+- Continuous Integration and Continuous Delivery: Thanks to its scalable framework, bk-ci is not just suited for basic CI workflows—it can also serve as the central hub for continuous delivery across all enterprise projects.
+- What you see is what you get: bk-ci offers flexible, visualized pipelines for seamless orchestration. With just a few clicks, you can map out your entire R&D process effortlessly.
 - Parallel and scalable framework: The flexible framework can be scaled horizontally at will to meet the enterprise’s need for large-scale use.
 - Distributed system: bk-ci can manage multiple agents easily to help you perform cross-platform build, testing and deployment in a faster manner.
 - Pipeline plugins: bk-ci has a complete plugin development system with properties like low barrier to entry and scalability.

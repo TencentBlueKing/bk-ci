@@ -853,9 +853,6 @@ importers:
       html-webpack-plugin:
         specifier: ^5.3.2
         version: 5.6.0(webpack@5.96.1(webpack-cli@5.1.4))
-      lodash:
-        specifier: ^4.17.21
-        version: 4.17.21
       mini-css-extract-plugin:
         specifier: 2.4.2
         version: 2.4.2(webpack@5.96.1)
@@ -15764,6 +15761,7 @@ packages:
   yaeti@0.0.6:
     resolution: {integrity: sha512-MvQa//+KcZCUkBTIC9blM+CU9J2GzuTytsOUwf2lidtvkx/6gnEp1QvJv34t9vdjhFmha/mUiNDbN0D0mJWdug==}
     engines: {node: '>=0.10.32'}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   yallist@2.1.2:
     resolution: {integrity: sha512-ncTzHV7NvsQZkYe1DW7cbDLm0YpzHmZF5r/iyP3ZnQtMiJ+pjzisCiMNI+Sj+xQF5pXhSHxSB3uDbsBTzY/c2A==}

@@ -85,6 +85,7 @@ import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
 import com.tencent.devops.process.engine.cfg.VersionConfigure
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.lock.PipelineModelLock
+import com.tencent.devops.process.engine.control.lock.PipelineReleaseLock
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
@@ -1222,7 +1223,7 @@ class PipelineRepositoryService constructor(
         }
 
         // TODO 暂时只有正式发布的版本需要推送，等草稿历史出来后调整消费者再全推送
-        if (versionStatus == VersionStatus.RELEASED) pipelineEventDispatcher.dispatch(
+        if (versionStatus?.fix() == VersionStatus.RELEASED) pipelineEventDispatcher.dispatch(
             PipelineUpdateEvent(
                 source = "update_pipeline",
                 projectId = projectId,
@@ -1347,6 +1348,61 @@ class PipelineRepositoryService constructor(
     }
 
     /**
+     * 获取所有本次构建触发需要的信息
+     * 并在获取过程中增加并发锁，防止流水线发布版本期间触发读取脏数据
+     */
+    fun getBuildTriggerInfo(
+        projectId: String,
+        pipelineId: String,
+        version: Int?
+    ): Triple<PipelineInfo, PipelineResourceVersion, Boolean> {
+        PipelineReleaseLock(redisOperation, pipelineId).use {
+            val pipelineInfo = getPipelineInfo(
+                projectId = projectId,
+                pipelineId = pipelineId
+            ) ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+                params = arrayOf(pipelineId)
+            )
+            if (version == null) {
+                val defaultVersion = getPipelineResourceVersion(
+                    projectId = projectId,
+                    pipelineId = pipelineId
+                ) ?: throw ErrorCodeException(
+                    statusCode = Response.Status.NOT_FOUND.statusCode,
+                    errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
+                    params = arrayOf(pipelineId)
+                )
+                // 正式执行时，当前最新版本可能是草稿，则作为调试执行
+                return Triple(
+                    pipelineInfo,
+                    defaultVersion,
+                    defaultVersion.status == VersionStatus.COMMITTING
+                )
+            } else {
+                val targetResource = getPipelineResourceVersion(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    version = version
+                ) ?: throw ErrorCodeException(
+                    statusCode = Response.Status.NOT_FOUND.statusCode,
+                    errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
+                    params = arrayOf(version.toString())
+                )
+                return when (targetResource.status) {
+                    VersionStatus.COMMITTING -> {
+                        Triple(pipelineInfo, targetResource, true)
+                    }
+                    else -> {
+                        Triple(pipelineInfo, targetResource, false)
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * 获取编排版本的通用方法
      * 1 如果指定了[version]则一定按照version号查询版本
      * 2 如果没有指定版本，则通过[includeDraft]控制是否过滤掉草稿，获得最新版本流水线
@@ -1356,25 +1412,26 @@ class PipelineRepositoryService constructor(
         projectId: String,
         pipelineId: String,
         version: Int? = null,
-        includeDraft: Boolean? = false
+        includeDraft: Boolean? = false,
+        queryDslContext: DSLContext? = null
     ): PipelineResourceVersion? {
         // TODO 取不到则直接从旧版本表读，待下架
         val resource = if (version == null) {
             if (includeDraft == true) pipelineResourceVersionDao.getDraftVersionResource(
-                dslContext = dslContext,
+                dslContext = queryDslContext ?: dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId
             ) else null
         } else {
             pipelineResourceVersionDao.getVersionResource(
-                dslContext = dslContext,
+                dslContext = queryDslContext ?: dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = version,
                 includeDraft = includeDraft
             )
         } ?: pipelineResourceDao.getReleaseVersionResource(
-            dslContext = dslContext,
+            dslContext = queryDslContext ?: dslContext,
             projectId = projectId,
             pipelineId = pipelineId
         )
@@ -1405,7 +1462,7 @@ class PipelineRepositoryService constructor(
             }
         }
         pipelineCallbackDao.list(
-            dslContext = dslContext,
+            dslContext = queryDslContext ?: dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             event = null

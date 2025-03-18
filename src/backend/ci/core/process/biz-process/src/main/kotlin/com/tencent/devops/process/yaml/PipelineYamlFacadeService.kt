@@ -309,7 +309,8 @@ class PipelineYamlFacadeService @Autowired constructor(
         scmType: ScmType,
         filePath: String,
         content: String,
-        targetAction: CodeTargetAction
+        targetAction: CodeTargetAction,
+        targetBranch: String?
     ) {
         logger.info("check push yaml file|$userId|$projectId|$pipelineId|$repoHashId|$scmType|$version|$versionName")
         val repository = client.get(ServiceRepositoryResource::class).get(
@@ -320,7 +321,7 @@ class PipelineYamlFacadeService @Autowired constructor(
             errorCode = ProcessMessageCode.GIT_NOT_FOUND,
             params = arrayOf(repoHashId)
         )
-        checkPushParam(content, repoHashId, filePath, targetAction, versionName, projectId, pipelineId)
+        checkPushParam(content, repoHashId, filePath, targetAction, versionName, projectId, pipelineId, targetBranch)
         val setting = PacRepoSetting(repository = repository)
         val event = PipelineYamlManualEvent(
             userId = userId,
@@ -349,7 +350,8 @@ class PipelineYamlFacadeService @Autowired constructor(
         filePath: String,
         content: String,
         commitMessage: String,
-        targetAction: CodeTargetAction
+        targetAction: CodeTargetAction,
+        targetBranch: String?
     ): PushPipelineResult {
         logger.info("push yaml file|$userId|$projectId|$pipelineId|$repoHashId|$scmType|$version|$versionName")
         val repository = client.get(ServiceRepositoryResource::class).get(
@@ -360,7 +362,7 @@ class PipelineYamlFacadeService @Autowired constructor(
             errorCode = ProcessMessageCode.GIT_NOT_FOUND,
             params = arrayOf(repoHashId)
         )
-        checkPushParam(content, repoHashId, filePath, targetAction, versionName, projectId, pipelineId)
+        checkPushParam(content, repoHashId, filePath, targetAction, versionName, projectId, pipelineId, targetBranch)
         try {
             val setting = PacRepoSetting(repository = repository)
             val event = PipelineYamlManualEvent(
@@ -389,7 +391,8 @@ class PipelineYamlFacadeService @Autowired constructor(
                 filePath = filePath,
                 content = content,
                 commitMessage = commitMessage,
-                targetAction = targetAction
+                targetAction = targetAction,
+                targetBranch = targetBranch
             )
             return PushPipelineResult(
                 projectId = projectId,
@@ -411,7 +414,8 @@ class PipelineYamlFacadeService @Autowired constructor(
         targetAction: CodeTargetAction,
         versionName: String?,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        targetBranch: String?
     ) {
         if (content.isBlank()) {
             throw ErrorCodeException(
@@ -426,10 +430,20 @@ class PipelineYamlFacadeService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_YAML_FILE_NAME_FORMAT
             )
         }
-        if (targetAction != CodeTargetAction.COMMIT_TO_MASTER && versionName.isNullOrBlank()) {
+        if (
+            (targetAction != CodeTargetAction.COMMIT_TO_MASTER &&
+                    targetAction != CodeTargetAction.COMMIT_TO_BRANCH) &&
+            versionName.isNullOrBlank()
+        ) {
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_NULL,
                 params = arrayOf("versionName")
+            )
+        }
+        if (targetAction == CodeTargetAction.COMMIT_TO_BRANCH && targetBranch.isNullOrBlank()) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                params = arrayOf("targetBranch")
             )
         }
         pipelineYamlService.getPipelineYamlInfo(

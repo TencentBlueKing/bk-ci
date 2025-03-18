@@ -916,8 +916,10 @@ export default {
             })
         }
     },
-    reviewExcuteAtom: async ({ commit }, { projectId, pipelineId, buildId, elementId, action }) => {
-        return request.post(`/${PROCESS_API_URL_PREFIX}/user/quality/builds/${projectId}/${pipelineId}/${buildId}/${elementId}/qualityGateReview/${action}`).then(response => {
+    reviewExcuteAtom: async ({ commit }, { projectId, pipelineId, buildId, elementId, action, ruleIds }) => {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/quality/builds/${projectId}/${pipelineId}/${buildId}/${elementId}/qualityGateReview/${action}`, {
+            ruleIds
+        }).then(response => {
             return response.data
         })
     },
@@ -927,8 +929,10 @@ export default {
     releaseDraftPipeline ({ commit }, { projectId, pipelineId, version, params }) {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/releaseVersion/${version}`, params)
     },
-    async prefetchPipelineVersion ({ commit }, { projectId, pipelineId, version }) {
-        const res = await request.get(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/releaseVersion/${version}/prefetch`)
+    async prefetchPipelineVersion ({ commit }, { projectId, pipelineId, version, ...params }) {
+        const res = await request.get(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/releaseVersion/${version}/prefetch`, {
+            params
+        })
         return res.data
     },
     yamlNavToPipelineModel ({ commit }, { projectId, body, ...params }) {
@@ -968,6 +972,11 @@ export default {
     },
     updateBuildNo ({ commit }, { projectId, pipelineId, currentBuildNo }) {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/updateBuildNo`, { currentBuildNo })
+    },
+    requestScmBranchList ({ commit }, { projectId, repositoryHashId, ...searchParams }) {
+        return request.get(`/${PROCESS_API_URL_PREFIX}/user/scm/${projectId}/${repositoryHashId}/branches`, {
+            params: searchParams
+        })
     }
 
 }
