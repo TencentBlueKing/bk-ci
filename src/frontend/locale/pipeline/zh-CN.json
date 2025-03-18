@@ -481,7 +481,15 @@
     "create": "创建",
     "searchTemplate": "搜索模板",
     "install": "安装",
-    "import": "导入"
+    "import": "导入",
+    "allTemplate": "全部模板",
+    "stageTemplate": "Stage模板",
+    "jobTemplate": "Job模板",
+    "stepTemplate": "Step模板",
+    "deleteCustom": "确认删除自定义模板？",
+    "deleteStore": "确认删除研发商店模板？",
+    "templateToCustom": "确认将模板转为自定义？",
+    "customTip": "转为自定义模板后，该模板将不再受研发商店源模板的控制，可在当前项目进行编辑和维护；之前的模板版本历史和流水线实例也都将保留。"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",

@@ -52,3 +52,5 @@ export const PIPELINE_GROUP_ASIDE_WIDTH_CACHE = 'pipeline_group_aside_width_cach
 
 export const CACHE_TEMPLATE_TABLE_WIDTH_MAP = 'cache_tempalte_table_width_map'
 export const TEMPLATE_TABLE_COLUMN_CACHE = 'tempalte_table_column_catch'
+
+export const TEMPLATE_TYPE_CACHE = 'tempalte_type_catch'

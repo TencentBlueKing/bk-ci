@@ -482,7 +482,15 @@
     "create": "Create",
     "searchTemplate": "Search Template",
     "install": "Install",
-    "import": "Import"
+    "import": "Import",
+    "allTemplate": "All",
+    "stageTemplate": "Stage",
+    "jobTemplate": "Job",
+    "stepTemplate": "Step",
+    "deleteCustom": "Confirm delete custom template?",
+    "deleteStore": "Confirm delete development store template?",
+    "templateToCustom": "Confirm converting the template to custom?",
+    "customTip": "After converting to a custom template, it will no longer be controlled by the development store source template and can be edited and maintained in the current project; previous template version history and pipeline instances will also be retained."
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
