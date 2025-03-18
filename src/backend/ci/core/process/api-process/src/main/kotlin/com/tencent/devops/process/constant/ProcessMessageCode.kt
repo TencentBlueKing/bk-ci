@@ -362,7 +362,6 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_BUILD_START_PARAM_NO_EMPTY = "2101254" // 构建启动参数如果必填，不能为空
     const val ERROR_REPEATEDLY_START_VM = "2101255" // 重复启动构建机，当前构建机的状态为：{0}
     const val ERROR_PIPELINE_VARIABLES_OUT_OF_LENGTH = "2101256" // 流水线启动参数{0}超出4000长度限制
-    const val ERROR_TRIGGER_CONDITION_NOT_MATCH = "2101260" // 触发条件不匹配
 
     // 在 {0} 下，构建机复用互斥组节点 {1} 与被复用的 {2} 节点前后顺序不明，使用变量需明确前后顺序
     const val ERROR_AGENT_REUSE_MUTEX_VAR_ERROR = "2101257"
@@ -370,6 +369,7 @@ object ProcessMessageCode {
     const val ERROR_COMMIT_BRANCH_IS_NOT_EMPTY = "2101259" // 指定分支不能为空
     const val ERROR_NON_LATEST_RELEASE_VERSION = "2101266" // 当前构建版本已不是最新版本，请重新选择版本
     const val ERROR_REPO_HASH_ID_IS_NOT_EMPTY = "2101267" // 代码库信息不能为空
+    const val ERROR_TRIGGER_CONDITION_NOT_MATCH = "2101270" // 触发条件不匹配
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
