@@ -314,13 +314,14 @@ class TGitApiService @Autowired constructor(
         targetAction: CodeTargetAction,
         pipelineId: String,
         pipelineName: String,
-        versionName: String?
+        versionName: String?,
+        targetBranch: String?
     ): PacGitPushResult {
         val token = cred.toToken()
-        val branchName = if (targetAction == CodeTargetAction.COMMIT_TO_MASTER) {
-            defaultBranch
-        } else {
-            versionName!!
+        val branchName = when {
+            targetAction == CodeTargetAction.COMMIT_TO_MASTER -> defaultBranch
+            targetAction == CodeTargetAction.COMMIT_TO_BRANCH && targetBranch == defaultBranch -> defaultBranch
+            else -> versionName!!
         }
         createBranch(
             userId = userId,
@@ -342,8 +343,9 @@ class TGitApiService @Autowired constructor(
             content = content,
             commitMessage = commitMessage
         )
-        val mrUrl = if (targetAction == CodeTargetAction.PUSH_BRANCH_AND_REQUEST_MERGE ||
-            targetAction == CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE
+        val mrUrl = if (
+            targetAction == CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE ||
+            targetAction == CodeTargetAction.COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE
         ) {
             createYamlMergeRequest(
                 userId = userId,

@@ -25,14 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.enums
+package com.tencent.devops.dispatch.controller
 
-enum class CodeTargetAction(val desc: String) {
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.api.ServiceDispatchJobResource
+import com.tencent.devops.dispatch.pojo.AgentStartMonitor
+import com.tencent.devops.dispatch.service.ThirdPartyAgentMonitorService
+import org.springframework.beans.factory.annotation.Autowired
 
-    COMMIT_TO_MASTER("提交到主干"),
-    CHECKOUT_BRANCH_AND_REQUEST_MERGE("新建分支创建MR"),
-    COMMIT_TO_SOURCE_BRANCH("提交到原始版本分支"),
-    COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE("提交到原始版本分支创建MR"),
-    COMMIT_TO_BRANCH("提交到指定分支"),
-    ;
+@RestResource
+class ServiceDispatchJobResourceImpl @Autowired constructor(
+    val thirdPartyAgentMonitorService: ThirdPartyAgentMonitorService
+) : ServiceDispatchJobResource {
+    override fun monitor(agentStartMonitor: AgentStartMonitor) {
+        thirdPartyAgentMonitorService.tryRollBackQueueMonitor(agentStartMonitor)
+    }
 }

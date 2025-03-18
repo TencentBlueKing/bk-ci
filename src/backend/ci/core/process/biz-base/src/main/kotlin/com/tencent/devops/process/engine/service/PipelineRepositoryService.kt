@@ -1390,17 +1390,13 @@ class PipelineRepositoryService constructor(
                     errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
                     params = arrayOf(version.toString())
                 )
-                return if (targetResource.status == VersionStatus.COMMITTING) {
-                    Triple(pipelineInfo, targetResource, true)
-                } else {
-                    val releaseVersion = getPipelineResourceVersion(
-                        projectId = projectId,
-                        pipelineId = pipelineId
-                    ) ?: throw ErrorCodeException(
-                        statusCode = Response.Status.NOT_FOUND.statusCode,
-                        errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
-                    )
-                    Triple(pipelineInfo, releaseVersion, false)
+                return when (targetResource.status) {
+                    VersionStatus.COMMITTING -> {
+                        Triple(pipelineInfo, targetResource, true)
+                    }
+                    else -> {
+                        Triple(pipelineInfo, targetResource, false)
+                    }
                 }
             }
         }

@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
+import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
@@ -94,7 +95,16 @@ interface ServicePipelineVersionResource {
         pipelineId: String,
         @Parameter(description = "流水线编排版本", required = true)
         @PathParam("version")
-        version: Int
+        version: Int,
+        @Parameter(description = "提交动作", required = false)
+        @QueryParam("targetAction")
+        targetAction: CodeTargetAction? = null,
+        @Parameter(description = "代码库hashId", required = false)
+        @QueryParam("repoHashId")
+        repoHashId: String? = null,
+        @Parameter(description = "指定提交的分支", required = false)
+        @QueryParam("targetBranch")
+        targetBranch: String? = null
     ): Result<PrefetchReleaseResult>
 
     @Operation(summary = "将当前模板发布为正式版本")

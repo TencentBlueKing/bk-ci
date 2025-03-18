@@ -297,7 +297,7 @@ class ThirdPartyAgentBuildDao {
     ): List<AgentBuildInfo> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             val sub = dslContext.select(DSL.max(ID).`as`("max_id"))
-                .from(this).groupBy(AGENT_ID).asTable("sub")
+                .from(this).where(AGENT_ID.`in`(agentIds)).groupBy(AGENT_ID).asTable("sub")
             return dslContext.select(
                 PROJECT_ID,
                 AGENT_ID,

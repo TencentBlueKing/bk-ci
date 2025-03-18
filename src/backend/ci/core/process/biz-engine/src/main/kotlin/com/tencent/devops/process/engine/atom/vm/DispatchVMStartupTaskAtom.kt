@@ -46,6 +46,8 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.dispatch.api.ServiceDispatchJobResource
+import com.tencent.devops.dispatch.pojo.AgentStartMonitor
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -53,6 +55,7 @@ import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
 import com.tencent.devops.process.engine.atom.parser.DispatchTypeBuilder
+import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineInfo
@@ -392,6 +395,14 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                         ignoreEnvAgentIds = retryThirdAgentEnv.split(",").filter { it.isNotBlank() }.toSet()
                     )
                 }
+
+                try {
+                    thirdPartyAgentRollBackMonitor(task)
+                    // 修改轮训时间,3m30s方便命中dispath的3分钟频率
+                    task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = (3.5 * 60 * 1000).toInt()
+                } catch (ignore: Exception) {
+                    // 忽略掉因调用打印接口出错而导致调度失败的问题
+                }
             }
 
             AtomResponse(
@@ -401,5 +412,19 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 errorMsg = task.errorMsg
             )
         }
+    }
+
+    private fun thirdPartyAgentRollBackMonitor(task: PipelineBuildTask) {
+        val agentMonitor = AgentStartMonitor(
+            projectId = task.projectId,
+            pipelineId = task.pipelineId,
+            buildId = task.buildId,
+            vmSeqId = task.containerId,
+            containerHashId = task.containerHashId,
+            userId = task.starter,
+            executeCount = task.executeCount,
+            stepId = task.stepId
+        )
+        client.get(ServiceDispatchJobResource::class).monitor(agentStartMonitor = agentMonitor)
     }
 }

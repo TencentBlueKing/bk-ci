@@ -44,6 +44,7 @@ import com.tencent.devops.dispatch.constants.BK_TASK_FETCHING_TIMEOUT
 import com.tencent.devops.dispatch.constants.BK_UNLIMITED
 import com.tencent.devops.dispatch.constants.BK_WAS_RECENTLY_BUILT
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
+import com.tencent.devops.dispatch.pojo.AgentStartMonitor
 import com.tencent.devops.dispatch.pojo.TPAMonitorEvent
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
@@ -89,9 +90,6 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
             logger.warn("monitor|${event.toLog()}|executeCount not equal ${record.executeCount}")
             return false
         }
-
-        // 重置可能的失败任务，先停掉这个功能
-        // tryRollBackQueue(event, record)
 
         // #5806 已经不再排队，则退出监控
         if (PipelineTaskStatus.toStatus(record.status) != PipelineTaskStatus.QUEUE) {
@@ -232,22 +230,13 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
         return true
     }
 
-    private fun log(event: TPAMonitorEvent, sb: StringBuilder, tag: String) {
-        buildLogPrinter.addLine(
-            buildId = event.buildId,
-            message = sb.toString(),
-            tag = tag,
-            containerHashId = event.containerHashId,
-            executeCount = event.executeCount ?: 1,
-            jobId = null,
-            stepId = event.stepId
-        )
-        sb.clear()
-    }
-
-    private fun genBuildDetailUrl(projectId: String, pipelineId: String, buildId: String): String {
-        return HomeHostUtil.getHost(commonConfig.devopsHostGateway!!) +
-                "/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+    fun tryRollBackQueueMonitor(event: AgentStartMonitor) {
+        val record = thirdPartyAgentBuildDao.get(dslContext, event.buildId, event.vmSeqId) ?: return
+        if (record.executeCount != event.executeCount) {
+            logger.warn("tryRollBackQueueMonitor|$event|executeCount not equal ${record.executeCount}")
+            return
+        }
+        tryRollBackQueue(event, record)
     }
 
     /**
@@ -258,7 +247,7 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
      * 未解决的场景：
      *  本次不涉及构建机集群重新漂移指定其他构建机，需要重新设计。
      */
-    fun tryRollBackQueue(event: TPAMonitorEvent, record: TDispatchThirdpartyAgentBuildRecord) {
+    fun tryRollBackQueue(event: AgentStartMonitor, record: TDispatchThirdpartyAgentBuildRecord) {
         if (PipelineTaskStatus.toStatus(record.status) != PipelineTaskStatus.RUNNING) {
             return
         }
@@ -283,6 +272,37 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
                 log(event, sb, VMUtils.genStartVMTaskId(event.vmSeqId))
             }
         }
+    }
+
+    private fun log(event: TPAMonitorEvent, sb: StringBuilder, tag: String) {
+        buildLogPrinter.addLine(
+            buildId = event.buildId,
+            message = sb.toString(),
+            tag = tag,
+            containerHashId = event.containerHashId,
+            executeCount = event.executeCount ?: 1,
+            jobId = null,
+            stepId = event.stepId
+        )
+        sb.clear()
+    }
+
+    private fun log(event: AgentStartMonitor, sb: StringBuilder, tag: String) {
+        buildLogPrinter.addLine(
+            buildId = event.buildId,
+            message = sb.toString(),
+            tag = tag,
+            containerHashId = event.containerHashId,
+            executeCount = event.executeCount ?: 1,
+            jobId = null,
+            stepId = event.stepId
+        )
+        sb.clear()
+    }
+
+    private fun genBuildDetailUrl(projectId: String, pipelineId: String, buildId: String): String {
+        return HomeHostUtil.getHost(commonConfig.devopsHostGateway!!) +
+                "/console/pipeline/$projectId/$pipelineId/detail/$buildId"
     }
 
     companion object {

@@ -25,14 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.enums
+package com.tencent.devops.dispatch.api
 
-enum class CodeTargetAction(val desc: String) {
+import com.tencent.devops.dispatch.pojo.AgentStartMonitor
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-    COMMIT_TO_MASTER("提交到主干"),
-    CHECKOUT_BRANCH_AND_REQUEST_MERGE("新建分支创建MR"),
-    COMMIT_TO_SOURCE_BRANCH("提交到原始版本分支"),
-    COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE("提交到原始版本分支创建MR"),
-    COMMIT_TO_BRANCH("提交到指定分支"),
-    ;
+@Tag(name = "SERVICE_AGENT", description = "服务-Agent")
+@Path("/service/dipsatch/jobs")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceDispatchJobResource {
+
+    @Operation(summary = "监控")
+    @POST
+    @Path("/monitor")
+    fun monitor(
+        @Parameter(description = "agent 事件", required = true)
+        agentStartMonitor: AgentStartMonitor
+    )
 }

@@ -75,7 +75,7 @@ class MetricsUserService @Autowired constructor(
         LinkedList(MutableList(DELAY_LIMIT) { Collections.synchronizedList(LinkedList()) })
 
     /* 疑似构建状态未同步队列,以buildId为单位 */
-    val uncheckArray: MutableSet<String> = mutableSetOf()
+    val uncheckArray: MutableSet<String> = Collections.synchronizedSet(mutableSetOf())
 
     private val buildMetricsCache = Caffeine.newBuilder()
         .maximumSize(10000)
@@ -106,12 +106,12 @@ class MetricsUserService @Autowired constructor(
      */
     @Scheduled(cron = "0 0/10 * * * ?")
     fun checkBuildStatusJob() {
-        logger.info(
-            "=========>> check build status job start|${local.size}|" +
-                "${uncheckArray.size}|${registry.meters.size}<<========="
-        )
         // 生成快照
         val unchecks = uncheckArray.toList()
+        logger.info(
+            "=========>> check build status job start|${local.size}|${registry.meters.size}|" +
+                "${uncheckArray.size}|${unchecks.size}<<========="
+        )
         val ready2delete = mutableListOf<String>()
         unchecks.chunked(CHUNK_SIZE).forEach { chunk ->
             val res = kotlin.runCatching {
