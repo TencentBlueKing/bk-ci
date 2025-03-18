@@ -300,7 +300,9 @@ object CommonUtils {
      * @return 数字
      */
     fun generateNumber(
-        prefix: Int, suffix: Int, totalLength: Int
+        prefix: Int,
+        suffix: Int,
+        totalLength: Int
     ): Long {
         val baseLength = prefix.toString().length + suffix.toString().length
         if (totalLength < baseLength) {

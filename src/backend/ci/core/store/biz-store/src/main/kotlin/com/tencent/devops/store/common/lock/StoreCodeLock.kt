@@ -29,7 +29,6 @@ package com.tencent.devops.store.common.lock
 
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 class StoreCodeLock(redisOperation: RedisOperation, storeType: String, storeCode: String) :
     RedisLock(
