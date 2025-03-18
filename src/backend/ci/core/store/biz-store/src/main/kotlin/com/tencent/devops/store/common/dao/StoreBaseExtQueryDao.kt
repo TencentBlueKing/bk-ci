@@ -48,7 +48,7 @@ class StoreBaseExtQueryDao {
         dslContext: DSLContext,
         storeId: String,
         fieldName: String? = null
-    ): Result<TStoreBaseExtRecord>? {
+    ): Result<TStoreBaseExtRecord> {
         return with(TStoreBaseExt.T_STORE_BASE_EXT) {
             val conditions = mutableListOf(STORE_ID.eq(storeId))
             if (!fieldName.isNullOrBlank()) {

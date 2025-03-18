@@ -372,12 +372,10 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         )
         val bkStoreContext = handlerRequest.bkStoreContext
         bkStoreContext[AUTH_HEADER_USER_ID] = userId
-        val containerIdLock = StoreCodeLock(redisOperation, handlerRequest.storeType, handlerRequest.storeCode)
-        try {
-            containerIdLock.lock()
-            StoreDeleteHandlerChain(handlerList).handleRequest(handlerRequest)
-        } finally {
-            containerIdLock.unlock()
+        StoreCodeLock(redisOperation, handlerRequest.storeType, handlerRequest.storeCode).use { lock ->
+            if (lock.tryLock()) {
+                StoreDeleteHandlerChain(handlerList).handleRequest(handlerRequest)
+            }
         }
         return Result(
             status = bkStoreContext[STATUS]?.toString()?.toInt() ?: 0,

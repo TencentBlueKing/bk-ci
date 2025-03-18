@@ -102,7 +102,7 @@ class StoreBaseManageDao {
                 .set(CLASSIFY_ID, storeBaseDataPO.classifyId)
                 .set(BUS_NUM, storeBaseDataPO.busNum)
                 .set(MODIFIER, storeBaseDataPO.modifier)
-                .set(UPDATE_TIME, LocalDateTime.now())
+                .set(UPDATE_TIME, storeBaseDataPO.updateTime)
                 .execute()
         }
     }
