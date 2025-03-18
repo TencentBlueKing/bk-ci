@@ -269,110 +269,130 @@
 
   <bk-sideslider
     v-model:isShow="isShowSlider"
-    :title="sliderTitle"
+    :title="title"
     :quick-close="false"
     ext-cls="slider"
     width="960"
     @hidden="batchCancel"
+    :before-close="beforeClose"
   >
     <template #default>
-      <div class="slider-main">
-        <p class="main-desc">
-          <i18n-t keypath="已选择X个用户组" tag="div">
-            <span class="desc-primary">{{ checkData.totalCount }}</span>
-          </i18n-t>
-          <i18n-t v-if="checkData.inoperableCount" keypath="；其中X个用户组X，本次操作将忽略" tag="div">
-            <span class="desc-warn">{{ checkData.inoperableCount }}</span><span class="desc-warn">{{ unableText[batchFlag] }}</span>
-          </i18n-t>
-        </p>
-        <div>
-          <GroupTab
-            :source-list="selectSourceList"
-            :is-show-operation="false"
-            :aside-item="asideItem"
-            :batch-flag="batchFlag"
-            :page-limit-change="pageLimitChange"
-            :page-value-change="pageValueChange"
-          />
-        </div>
-      </div>
-      <div class="slider-footer">
-        <div class="footer-main">
-          <div v-if="batchFlag === 'renewal'">
-            <div class="main-line">
-              <p class="main-label">{{t("续期对象")}}</p>
-              <span class="main-text">{{t("用户")}}： {{userName}}</span>
-            </div>
-            <div class="main-line">
-              <p class="main-label">{{t("续期时长")}}</p>
-              <TimeLimit ref="renewalRef" @change-time="handleChangeTime" />
-            </div>
+      <div v-if="!isDetail" class="slider-content" :style="{height: invalidAuthorizationCount ? 'calc(100vh - 282px)' : 'calc(100vh - 226px)'}">
+        <div class="slider-main">
+          <p class="main-desc">
+            <i18n-t keypath="已选择X个用户组" tag="div">
+              <span class="desc-primary">{{ checkData.totalCount }}</span>
+            </i18n-t>
+
+            <template v-if="checkData.inoperableCount">
+              <i18n-t keypath="；其中X个用户组X，" tag="span">
+                <span class="desc-warn">{{ checkData.inoperableCount }}</span><span class="desc-warn">{{ t(unableText[batchFlag]) }}</span>
+              </i18n-t>
+              <span v-if="batchFlag === 'remove' && checkData.needToHandover">
+                {{ t("需先完成交接。") }}
+                <span class="remove-num remove-detail" @click="handleDetail">{{ t("查看详情") }}</span>
+              </span>
+              <span v-else>{{ t("本次操作将忽略。") }}</span>
+            </template>
+          </p>
+          <div>
+            <GroupTab
+              :source-list="selectSourceList"
+              :is-show-operation="false"
+              :aside-item="asideItem"
+              :batch-flag="batchFlag"
+              :page-limit-change="pageLimitChange"
+              :page-value-change="pageValueChange"
+            />
           </div>
-          <div :class="[{'main-line-remove': !invalidAuthorizationCount}, 'main-line']">
-            <div v-if="batchFlag === 'remove' || batchFlag === 'handover'">
-              <p
-                v-if="invalidAuthorizationCount"
-                class="main-text"
-              >
-                <span v-if="batchFlag === 'remove'">{{ t('退出以上用户组，将导致') }}</span>
-                <span v-if="batchFlag === 'handover'">{{ t('移交以上用户组，将导致') }}</span>
-
-                <span v-for="(item, index) in activeItems" :key="item.key">
-                  <i18n-t :keypath="item.keypath" tag="span">
-                    <span class="remove-num">{{ item.count }}</span>
-                  </i18n-t>
-                  <span>{{ index === activeItems.length - 1 ? '。' : '，' }}</span>
-                </span>
-                
-                <span v-if="batchFlag === 'remove'">{{ t('请填写交接人，完成交接后才能成功退出。') }}</span>
-                
-                <span v-if="batchFlag === 'handover'">{{ t('请确认是否同步移交授权。') }}</span>
-              </p>
-              <p v-else class="main-label-remove">
-                <i18n-t v-if="batchFlag === 'remove'" keypath="确认从以上X个用户组中移出X吗？" tag="div">
-                  <span class="remove-num">{{ checkData.operableCount }}</span><span class="remove-person">{{ userName }}</span>
-                </i18n-t>
-              </p>
+        </div>
+        <div class="slider-footer" :style="{height: invalidAuthorizationCount || batchFlag === 'renewal' ? '230px' : '170px'}">
+          <div class="footer-main" :class="invalidAuthorizationCount ? '' : 'main-line-handover'">
+            <div v-if="batchFlag === 'renewal'">
+              <div class="main-line">
+                <p class="main-label">{{t("续期对象")}}</p>
+                <span class="main-text">{{t("用户")}}： {{userName}}</span>
+              </div>
+              <div class="main-line">
+                <p class="main-label">{{t("续期时长")}}</p>
+                <TimeLimit ref="renewalRef" @change-time="handleChangeTime" />
+              </div>
             </div>
-
-            <div
-              class="main-line main-line-handover"
-              v-if="batchFlag === 'handover' || (batchFlag === 'remove' && checkData.needToHandover)"
-            >
-              <p class="main-label">{{t("移交给")}}</p>
-              <bk-form
-                ref="formRef"
-                :rules="rules"
-                :model="handOverForm"
-              >
-                <bk-form-item
-                  required
-                  property="name"
+            <div class="main-line">
+              <div v-if="batchFlag === 'remove' || batchFlag === 'handover'">
+                <p
+                  v-if="invalidAuthorizationCount"
+                  class="main-text"
                 >
-                  <project-user-selector
-                    class="selector-input"
-                    @change="handleChangeOverFormName"
-                    @removeAll="handleClearOverFormName"
-                    :key="isShowSlider"
+                  <span v-if="batchFlag === 'remove'">{{ t('移出以上用户组，将导致') }}</span>
+                  <span v-if="batchFlag === 'handover'">{{ t('移交以上用户组，将导致') }}</span>
+
+                  <span v-for="(item, index) in activeItems" :key="item.key">
+                    <i18n-t :keypath="item.keypath" tag="span">
+                      <span class="remove-num">{{ item.count }}</span>
+                    </i18n-t>
+                    <span>{{ index === activeItems.length - 1 ? '。' : '，' }}</span>
+                  </span>
+                  
+                  <span class="remove-num remove-detail" @click="handleDetail">{{ t("查看详情") }}</span>
+                  <p v-if="batchFlag === 'remove'">{{ t('请填写交接人，完成交接后才能成功移出。') }}</p>
+                  <p v-if="batchFlag === 'handover'">{{ t('请确认是否同步移交授权。') }}</p>
+                </p>
+                <p v-else-if="batchFlag === 'remove'" class="main-label-remove">
+                  <i18n-t keypath="确认从以上X个用户组中移出X吗？" tag="span">
+                    <span class="remove-num">{{ checkData.operableCount }}</span><span class="remove-person">{{ userName }}</span>
+                  </i18n-t>
+                </p>
+              </div>
+
+              <div v-if="batchFlag === 'handover' || (batchFlag === 'remove' && checkData.needToHandover)"
+              >
+                <p class="main-label">{{t("移交给")}}</p>
+                <bk-form
+                  ref="formRef"
+                  :rules="rules"
+                  :model="handOverForm"
+                >
+                  <bk-form-item
+                    required
+                    property="name"
                   >
-                  </project-user-selector>
-                </bk-form-item>
-              </bk-form>
+                    <project-user-selector
+                      class="selector-input"
+                      @change="handleChangeOverFormName"
+                      @removeAll="handleClearOverFormName"
+                      :key="isShowSlider"
+                    >
+                    </project-user-selector>
+                  </bk-form-item>
+                </bk-form>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="footer-btn">
-          <bk-button
-            :disabled="!checkData.canHandoverCount && !checkData.operableCount"
-            :theme="batchFlag === 'remove' && !checkData.canHandoverCount && checkData.operableCount ? 'danger' : 'primary'"
-            @click="batchConfirm(batchFlag)"
-            :loading="batchBtnLoading"
-          >
-            {{batchFlag === 'remove' && checkData.needToHandover ? t("确认交接") : t(btnTexts[batchFlag])}}
-          </bk-button>
-          <bk-button @click="batchCancel">{{t("取消")}}</bk-button>
+          <div class="footer-btn">
+            <bk-button
+              :disabled="!checkData.canHandoverCount && !checkData.operableCount"
+              :theme="batchFlag === 'remove' && !checkData.canHandoverCount && checkData.operableCount ? 'danger' : 'primary'"
+              @click="batchConfirm(batchFlag)"
+              :loading="batchBtnLoading"
+            >
+              {{batchFlag === 'remove' && checkData.needToHandover ? t("确认交接") : t(btnTexts[batchFlag])}}
+            </bk-button>
+            <bk-button @click="batchCancel">{{t("取消")}}</bk-button>
+          </div>
         </div>
       </div>
+      <div class="slider-detail" v-else>
+        <DetailGroupTab
+          :source-list="detailSourceList"
+          :page-limit-change="detailPageLimitChange"
+          :page-value-change="detailPageValueChange"
+          @collapse-click="detailCollapseClick"
+        />
+      </div>
+    </template>
+    <template #footer>
+      <bk-button v-if="isDetail" class="go-back" @click="goBack">{{t("返回")}}</bk-button>
     </template>
   </bk-sideslider>
 </template>
@@ -380,8 +400,8 @@
 <script setup name="ManageAll">
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
-import { Message } from 'bkui-vue';
-import { ref, onMounted, computed, watch } from 'vue';
+import { Message, InfoBox } from 'bkui-vue';
+import { ref, onMounted, computed, watch, h } from 'vue';
 import ManageAside from './manage-aside.vue';
 import GroupTab from './group-tab.vue';
 import TimeLimit from './time-limit.vue';
@@ -393,6 +413,9 @@ import useManageAside from "@/store/manageAside";
 import manageSearch from "./manage-search.vue";
 import { storeToRefs } from 'pinia';
 import { batchOperateTypes, btnTexts, batchTitle, batchMassageText } from "@/utils/constants.js";
+import userDetailGroupTable from "@/store/userDetailGroupTable";
+import DetailGroupTab from "./detail-group-tab.vue";
+import { AngleRight  } from 'bkui-vue/lib/icon';
 
 const batchBtnLoading = ref(false);
 const { t } = useI18n();
@@ -433,6 +456,7 @@ const manageAsideRef = ref(null);
 const manageSearchRef = ref(null);
 const groupTableStore = userGroupTable();
 const manageAsideStore = useManageAside();
+const detailGroupTable = userDetailGroupTable();
 const operatorLoading = ref(false);
 const userName = computed(() => {
   if(asideItem.value){
@@ -446,7 +470,7 @@ const userName = computed(() => {
 const unableText = {
   renewal: t('无法续期'),
   handover: t('无法移交'),
-  remove: t('无法移出'),
+  remove: t('无法直接移出'),
 }
 const {
   sourceList,
@@ -494,6 +518,35 @@ const {
   handleAsideRemoveConfirm,
   getProjectMembers,
 } = manageAsideStore;
+
+const {
+  detailSourceList
+} = storeToRefs(detailGroupTable);
+const {
+  fetchDetailList,
+  detailCollapseClick,
+  detailPageLimitChange,
+  detailPageValueChange,
+} = detailGroupTable;
+const isDetail = ref(false);
+const title = computed(() => {
+  if (!isDetail.value) {
+    return sliderTitle.value
+  } else {
+    return h('p', { style: { display: 'flex', alignItems: 'center' } },
+      [
+        h('span', {
+          style: { color: '#3A84FF', cursor: 'pointer' },
+          onClick () {
+            goBack()
+          }
+        }, sliderTitle.value),
+        h(AngleRight, { style: { color: '#C4C6CC', fontSize: '22px', magin: '0 5px' } } ),
+        h('span',{ style: { fontSize: '14px', color: '#313238' } },  t('待移交详情'))
+      ]
+    )
+  }
+})
 const activeItems = computed(() => {
   const items = [
     {
@@ -673,9 +726,26 @@ async function batchOperator (flag) {
     loadingMap[flag].value = false;
   }
 }
+function beforeClose() {
+  return new Promise((resolve, reject) => {
+    if(isDetail.value) {
+      InfoBox({
+        title: t('批量移出操作尚未完成，确认放弃操作吗？'),
+        infoType: 'warning',
+        cancelText: t('取消'),
+        confirmText: t('确定'),
+        onConfirm: () => resolve(true),
+        onCancel: () => reject(),
+      });
+    } else {
+      resolve(true);
+    }
+  });
+}
 
 function batchCancel () {
   cancelClear(batchFlag.value);
+  isDetail.value = false;
 }
 /**
  * 批量操作请求参数获取
@@ -801,6 +871,32 @@ function handleClearOverFormName () {
 
 function closeDeptListPermissionDialog () {
   showDeptListPermissionDialog.value = false
+}
+/**
+ * 查看详情
+ */
+ async function handleDetail() {
+  const params = formatSelectParams();
+  delete params.renewalDuration;
+  isDetail.value = true;
+
+  const batchOperateType = batchFlag.value === "handover" ? "HANDOVER": batchFlag.value === "remove" ? "REMOVE" : ''
+  const detailParams = {
+    projectCode: projectId.value,
+    queryChannel: "PREVIEW",
+    batchOperateType: batchOperateType,
+    previewConditionReq: {
+      ...params,
+      operateChannel: 'MANAGER'
+    },
+  }
+  fetchDetailList(detailParams);
+}
+/**
+ * 返回
+ */
+function goBack() {
+  isDetail.value = false;
 }
 </script>
 
@@ -1019,13 +1115,8 @@ function closeDeptListPermissionDialog () {
 
 .slider{
 
-  ::v-deep .bk-modal-body {
-    background-color: #F0F1F5;
-  }
-
-  ::v-deep .bk-sideslider-content {
+  .slider-content {
     overflow: auto;
-    height: calc(100vh - 282px);
 
       &::-webkit-scrollbar-thumb {
         background-color: #c4c6cc !important;
@@ -1039,8 +1130,35 @@ function closeDeptListPermissionDialog () {
         width: 8px !important;
         height: 8px !important;
       }
-
   }
+
+  .slider-detail {
+    margin: 15px 0 24px;
+    overflow: auto;
+    height: calc(100vh - 135px);
+    &::-webkit-scrollbar-thumb {
+      background-color: #c4c6cc !important;
+      border-radius: 5px !important;
+      &:hover {
+        background-color: #979ba5 !important;
+      }
+    }
+
+    &::-webkit-scrollbar {
+      width: 8px !important;
+      height: 8px !important;
+    }
+  }
+
+  .go-back {
+    position: absolute;
+    bottom: 5px;
+  }
+
+  ::v-deep .bk-modal-body {
+    background-color: #F0F1F5;
+  }
+
   .slider-main {
     margin: 16px 24px;
 
@@ -1070,7 +1188,6 @@ function closeDeptListPermissionDialog () {
     bottom: 0;
     z-index: 9;
     width: 960px;
-    height: 230px;
     padding: 24px 48px;
     background: #FFFFFF;
     box-shadow: 0 -1px 6px 0 #DCDEE5;
@@ -1091,7 +1208,7 @@ function closeDeptListPermissionDialog () {
 
         .main-text {
           font-size: 14px;
-          margin-bottom: 24px;
+          margin-bottom: 20px;
           color: #63656E;
         }
 
@@ -1103,15 +1220,10 @@ function closeDeptListPermissionDialog () {
           margin: 0 !important;
         }
 
-        .remove-num {
-          color: #3a84ff;
-          font-size: 14px;
-          font-weight: 700;
-        }
-
         .main-label-remove {
           color: #63656e;
           font-size: 16px;
+          margin-top: 24px;
 
           .remove-person {
             color: #63656e;
@@ -1124,16 +1236,11 @@ function closeDeptListPermissionDialog () {
       .main-line-handover {
         margin-top: 26px;
       }
-
-      .main-line-remove {
-        margin-top: 40px;
-      }
     }
 
     .footer-btn {
       position: absolute;
-      bottom: 24px;
-      margin-top: 24px;
+      bottom: 20px;
 
       .bk-button {
         margin-right: 8px;
@@ -1144,5 +1251,15 @@ function closeDeptListPermissionDialog () {
 
 .text-blue {
   color: #699DF4;
+}
+
+.remove-num {
+  color: #3a84ff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.remove-detail {
+  cursor: pointer;
 }
 </style>

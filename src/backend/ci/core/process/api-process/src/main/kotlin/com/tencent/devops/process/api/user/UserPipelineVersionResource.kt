@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
+import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.pojo.BuildNoUpdateReq
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
@@ -94,7 +95,16 @@ interface UserPipelineVersionResource {
         pipelineId: String,
         @Parameter(description = "流水线编排版本", required = true)
         @PathParam("version")
-        version: Int
+        version: Int,
+        @Parameter(description = "提交动作", required = false)
+        @QueryParam("targetAction")
+        targetAction: CodeTargetAction? = null,
+        @Parameter(description = "代码库hashId", required = false)
+        @QueryParam("repoHashId")
+        repoHashId: String? = null,
+        @Parameter(description = "指定提交的分支", required = false)
+        @QueryParam("targetBranch")
+        targetBranch: String? = null
     ): Result<PrefetchReleaseResult>
 
     @Operation(summary = "将当前草稿发布为正式版本")
@@ -231,6 +241,9 @@ interface UserPipelineVersionResource {
         @Parameter(description = "搜索字段：变更说明", required = false)
         @QueryParam("description")
         description: String? = null,
+        @Parameter(description = "仅查询可执行构建的版本: 最新正式版本或者分支版本", required = false)
+        @QueryParam("buildOnly")
+        buildOnly: Boolean? = false,
         @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,

@@ -1,148 +1,56 @@
-package com.tencent.devops.process.service
+package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.EnvUtils
-import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
-import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
 import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
-import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.engine.pojo.PipelineModelTask
+import com.tencent.devops.process.pojo.pipeline.SubPipelineRef
+import com.tencent.devops.process.pojo.pipeline.SubPipelineTaskParam
 import com.tencent.devops.process.utils.PipelineVarUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 import java.util.regex.Pattern
-import javax.ws.rs.core.Response
 
+/**
+ * 子流水线节点服务
+ */
 @Service
-class SubPipelineRepositoryService @Autowired constructor(
+class SubPipelineTaskService @Autowired constructor(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
     private val pipelineResDao: PipelineResourceDao,
+    @Lazy
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelinePermissionService: PipelinePermissionService
+    private val subPipelineRefService: SubPipelineRefService
 ) {
-
     /**
-     * 检查当前流水线下所有子流水线插件的权限
-     * @param projectId 项目id
-     * @param pipelineId 流水线id
-     * @param userId 目标用户id
-     * @param permission 目标权限
+     * 支持的元素
      */
-    @SuppressWarnings("NestedBlockDepth")
-    fun checkSubPipelinePermission(
-        projectId: String,
-        pipelineId: String,
-        userId: String,
-        permission: AuthPermission
-    ): List<ElementCheckResult> {
-        val model = getModel(projectId, pipelineId) ?: throw ErrorCodeException(
-            statusCode = Response.Status.NOT_FOUND.statusCode,
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
-        )
-        val checkResults = mutableListOf<ElementCheckResult>()
-        val stages = model.stages
-        val contextMap = getContextMap(stages)
-        stages.subList(1, stages.size).forEach { stage ->
-            stage.containers.forEach { container ->
-                container.elements.forEach { element ->
-                    if (supportElement(element)) {
-                        checkElementPermission(
-                            projectId = projectId,
-                            stageName = stage.name ?: "",
-                            containerName = container.name,
-                            element = element,
-                            contextMap = contextMap,
-                            userId = userId,
-                            permission = permission
-                        )?.let {
-                            checkResults.add(it)
-                        }
-                    }
-                }
-            }
-        }
-        return checkResults
-    }
-
-    /**
-     * 检查用户是否有插件的目标流水线的指定权限
-     * @param userId 目标用户
-     * @param permission 目标权限
-     */
-    @SuppressWarnings("LongParameterList", "LongMethod")
-    fun checkElementPermission(
-        projectId: String,
-        stageName: String,
-        containerName: String,
-        element: Element,
-        contextMap: Map<String, String>,
-        userId: String,
-        permission: AuthPermission
-    ): ElementCheckResult? {
-        val subPipelineInfo = getSubPipelineInfo(
-            projectId = projectId,
-            element = element,
-            contextMap = contextMap
-        )
-        if (subPipelineInfo == null) {
-            return null
-        }
-        val (subProjectId, subPipelineId, subPipelineName) = subPipelineInfo
-        logger.info(
-            "check the sub-pipeline permissions[${permission.name}]|" +
-                    "project:$projectId|elementId:${element.id}|userId:$userId|" +
-                    "subProjectId:$subProjectId|subPipelineId:$subPipelineId"
-        )
-        // 校验流水线修改人是否有子流水线执行权限
-        val checkPermission = pipelinePermissionService.checkPipelinePermission(
-            userId = userId,
-            projectId = subProjectId,
-            pipelineId = subPipelineId,
-            permission = permission
-        )
-        val pipelinePermissionUrl = "/console/pipeline/$subProjectId/$subPipelineId/history"
-        return if (checkPermission) {
-            null
-        } else {
-            ElementCheckResult(
-                result = false,
-                errorTitle = I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_TITLE,
-                    params = arrayOf(userId)
-                ),
-                errorMessage = I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_MESSAGE,
-                    params = arrayOf(
-                        stageName,
-                        containerName,
-                        element.name,
-                        pipelinePermissionUrl,
-                        subPipelineName
-                    )
-                )
-            )
-        }
-    }
-
     fun supportElement(element: Element) = element is SubPipelineCallElement ||
             (element is MarketBuildAtomElement && element.getAtomCode() == SUB_PIPELINE_EXEC_ATOM_CODE) ||
             (element is MarketBuildLessAtomElement && element.getAtomCode() == SUB_PIPELINE_EXEC_ATOM_CODE)
 
-    fun getSubPipelineInfo(
+    /**
+     * 子流水线插件atomCode
+     */
+    fun supportAtomCode(atomCode: String) = (atomCode == SUB_PIPELINE_EXEC_ATOM_CODE) ||
+            atomCode == SubPipelineCallElement.classType
+
+    @Suppress("UNCHECKED_CAST")
+    fun getSubPipelineParam(
         projectId: String,
         element: Element,
         contextMap: Map<String, String>
@@ -178,17 +86,26 @@ class SubPipelineRepositoryService @Autowired constructor(
         projectId: String,
         element: SubPipelineCallElement,
         contextMap: Map<String, String>
-    ): Triple<String, String, String>? {
+    ): SubPipelineTaskParam? {
         val subPipelineType = element.subPipelineType ?: SubPipelineType.ID
         val subPipelineId = element.subPipelineId
         val subPipelineName = element.subPipelineName
-        return getSubPipelineInfo(
+        val (finalProjectId, finalPipelineId, finalPipeName) = getSubPipelineParam(
             projectId = projectId,
             subProjectId = projectId,
             subPipelineType = subPipelineType,
             subPipelineId = subPipelineId,
             subPipelineName = subPipelineName,
             contextMap = contextMap
+        ) ?: return null
+        return SubPipelineTaskParam(
+            taskProjectId = projectId,
+            taskPipelineType = subPipelineType,
+            taskPipelineId = subPipelineId,
+            taskPipelineName = subPipelineName,
+            projectId = finalProjectId,
+            pipelineId = finalPipelineId,
+            pipelineName = finalPipeName
         )
     }
 
@@ -196,7 +113,7 @@ class SubPipelineRepositoryService @Autowired constructor(
         projectId: String,
         inputMap: Map<String, Any>,
         contextMap: Map<String, String>
-    ): Triple<String, String, String>? {
+    ): SubPipelineTaskParam? {
         val subProjectId = inputMap.getOrDefault("projectId", projectId).toString()
         val subPipelineTypeStr = inputMap.getOrDefault("subPipelineType", "ID")
         val subPipelineName = inputMap["subPipelineName"]?.toString()
@@ -206,18 +123,27 @@ class SubPipelineRepositoryService @Autowired constructor(
             "NAME" -> SubPipelineType.NAME
             else -> return null
         }
-        return getSubPipelineInfo(
+        val (finalProjectId, finalPipelineId, finalPipeName) = getSubPipelineParam(
             projectId = projectId,
             subProjectId = subProjectId,
             subPipelineType = subPipelineType,
             subPipelineId = subPipelineId,
             subPipelineName = subPipelineName,
             contextMap = contextMap
+        ) ?: return null
+        return SubPipelineTaskParam(
+            taskProjectId = subProjectId,
+            taskPipelineType = subPipelineType,
+            taskPipelineId = subPipelineId,
+            taskPipelineName = subPipelineName,
+            projectId = finalProjectId,
+            pipelineId = finalPipelineId,
+            pipelineName = finalPipeName
         )
     }
 
     @SuppressWarnings("LongParameterList")
-    private fun getSubPipelineInfo(
+    private fun getSubPipelineParam(
         projectId: String,
         subProjectId: String,
         subPipelineType: SubPipelineType,
@@ -278,11 +204,12 @@ class SubPipelineRepositoryService @Autowired constructor(
     /**
      * 获取最新版流水线编排
      */
-    private fun getModel(projectId: String, pipelineId: String): Model? {
+    fun getModel(projectId: String, pipelineId: String): Model? {
         var model: Model? = null
         val modelString = pipelineResDao.getLatestVersionModelString(dslContext, projectId, pipelineId)
         if (modelString.isNullOrBlank()) {
             logger.warn("model not found: [$projectId|$pipelineId]")
+            return null
         }
         try {
             model = objectMapper.readValue(modelString, Model::class.java)
@@ -292,7 +219,7 @@ class SubPipelineRepositoryService @Autowired constructor(
         return model
     }
 
-    private fun getContextMap(stages: List<Stage>): Map<String, String> {
+    fun getContextMap(stages: List<Stage>): Map<String, String> {
         val triggerContainer = stages[0].containers[0] as TriggerContainer
         val variables = triggerContainer.params.associate { param ->
             param.id to param.defaultValue.toString()
@@ -300,8 +227,125 @@ class SubPipelineRepositoryService @Autowired constructor(
         return PipelineVarUtil.fillVariableMap(variables)
     }
 
+    fun modelTaskConvertSubPipelineRef(
+        model: Model,
+        channel: String,
+        enableModelTasks: List<PipelineModelTask>,
+        validRefList: MutableList<SubPipelineRef>,
+        invalidTaskIds: MutableSet<String>
+    ) {
+        enableModelTasks.forEach {
+            val subPipelineTaskParam = getSubPipelineParam(
+                projectId = it.projectId,
+                element = JsonUtil.mapTo(it.taskParams, Element::class.java),
+                contextMap = getContextMap(model.stages)
+            )
+            if (subPipelineTaskParam == null) {
+                // 记录无效数据，插件存在无效参数的情况
+                invalidTaskIds.add(it.taskId)
+                return@forEach
+            }
+            validRefList.add(
+                SubPipelineRef(
+                    projectId = it.projectId,
+                    pipelineId = it.pipelineId,
+                    pipelineName = model.name,
+                    channel = channel,
+                    element = EmptyElement(id = it.taskId, name = it.taskName),
+                    taskPosition = it.taskPosition,
+                    subPipelineId = subPipelineTaskParam.pipelineId,
+                    subProjectId = subPipelineTaskParam.projectId,
+                    subPipelineName = subPipelineTaskParam.pipelineName,
+                    taskProjectId = subPipelineTaskParam.taskProjectId,
+                    taskPipelineType = subPipelineTaskParam.taskPipelineType,
+                    taskPipelineId = subPipelineTaskParam.taskPipelineId,
+                    taskPipelineName = subPipelineTaskParam.taskPipelineName
+                )
+            )
+        }
+    }
+
+    fun batchDelete(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ) {
+        subPipelineRefService.deleteAll(
+            transaction = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+    }
+
+    fun batchAdd(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        model: Model,
+        channel: String,
+        modelTasks: List<PipelineModelTask>
+    ) {
+        // 启用状态的插件
+        val enableModelTasks = modelTasks.filter { it.taskEnable() }
+        // 有效的引用信息
+        val validRefList = mutableListOf<SubPipelineRef>()
+        // 无效的引用信息
+        val invalidTaskIds = mutableSetOf<String>()
+        // 转换为引用信息
+        modelTaskConvertSubPipelineRef(
+            model = model,
+            channel = channel,
+            enableModelTasks = enableModelTasks,
+            validRefList = validRefList,
+            invalidTaskIds = invalidTaskIds
+        )
+        // 清理无效数据
+        cleanUpInvalidRefs(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            existsTaskIds = enableModelTasks.map { it.taskId }.toSet(),
+            invalidTaskIds = invalidTaskIds
+        )
+        // 添加并更新引用信息
+        subPipelineRefService.batchAdd(
+            transaction = dslContext,
+            subPipelineRefList = validRefList
+        )
+    }
+
+    /**
+     * 清理无效引用信息
+     * 1. 已禁用的插件引用
+     * 2. 无效配置的插件引用
+     */
+    private fun cleanUpInvalidRefs(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        existsTaskIds: Set<String>,
+        invalidTaskIds: Set<String>
+    ) {
+        subPipelineRefService.cleanUpInvalidRefs(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            existsTaskIds = existsTaskIds,
+            invalidTaskIds = invalidTaskIds
+        )
+    }
+
+    /**
+     * 校验是否为子流水线插件, 同时校验启用状态
+     */
+    private fun PipelineModelTask.taskEnable(): Boolean {
+        val elementEnable = (this.stageEnable && this.containerEnable && this.additionalOptions?.enable ?: true)
+        val supportElement = supportAtomCode(this.atomCode) || this.taskAtom == SubPipelineCallElement.TASK_ATOM
+        return elementEnable && supportElement
+    }
+
     companion object {
-        private val logger = LoggerFactory.getLogger(SubPipelineRepositoryService::class.java)
+        val logger = LoggerFactory.getLogger(SubPipelineTaskService::class.java)
         private val PIPELINE_ID_PATTERN = Pattern.compile("(p-)?[a-f\\d]{32}")
         private const val SUB_PIPELINE_EXEC_ATOM_CODE = "SubPipelineExec"
     }

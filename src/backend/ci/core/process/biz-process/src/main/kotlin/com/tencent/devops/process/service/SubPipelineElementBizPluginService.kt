@@ -27,14 +27,20 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.container.Stage
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
-import com.tencent.devops.common.pipeline.pojo.element.atom.ElementCheckResult
+import com.tencent.devops.common.pipeline.pojo.element.atom.ElementBatchCheckParam
+import com.tencent.devops.common.pipeline.pojo.element.atom.ElementHolder
+import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedErrors
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PIPELINE_ELEMENT_CHECK_FAILED_MESSAGE
 import com.tencent.devops.process.engine.atom.plugin.IElementBizPluginService
+import com.tencent.devops.process.pojo.pipeline.SubPipelineIdAndName
+import com.tencent.devops.process.engine.service.SubPipelineRefService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -44,7 +50,8 @@ import org.springframework.stereotype.Service
  */
 @Service
 class SubPipelineElementBizPluginService @Autowired constructor(
-    private val subPipelineRepositoryService: SubPipelineRepositoryService
+    private val subPipelineCheckService: SubPipelineCheckService,
+    private val subPipelineRefService: SubPipelineRefService
 ) : IElementBizPluginService {
 
     companion object {
@@ -52,49 +59,101 @@ class SubPipelineElementBizPluginService @Autowired constructor(
     }
 
     override fun supportElement(element: Element): Boolean {
-        return subPipelineRepositoryService.supportElement(element)
+        return subPipelineCheckService.supportElement(element)
     }
 
-    override fun afterCreate(
-        element: Element,
-        projectId: String,
-        pipelineId: String,
-        pipelineName: String,
-        userId: String,
-        channelCode: ChannelCode,
-        create: Boolean,
-        container: Container
-    ) = Unit
+    override fun supportAtomCode(atomCode: String): Boolean {
+        return subPipelineCheckService.supportAtomCode(atomCode)
+    }
 
-    override fun beforeDelete(element: Element, param: BeforeDeleteParam) = Unit
+    override fun beforeDelete(element: Element, param: BeforeDeleteParam) {
+        element.id?.let {
+            subPipelineRefService.delete(
+                projectId = param.projectId,
+                pipelineId = param.pipelineId,
+                taskId = it
+            )
+        }
+    }
 
-    @Suppress("UNCHECKED_CAST")
-    override fun check(
-        projectId: String?,
-        userId: String,
-        stage: Stage,
-        container: Container,
-        element: Element,
-        contextMap: Map<String, String>,
-        appearedCnt: Int,
-        isTemplate: Boolean,
-        oauthUser: String?
-    ): ElementCheckResult {
-        logger.info(
-            "check the sub-pipeline permissions when deploying pipeline|projectId:$projectId|" +
-                    "element:${element.id}|contextMap:$contextMap|appearedCnt:$appearedCnt|isTemplate:$isTemplate|" +
-                    "oauthUser:$oauthUser|userId:$userId"
-        )
-        // 模板保存时不需要校验子流水线权限
-        if (isTemplate || projectId.isNullOrBlank()) return ElementCheckResult(true)
-        return subPipelineRepositoryService.checkElementPermission(
-            projectId = projectId,
-            stageName = stage.name ?: "",
-            containerName = container.name,
-            element = element,
-            contextMap = contextMap,
-            permission = AuthPermission.EXECUTE,
-            userId = oauthUser ?: userId
-        ) ?: ElementCheckResult(true)
+    override fun batchCheck(elements: List<ElementHolder>, param: ElementBatchCheckParam) {
+        if (param.projectId.isNullOrBlank() || param.isTemplate) return
+        val errors = mutableListOf<PipelineCheckFailedErrors.ErrorInfo>()
+        with(param) {
+            val subPipelineElementMap = subPipelineCheckService.distinctSubPipeline(
+                projectId = projectId!!,
+                elements = elements,
+                contextMap = contextMap
+            )
+            checkPermission(
+                param = param,
+                subPipelineElementMap = subPipelineElementMap,
+                errors = errors
+            )
+            checkCycle(
+                param = param,
+                subPipelineElementMap = subPipelineElementMap,
+                errors = errors
+            )
+        }
+        if (errors.isNotEmpty()) {
+            val failedReason = PipelineCheckFailedErrors(
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = BK_PIPELINE_ELEMENT_CHECK_FAILED_MESSAGE
+                ),
+                errors = errors
+            )
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_ELEMENT_CHECK_FAILED,
+                params = arrayOf(JsonUtil.toJson(failedReason))
+            )
+        }
+    }
+
+    fun checkPermission(
+        param: ElementBatchCheckParam,
+        subPipelineElementMap: Map<SubPipelineIdAndName, MutableList<ElementHolder>>,
+        errors: MutableList<PipelineCheckFailedErrors.ErrorInfo>
+    ) {
+        with(param) {
+            val errorDetails = subPipelineCheckService.batchCheckPermission(
+                userId = oauthUser ?: userId,
+                permission = AuthPermission.EXECUTE,
+                subPipelineElementMap = subPipelineElementMap
+            )
+            if (errorDetails.isNotEmpty()) {
+                val errorInfo = PipelineCheckFailedErrors.ErrorInfo(
+                    errorTitle = I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_TITLE,
+                        params = arrayOf(userId)
+                    ),
+                    errorDetails = errorDetails
+                )
+                errors.add(errorInfo)
+            }
+        }
+    }
+
+    fun checkCycle(
+        param: ElementBatchCheckParam,
+        subPipelineElementMap: Map<SubPipelineIdAndName, MutableList<ElementHolder>>,
+        errors: MutableList<PipelineCheckFailedErrors.ErrorInfo>
+    ) {
+        with(param) {
+            val errorDetails = subPipelineCheckService.batchCheckCycle(
+                projectId = projectId!!,
+                pipelineId = pipelineId,
+                subPipelineElementMap = subPipelineElementMap
+            )
+            if (errorDetails.isNotEmpty()) {
+                val errorInfo = PipelineCheckFailedErrors.ErrorInfo(
+                    errorTitle = I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.BK_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_TITLE
+                    ),
+                    errorDetails = errorDetails
+                )
+                errors.add(errorInfo)
+            }
+        }
     }
 }

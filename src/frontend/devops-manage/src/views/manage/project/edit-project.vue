@@ -44,6 +44,7 @@ const fetchProjectData = async () => {
       ...res,
       properties: {
         pipelineDialect: 'CLASSIC',
+        loggingLineLimit: null,
         ...res.properties,
       },
     };

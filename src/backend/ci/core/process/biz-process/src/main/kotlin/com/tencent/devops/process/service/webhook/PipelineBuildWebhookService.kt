@@ -520,7 +520,7 @@ class PipelineBuildWebhookService @Autowired constructor(
         val startParams = webhookCommit.params
 
         val repoName = webhookCommit.repoName
-
+        // 如果是分支版本的触发，此处一定要传指定的version号，按指定版本触发
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -545,7 +545,6 @@ class PipelineBuildWebhookService @Autowired constructor(
             logger.warn("[$pipelineId]| Fail to get the model")
             return null
         }
-        val model = resource.model
 
         // 兼容从旧v1版本下发过来的请求携带旧的变量命名
         val params = mutableMapOf<String, Any>()
@@ -571,11 +570,9 @@ class PipelineBuildWebhookService @Autowired constructor(
                 pipelineParamMap = HashMap(pipelineParamMap),
                 channelCode = pipelineInfo.channelCode,
                 isMobile = false,
-                model = model,
+                resource = resource,
                 signPipelineVersion = version,
-                frequencyLimit = false,
-                versionName = resource.versionName,
-                yamlVersion = resource.yamlVersion
+                frequencyLimit = false
             )
             pipelineWebHookQueueService.onWebHookTrigger(
                 projectId = projectId,

@@ -57,6 +57,8 @@ interface PermissionResourceMemberService {
 
     fun roleCodeToIamGroupId(
         projectCode: String,
+        resourceType: String,
+        resourceCode: String,
         roleCode: String
     ): Int
 

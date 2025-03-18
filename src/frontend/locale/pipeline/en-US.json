@@ -40,6 +40,7 @@
   "systemError": "SYSTEM",
   "thirdPartyError": "THIRD_PARTY",
   "pluginError": "PLUGIN",
+  "containerError": "AGENT",
   "createTime": "Create time",
   "retry": "Retry",
   "resume": "Continue",
@@ -141,8 +142,8 @@
   "pipelinesDetail": "Details",
   "newPipelineFromTemplateLabel": "New From Template",
   "newPipelineFromJSONLabel": "Import From Json",
-  "importPipelineLabel": "Please upload a pipeline JSON file",
-  "invalidPipelineJson": "Invalid Pipeline JSON",
+  "importPipelineLabel": "Please upload a pipeline JSON/YAML file",
+  "invalidPipelineJsonOrYaml": "Invalid Pipeline JSON/YAML",
   "exportPipelineSuccess": "Export Pipeline Success",
   "sizeLimit": "Maximum file size is 100MB. When re-uploading, if the path remains unchanged, there is no need to save the pipeline.",
   "fileUploadSuccess": "Upload Successful",
@@ -462,10 +463,13 @@
     },
     "editStoreTemplateTips": "The development store template does not support editing",
     "lastModifiedDate": "Last Modified on",
-    "lastModifiedBy": "Updater"
+    "lastModifiedBy": "Updater",
+    "templateCoverWarning": "Draft Overwrite Warning",
+    "templateCoverWarningDesc": "The draft edited by {0} (created from {1}) has not been published yet. Editing the branch version will overwrite the unpublished draft. Please confirm if you want to continue."
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
+    "exportPipelineYamlTip": "Export the YAML file to the code repository to enable PAC mode, allowing maintenance of the pipeline through the code repository or UI. ",
     "chooseExport": "Choose the export file format",
     "defaultViews": "My views",
     "copyPipeline": "Copy pipeline",
@@ -634,7 +638,8 @@
     "majorVersion": "Major Version",
     "minorVersion": "Feature Version",
     "fixVersion": "Fix Version",
-    "paramsInvalidMsg": "Params Invalid"
+    "paramsInvalidMsg": "Params Invalid",
+    "versionSelectorDisableTips": "1. When a PAC branch version exists, you can choose to execute the branch version.<br/>2. When there is no PAC branch version, the latest current version will always be executed."
   },
   "details": {
     "pipelineVersionDiffTips": "The pipeline config version has changed",
@@ -1485,7 +1490,9 @@
   "pipelineSetting": "Pipeline Settings",
   "COMMIT_TO_MASTER": "Commit to Default Branch",
   "CHECKOUT_BRANCH_AND_REQUEST_MERGE": "Add New Branch and Create MR to Default Branch",
-  "PUSH_BRANCH_AND_REQUEST_MERGE": "Commit to Branch【{0}】and Create MR",
+  "COMMIT_TO_SOURCE_BRANCH": "Commit to Source Branch {0}",
+  "COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE": "Commit to Source Branch {0} and Create MR",
+  "COMMIT_TO_BRANCH": "Commit to Branch",
   "atomModel": "Plugin Settings",
   "previewYaml": "Preview YAML",
   "applyToYaml": "Apply",
