@@ -25,44 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.utils
+package com.tencent.devops.store.common.lock
 
-object VersionUtils {
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
-    fun convertLatestVersion(version: String): String {
-        val versionPrefix = version.substring(0, version.indexOf(".") + 1)
-        return "$versionPrefix*"
-    }
-
-    fun convertLatestVersionName(version: String): String {
-        val versionPrefix = version.substring(0, version.indexOf(".") + 1)
-        return "${versionPrefix}latest"
-    }
-
-    /**
-     * 生成查询版本号
-     * @param version 版本号
-     */
-    fun generateQueryVersion(version: String): String {
-        return if (isLatestVersion(version)) {
-            version.replace("*", "") + "%"
-        } else {
-            version
-        }
-    }
-
-    /**
-     * 是否是x.latest这种最新版本号
-     * @param version 版本号
-     */
-    fun isLatestVersion(version: String) = version.contains("*")
-
-    /**
-     * 获取主版本号
-     * @param version 版本号
-     * @return 主版本号
-     */
-    fun getMajorVersion(version: String): Int {
-        return version.substring(0, version.indexOf(".")).toInt()
+class StoreCodeLock(redisOperation: RedisOperation, storeType: String, storeCode: String) :
+    RedisLock(
+        redisOperation = redisOperation,
+        lockKey = "lock:storeType:$storeType:storeCode:$storeCode",
+        expiredTimeInSeconds = 20L
+    ) {
+    override fun decorateKey(key: String): String {
+        // storeCode在各集群唯一，key无需加上集群信息前缀来区分
+        return key
     }
 }
