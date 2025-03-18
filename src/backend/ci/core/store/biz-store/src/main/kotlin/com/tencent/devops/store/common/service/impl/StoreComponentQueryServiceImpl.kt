@@ -980,7 +980,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 dslContext = dslContext,
                 storeId = storeId,
                 fieldName = KEY_BUILD_LESS_RUN_FLAG
-            )?.get(0)?.fieldValue.toBoolean()
+            ).getOrNull(0)?.fieldValue?.toBoolean()
             val extData = getBaseExtData(storeId, storeCode, storeTypeEnum)
             val publicFlag = record[tStoreBaseFeature.PUBLIC_FLAG] ?: false
             val marketItem = MarketItem(
@@ -1060,7 +1060,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             dslContext = dslContext,
             storeId = storeId,
             fieldName = KEY_URL_SCHEME
-        )?.getOrNull(0)?.fieldValue
+        ).getOrNull(0)?.fieldValue
         val extData = if (extDataResult.isNotEmpty || !urlScheme.isNullOrBlank()) {
             mutableMapOf<String, Any>().apply {
                 urlScheme?.let { put(KEY_URL_SCHEME, it) }

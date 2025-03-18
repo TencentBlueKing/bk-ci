@@ -140,12 +140,10 @@ class StoreReleaseServiceImpl @Autowired constructor(
         val storeBaseCreateRequest = storeCreateRequest.baseInfo
         val storeType = storeBaseCreateRequest.storeType
         val storeCode = storeBaseCreateRequest.storeCode
-        val containerIdLock = StoreCodeLock(redisOperation, storeType.name, storeCode)
-        try {
-            containerIdLock.lock()
-            StoreCreateHandlerChain(handlerList).handleRequest(storeCreateRequest)
-        } finally {
-            containerIdLock.unlock()
+        StoreCodeLock(redisOperation, storeType.name, storeCode).use { lock ->
+            if (lock.tryLock()) {
+                StoreCreateHandlerChain(handlerList).handleRequest(storeCreateRequest)
+            }
         }
         val storeId = bkStoreContext[KEY_STORE_ID]?.toString()
         return if (!storeId.isNullOrBlank()) {
@@ -169,12 +167,10 @@ class StoreReleaseServiceImpl @Autowired constructor(
         val storeBaseUpdateRequest = storeUpdateRequest.baseInfo
         val storeType = storeBaseUpdateRequest.storeType
         val storeCode = storeBaseUpdateRequest.storeCode
-        val containerIdLock = StoreCodeLock(redisOperation, storeType.name, storeCode)
-        try {
-            containerIdLock.lock()
-            StoreUpdateHandlerChain(handlerList).handleRequest(storeUpdateRequest)
-        } finally {
-            containerIdLock.unlock()
+        StoreCodeLock(redisOperation, storeType.name, storeCode).use { lock ->
+            if (lock.tryLock()) {
+                StoreUpdateHandlerChain(handlerList).handleRequest(storeUpdateRequest)
+            }
         }
         val storeId = bkStoreContext[KEY_STORE_ID]?.toString()
         return if (!storeId.isNullOrBlank()) {
