@@ -173,7 +173,7 @@
                     this.isLoading = true
                     const res = await this.requestTemplatePreview({
                         projectId: this.$route.params.projectId,
-                        templateId: this.templatePipeline.templateId,
+                        templateId: this.templatePipeline.templateId || this.templatePipeline.id,
                         highlightType: this.highlightType
                     })
                     if (!res.yamlSupported && this.isCodeMode) {

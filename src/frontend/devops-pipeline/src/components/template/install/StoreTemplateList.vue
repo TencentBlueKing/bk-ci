@@ -8,6 +8,7 @@
         <ul
             class="template-list"
             @scroll.passive="scrollLoadMore"
+            v-bkloading="{ isLoading: isPageLoading }"
         >
             <li
                 v-for="(temp, tIndex) in storeTemplate"
@@ -55,20 +56,29 @@
                         text
                         size="small"
                         theme="primary"
-                        @click.stop="handleTemp(temp, tIndex)"
+                        @click.stop="previewTemp(tIndex)"
                     >
                         {{ $t('pipelinesPreview') }}
                     </bk-button>
                 </div>
             </li>
         </ul>
+        
+        <pipeline-template-preview
+            v-model="isShowPreview"
+            :template-pipeline="activeTemp"
+        />
     </div>
 </template>
 
 <script>
     import { mapActions } from 'vuex'
+    import PipelineTemplatePreview from '@/components/PipelineTemplatePreview'
     export default {
         name: 'StoreTemplateList',
+        components: {
+            PipelineTemplatePreview
+        },
         data () {
             return {
                 loadEnd: false,
@@ -77,12 +87,23 @@
                 page: 1,
                 pageSize: 50,
                 storeTemplate: [],
-                activeTempIndex: 0
+                activeTempIndex: 0,
+                isShowPreview: false
             }
         },
         computed: {
             projectId () {
                 return this.$route.params.projectId
+            },
+            activeTemp () {
+                return this.storeTemplate[this.activeTempIndex] ?? null
+            }
+        },
+        watch: {
+            searchValue () {
+                this.page = 1
+                this.storeTemplate = []
+                this.requestMarkTemplates()
             }
         },
         created () {
@@ -95,6 +116,9 @@
 
             async requestMarkTemplates () {
                 try {
+                    if (this.page === 1) {
+                        this.isPageLoading = true
+                    }
                     this.isLoadingMore = true
                     const param = {
                         page: this.page,
@@ -114,20 +138,24 @@
                     })
                     console.error(e)
                 } finally {
+                    this.isPageLoading = false
                     this.isLoadingMore = false
                 }
             },
-
             selectTemp (temp, index) {
                 if (index === this.activeTempIndex) return
                 this.activeTempIndex = index
-                console.log(temp, 'temp')
             },
 
             scrollLoadMore (event) {
                 const target = event.target
                 const bottomDis = target.scrollHeight - target.clientHeight - target.scrollTop
                 if (bottomDis <= 500 && !this.loadEnd && !this.isLoadingMore) this.requestMarkTemplates()
+            },
+
+            previewTemp (index) {
+                this.isShowPreview = true
+                this.activeTempIndex = index
             }
         }
     }
