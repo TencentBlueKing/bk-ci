@@ -123,12 +123,10 @@
                 </section>
             </template>
         </bk-dialog>
-
         <CreateTemplateDialog
             :value.sync="showAddTemplateDialog"
             @confirm="handleConfirmCreate"
         />
-
         <InstallTemplateDialog
             :value.sync="showInstallTemplateDialog"
         />
@@ -136,7 +134,7 @@
 </template>
 
 <script>
-    import { getCurrentInstance, onMounted, ref, computed, h, nextTick } from '@vue/composition-api'
+    import { defineComponent, onMounted, ref, computed, h, nextTick } from '@vue/composition-api'
     import dayjs from 'dayjs'
     import Logo from '@/components/Logo'
     import SearchSelect from '@blueking/search-select'
@@ -144,14 +142,17 @@
     import templateTable from './templateTable'
     import CreateTemplateDialog from './CreateTemplateDialog'
     import InstallTemplateDialog from './InstallTemplateDialog'
-    // import { navConfirm } from '@/utils/util'
+    import UseInstance from '@/hook/useInstance'
     import {
         RESOURCE_ACTION,
-        TEMPLATE_RESOURCE_ACTION,
-        TEMPLATE_CREATE
+        TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
+    import {
+        TEMPLATE_TYPE_CACHE,
+        TEMPLATE_ACTION_MAP
+    } from '@/store/modules/templates/constants'
 
-    export default {
+    export default defineComponent({
         components: {
             Logo,
             SearchSelect,
@@ -159,21 +160,16 @@
             CreateTemplateDialog,
             InstallTemplateDialog
         },
-        setup () {
-            const instance = getCurrentInstance()
-            const route = instance.proxy.$route
-            // const router = instance.proxy.$router
-            const i18n = instance.proxy.$i18n
-            const store = instance.proxy.$store
-            const showTips = instance.proxy.$showTips
-            const bkInfo = instance.proxy.$bkInfo
-            const validator = instance.proxy.$validator
-
+        setup (props, { root }) {
+            if (!root) return
+            const { route, i18n, store, bkMessage, bkInfo, validator } = UseInstance(root)
             const hasCreatePermission = ref(false)
             const activeTab = ref('ALL')
             const searchValue = ref([])
             const isLoading = ref(false)
             const tableData = ref([])
+            const showAddTemplateDialog = ref(false)
+            const showInstallTemplateDialog = ref(false)
             const pagination = ref({
                 current: 1,
                 count: 6,
@@ -221,26 +217,32 @@
                     icon: 'pipeline-group-item-icon'
                 }
             ])
-            const filterData = computed(() => [{
-                name: i18n.t('template.name'),
-                id: 'fuzzySearchName'
-            }, {
-                name: i18n.t('template.desc'),
-                id: 'desc'
-            }, {
-                name: i18n.t('template.type'),
-                id: 'type'
-            }, {
-                name: i18n.t('template.source'),
-                id: 'source'
-            }, {
-                name: i18n.t('template.lastModifiedBy'),
-                id: 'updater'
-            }])
+            const filterData = computed(() => [
+                {
+                    name: i18n.t('template.name'),
+                    id: 'fuzzySearchName'
+                },
+                {
+                    name: i18n.t('template.desc'),
+                    id: 'desc'
+                },
+                {
+                    name: i18n.t('template.type'),
+                    id: 'type'
+                },
+                {
+                    name: i18n.t('template.source'),
+                    id: 'source'
+                },
+                {
+                    name: i18n.t('template.lastModifiedBy'),
+                    id: 'updater'
+                }
+            ])
             const projectId = computed(() => route.params.projectId)
 
             onMounted(() => {
-                const historyTab = localStorage.getItem('TEMPLATE_TYPE_CACHE')
+                const historyTab = localStorage.getItem(TEMPLATE_TYPE_CACHE)
                 if (historyTab) {
                     activeTab.value = historyTab
                 }
@@ -251,7 +253,7 @@
 
             function handleChangeMenu (name) {
                 activeTab.value = name
-                localStorage.setItem('TEMPLATE_TYPE_CACHE', activeTab.value)
+                localStorage.setItem(TEMPLATE_TYPE_CACHE, activeTab.value)
                 fetchTableData()
             }
             function sourceFilterMethod (value, row, column) {
@@ -260,17 +262,17 @@
             }
             async function hasPipelineTemplatePermission () {
                 try {
-                    hasCreatePermission.value = await store.dispatch('pipelines/hasPipelineTemplatePermission', {
+                    hasCreatePermission.value = await store.dispatch('templates/hasPipelineTemplatePermission', {
                         projectId: projectId.value,
-                        permission: TEMPLATE_CREATE
+                        permission: TEMPLATE_ACTION_MAP.CREATE
                     })
                 } catch (err) {
-                    showTips({ message: err.message || err, theme: 'error' })
+                    bkMessage({ message: err.message || err, theme: 'error' })
                 }
             }
             async function getType2Count () {
                 try {
-                    const nums = await store.dispatch('pipelines/getType2Count', {
+                    const nums = await store.dispatch('templates/getType2Count', {
                         projectId: projectId.value
                     })
                     navList.value = navList.value.map(item => {
@@ -279,7 +281,7 @@
                         return item
                     })
                 } catch (err) {
-                    showTips({ message: err.message || err, theme: 'error' })
+                    bkMessage({ message: err.message || err, theme: 'error' })
                 }
             }
             async function fetchTableData (params = { }) {
@@ -292,7 +294,7 @@
                         ...(activeTab.value !== 'ALL' && { type: activeTab.value }),
                         ...params
                     }
-                    const res = await store.dispatch('pipelines/getTemplateList', param)
+                    const res = await store.dispatch('templates/getTemplateList', param)
                     tableData.value = (res.records || []).map(x => {
                         x.updateTime = dayjs(x.updateTime).format('YYYY-MM-DD HH:mm:ss')
                         x.templateActions = [
@@ -366,7 +368,7 @@
                     })
                     pagination.value.count = res.count
                 } catch (err) {
-                    showTips({
+                    bkMessage({
                         message: err.message || err,
                         theme: 'error'
                     })
@@ -382,8 +384,11 @@
                 pagination.value.current = page
                 fetchTableData()
             }
-            function handleCreateClick () {
-
+            function handleShowCreateTemplateDialog () {
+                showAddTemplateDialog.value = true
+            }
+            function handleShowInstallTemplateDialog () {
+                showInstallTemplateDialog.value = true
             }
             function formatValue (originVal) {
                 return originVal.reduce((acc, filter) => {
@@ -491,15 +496,15 @@
             async function confirmDeleteTemplate (row) {
                 isLoading.value = true
                 try {
-                    await store.dispatch('pipelines/templateDelete', {
+                    await store.dispatch('pipelines/deleteTemplate', {
                         projectId: projectId.value,
                         templateId: row.id
                     })
 
                     fetchTableData()
-                    showTips({ message: i18n.t('template.deleteSuc'), theme: 'success' })
+                    bkMessage({ message: i18n.t('template.deleteSuc'), theme: 'success' })
                 } catch (err) {
-                    showTips({
+                    bkMessage({
                         message: err.message || err,
                         theme: 'error'
                     })
@@ -523,17 +528,17 @@
                     copySetting: copyTemp.value.isCopySetting,
                     name: copyTemp.value.templateName
                 }
-                store.dispatch('pipelines/templateCopy', postData).then((templateId) => {
+                store.dispatch('templates/templateCopy', postData).then((templateId) => {
                     console.log('🚀 ~ templateId:', templateId)
                     copyCancelHandler()
-                    showTips({ message: i18n.t('template.copySuc'), theme: 'success' })
+                    bkMessage({ message: i18n.t('template.copySuc'), theme: 'success' })
                     // router.push({
                     //     name: 'templateEdit',
                     //     params: { templateId }
                     // })
                 }).catch((err) => {
                     const message = err.message || err
-                    showTips({ message, theme: 'error' })
+                    bkMessage({ message, theme: 'error' })
                 }).finally(() => {
                     isLoading.value = false
                 })
@@ -544,6 +549,11 @@
                 copyTemp.value.pipelineId = ''
                 copyTemp.value.nameHasError = false
                 copyTemp.value.isCopySetting = true
+            }
+
+            function handleConfirmCreate () {
+                pagination.value.current = 1
+                fetchTableData()
             }
                 
             return {
@@ -565,7 +575,6 @@
                 fetchTableData,
                 handlePageLimitChange,
                 handlePageChange,
-                handleCreateClick,
                 formatValue,
                 handleSearchChange,
                 handleClear,
@@ -575,10 +584,15 @@
                 deleteTemplate,
                 confirmDeleteTemplate,
                 copyConfirmHandler,
-                copyCancelHandler
+                copyCancelHandler,
+                showAddTemplateDialog,
+                showInstallTemplateDialog,
+                handleShowInstallTemplateDialog,
+                handleShowCreateTemplateDialog,
+                handleConfirmCreate
             }
         }
-    }
+    })
 
 </script>
 
@@ -644,7 +658,11 @@
             height: 32px;
 
             .search-input {
+                background: white;
                 width: 600px;
+                ::placeholder {
+                    color: #c4c6cc;
+                }
             }
         }
    }

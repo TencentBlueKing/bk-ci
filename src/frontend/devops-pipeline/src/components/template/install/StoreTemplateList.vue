@@ -4,6 +4,7 @@
             v-model="searchValue"
             :placeholder="$t('template.searchTemplate')"
             right-icon="bk-icon icon-search"
+            @change="handleChangeSearchValue"
         />
         <ul
             class="template-list"
@@ -72,93 +73,94 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
+    import { defineComponent, ref, computed, onMounted } from '@vue/composition-api'
+    import UseInstance from '@/hook/useInstance'
     import PipelineTemplatePreview from '@/components/PipelineTemplatePreview'
-    export default {
+    export default defineComponent({
         name: 'StoreTemplateList',
         components: {
             PipelineTemplatePreview
         },
-        data () {
-            return {
-                loadEnd: false,
-                isLoadingMore: false,
-                searchValue: '',
-                page: 1,
-                pageSize: 50,
-                storeTemplate: [],
-                activeTempIndex: 0,
-                isShowPreview: false
-            }
-        },
-        computed: {
-            projectId () {
-                return this.$route.params.projectId
-            },
-            activeTemp () {
-                return this.storeTemplate[this.activeTempIndex] ?? null
-            }
-        },
-        watch: {
-            searchValue () {
-                this.page = 1
-                this.storeTemplate = []
-                this.requestMarkTemplates()
-            }
-        },
-        created () {
-            this.requestMarkTemplates()
-        },
-        methods: {
-            ...mapActions('common', [
-                'requestStoreTemplate'
-            ]),
-
-            async requestMarkTemplates () {
+        setup (props, { root, emit }) {
+            if (!root) return
+            const { route, store, bkMessage } = UseInstance(root)
+            const loadEnd = ref(false)
+            const isPageLoading = ref(false)
+            const isLoadingMore = ref(false)
+            const searchValue = ref('')
+            const page = ref(1)
+            const pageSize = ref(50)
+            const activeTempIndex = ref(0)
+            const storeTemplateNum = ref(0)
+            const storeTemplate = ref([])
+            const isShowPreview = ref(false)
+            const projectId = computed(() => route.params.projectId)
+            const activeTemp = computed(() => storeTemplate.value[activeTempIndex.value] ?? null)
+            async function requestMarkTemplates () {
                 try {
-                    if (this.page === 1) {
-                        this.isPageLoading = true
+                    if (page.value === 1) {
+                        isPageLoading.value = true
                     }
-                    this.isLoadingMore = true
+                    isLoadingMore.value = true
                     const param = {
-                        page: this.page,
-                        pageSize: this.pageSize,
-                        projectCode: this.projectId,
-                        keyword: this.searchValue
+                        page: page.value,
+                        pageSize: pageSize.value,
+                        projectCode: projectId.value,
+                        keyword: searchValue.value
                     }
-                    const res = await this.requestStoreTemplate(param)
-                    this.page++
-                    this.storeTemplateNum = res.data.count || 0
-                    this.storeTemplate.push(...res.data.records)
-                    this.loadEnd = res.data.count <= this.storeTemplate.length
+                    const res = await store.dispatch('common/requestStoreTemplate', param)
+                    page.value++
+                    storeTemplateNum.value = res.data.count || 0
+                    storeTemplate.value.push(...res.data.records)
+                    loadEnd.value = res.data.count <= storeTemplate.value?.length
+                    emit('change', activeTemp.value)
                 } catch (e) {
-                    this.$bkMessage({
+                    bkMessage({
                         theme: 'error',
                         message: (e.message || e)
                     })
                     console.error(e)
                 } finally {
-                    this.isPageLoading = false
-                    this.isLoadingMore = false
+                    isPageLoading.value = false
+                    isLoadingMore.value = false
                 }
-            },
-            selectTemp (temp, index) {
-                if (index === this.activeTempIndex) return
-                this.activeTempIndex = index
-            },
-
-            scrollLoadMore (event) {
+            }
+            function handleChangeSearchValue (val) {
+                page.value = 1
+                storeTemplate.value = []
+                requestMarkTemplates()
+            }
+            function selectTemp (temp, index) {
+                if (index === activeTempIndex.value) return
+                activeTempIndex.value = index
+                emit('change', activeTemp.value)
+            }
+            function scrollLoadMore (event) {
                 const target = event.target
                 const bottomDis = target.scrollHeight - target.clientHeight - target.scrollTop
-                if (bottomDis <= 500 && !this.loadEnd && !this.isLoadingMore) this.requestMarkTemplates()
-            },
-
-            previewTemp (index) {
-                this.isShowPreview = true
-                this.activeTempIndex = index
+                if (bottomDis <= 500 && !loadEnd.value && !isLoadingMore.value) requestMarkTemplates()
+            }
+            function previewTemp (index) {
+                isShowPreview.value = true
+                activeTempIndex.value = index
+            }
+            onMounted(() => {
+                requestMarkTemplates()
+            })
+            return {
+                isPageLoading,
+                searchValue,
+                activeTempIndex,
+                storeTemplate,
+                isShowPreview,
+                activeTemp,
+                selectTemp,
+                scrollLoadMore,
+                previewTemp,
+                handleChangeSearchValue
             }
         }
-    }
+    })
 </script>
 
 <style lang="scss">

@@ -171,14 +171,15 @@
 </template>
 
 <script>
-    import { getCurrentInstance, onMounted, ref, computed, toRefs } from '@vue/composition-api'
+    import { onMounted, ref, computed, toRefs } from '@vue/composition-api'
     import ExtMenu from './extMenu'
     import Logo from '@/components/Logo'
     import TemplateEmpty from '@/components/common/exception'
+    import UseInstance from '@/hook/useInstance'
     import {
         TEMPLATE_TABLE_COLUMN_CACHE,
         CACHE_TEMPLATE_TABLE_WIDTH_MAP
-    } from '@/store/constants'
+    } from '@/store/modules/templates/constants'
     import { convertTime } from '@/utils/util'
 
     export default {
@@ -205,10 +206,9 @@
                 })
             }
         },
-        setup (props) {
-            const instance = getCurrentInstance()
-            const router = instance.proxy.$router
-            const i18n = instance.proxy.$i18n
+        setup (props, { emit, root }) {
+            if (!root) return
+            const { router, i18n } = UseInstance(root)
             const { data, isLoading, pagination } = toRefs(props)
 
             const TEMPLATE_TRANSLATIONS = {
@@ -320,13 +320,13 @@
             })
 
             function handlePageLimitChange (limit) {
-                instance.proxy.$emit('limit-change', limit)
+                emit('limit-change', limit)
             }
             function handlePageChange (page) {
-                instance.proxy.$emit('page-change', page)
+                emit('page-change', page)
             }
             function clearFilter () {
-                instance.proxy.$emit('clear')
+                emit('clear')
             }
             function formatTime (row, cell, value) {
                 return convertTime(value)

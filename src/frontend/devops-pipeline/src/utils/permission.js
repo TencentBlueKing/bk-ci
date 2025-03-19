@@ -85,5 +85,3 @@ export const TEMPLATE_RESOURCE_ACTION = {
     EDIT: 'pipeline_template_edit',
     ENABLE: 'pipeline_template_enable'
 }
-
-export const TEMPLATE_CREATE = 'CREATE'
