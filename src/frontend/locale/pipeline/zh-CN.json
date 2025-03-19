@@ -1431,6 +1431,7 @@
   "hasDraftTips": "当前有正在编辑的草稿 (基于 {0})",
   "dropDraftTips": "确定放弃当前草稿，并基于 {0} 新建版本吗？",
   "createDraftTips": "确定基于历史版本 {0} 新建版本？",
+  "createBranchDraftTips": "确定基于分支版本 {0} 新建版本？",
   "mainBranch": "主路径",
   "viewAll": "查看全部版本",
   "diff": "版本对比",

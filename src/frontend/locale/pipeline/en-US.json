@@ -1431,6 +1431,7 @@
   "hasDraftTips": "There is a draft being edited (based on {0})",
   "dropDraftTips": "Are you sure you want to abandon the current draft and create a new version based on {0}?",
   "createDraftTips": "Are you sure you want to create a new version based on the historical version {0}?",
+  "createBranchDraftTips": "Are you sure you want to create a new version based on the branch {0}?",
   "mainBranch": "Main",
   "viewAll": "View All",
   "diff": "Diff",

@@ -143,7 +143,7 @@
                     case this.hasDraftPipeline:
                         return this.$t('hasDraftTips', [this.draftBaseVersionName])
                     default:
-                        return this.$t('createDraftTips', [this.versionName])
+                        return this.$t(this.isActiveBranchVersion ? 'createBranchDraftTips' : 'createDraftTips', [this.versionName])
                 }
             },
             isTemplatePipeline () {
@@ -176,7 +176,7 @@
                         this.showDraftConfirmDialog()
                     }
                 } else {
-                    if (this.isActiveBranchVersion) {
+                    if (this.isActiveBranchVersion && this.version !== this.draftVersion) {
                         this.showDraftConfirmDialog()
                     } else {
                         this.goEdit(this.draftVersion ?? this.version)
