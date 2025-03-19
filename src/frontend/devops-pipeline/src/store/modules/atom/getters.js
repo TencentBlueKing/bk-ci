@@ -253,21 +253,18 @@ export default {
                 atomCode === 'timerTrigger' && timerTriggerCount++
                 atomCode === 'remoteTrigger' && remoteTriggerCount++
 
-                return codeccCount > 1 || manualTriggerCount > 1 || timerTriggerCount > 1 || remoteTriggerCount > 1 || ele.isError
+                return codeccCount > 1 || manualTriggerCount > 1 || remoteTriggerCount > 1 || ele.isError
             })
 
             if (codeccCount > 1) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneCodecc'))
             } else if (manualTriggerCount > 1) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneManualTrigger'))
-            } else if (timerTriggerCount > 1) {
-                throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneTimerTrigger'))
             } else if (remoteTriggerCount > 1) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneRemoteTrigger'))
             } else if (elementValid) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.correctPipeline'))
             }
-
             return {
                 inValid: false,
                 message: ''
