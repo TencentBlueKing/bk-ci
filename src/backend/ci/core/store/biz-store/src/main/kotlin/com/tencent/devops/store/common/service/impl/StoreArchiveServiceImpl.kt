@@ -126,23 +126,20 @@ class StoreArchiveServiceImpl @Autowired constructor(
         val storeCode = storePkgInfoUpdateRequest.storeCode
         val version = storePkgInfoUpdateRequest.version
         val storeType = storePkgInfoUpdateRequest.storeType
-        val count = storeBaseQueryDao.countByCondition(
-            dslContext = dslContext,
-            storeCode = storeCode,
-            storeType = storeType
-        )
-        val storeId = when {
-            count < 2 -> storeBaseQueryDao.getFirstComponent(
-                dslContext = dslContext,
-                storeCode = storeCode,
-                storeType = storeType
-            )?.id
-            else -> storeBaseQueryDao.getComponentId(
-                dslContext = dslContext,
-                storeCode = storeCode,
-                version = version,
-                storeType = storeType
-            )
+        val storeId = with(storeBaseQueryDao) {
+            when (storePkgInfoUpdateRequest.releaseType) {
+                ReleaseTypeEnum.NEW -> getFirstComponent(
+                    dslContext = dslContext,
+                    storeCode = storeCode,
+                    storeType = storeType
+                )?.id
+                else -> getComponentId(
+                    dslContext = dslContext,
+                    storeCode = storeCode,
+                    version = version,
+                    storeType = storeType
+                )
+            }
         } ?: DigestUtils.md5Hex("$storeType-$storeCode-$version")
         val storePkgEnvRequests = storePkgInfoUpdateRequest.storePkgEnvInfos
         val storeBaseEnvDataPOs: MutableList<StoreBaseEnvDataPO> = mutableListOf()
