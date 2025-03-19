@@ -57,6 +57,9 @@ class ProjectRemoteDevService @Autowired constructor(
     @Value("\${remoteDev.bkrepoDevxUrl:}")
     val bkrepoDevxUrl = ""
 
+    @Value("\${remoteDev.bkrepoCsigDevxUrl:}")
+    val bkrepoCsigDevxUrl = ""
+
     @Value("\${remoteDev.bkrepoDevxSha256Key:}")
     val bkrepoDevxSha256Key = ""
 
@@ -91,8 +94,9 @@ class ProjectRemoteDevService @Autowired constructor(
             }
         }
 
-        // 启动bkrepo相关配置
+        // 启动bkrepo相关配置，包含ieg离岸和csig集群
         enableBkRepo(enableRepoData)
+        enableCsigBkRepo(enableRepoData)
     }
 
     private fun quickImportDashboard(
@@ -171,6 +175,39 @@ class ProjectRemoteDevService @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.error("enableBkRepo request api[${request.url.toUrl()}] error: ${e.localizedMessage}")
+        }
+    }
+
+    private fun enableCsigBkRepo(
+        data: EnableBkRepoData
+    ) {
+        val body = objectMapper.writeValueAsString(data)
+        val url = "$bkrepoCsigDevxUrl/repository/api/webhook/receiver/bkci"
+        val requestBody = body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+        val request = Request.Builder()
+            .url(url)
+            .headers(
+                mapOf(
+                    "X-DEVOPS-EVENT" to "DEVX_ENABLED",
+                    "X-DEVOPS-SIGNATURE-256" to HmacUtils(
+                        HmacAlgorithms.HMAC_SHA_256,
+                        bkrepoDevxSha256Key
+                    ).hmacHex(body)
+                ).toHeaders()
+            )
+            .post(requestBody)
+            .build()
+        logger.debug("enableCsigBkRepo|{}|{}", request.headers, body)
+        try {
+            OkhttpUtils.doHttp(request).use {
+                val responseStr = it.body!!.string()
+                if (!it.isSuccessful) {
+                    logger.warn("enableCsigBkRepo request failed, uri:($url)|response: ($responseStr)")
+                    return
+                }
+            }
+        } catch (e: Exception) {
+            logger.error("enableCsigBkRepo request api[${request.url.toUrl()}] error: ${e.localizedMessage}")
         }
     }
 
