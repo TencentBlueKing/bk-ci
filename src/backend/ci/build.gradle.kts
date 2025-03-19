@@ -1,7 +1,7 @@
 import java.net.URI
 
 plugins {
-    id("com.tencent.devops.boot") version "1.0.0-SNAPSHOT"
+    id("com.tencent.devops.boot") version "1.0.0"
     detektCheck
     `task-license-report` // 检查License合规
 }
