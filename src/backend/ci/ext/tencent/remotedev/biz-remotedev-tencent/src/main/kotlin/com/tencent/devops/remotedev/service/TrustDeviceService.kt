@@ -16,6 +16,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import jakarta.ws.rs.core.Response
 
 @Service
@@ -27,7 +29,7 @@ class TrustDeviceService @Autowired constructor(
     private val secret: String? = null
 
     @Value("\${remoteDev.trustDevice.expireDays:#{7}}")
-    private val expireDays: Int = 7
+    private val expireDays: Long = 7
 
     fun checkTrustDevice(userId: String, deviceId: String, token: String): Boolean {
         // 先判断是否过期
@@ -82,7 +84,7 @@ class TrustDeviceService @Autowired constructor(
         }
         val tokenInfo = TokenInfo(
             userId = genUserDetails(userId, deviceId),
-            expirationTime = System.currentTimeMillis() + (expireDays * 24 * 60 * 60 * 1000),
+            expirationTime = Instant.now().plus(expireDays, ChronoUnit.DAYS).toEpochMilli(),
             accessToken = null
         )
         tokenInfo.accessToken = try {

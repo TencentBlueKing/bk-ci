@@ -22,7 +22,6 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.QueryType
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.ExecuteContext
 import org.jooq.Field
 import org.jooq.Record1
 import org.jooq.SelectConditionStep
@@ -30,8 +29,6 @@ import org.jooq.SelectJoinStep
 import org.jooq.SelectSelectStep
 import org.jooq.Table
 import org.jooq.impl.DSL
-import org.jooq.impl.DefaultExecuteListener
-import org.jooq.impl.DefaultExecuteListenerProvider
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 
@@ -183,13 +180,13 @@ class WorkspaceJoinDao {
         search: WorkspaceSearch,
         checkField: List<Field<*>>
     ): SelectConditionStep<*> {
-        dslContext.configuration().set(DefaultExecuteListenerProvider(object : DefaultExecuteListener() {
-            override fun resultEnd(ctx: ExecuteContext) {
-                val sql = DSL.using(ctx.configuration()).renderInlined(ctx.query())
-                logger.info("genFetchProjectWorkspaceCond Executed SQL|$sql|${ctx.result()?.size}")
-                super.executeEnd(ctx)
-            }
-        }))
+//        dslContext.configuration().set(DefaultExecuteListenerProvider(object : DefaultExecuteListener() {
+//            override fun resultEnd(ctx: ExecuteContext) {
+//                val sql = DSL.using(ctx.configuration()).renderInlined(ctx.query())
+//                logger.info("genFetchProjectWorkspaceCond Executed SQL|$sql|${ctx.result()?.size}")
+//                super.executeEnd(ctx)
+//            }
+//        }))
         val conditions = mutableListOf<Condition>()
         with(TWorkspace.T_WORKSPACE) {
             search.projectId?.ifEmpty { null }?.let { projects ->
