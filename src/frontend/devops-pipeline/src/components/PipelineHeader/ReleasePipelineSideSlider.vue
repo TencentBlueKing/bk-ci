@@ -557,6 +557,7 @@
                 'releaseDraftPipeline',
                 'releaseDraftTemplate',
                 'requestPipelineSummary',
+                'requestTemplateSummary',
                 'setSaveStatus',
                 'prefetchPipelineVersion',
                 'requestScmBranchList',
@@ -724,8 +725,11 @@
                                 : null
                         }
                     })
-
-                    await this.requestPipelineSummary(this.$route.params)
+                    if (this.isTemplate) {
+                        await this.requestTemplateSummary(this.$route.params)
+                    } else {
+                        await this.requestPipelineSummary(this.$route.params)
+                    }
 
                     const tipsI18nKey = this.releaseParams.enablePac
                         ? 'pacPipelineReleaseTips'

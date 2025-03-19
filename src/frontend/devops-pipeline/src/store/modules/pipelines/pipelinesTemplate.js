@@ -48,7 +48,7 @@ const actions = {
         })
     },
     requestInstanceList (_, { projectId, templateId, params }) {
-        return ajax.get(`${prefix}/templateInstances/projects/${projectId}/templates/${templateId}`, { params }).then(response => {
+        return ajax.get(`${prefix}/template/Instances/v2/projects/${projectId}/templates/${templateId}`, { params }).then(response => {
             return response.data
         })
     },

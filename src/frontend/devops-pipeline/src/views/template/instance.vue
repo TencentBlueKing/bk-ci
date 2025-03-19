@@ -381,10 +381,10 @@
                         templateId: this.templateId,
                         params
                     })
-                    this.currentVersionId = res.latestVersion.version
+                    // this.currentVersionId = res.latestVersion.version
                     // this.versionList = res.versions
-                    this.currentVersionName = res.latestVersion.versionName
-                    this.instanceList = res.instances
+                    // this.currentVersionName = res.latestVersion.versionName
+                    this.instanceList = res.records
                     this.pagination.count = res.count
                     this.hasCreatePermission = res.hasCreateTemplateInstancePerm
                 } catch (err) {

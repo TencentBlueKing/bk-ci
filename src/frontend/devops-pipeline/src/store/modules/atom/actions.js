@@ -221,7 +221,11 @@ export default {
                         setting: templateRes.data.setting
                     },
                     updater: templateRes.data.resource.updater,
-                    updateTime: templateRes.data.resource.updateTime
+                    updateTime: templateRes.data.resource.updateTime,
+                    yamlSupported: !!templateRes.data.resource.yaml,
+                    yamlPreview: {
+                        yaml: templateRes.data.resource.yaml
+                    }
                 }
             },
             atomPropRes
@@ -927,7 +931,7 @@ export default {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/saveDraft`, draftPipeline)
     },
     saveDraftTemplate (_, { projectId, templateId, ...draftTemplate }) {
-        return request.post(`/${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/saveDraft`, draftTemplate)
+        return request.put(`/${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/saveDraft`, draftTemplate)
     },
     releaseDraftPipeline (_, { projectId, pipelineId, version, params }) {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/releaseVersion/${version}`, params)

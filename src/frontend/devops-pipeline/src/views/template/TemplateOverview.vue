@@ -219,7 +219,6 @@
         },
         created () {
             if (!this.pipelineHistoryViewable) {
-                debugger
                 this.$router.push({
                     name: 'templateEdit',
                     params: {
