@@ -1,10 +1,8 @@
 package com.tencent.devops.worker.common.utils
 
 import java.io.File
-import java.security.AccessController
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import sun.security.action.GetPropertyAction
 
 class CommandLineUtilsTest {
 
@@ -28,10 +26,7 @@ class CommandLineUtilsTest {
     @Test
     fun appendVariableToFileTest() {
         fun func(str: String) = CommandLineUtils.appendVariableToFile(
-            str, File(
-                AccessController
-                    .doPrivileged(GetPropertyAction("java.io.tmpdir"))
-            ), "appendVariableToFileTest"
+            str, File(System.getProperty("java.io.tmpdir")), "appendVariableToFileTest"
         )
         /*不识别*/
         Assertions.assertEquals(func("echo \"::set-variable name=RESULT::test\""), null)
@@ -50,10 +45,7 @@ class CommandLineUtilsTest {
     @Test
     fun appendRemarkToFileTest() {
         fun func(str: String) = CommandLineUtils.appendRemarkToFile(
-            str, File(
-                AccessController
-                    .doPrivileged(GetPropertyAction("java.io.tmpdir"))
-            ), "appendRemarkToFileTest"
+            str, File(System.getProperty("java.io.tmpdir")), "appendRemarkToFileTest"
         )
         /*不识别*/
         Assertions.assertEquals(func("echo \"::set-remark 备注信息\""), null)
@@ -75,10 +67,7 @@ class CommandLineUtilsTest {
         val stepId = "step_xx"
         fun func(str: String) = CommandLineUtils.appendOutputToFile(
             tmpLine = str,
-            workspace = File(
-                AccessController
-                    .doPrivileged(GetPropertyAction("java.io.tmpdir"))
-            ),
+            workspace = File(System.getProperty("java.io.tmpdir")),
             resultLogFile = "appendOutputToFileTest",
             jobId = jobId,
             stepId = stepId
@@ -106,10 +95,7 @@ class CommandLineUtilsTest {
     @Test
     fun appendGateToFileTest() {
         fun func(str: String) = CommandLineUtils.appendGateToFile(
-            str, File(
-                AccessController
-                    .doPrivileged(GetPropertyAction("java.io.tmpdir"))
-            ), "appendGateToFileTest"
+            str, File(System.getProperty("java.io.tmpdir")), "appendGateToFileTest"
         )
         /*不识别*/
         Assertions.assertEquals(func("echo \"::set-gate-value name=pass_rate::0.9\""), null)

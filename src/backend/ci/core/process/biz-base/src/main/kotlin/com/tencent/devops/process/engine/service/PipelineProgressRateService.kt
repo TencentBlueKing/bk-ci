@@ -12,7 +12,7 @@ import com.tencent.devops.process.pojo.BuildTaskProgressInfo
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @Service
 @Suppress("LongParameterList")

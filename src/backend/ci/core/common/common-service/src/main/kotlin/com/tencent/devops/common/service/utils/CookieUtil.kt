@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.service.utils
 
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletRequest
 
 object CookieUtil {
     fun getCookieValue(request: HttpServletRequest, name: String): String? {

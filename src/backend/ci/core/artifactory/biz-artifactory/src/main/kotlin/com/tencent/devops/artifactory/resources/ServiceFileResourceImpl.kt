@@ -34,7 +34,7 @@ import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import java.io.InputStream
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletResponse
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
 

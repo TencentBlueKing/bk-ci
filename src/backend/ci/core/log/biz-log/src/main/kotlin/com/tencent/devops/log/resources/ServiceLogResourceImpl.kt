@@ -36,7 +36,7 @@ import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.log.service.BuildLogQueryService
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 /**
  *

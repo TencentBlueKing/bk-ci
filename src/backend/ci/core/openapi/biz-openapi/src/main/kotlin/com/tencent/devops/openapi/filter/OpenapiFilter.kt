@@ -2,10 +2,10 @@ package com.tencent.devops.openapi.filter
 
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.openapi.filter.manager.ApiFilterManagerChain
-import javax.ws.rs.container.ContainerRequestContext
-import javax.ws.rs.container.ContainerRequestFilter
-import javax.ws.rs.container.PreMatching
-import javax.ws.rs.ext.Provider
+import jakarta.ws.rs.container.ContainerRequestContext
+import jakarta.ws.rs.container.ContainerRequestFilter
+import jakarta.ws.rs.container.PreMatching
+import jakarta.ws.rs.ext.Provider
 
 @Provider
 @PreMatching

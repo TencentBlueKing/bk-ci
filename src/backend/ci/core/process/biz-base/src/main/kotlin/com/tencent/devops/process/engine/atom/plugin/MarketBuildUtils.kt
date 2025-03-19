@@ -42,7 +42,9 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.HttpMethod
+import jakarta.ws.rs.HttpMethod
+import java.util.Optional
+import kotlin.jvm.optionals.getOrNull
 
 object MarketBuildUtils {
     private const val INPUT_PARAM = "input"
@@ -59,15 +61,15 @@ object MarketBuildUtils {
     private val atomCache = CacheBuilder.newBuilder()
         .maximumSize(1000)
         .expireAfterWrite(10, TimeUnit.MINUTES)
-        .build<String, PipelineAtom?>(object : CacheLoader<String, PipelineAtom?>() {
-            override fun load(atomCodeAndVersion: String): PipelineAtom? {
+        .build(object : CacheLoader<String, Optional<PipelineAtom>>() {
+            override fun load(atomCodeAndVersion: String): Optional<PipelineAtom> {
                 val client = SpringContextUtil.getBean(Client::class.java)
                 val arr = atomCodeAndVersion.split("|")
                 val atomCode = arr[0]
                 val atomVersion = arr[1]
                 val atom = client.get(ServiceAtomResource::class).getAtomVersionInfo(atomCode, atomVersion).data
                 logger.info("get atom version info for : $atomCode, $atomVersion, $atom")
-                return atom
+                return Optional.ofNullable(atom)
             }
         })
 
@@ -123,14 +125,17 @@ object MarketBuildUtils {
             HttpMethod.GET -> {
                 request = request.get()
             }
+
             HttpMethod.POST -> {
                 val requestBody = resolveParam(bkAtomHookBody, param, inputMap)
                 request = request.post(RequestBody.create(OkhttpUtils.jsonMediaType, requestBody))
             }
+
             HttpMethod.PUT -> {
                 val requestBody = resolveParam(bkAtomHookBody, param, inputMap)
                 request = request.put(RequestBody.create(OkhttpUtils.jsonMediaType, requestBody))
             }
+
             HttpMethod.DELETE -> {
                 request = request.delete()
             }
@@ -145,7 +150,7 @@ object MarketBuildUtils {
     @Suppress("ALL")
     private fun getDefaultHookUrl(atomCode: String, atomVersion: String, channelCode: ChannelCode): String {
         if (channelCode != ChannelCode.BS) return ""
-        val inputMap = atomCache.get("$atomCode|$atomVersion")?.props?.get(INPUT_PARAM)
+        val inputMap = atomCache.get("$atomCode|$atomVersion").getOrNull()?.props?.get(INPUT_PARAM)
         if (inputMap == null || inputMap !is Map<*, *>) {
             return ""
         }
@@ -157,7 +162,7 @@ object MarketBuildUtils {
     }
 
     private fun getDefaultHookMethod(atomCode: String, atomVersion: String): String {
-        val inputMap = atomCache.get("$atomCode|$atomVersion")?.props?.get(INPUT_PARAM)
+        val inputMap = atomCache.get("$atomCode|$atomVersion").getOrNull()?.props?.get(INPUT_PARAM)
         if (inputMap == null || inputMap !is Map<*, *>) {
             return ""
         }
@@ -169,7 +174,7 @@ object MarketBuildUtils {
     }
 
     private fun getDefaultHookBody(atomCode: String, atomVersion: String): String {
-        val inputMap = atomCache.get("$atomCode|$atomVersion")?.props?.get(INPUT_PARAM)
+        val inputMap = atomCache.get("$atomCode|$atomVersion").getOrNull()?.props?.get(INPUT_PARAM)
         if (inputMap == null || inputMap !is Map<*, *>) {
             return ""
         }

@@ -1,9 +1,10 @@
 package com.tencent.devops.environment.dao
 
+import com.tencent.devops.common.db.utils.fetchCountFix
 import com.tencent.devops.model.environment.tables.TAgentShareProject
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class AgentShareProjectDao {
@@ -13,7 +14,7 @@ class AgentShareProjectDao {
         sharedProjectId: String
     ): Int {
         with(TAgentShareProject.T_AGENT_SHARE_PROJECT) {
-            return dslContext.fetchCount(
+            return dslContext.fetchCountFix(
                 dslContext.selectFrom(this)
                     .where(AGENT_ID.eq(agentId))
                     .and(SHARED_PROJECT_ID.eq(sharedProjectId))

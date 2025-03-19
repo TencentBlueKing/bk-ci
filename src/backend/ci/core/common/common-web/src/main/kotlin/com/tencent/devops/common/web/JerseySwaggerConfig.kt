@@ -31,9 +31,9 @@ import io.swagger.v3.oas.integration.SwaggerConfiguration
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.info.Info
 import io.swagger.v3.oas.models.servers.Server
-import javax.annotation.PostConstruct
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import jakarta.annotation.PostConstruct
 
 class JerseySwaggerConfig : JerseyConfig() {
 

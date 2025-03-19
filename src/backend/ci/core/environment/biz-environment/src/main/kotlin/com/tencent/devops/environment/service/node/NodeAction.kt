@@ -28,7 +28,7 @@
 package com.tencent.devops.environment.service.node
 
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 
 /**
  * Node节点操作接口

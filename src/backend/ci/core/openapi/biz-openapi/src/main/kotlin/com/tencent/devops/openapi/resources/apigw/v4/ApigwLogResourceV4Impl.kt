@@ -42,8 +42,8 @@ import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwLogResourceV4
 import com.tencent.devops.openapi.service.IndexService
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value

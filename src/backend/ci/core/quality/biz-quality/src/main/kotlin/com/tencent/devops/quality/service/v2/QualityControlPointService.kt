@@ -53,7 +53,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

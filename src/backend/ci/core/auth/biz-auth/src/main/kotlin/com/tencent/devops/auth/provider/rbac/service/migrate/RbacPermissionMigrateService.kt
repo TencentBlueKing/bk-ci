@@ -459,6 +459,8 @@ class RbacPermissionMigrateService(
                         watcher = watcher
                     )
                 }
+
+                else -> {}
             }
             // 修改项目可授权人员范围
             if (projectInfo.subjectScopes == null || projectInfo.subjectScopes!!.isEmpty()) {

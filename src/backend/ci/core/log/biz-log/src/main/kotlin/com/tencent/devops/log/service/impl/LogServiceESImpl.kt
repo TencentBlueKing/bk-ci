@@ -61,9 +61,9 @@ import java.io.IOException
 import java.sql.Date
 import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.StreamingOutput
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.StreamingOutput
 import kotlin.math.ceil
 import org.elasticsearch.ElasticsearchStatusException
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest
