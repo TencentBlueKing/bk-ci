@@ -187,7 +187,6 @@ export default {
         try {
             let codeccCount = 0
             let manualTriggerCount = 0
-            let timerTriggerCount = 0
             let remoteTriggerCount = 0
 
             if (pipelineSetting && !pipelineSetting.pipelineName) {
@@ -250,7 +249,6 @@ export default {
                 atomCode === 'linuxPaasCodeCCScript' && codeccCount++
                 atomCode === 'CodeccCheckAtom' && codeccCount++
                 atomCode === 'manualTrigger' && manualTriggerCount++
-                atomCode === 'timerTrigger' && timerTriggerCount++
                 atomCode === 'remoteTrigger' && remoteTriggerCount++
 
                 return codeccCount > 1 || manualTriggerCount > 1 || remoteTriggerCount > 1 || ele.isError
