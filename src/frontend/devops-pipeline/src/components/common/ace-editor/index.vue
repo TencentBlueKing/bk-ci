@@ -28,8 +28,7 @@
         REPOSITORY_API_URL_PREFIX
     } from '@/store/constants'
     import ciYamlTheme from '@/utils/ciYamlTheme'
-    import { allVersionKeyList } from '@/utils/pipelineConst'
-    import { mapGetters, mapState } from 'vuex'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     export default {
         props: {
             value: {
@@ -89,11 +88,11 @@
             ...mapState('atom', [
                 'commonParams',
                 'triggerParams',
-                'atomsOutputMap',
                 'editingElementPos'
             ]),
             ...mapGetters('atom', [
-                'allPipelineParams'
+                'allPipelineParams',
+                'getAllAtomOuputList'
             ]),
             langMap () {
                 return {
@@ -106,6 +105,8 @@
                 }
             },
             pipelineParams () {
+                const { stageIndex, containerIndex, elementIndex } = this.editingElementPos
+                const currentElementPos = parseInt(`${stageIndex}${containerIndex}${elementIndex}`)
                 return [
                     ...this.commonParams.reduce((acc, item) => [
                         ...acc,
@@ -116,8 +117,14 @@
                         ...item.params.map(param => param.name)
                     ], []),
                     ...this.allPipelineParams.map(param => param.id),
-                    ...(Object.values(this.atomsOutputMap).map(item => Object.keys(item)).flat()),
-                    ...allVersionKeyList
+                    ...(this.getAllAtomOuputList().reduce((acc, item) => {
+                        if (!item.stepId || item.totalIndex > currentElementPos) return acc
+                        return [
+                            ...acc,
+                            ...item.params.map(param => `${item.envPrefix}${param.name}`)
+                        ]
+                    }, []))
+
                 ]
             }
         },
@@ -161,6 +168,10 @@
                 await this.initDefaultMonaco()
             }
 
+            if (this.atomsOutputMap == null) {
+                this.fetchAtomsOutput()
+            }
+
             this.isLoading = false
             this.editor.onDidChangeModelContent(event => {
                 const value = this.editor.getValue()
@@ -175,6 +186,9 @@
             this.editor?.dispose?.()
         },
         methods: {
+            ...mapActions('atom', [
+                'fetchAtomsOutput'
+            ]),
             getLang (lang) {
                 return this.langMap[lang] || lang
             },
