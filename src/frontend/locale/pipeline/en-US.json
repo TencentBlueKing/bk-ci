@@ -465,7 +465,8 @@
     "lastModifiedDate": "Last Modified on",
     "lastModifiedBy": "Updater",
     "templateCoverWarning": "Draft Overwrite Warning",
-    "templateCoverWarningDesc": "The draft edited by {0} (created from {1}) has not been published yet. Editing the branch version will overwrite the unpublished draft. Please confirm if you want to continue."
+    "templateCoverWarningDesc": "The draft edited by {0} (created from {2}) has not been published yet. Editing the branch version will overwrite the unpublished draft. Please confirm if you want to continue.",
+    "templateOutDateCoverWarningDesc": "A new dev branch version has been submitted to the code repository. The draft edited by {0} (created from {2} on {1}) has expired. This operation will overwrite the expired draft. Please confirm whether to continue"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",

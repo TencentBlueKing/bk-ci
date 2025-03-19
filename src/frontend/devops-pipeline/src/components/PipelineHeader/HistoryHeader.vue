@@ -60,6 +60,7 @@
                 :is-active-draft="activePipelineVersion?.isDraft"
                 :is-active-branch-version="isActiveBranchVersion"
                 :draft-creator="activePipelineVersion?.creator"
+                :draft-create-time="activePipelineVersion?.createTime"
             >
                 {{ operateName }}
             </RollbackEntry>
