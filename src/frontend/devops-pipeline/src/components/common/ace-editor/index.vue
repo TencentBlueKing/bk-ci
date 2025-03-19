@@ -28,6 +28,7 @@
         REPOSITORY_API_URL_PREFIX
     } from '@/store/constants'
     import ciYamlTheme from '@/utils/ciYamlTheme'
+    import { allVersionKeyList } from '@/utils/pipelineConst'
     import { mapGetters, mapState } from 'vuex'
     export default {
         props: {
@@ -88,6 +89,7 @@
             ...mapState('atom', [
                 'commonParams',
                 'triggerParams',
+                'atomsOutputMap',
                 'editingElementPos'
             ]),
             ...mapGetters('atom', [
@@ -105,15 +107,17 @@
             },
             pipelineParams () {
                 return [
-                    this.commonParams.reduce((acc, item) => [
+                    ...this.commonParams.reduce((acc, item) => [
                         ...acc,
                         ...item.params.map(param => param.name)
-                    ], []).join(','),
-                    this.triggerParams.reduce((acc, item) => [
+                    ], []),
+                    ...this.triggerParams.reduce((acc, item) => [
                         ...acc,
                         ...item.params.map(param => param.name)
-                    ], []).join(','),
-                    this.allPipelineParams.map(param => param.id).join(',')
+                    ], []),
+                    ...this.allPipelineParams.map(param => param.id),
+                    ...(Object.values(this.atomsOutputMap).map(item => Object.keys(item)).flat()),
+                    ...allVersionKeyList
                 ]
             }
         },
@@ -244,8 +248,8 @@
                         version: '1.0.0'
                     },
 
-                    // env: ReleaseChannel.INSIDER,
-                    env: 'production',
+                    env: 'insider',
+                    // env: 'production',
                     brandPaddingRight: 32,
                     authenticatedSession: {
                         accessToken,
@@ -273,6 +277,7 @@
             },
             registryCopilotContext () {
                 const [pipelineId, elementId, elementName, version, jobId, stepId] = this.parentElementAlias.split(':')
+                console.log('pipelineParams', this.pipelineParams)
                 this.gongfengEditor.registerContextDefinition(this.editor, {
                     variables: this.pipelineParams,
                     workspace: [
