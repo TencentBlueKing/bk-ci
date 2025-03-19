@@ -36,6 +36,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
+import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.web.RestResource
@@ -85,7 +86,10 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        version: Int
+        version: Int,
+        targetAction: CodeTargetAction?,
+        repoHashId: String?,
+        targetBranch: String?
     ): Result<PrefetchReleaseResult> {
         checkParam(userId, projectId)
         val permission = AuthPermission.EDIT
@@ -110,7 +114,10 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = version
+                version = version,
+                targetAction = targetAction,
+                repoHashId = repoHashId,
+                targetBranch = targetBranch
             )
         )
     }
