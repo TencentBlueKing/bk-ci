@@ -483,10 +483,6 @@
     "searchTemplate": "Search Template",
     "install": "Install",
     "import": "Import",
-    "allTemplate": "All",
-    "stageTemplate": "Stage",
-    "jobTemplate": "Job",
-    "stepTemplate": "Step",
     "deleteCustom": "Confirm delete custom template?",
     "deleteStore": "Confirm delete development store template?",
     "templateToCustom": "Confirm converting the template to custom?",
@@ -1712,5 +1708,10 @@
   "noDraft": "No drafts available for deletion",
   "isTaskTermination": "Are you sure you want to terminate the task execution?",
   "pipelineNameConventions": "Pipeline Naming Conventions:",
-  "addLabels": "Add Label"
+  "addLabels": "Add Label",
+  "allTemplate": "All",
+  "stageTemplate": "Stage",
+  "jobTemplate": "Job",
+  "stepTemplate": "Step",
+  "pipelineTemplate": "Pipeline"
 }

@@ -29,7 +29,8 @@ const pipelinesGroup = () => import(/* webpackChunkName: "pipelinesGroup" */'../
 const pipelinesAudit = () => import(/* webpackChunkName: "pipelinesAudit" */'../views/list/audit')
 
 // 流水线模板
-const templateList = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/list/')
+const templateGroup = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/')
+const TemplateList = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/List/')
 // const pipelinesTemplate = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/list/template')
 // const templateEntry = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/')
 // const templateEdit = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/edit.vue')
@@ -109,7 +110,14 @@ const routes = [
                     {
                         path: 'template',
                         name: 'template',
-                        component: templateList
+                        component: templateGroup,
+                        children: [
+                            {
+                                path: ':viewId?',
+                                name: 'TemplateManageList',
+                                component: TemplateList
+                            }
+                        ]
                     },
                     {
                         path: 'atomManage',

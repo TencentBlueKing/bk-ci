@@ -57,7 +57,7 @@
         },
         setup (props, { root, emit }) {
             if (!root) return
-            const { i18n, store, route } = UseInstance(root)
+            const { i18n, store, route, bkMessage } = UseInstance(root)
             const { value } = toRefs(props)
             const storeTemplateInfo = ref({})
             const activeTab = ref(INSTALL_TYPE_STORE)
@@ -123,9 +123,9 @@
                 }
             }
 
-            function importTemplateFromStore () {
+            async function importTemplateFromStore () {
                 try {
-                    const res = store.dispatch('templates/importTemplateFromStore', {
+                    await store.dispatch('templates/importTemplateFromStore', {
                         projectId: projectId.value,
                         params: {
                             marketTemplateId: storeTemplateInfo.value.code,
@@ -133,9 +133,11 @@
                             marketTemplateVersion: storeTemplateInfo.value.version
                         }
                     })
-                    console.log(res)
                 } catch (e) {
-                    console.error(e)
+                    bkMessage({
+                        theme: 'error',
+                        message: e.message || e
+                    })
                 }
             }
             return {

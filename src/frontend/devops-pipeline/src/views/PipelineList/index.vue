@@ -165,7 +165,7 @@
                     },
                     {
                         label: this.$t('templateName'),
-                        name: 'template'
+                        name: 'TemplateManageList'
                     }
                 ]
             }

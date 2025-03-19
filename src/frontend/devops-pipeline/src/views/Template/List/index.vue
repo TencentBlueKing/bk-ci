@@ -1,30 +1,5 @@
 <template>
     <article class="template-manage-entry">
-        <aside class="template-aside">
-            <div
-                v-for="(item, idx) in navList"
-                :key="idx"
-            >
-                <div
-                    :class="['nav-item', activeTab === item.name ? 'active' : '']"
-                    @click="handleChangeMenu(item.name)"
-                >
-                    <div>
-                        <Logo
-                            :class="item.icon"
-                            size="14"
-                            :name="item.icon"
-                        />
-                        <span>{{ $t(item.label) }}</span>
-                    </div>
-                    <span class="nav-num">{{ item.num }}</span>
-                </div>
-                <p
-                    v-if="item.isAll"
-                    class="item-border"
-                ></p>
-            </div>
-        </aside>
         <div class="template-main">
             <div class="template-main-header">
                 <div>
@@ -53,7 +28,7 @@
             </div>
             <templateTable
                 ref="selfTemp"
-                :type="activeTab"
+                :type="templateViewId"
                 :data="tableData"
                 :pagination="pagination"
                 :is-loading="isLoading"
@@ -136,7 +111,6 @@
 <script>
     import { defineComponent, onMounted, ref, computed, h, nextTick } from '@vue/composition-api'
     import dayjs from 'dayjs'
-    import Logo from '@/components/Logo'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
     import templateTable from './templateTable'
@@ -148,13 +122,14 @@
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
     import {
-        TEMPLATE_TYPE_CACHE,
+        // TEMPLATE_VIEW_ID_CACHE,
+        TEMPLATE_VIEW_ID_MAP,
+        ALL_TEMPLATE_VIEW_ID,
         TEMPLATE_ACTION_MAP
     } from '@/store/modules/templates/constants'
 
     export default defineComponent({
         components: {
-            Logo,
             SearchSelect,
             templateTable,
             CreateTemplateDialog,
@@ -162,9 +137,8 @@
         },
         setup (props, { root }) {
             if (!root) return
-            const { route, i18n, store, bkMessage, bkInfo, validator } = UseInstance(root)
+            const { route, i18n, store, bkMessage, bkInfo, validator } = UseInstance()
             const hasCreatePermission = ref(false)
-            const activeTab = ref('ALL')
             const searchValue = ref([])
             const isLoading = ref(false)
             const tableData = ref([])
@@ -189,34 +163,6 @@
                 { label: i18n.t('true'), value: true },
                 { label: i18n.t('false'), value: false }
             ])
-            const navList = ref([
-                {
-                    label: 'template.allTemplate',
-                    name: 'ALL',
-                    isAll: true,
-                    icon: 'group'
-                },
-                {
-                    label: 'template.pipelineTemplate',
-                    name: 'PIPELINE',
-                    icon: 'pipeline'
-                },
-                {
-                    label: 'template.stageTemplate',
-                    name: 'STAGE',
-                    icon: 'pipeline-group-item-icon'
-                },
-                {
-                    label: 'template.jobTemplate',
-                    name: 'JOB',
-                    icon: 'pipeline-group-item-icon'
-                },
-                {
-                    label: 'template.stepTemplate',
-                    name: 'STEP',
-                    icon: 'pipeline-group-item-icon'
-                }
-            ])
             const filterData = computed(() => [
                 {
                     name: i18n.t('template.name'),
@@ -240,22 +186,13 @@
                 }
             ])
             const projectId = computed(() => route.params.projectId)
+            const templateViewId = computed(() => route.params.viewId)
 
             onMounted(() => {
-                const historyTab = localStorage.getItem(TEMPLATE_TYPE_CACHE)
-                if (historyTab) {
-                    activeTab.value = historyTab
-                }
-                getType2Count()
                 fetchTableData()
                 hasPipelineTemplatePermission()
             })
 
-            function handleChangeMenu (name) {
-                activeTab.value = name
-                localStorage.setItem(TEMPLATE_TYPE_CACHE, activeTab.value)
-                fetchTableData()
-            }
             function sourceFilterMethod (value, row, column) {
                 const property = column.property
                 return row[property] === value
@@ -270,20 +207,7 @@
                     bkMessage({ message: err.message || err, theme: 'error' })
                 }
             }
-            async function getType2Count () {
-                try {
-                    const nums = await store.dispatch('templates/getType2Count', {
-                        projectId: projectId.value
-                    })
-                    navList.value = navList.value.map(item => {
-                        const key = item.name.toLowerCase()
-                        item.num = nums[key] || 0
-                        return item
-                    })
-                } catch (err) {
-                    bkMessage({ message: err.message || err, theme: 'error' })
-                }
-            }
+            
             async function fetchTableData (params = { }) {
                 isLoading.value = true
                 try {
@@ -291,7 +215,7 @@
                         projectId: projectId.value,
                         page: pagination.value.current,
                         pageSize: pagination.value.limit,
-                        ...(activeTab.value !== 'ALL' && { type: activeTab.value }),
+                        ...(templateViewId.value !== ALL_TEMPLATE_VIEW_ID && { type: TEMPLATE_VIEW_ID_MAP[templateViewId.value] }),
                         ...params
                     }
                     const res = await store.dispatch('templates/getTemplateList', param)
@@ -555,23 +479,20 @@
                 pagination.value.current = 1
                 fetchTableData()
             }
-                
+
             return {
                 hasCreatePermission,
-                activeTab,
+                templateViewId,
                 searchValue,
                 isLoading,
                 tableData,
                 pagination,
                 copyTemp,
                 copySettings,
-                navList,
                 filterData,
                 projectId,
-                handleChangeMenu,
                 sourceFilterMethod,
                 hasPipelineTemplatePermission,
-                getType2Count,
                 fetchTableData,
                 handlePageLimitChange,
                 handlePageChange,
@@ -605,52 +526,9 @@
     box-sizing: border-box;
     border: 1px solid #dcdee5;
 
-    .template-aside{
-        width: 240px;
-        background: #FFFFFF;
-        padding-top: 8px;
-        box-shadow: 1px 0 0 0 #EAEBF0, 1px 0 0 0 #DCDEE5;
-
-        .nav-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 0 32px;
-            height: 40px;
-            align-items: center;
-            font-size: 14px;
-            color: #4D4F56;
-            cursor: pointer;
-            svg {
-                vertical-align: middle;
-                border: 1px solid #ccc;
-                margin: 0 10px;
-            }
-            .nav-num {
-                height: 16px;
-                padding: 0 8px;
-                background: #F0F1F5;
-                border-radius: 8px;
-                font-size: 12px;
-                color: #979BA5;
-                text-align: center;
-                line-height: 16px;
-            }
-        }
-        .active{
-            background-color: #E1ECFF;
-            color: #3A84FF;
-        }
-        .item-border {
-            width: 190px;
-            border-bottom: 1px solid #DCDEE5;
-            margin: 8px 24px;
-        }
-   }
-
    .template-main {
-        width: calc(100% - 240px);
+        width: 100%;
         padding: 24px 36px 12px 24px;
-
         &-header {
             display: flex;
             justify-content: space-between;

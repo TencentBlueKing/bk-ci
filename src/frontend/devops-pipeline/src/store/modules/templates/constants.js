@@ -22,10 +22,10 @@ export const INSTALL_TYPE_STORE = 'INSTALL_TYPE_STORE'
 export const INSTALL_TYPE_REPOSITORY = 'INSTALL_TYPE_REPOSITORY'
 export const INSTALL_TYPE_LOCAL = 'INSTALL_TYPE_LOCAL'
 
-// 模板列表表格缓存(用于记录表格列宽\隐藏列等)
+// 模板列表表格缓存(用于记录表格列宽\隐藏列\视图ID等)
 export const CACHE_TEMPLATE_TABLE_WIDTH_MAP = 'CACHE_TEMPLATE_TABLE_WIDTH_MAP'
 export const TEMPLATE_TABLE_COLUMN_CACHE = 'TEMPLATE_TABLE_COLUMN_CACHE'
-export const TEMPLATE_TYPE_CACHE = 'TEMPLATE_TYPE_CACHE'
+export const TEMPLATE_VIEW_ID_CACHE = 'TEMPLATE_VIEW_ID_CACHE'
 
 // 模板操作权限类型
 export const TEMPLATE_ACTION_MAP = {
@@ -34,4 +34,18 @@ export const TEMPLATE_ACTION_MAP = {
     EDIT: 'EDIT',
     DELETE: 'DELETE',
     VIEW: 'VIEW'
+}
+
+// 模板列表视图ID
+export const ALL_TEMPLATE_VIEW_ID = 'allTemplate'
+export const PIPELINE_TEMPLATE_VIEW_ID = 'pipelineTemplate'
+export const STAGE_TEMPLATE_VIEW_ID = 'stageTemplate'
+export const JOB_TEMPLATE_VIEW_ID = 'jobTemplate'
+export const STEP_TEMPLATE_VIEW_ID = 'stepTemplate'
+export const TEMPLATE_VIEW_ID_MAP = {
+    ALL_TEMPLATE_VIEW_ID: 'ALL',
+    PIPELINE_TEMPLATE_VIEW_ID: 'PIPELINE',
+    STAGE_TEMPLATE_VIEW_ID: 'STAGE',
+    JOB_TEMPLATE_VIEW_ID: 'JO',
+    STEP_TEMPLATE_VIEW_ID: 'STEP'
 }
