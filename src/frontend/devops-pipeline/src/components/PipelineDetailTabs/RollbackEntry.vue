@@ -191,7 +191,7 @@
                         this.showDraftConfirmDialog()
                     }
                 } else {
-                    if (this.isActiveBranchVersion && this.version !== this.draftVersion) {
+                    if (this.isActiveBranchVersion && this.version !== this.pipelineInfo?.baseVersion) {
                         this.showDraftConfirmDialog()
                     } else {
                         this.goEdit(this.draftVersion ?? this.version)
