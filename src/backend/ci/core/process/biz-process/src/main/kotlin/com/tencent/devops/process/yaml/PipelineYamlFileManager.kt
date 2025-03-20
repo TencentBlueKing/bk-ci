@@ -445,7 +445,7 @@ class PipelineYamlFileManager @Autowired constructor(
 
             context.actionType = YamlPipelineActionType.UPDATE
             context.pipelineId = pipelineId
-            val pipelineInfo = pipelineYamlResourceManager.getPipelineInfo(
+            val pipelineName = pipelineYamlResourceManager.getPipelineName(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 isTemplate = GitActionCommon.isTemplateFile(filePath)
@@ -455,7 +455,7 @@ class PipelineYamlFileManager @Autowired constructor(
                     params = arrayOf(pipelineId)
                 )
             }
-            context.pipelineName = pipelineInfo.pipelineName
+            context.pipelineName = pipelineName
 
             updatePipelineIfAbsent(pipelineId = pipelineId)?.let {
                 context.versionName = it.versionName
@@ -824,7 +824,7 @@ class PipelineYamlFileManager @Autowired constructor(
             return
         }
         val pipelineId = pipelineYamlInfo.pipelineId
-        val pipelineInfo = pipelineYamlResourceManager.getPipelineInfo(
+        val pipelineName = pipelineYamlResourceManager.getPipelineName(
             projectId = projectId,
             pipelineId = pipelineId,
             isTemplate = GitActionCommon.isTemplateFile(filePath)
@@ -835,7 +835,7 @@ class PipelineYamlFileManager @Autowired constructor(
             )
         }
         context.pipelineId = pipelineId
-        context.pipelineName = pipelineInfo.pipelineName
+        context.pipelineName = pipelineName
         context.versionName = ref
 
         // 判断是否能够删除流水线还是删除流水线分支版本

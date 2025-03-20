@@ -123,11 +123,11 @@ class PipelineYamlResourceService @Autowired constructor(
         )
     }
 
-    override fun getPipelineInfo(projectId: String, pipelineId: String): PipelineInfo? {
+    override fun getPipelineName(projectId: String, pipelineId: String): String? {
         return pipelineRepositoryService.getPipelineInfo(
             projectId = projectId,
             pipelineId = pipelineId
-        )
+        )?.pipelineName
     }
 
     override fun existsReleaseVersion(projectId: String, pipelineId: String): Boolean {
