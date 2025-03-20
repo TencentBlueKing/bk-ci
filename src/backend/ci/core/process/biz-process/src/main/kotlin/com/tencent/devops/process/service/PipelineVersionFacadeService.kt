@@ -140,14 +140,15 @@ class PipelineVersionFacadeService @Autowired constructor(
         val canRelease = draftResource != null && draftResource.model.stages.size > 1
         // 存在草稿版本就可以调试
         val canDebug = draftResource != null
-        val latestResource = pipelineRepositoryService.getPipelineResourceVersion(
+        val releaseResource = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
-            pipelineId = pipelineId
+            pipelineId = pipelineId,
+            version = detailInfo.pipelineVersion
         ) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
             params = arrayOf(pipelineId)
         )
-        val yamlInfo = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, latestResource.version)
+        val yamlInfo = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, releaseResource.version)
         var baseVersion: Int? = null
         var baseVersionName: String? = null
         var baseVersionStatus: VersionStatus? = null
@@ -172,31 +173,23 @@ class PipelineVersionFacadeService @Autowired constructor(
         /**
          * 获取最新版本和版本名称
          *
-         * 1. 如果最新版本是草稿版本,则使用草稿版本
-         * 2. 如果最新版本是分支版本,则需要获取分支最新的激活版本
-         * 3. 如果最新版本是正式版本,则使用正式版本
+         * 如果最新版本是分支版本,则需要获取分支最新的激活版本,否则最新版本可能是正式或者草稿版本
          */
-        // latestResource的数据是从T_PIPELINE_RESOURCE中获取,数据会与T_PIPELINE_RESOURCE_VERSION不一致
-        val latestReleaseResource = pipelineRepositoryService.getPipelineResourceVersion(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = latestResource.version,
-            includeDraft = true
-        ) ?: latestResource
-        val (releaseVersion, releaseVersionName) = when (latestReleaseResource.status) {
+        val (releaseVersion, releaseVersionName) = when (releaseResource.status) {
+            // 分支版本,需要获取当前分支最新的激活版本
             VersionStatus.BRANCH -> {
                 val branchVersion = pipelineRepositoryService.getBranchVersionResource(
-                    projectId, pipelineId, latestReleaseResource.versionName
+                    projectId, pipelineId, releaseResource.versionName
                 )
-                Pair(branchVersion?.version ?: latestResource.version, branchVersion?.versionName)
+                Pair(branchVersion?.version ?: releaseResource.version, branchVersion?.versionName)
             }
 
             else -> {
-                Pair(latestResource.version, latestResource.versionName)
+                Pair(releaseResource.version, releaseResource.versionName)
             }
         }
         // 草稿版本和版本名,如果有草稿版本,则使用草稿版本,否则使用最新版本
-        val (draftVersion, draftVersionName) = if (draftResource == null) {
+        val (version, versionName) = if (draftResource == null) {
             Pair(releaseVersion, releaseVersionName)
         } else {
             Pair(draftResource.version, null)
@@ -226,8 +219,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             latestVersionStatus = detailInfo.latestVersionStatus,
             runLockType = releaseSetting.runLockType,
             permissions = permissions,
-            version = draftVersion,
-            versionName = draftVersionName,
+            version = version,
+            versionName = versionName,
             releaseVersion = releaseVersion,
             releaseVersionName = releaseVersionName,
             baseVersion = baseVersion,
