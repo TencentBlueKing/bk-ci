@@ -287,6 +287,7 @@ class PipelineBuildFacadeService(
             triggerContainer.params.forEach { param ->
                 // 如果没有上次构建的记录则直接使用默认值
                 param.value = param.defaultValue
+                param.latestRandomStringInPath = param.randomStringInPath
             }
         }
 
