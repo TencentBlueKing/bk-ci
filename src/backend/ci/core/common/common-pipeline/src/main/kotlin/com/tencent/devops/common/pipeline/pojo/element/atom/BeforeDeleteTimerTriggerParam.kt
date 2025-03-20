@@ -35,7 +35,7 @@ data class BeforeDeleteTimerTriggerParam(
     override val pipelineId: String,
     override val channelCode: ChannelCode,
     val deleteTimerBranch: Boolean = false
-): BeforeDeleteParam(
+) : BeforeDeleteParam(
     userId,
     projectId,
     pipelineId,

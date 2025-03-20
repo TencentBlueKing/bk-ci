@@ -681,8 +681,8 @@ open class DefaultModelCheckPlugin constructor(
         sourceModel: Model?,
         originElement: Element,
         param: BeforeDeleteParam
-    ) : BeforeDeleteParam {
-        return when(originElement) {
+    ): BeforeDeleteParam {
+        return when (originElement) {
             is TimerTriggerElement -> {
                 BeforeDeleteTimerTriggerParam(
                     userId = param.userId,
@@ -692,6 +692,7 @@ open class DefaultModelCheckPlugin constructor(
                     deleteTimerBranch = cleanTimerBranch(sourceModel)
                 )
             }
+
             else -> param
         }
     }

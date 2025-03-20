@@ -335,7 +335,7 @@ open class PipelineTimerService @Autowired constructor(
     fun cleanTimer(
         projectId: String,
         pipelineId: String
-    ) :Int {
+    ): Int {
         return pipelineTimerDao.delete(
             dslContext = dslContext,
             pipelineId = pipelineId,

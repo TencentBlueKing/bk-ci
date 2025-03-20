@@ -142,7 +142,7 @@ open class PipelineTimerUpgradeService @Autowired constructor(
                         val deleteCount = pipelineTimerService.cleanTimer(projectId, pipelineId)
                         logger.info(
                             "timer trigger element is empty, deleted $deleteCount timer tasks" +
-                                    "|$projectId|${pipelineId}"
+                                    "|$projectId|$pipelineId"
                         )
                     }
 
