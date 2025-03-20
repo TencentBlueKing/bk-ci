@@ -28,8 +28,11 @@
 package com.tencent.devops.process.engine.compatibility.v2
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.CustomFileVersionControlInfo
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -37,7 +40,7 @@ import org.slf4j.LoggerFactory
 
 open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibilityTransformer {
 
-    @SuppressWarnings("ComplexMethod")
+    @SuppressWarnings("ComplexMethod", "NestedBlockDepth")
     override fun parseTriggerParam(
         userId: String,
         projectId: String,
@@ -49,6 +52,9 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
         val paramsMap = HashMap<String, BuildParameters>(paramProperties.size, 1F)
 
         paramProperties.forEach { param ->
+            // 对于CUSTOM_FILE类型的变量，需要特殊处理和保存
+            var randomStringInPath: String? = null
+
             // 通过对现有Model存在的旧变量替换成新变量， 如果已经是新的会为空，直接为it.id
             val key = PipelineVarUtil.oldVarToNewVar(param.id) ?: param.id
 
@@ -64,6 +70,22 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
 //                TODO #8161 没有作为前端可填入参的变量，直接取默认值，不可被覆盖（实施前仅打印日志）
 //                param.defaultValue
 //            }
+                param.type == BuildFormPropertyType.CUSTOM_FILE && param.enableVersionControl == true -> {
+                    // 与前端约定，对于自定义文件路径需要，解析出版本控制信息
+                    val versionControlInfo = paramValues[key]?.let { str ->
+                        try {
+                            JsonUtil.to(str, CustomFileVersionControlInfo::class.java)
+                        } catch (ignore: Throwable) {
+                            null
+                        }
+                    }
+                    if (versionControlInfo != null) {
+                        randomStringInPath = versionControlInfo.latestRandomStringInPath
+                        versionControlInfo.directory
+                    } else {
+                        param.value ?: param.defaultValue
+                    }
+                }
                 else -> {
                     val overrideValue = paramValues[key] ?: paramValues[param.id]
                     if (!param.required && overrideValue != null) {
@@ -88,7 +110,8 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
                 valueType = param.type,
                 readOnly = param.readOnly,
                 desc = param.desc,
-                defaultValue = param.defaultValue
+                defaultValue = param.defaultValue,
+                latestRandomStringInPath = randomStringInPath
             )
         }
 

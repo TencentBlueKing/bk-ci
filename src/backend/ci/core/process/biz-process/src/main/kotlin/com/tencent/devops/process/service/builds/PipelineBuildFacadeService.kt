@@ -256,9 +256,9 @@ class PipelineBuildFacadeService(
         // 获取最后一次的构建id
         val lastTimeInfo = pipelineRuntimeService.getLastTimeBuild(projectId, pipelineId, debug)
         if (lastTimeInfo?.buildParameters?.isNotEmpty() == true) {
-            val latestParamsMap = lastTimeInfo.buildParameters!!.associate { it.key to it.value }
+            val latestParamsMap = lastTimeInfo.buildParameters!!.associateBy { it.key }
             triggerContainer.params.forEach { param ->
-                val realValue = latestParamsMap[param.id]
+                val latestParam = latestParamsMap[param.id]
                 // 入参、推荐版本号参数有上一次的构建参数的时候才设置成默认值，否者依然使用默认值
                 // 当值是boolean类型的时候，需要转为boolean类型
                 param.value = when {
@@ -272,18 +272,22 @@ class PipelineBuildFacadeService(
                     }
 
                     param.defaultValue is Boolean -> {
-                        realValue?.toString()?.toBoolean()
+                        latestParam?.value?.toString()?.toBoolean()
                     }
 
                     else -> {
-                        realValue
+                        latestParam?.value
                     }
                 } ?: param.defaultValue
+                // 如果上次构建指定了最新的目录随机字符串，则填充到构建预览信息
+                param.latestRandomStringInPath =
+                    latestParam?.latestRandomStringInPath ?: param.randomStringInPath
             }
         } else {
             triggerContainer.params.forEach { param ->
                 // 如果没有上次构建的记录则直接使用默认值
                 param.value = param.defaultValue
+                param.latestRandomStringInPath = param.randomStringInPath
             }
         }
 
