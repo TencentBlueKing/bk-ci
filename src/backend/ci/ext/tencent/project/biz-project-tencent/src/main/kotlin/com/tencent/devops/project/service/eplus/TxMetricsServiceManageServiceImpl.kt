@@ -27,10 +27,6 @@
 
 package com.tencent.devops.project.service.eplus
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
-import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
 import com.tencent.devops.project.pojo.service.ServiceVO
@@ -46,9 +42,7 @@ import java.text.MessageFormat
 @Service("METRICS_MANAGE_SERVICE")
 class TxMetricsServiceManageServiceImpl(
     private val dslContext: DSLContext,
-    private val projectDao: ProjectDao,
-    private val authProjectApi: AuthProjectApi,
-    private val pipelineAuthServiceCode: PipelineAuthServiceCode
+    private val projectDao: ProjectDao
 ) : ServiceManageService() {
 
     @Value("\${eplus.panelFrom:}")
@@ -67,21 +61,6 @@ class TxMetricsServiceManageServiceImpl(
     private val panelPid: Int? = null
 
     override fun doSpecBus(userId: String, serviceVO: ServiceVO, projectId: String?): ServiceVO {
-        if (!projectId.isNullOrBlank()) {
-            // 检查用户是否有该项目的权限
-            val hasPermission = authProjectApi.isProjectUser(
-                user = userId,
-                serviceCode = pipelineAuthServiceCode,
-                projectCode = projectId,
-                group = null
-            )
-            if (!hasPermission) {
-                throw ErrorCodeException(
-                    errorCode = ProjectMessageCode.USER_NOT_PROJECT_USER,
-                    params = arrayOf(userId, projectId)
-                )
-            }
-        }
         if (projectId.isNullOrBlank() || publicKey.isNullOrBlank()) return serviceVO
         if (panelUrl.isNullOrBlank() || panelPid == null || panelNid == null) return serviceVO
         val project = projectDao.getByEnglishName(dslContext, projectId)
