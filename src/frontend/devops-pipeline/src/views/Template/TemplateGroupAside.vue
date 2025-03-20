@@ -45,7 +45,7 @@
         },
         setup (props, { root }) {
             if (!root) return
-            const { router, store, route } = UseInstance(root)
+            const { proxy } = UseInstance()
             const navList = ref([
                 {
                     viewId: ALL_TEMPLATE_VIEW_ID,
@@ -79,11 +79,11 @@
                 }
             ])
             const countMap = ref({})
-            const projectId = computed(() => route.params.projectId)
+            const projectId = computed(() => proxy.$route.params.projectId)
             const cacheViewId = localStorage.getItem(TEMPLATE_VIEW_ID_CACHE) || ALL_TEMPLATE_VIEW_ID
             async function getType2Count () {
                 try {
-                    countMap.value = await store.dispatch('templates/getType2Count', {
+                    countMap.value = await proxy.$store.dispatch('templates/getType2Count', {
                         projectId: projectId.value
                     })
                 } catch (err) {
@@ -92,7 +92,7 @@
             }
             function handleChangeMenu (viewId) {
                 localStorage.setItem(TEMPLATE_VIEW_ID_CACHE, viewId)
-                router.push({
+                proxy.$router.push({
                     name: 'TemplateManageList',
                     params: {
                         viewId

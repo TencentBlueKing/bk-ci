@@ -16,8 +16,8 @@
         name: 'localFile',
         setup (props, { root, emit }) {
             if (!root) return
-            const { route } = UseInstance(root)
-            const projectId = computed(() => route.params.projectId)
+            const { proxy } = UseInstance()
+            const projectId = computed(() => proxy.$route.params.projectId)
             const repository = ref('')
             function handleSelect () {
 

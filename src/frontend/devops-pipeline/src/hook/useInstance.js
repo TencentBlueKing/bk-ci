@@ -21,12 +21,10 @@ import { getCurrentInstance } from '@vue/composition-api'
 export default function useInstance () {
     const vm = getCurrentInstance()
     const proxy = vm.proxy
-    
+
     return {
         vm,
-        route: proxy.$route,
-        router: proxy.$router,
-        store: proxy.$store,
+        proxy,
         bkMessage: proxy.$bkMessage,
         bkInfo: proxy.$bkInfo,
         i18n: proxy.$i18n,

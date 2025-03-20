@@ -57,14 +57,14 @@
         },
         setup (props, { root, emit }) {
             if (!root) return
-            const { i18n, store, route, bkMessage } = UseInstance(root)
+            const { proxy, i18n, bkMessage } = UseInstance()
             const { value } = toRefs(props)
             const storeTemplateInfo = ref({})
             const activeTab = ref(INSTALL_TYPE_STORE)
             const dialogPosition = {
                 top: '120'
             }
-            const projectId = computed(() => route.params.projectId)
+            const projectId = computed(() => proxy.$route.params.projectId)
             const confirmBtnText = computed(() => activeTab.value === INSTALL_TYPE_STORE ? i18n.t('template.install') : i18n.t('template.import'))
             const tabTypeMap = computed(() => {
                 return [
@@ -125,7 +125,7 @@
 
             async function importTemplateFromStore () {
                 try {
-                    await store.dispatch('templates/importTemplateFromStore', {
+                    await proxy.$store?.dispatch('templates/importTemplateFromStore', {
                         projectId: projectId.value,
                         params: {
                             marketTemplateId: storeTemplateInfo.value.code,

@@ -208,7 +208,7 @@
         },
         setup (props, { emit, root }) {
             if (!root) return
-            const { router, i18n } = UseInstance(root)
+            const { proxy, i18n } = UseInstance()
             const { data, isLoading, pagination } = toRefs(props)
 
             const TEMPLATE_TRANSLATIONS = {
@@ -332,7 +332,7 @@
                 return convertTime(value)
             }
             function goEdit (row) {
-                router.push({
+                proxy.$router.push({
                     name: 'pipelinesEdit',
                     params: {
                         projectId: row.projectId,

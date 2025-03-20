@@ -78,9 +78,9 @@
         },
         setup (props, { root, emit }) {
             if (!root) return
-            const { route, i18n, bkMessage, userInfo, store } = UseInstance(root)
+            const { proxy, i18n, bkMessage, userInfo } = UseInstance()
             const { value } = toRefs(props)
-            const projectId = computed(() => route.params.projectId)
+            const projectId = computed(() => proxy.$route.params.projectId)
             const userName = computed(() => userInfo?.username || window?.userInfo?.username || '')
             const rules = computed(() => {
                 return {
@@ -140,7 +140,7 @@
 
             function handConfirmCreateTemplate () {
                 templateFormRef.value.validate().then(async () => {
-                    await store.dispatch('templates/createTemplate', {
+                    await proxy.$store.dispatch('templates/createTemplate', {
                         projectId: projectId.value,
                         params: templateFormData.value
                     })

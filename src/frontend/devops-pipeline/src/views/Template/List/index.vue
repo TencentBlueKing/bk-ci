@@ -110,6 +110,7 @@
 
 <script>
     import { defineComponent, onMounted, ref, computed, h, nextTick } from '@vue/composition-api'
+    import { watch } from 'vue'
     import dayjs from 'dayjs'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
@@ -137,7 +138,7 @@
         },
         setup (props, { root }) {
             if (!root) return
-            const { route, i18n, store, bkMessage, bkInfo, validator } = UseInstance()
+            const { proxy, i18n, bkMessage, bkInfo, validator } = UseInstance()
             const hasCreatePermission = ref(false)
             const searchValue = ref([])
             const isLoading = ref(false)
@@ -185,11 +186,17 @@
                     id: 'updater'
                 }
             ])
-            const projectId = computed(() => route.params.projectId)
-            const templateViewId = computed(() => route.params.viewId)
-
-            onMounted(() => {
+            const projectId = computed(() => proxy.$route.params.projectId)
+            const templateViewId = computed(() => {
+                return proxy.$route.params.viewId
+            })
+            watch(() => searchValue.value, () => {
+                console.log(123)
                 fetchTableData()
+            }, {
+                immediate: true
+            })
+            onMounted(() => {
                 hasPipelineTemplatePermission()
             })
 
@@ -199,7 +206,7 @@
             }
             async function hasPipelineTemplatePermission () {
                 try {
-                    hasCreatePermission.value = await store.dispatch('templates/hasPipelineTemplatePermission', {
+                    hasCreatePermission.value = await proxy.$store.dispatch('templates/hasPipelineTemplatePermission', {
                         projectId: projectId.value,
                         permission: TEMPLATE_ACTION_MAP.CREATE
                     })
@@ -208,7 +215,7 @@
                 }
             }
             
-            async function fetchTableData (params = { }) {
+            async function fetchTableData (params = {}) {
                 isLoading.value = true
                 try {
                     const param = {
@@ -218,7 +225,7 @@
                         ...(templateViewId.value !== ALL_TEMPLATE_VIEW_ID && { type: TEMPLATE_VIEW_ID_MAP[templateViewId.value] }),
                         ...params
                     }
-                    const res = await store.dispatch('templates/getTemplateList', param)
+                    const res = await proxy.$store.dispatch('templates/getTemplateList', param)
                     tableData.value = (res.records || []).map(x => {
                         x.updateTime = dayjs(x.updateTime).format('YYYY-MM-DD HH:mm:ss')
                         x.templateActions = [
@@ -420,7 +427,7 @@
             async function confirmDeleteTemplate (row) {
                 isLoading.value = true
                 try {
-                    await store.dispatch('pipelines/deleteTemplate', {
+                    await proxy.$store.dispatch('pipelines/deleteTemplate', {
                         projectId: projectId.value,
                         templateId: row.id
                     })
@@ -452,7 +459,7 @@
                     copySetting: copyTemp.value.isCopySetting,
                     name: copyTemp.value.templateName
                 }
-                store.dispatch('templates/templateCopy', postData).then((templateId) => {
+                proxy.$store.dispatch('templates/templateCopy', postData).then((templateId) => {
                     console.log('🚀 ~ templateId:', templateId)
                     copyCancelHandler()
                     bkMessage({ message: i18n.t('template.copySuc'), theme: 'success' })

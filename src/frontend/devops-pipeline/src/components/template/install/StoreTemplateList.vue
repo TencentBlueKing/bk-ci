@@ -83,7 +83,7 @@
         },
         setup (props, { root, emit }) {
             if (!root) return
-            const { route, store, bkMessage } = UseInstance(root)
+            const { proxy, bkMessage } = UseInstance()
             const loadEnd = ref(false)
             const isPageLoading = ref(false)
             const isLoadingMore = ref(false)
@@ -94,7 +94,7 @@
             const storeTemplateNum = ref(0)
             const storeTemplate = ref([])
             const isShowPreview = ref(false)
-            const projectId = computed(() => route.params.projectId)
+            const projectId = computed(() => proxy.$route.params.projectId)
             const activeTemp = computed(() => storeTemplate.value[activeTempIndex.value] ?? null)
             async function requestMarkTemplates () {
                 try {
@@ -108,7 +108,7 @@
                         projectCode: projectId.value,
                         keyword: searchValue.value
                     }
-                    const res = await store.dispatch('common/requestStoreTemplate', param)
+                    const res = await proxy.$store.dispatch('common/requestStoreTemplate', param)
                     page.value++
                     storeTemplateNum.value = res.data.count || 0
                     storeTemplate.value.push(...res.data.records)
