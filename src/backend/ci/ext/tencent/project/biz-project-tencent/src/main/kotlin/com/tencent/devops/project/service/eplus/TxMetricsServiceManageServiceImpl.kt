@@ -27,8 +27,6 @@
 
 package com.tencent.devops.project.service.eplus
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
 import com.tencent.devops.project.pojo.service.ServiceVO
@@ -47,8 +45,8 @@ class TxMetricsServiceManageServiceImpl(
     private val projectDao: ProjectDao
 ) : ServiceManageService() {
 
-    @Value("\${eplus.panelFrom:#{null}}")
-    private val panelFrom: String? = null
+    @Value("\${eplus.panelFrom:}")
+    private val panelFrom: String = ""
 
     @Value("\${eplus.panelUrl:#{null}}")
     private val panelUrl: String? = null
@@ -66,8 +64,7 @@ class TxMetricsServiceManageServiceImpl(
         if (projectId.isNullOrBlank() || publicKey.isNullOrBlank()) return serviceVO
         if (panelUrl.isNullOrBlank() || panelPid == null || panelNid == null) return serviceVO
         val project = projectDao.getByEnglishName(dslContext, projectId)
-            ?: throw ErrorCodeException(errorCode = ProjectMessageCode.PROJECT_NOT_EXIST, params = arrayOf(projectId))
-        if (project.authSecrecy != ProjectAuthSecrecyStatus.PUBLIC.value) return serviceVO
+        if (project?.authSecrecy != ProjectAuthSecrecyStatus.PUBLIC.value) return serviceVO
         // 非保密项目才跳去eplus页面看统计数据
         return serviceVO.apply {
             val jsonData = JsonData(
