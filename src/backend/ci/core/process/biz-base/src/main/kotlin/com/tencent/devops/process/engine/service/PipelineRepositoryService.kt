@@ -1044,6 +1044,21 @@ class PipelineRepositoryService constructor(
                         ) ?: throw ErrorCodeException(
                             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_DRAFT_EXISTS
                         )
+                        val pipelineInfo = getPipelineInfo(projectId = projectId, pipelineId = pipelineId)
+                        // 将草稿版本发布成分支版本,需要把最新状态转换成分支版本
+                        if (pipelineInfo != null &&
+                            pipelineInfo.version == draftVersion.version &&
+                            pipelineInfo.latestVersionStatus == VersionStatus.COMMITTING
+                        ) {
+                            pipelineInfoDao.update(
+                                dslContext = transactionContext,
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                userId = userId,
+                                // 进行过至少一次发布版本后，取消仅有草稿/分支的状态
+                                latestVersionStatus = VersionStatus.BRANCH
+                            )
+                        }
                         version = draftVersion.version
                         versionName = branchName
                         branchAction = BranchVersionAction.ACTIVE

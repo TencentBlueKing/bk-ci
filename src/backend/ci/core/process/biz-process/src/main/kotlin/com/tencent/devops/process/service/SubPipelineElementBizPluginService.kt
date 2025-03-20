@@ -116,8 +116,9 @@ class SubPipelineElementBizPluginService @Autowired constructor(
         errors: MutableList<PipelineCheckFailedErrors.ErrorInfo>
     ) {
         with(param) {
+            val userId = oauthUser ?: userId
             val errorDetails = subPipelineCheckService.batchCheckPermission(
-                userId = oauthUser ?: userId,
+                userId = userId,
                 permission = AuthPermission.EXECUTE,
                 subPipelineElementMap = subPipelineElementMap
             )

@@ -1189,7 +1189,7 @@ abstract class ImageReleaseService {
                 storeReleaseCreateRequest = StoreReleaseCreateRequest(
                     storeCode = image.imageCode,
                     storeType = StoreTypeEnum.IMAGE,
-                    latestUpgrader = image.creator,
+                    latestUpgrader = image.modifier,
                     latestUpgradeTime = pubTime
                 )
             )
