@@ -30,6 +30,8 @@ package com.tencent.devops.project.service.impl
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -62,7 +64,9 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
     private val serviceDao: ServiceDao,
     private val favoriteDao: FavoriteDao,
     private val gray: Gray,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val authProjectApi: AuthProjectApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) : UserProjectServiceService {
 
     override fun getService(userId: String, serviceId: Long): Result<ServiceVO> {
@@ -307,6 +311,21 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
     }
 
     override fun getServiceUrl(userId: String, projectId: String?, serviceId: Long): Result<String> {
+        if (!projectId.isNullOrBlank()) {
+            // 检查用户是否有该项目的权限
+            val hasPermission = authProjectApi.isProjectUser(
+                user = userId,
+                serviceCode = pipelineAuthServiceCode,
+                projectCode = projectId,
+                group = null
+            )
+            if (!hasPermission) {
+                throw ErrorCodeException(
+                    errorCode = ProjectMessageCode.USER_NOT_PROJECT_USER,
+                    params = arrayOf(userId, projectId)
+                )
+            }
+        }
         val serviceResult = getService(userId, serviceId)
         var serviceVO = serviceResult.data ?: throw ErrorCodeException(
             errorCode = serviceResult.code.toString(), defaultMessage = serviceResult.message
