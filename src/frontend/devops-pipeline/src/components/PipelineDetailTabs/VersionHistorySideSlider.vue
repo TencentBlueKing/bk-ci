@@ -116,6 +116,7 @@
                                 :is-active-draft="props.row.isDraft"
                                 :is-active-branch-version="props.row.isBranchVersion"
                                 :draft-creator="props.row?.creator"
+                                :draft-create-time="props.row?.createTime"
                             />
                             <version-diff-entry
                                 v-if="props.row.version !== releaseVersion"
