@@ -145,7 +145,7 @@
   "importPipelineLabel": "请上传一个流水线JSON/YAML文件",
   "invalidPipelineJsonOrYaml": "非法的流水线JSON/YAML文件",
   "exportPipelineSuccess": "导出流水线成功",
-  "sizeLimit": "最大上传{0}MB，重新上传时若路径未变更，无需保存流水线",
+  "sizeLimit": "最大上传{0}MB的文件",
   "fileUploadSuccess": "上传成功",
   "empty": "暂无数据",
   "link": "链接",
@@ -1051,7 +1051,7 @@
     "codelibConfigs": "代码库配置",
     "timerTriggerCodelibTips": "- Git 仓库，分支非必填，缺省时为默认分支\n- SVN 仓库，分支必填，为仓库根路径下的一级子目录",
     "timerTriggerBranchTips": "若多个分支均有变更，满足条件时每个分支将触发一次",
-    "filePathTips": "请填写自定义仓库目录，如/a",
+    "filePathTips": "请输入文件存放的目录，如/a",
     "fileNameTips": "文件名，留空则自动读取",
     "enableDocker": "启用 Docker 运行构建任务",
     "imagePullPolicy": "镜像拉取策略",
@@ -1068,7 +1068,10 @@
     "lineBreak": "多个选项用换行符分隔",
     "noEnglishCommas": "每个选项不能包含英文逗号",
     "formatSupport": "与 HTML select 标签类似，选项支持 value=name / value 两种格式",
-    "batchCopy": "一键复制"
+    "batchCopy": "一键复制",
+    "randomlyGenerate": "<随机生成>",
+    "enableVersionControl": "开启版本管理",
+    "versionControlTip": "开启后，上传文件时，将在目录下自动生成版本路径，避免同名覆盖。"
   },
   "storeMap": {
     "textarea": "文本框",
