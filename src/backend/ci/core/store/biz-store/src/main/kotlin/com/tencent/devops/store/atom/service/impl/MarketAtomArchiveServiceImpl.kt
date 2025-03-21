@@ -338,8 +338,8 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
                         .getFileSize(StoreTypeEnum.ATOM, pkgPath).data ?: 0L
                     if (nodeSize > 0) {
                         AtomPackageInfo(
-                            osName = record.osName,
-                            arch = record.osArch,
+                            osName = record.osName?: "",
+                            arch = record.osArch?: "",
                             size = nodeSize
                         )
                     } else {
