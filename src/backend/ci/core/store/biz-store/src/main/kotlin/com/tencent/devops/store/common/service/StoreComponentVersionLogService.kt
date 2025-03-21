@@ -1,5 +1,6 @@
 package com.tencent.devops.store.common.service
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
@@ -151,8 +152,8 @@ abstract class StoreComponentVersionLogService {
             StoreTypeEnum.ATOM -> {
                 val size = record.get("PACKAGE_SIZE") as? String ?: return ""
                 if (size.isNotEmpty()) {
-                    val atomPackageInfo = JsonUtil.to(size, List::class.java) as? List<AtomPackageInfo>
-                    atomPackageInfo?.let {
+                    val atomPackageInfo = JsonUtil.to(size, object : TypeReference<List<AtomPackageInfo>>() {})
+                    atomPackageInfo.let {
                         if (it.isNotEmpty()) {
                             val totalSize = it.map { info -> BigDecimal(info.size) }.reduce(BigDecimal::add)
                             return formatSizeInMB(totalSize)
