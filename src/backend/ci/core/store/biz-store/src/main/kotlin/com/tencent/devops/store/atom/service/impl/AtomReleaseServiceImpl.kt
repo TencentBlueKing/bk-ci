@@ -1491,7 +1491,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             )
         }
     }
-
     private fun saveAtomSize(atomId: String) {
         val atomPackageInfoList = mutableListOf<AtomPackageInfo>()
         try {
