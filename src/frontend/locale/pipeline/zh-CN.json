@@ -1712,5 +1712,8 @@
   "stageTemplate": "Stage模板",
   "jobTemplate": "Job模板",
   "stepTemplate": "Step模板",
-  "pipelineTemplate": "流水线模板"
+  "pipelineTemplate": "流水线模板",
+  "allSource": "全部",
+  "customSource": "自定义",
+  "marketSource": "研发商店"
 }

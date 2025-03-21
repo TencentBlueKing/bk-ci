@@ -1713,5 +1713,8 @@
   "stageTemplate": "Stage",
   "jobTemplate": "Job",
   "stepTemplate": "Step",
-  "pipelineTemplate": "Pipeline"
+  "pipelineTemplate": "Pipeline",
+  "allSource": "All",
+  "customSource": "Custom",
+  "marketSource": "Store"
 }

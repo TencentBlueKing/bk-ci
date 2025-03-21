@@ -2,7 +2,7 @@
     <article class="template-manage-entry">
         <div class="template-main">
             <div class="template-main-header">
-                <div>
+                <div class="search-group">
                     <bk-button
                         :theme="'primary'"
                         :disabled="!hasCreatePermission"
@@ -16,6 +16,25 @@
                     >
                         {{ $t('template.installOrImportTemplate') }}
                     </bk-button>
+                    <ul class="search-tab">
+                        <li
+                            v-for="(item, idx) in searchTab"
+                            :key="idx"
+                        >
+                            <p
+                                :class="[currentSearchTab === item.countKey ? 'active' : '']"
+                                @click="handleChangeSearchTab(item.countKey)"
+                            >
+                                <Logo
+                                    :class="item.icon"
+                                    size="14"
+                                    :name="item.icon"
+                                />
+                                <span>{{ $t(item.i18nKey) }}</span>
+                                <!-- <span class="nav-num">{{ countMap[item.countKey] ?? 0 }}</span> -->
+                            </p>
+                        </li>
+                    </ul>
                 </div>
                 <search-select
                     class="search-input"
@@ -117,6 +136,7 @@
     import CreateTemplateDialog from './CreateTemplateDialog'
     import InstallTemplateDialog from './InstallTemplateDialog'
     import UseInstance from '@/hook/useInstance'
+    import Logo from '@/components/Logo'
     import {
         RESOURCE_ACTION,
         TEMPLATE_RESOURCE_ACTION
@@ -125,7 +145,10 @@
         // TEMPLATE_VIEW_ID_CACHE,
         TEMPLATE_VIEW_ID_MAP,
         ALL_TEMPLATE_VIEW_ID,
-        TEMPLATE_ACTION_MAP
+        TEMPLATE_ACTION_MAP,
+        ALL_SOURCE,
+        CUSTOM_SOURCE,
+        MARKET_SOURCE
     } from '@/store/modules/templates/constants'
 
     const { proxy, i18n, bkMessage, bkInfo, h, validator } = UseInstance()
@@ -174,6 +197,25 @@
         {
             name: i18n.t('template.lastModifiedBy'),
             id: 'updater'
+        }
+    ])
+    // const countMap = ref({})
+    const currentSearchTab = ref('ALL')
+    const searchTab = ref([
+        {
+            i18nKey: ALL_SOURCE,
+            icon: 'group',
+            countKey: 'ALL'
+        },
+        {
+            i18nKey: CUSTOM_SOURCE,
+            icon: 'pipeline',
+            countKey: 'CUSTOM'
+        },
+        {
+            i18nKey: MARKET_SOURCE,
+            icon: 'stage',
+            countKey: 'MARKET'
         }
     ])
     const projectId = computed(() => proxy.$route.params.projectId)
@@ -309,6 +351,10 @@
     }
     function handleShowInstallTemplateDialog () {
         showInstallTemplateDialog.value = true
+    }
+    function handleChangeSearchTab (key) {
+        currentSearchTab.value = key
+        // fetchTableData({currentSearchTab: key})
     }
     // function formatValue (originVal) {
     //     return originVal.reduce((acc, filter) => {
@@ -477,6 +523,7 @@
 </script>
 
 <style lang="scss" scoped>
+@import '@/scss/conf';
 .template-manage-entry{
     width: 100%;
     height: 100%;
@@ -494,9 +541,40 @@
             margin-bottom: 16px;
             height: 32px;
 
+            &-group {
+                display: flex;
+            }
+
+            .search-tab {
+                display: inline-flex;
+                padding: 4px;
+                margin-left: 8px;
+                background: #EAEBF0;
+                height: 32px;
+                border-radius: 2px;
+
+                li{
+                    width: 90px;
+                    height: 24px;
+                    line-height: 24px;
+                    font-size: 12px;
+                    color: #4D4F56;
+                    text-align: center;
+                    border-radius: 2px;
+                    cursor: pointer;
+                }
+
+                .active {
+                    background-color: #fff;
+                    color: $primaryColor;
+                    border-radius: 2px;
+                }
+            }
+
             .search-input {
                 background: white;
-                width: 600px;
+                flex: 1;
+                margin-left: 10vw;
                 ::placeholder {
                     color: #c4c6cc;
                 }

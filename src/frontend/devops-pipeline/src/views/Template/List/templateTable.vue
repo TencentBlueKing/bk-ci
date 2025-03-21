@@ -282,7 +282,6 @@
         if (columnsCache) {
             selectedTableColumn.value = columnsCache.columns
             tableSize.value = columnsCache.size
-            console.log(columnsCache.size, '///', tableSize.value)
         } else {
             selectedTableColumn.value = [
                 { id: 'name' },
@@ -352,6 +351,7 @@
 
 <style lang="scss">
 @import '@/scss/mixins/ellipsis';
+@import '@/scss/conf';
 
 .template-name {
     display: flex;
@@ -382,11 +382,12 @@
         display: inline-block;
         text-align: center;
         min-width: 62px;
+        color: $primaryColor;
     }
 }
 
 .select-text {
-    color: #3A84FF;
+    color: $primaryColor;
     cursor: pointer;
 }
 

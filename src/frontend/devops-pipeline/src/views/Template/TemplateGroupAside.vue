@@ -19,7 +19,7 @@
                 <span class="nav-num">{{ countMap[item.countKey] ?? 0 }}</span>
             </div>
             <p
-                v-if="item.isAll"
+                v-if="item.countKey === 'all'"
                 class="item-border"
             />
         </div>
