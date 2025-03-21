@@ -49,6 +49,7 @@ import com.tencent.devops.store.common.service.StoreI18nMessageService
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.pojo.atom.AtomConfigInfo
+import com.tencent.devops.store.pojo.atom.AtomPackageInfo
 import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.atom.ReleaseInfo
@@ -329,29 +330,39 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
     }
 
     private fun saveAtomSize(atomId: String, atomEnvRecords: List<TAtomEnvInfoRecord>) {
-        val list = mutableListOf<Long>()
         val totalRecords = atomEnvRecords.size
         try {
-            atomEnvRecords.mapNotNull { record ->
+            val atomSizeInfoList = atomEnvRecords.mapNotNull { record ->
                 record.pkgPath?.let { pkgPath ->
                     val nodeSize = client.get(ServiceArchiveComponentPkgResource::class)
                         .getFileSize(StoreTypeEnum.ATOM, pkgPath).data ?: 0L
-                    logger.info("getStoreComponentPkgSize, node:$nodeSize")
-                    if (nodeSize > 0) nodeSize else null
+                    if (nodeSize > 0) {
+                        AtomPackageInfo(
+                            osName = record.osName,
+                            arch = record.osArch,
+                            size = nodeSize
+                        )
+                    } else {
+                        null
+                    }
                 }
-            }.let { sizes -> list.addAll(sizes) }
+            }
+
             // 都成功时才存储
-            if (list.isNotEmpty() && list.size == totalRecords) {
-                val size = list.joinToString(", ") { byte ->
-                    String.format("%.2f MB", byte / (1024.0 * 1024.0))
-                }
+            if (atomSizeInfoList.size == totalRecords) {
+                val size = JsonUtil.toJson(atomSizeInfoList)
                 marketAtomVersionLogDao.updateAtomVersionByAtomId(dslContext, atomId, size)
             } else {
-                logger.warn("Not all sizes were collected for atomId: $atomId, collected: ${list.size}, expected: $totalRecords")
+                logger.warn(
+                    "Not all sizes were collected for atomId: $atomId, " +
+                            "collected: ${atomSizeInfoList.size}, " +
+                            "expected: $totalRecords"
+                )
             }
         } catch (ignore: Throwable) {
             logger.error(
-                "Error saving atom size for atomId: $atomId, collected sizes: ${list.size} of $totalRecords, error: ${ignore.message}",
+                "Error saving atom size for atomId: $atomId, " +
+                        " error: ${ignore.message}",
                 ignore
             )
         }

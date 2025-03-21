@@ -28,10 +28,10 @@
 package com.tencent.devops.store.atom.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomArchiveResource
 import com.tencent.devops.store.atom.service.MarketAtomArchiveService
-import com.tencent.devops.store.common.utils.ThreadPoolUtil
 import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum

@@ -3,16 +3,20 @@ package com.tencent.devops.store.common.service
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.store.common.dao.AbstractStoreCommonDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreVersionLogDao
+import com.tencent.devops.store.pojo.atom.AtomPackageInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreVersionLogInfo
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.LocalDateTime
 
 abstract class StoreComponentVersionLogService {
@@ -135,24 +139,39 @@ abstract class StoreComponentVersionLogService {
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun getPackageSize(record: Record, storeType: StoreTypeEnum): String {
+        fun formatSizeInMB(sizeInBytes: BigDecimal): String =
+            String.format(
+                "%.2f M",
+                sizeInBytes.divide(BigDecimal(1024.0 * 1024.0), 2, RoundingMode.HALF_UP).toDouble()
+            )
+
         return when (storeType) {
             StoreTypeEnum.ATOM -> {
-                record.get("PACKAGE_SIZE") as? String ?: ""
+                val size = record.get("PACKAGE_SIZE") as? String ?: return ""
+                if (size.isNotEmpty()) {
+                    val atomPackageInfo = JsonUtil.to(size, List::class.java) as? List<AtomPackageInfo>
+                    atomPackageInfo?.let {
+                        if (it.isNotEmpty()) {
+                            val totalSize = it.map { info -> BigDecimal(info.size) }.reduce(BigDecimal::add)
+                            return formatSizeInMB(totalSize)
+                        }
+                    }
+                }
+                ""
             }
 
             StoreTypeEnum.IMAGE -> {
-                val size = record.get("IMAGE_SIZE") as? String ?: ""
+                val size = record.get("IMAGE_SIZE") as? String ?: return ""
                 if (size.isNotEmpty()) {
-                    String.format("%.2f MB", size.toLong() / (1024.0 * 1024.0))
+                    return formatSizeInMB(BigDecimal(size.toLong()))
                 } else {
                     ""
                 }
             }
 
-            else -> {
-                ""
-            }
+            else -> ""
         }
     }
 }
