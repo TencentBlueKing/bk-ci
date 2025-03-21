@@ -199,7 +199,7 @@
                 const { pagingConfig: { current, limit } } = this.$refs.selfTemp
                 this.getApiData(current, limit, params).then((res) => {
                     success(res)
-                    const list = res.models || []
+                    const list = res.records || []
                     this.showSelfEmpty = list.length <= 0
                 })
             },

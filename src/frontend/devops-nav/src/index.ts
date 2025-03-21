@@ -14,6 +14,7 @@ import eventBus from '@/utils/eventBus'
 import iframeUtil from '@/utils/iframeUtil'
 import App from '@/views/App.vue'
 import Vue from 'vue'
+import { castToVueI18n } from 'vue-i18n-bridge'
 import createDocs from '../../common-lib/docs'
 
 import createLocale from '../../locale'
@@ -167,9 +168,12 @@ Vue.mixin({
     }
 })
 
+const castVuei18n = castToVueI18n(i18n)
+Vue.use(castVuei18n)
+
 window.devops = new Vue({
     el: '#devops-root',
-    i18n,
+    i18n: castVuei18n,
     router,
     store,
     render (h) {
