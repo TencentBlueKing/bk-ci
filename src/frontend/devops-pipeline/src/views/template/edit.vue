@@ -13,7 +13,7 @@
                     <bk-button
                         theme="primary"
                         @click="saveTemplateDraft"
-                        :disabled="isSaving"
+                        :disabled="saveStatus"
                         outline
                     >
                         {{ $t('save') }}
@@ -40,7 +40,6 @@
     } from '@/utils/permission'
     import {
         convertMStoStringByRule,
-        navConfirm,
         showPipelineCheckMsg
     } from '@/utils/util'
     import Edit from '@/views/subpages/edit'
@@ -58,10 +57,7 @@
         },
         data () {
             return {
-                isSaving: false,
-                isLoading: true,
-                confirmMsg: this.$t('editPage.confirmMsg'),
-                cancelText: this.$t('cancel')
+                isLoading: true
             }
         },
         computed: {
@@ -124,12 +120,6 @@
             this.removeLeaveListenr()
             this.errors.clear()
         },
-        beforeRouteUpdate (to, from, next) {
-            this.leaveConfirm(to, from, next)
-        },
-        beforeRouteLeave (to, from, next) {
-            this.leaveConfirm(to, from, next)
-        },
         methods: {
             // TODO: 优化
             ...mapActions('atom', [
@@ -137,6 +127,7 @@
                 'saveDraftTemplate',
                 'setPipelineEditing',
                 'setAtomEditing',
+                'requestTemplateSummary',
                 'requestPipeline',
                 'updateContainer'
             ]),
@@ -157,6 +148,7 @@
             async saveTemplateDraft () {
                 const valid = await this.$validator.validate()
                 const pipeline = Object.assign({}, this.pipeline, {
+                    name: this.pipelineSetting.pipelineName,
                     stages: [
                         this.pipeline.stages[0],
                         ...this.pipelineWithoutTrigger.stages
@@ -174,7 +166,7 @@
                 this.formatParams(pipeline)
                 let result
                 try {
-                    this.isSaving = true
+                    this.saveStatus = true
 
                     const { data } = await this.saveDraftTemplate({
                         projectId: this.projectId,
@@ -189,6 +181,16 @@
                             theme: 'success'
                         })
                         this.setPipelineEditing(false)
+
+                        await this.requestTemplateSummary(this.$route.params)
+
+                        this.$router.replace({
+                            ...this.$route,
+                            params: {
+                                ...this.$route.params,
+                                version: data.version
+                            }
+                        })
 
                         result = true
                     } else {
@@ -209,7 +211,7 @@
 
                     result = false
                 } finally {
-                    this.isSaving = false
+                    this.saveStatus = false
                 }
                 return result
             },
@@ -230,19 +232,6 @@
                     name: 'pipelinesTemplate'
                 })
             },
-            leaveConfirm (to, from, next) {
-                if (this.template?.templateType === 'CONSTRAINT' || (this.isEnabledPermission && !this.template.hasPermission)) {
-                    next(true)
-                    return
-                }
-                if (this.isEditing) {
-                    navConfirm({ content: this.confirmMsg, type: 'warning', cancelText: this.cancelText })
-                        .then(next)
-                        .catch(() => next(false))
-                } else {
-                    next(true)
-                }
-            },
             formatParams (pipeline) {
                 const params = pipeline && pipeline.stages[0].containers[0].params
                 const paramList = params && this.getParams(params)
@@ -260,16 +249,7 @@
                 })
                 return result
             },
-            addLeaveListenr () {
-                window.addEventListener('beforeunload', this.leaveSure)
-            },
-            removeLeaveListenr () {
-                window.removeEventListener('beforeunload', this.leaveSure)
-            },
-            leaveSure (e) {
-                e.returnValue = this.confirmMsg
-                return this.confirmMsg
-            },
+
             localConvertMStoString (num) {
                 return convertMStoStringByRule(new Date().getTime() - num)
             }

@@ -223,9 +223,7 @@ export default {
                     updater: templateRes.data.resource.updater,
                     updateTime: templateRes.data.resource.updateTime,
                     yamlSupported: !!templateRes.data.resource.yaml,
-                    yamlPreview: {
-                        yaml: templateRes.data.resource.yaml
-                    }
+                    yamlPreview: templateRes.data.yamlPreview
                 }
             },
             atomPropRes
@@ -942,7 +940,7 @@ export default {
         })
         return res.data
     },
-    releaseDraftTemplate (_, { projectId, templateId, version, ...params }) {
+    releaseDraftTemplate (_, { projectId, templateId, version, params }) {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/releaseVersion/${version}`, params)
     },
     yamlNavToPipelineModel ({ commit }, { projectId, body, ...params }) {

@@ -306,7 +306,10 @@
             goEditTemplate () {
                 this.$router.push({
                     name: 'templateEdit',
-                    params: this.$route.params
+                    params: {
+                        ...this.$route.params,
+                        version: this.pipelineInfo?.version
+                    }
                 })
             }
         }

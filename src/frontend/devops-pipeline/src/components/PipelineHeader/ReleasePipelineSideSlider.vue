@@ -852,39 +852,41 @@
                                             },
                                             this.$t('dealMR')
                                         )
-                                        : h(
-                                            'bk-button',
-                                            {
-                                                props: {
-                                                    theme: 'primary'
-                                                },
-                                                on: {
-                                                    click: () => {
-                                                        this.$bkInfo.close(instance.id)
-                                                        if (!updateBuildNo) {
-                                                            this.$router.push({
-                                                                name: 'executePreview',
-                                                                params: {
-                                                                    ...this.$route.params,
-                                                                    version: this.pipelineInfo?.releaseVersion
-                                                                }
-                                                            })
-                                                        } else {
-                                                            this.$router.push({
-                                                                name: 'pipelinesHistory',
-                                                                params: {
-                                                                    ...this.$route.params,
-                                                                    type: 'pipeline',
-                                                                    isDirectShowVersion: true,
-                                                                    version: this.pipelineInfo?.releaseVersion
-                                                                }
-                                                            })
+                                        : !this.isTemplate
+                                            ? h(
+                                                'bk-button',
+                                                {
+                                                    props: {
+                                                        theme: 'primary'
+                                                    },
+                                                    on: {
+                                                        click: () => {
+                                                            this.$bkInfo.close(instance.id)
+                                                            if (!updateBuildNo) {
+                                                                this.$router.push({
+                                                                    name: 'executePreview',
+                                                                    params: {
+                                                                        ...this.$route.params,
+                                                                        version: this.pipelineInfo?.releaseVersion
+                                                                    }
+                                                                })
+                                                            } else {
+                                                                this.$router.push({
+                                                                    name: 'pipelinesHistory',
+                                                                    params: {
+                                                                        ...this.$route.params,
+                                                                        type: 'pipeline',
+                                                                        isDirectShowVersion: true,
+                                                                        version: this.pipelineInfo?.releaseVersion
+                                                                    }
+                                                                })
+                                                            }
                                                         }
                                                     }
-                                                }
-                                            },
-                                            this.$t(!updateBuildNo ? 'goExec' : 'buildNoBaseline.goReset')
-                                        ),
+                                                },
+                                                this.$t(!updateBuildNo ? 'goExec' : 'buildNoBaseline.goReset')
+                                            )
+                                            : null,
                                     h(
                                         'bk-button',
                                         {
@@ -892,7 +894,7 @@
                                                 click: () => {
                                                     this.$bkInfo.close(instance.id)
                                                     !updateBuildNo && this.$router.push({
-                                                        name: 'pipelinesHistory',
+                                                        name: this.isTemplate ? 'TemplateOverview' : 'pipelinesHistory',
                                                         params: {
                                                             ...this.$route.params,
                                                             type: 'pipeline',

@@ -320,7 +320,7 @@
                     this.formatParams(pipeline)
 
                     // 请求执行构建
-                    await this.saveDraftPipeline({
+                    const { version } = await this.saveDraftPipeline({
                         projectId,
                         pipelineId,
                         baseVersion: this.pipelineInfo?.baseVersion,
@@ -341,12 +341,18 @@
                     this.setPipelineEditing(false)
 
                     await this.requestPipelineSummary(this.$route.params)
-
+                    this.$router.replace({
+                        params: {
+                            ...this.$route.params,
+                            version
+                        }
+                    })
                     this.$bkMessage({
                         theme: 'success',
                         message: this.$t('editPage.saveDraftSuccess', [pipelineSetting.pipelineName]),
                         limit: 1
                     })
+
                     return true
                 } catch (e) {
                     const { projectId, pipelineId } = this.$route.params
