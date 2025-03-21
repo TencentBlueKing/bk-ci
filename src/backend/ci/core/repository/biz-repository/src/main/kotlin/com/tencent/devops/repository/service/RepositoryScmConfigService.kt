@@ -82,16 +82,16 @@ class RepositoryScmConfigService @Autowired constructor(
     @Value("\${scm.oauth.callbackUrl:#{null}}")
     private val oauthCallbackUrl: String = ""
 
-    @Value("\${logo.allowUploadLogoTypes}")
+    @Value("\${logo.allowUploadLogoTypes:#{null}}")
     private lateinit var allowUploadLogoTypes: String
 
-    @Value("\${logo.maxUploadLogoSize}")
+    @Value("\${logo.maxUploadLogoSize:#{null}}")
     private lateinit var maxUploadLogoSize: String
 
-    @Value("\${logo.allowUploadLogoWidth}")
+    @Value("\${logo.allowUploadLogoWidth:#{null}}")
     private lateinit var allowUploadLogoWidth: String
 
-    @Value("\${logo.allowUploadLogoHeight}")
+    @Value("\${logo.allowUploadLogoHeight:#{null}}")
     private lateinit var allowUploadLogoHeight: String
 
     fun create(userId: String, request: RepositoryScmConfigReq) {
