@@ -65,116 +65,100 @@
     </bk-dialog>
 </template>
 
-<script>
-    import { defineComponent, onMounted, ref, toRefs, computed } from '@vue/composition-api'
+<script setup name='CreateTemplateDialog'>
+    import { onMounted, ref, computed, defineProps } from 'vue'
     import UseInstance from '@/hook/useInstance'
-    export default defineComponent({
-        name: 'CreateTemplateDialog',
-        props: {
-            value: {
-                type: Boolean,
-                default: false
-            }
-        },
-        setup (props, { root, emit }) {
-            if (!root) return
-            const { proxy, i18n, bkMessage, userInfo } = UseInstance()
-            const { value } = toRefs(props)
-            const projectId = computed(() => proxy.$route.params.projectId)
-            const userName = computed(() => userInfo?.username || window?.userInfo?.username || '')
-            const rules = computed(() => {
-                return {
-                    name: [
-                        {
-                            required: true,
-                            message: i18n.t('template.pleaseEnterTemplateName'),
-                            trigger: 'blur'
-                        },
-                        {
-                            message: i18n.t('template.nameTips'),
-                            validator: (val) => {
-                                console.log(val)
-                                return val
-                            },
-                            trigger: 'blur'
-                        }
-                    ]
-                }
-            })
-            function getDefaultFormData () {
-                return {
-                    projectId: projectId.value,
-                    creator: userName.value,
-                    type: 'PIPELINE',
-                    source: 'CUSTOM',
-                    name: '',
-                    desc: ''
-                }
-            }
-            const templateFormRef = ref(null)
-            const templateFormData = ref({
-                projectId: projectId.value,
-                creator: userName.value,
-                type: 'PIPELINE',
-                source: 'CUSTOM',
-                name: '',
-                desc: ''
-            })
-            const templateTypeMap = computed(() => [
-                {
-                    name: i18n.t('template.pipelineTemplate'),
-                    value: 'PIPELINE',
-                    isActive: templateFormData.value.type === 'PIPELINE'
-                }
-            ])
-            const templateTypeTips = computed(() => {
-                const tipsMap = {
-                    PIPELINE: i18n.t('template.pipelineTypeTips')
-                }
-                return tipsMap[templateFormData.value.type] || ''
-            })
-
-            function handleChangeTemplateType (type) {
-                templateFormData.value.type = type
-            }
-
-            function handConfirmCreateTemplate () {
-                templateFormRef.value.validate().then(async () => {
-                    await proxy.$store.dispatch('templates/createTemplate', {
-                        projectId: projectId.value,
-                        params: templateFormData.value
-                    })
-                    bkMessage({
-                        theme: 'success',
-                        message: i18n.t('创建模板成功')
-                    })
-                    templateFormData.value = getDefaultFormData()
-                    emit('update:value', false)
-                    emit('confirm')
-                })
-            }
-
-            function handleCancelCreateTemplate () {
-                emit('update:value', false)
-                templateFormRef.value.clearError()
-                templateFormData.value = getDefaultFormData()
-            }
-
-            onMounted(() => {
-                templateFormData.value = getDefaultFormData()
-            })
-            return {
-                value,
-                rules,
-                templateFormRef,
-                templateFormData,
-                templateTypeMap,
-                templateTypeTips,
-                handleChangeTemplateType,
-                handConfirmCreateTemplate,
-                handleCancelCreateTemplate
-            }
+    const { proxy, i18n, bkMessage, userInfo } = UseInstance()
+    defineProps({
+        value: {
+            type: Boolean,
+            default: false
         }
+    })
+    const emit = defineEmits(['update:value', 'confirm'])
+
+    const projectId = computed(() => proxy.$route.params.projectId)
+    const userName = computed(() => userInfo?.username || window?.userInfo?.username || '')
+    const rules = computed(() => {
+        return {
+            name: [
+                {
+                    required: true,
+                    message: i18n.t('template.pleaseEnterTemplateName'),
+                    trigger: 'blur'
+                },
+                {
+                    message: i18n.t('template.nameTips'),
+                    validator: (val) => {
+                        console.log(val)
+                        return val
+                    },
+                    trigger: 'blur'
+                }
+            ]
+        }
+    })
+    function getDefaultFormData () {
+        return {
+            projectId: projectId.value,
+            creator: userName.value,
+            type: 'PIPELINE',
+            source: 'CUSTOM',
+            name: '',
+            desc: ''
+        }
+    }
+    const templateFormRef = ref(null)
+    const templateFormData = ref({
+        projectId: projectId.value,
+        creator: userName.value,
+        type: 'PIPELINE',
+        source: 'CUSTOM',
+        name: '',
+        desc: ''
+    })
+    const templateTypeMap = computed(() => [
+        {
+            name: i18n.t('template.pipelineTemplate'),
+            value: 'PIPELINE',
+            isActive: templateFormData.value.type === 'PIPELINE'
+        }
+    ])
+    const templateTypeTips = computed(() => {
+        const tipsMap = {
+            PIPELINE: i18n.t('template.pipelineTypeTips')
+        }
+        return tipsMap[templateFormData.value.type] || ''
+    })
+
+    function handleChangeTemplateType (type) {
+        templateFormData.value.type = type
+    }
+
+    function handConfirmCreateTemplate () {
+        templateFormRef.value.validate().then(async () => {
+            await proxy.$store.dispatch('templates/createTemplate', {
+                projectId: projectId.value,
+                params: templateFormData.value
+            })
+            bkMessage({
+                theme: 'success',
+                message: i18n.t('创建模板成功')
+            })
+            templateFormData.value = getDefaultFormData()
+            emit('update:value', false)
+            emit('confirm')
+        })
+    }
+
+    function handleCancelCreateTemplate () {
+        emit('update:value', false)
+        templateFormRef.value.clearError()
+        templateFormData.value = getDefaultFormData()
+    }
+
+    onMounted(() => {
+        templateFormData.value = getDefaultFormData()
     })
 </script>
 

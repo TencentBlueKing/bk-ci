@@ -26,8 +26,8 @@
     </aside>
 </template>
 
-<script>
-    import { defineComponent, ref, onMounted, computed } from '@vue/composition-api'
+<script setup name='TemplateGroupAside'>
+    import { ref, computed, onMounted } from 'vue'
     import UseInstance from '@/hook/useInstance'
     import Logo from '@/components/Logo'
     import {
@@ -38,79 +38,64 @@
         STEP_TEMPLATE_VIEW_ID,
         TEMPLATE_VIEW_ID_CACHE
     } from '@/store/modules/templates/constants'
-    export default defineComponent({
-        name: 'TemplateGroupAside',
-        components: {
-            Logo
-        },
-        setup (props, { root }) {
-            if (!root) return
-            const { proxy } = UseInstance()
-            const navList = ref([
-                {
-                    viewId: ALL_TEMPLATE_VIEW_ID,
-                    i18nKey: ALL_TEMPLATE_VIEW_ID,
-                    icon: 'group',
-                    countKey: 'ALL'
-                },
-                {
-                    viewId: PIPELINE_TEMPLATE_VIEW_ID,
-                    i18nKey: PIPELINE_TEMPLATE_VIEW_ID,
-                    icon: 'pipeline',
-                    countKey: 'PIPELINE'
-                },
-                {
-                    viewId: STAGE_TEMPLATE_VIEW_ID,
-                    i18nKey: STAGE_TEMPLATE_VIEW_ID,
-                    icon: 'stage',
-                    countKey: 'STAGE'
-                },
-                {
-                    viewId: JOB_TEMPLATE_VIEW_ID,
-                    i18nKey: JOB_TEMPLATE_VIEW_ID,
-                    icon: 'job',
-                    countKey: 'JOB'
-                },
-                {
-                    viewId: STEP_TEMPLATE_VIEW_ID,
-                    i18nKey: STEP_TEMPLATE_VIEW_ID,
-                    icon: 'job',
-                    countKey: 'STEP'
-                }
-            ])
-            const countMap = ref({})
-            const projectId = computed(() => proxy.$route.params.projectId)
-            const cacheViewId = localStorage.getItem(TEMPLATE_VIEW_ID_CACHE) || ALL_TEMPLATE_VIEW_ID
-            async function getType2Count () {
-                try {
-                    countMap.value = await proxy.$store.dispatch('templates/getType2Count', {
-                        projectId: projectId.value
-                    })
-                } catch (err) {
-                    console.error(err)
-                }
-            }
-            function handleChangeMenu (viewId) {
-                localStorage.setItem(TEMPLATE_VIEW_ID_CACHE, viewId)
-                proxy.$router.push({
-                    name: 'TemplateManageList',
-                    params: {
-                        viewId
-                    }
-                })
-            }
-            onMounted(() => {
-                getType2Count()
-            })
-            return {
-                cacheViewId,
-                navList,
-                countMap,
-                handleChangeMenu
-            }
-        }
-    })
 
+    const { proxy } = UseInstance()
+    const navList = ref([
+        {
+            viewId: ALL_TEMPLATE_VIEW_ID,
+            i18nKey: ALL_TEMPLATE_VIEW_ID,
+            icon: 'group',
+            countKey: 'all'
+        },
+        {
+            viewId: PIPELINE_TEMPLATE_VIEW_ID,
+            i18nKey: PIPELINE_TEMPLATE_VIEW_ID,
+            icon: 'pipeline',
+            countKey: 'PIPELINE'
+        },
+        {
+            viewId: STAGE_TEMPLATE_VIEW_ID,
+            i18nKey: STAGE_TEMPLATE_VIEW_ID,
+            icon: 'stage',
+            countKey: 'STAGE'
+        },
+        {
+            viewId: JOB_TEMPLATE_VIEW_ID,
+            i18nKey: JOB_TEMPLATE_VIEW_ID,
+            icon: 'job',
+            countKey: 'JOB'
+        },
+        {
+            viewId: STEP_TEMPLATE_VIEW_ID,
+            i18nKey: STEP_TEMPLATE_VIEW_ID,
+            icon: 'job',
+            countKey: 'STEP'
+        }
+    ])
+    const countMap = ref({})
+    const projectId = computed(() => proxy.$route.params.projectId)
+    const cacheViewId = localStorage.getItem(TEMPLATE_VIEW_ID_CACHE) || ALL_TEMPLATE_VIEW_ID
+    async function getType2Count () {
+        try {
+            countMap.value = await proxy.$store.dispatch('templates/getType2Count', {
+                projectId: projectId.value
+            })
+        } catch (err) {
+            console.error(err)
+        }
+    }
+    function handleChangeMenu (viewId) {
+        localStorage.setItem(TEMPLATE_VIEW_ID_CACHE, viewId)
+        proxy.$router.push({
+            name: 'TemplateManageList',
+            params: {
+                viewId
+            }
+        })
+    }
+    onMounted(() => {
+        getType2Count()
+    })
 </script>
 
 <style lang="scss">

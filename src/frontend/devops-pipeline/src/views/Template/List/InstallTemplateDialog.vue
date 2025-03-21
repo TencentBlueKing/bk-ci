@@ -30,8 +30,8 @@
     </bk-dialog>
 </template>
 
-<script>
-    import { defineComponent, ref, toRefs, computed } from '@vue/composition-api'
+<script setup name='InstallTemplateDialog'>
+    import { ref, computed, defineProps, defineEmits } from 'vue'
     import UseInstance from '@/hook/useInstance'
     import StoreTemplateList from '@/components/template/install/StoreTemplateList'
     import Repository from '@/components/template/install/Repository'
@@ -42,90 +42,82 @@
         INSTALL_TYPE_LOCAL
     } from '@/store/modules/templates/constants'
 
-    export default defineComponent({
-        name: 'InstallTemplateDialog',
-        components: {
-            StoreTemplateList,
-            Repository,
-            LocalFile
-        },
-        props: {
-            value: {
-                type: Boolean,
-                default: false
-            }
-        },
-        setup (props, { root, emit }) {
-            if (!root) return
-            const { proxy, i18n, bkMessage } = UseInstance()
-            const { value } = toRefs(props)
-            const storeTemplateInfo = ref({})
-            const activeTab = ref(INSTALL_TYPE_STORE)
-            const dialogPosition = {
-                top: '120'
-            }
-            const projectId = computed(() => proxy.$route.params.projectId)
-            const confirmBtnText = computed(() => activeTab.value === INSTALL_TYPE_STORE ? i18n.t('template.install') : i18n.t('template.import'))
-            const tabTypeMap = computed(() => {
-                return [
-                    {
-                        name: INSTALL_TYPE_STORE,
-                        label: i18n.t('template.store')
-                    },
-                    {
-                        name: INSTALL_TYPE_REPOSITORY,
-                        label: i18n.t('template.repository')
-                    },
-                    {
-                        name: INSTALL_TYPE_LOCAL,
-                        label: i18n.t('template.localFile')
-                    }
-                ]
-            })
-            const componentName = computed(() => {
-                const components = {
-                    INSTALL_TYPE_STORE: StoreTemplateList,
-                    INSTALL_TYPE_REPOSITORY: Repository,
-                    INSTALL_TYPE_LOCAL: LocalFile
-                }
-                return components[activeTab.value]
-            })
+    const { proxy, i18n, bkMessage } = UseInstance()
+    defineProps({
+        value: {
+            type: Boolean,
+            default: false
+        }
+    })
+    const emit = defineEmits(['update:value', 'confirm'])
 
-            function handleCancelInstall () {
-                emit('update:value', false)
+    const storeTemplateInfo = ref({})
+    const activeTab = ref(INSTALL_TYPE_STORE)
+    const dialogPosition = {
+        top: '120'
+    }
+    const projectId = computed(() => proxy.$route.params.projectId)
+    const confirmBtnText = computed(() => activeTab.value === INSTALL_TYPE_STORE ? i18n.t('template.install') : i18n.t('template.import'))
+    const tabTypeMap = computed(() => {
+        return [
+            {
+                name: INSTALL_TYPE_STORE,
+                label: i18n.t('template.store')
+            },
+            {
+                name: INSTALL_TYPE_REPOSITORY,
+                label: i18n.t('template.repository')
+            },
+            {
+                name: INSTALL_TYPE_LOCAL,
+                label: i18n.t('template.localFile')
             }
+        ]
+    })
+    const componentName = computed(() => {
+        const components = {
+            INSTALL_TYPE_STORE: StoreTemplateList,
+            INSTALL_TYPE_REPOSITORY: Repository,
+            INSTALL_TYPE_LOCAL: LocalFile
+        }
+        return components[activeTab.value]
+    })
+
+    function handleCancelInstall () {
+        emit('update:value', false)
+    }
             
-            function handleConfirmInstall () {
-                switch (activeTab.value) {
-                    case INSTALL_TYPE_STORE:
-                        importTemplateFromStore()
-                        break
-                    case INSTALL_TYPE_REPOSITORY:
-                        console.log(INSTALL_TYPE_REPOSITORY)
-                        break
-                    case INSTALL_TYPE_LOCAL:
-                        console.log(INSTALL_TYPE_LOCAL)
-                        break
-                }
-                emit('confirm')
-            }
-            function handleSubChange (val) {
-                switch (activeTab.value) {
-                    case INSTALL_TYPE_STORE:
-                        storeTemplateInfo.value = val
-                        break
-                    case INSTALL_TYPE_REPOSITORY:
-                        console.log(INSTALL_TYPE_REPOSITORY)
-                        break
-                    case INSTALL_TYPE_LOCAL:
-                        console.log(INSTALL_TYPE_LOCAL)
-                        break
-                }
-            }
+    function handleConfirmInstall () {
+        switch (activeTab.value) {
+            case INSTALL_TYPE_STORE:
+                importTemplateFromStore()
+                break
+            case INSTALL_TYPE_REPOSITORY:
+                console.log(INSTALL_TYPE_REPOSITORY)
+                break
+            case INSTALL_TYPE_LOCAL:
+                console.log(INSTALL_TYPE_LOCAL)
+                break
+        }
+        emit('confirm')
+    }
+    function handleSubChange (val) {
+        switch (activeTab.value) {
+            case INSTALL_TYPE_STORE:
+                storeTemplateInfo.value = val
+                break
+            case INSTALL_TYPE_REPOSITORY:
+                console.log(INSTALL_TYPE_REPOSITORY)
+                break
+            case INSTALL_TYPE_LOCAL:
+                console.log(INSTALL_TYPE_LOCAL)
+                break
+        }
+    }
 
-            async function importTemplateFromStore () {
-                try {
-                    await proxy.$store?.dispatch('templates/importTemplateFromStore', {
+    async function importTemplateFromStore () {
+        try {
+            await proxy.$store?.dispatch('templates/importTemplateFromStore', {
                         projectId: projectId.value,
                         params: {
                             marketTemplateId: storeTemplateInfo.value.code,
@@ -133,26 +125,13 @@
                             marketTemplateVersion: storeTemplateInfo.value.version
                         }
                     })
-                } catch (e) {
-                    bkMessage({
-                        theme: 'error',
-                        message: e.message || e
-                    })
-                }
-            }
-            return {
-                value,
-                activeTab,
-                dialogPosition,
-                confirmBtnText,
-                tabTypeMap,
-                componentName,
-                handleSubChange,
-                handleCancelInstall,
-                handleConfirmInstall
-            }
+        } catch (e) {
+            bkMessage({
+                theme: 'error',
+                message: e.message || e
+            })
         }
-    })
+    }
 </script>
 
 <style lang="scss">

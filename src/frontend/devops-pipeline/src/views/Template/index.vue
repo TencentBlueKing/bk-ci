@@ -14,8 +14,8 @@
     </bk-resize-layout>
 </template>
 
-<script>
-    import { defineComponent, ref, onMounted } from '@vue/composition-api'
+<script setup>
+    import { onMounted, ref } from 'vue'
     import TemplateGroupAside from './TemplateGroupAside'
     import templateList from './List/'
     import {
@@ -23,31 +23,18 @@
         PIPELINE_GROUP_ASIDE_WIDTH_CACHE
     } from '@/store/constants'
 
-    export default defineComponent({
-        components: {
-            templateList,
-            TemplateGroupAside
-        },
-        setup (props, { root }) {
-            if (!root) return
-            const initialDivide = ref(Number(localStorage.getItem(PIPELINE_GROUP_ASIDE_WIDTH_CACHE)) || 280)
-            function handleCollapseChange (val) {
-                localStorage.setItem(PIPELINE_ASIDE_PANEL_TOGGLE, JSON.stringify(val))
-            }
+    const initialDivide = ref(Number(localStorage.getItem(PIPELINE_GROUP_ASIDE_WIDTH_CACHE)) || 280)
+    function handleCollapseChange (val) {
+        localStorage.setItem(PIPELINE_ASIDE_PANEL_TOGGLE, JSON.stringify(val))
+    }
 
-            function afterResize (width) {
-                localStorage.setItem(PIPELINE_GROUP_ASIDE_WIDTH_CACHE, JSON.stringify(width))
-            }
-            onMounted(() => {
-                if (localStorage.getItem(PIPELINE_ASIDE_PANEL_TOGGLE) === 'true') {
-                    this.$refs.resizeLayout.setCollapse(true)
-                }
-            })
-            return {
-                initialDivide,
-                handleCollapseChange,
-                afterResize
-            }
+    function afterResize (width) {
+        localStorage.setItem(PIPELINE_GROUP_ASIDE_WIDTH_CACHE, JSON.stringify(width))
+    }
+    
+    onMounted(() => {
+        if (localStorage.getItem(PIPELINE_ASIDE_PANEL_TOGGLE) === 'true') {
+            this.$refs.resizeLayout.setCollapse(true)
         }
     })
 </script>

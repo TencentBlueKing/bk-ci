@@ -72,94 +72,75 @@
     </div>
 </template>
 
-<script>
-    import { defineComponent, ref, computed, onMounted } from '@vue/composition-api'
+<script setup name='StoreTemplateList'>
+    import { ref, computed, onMounted } from 'vue'
     import UseInstance from '@/hook/useInstance'
     import PipelineTemplatePreview from '@/components/PipelineTemplatePreview'
-    export default defineComponent({
-        name: 'StoreTemplateList',
-        components: {
-            PipelineTemplatePreview
-        },
-        setup (props, { root, emit }) {
-            if (!root) return
-            const { proxy, bkMessage } = UseInstance()
-            const loadEnd = ref(false)
-            const isPageLoading = ref(false)
-            const isLoadingMore = ref(false)
-            const searchValue = ref('')
-            const page = ref(1)
-            const pageSize = ref(50)
-            const activeTempIndex = ref(0)
-            const storeTemplateNum = ref(0)
-            const storeTemplate = ref([])
-            const isShowPreview = ref(false)
-            const projectId = computed(() => proxy.$route.params.projectId)
-            const activeTemp = computed(() => storeTemplate.value[activeTempIndex.value] ?? null)
-            async function requestMarkTemplates () {
-                try {
-                    if (page.value === 1) {
-                        isPageLoading.value = true
-                    }
-                    isLoadingMore.value = true
-                    const param = {
-                        page: page.value,
-                        pageSize: pageSize.value,
-                        projectCode: projectId.value,
-                        keyword: searchValue.value
-                    }
-                    const res = await proxy.$store.dispatch('common/requestStoreTemplate', param)
-                    page.value++
-                    storeTemplateNum.value = res.data.count || 0
-                    storeTemplate.value.push(...res.data.records)
-                    loadEnd.value = res.data.count <= storeTemplate.value?.length
-                    emit('change', activeTemp.value)
-                } catch (e) {
-                    bkMessage({
-                        theme: 'error',
-                        message: (e.message || e)
-                    })
-                    console.error(e)
-                } finally {
-                    isPageLoading.value = false
-                    isLoadingMore.value = false
-                }
+
+    const emit = defineEmits(['change'])
+    const { proxy, bkMessage } = UseInstance()
+    const loadEnd = ref(false)
+    const isPageLoading = ref(false)
+    const isLoadingMore = ref(false)
+    const searchValue = ref('')
+    const page = ref(1)
+    const pageSize = ref(50)
+    const activeTempIndex = ref(0)
+    const storeTemplateNum = ref(0)
+    const storeTemplate = ref([])
+    const isShowPreview = ref(false)
+    const projectId = computed(() => proxy.$route.params.projectId)
+    const activeTemp = computed(() => storeTemplate.value[activeTempIndex.value] ?? null)
+    async function requestMarkTemplates () {
+        try {
+            if (page.value === 1) {
+                isPageLoading.value = true
             }
-            function handleChangeSearchValue (val) {
-                page.value = 1
-                storeTemplate.value = []
-                requestMarkTemplates()
+            isLoadingMore.value = true
+            const param = {
+                page: page.value,
+                pageSize: pageSize.value,
+                projectCode: projectId.value,
+                keyword: searchValue.value
             }
-            function selectTemp (temp, index) {
-                if (index === activeTempIndex.value) return
-                activeTempIndex.value = index
-                emit('change', activeTemp.value)
-            }
-            function scrollLoadMore (event) {
-                const target = event.target
-                const bottomDis = target.scrollHeight - target.clientHeight - target.scrollTop
-                if (bottomDis <= 500 && !loadEnd.value && !isLoadingMore.value) requestMarkTemplates()
-            }
-            function previewTemp (index) {
-                isShowPreview.value = true
-                activeTempIndex.value = index
-            }
-            onMounted(() => {
-                requestMarkTemplates()
+            const res = await proxy.$store.dispatch('common/requestStoreTemplate', param)
+            page.value++
+            storeTemplateNum.value = res.data.count || 0
+            storeTemplate.value.push(...res.data.records)
+            loadEnd.value = res.data.count <= storeTemplate.value?.length
+            emit('change', activeTemp.value)
+        } catch (e) {
+            bkMessage({
+                theme: 'error',
+                message: (e.message || e)
             })
-            return {
-                isPageLoading,
-                searchValue,
-                activeTempIndex,
-                storeTemplate,
-                isShowPreview,
-                activeTemp,
-                selectTemp,
-                scrollLoadMore,
-                previewTemp,
-                handleChangeSearchValue
-            }
+            console.error(e)
+        } finally {
+            isPageLoading.value = false
+            isLoadingMore.value = false
         }
+    }
+    function handleChangeSearchValue (val) {
+        page.value = 1
+        storeTemplate.value = []
+        requestMarkTemplates()
+    }
+    function selectTemp (temp, index) {
+        if (index === activeTempIndex.value) return
+        activeTempIndex.value = index
+        emit('change', activeTemp.value)
+    }
+    function scrollLoadMore (event) {
+        const target = event.target
+        const bottomDis = target.scrollHeight - target.clientHeight - target.scrollTop
+        if (bottomDis <= 500 && !loadEnd.value && !isLoadingMore.value) requestMarkTemplates()
+    }
+    function previewTemp (index) {
+        isShowPreview.value = true
+        activeTempIndex.value = index
+    }
+    onMounted(() => {
+        requestMarkTemplates()
     })
 </script>
 

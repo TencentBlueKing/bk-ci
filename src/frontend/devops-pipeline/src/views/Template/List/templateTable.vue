@@ -170,8 +170,8 @@
     </bk-table>
 </template>
 
-<script>
-    import { onMounted, ref, computed, toRefs } from '@vue/composition-api'
+<script setup>
+    import { onMounted, ref, computed, defineProps } from 'vue'
     import ExtMenu from './extMenu'
     import Logo from '@/components/Logo'
     import TemplateEmpty from '@/components/common/exception'
@@ -182,204 +182,172 @@
     } from '@/store/modules/templates/constants'
     import { convertTime } from '@/utils/util'
 
-    export default {
-        components: {
-            ExtMenu,
-            Logo,
-            TemplateEmpty
+    const { proxy, i18n } = UseInstance()
+    defineProps({
+        data: {
+            type: Array,
+            default: () => []
         },
-        props: {
-            data: {
-                type: Array,
-                default: () => []
-            },
-            isLoading: {
-                type: Boolean,
-                default: false
-            },
-            pagination: {
-                type: Object,
-                default: () => ({
-                    current: 1,
-                    count: 6,
-                    limit: 20
-                })
-            }
+        isLoading: {
+            type: Boolean,
+            default: false
         },
-        setup (props, { emit, root }) {
-            if (!root) return
-            const { proxy, i18n } = UseInstance()
-            const { data, isLoading, pagination } = toRefs(props)
-
-            const TEMPLATE_TRANSLATIONS = {
-                PIPELINE: 'template.pipelineTemplate',
-                STAGE: 'template.stageTemplate',
-                JOB: 'template.jobTemplate',
-                STEP: 'template.stepTemplate',
-                ALL: 'template.allTemplate'
-            }
-            const tableSize = ref('medium')
-            const tableColumn = ref([])
-            const selectedTableColumn = ref([])
-            const tableWidthMap = ref({})
-
-            const sourceFilters = computed(() => ['PIPELINE', 'STAGE', 'JOB', 'STEP'].map(type => ({
-                text: i18n.t(TEMPLATE_TRANSLATIONS[type]),
-                value: type
-            })))
-            const TEMPLATE_TYPE = computed(() => {
-                const types = {}
-                Object.keys(TEMPLATE_TRANSLATIONS).forEach(type => {
-                    types[type] = i18n.t(TEMPLATE_TRANSLATIONS[type])
-                })
-                return types
+        pagination: {
+            type: Object,
+            default: () => ({
+                current: 1,
+                count: 6,
+                limit: 20
             })
-            const allRenderColumnMap = computed(() => {
-                return selectedTableColumn.value.reduce((result, item) => {
-                    result[item.id] = true
-                    return result
-                }, {})
-            })
-
-            onMounted(() => {
-                tableColumn.value = [
-                    {
-                        id: 'name',
-                        label: i18n.t('template.name'),
-                        disabled: true
-                    },
-                    {
-                        id: 'desc',
-                        label: i18n.t('template.desc')
-                    },
-                    {
-                        id: 'type',
-                        label: i18n.t('template.type')
-                    },
-                    {
-                        id: 'lastedVersion',
-                        label: i18n.t('template.lastedVersion')
-                    },
-                    {
-                        id: 'source',
-                        label: i18n.t('template.source')
-                    },
-                    {
-                        id: 'debugPipelineCount',
-                        label: i18n.t('template.debugPipelineCount')
-                    },
-                    {
-                        id: 'instancePipelineCount',
-                        label: i18n.t('template.instancePipelineCount')
-                    },
-                    {
-                        id: 'updater',
-                        label: i18n.t('template.lastModifiedBy')
-                    },
-                    {
-                        id: 'updateTime',
-                        label: i18n.t('template.lastModifiedDate')
-                    },
-                    {
-                        id: 'operate',
-                        label: i18n.t('operate'),
-                        disabled: true
-                    }
-                ]
-                const columnsCache = JSON.parse(localStorage.getItem(TEMPLATE_TABLE_COLUMN_CACHE))
-                if (columnsCache) {
-                    selectedTableColumn.value = columnsCache.columns
-                    tableSize.value = columnsCache.size
-                    console.log(columnsCache.size, '///', tableSize.value)
-                } else {
-                    selectedTableColumn.value = [
-                        { id: 'name' },
-                        { id: 'desc' },
-                        { id: 'type' },
-                        { id: 'lastedVersion' },
-                        { id: 'source' },
-                        { id: 'debugPipelineCount' },
-                        { id: 'instancePipelineCount' },
-                        { id: 'updater' },
-                        { id: 'updateTime' },
-                        { id: 'operate' }
-                    ]
-                }
-                tableWidthMap.value = JSON.parse(localStorage.getItem(CACHE_TEMPLATE_TABLE_WIDTH_MAP)) || {
-                    name: 220,
-                    desc: 200,
-                    type: 100,
-                    lastedVersion: 80,
-                    source: 80,
-                    debugPipelineCount: 80,
-                    instancePipelineCount: '',
-                    updater: '',
-                    updateTime: 100,
-                    operate: 96
-                }
-            })
-
-            function handlePageLimitChange (limit) {
-                emit('limit-change', limit)
-            }
-            function handlePageChange (page) {
-                emit('page-change', page)
-            }
-            function clearFilter () {
-                emit('clear')
-            }
-            function formatTime (row, cell, value) {
-                return convertTime(value)
-            }
-            function goEdit (row) {
-                proxy.$router.push({
-                    name: 'pipelinesEdit',
-                    params: {
-                        projectId: row.projectId,
-                        pipelineId: row.pipelineId
-                    }
-                })
-            }
-            function handleSettingChange ({ fields, size }) {
-                selectedTableColumn.value = fields
-                tableSize.value = size
-                localStorage.setItem(TEMPLATE_TABLE_COLUMN_CACHE, JSON.stringify({
-                    columns: fields,
-                    size
-                }))
-            }
-            function handelHeaderDragend (newWidth, oldWidth, column) {
-                tableWidthMap.value[column.property] = newWidth
-                localStorage.setItem(CACHE_TEMPLATE_TABLE_WIDTH_MAP, JSON.stringify(tableWidthMap.value))
-            }
-            function sourceFilterMethod (value, row, column) {
-                const property = column.property
-                return row[property] === value
-            }
-
-            return {
-                data,
-                isLoading,
-                pagination,
-                tableSize,
-                tableColumn,
-                selectedTableColumn,
-                tableWidthMap,
-                sourceFilters,
-                TEMPLATE_TYPE,
-                allRenderColumnMap,
-                handlePageLimitChange,
-                handlePageChange,
-                clearFilter,
-                formatTime,
-                goEdit,
-                handleSettingChange,
-                handelHeaderDragend,
-                sourceFilterMethod
-            }
         }
-    }
+    })
+    const emit = defineEmits(['limit-change', 'page-change', 'clear'])
 
+    const TEMPLATE_TRANSLATIONS = {
+        PIPELINE: 'pipelineTemplate',
+        STAGE: 'stageTemplate',
+        JOB: 'jobTemplate',
+        STEP: 'stepTemplate',
+        ALL: 'allTemplate'
+    }
+    const tableSize = ref('medium')
+    const tableColumn = ref([])
+    const selectedTableColumn = ref([])
+    const tableWidthMap = ref({})
+
+    const sourceFilters = computed(() => ['PIPELINE', 'STAGE', 'JOB', 'STEP'].map(type => ({
+        text: i18n.t(TEMPLATE_TRANSLATIONS[type]),
+        value: type
+    })))
+    const TEMPLATE_TYPE = computed(() => {
+        const types = {}
+        Object.keys(TEMPLATE_TRANSLATIONS).forEach(type => {
+            types[type] = i18n.t(TEMPLATE_TRANSLATIONS[type])
+        })
+        return types
+    })
+    const allRenderColumnMap = computed(() => {
+        return selectedTableColumn.value.reduce((result, item) => {
+            result[item.id] = true
+            return result
+        }, {})
+    })
+
+    onMounted(() => {
+        tableColumn.value = [
+            {
+                id: 'name',
+                label: i18n.t('template.name'),
+                disabled: true
+            },
+            {
+                id: 'desc',
+                label: i18n.t('template.desc')
+            },
+            {
+                id: 'type',
+                label: i18n.t('template.type')
+            },
+            {
+                id: 'lastedVersion',
+                label: i18n.t('template.lastedVersion')
+            },
+            {
+                id: 'source',
+                label: i18n.t('template.source')
+            },
+            {
+                id: 'debugPipelineCount',
+                label: i18n.t('template.debugPipelineCount')
+            },
+            {
+                id: 'instancePipelineCount',
+                label: i18n.t('template.instancePipelineCount')
+            },
+            {
+                id: 'updater',
+                label: i18n.t('template.lastModifiedBy')
+            },
+            {
+                id: 'updateTime',
+                label: i18n.t('template.lastModifiedDate')
+            },
+            {
+                id: 'operate',
+                label: i18n.t('operate'),
+                disabled: true
+            }
+        ]
+        const columnsCache = JSON.parse(localStorage.getItem(TEMPLATE_TABLE_COLUMN_CACHE))
+        if (columnsCache) {
+            selectedTableColumn.value = columnsCache.columns
+            tableSize.value = columnsCache.size
+            console.log(columnsCache.size, '///', tableSize.value)
+        } else {
+            selectedTableColumn.value = [
+                { id: 'name' },
+                { id: 'desc' },
+                { id: 'type' },
+                { id: 'lastedVersion' },
+                { id: 'source' },
+                { id: 'debugPipelineCount' },
+                { id: 'instancePipelineCount' },
+                { id: 'updater' },
+                { id: 'updateTime' },
+                { id: 'operate' }
+            ]
+        }
+        tableWidthMap.value = JSON.parse(localStorage.getItem(CACHE_TEMPLATE_TABLE_WIDTH_MAP)) || {
+            name: 220,
+            desc: 200,
+            type: 100,
+            lastedVersion: 80,
+            source: 80,
+            debugPipelineCount: 80,
+            instancePipelineCount: '',
+            updater: '',
+            updateTime: 100,
+            operate: 96
+        }
+    })
+
+    function handlePageLimitChange (limit) {
+        emit('limit-change', limit)
+    }
+    function handlePageChange (page) {
+        emit('page-change', page)
+    }
+    function clearFilter () {
+        emit('clear')
+    }
+    function formatTime (row, cell, value) {
+        return convertTime(value)
+    }
+    function goEdit (row) {
+        proxy.$router.push({
+            name: 'pipelinesEdit',
+            params: {
+                projectId: row.projectId,
+                pipelineId: row.pipelineId
+            }
+        })
+    }
+    function handleSettingChange ({ fields, size }) {
+        selectedTableColumn.value = fields
+        tableSize.value = size
+        localStorage.setItem(TEMPLATE_TABLE_COLUMN_CACHE, JSON.stringify({
+            columns: fields,
+            size
+        }))
+    }
+    function handelHeaderDragend (newWidth, oldWidth, column) {
+        tableWidthMap.value[column.property] = newWidth
+        localStorage.setItem(CACHE_TEMPLATE_TABLE_WIDTH_MAP, JSON.stringify(tableWidthMap.value))
+    }
+    function sourceFilterMethod (value, row, column) {
+        const property = column.property
+        return row[property] === value
+    }
 </script>
 
 <style lang="scss">

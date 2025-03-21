@@ -45,23 +45,12 @@
     </div>
 </template>
 
-<script>
-    import { defineComponent, ref, computed } from '@vue/composition-api'
-    import UseInstance from '@/hook/useInstance'
-    export default defineComponent({
-        name: 'Repository',
-        setup (props, { root }) {
-            if (!root) return
-            const { proxy } = UseInstance()
-            const projectId = computed(() => proxy.$route.params.projectId)
-            const repository = ref('')
-         
-            return {
-                projectId,
-                repository
-            }
-        }
-    })
+<script setup name='Repository'>
+    import { ref } from 'vue'
+    // import UseInstance from '@/hook/useInstance'
+    // const { proxy } = UseInstance()
+    // const projectId = computed(() => proxy.$route.params.projectId)
+    const repository = ref('')
 
 </script>
 
