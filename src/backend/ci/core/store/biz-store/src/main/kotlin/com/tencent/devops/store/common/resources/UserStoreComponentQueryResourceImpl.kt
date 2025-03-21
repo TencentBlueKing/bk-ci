@@ -46,6 +46,7 @@ import com.tencent.devops.store.pojo.common.media.StoreMediaInfo
 import com.tencent.devops.store.pojo.common.test.StoreTestItem
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
+import com.tencent.devops.store.pojo.common.version.StoreVersionLogInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -218,5 +219,19 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
         storeCode: String
     ): Result<List<StoreMediaInfo>?> {
         return storeMediaService.getByCode(storeCode, storeType)
+    }
+
+    override fun getStoreVersionLogs(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<StoreVersionLogInfo>> {
+        return storeComponentQueryService.getStoreVersionLogs(
+            storeCode = storeCode,
+            storeType = storeType,
+            page = page,
+            pageSize = pageSize
+        )
     }
 }
