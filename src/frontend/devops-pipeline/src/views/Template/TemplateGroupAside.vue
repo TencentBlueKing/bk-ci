@@ -135,7 +135,6 @@
             color: #3A84FF;
         }
         .item-border {
-            width: 190px;
             border-bottom: 1px solid #DCDEE5;
             margin: 8px 24px;
         }
