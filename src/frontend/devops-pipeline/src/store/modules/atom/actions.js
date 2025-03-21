@@ -207,7 +207,7 @@ export default {
     },
     requestTemplate: async ({ commit, dispatch, getters, state }, { projectId, templateId, version }) => {
         const [templateRes, atomPropRes] = await Promise.all([
-            request.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/${version}/details/`),
+            dispatch('fetchTemplateByVersion', { projectId, templateId, version }),
             request.get(`/${PROCESS_API_URL_PREFIX}/user/template/v2/atoms/projects/${projectId}/templates/${templateId}/atom/prop/list`, {
                 params: version ? { version } : {}
             })
@@ -217,13 +217,13 @@ export default {
             {
                 data: {
                     modelAndSetting: {
-                        model: templateRes.data.resource.model,
-                        setting: templateRes.data.setting
+                        model: templateRes.resource.model,
+                        setting: templateRes.setting
                     },
-                    updater: templateRes.data.resource.updater,
-                    updateTime: templateRes.data.resource.updateTime,
-                    yamlSupported: !!templateRes.data.resource.yaml,
-                    yamlPreview: templateRes.data.yamlPreview
+                    updater: templateRes.resource.updater,
+                    updateTime: templateRes.resource.updateTime,
+                    yamlSupported: !!templateRes.resource.yaml,
+                    yamlPreview: templateRes.yamlPreview
                 }
             },
             atomPropRes
@@ -237,7 +237,7 @@ export default {
                 [pipelineRes, atomPropRes] = await dispatch('requestTemplate', { version, ...params })
             } else {
                 [pipelineRes, atomPropRes] = await Promise.all([
-                    request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${params.projectId}/pipelines/${params.pipelineId}/versions/${version ?? ''}`),
+                    dispatch('fetchPipelineByVersion', params),
                     request.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/projects/${params.projectId}/pipelines/${params.pipelineId}/atom/prop/list`, {
                         params: version ? { version } : {}
                     })
@@ -252,7 +252,10 @@ export default {
         }
     },
     fetchPipelineByVersion ({ commit }, { projectId, pipelineId, version }) {
-        return request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version ?? ''}`).then(res => {
+        return request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version ?? ''}`)
+    },
+    fetchTemplateByVersion ({ commit }, { projectId, templateId, version }) {
+        return request.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/${version}/details/`).then(res => {
             return res.data
         })
     },
