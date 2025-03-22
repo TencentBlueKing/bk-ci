@@ -118,4 +118,24 @@ object GitActionCommon {
     fun getCiDirectory(filePath: String): String {
         return filePath.let { it.substring(0, it.indexOfLast { c -> c == '/' }) }
     }
+
+    fun getCiFileName(filePath: String): String {
+        return filePath.removePrefix(".ci/")
+    }
+
+    fun getCiFilePath(fileName: String): String {
+        return "${Constansts.ciFileDirectoryName}${File.separator}$fileName"
+    }
+
+    fun getSourceRef(fork: Boolean, sourceFullName: String, sourceBranch: String): String {
+        return if (fork) {
+            "$sourceFullName:$sourceBranch"
+        } else {
+            sourceBranch
+        }
+    }
+
+    fun isTemplateFile(filePath: String): Boolean {
+        return filePath.startsWith(".ci/templates")
+    }
 }

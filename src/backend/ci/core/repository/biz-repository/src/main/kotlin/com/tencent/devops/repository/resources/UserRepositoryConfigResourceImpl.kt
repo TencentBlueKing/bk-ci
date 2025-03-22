@@ -27,51 +27,112 @@
 
 package com.tencent.devops.repository.resources
 
-import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.UserRepositoryConfigResource
-import com.tencent.devops.repository.pojo.RepositoryConfig
-import com.tencent.devops.repository.pojo.enums.RepositoryConfigStatusEnum
-import com.tencent.devops.scm.config.GitConfig
+import com.tencent.devops.repository.pojo.RepositoryConfigLogoInfo
+import com.tencent.devops.repository.pojo.RepositoryScmConfigReq
+import com.tencent.devops.repository.pojo.RepositoryScmConfigVo
+import com.tencent.devops.repository.pojo.RepositoryScmProviderVo
+import com.tencent.devops.repository.pojo.ScmConfigBaseInfo
+import com.tencent.devops.repository.pojo.enums.ScmConfigStatus
+import com.tencent.devops.repository.service.RepositoryScmConfigService
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
+import java.io.InputStream
 
 @RestResource
 class UserRepositoryConfigResourceImpl @Autowired constructor(
-    private val gitConfig: GitConfig
+    private val repositoryScmConfigService: RepositoryScmConfigService
 ) : UserRepositoryConfigResource {
 
-    companion object {
-        // 后续需改造数据库字段
-        val DOC_URL_MAP = mapOf(
-            ScmType.GITHUB.name to "/UserGuide/Setup/guidelines-bkdevops-githubapp.md"
+    override fun list(userId: String): Result<List<ScmConfigBaseInfo>> {
+        return Result(
+            repositoryScmConfigService.listConfigBaseInfo(userId)
         )
     }
 
-    override fun list(): Result<List<RepositoryConfig>> {
-        // TODO 源码管理需要优化
-        val managers = ScmType.values().map {
-            val status = when {
-                it == ScmType.GITHUB && gitConfig.githubClientId.isBlank() ->
-                    RepositoryConfigStatusEnum.DEPLOYING
+    override fun listProvider(userId: String): Result<List<RepositoryScmProviderVo>> {
+        return Result(repositoryScmConfigService.listProvider(userId))
+    }
 
-                it == ScmType.CODE_GIT && gitConfig.clientId.isBlank() ->
-                    RepositoryConfigStatusEnum.DISABLED
-
-                else ->
-                    RepositoryConfigStatusEnum.OK
-            }
-            RepositoryConfig(
-                scmType = it,
-                name = I18nUtil.getCodeLanMessage(
-                    messageCode = "TRIGGER_TYPE_${it.name}",
-                    defaultMessage = it.name
-                ),
+    override fun listConfig(
+        userId: String,
+        status: ScmConfigStatus?,
+        excludeStatus: ScmConfigStatus?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<SQLPage<RepositoryScmConfigVo>> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
+        val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
+        return Result(
+            repositoryScmConfigService.listConfigVo(
+                userId = userId,
                 status = status,
-                docUrl = DOC_URL_MAP[it.name] ?: ""
+                excludeStatus = excludeStatus,
+                limit = sqlLimit.limit,
+                offset = sqlLimit.offset
             )
-        }
-        return Result(managers)
+        )
+    }
+
+    override fun create(userId: String, request: RepositoryScmConfigReq): Result<Boolean> {
+        repositoryScmConfigService.create(
+            userId = userId,
+            request = request
+        )
+        return Result(true)
+    }
+
+    override fun edit(userId: String, scmCode: String, request: RepositoryScmConfigReq): Result<Boolean> {
+        repositoryScmConfigService.edit(
+            userId = userId,
+            scmCode = scmCode,
+            request = request
+        )
+        return Result(true)
+    }
+
+    override fun enable(userId: String, scmCode: String): Result<Boolean> {
+        repositoryScmConfigService.enable(
+            userId = userId,
+            scmCode = scmCode
+        )
+        return Result(true)
+    }
+
+    override fun disable(userId: String, scmCode: String): Result<Boolean> {
+        repositoryScmConfigService.disable(
+            userId = userId,
+            scmCode = scmCode
+        )
+        return Result(true)
+    }
+
+    override fun delete(userId: String, scmCode: String): Result<Boolean> {
+        repositoryScmConfigService.delete(
+            userId = userId,
+            scmCode = scmCode
+        )
+        return Result(true)
+    }
+
+    override fun uploadLogo(
+        userId: String,
+        contentLength: Long,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<RepositoryConfigLogoInfo?> {
+        return Result(
+            repositoryScmConfigService.uploadLogo(
+                userId = userId,
+                contentLength = contentLength,
+                inputStream = inputStream,
+                disposition = disposition
+            )
+        )
     }
 }

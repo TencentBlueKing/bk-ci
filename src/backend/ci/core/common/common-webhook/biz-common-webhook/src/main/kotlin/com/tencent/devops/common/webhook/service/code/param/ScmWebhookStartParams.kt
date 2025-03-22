@@ -164,7 +164,7 @@ interface ScmWebhookStartParams<T : WebHookTriggerElement> {
         projectId: String,
         element: T,
         repo: Repository,
-        matcher: ScmWebhookMatcher,
+        matcher: ScmWebhookMatcher?,
         variables: Map<String, String>,
         params: WebHookParams,
         matchResult: WebhookMatchResult

@@ -28,22 +28,37 @@
 
 package com.tencent.devops.repository.service
 
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineYamlResource
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileSyncReq
+import com.tencent.devops.repository.constant.RepositoryConstants
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.dao.RepositoryDao
+import com.tencent.devops.repository.pojo.RepoCondition
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.credential.AuthRepository
+import com.tencent.devops.repository.pojo.enums.RepoYamlSyncStatusEnum
+import com.tencent.devops.repository.service.hub.ScmFileApiService
+import com.tencent.devops.repository.service.hub.ScmRefApiService
+import com.tencent.devops.repository.service.hub.ScmRepositoryApiService
 import com.tencent.devops.repository.service.loader.CodeRepositoryServiceRegistrar
+import com.tencent.devops.scm.api.enums.ScmEventType
+import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
+import com.tencent.devops.scm.config.GitConfig
+import com.tencent.devops.scm.config.P4Config
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -51,8 +66,16 @@ class RepositoryPacService @Autowired constructor(
     private val dslContext: DSLContext,
     private val repositoryDao: RepositoryDao,
     private val repositoryService: RepositoryService,
-    private val client: Client
+    private val client: Client,
+    private val repositoryApiService: ScmRepositoryApiService,
+    private val fileApiService: ScmFileApiService,
+    private val refApiService: ScmRefApiService,
+    private val gitConfig: GitConfig,
+    private val p4Config: P4Config
 ) {
+
+    @Value("\${scm.webhook.url:#{null}}")
+    private val webhookUrl: String = ""
 
     companion object {
         private val logger = LoggerFactory.getLogger(RepositoryPacService::class.java)
@@ -83,31 +106,12 @@ class RepositoryPacService @Autowired constructor(
                 language = I18nUtil.getLanguage(userId)
             )
         )
-        val repository = repositoryDao.get(dslContext = dslContext, repositoryId = repositoryId, projectId = projectId)
-        if (repository.enablePac == true) {
-            throw ErrorCodeException(
-                errorCode = RepositoryMessageCode.ERROR_REPO_REPEATEDLY_ENABLED_PAC
-            )
-        }
-        val codeRepositoryService = CodeRepositoryServiceRegistrar.getServiceByScmType(repository.type)
-        codeRepositoryService.pacCheckEnabled(
+        val repository = repositoryService.serviceGet(
             projectId = projectId,
-            userId = userId,
-            record = repository,
-            retry = false
+            repositoryConfig = RepositoryConfigUtils.buildConfig(repositoryHashId, RepositoryType.ID)
         )
-        client.get(ServicePipelineYamlResource::class).enable(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repositoryHashId,
-            scmType = ScmType.valueOf(repository.type)
-        )
-        repositoryDao.enablePac(
-            dslContext = dslContext,
-            userId = userId,
-            projectId = projectId,
-            repositoryId = repositoryId
-        )
+        validateEnablePac(userId = userId, projectId = projectId, repository = repository)
+        enablePac(userId = userId, projectId = projectId, repository = repository)
     }
 
     fun getYamlSyncStatus(projectId: String, repositoryHashId: String): String? {
@@ -253,6 +257,7 @@ class RepositoryPacService @Autowired constructor(
         val repositoryId = HashUtil.decodeOtherIdToLong(repoHashId)
         repositoryDao.updateYamlSyncStatus(
             dslContext = dslContext,
+            projectId = projectId,
             repositoryId = repositoryId,
             syncStatus = syncStatus
         )
@@ -262,5 +267,148 @@ class RepositoryPacService @Autowired constructor(
         val codeRepositoryService = CodeRepositoryServiceRegistrar.getServiceByScmType(scmType.name)
         val record = codeRepositoryService.getPacRepository(externalId = externalId) ?: return null
         return codeRepositoryService.compose(record)
+    }
+
+    /**
+     * pac开启验证
+     */
+    fun validateEnablePac(userId: String, projectId: String, repository: Repository) {
+        if (repository.enablePac == true) {
+            throw ErrorCodeException(
+                errorCode = RepositoryMessageCode.ERROR_REPO_REPEATEDLY_ENABLED_PAC
+            )
+        }
+        val authRepository = AuthRepository(repository)
+        val serverRepository = repositoryApiService.findRepository(
+            projectId = projectId,
+            authRepository = authRepository
+        )
+        if (serverRepository !is GitScmServerRepository) {
+            throw ErrorCodeException(
+                errorCode = RepositoryMessageCode.ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC
+            )
+        }
+        // 验证是否已经有关联的代码库开启PAC
+        val codeRepositoryService = CodeRepositoryServiceRegistrar.getService(repository)
+        val condition = RepoCondition(
+            projectId = projectId,
+            scmCode = repository.scmCode,
+            projectName = serverRepository.fullName
+        )
+        val existsPacRepo = codeRepositoryService.listByCondition(repoCondition = condition, offset = 1, limit = 1)
+        if (!existsPacRepo.isNullOrEmpty()) {
+            throw ErrorCodeException(
+                errorCode = RepositoryMessageCode.ERROR_REPO_URL_HAS_ENABLED_PAC,
+                params = arrayOf(existsPacRepo.first().projectId!!)
+            )
+        }
+        // 验证代码库是否有代码库的管理员权限
+        val perm = repositoryApiService.findPerm(
+            projectId = projectId,
+            username = repository.userName,
+            authRepository = authRepository
+        )
+        if (!perm.admin) {
+            throw ErrorCodeException(
+                errorCode = RepositoryMessageCode.ERROR_MEMBER_LEVEL_LOWER_MASTER,
+                params = arrayOf(repository.userName)
+            )
+        }
+    }
+
+    /**
+     * 开启pac
+     *
+     * 调用前必须先调用validateEnablePac验证合法性
+     */
+    fun enablePac(userId: String, projectId: String, repository: Repository) {
+        val repositoryId = HashUtil.decodeOtherIdToLong(repository.repoHashId!!)
+        val authRepository = AuthRepository(repository)
+        val serverRepository = repositoryApiService.findRepository(
+            projectId = projectId,
+            authRepository = authRepository
+        )
+        if (serverRepository !is GitScmServerRepository) {
+            throw ErrorCodeException(
+                errorCode = RepositoryMessageCode.ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC
+            )
+        }
+        // 创建webhook,开启PAC时默认注册push和合并请求事件
+        val hookUrl = getHookUrl(repository.getScmType())
+        repositoryApiService.createHook(
+            projectId = projectId,
+            hookUrl = hookUrl,
+            events = listOf(
+                ScmEventType.PUSH.value,
+                ScmEventType.PULL_REQUEST.value
+            ),
+            authRepository = authRepository
+        )
+        // 获取yaml文件列表
+        val defaultBranch = serverRepository.defaultBranch
+        val fileTrees = fileApiService.listFileTree(
+            projectId = projectId,
+            path = RepositoryConstants.CI_DIR_PATH,
+            ref = defaultBranch,
+            recursive = true,
+            authRepository = authRepository
+        )
+        // 文件列表为空,不需要同步yaml文件
+        if (fileTrees.isEmpty()) {
+            repositoryDao.enablePac(
+                dslContext = dslContext,
+                userId = userId,
+                projectId = projectId,
+                repositoryId = repositoryId,
+                syncStatus = RepoYamlSyncStatusEnum.SUCCEED.name
+            )
+            return
+        }
+        val commit = refApiService.findCommit(
+            projectId = projectId,
+            authRepository = authRepository,
+            sha = defaultBranch
+        )
+        repositoryDao.enablePac(
+            dslContext = dslContext,
+            userId = userId,
+            projectId = projectId,
+            repositoryId = repositoryId,
+            syncStatus = RepoYamlSyncStatusEnum.SYNC.name
+        )
+        client.get(ServicePipelineYamlResource::class).syncYamlFile(
+            userId = userId,
+            projectId = projectId,
+            yamlFileSyncReq = PipelineYamlFileSyncReq(
+                repository = repository,
+                fileTrees = fileTrees,
+                defaultBranch = defaultBranch,
+                commit = commit
+            )
+        )
+    }
+
+    private fun getHookUrl(type: ScmType): String {
+        return when (type) {
+            ScmType.CODE_GIT -> {
+                gitConfig.gitHookUrl
+            }
+
+            ScmType.CODE_GITLAB -> {
+                gitConfig.gitlabHookUrl
+            }
+
+            ScmType.CODE_TGIT -> {
+                gitConfig.tGitHookUrl
+            }
+
+            ScmType.CODE_P4 -> {
+                p4Config.p4HookUrl
+            }
+
+            else -> {
+                webhookUrl
+            }
+        }
     }
 }

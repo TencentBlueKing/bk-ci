@@ -39,6 +39,7 @@ dependencies {
     api(project(":core:auth:api-auth"))
     api(project(":core:project:api-project"))
     api(project(":core:common:common-auth:common-auth-provider"))
+    api(project(":core:repository:biz-base-scm"))
     api("com.google.code.gson:gson")
     api("org.eclipse.jgit:org.eclipse.jgit")
 }

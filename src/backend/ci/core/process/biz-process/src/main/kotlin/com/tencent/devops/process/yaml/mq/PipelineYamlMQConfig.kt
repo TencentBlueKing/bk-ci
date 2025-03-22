@@ -47,4 +47,8 @@ class PipelineYamlMQConfig @Autowired constructor(
     @EventConsumer
     fun pipelineYamlTriggerConsumer() =
         ScsConsumerBuilder.build<PipelineYamlTriggerEvent> { pipelineYamlTriggerListener.execute(it) }
+
+    @EventConsumer
+    fun pipelineYamlFileConsumer() =
+        ScsConsumerBuilder.build<PipelineYamlFileEvent> { pipelineYamlTriggerListener.execute(it) }
 }
