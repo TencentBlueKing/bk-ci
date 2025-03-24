@@ -25,46 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.enums
+package com.tencent.devops.project.service
 
-import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.project.pojo.service.ServiceVO
 
-enum class StoreStatusEnum(val isProcessing: Boolean) {
-    INIT(true), // 初始化
-    COMMITTING(true), // 提交中
-    BUILDING(true), // 构建中
-    BUILD_FAIL(true), // 构建失败
-    CHECKING(true), // 验证中
-    CHECK_FAIL(true), // 验证失败
-    TESTING(true), // 测试中
-    EDITING(true), // 填写信息中
-    AUDITING(true), // 审核中
-    AUDIT_REJECT(false), // 审核驳回
-    RELEASED(false), // 已发布
-    GROUNDING_SUSPENSION(false), // 上架中止
-    UNDERCARRIAGING(false), // 下架中
-    UNDERCARRIAGED(false), // 已下架
-    TESTED(false); // 测试结束(仅分支测试使用)
+abstract class ServiceManageService {
 
-    fun getI18n(language: String): String {
-        return MessageUtil.getMessageByLocale(
-            messageCode = "STORE_BASE_STATUS_${this.name}",
-            language = language
-        )
-    }
-
-    companion object {
-
-        fun getProcessingStatusList(): List<String> {
-            return values().filter { it.isProcessing }.map { it.name }
-        }
-
-        fun getTestStatusList(): List<String> {
-            return listOf(
-                TESTING.name,
-                EDITING.name,
-                AUDITING.name
-            )
-        }
-    }
+    /**
+     * 处理特殊逻辑
+     * @param userId 用户ID
+     * @param serviceVO 服务bean
+     * @param projectId 项目ID
+     * @return ServiceVO
+     */
+    abstract fun doSpecBus(userId: String, serviceVO: ServiceVO, projectId: String? = null): ServiceVO
 }
