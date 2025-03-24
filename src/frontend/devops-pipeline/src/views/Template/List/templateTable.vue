@@ -26,7 +26,7 @@
             <template slot-scope="{ row }">
                 <div
                     class="template-name select-text"
-                    @click="goEdit(row)"
+                    @click="goTemplateOverview(row, 'instanceList')"
                 >
                     <img :src="row.logoUrl">
                     <span :title="row.name">{{ row.name }}</span>
@@ -101,7 +101,9 @@
             prop="debugPipelineCount"
         >
             <template slot-scope="{ row }">
-                <span class="select-text">{{ row.debugPipelineCount }}</span>
+                <span class="select-text">
+                    {{ row.debugPipelineCount }}
+                </span>
             </template>
         </bk-table-column>
         <bk-table-column
@@ -111,7 +113,12 @@
             prop="instancePipelineCount"
         >
             <template slot-scope="{ row }">
-                <span class="select-text">{{ row.debugPipelineCount }}</span>
+                <span
+                    class="select-text"
+                    @click="() => row.instancePipelineCount && goTemplateOverview(row, 'instanceList')"
+                >
+                    {{ row.instancePipelineCount }}
+                </span>
             </template>
         </bk-table-column>
         <bk-table-column
@@ -322,12 +329,13 @@
     function formatTime (row, cell, value) {
         return convertTime(value)
     }
-    function goEdit (row) {
+    function goTemplateOverview (row, type) {
         proxy.$router.push({
-            name: 'pipelinesEdit',
+            name: 'TemplateOverview',
             params: {
-                projectId: row.projectId,
-                pipelineId: row.pipelineId
+                templateId: row.id,
+                version: row.releasedVersion,
+                type
             }
         })
     }
