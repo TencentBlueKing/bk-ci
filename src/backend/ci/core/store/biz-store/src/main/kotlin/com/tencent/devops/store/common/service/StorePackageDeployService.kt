@@ -70,7 +70,7 @@ import org.springframework.stereotype.Service
 import org.springframework.util.FileSystemUtils
 
 @Service
-abstract class StorePackageDeployService@Autowired constructor() {
+abstract class StorePackageDeployService {
 
     @Autowired
     lateinit var dslContext: DSLContext
