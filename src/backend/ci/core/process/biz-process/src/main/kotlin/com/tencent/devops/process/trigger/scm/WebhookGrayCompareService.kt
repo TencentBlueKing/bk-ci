@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.utils.PIPELINE_PAC_REPO_HASH_ID
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
@@ -52,8 +53,6 @@ import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
 
 /**
  * 历史的webhook与通过devops-scm的webhook数据对比
@@ -67,19 +66,24 @@ class WebhookGrayCompareService @Autowired constructor(
     private val pipelineYamlService: PipelineYamlService,
     private val webhookTriggerMatcher: WebhookTriggerMatcher
 ) {
-
-    private val executorService = ThreadPoolExecutor(
-        5,
-        10,
-        0L,
-        TimeUnit.MILLISECONDS,
-        LinkedBlockingQueue(100)
-    )
-
-    fun asyncCompareWebhook(scmType: ScmType, request: WebhookRequest, matcher: ScmWebhookMatcher) {
-        executorService.execute {
-            compareWebhook(scmType, request, matcher)
-        }
+    fun asyncCompareWebhook(
+        scmType: ScmType,
+        request: WebhookRequest,
+        matcher: ScmWebhookMatcher
+    ) {
+        val bizId = MDC.get(TraceTag.BIZID)
+        ThreadPoolUtil.submitAction(
+            corePoolSize = 5,
+            maximumPoolSize = 10,
+            keepAliveTime = 0L,
+            queue = LinkedBlockingQueue(100),
+            action = {
+                MDC.put(TraceTag.BIZID, bizId)
+                compareWebhook(scmType, request, matcher)
+                MDC.remove(TraceTag.BIZID)
+            },
+            actionTitle = "async compare webhook|scmType: $scmType|repoName: ${matcher.getRepoName()}"
+        )
     }
 
     fun compareWebhook(scmType: ScmType, request: WebhookRequest, matcher: ScmWebhookMatcher) {
@@ -91,7 +95,7 @@ class WebhookGrayCompareService @Autowired constructor(
             }
             compareParams(oldPipelineAndParams, newPipelineAndParams, scmType, matcher)
         } catch (ignored: Exception) {
-            logger.warn("Failed to compare webhook|scmType: $scmType|repoName: ${matcher.getRepoName()}")
+            logger.warn("Failed to compare webhook|scmType: $scmType|repoName: ${matcher.getRepoName()}", ignored)
         }
     }
 
@@ -130,7 +134,7 @@ class WebhookGrayCompareService @Autowired constructor(
             val add = newPipelineAndParams.keys.minus(oldPipelineAndParams.keys)
             logger.warn(
                 "compare webhook|new not contains all old|" +
-                        "scmType: $scmType|repoName: ${matcher.getRepoName()}|miss:$miss|add:$add",
+                        "scmType: $scmType|repoName: ${matcher.getRepoName()}|miss:$miss|add:$add"
             )
             return false
         }
@@ -144,11 +148,15 @@ class WebhookGrayCompareService @Autowired constructor(
         scmType: ScmType,
         matcher: ScmWebhookMatcher
     ) {
-        val newMissVar = mutableListOf<String>()
-        val diffValueKeys = mutableListOf<String>()
+        val newMissVar = mutableSetOf<String>()
+        val diffValueKeys = mutableSetOf<String>()
         oldPipelineAndParams.forEach { (pipelineId, oldParams) ->
             val newParams = newPipelineAndParams[pipelineId] ?: return@forEach
-            oldParams.forEach { (key, value) ->
+            oldParams.forEach eachParam@{ (key, value) ->
+                // 旧值为空字符串, 新值不存在, 直接忽略
+                if ((value?.toString() ?: "").isBlank() && !newParams.containsKey(key)) {
+                    return@eachParam
+                }
                 if (newParams.containsKey(key)) {
                     if (value != newParams[key]) {
                         diffValueKeys.add(key)
@@ -330,6 +338,9 @@ class WebhookGrayCompareService @Autowired constructor(
             variables[PIPELINE_PAC_REPO_HASH_ID] = repository.repoHashId!!
         }
         container.elements.filterIsInstance<WebHookTriggerElement>().forEach elements@{ element ->
+            if (!element.elementEnabled()) {
+                return
+            }
             val atomResponse = webhookTriggerMatcher.matches(
                 projectId = projectId,
                 pipelineId = pipelineId,

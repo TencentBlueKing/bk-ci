@@ -106,6 +106,9 @@ class WebhookTriggerBuildService @Autowired constructor(
             }
             val failedMatchElements = mutableListOf<PipelineTriggerFailedMatchElement>()
             container.elements.filterIsInstance<WebHookTriggerElement>().forEach elements@{ element ->
+                if (!element.elementEnabled()) {
+                    return@elements
+                }
                 val atomResponse = webhookTriggerMatcher.matches(
                     projectId = projectId,
                     pipelineId = pipelineId,
