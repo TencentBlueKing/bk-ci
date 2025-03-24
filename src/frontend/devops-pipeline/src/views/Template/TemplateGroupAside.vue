@@ -50,25 +50,25 @@
         {
             viewId: PIPELINE_TEMPLATE_VIEW_ID,
             i18nKey: PIPELINE_TEMPLATE_VIEW_ID,
-            icon: 'pipeline',
+            icon: 'pipeline-template',
             countKey: 'PIPELINE'
         },
         {
             viewId: STAGE_TEMPLATE_VIEW_ID,
             i18nKey: STAGE_TEMPLATE_VIEW_ID,
-            icon: 'stage',
+            icon: 'stage-template',
             countKey: 'STAGE'
         },
         {
             viewId: JOB_TEMPLATE_VIEW_ID,
             i18nKey: JOB_TEMPLATE_VIEW_ID,
-            icon: 'job',
+            icon: 'job-template',
             countKey: 'JOB'
         },
         {
             viewId: STEP_TEMPLATE_VIEW_ID,
             i18nKey: STEP_TEMPLATE_VIEW_ID,
-            icon: 'job',
+            icon: 'step-template',
             countKey: 'STEP'
         }
     ])
@@ -116,6 +116,7 @@
             cursor: pointer;
             svg {
                 vertical-align: middle;
+                color: #C4C6CC;
                 margin: 0 10px;
             }
             .nav-num {

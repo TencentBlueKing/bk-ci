@@ -204,17 +204,17 @@
     const searchTab = ref([
         {
             i18nKey: ALL_SOURCE,
-            icon: 'group',
+            icon: 'app-store',
             countKey: 'ALL'
         },
         {
             i18nKey: CUSTOM_SOURCE,
-            icon: 'pipeline',
+            icon: 'custom-template',
             countKey: 'CUSTOM'
         },
         {
             i18nKey: MARKET_SOURCE,
-            icon: 'stage',
+            icon: 'custom-template',
             countKey: 'MARKET'
         }
     ])
@@ -567,12 +567,21 @@
                     text-align: center;
                     border-radius: 2px;
                     cursor: pointer;
+
+                    svg {
+                        vertical-align: middle;
+                        color: #979BA5;
+                    }
                 }
 
                 .active {
                     background-color: #fff;
                     color: $primaryColor;
                     border-radius: 2px;
+  
+                    svg {
+                        color: #979BA5;
+                    }
                 }
             }
 
