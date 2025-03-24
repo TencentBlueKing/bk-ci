@@ -120,7 +120,8 @@ class OpImageResourceImpl @Autowired constructor(
             imageCode = imageCode,
             page = page,
             pageSize = pageSize,
-            interfaceName = "/op/pipeline/image/imageCodes/{imageCode}/versions/list"
+            interfaceName = "/op/pipeline/image/imageCodes/{imageCode}/versions/list",
+            validationFlag = false
         )
     }
 

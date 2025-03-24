@@ -56,4 +56,13 @@ object VersionUtils {
      * @param version 版本号
      */
     fun isLatestVersion(version: String) = version.contains("*")
+
+    /**
+     * 获取主版本号
+     * @param version 版本号
+     * @return 主版本号
+     */
+    fun getMajorVersion(version: String): Int {
+        return version.substring(0, version.indexOf(".")).toInt()
+    }
 }

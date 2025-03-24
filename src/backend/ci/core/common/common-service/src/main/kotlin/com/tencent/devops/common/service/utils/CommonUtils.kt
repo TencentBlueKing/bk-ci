@@ -291,4 +291,49 @@ object CommonUtils {
             SpringContextUtil.getBean(DSLContext::class.java)
         }
     }
+
+    /**
+     * 根据指定前后缀、长度生成数字
+     * @param prefix 前缀
+     * @param suffix 后缀
+     * @param totalLength 长度
+     * @return 数字
+     */
+    fun generateNumber(
+        prefix: Int,
+        suffix: Int,
+        totalLength: Int
+    ): Long {
+        if (prefix < 0) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+                params = arrayOf("prefix must be non-negative")
+            )
+        }
+        if (suffix < 0) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+                params = arrayOf("suffix must be non-negative")
+            )
+        }
+        val prefixStr = prefix.toString()
+        val suffixStr = suffix.toString()
+        val baseLength = prefixStr.length + suffixStr.length
+        if (totalLength < baseLength || totalLength > 19) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+                params = arrayOf("totalLength must be between $baseLength and 19")
+            )
+        }
+        val zerosCount = totalLength - baseLength
+        val numberStr = "$prefixStr${"0".repeat(zerosCount)}$suffixStr"
+        return try {
+            numberStr.toLong()
+        } catch (e: NumberFormatException) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+                params = arrayOf("the generated value exceeds the maximum value of the Long type")
+            )
+        }
+    }
 }

@@ -29,6 +29,8 @@ package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
@@ -66,9 +68,20 @@ class UserProjectServiceImpl @Autowired constructor(
     private val favoriteDao: FavoriteDao,
     gray: Gray,
     redisOperation: RedisOperation,
+    authProjectApi: AuthProjectApi,
+    pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val tofService: TOFService,
     private val bkTag: BkTag
-) : AbsUserProjectServiceServiceImpl(dslContext, serviceTypeDao, serviceDao, favoriteDao, gray, redisOperation) {
+) : AbsUserProjectServiceServiceImpl(
+    dslContext,
+    serviceTypeDao,
+    serviceDao,
+    favoriteDao,
+    gray,
+    redisOperation,
+    authProjectApi,
+    pipelineAuthServiceCode
+) {
 
     @Value("\${project.container.url:#{null}}")
     private var containerUrl: String? = null
