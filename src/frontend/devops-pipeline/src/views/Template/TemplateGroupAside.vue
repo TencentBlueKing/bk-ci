@@ -12,7 +12,7 @@
                     <Logo
                         :class="item.icon"
                         size="16"
-                        :name="item.icon"
+                        :name="($route.params.viewId || cacheViewId) === item.viewId ? item.activeIcon : item.icon"
                     />
                     <span>{{ $t(item.i18nKey) }}</span>
                 </div>
