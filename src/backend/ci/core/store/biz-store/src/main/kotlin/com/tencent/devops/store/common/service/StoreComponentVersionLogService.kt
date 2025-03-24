@@ -140,39 +140,42 @@ abstract class StoreComponentVersionLogService {
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
     private fun getPackageSize(record: Record, storeType: StoreTypeEnum): String {
-        fun formatSizeInMB(sizeInBytes: BigDecimal): String =
-            String.format(
-                "%.2f M",
-                sizeInBytes.divide(BigDecimal(1024.0 * 1024.0), 2, RoundingMode.HALF_UP).toDouble()
-            )
-
         return when (storeType) {
-            StoreTypeEnum.ATOM -> {
-                val size = record.get("PACKAGE_SIZE") as? String ?: return ""
-                if (size.isNotEmpty()) {
-                    val atomPackageInfo = JsonUtil.to(size, object : TypeReference<List<AtomPackageInfo>>() {})
-                    atomPackageInfo.let {
-                        if (it.isNotEmpty()) {
-                            val totalSize = it.map { info -> BigDecimal(info.size) }.reduce(BigDecimal::add)
-                            return formatSizeInMB(totalSize)
-                        }
-                    }
-                }
-                ""
-            }
-
-            StoreTypeEnum.IMAGE -> {
-                val size = record.get("IMAGE_SIZE") as? String ?: return ""
-                if (size.isNotEmpty()) {
-                    return formatSizeInMB(BigDecimal(size.toLong()))
-                } else {
-                    ""
-                }
-            }
-
+            StoreTypeEnum.ATOM -> handleAtomPackageSize(record)
+            StoreTypeEnum.IMAGE -> handleImageSize(record)
             else -> ""
         }
     }
+
+    private fun handleAtomPackageSize(record: Record): String {
+        val size = record.get("PACKAGE_SIZE") as? String ?: return ""
+        if (size.isNotEmpty()) {
+            val atomPackageInfo = JsonUtil.to(size, object : TypeReference<List<AtomPackageInfo>>() {})
+            return calculateTotalSize(atomPackageInfo)
+        }
+        return ""
+    }
+
+    private fun handleImageSize(record: Record): String {
+        val size = record.get("IMAGE_SIZE") as? String ?: return ""
+        if (size.isNotEmpty()) {
+            return formatSizeInMB(BigDecimal(size.toLong()))
+        }
+        return ""
+    }
+
+    private fun calculateTotalSize(atomPackageInfos: List<AtomPackageInfo>): String {
+        if (atomPackageInfos.isNotEmpty()) {
+            val totalSize = atomPackageInfos.map { info -> BigDecimal(info.size) }.reduce(BigDecimal::add)
+            return formatSizeInMB(totalSize.divide(BigDecimal(atomPackageInfos.size), 2, RoundingMode.HALF_UP))
+        }
+        return ""
+    }
+
+    private fun formatSizeInMB(sizeInBytes: BigDecimal): String =
+        String.format(
+            "%.2f M",
+            sizeInBytes.divide(BigDecimal(1024.0 * 1024.0), 2, RoundingMode.HALF_UP).toDouble()
+        )
 }

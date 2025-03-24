@@ -2,7 +2,6 @@ package com.tencent.devops.store.pojo.atom
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-
 @Schema(title = "组件包信息")
 data class AtomPackageInfo(
     @get:Schema(title = "操作系统名称")

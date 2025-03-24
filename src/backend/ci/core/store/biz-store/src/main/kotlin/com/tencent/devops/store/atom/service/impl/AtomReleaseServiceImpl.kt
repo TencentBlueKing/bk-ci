@@ -138,7 +138,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import java.time.LocalDateTime
-import java.util.*
+import java.util.Locale
 import java.util.concurrent.Executors
 
 @Suppress("ALL")
@@ -1503,8 +1503,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                             .getFileSize(StoreTypeEnum.ATOM, pkgPath).data ?: 0L
                         if (nodeSize > 0) {
                             AtomPackageInfo(
-                                osName = record.osName?: "",
-                                arch = record.osArch?: "",
+                                osName = record.osName ?: "",
+                                arch = record.osArch ?: "",
                                 size = nodeSize
                             )
                         } else {
