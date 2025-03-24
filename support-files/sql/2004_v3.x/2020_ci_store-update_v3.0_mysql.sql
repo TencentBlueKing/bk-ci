@@ -63,6 +63,14 @@ BEGIN
         ALTER TABLE T_STORE_PROJECT_REL DROP INDEX `inx_tspr_type`;
     END IF;
 
+	IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_ATOM_VERSION_LOG'
+                    AND COLUMN_NAME = 'PACKAGE_SIZE') THEN
+        ALTER TABLE T_ATOM_VERSION_LOG ADD COLUMN `PACKAGE_SIZE` VARCHAR(1024) DEFAULT NULL COMMENT '版本包大小';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;
