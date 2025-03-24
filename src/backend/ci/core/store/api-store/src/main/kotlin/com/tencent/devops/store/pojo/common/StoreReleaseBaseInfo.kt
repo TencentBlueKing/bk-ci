@@ -29,7 +29,6 @@ package com.tencent.devops.store.pojo.common
 
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
-import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreBaseEnvRequest
 import com.tencent.devops.store.pojo.common.publication.StoreBaseFeatureRequest
