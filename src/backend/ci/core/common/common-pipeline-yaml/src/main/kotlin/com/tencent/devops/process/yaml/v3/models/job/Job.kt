@@ -141,7 +141,10 @@ data class ServiceWith(
 )
 
 data class Strategy(
-    val matrix: Any,
+    val matrix: Any? = null,
+    val include: Any? = null,
+    val exclude: Any? = null,
+
     @get:Schema(title = "fast-kill")
     @JsonProperty("fast-kill")
     val fastKill: Boolean? = null,
