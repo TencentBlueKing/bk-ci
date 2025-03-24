@@ -34,9 +34,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.io.InputStream
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
-import java.io.InputStream
 
 @RestResource
 class UserArchiveComponentPkgResourceImpl @Autowired constructor(
@@ -59,7 +59,6 @@ class UserArchiveComponentPkgResourceImpl @Autowired constructor(
                 inputStream = inputStream,
                 disposition = disposition,
                 archiveStorePkgRequest = ArchiveStorePkgRequest(
-                    storeId = storeId,
                     storeCode = storeCode,
                     storeType = storeType,
                     version = version,

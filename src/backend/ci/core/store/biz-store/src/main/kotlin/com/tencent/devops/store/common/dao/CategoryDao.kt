@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TCategory
+import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.records.TCategoryRecord
 import com.tencent.devops.store.pojo.common.category.Category
 import com.tencent.devops.store.pojo.common.category.CategoryRequest
@@ -176,6 +177,13 @@ class CategoryDao {
                 createTime = createTime.timestampmilli(),
                 updateTime = updateTime.timestampmilli()
             )
+        }
+    }
+
+    fun getIdsByCodes(dslContext: DSLContext, categoryCodes: List<String>, type: Byte): List<String> {
+        with(TCategory.T_CATEGORY) {
+            return dslContext.select(ID).from(this).where(CATEGORY_CODE.`in`(categoryCodes).and(TYPE.eq(type)))
+                .fetchInto(String::class.java)
         }
     }
 }

@@ -30,13 +30,16 @@ package com.tencent.devops.store.api.common
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ENV
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfResp
-import com.tencent.devops.store.pojo.common.env.StorePkgRunEnvInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.v3.oas.annotations.tags.Tag
+import com.tencent.devops.store.pojo.common.env.StorePkgRunEnvInfo
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfResp
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import java.io.InputStream
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -45,6 +48,8 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.glassfish.jersey.media.multipart.FormDataParam
 
 @Tag(name = "BUILD_STORE", description = "build-store")
 @Path("/build/store/")
@@ -93,4 +98,27 @@ interface BuildStoreResource {
         @QueryParam("osArch")
         osArch: String
     ): Result<StorePkgRunEnvInfo?>
+
+    @Operation(summary = "根据组件包一键部署组件")
+    @GET
+    @Path("/deploy")
+    fun deployStore(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "storeCode", required = true)
+        @FormDataParam("storeCode")
+        storeCode: String,
+        @Parameter(description = "storeType", required = true)
+        @FormDataParam("storeType")
+        storeType: StoreTypeEnum,
+        @Parameter(description = "文件", required = true)
+        @FormDataParam("file")
+        inputStream: InputStream,
+        @FormDataParam("file")
+        disposition: FormDataContentDisposition,
+        @Parameter(description = "组件版本", required = false)
+        @QueryParam("version")
+        version: String? = null
+    )
 }

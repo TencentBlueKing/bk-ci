@@ -25,31 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.util
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.store.common.utils.TextReferenceFileAnalysisUtil
-import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Test
+import io.swagger.v3.oas.annotations.media.Schema
 
-class TextReferenceFileAnalysisUtilTest {
-
-    @Test
-    fun regexAnalysisTest() {
-        val input = "插件发布测试描述:\${{indexFile(\"cat2.png\")}}||插件发布测试描述:\${{indexFile(\"cat.png\")}}"
-        val pathList = mutableListOf<String>()
-        val result = mutableMapOf<String, String>()
-        TextReferenceFileAnalysisUtil.regexAnalysis(
-            input = input,
-            fileDirPath = "",
-            pathList = pathList
-        )
-        pathList.forEach {
-            result[it] = "www.tested.xxx"
-        }
-        val filePathReplaceResult = TextReferenceFileAnalysisUtil.filePathReplace(result, input)
-        Assertions.assertEquals(
-            "插件发布测试描述:![cat2.png](www.tested.xxx)||插件发布测试描述:![cat.png](www.tested.xxx)",
-            filePathReplaceResult
-        )
-    }
-}
+@Schema(title = "组件发布部署模型")
+data class StoreReleaseInfo(
+    @get:Schema(title = "项目编码", required = false)
+    var projectId: String = "",
+    @get:Schema(title = "组件发布基础模型信息", required = true)
+    var baseInfo: StoreReleaseBaseInfo
+)

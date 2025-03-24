@@ -93,8 +93,8 @@ object StoreMessageCode {
     const val TASK_JSON_CONFIG_IS_INVALID = "2120040"
     // 研发商店: 拉取文件[{0}]失败，失败原因：{1}
     const val USER_PULL_FILE_FAIL = "2120041"
-    // 插件包文件[{0}]不存在，请检查文件所在路径是否正确
-    const val ATOM_PACKAGE_FILE_NOT_FOUND = "2120042"
+    // 组件包文件[{0}]不存在，请检查文件所在路径是否正确
+    const val STORE_PACKAGE_FILE_NOT_FOUND = "2120042"
 
     const val USER_TEMPLATE_VERSION_IS_NOT_FINISH = "2120201" // 研发商店：模板{0}的{1}版本发布未结束，请稍后再试
     const val USER_TEMPLATE_RELEASE_STEPS_ERROR = "2120202" // 研发商店：模板发布流程状态变更顺序不正确
@@ -170,4 +170,5 @@ object StoreMessageCode {
     const val STORE_QUERY_PARAM_CHECK_FAIL = "2120935"
     const val STORE_COMPONENT_IS_NOT_ALLOW_OFFLINE = "2120936" // 研发商店：非发布状态的版本不允许下架
     const val STORE_COMPONENT_CODE_REPOSITORY_DELETE_FAIL = "2120937" // 研发商店：代码库删除失败，失败原因:{0}
+    const val STORE_COMPONENT_CONFIG_YML_FORMAT_ERROR = "2120938" // 研发商店：组件配置文件bk-config.yml配置错误，错误字段{0}
 }

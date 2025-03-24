@@ -27,27 +27,42 @@
 
 package com.tencent.devops.store.common.utils
 
-import com.tencent.devops.artifactory.api.ServiceArchiveAtomFileResource
-import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.artifactory.api.ServiceArchiveComponentPkgResource
+import com.tencent.devops.artifactory.pojo.ArchiveStorePkgRequest
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.pojo.common.BK_STORE_DIR_PATH
+import com.tencent.devops.store.pojo.common.CONFIG_YML_NAME
+import com.tencent.devops.store.pojo.common.KEY_RELEASE_INFO
+import com.tencent.devops.store.pojo.common.StoreReleaseInfo
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import java.io.File
+import java.io.InputStream
+import java.nio.charset.Charset
+import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.regex.Matcher
 import java.util.regex.Pattern
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 
-object TextReferenceFileAnalysisUtil {
+object StoreFileAnalysisUtil {
 
-    private const val BK_CI_ATOM_DIR = "bk-atom"
+    private const val BK_CI_STORE_DIR = "bk-store"
     private const val BK_CI_PATH_REGEX = "(\\\$\\{\\{indexFile\\()(\"[^\"]*\")"
-    private val fileSeparator: String = System.getProperty("file.separator")
+    private val fileSeparator: String = FileSystems.getDefault().getSeparator()
 
-    fun getAtomBasePath(): String {
+    fun getStoreBasePath(): String {
         return System.getProperty("java.io.tmpdir").removeSuffix(fileSeparator)
     }
 
@@ -118,23 +133,23 @@ object TextReferenceFileAnalysisUtil {
         }
     }
 
-    fun serviceArchiveAtomFile(
+    fun serviceArchiveStoreFile(
         client: Client,
         userId: String,
-        archiveAtomRequest: ArchiveAtomRequest,
+        archiveStorePkgRequest: ArchiveStorePkgRequest,
         file: File
     ): Result<Boolean?> {
-        val serviceUrlPrefix = client.getServiceUrl(ServiceArchiveAtomFileResource::class)
-        val serviceUrl = StringBuilder("$serviceUrlPrefix/service/artifactories/archiveAtom?userId=$userId" +
-                "&projectCode=${archiveAtomRequest.projectCode}&atomCode=${archiveAtomRequest.atomCode}" +
-                "&version=${archiveAtomRequest.version}")
-        archiveAtomRequest.releaseType?.let {
-            serviceUrl.append("&releaseType=${archiveAtomRequest.releaseType!!.name}")
-        }
-        archiveAtomRequest.os?.let {
-            serviceUrl.append("&os=${archiveAtomRequest.os}")
-        }
-        OkhttpUtils.uploadFile(serviceUrl.toString(), file).use { response ->
+        val serviceUrlPrefix = client.getServiceUrl(ServiceArchiveComponentPkgResource::class)
+        val serviceUrl = "$serviceUrlPrefix/service/artifactories/store/component" +
+                "/types/${archiveStorePkgRequest.storeType.name}" +
+                "/codes/${archiveStorePkgRequest.storeCode}/pkg/archive" +
+                "?version=${archiveStorePkgRequest.version}" +
+                "&releaseType=${archiveStorePkgRequest.releaseType!!.name}"
+        OkhttpUtils.uploadFile(
+            url = serviceUrl.toString(),
+            uploadFile = file,
+            headers = mapOf(AUTH_HEADER_USER_ID to userId)
+        ).use { response ->
             response.body!!.string()
             if (!response.isSuccessful) {
                 return I18nUtil.generateResponseDataObject(
@@ -146,8 +161,8 @@ object TextReferenceFileAnalysisUtil {
         }
     }
 
-    fun buildStoreArchivePath(atomDir: String) =
-        "${getAtomBasePath()}$fileSeparator$BK_CI_ATOM_DIR$fileSeparator$atomDir"
+    fun buildStoreArchivePath(storeDir: String) =
+        "${getStoreBasePath()}$fileSeparator$BK_CI_STORE_DIR$fileSeparator$storeDir"
 
     fun isDirectoryNotEmpty(path: String?): Boolean {
         if (path == null) {
@@ -156,4 +171,53 @@ object TextReferenceFileAnalysisUtil {
         val directory = Paths.get(path)
         return Files.isDirectory(directory) && Files.list(directory).findFirst().isPresent
     }
+
+    fun extractStorePackage(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Pair<String, File> {
+        // 提取文件类型
+        val fileName = disposition.fileName
+        val index = fileName.lastIndexOf(".")
+        val fileType = fileName.substring(index + 1)
+
+        // 创建临时文件
+        val uuid = UUIDUtil.generate()
+        val file = Files.createTempFile(uuid, ".$fileType").toFile()
+        file.outputStream().use {
+            inputStream.copyTo(it)
+        }
+
+        // 解压到目标路径
+        val storePath = StoreFileAnalysisUtil.buildStoreArchivePath(
+            "${storeCode}_${storeType.name}"
+        ) + "$fileSeparator$uuid"
+        if (!File(storePath).exists()) {
+            ZipUtil.unZipFile(file, storePath, false)
+        }
+
+        return Pair(storePath, file)
+    }
+
+    fun getBkConfigMap(storeDirPath: String): MutableMap<String, Any>? {
+        // 从指定路径读取配置文件
+        val bkConfigFile = File(storeDirPath, CONFIG_YML_NAME)
+        return if (bkConfigFile.exists()) {
+            val fileContent = bkConfigFile.readText(Charset.forName(Charsets.UTF_8.name()))
+            val dataMap = YamlUtil.to(fileContent, object : TypeReference<MutableMap<String, Any>>() {})
+            dataMap[BK_STORE_DIR_PATH] = storeDirPath
+            val storeReleaseInfo = dataMap.get(KEY_RELEASE_INFO)?.let {
+                JsonUtil.mapTo(it as Map<String, Any>, StoreReleaseInfo::class.java)
+            }
+            storeReleaseInfo?.let {
+                dataMap[KEY_RELEASE_INFO] = it
+            }
+            dataMap
+        } else {
+            null
+        }
+    }
+
 }

@@ -30,12 +30,14 @@ package com.tencent.devops.store.common.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.BuildStoreResource
-import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfResp
-import com.tencent.devops.store.pojo.common.env.StorePkgRunEnvInfo
-import com.tencent.devops.store.pojo.common.enums.FieldTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.StorePkgRunEnvInfoService
 import com.tencent.devops.store.common.service.UserSensitiveConfService
+import com.tencent.devops.store.pojo.common.enums.FieldTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.env.StorePkgRunEnvInfo
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfResp
+import java.io.InputStream
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -80,5 +82,16 @@ class BuildStoreResourceImpl @Autowired constructor(
                 runtimeVersion = runtimeVersion
             )
         )
+    }
+
+    override fun deployStore(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition,
+        version: String?
+    ) {
+        TODO("Not yet implemented")
     }
 }
