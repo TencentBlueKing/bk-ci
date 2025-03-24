@@ -65,39 +65,21 @@ import java.io.InputStream
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.util.FileSystemUtils
 
-abstract class StorePackageDeployService {
-
-    @Autowired
-    lateinit var dslContext: DSLContext
-
-    @Autowired
-    lateinit var storeReleaseService: StoreReleaseService
-
-    @Autowired
-    lateinit var storeBaseQueryDao: StoreBaseQueryDao
-
-    @Autowired
-    lateinit var storeLogoService: StoreLogoService
-
-    @Autowired
-    lateinit var storeFileService: StoreFileService
-
-    @Autowired
-    lateinit var client: Client
-
-    @Autowired
-    lateinit var labelDao: LabelDao
-
-    @Autowired
-    lateinit var categoryDao: CategoryDao
-
-    @Autowired
-    lateinit var classifyDao: ClassifyDao
-
+@Service
+class StorePackageDeployService(
+    private val dslContext: DSLContext,
+    private val storeReleaseService: StoreReleaseService,
+    private val storeBaseQueryDao: StoreBaseQueryDao,
+    private val storeLogoService: StoreLogoService,
+    private val storeFileService: StoreFileService,
+    private val client: Client,
+    private val labelDao: LabelDao,
+    private val categoryDao: CategoryDao,
+    private val classifyDao: ClassifyDao
+) {
     private val logger = LoggerFactory.getLogger(StorePackageDeployService::class.java)
 
     /**
