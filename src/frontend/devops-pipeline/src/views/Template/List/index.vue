@@ -27,7 +27,7 @@
                             >
                                 <Logo
                                     :class="item.icon"
-                                    size="14"
+                                    size="13"
                                     :name="item.icon"
                                 />
                                 <span>{{ $t(item.i18nKey) }}</span>
@@ -572,6 +572,7 @@
                     svg {
                         vertical-align: middle;
                         color: #979BA5;
+                        margin-right: 4px;
                     }
                 }
 

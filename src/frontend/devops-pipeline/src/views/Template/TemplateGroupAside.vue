@@ -45,30 +45,35 @@
             viewId: ALL_TEMPLATE_VIEW_ID,
             i18nKey: ALL_TEMPLATE_VIEW_ID,
             icon: 'template-all',
+            activeIcon: 'group',
             countKey: 'all'
         },
         {
             viewId: PIPELINE_TEMPLATE_VIEW_ID,
             i18nKey: PIPELINE_TEMPLATE_VIEW_ID,
             icon: 'template-pipeline',
+            activeIcon: 'pipeline-template',
             countKey: 'PIPELINE'
         },
         {
             viewId: STAGE_TEMPLATE_VIEW_ID,
             i18nKey: STAGE_TEMPLATE_VIEW_ID,
             icon: 'template-stage',
+            activeIcon: 'stage-template',
             countKey: 'STAGE'
         },
         {
             viewId: JOB_TEMPLATE_VIEW_ID,
             i18nKey: JOB_TEMPLATE_VIEW_ID,
             icon: 'template-job',
+            activeIcon: 'job-template',
             countKey: 'JOB'
         },
         {
             viewId: STEP_TEMPLATE_VIEW_ID,
             i18nKey: STEP_TEMPLATE_VIEW_ID,
             icon: 'template-step',
+            activeIcon: 'step-template',
             countKey: 'STEP'
         }
     ])
