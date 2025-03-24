@@ -227,6 +227,11 @@
     }, {
         immediate: true
     })
+    watch(() => templateViewId.value, () => {
+        searchValue.value = []
+    }, {
+        immediate: true
+    })
     onMounted(() => {
         hasPipelineTemplatePermission()
     })
