@@ -653,7 +653,18 @@ class PipelineBuildFacadeService(
             val triggerContainer = resource.model.getTriggerContainer()
 
             if (startType == StartType.MANUAL && !debug) {
-                if (!readyToBuildPipelineInfo.canManualStartup) {
+                // 不能通过pipelineInfo里面的canManualStartup来判断,pipelineInfo总是使用的最新版本,但是执行可以使用分支版本
+                var canManualStartup = false
+                run lit@{
+                    triggerContainer.elements.forEach {
+                        if (it is ManualTriggerElement && it.elementEnabled()) {
+                            canManualStartup = true
+                            return@lit
+                        }
+                    }
+                }
+
+                if (!canManualStartup) {
                     throw ErrorCodeException(
                         errorCode = ProcessMessageCode.DENY_START_BY_MANUAL
                     )

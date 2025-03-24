@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.pojo.common.publication
 
+import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -44,6 +45,9 @@ data class StoreBaseCreateRequest(
     @get:Schema(title = "store组件名称", required = true)
     @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
     val name: String,
+    @get:Schema(title = "版本号", required = true)
+    @field:BkField(patternStyle = BkStyleEnum.VERSION_STYLE)
+    var version: String = INIT_VERSION,
     @get:Schema(title = "基础扩展信息", required = false)
     val extBaseInfo: Map<String, Any>? = null,
     @get:Schema(title = "特性信息", required = false)

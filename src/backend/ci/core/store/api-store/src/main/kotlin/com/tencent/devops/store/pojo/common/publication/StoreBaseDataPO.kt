@@ -62,6 +62,8 @@ data class StoreBaseDataPO(
     val pubTime: LocalDateTime? = null,
     @get:Schema(title = "分类ID")
     val classifyId: String = "",
+    @get:Schema(title = "业务序号")
+    val busNum: Long? = null,
     @get:Schema(title = "创建人")
     val creator: String,
     @get:Schema(title = "修改人")
