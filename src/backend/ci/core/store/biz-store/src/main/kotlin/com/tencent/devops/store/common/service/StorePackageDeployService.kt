@@ -111,6 +111,9 @@ class StorePackageDeployService(
             val codeCount =
                 storeBaseQueryDao.countByCondition(dslContext = dslContext, storeType = storeType, storeCode = storeCode)
             val firstPublisherFlag = codeCount == 0
+            if (firstPublisherFlag) {
+                storeReleaseService.createComponent(userId, getStoreCreateRequest(storeCode, storeType, bkConfigMap))
+            }
             bkConfigMap[BK_STORE_FIRST_PUBLISHER_FLAG] = firstPublisherFlag
             // 检查bk-config.yml配置
             val checkBkConfigResult = checkBkConfig(bkConfigMap)
@@ -178,7 +181,7 @@ class StorePackageDeployService(
     }
 
 
-    fun getStoreCreateReque(
+    fun getStoreCreateRequest(
         storeCode: String,
         storeType: StoreTypeEnum,
         bkConfigMap: Map<String, Any>
