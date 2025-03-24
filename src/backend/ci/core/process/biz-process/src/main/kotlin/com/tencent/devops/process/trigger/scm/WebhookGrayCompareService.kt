@@ -239,6 +239,7 @@ class WebhookGrayCompareService @Autowired constructor(
         }
     }
 
+    @SuppressWarnings("NestedBlockDepth")
     private fun getNewSuccessfulPipelines(
         scmType: ScmType,
         request: WebhookRequest
