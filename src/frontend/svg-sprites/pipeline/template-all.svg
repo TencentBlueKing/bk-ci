@@ -14,7 +14,7 @@
                                 <use xlink:href="#path-1"></use>
                             </mask>
                             <g id="形状" fill-rule="nonzero"></g>
-                            <rect id="矩形" fill="#3A84FF" fill-rule="nonzero" mask="url(#mask-2)" x="-2" y="-2" width="16" height="16"></rect>
+                            <rect id="矩形" fill="currentColor" fill-rule="nonzero" mask="url(#mask-2)" x="-2" y="-2" width="16" height="16"></rect>
                             <rect id="codesign_placeholder_name" mask="url(#mask-2)" x="-2" y="-2" width="16" height="16"></rect>
                         </g>
                     </g>

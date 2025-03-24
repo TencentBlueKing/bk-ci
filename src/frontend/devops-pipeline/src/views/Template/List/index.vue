@@ -467,7 +467,7 @@
     async function confirmDeleteTemplate (row) {
         isLoading.value = true
         try {
-            await proxy.$store.dispatch('pipelines/deleteTemplate', {
+            await proxy.$store.dispatch('templates/deleteTemplate', {
                 projectId: projectId.value,
                 templateId: row.id
             })
@@ -494,12 +494,13 @@
 
         const postData = {
             projectId: projectId.value,
-            srcTemplateId: copyTemp.value.srcTemplateId,
-            copySetting: copyTemp.value.isCopySetting,
-            name: copyTemp.value.templateName
+            params: {
+                srcTemplateId: copyTemp.value.srcTemplateId,
+                copySetting: copyTemp.value.isCopySetting,
+                name: copyTemp.value.templateName
+            }
         }
         proxy.$store.dispatch('templates/templateCopy', postData).then((templateId) => {
-            console.log('🚀 ~ templateId:', templateId)
             copyCancelHandler()
             bkMessage({ message: i18n.t('template.copySuc'), theme: 'success' })
             // router.push({
