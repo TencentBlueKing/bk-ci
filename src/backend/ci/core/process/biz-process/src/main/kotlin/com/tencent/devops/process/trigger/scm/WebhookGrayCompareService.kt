@@ -153,12 +153,15 @@ class WebhookGrayCompareService @Autowired constructor(
         oldPipelineAndParams.forEach { (pipelineId, oldParams) ->
             val newParams = newPipelineAndParams[pipelineId] ?: return@forEach
             oldParams.forEach eachParam@{ (key, value) ->
+                val oldValue = value?.toString() ?: ""
                 // 旧值为空字符串, 新值不存在, 直接忽略
-                if ((value?.toString() ?: "").isBlank() && !newParams.containsKey(key)) {
+                if (oldValue.isBlank() && !newParams.containsKey(key)) {
                     return@eachParam
                 }
                 if (newParams.containsKey(key)) {
-                    if (value != newParams[key]) {
+                    // 同步新旧参数类型为String
+                    val newValue = newParams[key]?.toString() ?: ""
+                    if (oldValue != newValue) {
                         diffValueKeys.add(key)
                     }
                 } else {
