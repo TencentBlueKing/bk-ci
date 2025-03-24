@@ -39,6 +39,7 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.dao.PipelineTriggerEventDao
 import com.tencent.devops.process.trigger.WebhookTriggerService
 import com.tencent.devops.process.trigger.event.ScmWebhookRequestEvent
+import com.tencent.devops.process.trigger.scm.WebhookGrayCompareService
 import com.tencent.devops.process.trigger.scm.WebhookGrayService
 import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
@@ -59,7 +60,8 @@ class WebhookRequestService(
     private val pipelineTriggerEventDao: PipelineTriggerEventDao,
     private val pipelineYamlFacadeService: PipelineYamlFacadeService,
     private val grayService: WebhookGrayService,
-    private val simpleDispatcher: SampleEventDispatcher
+    private val simpleDispatcher: SampleEventDispatcher,
+    private val webhookGrayCompareService: WebhookGrayCompareService
 ) {
 
     companion object {
@@ -103,6 +105,13 @@ class WebhookRequestService(
         } catch (ignored: Throwable) {
             // 日志保存异常,不影响正常触发
             logger.warn("Failed to save webhook request", ignored)
+        }
+        if (scmType == ScmType.CODE_GIT || scmType == ScmType.CODE_TGIT) {
+            webhookGrayCompareService.asyncCompareWebhook(
+                scmType = scmType,
+                request = request,
+                matcher = matcher
+            )
         }
         val repoName = matcher.getRepoName()
         // 如果整个仓库都开启灰度，则全部走新逻辑

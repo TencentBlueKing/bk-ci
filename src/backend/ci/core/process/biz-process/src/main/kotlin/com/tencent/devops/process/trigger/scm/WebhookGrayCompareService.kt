@@ -51,6 +51,9 @@ import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 /**
  * 历史的webhook与通过devops-scm的webhook数据对比
@@ -65,26 +68,28 @@ class WebhookGrayCompareService @Autowired constructor(
     private val webhookTriggerMatcher: WebhookTriggerMatcher
 ) {
 
+    private val executorService = ThreadPoolExecutor(
+        5,
+        10,
+        0L,
+        TimeUnit.MILLISECONDS,
+        LinkedBlockingQueue(100)
+    )
+
+    fun asyncCompareWebhook(scmType: ScmType, request: WebhookRequest, matcher: ScmWebhookMatcher) {
+        executorService.execute {
+            compareWebhook(scmType, request, matcher)
+        }
+    }
+
     fun compareWebhook(scmType: ScmType, request: WebhookRequest, matcher: ScmWebhookMatcher) {
         try {
             val oldPipelineAndParams = getOldSuccessfulPipelines(scmType = scmType, matcher = matcher)
             val newPipelineAndParams = getNewSuccessfulPipelines(scmType = scmType, request = request)
-            if (oldPipelineAndParams.size != newPipelineAndParams.size) {
-                // 新比旧少的流水线
-                val miss = oldPipelineAndParams.keys.minus(newPipelineAndParams.keys)
-                // 新比旧多的流水线
-                val add = newPipelineAndParams.keys.minus(oldPipelineAndParams.keys)
-                logger.warn(
-                    "compare webhook|the number of pipelines differs|" +
-                            "scmType: $scmType|repoName: ${matcher.getRepoName()}|miss:$miss|add:$add",
-                )
-                return
-            }
             if (!comparePipeline(oldPipelineAndParams, newPipelineAndParams, scmType, matcher)) {
                 return
             }
             compareParams(oldPipelineAndParams, newPipelineAndParams, scmType, matcher)
-            return
         } catch (ignored: Exception) {
             logger.warn("Failed to compare webhook|scmType: $scmType|repoName: ${matcher.getRepoName()}")
         }
@@ -96,6 +101,17 @@ class WebhookGrayCompareService @Autowired constructor(
         scmType: ScmType,
         matcher: ScmWebhookMatcher
     ): Boolean {
+        if (oldPipelineAndParams.size != newPipelineAndParams.size) {
+            // 新比旧少的流水线
+            val miss = oldPipelineAndParams.keys.minus(newPipelineAndParams.keys)
+            // 新比旧多的流水线
+            val add = newPipelineAndParams.keys.minus(oldPipelineAndParams.keys)
+            logger.warn(
+                "compare webhook|the number of pipelines differs|" +
+                        "scmType: $scmType|repoName: ${matcher.getRepoName()}|miss:$miss|add:$add"
+            )
+            return false
+        }
         if (!oldPipelineAndParams.keys.containsAll(newPipelineAndParams.keys)) {
             // 新比旧少的流水线
             val miss = oldPipelineAndParams.keys.minus(newPipelineAndParams.keys)
