@@ -204,17 +204,17 @@
     const searchTab = ref([
         {
             i18nKey: ALL_SOURCE,
-            icon: 'app-store',
+            icon: 'template-application',
             countKey: 'ALL'
         },
         {
             i18nKey: CUSTOM_SOURCE,
-            icon: 'custom-template',
+            icon: 'template-view',
             countKey: 'CUSTOM'
         },
         {
             i18nKey: MARKET_SOURCE,
-            icon: 'custom-template',
+            icon: 'template-view',
             countKey: 'MARKET'
         }
     ])
@@ -580,7 +580,7 @@
                     border-radius: 2px;
   
                     svg {
-                        color: #979BA5;
+                        color: $primaryColor;
                     }
                 }
             }

@@ -11,7 +11,7 @@
                 <div>
                     <Logo
                         :class="item.icon"
-                        size="14"
+                        size="16"
                         :name="item.icon"
                     />
                     <span>{{ $t(item.i18nKey) }}</span>
@@ -44,31 +44,31 @@
         {
             viewId: ALL_TEMPLATE_VIEW_ID,
             i18nKey: ALL_TEMPLATE_VIEW_ID,
-            icon: 'group',
+            icon: 'template-all',
             countKey: 'all'
         },
         {
             viewId: PIPELINE_TEMPLATE_VIEW_ID,
             i18nKey: PIPELINE_TEMPLATE_VIEW_ID,
-            icon: 'pipeline-template',
+            icon: 'template-pipeline',
             countKey: 'PIPELINE'
         },
         {
             viewId: STAGE_TEMPLATE_VIEW_ID,
             i18nKey: STAGE_TEMPLATE_VIEW_ID,
-            icon: 'stage-template',
+            icon: 'template-stage',
             countKey: 'STAGE'
         },
         {
             viewId: JOB_TEMPLATE_VIEW_ID,
             i18nKey: JOB_TEMPLATE_VIEW_ID,
-            icon: 'job-template',
+            icon: 'template-job',
             countKey: 'JOB'
         },
         {
             viewId: STEP_TEMPLATE_VIEW_ID,
             i18nKey: STEP_TEMPLATE_VIEW_ID,
-            icon: 'step-template',
+            icon: 'template-step',
             countKey: 'STEP'
         }
     ])

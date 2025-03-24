@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="13px" height="13px" viewBox="0 0 13 13" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Icon/1 常用图标/搜索</title>
+    <g id="模板管理" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="新建模板-交互说明" transform="translate(-368.500000, -2123.500000)">
+            <g id="编组-3备份-6" transform="translate(50.000000, 1890.000000)">
+                <g id="Dropdown/1.1-菜单-2项" transform="translate(304.000000, 188.000000)">
+                    <g id="Dropdown/元件/基础备份" transform="translate(1.000000, 36.000000)">
+                        <g id="编组" transform="translate(12.000000, 5.000000)">
+                            <g id="Icon/1-常用图标/搜索" transform="translate(0.000000, 3.000000)">
+                                <path d="M6.5,2.5 L6.5,6.5 L2.5,6.5 L2.5,2.5 L6.5,2.5 M7.5,1.5 L1.5,1.5 L1.5,7.5 L7.5,7.5 L7.5,1.5 Z M13.5,2.5 L13.5,6.5 L9.5,6.5 L9.5,2.5 L13.5,2.5 M14.5,1.5 L8.5,1.5 L8.5,7.5 L14.5,7.5 L14.5,1.5 Z M6.5,9.5 L6.5,13.5 L2.5,13.5 L2.5,9.5 L6.5,9.5 M7.5,8.5 L1.5,8.5 L1.5,14.5 L7.5,14.5 L7.5,8.5 L7.5,8.5 Z M13.5,9.5 L13.5,13.5 L9.5,13.5 L9.5,9.5 L13.5,9.5 M14.5,8.5 L8.5,8.5 L8.5,14.5 L14.5,14.5 L14.5,8.5 L14.5,8.5 Z" id="形状" fill="#4D4F56"></path>
+                                <rect id="codesign_placeholder_name" x="0" y="0" width="16" height="16"></rect>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
