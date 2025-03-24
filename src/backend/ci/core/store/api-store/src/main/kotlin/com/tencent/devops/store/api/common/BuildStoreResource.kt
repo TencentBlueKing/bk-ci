@@ -116,9 +116,6 @@ interface BuildStoreResource {
         @FormDataParam("file")
         inputStream: InputStream,
         @FormDataParam("file")
-        disposition: FormDataContentDisposition,
-        @Parameter(description = "组件版本", required = false)
-        @QueryParam("version")
-        version: String? = null
+        disposition: FormDataContentDisposition
     )
 }

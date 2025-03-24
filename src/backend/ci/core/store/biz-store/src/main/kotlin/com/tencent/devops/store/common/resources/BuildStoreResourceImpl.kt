@@ -30,6 +30,7 @@ package com.tencent.devops.store.common.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.BuildStoreResource
+import com.tencent.devops.store.common.service.StorePackageDeployService
 import com.tencent.devops.store.common.service.StorePkgRunEnvInfoService
 import com.tencent.devops.store.common.service.UserSensitiveConfService
 import com.tencent.devops.store.pojo.common.enums.FieldTypeEnum
@@ -43,7 +44,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class BuildStoreResourceImpl @Autowired constructor(
     private val sensitiveConfService: UserSensitiveConfService,
-    private val storePkgRunEnvInfoService: StorePkgRunEnvInfoService
+    private val storePkgRunEnvInfoService: StorePkgRunEnvInfoService,
+    private val storePackageDeployService: StorePackageDeployService
 ) : BuildStoreResource {
 
     override fun getSensitiveConf(
@@ -89,9 +91,14 @@ class BuildStoreResourceImpl @Autowired constructor(
         storeCode: String,
         storeType: StoreTypeEnum,
         inputStream: InputStream,
-        disposition: FormDataContentDisposition,
-        version: String?
+        disposition: FormDataContentDisposition
     ) {
-        TODO("Not yet implemented")
+        storePackageDeployService.deployStore(
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType,
+            inputStream = inputStream,
+            disposition = disposition,
+        )
     }
 }
