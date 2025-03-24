@@ -7,6 +7,8 @@ import com.tencent.devops.remotedev.pojo.expert.CreateExpertSupportConfigData
 import com.tencent.devops.remotedev.pojo.expert.ExpertSupportConfigType
 import com.tencent.devops.remotedev.pojo.expert.FetchExpertSupResp
 import com.tencent.devops.remotedev.pojo.expert.UpdateSupportData
+import com.tencent.devops.remotedev.pojo.op.OpDiskOperatorData
+import com.tencent.devops.remotedev.pojo.op.OpDiskOperatorDataResp
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -34,5 +36,9 @@ class OpExpertSupportImpl @Autowired constructor(
 
     override fun deleteConfigWithData(userId: String, data: CreateExpertSupportConfigData) {
         expertSupportService.deleteConfigWithData(data)
+    }
+
+    override fun createOrUpdateDisk(userId: String, data: OpDiskOperatorData): Result<OpDiskOperatorDataResp> {
+        return Result(expertSupportService.createOrUpdateDisk(userId, data))
     }
 }

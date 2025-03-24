@@ -43,6 +43,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceShared.AssignType
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
+import com.tencent.devops.remotedev.pojo.expert.CreateDiskDataClass
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.expert.CreateExpertSupportConfigData
 import com.tencent.devops.remotedev.pojo.expert.CreateSupportData
@@ -53,6 +54,10 @@ import com.tencent.devops.remotedev.pojo.expert.FetchExpertSupResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.UpdateSupportData
 import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
+import com.tencent.devops.remotedev.pojo.op.OpDiskOperator
+import com.tencent.devops.remotedev.pojo.op.OpDiskOperatorData
+import com.tencent.devops.remotedev.pojo.op.OpDiskOperatorDataResp
+import com.tencent.devops.remotedev.pojo.op.OpDiskOperatorDiskType
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
@@ -572,6 +577,65 @@ class ExpertSupportService @Autowired constructor(
         data: CreateExpertSupportConfigData
     ) {
         expertSupportDao.deleteExpertSupportConfigWithData(dslContext, data.type, data.content)
+    }
+
+    fun createOrUpdateDisk(userId: String, data: OpDiskOperatorData): OpDiskOperatorDataResp {
+        // 检验 ip 带区域
+        val ipSub = data.ip.split(".")
+        if (ipSub.size != 5) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
+                params = arrayOf("ip ${data.ip} no region")
+            )
+        }
+        // 不能有多个工作空间名称
+        val workspaceNames = workspaceJoinDao.fetchRunningUser(dslContext, userId, data.ip)
+        if (workspaceNames.isEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
+                params = arrayOf("no workspace")
+            )
+        }
+        if (workspaceNames.size > 1) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
+                params = arrayOf("multiple workspace $workspaceNames")
+            )
+        }
+        val workspaceName = workspaceNames.first()
+
+        // 创建磁盘不区分盘符直接
+        if (data.op == OpDiskOperator.CREATE) {
+            val result = createDisk(workspaceName, userId, data.size)
+            return OpDiskOperatorDataResp(
+                result = result.result,
+                message = result.message,
+                taskId = result.taskId
+            )
+        }
+
+        val diskList = remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.BCS).fetchDiskList(
+            workspaceName = workspaceName,
+            userId = userId
+        )
+        val pvcId = when (data.disk) {
+            OpDiskOperatorDiskType.D ->
+                diskList.firstOrNull { it.pvcClass == CreateDiskDataClass.SDD.data && !it.isSystemVolume }?.pvcName
+
+            OpDiskOperatorDiskType.E ->
+                diskList.firstOrNull { it.pvcClass == CreateDiskDataClass.HDD.data }?.pvcName
+        } ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
+            params = arrayOf("no find disk ${data.disk} from list $diskList")
+        )
+
+        val result = expandDisk(workspaceName, userId, data.size, pvcId)
+
+        return OpDiskOperatorDataResp(
+            result?.valid ?: false,
+            result?.message,
+            result?.taskId
+        )
     }
 
     @ActionAuditRecord(
