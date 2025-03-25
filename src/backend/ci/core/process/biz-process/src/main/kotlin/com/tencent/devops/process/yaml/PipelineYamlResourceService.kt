@@ -29,7 +29,6 @@ package com.tencent.devops.process.yaml
 
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
@@ -123,11 +122,11 @@ class PipelineYamlResourceService @Autowired constructor(
         )
     }
 
-    override fun getPipelineInfo(projectId: String, pipelineId: String): PipelineInfo? {
+    override fun getPipelineName(projectId: String, pipelineId: String): String? {
         return pipelineRepositoryService.getPipelineInfo(
             projectId = projectId,
             pipelineId = pipelineId
-        )
+        )?.pipelineName
     }
 
     override fun existsReleaseVersion(projectId: String, pipelineId: String): Boolean {

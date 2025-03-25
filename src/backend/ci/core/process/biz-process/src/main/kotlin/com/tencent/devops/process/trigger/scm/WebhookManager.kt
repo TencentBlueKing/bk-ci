@@ -122,6 +122,10 @@ class WebhookManager @Autowired constructor(
                     )
                     pipelineTriggerEventService.saveTriggerEvent(triggerEvent = triggerEvent)
                 } else {
+                    val event = pipelineTriggerEventService.getTriggerEvent(
+                        projectId = repository.projectId!!,
+                        eventId = eventId
+                    )
                     val triggerEvent = PipelineTriggerEvent(
                         projectId = repository.projectId,
                         eventId = eventId,
@@ -131,7 +135,7 @@ class WebhookManager @Autowired constructor(
                         triggerUser = webhook.userName,
                         eventDesc = eventDesc,
                         requestId = requestId,
-                        createTime = LocalDateTime.now(),
+                        createTime = event?.createTime ?: LocalDateTime.now(),
                         eventBody = webhook
                     )
                     pipelineTriggerEventService.updateTriggerEvent(triggerEvent = triggerEvent)

@@ -28,7 +28,6 @@
 package com.tencent.devops.process.yaml
 
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
-import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
@@ -79,10 +78,10 @@ interface IPipelineYamlResourceService {
         pipelineId: String
     ): DeletePipelineResult
 
-    fun getPipelineInfo(
+    fun getPipelineName(
         projectId: String,
         pipelineId: String
-    ): PipelineInfo?
+    ): String?
 
     fun existsReleaseVersion(
         projectId: String,

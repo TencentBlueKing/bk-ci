@@ -224,6 +224,8 @@ class PipelineYamlFacadeService @Autowired constructor(
                 requestId = requestId,
                 eventSource = repoHashId
             )
+            // 普通流水线开启灰度策略，PAC流水线没有开启灰度策略，会导致PAC流水线触发事件出现重复，此处统一触发时间
+            val event = pipelineTriggerEventService.getTriggerEvent(projectId, eventId)
             val triggerEvent = PipelineTriggerEvent(
                 projectId = projectId,
                 eventId = eventId,
@@ -233,7 +235,7 @@ class PipelineYamlFacadeService @Autowired constructor(
                 triggerUser = matcher.getUsername(),
                 eventDesc = matcher.getEventDesc(),
                 requestId = requestId,
-                createTime = eventTime
+                createTime = event?.createTime ?: eventTime
             )
             pipelineTriggerEventService.saveTriggerEvent(triggerEvent)
             action.data.context.eventId = eventId

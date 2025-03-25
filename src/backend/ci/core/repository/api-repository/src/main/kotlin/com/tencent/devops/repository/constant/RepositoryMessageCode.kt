@@ -94,24 +94,24 @@ object RepositoryMessageCode {
     const val ERROR_USER_HAVE_NOT_DOWNLOAD_PEM = "2115043" // 用户（{0}）无（{1}）项目下载权限
     const val NOT_GITHUB_AUTHORIZED_BY_OAUTH = "2115044" // 用户[{0}]尚未进行GITHUB OAUTH授权，请先授权。
     const val REPOSITORY_NO_SUPPORT_OAUTH = "2115045" // （{0}）类型代码库暂不支持OAUTH授权
+    const val OAUTH_INFO_OCCUPIED_CANNOT_DELETE = "2115049" // OAUTH授权信息被占用，无法删除
 
     const val USER_NOT_PERMISSIONS_OPERATE_REPOSITORY = "2115046" // 用户({0})无权限在工程({1})下{2}流水线{3}
     const val FAIL_TO_GET_OPEN_COPILOT_TOKEN = "2115048" // 获取open copilot token 失败, 失败详情: {0}
     const val EMPTY_COMMIT_RECORD = "2115050" // 无代码变更记录
     const val REPOSITORY_NO_SUPPORT_AI_SUMMARY = "2115051" // 仅支持工蜂代码库生成AI摘要，
-    const val OAUTH_INFO_OCCUPIED_CANNOT_DELETE = "2115052" // OAUTH授权信息被占用，无法删除
 
-    const val ERROR_WEBHOOK_SERVER_REPO_FULL_NAME_IS_EMPTY = "2115053" // webhook解析结果,fullName不能为空
-    const val ERROR_SCM_PROVIDER_NOT_FOUND = "2115054" // 源代码提供者{0}不存在
-    const val ERROR_SCM_CONFIG_NOT_FOUND = "2115055" // 源代码配置{0}不存在
-    const val ERROR_SCM_PROVIDER_NOT_SUPPORT_AUTH_TYPE = "2115056" // 源代码提供者不支持授权类型:{0}
-    const val ERROR_SCM_PROXY_SERVICE_NOT_FOUND = "2115057" // scm代理服务[{0}]没有发现
-    const val ERROR_SCM_PROXY_SERVICE_METHOD_NOT_FOUND = "2115058" // scm代理服务[{0}]的方法[{0}]不存在
-    const val ERROR_NOT_SUPPORT_SCM_PROVIDER_TYPE = "2115059" // 不支持的源码提供者类型:{0}
-    const val ERROR_NOT_SUPPORT_CREDENTIAL_TYPE = "2115060" // 不支持的凭证类型:{0}
-    const val ERROR_SCM_CONFIG_IN_USED_CAN_NOT_DELETE = "2115061" // 代码源[{0}]已关联代码库,不能删除
-    const val ERROR_NOT_SUPPORT_REPOSITORY_AUTH = "2115062" // 不支持的代码库鉴权方式
-    const val ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC = "2115063" // 仅支持git类型代码库开启PAC
+    const val ERROR_WEBHOOK_SERVER_REPO_FULL_NAME_IS_EMPTY = "2115052" // webhook解析结果,fullName不能为空
+    const val ERROR_SCM_PROVIDER_NOT_FOUND = "2115053" // 源代码提供者{0}不存在
+    const val ERROR_SCM_CONFIG_NOT_FOUND = "2115054" // 源代码配置{0}不存在
+    const val ERROR_SCM_PROVIDER_NOT_SUPPORT_AUTH_TYPE = "2115055" // 源代码提供者不支持授权类型:{0}
+    const val ERROR_SCM_PROXY_SERVICE_NOT_FOUND = "2115056" // scm代理服务[{0}]没有发现
+    const val ERROR_SCM_PROXY_SERVICE_METHOD_NOT_FOUND = "2115057" // scm代理服务[{0}]的方法[{0}]不存在
+    const val ERROR_NOT_SUPPORT_SCM_PROVIDER_TYPE = "2115058" // 不支持的源码提供者类型:{0}
+    const val ERROR_NOT_SUPPORT_CREDENTIAL_TYPE = "2115059" // 不支持的凭证类型:{0}
+    const val ERROR_SCM_CONFIG_IN_USED_CAN_NOT_DELETE = "2115060" // 代码源[{0}]已关联代码库,不能删除
+    const val ERROR_NOT_SUPPORT_REPOSITORY_AUTH = "2115061" // 不支持的代码库鉴权方式
+    const val ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC = "2115062" // 仅支持git类型代码库开启PAC
 
     const val BK_REQUEST_FILE_SIZE_LIMIT = "bkRequestFileSizeLimit" // 请求文件不能超过1M
     const val OPERATION_ADD_CHECK_RUNS = "OperationAddCheckRuns" // 添加检测任务
