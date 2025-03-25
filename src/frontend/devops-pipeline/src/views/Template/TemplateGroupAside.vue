@@ -5,14 +5,14 @@
             :key="idx"
         >
             <div
-                :class="['nav-item', ($route.params.viewId || cacheViewId) === item.viewId ? 'active' : '']"
+                :class="['nav-item', { active: isActive(item.viewId) }]"
                 @click="handleChangeMenu(item.viewId)"
             >
                 <div>
                     <Logo
                         :class="item.icon"
                         size="16"
-                        :name="($route.params.viewId || cacheViewId) === item.viewId ? item.activeIcon : item.icon"
+                        :name="isActive(item.viewId) ? item.activeIcon : item.icon"
                     />
                     <span>{{ $t(item.i18nKey) }}</span>
                 </div>
@@ -27,15 +27,15 @@
 </template>
 
 <script setup name='TemplateGroupAside'>
-    import { ref, computed, onMounted } from 'vue'
+    import { ref, computed, onMounted, defineExpose } from 'vue'
     import UseInstance from '@/hook/useInstance'
     import Logo from '@/components/Logo'
     import {
         ALL_TEMPLATE_VIEW_ID,
         PIPELINE_TEMPLATE_VIEW_ID,
-        STAGE_TEMPLATE_VIEW_ID,
-        JOB_TEMPLATE_VIEW_ID,
-        STEP_TEMPLATE_VIEW_ID,
+        // STAGE_TEMPLATE_VIEW_ID,
+        // JOB_TEMPLATE_VIEW_ID,
+        // STEP_TEMPLATE_VIEW_ID,
         TEMPLATE_VIEW_ID_CACHE
     } from '@/store/modules/templates/constants'
 
@@ -54,32 +54,35 @@
             icon: 'template-pipeline',
             activeIcon: 'pipeline-template',
             countKey: 'PIPELINE'
-        },
-        {
-            viewId: STAGE_TEMPLATE_VIEW_ID,
-            i18nKey: STAGE_TEMPLATE_VIEW_ID,
-            icon: 'template-stage',
-            activeIcon: 'stage-template',
-            countKey: 'STAGE'
-        },
-        {
-            viewId: JOB_TEMPLATE_VIEW_ID,
-            i18nKey: JOB_TEMPLATE_VIEW_ID,
-            icon: 'template-job',
-            activeIcon: 'job-template',
-            countKey: 'JOB'
-        },
-        {
-            viewId: STEP_TEMPLATE_VIEW_ID,
-            i18nKey: STEP_TEMPLATE_VIEW_ID,
-            icon: 'template-step',
-            activeIcon: 'step-template',
-            countKey: 'STEP'
         }
+        // {
+        //     viewId: STAGE_TEMPLATE_VIEW_ID,
+        //     i18nKey: STAGE_TEMPLATE_VIEW_ID,
+        //     icon: 'template-stage',
+        //     activeIcon: 'stage-template',
+        //     countKey: 'STAGE'
+        // },
+        // {
+        //     viewId: JOB_TEMPLATE_VIEW_ID,
+        //     i18nKey: JOB_TEMPLATE_VIEW_ID,
+        //     icon: 'template-job',
+        //     activeIcon: 'job-template',
+        //     countKey: 'JOB'
+        // },
+        // {
+        //     viewId: STEP_TEMPLATE_VIEW_ID,
+        //     i18nKey: STEP_TEMPLATE_VIEW_ID,
+        //     icon: 'template-step',
+        //     activeIcon: 'step-template',
+        //     countKey: 'STEP'
+        // }
     ])
     const countMap = ref({})
     const projectId = computed(() => proxy.$route.params.projectId)
-    const cacheViewId = localStorage.getItem(TEMPLATE_VIEW_ID_CACHE) || ALL_TEMPLATE_VIEW_ID
+    const currentViewId = computed(() => proxy.$route.params.viewId || localStorage.getItem(TEMPLATE_VIEW_ID_CACHE) || ALL_TEMPLATE_VIEW_ID)
+    function isActive (viewId) {
+        return currentViewId.value === viewId
+    }
     async function getType2Count () {
         try {
             countMap.value = await proxy.$store.dispatch('templates/getType2Count', {
@@ -98,6 +101,9 @@
             }
         })
     }
+    defineExpose({
+        isActive
+    })
     onMounted(() => {
         getType2Count()
     })

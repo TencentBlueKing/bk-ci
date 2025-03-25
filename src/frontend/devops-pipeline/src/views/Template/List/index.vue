@@ -187,10 +187,6 @@
             id: 'desc'
         },
         {
-            name: i18n.t('template.type'),
-            id: 'type'
-        },
-        {
             name: i18n.t('template.source'),
             id: 'source'
         },
@@ -224,15 +220,12 @@
     })
     watch(() => searchValue.value, () => {
         fetchTableData()
-    }, {
-        immediate: true
     })
     watch(() => templateViewId.value, () => {
         searchValue.value = []
-    }, {
-        immediate: true
     })
     onMounted(() => {
+        fetchTableData()
         hasPipelineTemplatePermission()
     })
 

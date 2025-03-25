@@ -94,7 +94,7 @@
                 </div>
             </template>
         </bk-table-column>
-        <bk-table-column
+        <!-- <bk-table-column
             v-if="allRenderColumnMap.debugPipelineCount"
             :width="tableWidthMap.debugPipelineCount"
             :label="$t('template.debugPipelineCount')"
@@ -105,7 +105,7 @@
                     {{ row.debugPipelineCount }}
                 </span>
             </template>
-        </bk-table-column>
+        </bk-table-column> -->
         <bk-table-column
             v-if="allRenderColumnMap.instancePipelineCount"
             :width="tableWidthMap.instancePipelineCount"

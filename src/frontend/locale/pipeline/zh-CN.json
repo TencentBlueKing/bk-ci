@@ -465,7 +465,7 @@
     "lastModifiedBy": "更新人",
     "desc": "简介",
     "type": "模板类型",
-    "searchPlaceholder": "模板名称/模板描述/模板类型/来源/更新人",
+    "searchPlaceholder": "模板名称/模板描述/来源/更新人",
     "lastedVersion": "最新版本",
     "debugPipelineCount": "调试流水线",
     "instancePipelineCount": "实例",
