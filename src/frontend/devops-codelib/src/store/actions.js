@@ -299,6 +299,7 @@ const actions = {
                 scmCode,
                 search
             }
+            commit(DIALOG_LOADING_MUTATION, true)
             const queryStr = Object.keys(query).filter(key => query[key]).map(key => `${key}=${query[key]}`).join('&')
             const res = await vue.$ajax.get(`/repository/api/user/scm/repository/api/${projectId}/${scmCode}/listRepoBaseInfo?${queryStr}`)
             commit(SET_OAUTH_MUTATION, {

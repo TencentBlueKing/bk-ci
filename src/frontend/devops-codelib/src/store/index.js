@@ -29,7 +29,7 @@ const store = {
         codelibs: null,
         tickets: null,
         showCodelibDialog: false,
-        fetchingCodelibDetail: true,
+        fetchingCodelibDetail: false,
         codelib: {
             aliasName: '',
             credentialId: '',

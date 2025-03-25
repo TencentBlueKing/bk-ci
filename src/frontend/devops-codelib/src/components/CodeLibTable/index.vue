@@ -19,7 +19,7 @@
                 'devops-codelib-table': true,
                 'flod-table': isListFlod
             }"
-            :data="records"
+            :data="tableData"
             :size="tableSize"
             :height="tableHeight"
             :outer-border="false"
@@ -162,7 +162,7 @@
             >
                 <template slot-scope="props">
                     <bk-button
-                        v-if="props.row.type === 'CODE_GIT' && !props.row.enablePac"
+                        v-if="props.row.showEnablePac && !props.row.enablePac"
                         theme="primary"
                         text
                         class="mr10"
@@ -352,6 +352,15 @@
 
             projectId () {
                 return this.$route.params.projectId
+            },
+            
+            tableData () {
+                return this.records.map(codelib => {
+                    return {
+                        ...codelib,
+                        showEnablePac: this.codelibTypes.find(i => i.scmCode === codelib.scmCode)?.pacEnabled || false
+                    }
+                })
             },
 
             /**
