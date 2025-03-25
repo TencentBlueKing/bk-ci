@@ -1,5 +1,5 @@
 import http from '@/http/api'
-import { defineComponent, ref, onMounted, h } from 'vue';
+import { defineComponent, ref, onMounted, h, resolveDirective, withDirectives } from 'vue';
 import { timeFormatter } from '@/common/util';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
@@ -27,10 +27,13 @@ export default defineComponent({
       handlePageValueChange
     } = useRepoConfigTable();
     const enabledStatus = ['OK', 'SUCCESS', 'DEPLOYING'];
+    const bkTooltips = resolveDirective('bk-tooltips');
+
     const columns = ref([
       {
         'label': t('代码源名称'),
         'field': 'name',
+        disabled: true,
         render({ cell, row }) {
           return h('p', {
             class: 'flex items-center'
@@ -51,6 +54,7 @@ export default defineComponent({
       {
         'label': t('代码源标识'),
         'field': 'scmCode',
+        disabled: true,
       },
       {
         'label': t('代码源域名'),
@@ -105,6 +109,7 @@ export default defineComponent({
       {
         label: t('操作'),
         field: 'operation',
+        disabled: true,
         showOverflowTooltip: true,
         render({ cell, row }) {
           return h('p', {
@@ -124,13 +129,16 @@ export default defineComponent({
                 handleToggleConfigStatus(row)
               }
             }, enabledStatus.includes(row.status) ? t('停用') : t('启用')),
-            h('span', {
-              class: `text-[#3A84FF] text-[12px] ${!row.canDelete ? 'text-[#C4C6CC] cursor-not-allowed' : 'cursor-pointer'}`,
-              onClick() {
-                if (!row.canDelete) return
-                handleDeleteConfig(row)
-              }
-            }, t('删除'))
+            ...(
+              [withDirectives(h('p', {
+                class: `text-[#3A84FF] text-[12px] ${!row.canDelete ? 'text-[#C4C6CC] cursor-not-allowed' : 'cursor-pointer'}`,
+                style: { 'margin-left': '5px' },
+                onClick() {
+                  if (!row.canDelete) return
+                  handleDeleteConfig(row)
+                }
+              }, t('删除')), !row.canDelete ? [[bkTooltips, t('已关联代码库，不能删除')]] : [])] 
+            ),
           ])
         }
       }
@@ -216,7 +224,9 @@ export default defineComponent({
         }
       })
     }
-
+    const settings = {
+      checked: columns.value.map(i => i.field)
+    }
     onMounted(() => {
       getRepoConfigList();
     });
@@ -233,7 +243,8 @@ export default defineComponent({
             <bk-table
               class="bg-white !h-tableHeight"
               border={borderConfig.value}
-              settings={true}
+              settings={settings}
+              show-overflow-tooltip
               columns={columns.value}
               data={repoConfigList.value}
               pagination={pagination.value}

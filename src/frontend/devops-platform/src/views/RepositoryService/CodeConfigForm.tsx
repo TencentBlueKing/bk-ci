@@ -370,6 +370,7 @@ export default defineComponent({
               <p class="h-[44px] text-[14px] font-bold text-[#4D4F56]">{t('高级设置')}</p>
               <bk-form-item
                 property="props.apiUrl"
+                required
                 label={'API URL'}
               >
                   <bk-input
@@ -395,91 +396,95 @@ export default defineComponent({
                   }
                 </bk-checkbox-group>
               </bk-form-item>
-              <div class="ml-[150px] mb-[20px]">
-                {
-                  curProviderConfig.value?.credentialTypeList?.find(i => i.credentialType === 'OAUTH') && (
-                    <div class="check-popper relative max-w-[710px] pt-[24px] pr-[120px] leading-[128px] border border-[#DCDEE5] bg-[#FAFBFD] mt-[10px]">
-                      <bk-form-item
-                        label={t('OAUTH类型')}
-                        property="oauthType"
-                        required
-                      >
-                        <bk-radio-group v-model={configFormData.value.oauthType}>
-                          <bk-radio label="NEW">
-                            {t('新建')}
-                          </bk-radio>
-                          <bk-radio label="REUSE">
-                            {t('复用')}
-                          </bk-radio>
-                        </bk-radio-group>
-                      </bk-form-item>
-                      {
-                        isNewOauthType.value ? (
-                          <section>
-                            <bk-form-item
-                              label="web url"
-                              property="props.webUrl"
-                              required
-                            >
-                              <bk-input
-                                v-model={configFormData.value.props.webUrl}
-                                clearable
-                              />
-                            </bk-form-item>
-                            <bk-form-item
-                              label={t('应用 ID')}
-                              property="props.clientId"
-                              required
-                            >
-                              <bk-input
-                                v-model={configFormData.value.props.clientId}
-                                placeholder={t('OAUTH 授权时和代码库提供方交互鉴权所需的client_id')}
-                                clearable
-                              />
-                            </bk-form-item>
-                            <bk-form-item
-                              label={t('应用 Secret')}
-                              property="props.clientSecret"
-                              required
-                            >
-                              <bk-input
-                                v-model={configFormData.value.props.clientSecret}
-                                placeholder={t('OAUTH授权时和代码库提供方交互鉴权所需的client_secret')}
-                                clearable
-                              />
-                            </bk-form-item>
-                          </section>
-                        ) : (
+              {
+                configFormData.value.credentialTypeList.includes('OAUTH') ? (
+                  <div class="ml-[150px] mb-[20px]">
+                    {
+                      curProviderConfig.value?.credentialTypeList?.find(i => i.credentialType === 'OAUTH') && (
+                        <div class="check-popper relative max-w-[710px] pt-[24px] pr-[120px] leading-[128px] border border-[#DCDEE5] bg-[#FAFBFD] mt-[10px]">
                           <bk-form-item
-                            label={t('代码源标识')}
-                            property="oauthScmCode"
+                            label={t('OAUTH类型')}
+                            property="oauthType"
                             required
                           >
-                            <bk-select
-                              v-model={configFormData.value.oauthScmCode}
-                              scroll-loading={isLoading.value}
-                              filterable
-                              scroll-end={handleScrollEnd}
-                            >
-                              {
-                                repoConfigList.value.map(repo => 
-                                  (
-                                    <bk-option
-                                      id={repo.scmCode}
-                                      key={repo.scmCode}
-                                      name={repo.name}
-                                    />
-                                  )
-                                )
-                              }
-                            </bk-select>
+                            <bk-radio-group v-model={configFormData.value.oauthType}>
+                              <bk-radio label="NEW">
+                                {t('新建')}
+                              </bk-radio>
+                              <bk-radio label="REUSE">
+                                {t('复用')}
+                              </bk-radio>
+                            </bk-radio-group>
                           </bk-form-item>
-                        )
-                      }
-                    </div>
-                  )
-                }
-              </div>
+                          {
+                            isNewOauthType.value ? (
+                              <section>
+                                <bk-form-item
+                                  label="web url"
+                                  property="props.webUrl"
+                                  required
+                                >
+                                  <bk-input
+                                    v-model={configFormData.value.props.webUrl}
+                                    clearable
+                                  />
+                                </bk-form-item>
+                                <bk-form-item
+                                  label={t('应用 ID')}
+                                  property="props.clientId"
+                                  required
+                                >
+                                  <bk-input
+                                    v-model={configFormData.value.props.clientId}
+                                    placeholder={t('OAUTH 授权时和代码库提供方交互鉴权所需的client_id')}
+                                    clearable
+                                  />
+                                </bk-form-item>
+                                <bk-form-item
+                                  label={t('应用 Secret')}
+                                  property="props.clientSecret"
+                                  required
+                                >
+                                  <bk-input
+                                    v-model={configFormData.value.props.clientSecret}
+                                    placeholder={t('OAUTH授权时和代码库提供方交互鉴权所需的client_secret')}
+                                    clearable
+                                  />
+                                </bk-form-item>
+                              </section>
+                            ) : (
+                              <bk-form-item
+                                label={t('代码源标识')}
+                                property="oauthScmCode"
+                                required
+                              >
+                                <bk-select
+                                  v-model={configFormData.value.oauthScmCode}
+                                  scroll-loading={isLoading.value}
+                                  filterable
+                                  scroll-end={handleScrollEnd}
+                                >
+                                  {
+                                    repoConfigList.value.map(repo => 
+                                      (
+                                        <bk-option
+                                          id={repo.scmCode}
+                                          key={repo.scmCode}
+                                          name={repo.name}
+                                        />
+                                      )
+                                    )
+                                  }
+                                </bk-select>
+                              </bk-form-item>
+                            )
+                          }
+                        </div>
+                      )
+                    }
+                  </div>
+                ) : null
+              }
               {
                 (curProviderConfig.value?.webhook && curProviderConfig.value?.webhookSecretType === 'APP') && (
                   <bk-form-item
