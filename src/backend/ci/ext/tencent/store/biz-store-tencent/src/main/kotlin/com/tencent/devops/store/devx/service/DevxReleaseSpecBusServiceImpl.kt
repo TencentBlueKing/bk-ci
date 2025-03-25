@@ -287,19 +287,28 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         val version = storeBaseUpdateRequest.versionInfo.version
         val storeType = StoreTypeEnum.DEVX
         val releaseType = storeBaseUpdateRequest.versionInfo.releaseType
-        val storeId = if (releaseType == ReleaseTypeEnum.NEW ||
-            releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE
-        ) {
-            val baseRecord = storeBaseQueryDao.getComponent(
-                dslContext = dslContext,
-                storeCode = storeBaseUpdateRequest.storeCode,
-                version = storeBaseUpdateRequest.versionInfo.version,
-                storeType = StoreTypeEnum.DEVX
-            ) ?: throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
-            baseRecord.id
-        } else {
-            // 普通发布类型会重新生成一条版本记录
-            DigestUtils.md5Hex("$storeType-$storeCode-$version")
+        val storeId = when (releaseType) {
+            ReleaseTypeEnum.NEW -> {
+                val baseRecord = storeBaseQueryDao.getFirstComponent(
+                    dslContext = dslContext,
+                    storeCode = storeBaseUpdateRequest.storeCode,
+                    storeType = StoreTypeEnum.DEVX
+                ) ?: throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+                baseRecord.id
+            }
+            ReleaseTypeEnum.CANCEL_RE_RELEASE -> {
+                val baseRecord = storeBaseQueryDao.getComponent(
+                    dslContext = dslContext,
+                    storeCode = storeBaseUpdateRequest.storeCode,
+                    storeType = StoreTypeEnum.DEVX,
+                    version = version
+                ) ?: throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+                baseRecord.id
+            }
+            else -> {
+                // 普通发布类型会重新生成一条版本记录
+                DigestUtils.md5Hex("$storeType-$storeCode-$version")
+            }
         }
         val baseEnvRecords = storeBaseEnvQueryDao.getBaseEnvsByStoreId(dslContext, storeId) ?: throw ErrorCodeException(
             errorCode = StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID

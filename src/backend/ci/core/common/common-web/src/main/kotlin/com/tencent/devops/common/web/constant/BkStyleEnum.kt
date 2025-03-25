@@ -48,5 +48,6 @@ enum class BkStyleEnum(val style: String) {
     PIPELINE_CONCURRENCY_GROUP_STYLE("^.{1,128}\$"), // 流水线并发组名称正则表达式
     STORE_FIELD_TYPE_STYLE("^BACKEND|FRONTEND|ALL\$"), // 研发商店私有配置字段类型正则表达式
     PAGE_SIZE_STYLE("^100\$|^([1-9]|[1-9]\\d)\$"), // 页码正则表达式
-    IP_STYLE("^(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])$") // IPv4
+    IP_STYLE("^(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])$"), // IPv4
+    VERSION_STYLE("^(?=.{1,256}\$)(0|[1-9]\\d*)(\\.(0|[1-9]\\d*)){2,}(\\.\\S+)*$") // 版本号正则表达式
 }

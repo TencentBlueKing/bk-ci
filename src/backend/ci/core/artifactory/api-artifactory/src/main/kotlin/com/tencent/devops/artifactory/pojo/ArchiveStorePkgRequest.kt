@@ -41,6 +41,6 @@ data class ArchiveStorePkgRequest(
     val storeType: StoreTypeEnum,
     @get:Schema(title = "版本号", required = true)
     val version: String,
-    @get:Schema(title = "发布类型", required = false)
-    val releaseType: ReleaseTypeEnum? = null
+    @get:Schema(title = "发布类型", required = true)
+    val releaseType: ReleaseTypeEnum = ReleaseTypeEnum.COMPATIBILITY_FIX
 )

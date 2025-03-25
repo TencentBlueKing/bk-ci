@@ -17,7 +17,7 @@ data class UserInfoCheckResult(
     val moa: UserInfoMoaCheckConfig,
     @JsonProperty("face_recognition")
     @get:Schema(title = "人脸识别管控检验")
-    val faceRecognition: FaceRecognition
+    var faceRecognition: FaceRecognition
 ) {
     companion object {
         fun noCheck(): UserInfoCheckResult = UserInfoCheckResult(

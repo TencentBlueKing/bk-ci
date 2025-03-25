@@ -63,6 +63,22 @@ BEGIN
         ALTER TABLE T_STORE_PROJECT_REL DROP INDEX `inx_tspr_type`;
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_STORE_BASE'
+                AND COLUMN_NAME = 'BUS_NUM') THEN
+        ALTER TABLE T_STORE_BASE ADD `BUS_NUM` bigint(20) DEFAULT NULL COMMENT '业务序号';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                   FROM information_schema.statistics
+                   WHERE TABLE_SCHEMA = db
+                     AND TABLE_NAME = 'T_STORE_BASE'
+                     AND INDEX_NAME = 'INX_TSB_TYPE_CODE_NUM') THEN
+     ALTER TABLE `T_STORE_BASE` ADD INDEX `INX_TSB_TYPE_CODE_NUM` (`STORE_TYPE`,`STORE_CODE`,`BUS_NUM`);
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

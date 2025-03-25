@@ -88,14 +88,6 @@ class StoreArchiveServiceImpl @Autowired constructor(
             storeType = storeType
         )
         var storeName = storeRecord?.name
-        // 判断是否有资格上传包
-        if (storeRecord != null && storeRecord.status !in listOf(
-                StoreStatusEnum.INIT.name,
-                StoreStatusEnum.GROUNDING_SUSPENSION.name
-            )
-        ) {
-            throw ErrorCodeException(errorCode = StoreMessageCode.STORE_RELEASE_STEPS_ERROR)
-        }
         if (storeName == null) {
             val storeNewestRecord = storeBaseQueryDao.getNewestComponentByCode(dslContext, storeCode, storeType)
                 ?: throw ErrorCodeException(
@@ -116,6 +108,14 @@ class StoreArchiveServiceImpl @Autowired constructor(
                 name = storeName ?: ""
             )
         }
+        // 判断是否有资格上传包
+        if (storeRecord != null && storeRecord.status !in listOf(
+                StoreStatusEnum.INIT.name,
+                StoreStatusEnum.GROUNDING_SUSPENSION.name
+            )
+        ) {
+            throw ErrorCodeException(errorCode = StoreMessageCode.STORE_RELEASE_STEPS_ERROR)
+        }
         return true
     }
 
@@ -126,12 +126,21 @@ class StoreArchiveServiceImpl @Autowired constructor(
         val storeCode = storePkgInfoUpdateRequest.storeCode
         val version = storePkgInfoUpdateRequest.version
         val storeType = storePkgInfoUpdateRequest.storeType
-        val storeId = storeBaseQueryDao.getComponentId(
-            dslContext = dslContext,
-            storeCode = storeCode,
-            version = version,
-            storeType = storeType
-        ) ?: DigestUtils.md5Hex("$storeType-$storeCode-$version")
+        val storeId = with(storeBaseQueryDao) {
+            when (storePkgInfoUpdateRequest.releaseType) {
+                ReleaseTypeEnum.NEW -> getFirstComponent(
+                    dslContext = dslContext,
+                    storeCode = storeCode,
+                    storeType = storeType
+                )?.id
+                else -> getComponentId(
+                    dslContext = dslContext,
+                    storeCode = storeCode,
+                    version = version,
+                    storeType = storeType
+                )
+            }
+        } ?: DigestUtils.md5Hex("$storeType-$storeCode-$version")
         val storePkgEnvRequests = storePkgInfoUpdateRequest.storePkgEnvInfos
         val storeBaseEnvDataPOs: MutableList<StoreBaseEnvDataPO> = mutableListOf()
         var storeBaseEnvExtDataPOs: MutableList<StoreBaseEnvExtDataPO>? = null

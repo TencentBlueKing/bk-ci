@@ -414,7 +414,7 @@ class OpIdeAtomServiceImpl @Autowired constructor(
                 storeReleaseCreateRequest = StoreReleaseCreateRequest(
                     storeCode = atomRecord.atomCode,
                     storeType = StoreTypeEnum.IDE_ATOM,
-                    latestUpgrader = atomRecord.creator,
+                    latestUpgrader = atomRecord.modifier,
                     latestUpgradeTime = pubTime
                 )
             )
