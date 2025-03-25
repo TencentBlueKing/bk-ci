@@ -43,6 +43,7 @@ import java.io.InputStream
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -100,7 +101,7 @@ interface BuildStoreResource {
     ): Result<StorePkgRunEnvInfo?>
 
     @Operation(summary = "根据组件包一键部署组件")
-    @GET
+    @POST
     @Path("/deploy")
     fun deployStore(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
