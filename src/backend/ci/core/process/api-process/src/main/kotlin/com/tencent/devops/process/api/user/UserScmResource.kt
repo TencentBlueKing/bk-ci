@@ -83,7 +83,10 @@ interface UserScmResource {
         repositoryId: String,
         @Parameter(description = "代码库请求类型", required = true)
         @QueryParam("repositoryType")
-        repositoryType: RepositoryType?
+        repositoryType: RepositoryType?,
+        @Parameter(description = "搜索条件", required = false)
+        @QueryParam("search")
+        search: String?
     ): Result<List<String>>
 
     @Operation(summary = "列出仓库所有分支")

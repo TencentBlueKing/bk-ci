@@ -22,6 +22,7 @@ import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.HandoverAuthorizationDetailVo
 import com.tencent.devops.auth.pojo.vo.HandoverGroupDetailVo
+import com.tencent.devops.auth.pojo.vo.MemberExitsProjectCheckVo
 import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
 import com.tencent.devops.common.api.model.SQLPage
 
@@ -46,6 +47,7 @@ interface PermissionManageFacadeService {
         relatedResourceCode: String? = null,
         action: String? = null,
         operateChannel: OperateChannel? = OperateChannel.MANAGER,
+        uniqueManagerGroupsQueryFlag: Boolean? = null,
         start: Int? = null,
         limit: Int? = null
     ): SQLPage<GroupDetailsInfoVo>
@@ -64,7 +66,8 @@ interface PermissionManageFacadeService {
         relatedResourceType: String?,
         relatedResourceCode: String?,
         action: String?,
-        operateChannel: OperateChannel? = OperateChannel.MANAGER
+        operateChannel: OperateChannel? = OperateChannel.MANAGER,
+        uniqueManagerGroupsQueryFlag: Boolean?
     ): List<ResourceType2CountVo>
 
     /**
@@ -252,4 +255,20 @@ interface PermissionManageFacadeService {
         projectCode: String,
         userId: String
     ): Boolean
+
+    /**
+     * 用户主动退出项目检查
+     * */
+    fun checkMemberExitsProject(
+        projectCode: String,
+        userId: String
+    ): MemberExitsProjectCheckVo
+
+    /**
+     * 用户主动退出项目
+     * */
+    fun memberExitsProject(
+        projectCode: String,
+        request: RemoveMemberFromProjectReq
+    ): String
 }

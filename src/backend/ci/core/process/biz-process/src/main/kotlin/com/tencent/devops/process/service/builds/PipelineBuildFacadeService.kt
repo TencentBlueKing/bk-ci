@@ -58,6 +58,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -187,8 +188,8 @@ class PipelineBuildFacadeService(
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
     private var cancelIntervalLimitTime: Int = 60 // 取消间隔时间为60秒
 
-    @Value("\${pipeline.build.retry.limit_days:21}")
-    private var retryLimitDays: Int = 21
+    @Value("\${pipeline.build.retry.limit_days:28}")
+    private var retryLimitDays: Int = 28
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildFacadeService::class.java)
@@ -230,7 +231,7 @@ class PipelineBuildFacadeService(
             )
         }
         val (pipeline, resource, debug) = pipelineRepositoryService.getBuildTriggerInfo(
-            projectId, pipelineId, null
+            projectId, pipelineId, version
         )
         if (pipeline.locked == true) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
@@ -416,9 +417,10 @@ class PipelineBuildFacadeService(
             }
             buildInfo.startTime?.let {
                 // 判断当前时间是否超过最大重试时间
-                if (LocalDateTime.now().minusDays(retryLimitDays.toLong()).timestampmilli() - it < 0) {
+                if (LocalDateTime.now().minusDays(retryLimitDays.toLong()).timestampmilli() - it > 0) {
                     throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY
+                        errorCode = ProcessMessageCode.ERROR_PIPELINE_RETRY_TIME_INVALID,
+                        params = arrayOf(retryLimitDays.toString())
                     )
                 }
             }
@@ -639,6 +641,10 @@ class PipelineBuildFacadeService(
             )
             if (readyToBuildPipelineInfo.locked == true) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
+            }
+            // 正式版本,必须使用最新版本执行
+            if (version != null && resource.status == VersionStatus.RELEASED && resource.version != version) {
+                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_NON_LATEST_RELEASE_VERSION)
             }
 
             /**

@@ -54,8 +54,8 @@
     "vue-eslint-parser": "^9.0.2",
     "webpack": "~5.76.1",
     "webpack-bundle-analyzer": "^4.4.2",
-    "webpack-cli": "^4.10.0",
-    "webpack-dev-server": "^4.3.1"
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.0.0"
   },
   "resolutions": {
     "glob-parent": "5.1.2"
@@ -124,6 +124,11 @@
       "http-proxy-middleware@<2.0.7": ">=2.0.7",
       "elliptic@<6.6.0": ">=6.6.0",
       "cross-spawn@<7.0.5": ">=7.0.5"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "vue-demi",
+      "husky",
+      "vue-echarts"
+    ]
   }
 }

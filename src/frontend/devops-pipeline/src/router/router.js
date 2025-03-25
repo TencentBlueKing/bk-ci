@@ -29,13 +29,12 @@ const pipelinesGroup = () => import(/* webpackChunkName: "pipelinesGroup" */'../
 const pipelinesAudit = () => import(/* webpackChunkName: "pipelinesAudit" */'../views/list/audit')
 
 // 流水线模板
-const templateGroup = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/')
 const TemplateList = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/List/')
-// const pipelinesTemplate = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/list/template')
-// const templateEntry = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/')
-// const templateEdit = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/edit.vue')
+const templateGroup = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/')
+const templateEntry = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/')
+const TemplateOverview = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/TemplateOverview')
+const templateEdit = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/edit.vue')
 // const templateSetting = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/setting.vue')
-// const templateInstance = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/instance.vue')
 // const templateInstanceCreate = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/instance_create.vue')
 // const templatePermission = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/permission.vue')
 
@@ -144,37 +143,37 @@ const routes = [
                     }
                 ]
             },
-            // {
-            //     path: 'template/:templateId',
-            //     component: templateEntry,
-            //     children: [
-            //         {
-            //             path: 'edit',
-            //             name: 'templateEdit',
-            //             component: templateEdit
-            //         },
-            //         {
-            //             path: 'setting',
-            //             name: 'templateSetting',
-            //             component: templateSetting
-            //         },
-            //         {
-            //             path: 'instance',
-            //             name: 'templateInstance',
-            //             component: templateInstance
-            //         },
-            //         {
-            //             path: 'createInstance/:curVersionId/:pipelineName?',
-            //             name: 'createInstance',
-            //             component: templateInstanceCreate
-            //         },
-            //         {
-            //             path: 'permission',
-            //             name: 'templatePermission',
-            //             component: templatePermission
-            //         }
-            //     ]
-            // },
+            {
+                path: 'template/:templateId/:version?',
+                component: templateEntry,
+                children: [
+                    {
+                        path: 'edit',
+                        name: 'templateEdit',
+                        component: templateEdit
+                    },
+                    // {
+                    //     path: 'createInstance/:curVersionId/:pipelineName?',
+                    //     name: 'createInstance',
+                    //     component: templateInstanceCreate
+                    // },
+                    // {
+                    //     path: 'setting',
+                    //     name: 'templateSetting',
+                    //     component: templateSetting
+                    // },
+                    // {
+                    //     path: 'permission',
+                    //     name: 'templatePermission',
+                    //     component: templatePermission
+                    // },
+                    {
+                        path: ':type?',
+                        name: 'TemplateOverview',
+                        component: TemplateOverview
+                    }
+                ]
+            },
             {
                 // docker console
                 path: 'dockerConsole',

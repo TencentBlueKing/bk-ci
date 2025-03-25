@@ -27,6 +27,7 @@ function isSkip (status) {
 }
 
 export default {
+    isTemplate: state => state.pipelineInfo?.isTemplate ?? false,
     isCurPipelineLocked: state => {
         return state.pipelineInfo?.locked ?? false
     },

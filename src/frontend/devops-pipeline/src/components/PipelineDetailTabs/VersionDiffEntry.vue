@@ -71,7 +71,7 @@
 <script>
     import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
     import YamlDiff from '@/components/YamlDiff'
-    import { mapActions } from 'vuex'
+    import { mapActions, mapGetters } from 'vuex'
     export default {
         components: {
             YamlDiff,
@@ -123,16 +123,20 @@
                 pipelineVersionList: []
             }
         },
+        computed: {
+            ...mapGetters('atom', ['isTemplate'])
+        },
 
         methods: {
             ...mapActions('atom', [
-                'fetchPipelineByVersion'
+                'fetchPipelineByVersion',
+                'fetchTemplateByVersion'
             ]),
             async fetchPipelineYaml (version) {
                 try {
-                    const res = await this.fetchPipelineByVersion({
-                        projectId: this.$route.params.projectId,
-                        pipelineId: this.$route.params.pipelineId,
+                    const fn = this.isTemplate ? this.fetchTemplateByVersion : this.fetchPipelineByVersion
+                    const res = await fn({
+                        ...this.$route.params,
                         version
                     })
                     if (res?.yamlSupported) {

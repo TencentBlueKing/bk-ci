@@ -88,7 +88,7 @@
                 v-if="isDebugExec"
                 :can-release="canRelease"
                 :project-id="projectId"
-                :pipeline-id="pipelineId"
+                :id="pipelineId"
             />
         </aside>
     </div>

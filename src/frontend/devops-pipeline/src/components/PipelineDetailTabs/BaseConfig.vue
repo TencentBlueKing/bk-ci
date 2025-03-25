@@ -52,7 +52,7 @@
                             </div>
                         </bk-popover>
                         <span class="base-info-block-row-value">
-                            <template v-if="['label', 'pipelineGroup'].includes(row.key)">
+                            <template v-if="Array.isArray(row.value)">
                                 <template v-if="row.value.length > 0">
                                     <bk-tag
                                         v-for="label in row.value"
@@ -66,12 +66,12 @@
                                     --
                                 </template>
                             </template>
-                            <template v-else-if="['namingConvention', 'modificationDetail', 'creatorDetail'].includes(row.key)">
-                                <span>{{ row.value || '--' }}</span>
-                                <span class="base-info-block-row-value-gray">{{ row.grayDesc }}</span>
-                            </template>
                             <template v-else>
-                                {{ row.value || '--' }}
+                                <span>{{ row.value || '--' }}</span>
+                                <span
+                                    v-if="row.grayDesc"
+                                    class="base-info-block-row-value-gray"
+                                >{{ row.grayDesc }}</span>
                             </template>
                         </span>
                     </template>
@@ -81,8 +81,8 @@
     </bk-collapse>
 </template>
 <script>
-    import { convertTime } from '@/utils/util'
     import NamingConventionTip from '@/components/namingConventionTip.vue'
+    import { convertTime } from '@/utils/util'
     export default {
         components: {
             NamingConventionTip
@@ -103,6 +103,9 @@
             }
         },
         computed: {
+            isTemplate () {
+                return this.basicInfo?.isTemplate ?? false
+            },
             panels () {
                 return [{
                     name: 'baseInfo',
@@ -116,40 +119,68 @@
                 const { basicInfo } = this
                 const { inheritedDialect, projectDialect, pipelineDialect } = basicInfo?.pipelineAsCodeSettings ?? {}
                 const namingConvention = inheritedDialect ? this.namingStyle[projectDialect] : this.namingStyle[pipelineDialect]
-                return [
-                    {
-                        key: 'pipelineName',
-                        value: basicInfo?.pipelineName ?? '--'
-                    },
-                    {
-                        key: 'label',
-                        value: basicInfo?.labelNames ?? []
-                    },
-                    {
-                        key: 'pipelineGroup',
-                        value: basicInfo?.viewNames ?? []
-                    },
-                    {
-                        key: 'desc',
-                        value: basicInfo?.desc ?? '--'
-                    },
-                    {
-                        key: 'namingConvention',
-                        value: namingConvention ?? '--',
-                        grayDesc: inheritedDialect ? ` ( ${this.$t('inheritedProject')} )` : ''
-                    },
-                    {
-                        key: 'modificationDetail',
-                        value: basicInfo?.versionUpdater ?? '--',
-                        grayDesc: ` | ${convertTime(basicInfo?.versionUpdateTime)}`
-                    },
-                    {
-                        key: 'creatorDetail',
-                        value: basicInfo?.creator ?? '--',
-                        grayDesc: ` | ${convertTime(basicInfo?.createTime)}`
-                    }
-                ]
+                return this.isTemplate
+                    ? [
+                        {
+                            key: 'name',
+                            value: basicInfo?.name
+                        },
+                        {
+                            key: 'desc',
+                            value: basicInfo?.desc
+                        },
+                        {
+                            key: 'template.templateType',
+                            value: this.$t(`template.${basicInfo?.type.toLowerCase()}Template`)
+                        },
+                        {
+                            key: 'label',
+                            value: basicInfo?.labelNames ?? []
+                        },
+                        {
+                            key: 'creator',
+                            value: basicInfo?.creator
+                        },
+                        {
+                            key: 'createTime',
+                            value: basicInfo?.creatorTime
+                        }
+                    ]
+                    : [
+                        {
+                            key: 'pipelineName',
+                            value: basicInfo?.pipelineName
+                        },
+                        {
+                            key: 'label',
+                            value: basicInfo?.labelNames ?? []
+                        },
+                        {
+                            key: 'pipelineGroup',
+                            value: basicInfo?.viewNames ?? []
+                        },
+                        {
+                            key: 'desc',
+                            value: basicInfo?.desc
+                        },
+                        {
+                            key: 'namingConvention',
+                            value: namingConvention,
+                            grayDesc: inheritedDialect ? ` ( ${this.$t('inheritedProject')} )` : ''
+                        },
+                        {
+                            key: 'modificationDetail',
+                            value: basicInfo?.versionUpdater,
+                            grayDesc: ` | ${convertTime(basicInfo?.versionUpdateTime)}`
+                        },
+                        {
+                            key: 'creatorDetail',
+                            value: basicInfo?.creator,
+                            grayDesc: ` | ${convertTime(basicInfo?.createTime)}`
+                        }
+                    ]
             },
+
             executeConfRows () {
                 const runLockType = this.basicInfo?.runLockType?.toLowerCase?.()
                 return [
@@ -195,7 +226,7 @@
                                     label: 'settings.lagestTime',
                                     value: Number.isInteger(this.basicInfo?.waitQueueTimeMinute) ? `${this.basicInfo?.waitQueueTimeMinute}${this.$t('settings.minutes')}` : '--'
                                 }
-    
+
                             ]
                             : []
                         )

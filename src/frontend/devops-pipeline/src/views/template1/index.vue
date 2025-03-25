@@ -3,17 +3,9 @@
         class="biz-container pipeline-subpages"
         v-bkloading="{ isLoading }"
     >
-        <div class="biz-side-bar">
-            <side-bar
-                :nav="nav"
-                :side-menu-list="sideMenuList"
-                :sub-system-name="'pipelines'"
-            >
-            </side-bar>
-        </div>
         <template v-if="!isLoading">
             <router-view
-                v-if="hasViewPermission"
+                v-if="hasViewPermission && isInfoReady"
                 class="biz-content"
                 :is-enabled-permission="isEnabledPermission"
             >
@@ -36,13 +28,13 @@
 </template>
 
 <script>
-    import { handleTemplateNoPermission, TEMPLATE_RESOURCE_ACTION } from '@/utils/permission'
-    import sideBar from '@/components/devops/side-nav'
     import emptyTips from '@/components/template/empty-tips'
+    import { SET_PIPELINE_INFO } from '@/store/modules/atom/constants'
+    import { handleTemplateNoPermission, TEMPLATE_RESOURCE_ACTION } from '@/utils/permission'
+    import { mapActions, mapState } from 'vuex'
 
     export default {
         components: {
-            'side-bar': sideBar,
             emptyTips
         },
 
@@ -50,70 +42,44 @@
             return {
                 isLoading: true,
                 isEnabledPermission: false,
-                hasViewPermission: true,
-                sideMenuList: [
-                    {
-                        list: [
-                            {
-                                id: 'templateEdit',
-                                name: this.$t('edit'),
-                                icon: 'icon-edit'
-                            },
-                            {
-                                id: 'templateSetting',
-                                name: this.$t('template.settings'),
-                                icon: 'icon-cog'
-                            },
-                            {
-                                id: 'templateInstance',
-                                name: this.$t('template.instanceManage'),
-                                icon: 'icon-list',
-                                isSelected: false,
-                                showChildren: false,
-                                children: [
-                                    {
-                                        id: 'createInstance',
-                                        name: this.$t('template.addInstance'),
-                                        icon: 'icon-list'
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                ],
-                nav: {
-                    backUrl: 'pipelinesTemplate',
-                    title: this.$t('templateManage'),
-                    icon: ''
-                }
+                hasViewPermission: true
             }
         },
-
-        created () {
-            this.$updateTabTitle?.()
-            const { projectId, templateId } = this.$route.params
-            this.$store.dispatch('requestProjectDetail', { projectId })
-            this.$store.dispatch('pipelines/enableTemplatePermissionManage', projectId).then((res) => {
-                if (res.data) {
-                    this.isEnabledPermission = res.data
-                    this.sideMenuList[0].list.push({
-                        id: 'templatePermission',
-                        name: this.$t('template.permissionSetting'),
-                        icon: 'permission'
-                    })
-                }
-            })
-            this.$store.dispatch('pipelines/getTemplateHasViewPermission', {
-                projectId,
-                templateId
-            }).then(async res => {
-                this.hasViewPermission = res.data
-                if (!this.hasViewPermission) await this.handleApply()
-            }).finally(() => {
-                this.isLoading = false
-            })
+        computed: {
+            ...mapState('atom', ['pipelineInfo']),
+            isInfoReady () {
+                return this.pipelineInfo?.id === this.$route.params?.templateId
+            }
         },
+        created () {
+            console.log(this.$route.params)
+            this.init()
+        },
+        mounted () {
+            this.$updateTabTitle?.()
+        },
+        beforeDestroy () {
+            this.selectPipelineVersion(null)
+            this.setPipeline(null)
+            this.setPipelineWithoutTrigger(null)
+            this.resetAtomModalMap()
+            this.$store.commit('atom/resetPipelineSetting', null)
+            this.$store.commit(`atom/${SET_PIPELINE_INFO}`, null)
+        },
+
         methods: {
+            ...mapActions({
+                enableTemplatePermissionManage: 'pipelines/enableTemplatePermissionManage',
+                getTemplateHasViewPermission: 'pipelines/getTemplateHasViewPermission',
+                requestProjectDetail: 'requestProjectDetail'
+            }),
+            ...mapActions('atom', [
+                'requestTemplateSummary',
+                'selectPipelineVersion',
+                'setPipeline',
+                'setPipelineWithoutTrigger',
+                'resetAtomModalMap'
+            ]),
             handleApply () {
                 const { projectId, templateId } = this.$route.params
                 handleTemplateNoPermission({
@@ -121,6 +87,30 @@
                     resourceCode: templateId,
                     action: TEMPLATE_RESOURCE_ACTION.VIEW
                 })
+            },
+            async init () {
+                try {
+                    this.isLoading = true
+                    const { projectId, templateId } = this.$route.params
+                    const [enablePermRes, viewPermRes] = await Promise.all([
+                        this.enableTemplatePermissionManage(projectId),
+                        this.getTemplateHasViewPermission({ projectId, templateId }),
+                        this.requestTemplateSummary({
+                            projectId,
+                            templateId
+                        }),
+                        this.requestProjectDetail({ projectId })
+                    ])
+                    this.isEnabledPermission = enablePermRes.data
+                    this.hasViewPermission = viewPermRes.data
+                    if (!this.hasViewPermission) {
+                        await this.handleApply()
+                    }
+                } catch (error) {
+                    console.error(error)
+                } finally {
+                    this.isLoading = false
+                }
             }
         }
     }
@@ -129,12 +119,9 @@
 <style lang="scss">
     .pipeline-subpages {
         min-height: 100%;
-    }
-    .biz-content {
-        width: 100%;
-        height: 100%;
-        .group-table {
-            padding: 20px;
+        .biz-content {
+            width: 100%;
+            height: 100%;
         }
     }
 </style>

@@ -42,7 +42,7 @@
                     >
                         <span
                             v-if="isEnabledPermission"
-                            @click="editTemplate(row)"
+                            @click="toInstanceList(row)"
                             v-perm="{
                                 hasPermission: row.canView,
                                 disablePermissionApi: true,
@@ -58,7 +58,7 @@
                         </span>
                         <span
                             v-else
-                            @click="editTemplate(row)"
+                            @click="toInstanceList(row)"
                         >{{ row.name }}</span>
                     </div>
                 </template>
@@ -224,7 +224,7 @@
                                 :class="{ 'is-danger': copyTemp.nameHasError }"
                                 @input="copyTemp.nameHasError = false"
                                 name="copyTemplateName"
-                                v-validate="&quot;required|max:30&quot;"
+                                v-validate="'required|max:30'"
                                 maxlength="30"
                             >
                         </div>
@@ -266,13 +266,13 @@
 
 <script>
     import Logo from '@/components/Logo'
-    import dayjs from 'dayjs'
-    import ExtMenu from './extMenu'
     import {
         RESOURCE_ACTION,
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
     import { navConfirm } from '@/utils/util'
+    import dayjs from 'dayjs'
+    import ExtMenu from './extMenu'
 
     export default {
         components: {
@@ -366,8 +366,11 @@
                         this.hasCreatePermission = res.hasCreatePermission
                         this.isEnabledPermission = res.enableTemplatePermissionManage
                         this.isManagerUser = res.hasPermission
-                        this.listData = (res.models || []).map(x => {
+
+                        this.listData = (res.records || []).map(x => {
                             x.updateTime = dayjs(x.updateTime).format('YYYY-MM-DD HH:mm:ss')
+                            x.associateCodes = []
+                            x.associatePipelines = []
                             x.templateActions = [
                                 {
                                     text: this.$t('clone'),
@@ -419,6 +422,7 @@
                             ]
                             return x
                         })
+                        console.log(this.listData)
                         this.pagingConfig.count = res.count
                     }
                 })
@@ -446,17 +450,22 @@
             toInstanceList (row) {
                 if (!this.isEnabledPermission && !row.canView) return
                 this.$router.push({
-                    name: 'templateInstance',
-                    params: { templateId: row.templateId }
+                    name: 'TemplateOverview',
+                    params: {
+                        templateId: row.id,
+                        version: row.releasedVersion,
+                        type: 'instanceList'
+                    }
                 })
             },
 
             editTemplate (row) {
                 if (!this.isEnabledPermission && !row.canEdit) return
-
                 this.$router.push({
                     name: 'templateEdit',
-                    params: { templateId: row.templateId }
+                    params: {
+                        templateId: row.id
+                    }
                 })
             },
 

@@ -132,11 +132,10 @@
 </template>
 <script>
     import Logo from '@/components/Logo'
-    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import { bus, SHOW_VERSION_HISTORY_SIDESLIDER } from '@/utils/bus'
     import { VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     import { convertTime } from '@/utils/util'
-    import { mapActions, mapState } from 'vuex'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     export default {
         name: 'VersionSelector',
         emit: ['input', 'change', 'showAllVersion'],
@@ -175,6 +174,10 @@
             includeDraft: {
                 type: Boolean,
                 default: true
+            },
+            buildOnly: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -200,11 +203,14 @@
             ...mapState('atom', [
                 'pipelineInfo'
             ]),
+            ...mapGetters('atom', [
+                'isTemplate'
+            ]),
             projectId () {
                 return this.$route.params.projectId
             },
-            pipelineId () {
-                return this.$route.params.pipelineId
+            uniqueId () {
+                return this.$route.params?.[this.isTemplate ? 'templateId' : 'pipelineId']
             },
             // 最新的流水线版本信息
             activeDisplayName () {
@@ -230,7 +236,7 @@
                     this.activeVersion = activeVersion
                 }
             },
-            pipelineId: {
+            uniqueId: {
                 handler () {
                     this.hasNext = true
                     this.loadMore(1)
@@ -246,13 +252,15 @@
         },
         methods: {
             convertTime,
-            ...mapActions('pipelines', [
-                'requestPipelineVersionList'
-            ]),
+            ...mapActions({
+                requestPipelineVersionList: 'pipelines/requestPipelineVersionList',
+                requestTemplateVersionList: 'pipelines/requestTemplateVersionList',
+                requestPipelineSummary: 'atom/requestPipelineSummary'
+            }),
 
             async loadMore (page) {
                 try {
-                    const { projectId, pipelineId, pagination } = this
+                    const { projectId, pagination } = this
                     const nextPage = page ?? pagination.page + 1
                     if (nextPage > 1 && !this.hasNext) return
                     if (nextPage === 1) {
@@ -260,46 +268,44 @@
                     } else {
                         this.bottomLoadingOptions.isLoading = true
                     }
-                    const res = await this.requestPipelineVersionList({
+                    const dataSource = this.isTemplate ? this.requestTemplateVersionList : this.requestPipelineVersionList
+                    const res = await dataSource({
                         projectId,
-                        pipelineId,
+                        ...{
+                            [this.isTemplate ? 'templateId' : 'pipelineId']: this.uniqueId
+                        },
                         page: nextPage,
                         pageSize: pagination.limit,
                         versionName: this.searchKeyword,
-                        includeDraft: this.includeDraft
+                        includeDraft: this.includeDraft,
+                        buildOnly: this.buildOnly
                     })
                     this.pagination.page = res.page
                     this.hasNext = res.count > res.page * pagination.limit
-                    if (res.records.length > 0) {
-                        const versions = res.records.map(item => {
-                            const isDraft = item.status === VERSION_STATUS_ENUM.COMMITTING
-                            const isBranchVersion = item.status === VERSION_STATUS_ENUM.BRANCH
+                    const versions = res.records.map(item => {
+                        const isDraft = item.status === VERSION_STATUS_ENUM.COMMITTING
+                        const isBranchVersion = item.status === VERSION_STATUS_ENUM.BRANCH
 
-                            return {
-                                ...item,
-                                displayName: isDraft ? this.$t('draft') : item.versionName,
-                                description: isDraft ? this.$t('baseOn', [item.baseVersionName]) : (item.description || '--'),
-                                isBranchVersion,
-                                isDraft,
-                                isRelease: item.status === VERSION_STATUS_ENUM.RELEASED
+                        return {
+                            ...item,
+                            displayName: isDraft ? this.$t('draft') : item.versionName,
+                            description: isDraft ? this.$t('baseOn', [item.baseVersionName]) : (item.description || '--'),
+                            isBranchVersion,
+                            isDraft,
+                            isRelease: item.status === VERSION_STATUS_ENUM.RELEASED
 
-                            }
-                        })
-                        if (page === 1) {
-                            this.versionList = versions
-                            const releaseVersion = versions.find(item => item.status === VERSION_STATUS_ENUM.RELEASED)
-                            if (releaseVersion?.version > this.pipelineInfo.releaseVersion) {
-                                // HACK: 最新版本变更时，更新当前流水线信息
-                                this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
-                                    releaseVersion: releaseVersion.version,
-                                    releaseVersionName: releaseVersion.versionName
-                                })
-                            }
-                        } else {
-                            this.versionList.push(...versions)
                         }
-                        this.switchVersion(this.value)
+                    })
+                    if (page === 1) {
+                        this.versionList = versions
+                        const releaseVersion = versions.find(item => item.status === VERSION_STATUS_ENUM.RELEASED)
+                        if (releaseVersion?.version > this.pipelineInfo.releaseVersion) {
+                            this.requestPipelineSummary(this.$route.params)
+                        }
+                    } else {
+                        this.versionList.push(...versions)
                     }
+                    this.switchVersion(this.value)
                 } catch (error) {
                     console.log(error)
                 } finally {

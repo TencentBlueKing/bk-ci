@@ -383,6 +383,13 @@ const actions = {
             params
         }).then(res => res.data)
     },
+    requestTemplateVersionList (_, { projectId, templateId, ...params }) {
+        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/versions`, {
+            ...params,
+            projectId,
+            templateId
+        }).then(res => res.data)
+    },
     // 删除流水线历史版本
     deletePipelineVersion (_, { projectId, pipelineId, version }) {
         return ajax.delete(`${prefix}${projectId}/${pipelineId}/${version}`)
