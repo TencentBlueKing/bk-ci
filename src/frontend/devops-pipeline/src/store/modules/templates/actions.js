@@ -28,8 +28,8 @@ const actions = {
             return response.data
         })
     },
-    templateCopy (_, { projectId, srcTemplateId, copySetting, name }) {
-        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${srcTemplateId}/copy?copySetting=${copySetting}&name=${name}`).then(response => {
+    templateCopy (_, { projectId, params }) {
+        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/copy`, params).then(response => {
             return response.data
         })
     },

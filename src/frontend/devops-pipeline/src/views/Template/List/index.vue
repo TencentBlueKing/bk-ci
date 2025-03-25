@@ -27,7 +27,7 @@
                             >
                                 <Logo
                                     :class="item.icon"
-                                    size="14"
+                                    size="13"
                                     :name="item.icon"
                                 />
                                 <span>{{ $t(item.i18nKey) }}</span>
@@ -187,10 +187,6 @@
             id: 'desc'
         },
         {
-            name: i18n.t('template.type'),
-            id: 'type'
-        },
-        {
             name: i18n.t('template.source'),
             id: 'source'
         },
@@ -204,17 +200,17 @@
     const searchTab = ref([
         {
             i18nKey: ALL_SOURCE,
-            icon: 'group',
+            icon: 'template-application',
             countKey: 'ALL'
         },
         {
             i18nKey: CUSTOM_SOURCE,
-            icon: 'pipeline',
+            icon: 'template-view',
             countKey: 'CUSTOM'
         },
         {
             i18nKey: MARKET_SOURCE,
-            icon: 'stage',
+            icon: 'template-view',
             countKey: 'MARKET'
         }
     ])
@@ -224,15 +220,12 @@
     })
     watch(() => searchValue.value, () => {
         fetchTableData()
-    }, {
-        immediate: true
     })
     watch(() => templateViewId.value, () => {
         searchValue.value = []
-    }, {
-        immediate: true
     })
     onMounted(() => {
+        fetchTableData()
         hasPipelineTemplatePermission()
     })
 
@@ -467,7 +460,7 @@
     async function confirmDeleteTemplate (row) {
         isLoading.value = true
         try {
-            await proxy.$store.dispatch('pipelines/deleteTemplate', {
+            await proxy.$store.dispatch('templates/deleteTemplate', {
                 projectId: projectId.value,
                 templateId: row.id
             })
@@ -494,12 +487,13 @@
 
         const postData = {
             projectId: projectId.value,
-            srcTemplateId: copyTemp.value.srcTemplateId,
-            copySetting: copyTemp.value.isCopySetting,
-            name: copyTemp.value.templateName
+            params: {
+                srcTemplateId: copyTemp.value.srcTemplateId,
+                copySetting: copyTemp.value.isCopySetting,
+                name: copyTemp.value.templateName
+            }
         }
         proxy.$store.dispatch('templates/templateCopy', postData).then((templateId) => {
-            console.log('🚀 ~ templateId:', templateId)
             copyCancelHandler()
             bkMessage({ message: i18n.t('template.copySuc'), theme: 'success' })
             // router.push({
@@ -567,12 +561,22 @@
                     text-align: center;
                     border-radius: 2px;
                     cursor: pointer;
+
+                    svg {
+                        vertical-align: middle;
+                        color: #979BA5;
+                        margin-right: 4px;
+                    }
                 }
 
                 .active {
                     background-color: #fff;
                     color: $primaryColor;
                     border-radius: 2px;
+  
+                    svg {
+                        color: $primaryColor;
+                    }
                 }
             }
 

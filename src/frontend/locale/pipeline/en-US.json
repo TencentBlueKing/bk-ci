@@ -466,7 +466,7 @@
     "lastModifiedBy": "Updater",
     "desc": "Template description",
     "type": "Template type",
-    "searchPlaceholder": "Template name/Template description/Template type/Source/Updated by",
+    "searchPlaceholder": "Template name/Template description/Source/Updated by",
     "lastedVersion": "Latest version",
     "debugPipelineCount": "Debug pipeline",
     "instancePipelineCount": "Instance",
