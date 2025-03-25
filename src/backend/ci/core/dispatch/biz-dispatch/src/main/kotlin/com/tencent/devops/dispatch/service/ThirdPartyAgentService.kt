@@ -88,6 +88,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DeadlockLoserDataAccessException
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeoutException
 
 @Service
 @Suppress("ALL")
@@ -697,31 +698,47 @@ class ThirdPartyAgentService @Autowired constructor(
         }
 
         val heartR = try {
-            heartBeatF.get()?.data
+            heartBeatF.get(AGENT_ASK_TIMEOUT_MS, TimeUnit.MILLISECONDS)?.data
+        } catch (e: TimeoutException) {
+            logger.warn("$projectId|$agentId|ask heartbeat timeout")
+            null
         } catch (e: Exception) {
             askExceptionDeal(agentId, e)
             null
         }
+
         val buildR = try {
-            buildF?.get()?.data
+            buildF?.get(AGENT_ASK_TIMEOUT_MS, TimeUnit.MILLISECONDS)?.data
+        } catch (e: TimeoutException) {
+            logger.warn("$projectId|$agentId|ask build timeout")
+            null
         } catch (e: Exception) {
             askExceptionDeal(agentId, e)
             null
         }
         val upgradeR = try {
-            upgradeF?.get()?.data
+            upgradeF?.get(AGENT_ASK_TIMEOUT_MS, TimeUnit.MILLISECONDS)?.data
+        } catch (e: TimeoutException) {
+            logger.warn("$projectId|$agentId|ask upgrade timeout")
+            null
         } catch (e: Exception) {
             askExceptionDeal(agentId, e)
             null
         }
         val pipelineR = try {
-            pipelineF?.get()?.data
+            pipelineF?.get(AGENT_ASK_TIMEOUT_MS, TimeUnit.MILLISECONDS)?.data
+        } catch (e: TimeoutException) {
+            logger.warn("$projectId|$agentId|ask pipeline timeout")
+            null
         } catch (e: Exception) {
             askExceptionDeal(agentId, e)
             null
         }
         val dockerDebugR = try {
             dockerDebugF?.get()?.data
+        } catch (e: TimeoutException) {
+            logger.warn("$projectId|$agentId|ask dockerDebug timeout")
+            null
         } catch (e: Exception) {
             askExceptionDeal(agentId, e)
             null
@@ -867,5 +884,8 @@ class ThirdPartyAgentService @Autowired constructor(
         private const val AGENT_REPEATED_INSTALL_ALARM = "environment:thirdparty:goagent:repeatedinstall"
 
         private fun String.isIgnoreLocalIp() = this.trim() == "127.0.0.1" || this.trim().startsWith("192.168.")
+
+        // ask 请求超时时间
+        private const val AGENT_ASK_TIMEOUT_MS = 5000L
     }
 }
