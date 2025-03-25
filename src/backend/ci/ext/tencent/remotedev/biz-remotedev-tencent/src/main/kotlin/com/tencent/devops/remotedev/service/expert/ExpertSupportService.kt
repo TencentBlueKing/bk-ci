@@ -604,9 +604,11 @@ class ExpertSupportService @Autowired constructor(
         }
         val workspaceName = workspaceNames.first()
 
+        // 容量的单位是 Gi
+        val size = "${data.size}Gi"
         // 创建磁盘不区分盘符直接
         if (data.op == OpDiskOperator.CREATE) {
-            val result = createDisk(workspaceName, userId, data.size)
+            val result = createDisk(workspaceName, userId, size)
             return OpDiskOperatorDataResp(
                 result = result.result,
                 message = result.message,
@@ -619,17 +621,22 @@ class ExpertSupportService @Autowired constructor(
             userId = userId
         )
         val pvcId = when (data.disk) {
-            OpDiskOperatorDiskType.D ->
-                diskList.firstOrNull { it.pvcClass == CreateDiskDataClass.SDD.data && !it.isSystemVolume }?.pvcName
+            OpDiskOperatorDiskType.D -> {
+                val disk = diskList.getOrNull(1)
+                if (disk?.isSystemVolume == false) {
+                    disk.pvcName
+                } else {
+                    null
+                }
+            }
 
-            OpDiskOperatorDiskType.E ->
-                diskList.firstOrNull { it.pvcClass == CreateDiskDataClass.HDD.data }?.pvcName
+            OpDiskOperatorDiskType.E -> diskList.getOrNull(2)?.pvcName
         } ?: throw ErrorCodeException(
             errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
             params = arrayOf("no find disk ${data.disk} from list $diskList")
         )
 
-        val result = expandDisk(workspaceName, userId, data.size, pvcId)
+        val result = expandDisk(workspaceName, userId, size, pvcId)
 
         return OpDiskOperatorDataResp(
             result?.valid ?: false,

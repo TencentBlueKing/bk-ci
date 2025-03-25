@@ -4,7 +4,7 @@ data class OpDiskOperatorData(
     val ip: String,
     val op: OpDiskOperator,
     val disk: OpDiskOperatorDiskType,
-    val size: String
+    val size: Int
 )
 
 enum class OpDiskOperator {
