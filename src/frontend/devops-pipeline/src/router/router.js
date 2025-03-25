@@ -31,7 +31,7 @@ const pipelinesAudit = () => import(/* webpackChunkName: "pipelinesAudit" */'../
 // 流水线模板
 const TemplateList = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/List/')
 const templateGroup = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/')
-const templateEntry = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/')
+const templateEntry = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/TemplateEntry')
 const TemplateOverview = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/TemplateOverview')
 const templateEdit = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/edit.vue')
 // const templateSetting = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/setting.vue')

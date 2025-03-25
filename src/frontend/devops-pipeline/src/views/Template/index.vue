@@ -10,14 +10,13 @@
         @after-resize="afterResize"
     >
         <TemplateGroupAside slot="aside" />
-        <templateList slot="main" />
+        <router-view slot="main" />
     </bk-resize-layout>
 </template>
 
 <script setup>
     import { onMounted, ref } from 'vue'
     import TemplateGroupAside from './TemplateGroupAside'
-    import templateList from './List/'
     import {
         PIPELINE_ASIDE_PANEL_TOGGLE,
         PIPELINE_GROUP_ASIDE_WIDTH_CACHE
