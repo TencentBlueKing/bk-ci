@@ -33,7 +33,8 @@ export default {
                     GitlabSSH: this.$t('codelib.gitlabUrlPlaceholder'),
                     GitlabHTTP: this.$t('codelib.gitlabUrlPlaceholder'),
                     HTTP: this.$t('codelib.httpUrlPlaceholder'),
-                    HTTPS: this.$t('codelib.httpsUrlPlaceholder')
+                    HTTPS: this.$t('codelib.httpsUrlPlaceholder'),
+                    SSH: this.$t('codelib.gitUrlPlaceholder')
                 },
                 cred: {
                     SVN: this.$t('codelib.svnCredPlaceholder'),
@@ -168,6 +169,8 @@ export default {
             if (this.codelibConfig.label === 'SVN') {
                 payload = `${this.codelibConfig.label}${this.codelib.svnType}`
             }
+            console.log(payload, 'payload')
+            console.log(this.codelib.authType, 'this.codelib.authType')
             return (
                 this.placeholders.url[payload]
                 || this.placeholders.url[this.codelib.authType]
