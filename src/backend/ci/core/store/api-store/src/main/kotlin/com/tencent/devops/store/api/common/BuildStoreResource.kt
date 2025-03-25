@@ -102,6 +102,7 @@ interface BuildStoreResource {
 
     @Operation(summary = "根据组件包一键部署组件")
     @POST
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Path("/deploy")
     fun deployStore(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
