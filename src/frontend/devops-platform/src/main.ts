@@ -10,7 +10,6 @@ import bkui from 'bkui-vue';
 // 全量引入 bkui-vue 样式
 import 'bkui-vue/dist/style.css';
 
-
 const app = createApp(App);
 app.use(router);
 app.use(i18n);

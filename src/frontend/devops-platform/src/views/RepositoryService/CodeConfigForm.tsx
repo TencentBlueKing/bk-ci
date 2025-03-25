@@ -370,6 +370,7 @@ export default defineComponent({
               <p class="h-[44px] text-[14px] font-bold text-[#4D4F56]">{t('高级设置')}</p>
               <bk-form-item
                 property="props.apiUrl"
+                required
                 label={'API URL'}
               >
                   <bk-input
