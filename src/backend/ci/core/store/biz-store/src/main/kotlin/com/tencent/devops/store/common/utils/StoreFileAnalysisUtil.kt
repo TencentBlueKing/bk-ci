@@ -195,7 +195,7 @@ object StoreFileAnalysisUtil {
             "${storeCode}_${storeType.name}"
         ) + "$fileSeparator$uuid"
         if (!File(storePath).exists()) {
-            ZipUtil.unZipFile(file, storePath, false)
+            ZipUtil.unZipFile(file, storePath, true)
         }
 
         return Pair(storePath, file)
