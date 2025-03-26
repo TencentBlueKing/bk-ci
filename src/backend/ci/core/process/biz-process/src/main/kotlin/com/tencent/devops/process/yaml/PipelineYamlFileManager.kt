@@ -322,10 +322,10 @@ class PipelineYamlFileManager @Autowired constructor(
             return try {
                 lock.lock()
                 val defaultBranch = serverRepository.defaultBranch
-                val ref = if (targetAction == CodeTargetAction.COMMIT_TO_MASTER) {
-                    defaultBranch
-                } else {
-                    versionName!!
+                val ref = when {
+                    targetAction == CodeTargetAction.COMMIT_TO_MASTER -> defaultBranch
+                    targetAction == CodeTargetAction.COMMIT_TO_BRANCH && targetBranch == defaultBranch -> defaultBranch
+                    else -> versionName!!
                 }
                 // 推送文件
                 val filePushResult = client.get(ServiceScmFileApiResource::class).pushFile(

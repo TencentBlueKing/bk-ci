@@ -111,7 +111,7 @@ class WebhookGrayCompareService @Autowired constructor(
             // 新比旧多的流水线
             val add = newPipelineAndParams.keys.minus(oldPipelineAndParams.keys)
             logger.warn(
-                "compare webhook|the number of pipelines differs|" +
+                "compare webhook exception|the number of pipelines differs|" +
                         "scmType: $scmType|repoName: ${matcher.getRepoName()}|miss:$miss|add:$add"
             )
             return false
@@ -122,7 +122,7 @@ class WebhookGrayCompareService @Autowired constructor(
             // 新比旧多的流水线
             val add = newPipelineAndParams.keys.minus(oldPipelineAndParams.keys)
             logger.warn(
-                "compare webhook|old not contains all new|" +
+                "compare webhook exception|old not contains all new|" +
                         "scmType: $scmType|repoName: ${matcher.getRepoName()}|miss:$miss|add:$add",
             )
             return false
@@ -133,7 +133,7 @@ class WebhookGrayCompareService @Autowired constructor(
             // 新比旧多的流水线
             val add = newPipelineAndParams.keys.minus(oldPipelineAndParams.keys)
             logger.warn(
-                "compare webhook|new not contains all old|" +
+                "compare webhook exception|new not contains all old|" +
                         "scmType: $scmType|repoName: ${matcher.getRepoName()}|miss:$miss|add:$add"
             )
             return false
@@ -171,14 +171,14 @@ class WebhookGrayCompareService @Autowired constructor(
         }
         if (newMissVar.isNotEmpty()) {
             logger.warn(
-                "compare webhook|new miss var|" +
+                "compare webhook exception|new miss var|" +
                         "scmType: $scmType|repoName: ${matcher.getRepoName()}|newMissVar:$newMissVar",
             )
             return
         }
         if (diffValueKeys.isNotEmpty()) {
             logger.warn(
-                "compare webhook|var value diff|" +
+                "compare webhook exception|var value diff|" +
                         "scmType: $scmType|repoName: ${matcher.getRepoName()}|diffValueKeys:$diffValueKeys",
             )
             return
