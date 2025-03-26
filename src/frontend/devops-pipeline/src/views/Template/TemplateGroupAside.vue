@@ -5,14 +5,14 @@
             :key="idx"
         >
             <div
-                :class="['nav-item', { active: isActive(item.viewId) }]"
+                :class="['nav-item', { active: item.isActive }]"
                 @click="handleChangeMenu(item.viewId)"
             >
                 <div>
                     <Logo
                         :class="item.icon"
                         size="16"
-                        :name="isActive(item.viewId) ? item.activeIcon : item.icon"
+                        :name="item.isActive ? item.activeIcon : item.icon"
                     />
                     <span>{{ $t(item.i18nKey) }}</span>
                 </div>
@@ -27,7 +27,7 @@
 </template>
 
 <script setup name='TemplateGroupAside'>
-    import { ref, computed, onMounted, defineExpose } from 'vue'
+    import { ref, computed, onMounted } from 'vue'
     import UseInstance from '@/hook/useInstance'
     import Logo from '@/components/Logo'
     import {
@@ -40,49 +40,54 @@
     } from '@/store/modules/templates/constants'
 
     const { proxy } = UseInstance()
-    const navList = ref([
-        {
-            viewId: ALL_TEMPLATE_VIEW_ID,
-            i18nKey: ALL_TEMPLATE_VIEW_ID,
-            icon: 'template-all',
-            activeIcon: 'group',
-            countKey: 'all'
-        },
-        {
-            viewId: PIPELINE_TEMPLATE_VIEW_ID,
-            i18nKey: PIPELINE_TEMPLATE_VIEW_ID,
-            icon: 'template-pipeline',
-            activeIcon: 'pipeline-template',
-            countKey: 'PIPELINE'
-        }
-        // {
-        //     viewId: STAGE_TEMPLATE_VIEW_ID,
-        //     i18nKey: STAGE_TEMPLATE_VIEW_ID,
-        //     icon: 'template-stage',
-        //     activeIcon: 'stage-template',
-        //     countKey: 'STAGE'
-        // },
-        // {
-        //     viewId: JOB_TEMPLATE_VIEW_ID,
-        //     i18nKey: JOB_TEMPLATE_VIEW_ID,
-        //     icon: 'template-job',
-        //     activeIcon: 'job-template',
-        //     countKey: 'JOB'
-        // },
-        // {
-        //     viewId: STEP_TEMPLATE_VIEW_ID,
-        //     i18nKey: STEP_TEMPLATE_VIEW_ID,
-        //     icon: 'template-step',
-        //     activeIcon: 'step-template',
-        //     countKey: 'STEP'
-        // }
-    ])
+    const navList = computed(() => {
+        const list = [
+            {
+                viewId: ALL_TEMPLATE_VIEW_ID,
+                i18nKey: ALL_TEMPLATE_VIEW_ID,
+                icon: 'template-all',
+                activeIcon: 'group',
+                countKey: 'all'
+            },
+            {
+                viewId: PIPELINE_TEMPLATE_VIEW_ID,
+                i18nKey: PIPELINE_TEMPLATE_VIEW_ID,
+                icon: 'template-pipeline',
+                activeIcon: 'pipeline-template',
+                countKey: 'PIPELINE'
+            }
+            // {
+            //     viewId: STAGE_TEMPLATE_VIEW_ID,
+            //     i18nKey: STAGE_TEMPLATE_VIEW_ID,
+            //     icon: 'template-stage',
+            //     activeIcon: 'stage-template',
+            //     countKey: 'STAGE'
+            // },
+            // {
+            //     viewId: JOB_TEMPLATE_VIEW_ID,
+            //     i18nKey: JOB_TEMPLATE_VIEW_ID,
+            //     icon: 'template-job',
+            //     activeIcon: 'job-template',
+            //     countKey: 'JOB'
+            // },
+            // {
+            //     viewId: STEP_TEMPLATE_VIEW_ID,
+            //     i18nKey: STEP_TEMPLATE_VIEW_ID,
+            //     icon: 'template-step',
+            //     activeIcon: 'step-template',
+            //     countKey: 'STEP'
+            // }
+        ]
+        return list.map(i => {
+            return {
+                ...i,
+                isActive: currentViewId.value === i.viewId
+            }
+        })
+    })
     const countMap = ref({})
     const projectId = computed(() => proxy.$route.params.projectId)
     const currentViewId = computed(() => proxy.$route.params.viewId || localStorage.getItem(TEMPLATE_VIEW_ID_CACHE) || ALL_TEMPLATE_VIEW_ID)
-    function isActive (viewId) {
-        return currentViewId.value === viewId
-    }
     async function getType2Count () {
         try {
             countMap.value = await proxy.$store.dispatch('templates/getType2Count', {
@@ -101,9 +106,6 @@
             }
         })
     }
-    defineExpose({
-        isActive
-    })
     onMounted(() => {
         getType2Count()
     })
