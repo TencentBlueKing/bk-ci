@@ -53,10 +53,10 @@
             :width="tableWidthMap.type"
             :label="$t('template.type')"
             prop="type"
-            :filters="sourceFilters"
-            :filter-method="sourceFilterMethod"
-            :filter-multiple="false"
         >
+            <!-- :filters="sourceFilters"
+            :filter-method="sourceFilterMethod"
+            :filter-multiple="false" -->
             <template slot-scope="{ row }">
                 <span>{{ TEMPLATE_TYPE[row.type] || '--' }}</span>
             </template>
@@ -150,7 +150,7 @@
                 class="template-operate"
             >
                 <span
-                    @click="toInstanceList(row)"
+                    @click="goTemplateOverview(row, 'instanceList')"
                     :class="['action', row.canEdit ? 'create-permission' : 'not-create-permission']"
                 >
                     <span v-if="row.type === 'PIPELINE'">
@@ -222,10 +222,10 @@
     const selectedTableColumn = ref([])
     const tableWidthMap = ref({})
 
-    const sourceFilters = computed(() => ['PIPELINE', 'STAGE', 'JOB', 'STEP'].map(type => ({
-        text: i18n.t(TEMPLATE_TRANSLATIONS[type]),
-        value: type
-    })))
+    // const sourceFilters = computed(() => ['PIPELINE', 'STAGE', 'JOB', 'STEP'].map(type => ({
+    //     text: i18n.t(TEMPLATE_TRANSLATIONS[type]),
+    //     value: type
+    // })))
     const TEMPLATE_TYPE = computed(() => {
         const types = {}
         Object.keys(TEMPLATE_TRANSLATIONS).forEach(type => {
@@ -351,10 +351,10 @@
         tableWidthMap.value[column.property] = newWidth
         localStorage.setItem(CACHE_TEMPLATE_TABLE_WIDTH_MAP, JSON.stringify(tableWidthMap.value))
     }
-    function sourceFilterMethod (value, row, column) {
-        const property = column.property
-        return row[property] === value
-    }
+    // function sourceFilterMethod (value, row, column) {
+    //     const property = column.property
+    //     return row[property] === value
+    // }
 </script>
 
 <style lang="scss">

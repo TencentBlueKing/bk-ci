@@ -40,6 +40,9 @@
     } from '@/store/modules/templates/constants'
 
     const { proxy } = UseInstance()
+    const countMap = ref({})
+    const projectId = computed(() => proxy.$route.params.projectId)
+    const currentViewId = computed(() => proxy.$route.params.viewId || localStorage.getItem(TEMPLATE_VIEW_ID_CACHE) || ALL_TEMPLATE_VIEW_ID)
     const navList = computed(() => {
         const list = [
             {
@@ -47,7 +50,7 @@
                 i18nKey: ALL_TEMPLATE_VIEW_ID,
                 icon: 'template-all',
                 activeIcon: 'group',
-                countKey: 'all'
+                countKey: 'ALL'
             },
             {
                 viewId: PIPELINE_TEMPLATE_VIEW_ID,
@@ -85,9 +88,6 @@
             }
         })
     })
-    const countMap = ref({})
-    const projectId = computed(() => proxy.$route.params.projectId)
-    const currentViewId = computed(() => proxy.$route.params.viewId || localStorage.getItem(TEMPLATE_VIEW_ID_CACHE) || ALL_TEMPLATE_VIEW_ID)
     async function getType2Count () {
         try {
             countMap.value = await proxy.$store.dispatch('templates/getType2Count', {
