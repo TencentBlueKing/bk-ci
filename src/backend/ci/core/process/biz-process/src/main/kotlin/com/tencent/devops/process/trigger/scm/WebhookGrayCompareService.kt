@@ -35,6 +35,8 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_PAC_REPO_HASH_ID
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
@@ -152,7 +154,8 @@ class WebhookGrayCompareService @Autowired constructor(
         val diffValueKeys = mutableSetOf<String>()
         oldPipelineAndParams.forEach { (pipelineId, oldParams) ->
             val newParams = newPipelineAndParams[pipelineId] ?: return@forEach
-            oldParams.forEach eachParam@{ (key, value) ->
+            // 部分字段存在时效性，无需对比
+            oldParams.filter { !IGNORED_PARAM_KEYS.contains(it.key) }.forEach eachParam@{ (key, value) ->
                 val oldValue = value?.toString() ?: ""
                 // 旧值为空字符串, 新值不存在, 直接忽略
                 if (oldValue.isBlank() && !newParams.containsKey(key)) {
@@ -251,6 +254,7 @@ class WebhookGrayCompareService @Autowired constructor(
             }
 
             val matchResult = matcher.isMatch(projectId, pipelineId, repo, webHookParams)
+            logger.info("compare webhook|pipelineId: $pipelineId|matchResult: $matchResult")
             if (matchResult.isMatch) {
                 val params = WebhookStartParamsRegistrar.getService(element).getStartParams(
                     projectId = projectId,
@@ -360,5 +364,10 @@ class WebhookGrayCompareService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(WebhookGrayCompareService::class.java)
+        // 忽略的参数名
+        private val IGNORED_PARAM_KEYS = listOf(
+            BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME,
+            BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP
+        )
     }
 }

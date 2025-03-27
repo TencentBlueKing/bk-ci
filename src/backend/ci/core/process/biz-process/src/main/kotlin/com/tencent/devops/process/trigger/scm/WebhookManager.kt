@@ -70,6 +70,10 @@ class WebhookManager @Autowired constructor(
                         body = request.body
                     )
                 ).data ?: return
+                if (webhookData.webhook.skip()) {
+                    logger.info("skip this webhook request|scmCode:$scmCode|webhookData:$webhookData")
+                    return
+                }
                 handleWebhookData(
                     requestId = requestId,
                     scmCode = scmCode,

@@ -9,6 +9,10 @@ import com.tencent.devops.common.webhook.util.WebhookUtils.convert
  * 动作过滤条件
  */
 class ActionCondition(private val filterType: ActionFilterType) : WebhookCondition {
+    companion object {
+        private const val EMPTY_ACTION = "empty-action"
+    }
+
     override fun match(context: WebhookConditionContext): Boolean {
         with(context.webhookParams) {
             val messageCode = when (filterType) {
@@ -19,18 +23,17 @@ class ActionCondition(private val filterType: ActionFilterType) : WebhookConditi
                 ActionFilterType.REVIEW -> WebhookI18nConstants.REVIEW_ACTION_NOT_MATCH
             }
             val includedAction = when (filterType) {
-                ActionFilterType.PUSH -> convert(includePushAction).ifEmpty {
-                    listOf("empty-action")
-                }
+                ActionFilterType.PUSH -> convert(includePushAction)
 
-                ActionFilterType.PULL_REQUEST -> convert(includeMrAction).ifEmpty {
-                    listOf("empty-action")
-                }
+                ActionFilterType.PULL_REQUEST -> convert(includeMrAction)
 
                 ActionFilterType.ISSUE -> convert(includeIssueAction)
 
                 ActionFilterType.Note -> convert(includeNoteTypes)
+
                 ActionFilterType.REVIEW -> convert(includeCrState)
+            }.ifEmpty {
+                listOf(EMPTY_ACTION)
             }
             val triggerOnAction = context.factParam.action
             val actionFilter = ContainsFilter(
