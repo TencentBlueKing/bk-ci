@@ -65,22 +65,31 @@ import java.io.InputStream
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.util.FileSystemUtils
 
-@Service
-abstract class StorePackageDeployService(
-    private val dslContext: DSLContext,
-    private val storeReleaseService: StoreReleaseService,
-    private val storeBaseQueryDao: StoreBaseQueryDao,
-    private val storeLogoService: StoreLogoService,
-    private val storeFileService: StoreFileService,
-    private val client: Client,
-    private val labelDao: LabelDao,
-    private val categoryDao: CategoryDao,
-    private val classifyDao: ClassifyDao
-) {
+abstract class StorePackageDeployService {
     private val logger = LoggerFactory.getLogger(StorePackageDeployService::class.java)
+
+
+    @Autowired
+    lateinit var dslContext: DSLContext
+    @Autowired
+    lateinit var storeReleaseService: StoreReleaseService
+    @Autowired
+    lateinit var storeBaseQueryDao: StoreBaseQueryDao
+    @Autowired
+    lateinit var storeLogoService: StoreLogoService
+    @Autowired
+    lateinit var storeFileService: StoreFileService
+    @Autowired
+    lateinit var client: Client
+    @Autowired
+    lateinit var labelDao: LabelDao
+    @Autowired
+    lateinit var categoryDao: CategoryDao
+    @Autowired
+    lateinit var classifyDao: ClassifyDao
 
     /**
      * 一键发布组件
@@ -139,7 +148,7 @@ abstract class StorePackageDeployService(
                 storeDirPath = storeDirPath,
                 bkConfigMap = bkConfigMap
             )
-            storeReleaseService.updateComponent(userId, getStoreUpdateReques(storeCode, storeType, bkConfigMap))?.let {
+            storeReleaseService.updateComponent(userId, getStoreUpdateRequest(storeCode, storeType, bkConfigMap))?.let {
                 bkConfigMap[KEY_STORE_ID] = it.storeId
             }
             return bkConfigMap[KEY_STORE_ID] as? String
@@ -194,7 +203,7 @@ abstract class StorePackageDeployService(
     }
 
 
-    fun getStoreCreateRequest(
+    private fun getStoreCreateRequest(
         storeCode: String,
         storeType: StoreTypeEnum,
         bkConfigMap: Map<String, Any>
@@ -221,7 +230,7 @@ abstract class StorePackageDeployService(
         bkConfigMap: MutableMap<String, Any>
     ) {
         val storeReleaseInfo = bkConfigMap[KEY_RELEASE_INFO] as StoreReleaseInfo
-        var logoUrl = storeReleaseInfo.baseInfo.logoUrl
+        val logoUrl = storeReleaseInfo.baseInfo.logoUrl
         logoUrl?.let {
             storeReleaseInfo.baseInfo.logoUrl = logoUrlAnalysis(userId, storeDirPath, logoUrl)
         }
@@ -286,7 +295,7 @@ abstract class StorePackageDeployService(
         return url
     }
 
-    fun getStoreUpdateReques(
+    private fun getStoreUpdateRequest(
         storeCode: String,
         storeType: StoreTypeEnum,
         bkConfigMap: Map<String, Any>
