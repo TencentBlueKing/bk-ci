@@ -92,13 +92,15 @@ class BuildStoreResourceImpl @Autowired constructor(
         storeType: StoreTypeEnum,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
-    ) {
-        storePackageDeployService.deployStore(
-            userId = userId,
-            storeCode = storeCode,
-            storeType = storeType,
-            inputStream = inputStream,
-            disposition = disposition,
+    ): Result<String?> {
+        return Result(
+            storePackageDeployService.deployStore(
+                userId = userId,
+                storeCode = storeCode,
+                storeType = storeType,
+                inputStream = inputStream,
+                disposition = disposition,
+            )
         )
     }
 }

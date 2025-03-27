@@ -119,5 +119,5 @@ interface BuildStoreResource {
         inputStream: InputStream,
         @FormDataParam("file")
         disposition: FormDataContentDisposition
-    )
+    ): Result<String?>
 }

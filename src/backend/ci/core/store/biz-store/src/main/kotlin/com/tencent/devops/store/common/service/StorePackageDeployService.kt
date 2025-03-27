@@ -50,6 +50,7 @@ import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_CODE
 import com.tencent.devops.store.pojo.common.KEY_DEFAULT_FLAG
 import com.tencent.devops.store.pojo.common.KEY_PACKAGE_PATH
 import com.tencent.devops.store.pojo.common.KEY_RELEASE_INFO
+import com.tencent.devops.store.pojo.common.KEY_STORE_ID
 import com.tencent.devops.store.pojo.common.KEY_STORE_PACKAGE_FILE
 import com.tencent.devops.store.pojo.common.StoreReleaseBaseInfo
 import com.tencent.devops.store.pojo.common.StoreReleaseInfo
@@ -58,7 +59,6 @@ import com.tencent.devops.store.pojo.common.publication.StoreBaseCreateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreBaseUpdateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreCreateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
-import com.tencent.devops.store.pojo.common.publication.StoreUpdateResponse
 import com.tencent.devops.store.pojo.common.version.VersionModel
 import java.io.File
 import java.io.InputStream
@@ -69,7 +69,7 @@ import org.springframework.stereotype.Service
 import org.springframework.util.FileSystemUtils
 
 @Service
-class StorePackageDeployService(
+abstract class StorePackageDeployService(
     private val dslContext: DSLContext,
     private val storeReleaseService: StoreReleaseService,
     private val storeBaseQueryDao: StoreBaseQueryDao,
@@ -92,7 +92,7 @@ class StorePackageDeployService(
         storeType: StoreTypeEnum,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
-    ): StoreUpdateResponse? {
+    ): String? {
         val (storeDirPath, storePackageFile) = StoreFileAnalysisUtil.extractStorePackage(
             storeCode = storeCode,
             storeType = storeType,
@@ -112,7 +112,12 @@ class StorePackageDeployService(
                 storeBaseQueryDao.countByCondition(dslContext = dslContext, storeType = storeType, storeCode = storeCode)
             val firstPublisherFlag = codeCount == 0
             if (firstPublisherFlag) {
-                storeReleaseService.createComponent(userId, getStoreCreateRequest(storeCode, storeType, bkConfigMap))
+                storeReleaseService.createComponent(
+                    userId = userId,
+                    storeCreateRequest = getStoreCreateRequest(storeCode, storeType, bkConfigMap)
+                )?.let {
+                    bkConfigMap[KEY_STORE_ID] = it.storeId
+                }
             }
             bkConfigMap[BK_STORE_FIRST_PUBLISHER_FLAG] = firstPublisherFlag
             // 检查bk-config.yml配置
@@ -134,7 +139,10 @@ class StorePackageDeployService(
                 storeDirPath = storeDirPath,
                 bkConfigMap = bkConfigMap
             )
-            return storeReleaseService.updateComponent(userId, getStoreUpdateReques(storeCode, storeType, bkConfigMap))
+            storeReleaseService.updateComponent(userId, getStoreUpdateReques(storeCode, storeType, bkConfigMap))?.let {
+                bkConfigMap[KEY_STORE_ID] = it.storeId
+            }
+            return bkConfigMap[KEY_STORE_ID] as? String
         } finally {
             storePackageFile.delete()
             FileSystemUtils.deleteRecursively(File(storeDirPath).parentFile)
@@ -165,12 +173,17 @@ class StorePackageDeployService(
             if(firstPublisherFlag && storeReleaseInfo?.baseInfo != null) {
                 voidFields.addAll(validateBaseInfo(storeReleaseInfo.baseInfo))
             }
+            storeReleaseInfo?.baseInfo?.let {
+                voidFields.addAll(checkStoreReleaseExtInfo(storeReleaseInfo))
+            }
         } catch (ignored: Throwable) {
             logger.warn("checkBkConfig $KEY_RELEASE_INFO parse failed", ignored)
             voidFields.add(KEY_RELEASE_INFO)
         }
         return voidFields
     }
+
+    abstract fun checkStoreReleaseExtInfo(storeReleaseInfo: StoreReleaseInfo): List<String>
 
     private fun validateBaseInfo(baseInfo: StoreReleaseBaseInfo): List<String> {
         return listOfNotNull(

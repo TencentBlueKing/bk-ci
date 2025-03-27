@@ -191,7 +191,7 @@ object StoreFileAnalysisUtil {
         }
 
         // 解压到目标路径
-        val storePath = StoreFileAnalysisUtil.buildStoreArchivePath(
+        val storePath = buildStoreArchivePath(
             "${storeCode}_${storeType.name}"
         ) + "$fileSeparator$uuid"
         if (!File(storePath).exists()) {
