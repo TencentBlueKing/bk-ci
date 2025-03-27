@@ -2705,16 +2705,23 @@ class PipelineBuildFacadeService(
             )
         )
         val buildInfo = checkPipelineInfo(projectId, pipelineId, buildId)
+        val buildVars = buildVariableService.getAllVariable(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            keys = setOf(PIPELINE_START_TASK_ID)
+        )
         // 按原有的启动参数组装启动参数(排除重试次数)
         val startParameters = buildInfo.buildParameters?.filter {
             it.key != PIPELINE_RETRY_COUNT
         }?.associate {
             it.key to it.value.toString()
         }?.toMutableMap() ?: mutableMapOf()
+        startParameters.putAll(buildVars)
         val startType = StartType.toStartType(buildInfo.trigger)
         // 定时触发不存在调试的情况
         val (readyToBuildPipelineInfo, resource, _) = pipelineRepositoryService.getBuildTriggerInfo(
-            projectId, pipelineId, null
+            projectId, pipelineId, buildInfo.version
         )
         if (readyToBuildPipelineInfo.locked == true) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
