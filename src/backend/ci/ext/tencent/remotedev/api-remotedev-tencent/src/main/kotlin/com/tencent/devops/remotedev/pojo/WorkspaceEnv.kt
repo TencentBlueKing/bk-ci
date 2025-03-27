@@ -44,5 +44,7 @@ data class WorkspaceEnv(
     @get:Schema(title = "正在使用节点数量", required = true)
     val inUseNodeCount: Int,
     @get:Schema(title = "节点hash id", required = false)
-    val nodeHashIds: List<String>? = null
+    val nodeHashIds: List<String>? = null,
+    @get:Schema(title = "当前登陆人", required = false)
+    val currentLoginUsers: List<String> = emptyList()
 )
