@@ -120,8 +120,11 @@ abstract class StorePackageDeployService {
                 )
             }
             bkConfigMap[KEY_STORE_PACKAGE_FILE] = storePackageFile
-            val codeCount =
-                storeBaseQueryDao.countByCondition(dslContext = dslContext, storeType = storeType, storeCode = storeCode)
+            val codeCount = storeBaseQueryDao.countByCondition(
+                dslContext = dslContext,
+                storeType = storeType,
+                storeCode = storeCode
+            )
             val firstPublisherFlag = codeCount == 0
             if (firstPublisherFlag) {
                 storeReleaseService.createComponent(
@@ -129,6 +132,15 @@ abstract class StorePackageDeployService {
                     storeCreateRequest = getStoreCreateRequest(storeCode, storeType, bkConfigMap)
                 )?.let {
                     bkConfigMap[KEY_STORE_ID] = it.storeId
+                }
+            } else {
+                val record = storeBaseQueryDao.getLatestComponentByCode(dslContext, storeCode, storeType)
+                if ((record != null)
+                    && (listOf(StoreStatusEnum.INIT.name, StoreStatusEnum.RELEASED.name).contains(record.status))) {
+                    throw ErrorCodeException(
+                        errorCode = STORE_VERSION_IS_NOT_FINISH,
+                        params = arrayOf(record.storeCode, record.version)
+                    )
                 }
             }
             bkConfigMap[BK_STORE_FIRST_PUBLISHER_FLAG] = firstPublisherFlag
@@ -162,16 +174,6 @@ abstract class StorePackageDeployService {
     }
 
     private fun checkBkConfig(bkConfigMap: MutableMap<String, Any>): List<String> {
-        val storeId = bkConfigMap[KEY_STORE_ID] as? String
-        storeId?.let {
-            val record = storeBaseQueryDao.getComponentById(dslContext, it)
-            if (record != null && record.status != StoreStatusEnum.INIT.name) {
-                throw ErrorCodeException(
-                    errorCode = STORE_VERSION_IS_NOT_FINISH,
-                    params = arrayOf(record.storeCode, record.version)
-                )
-            }
-        }
         val osInfoList = bkConfigMap[KEY_OS] as? List<Map<String, Any>>
         val voidFields = mutableListOf<String>()
         if (osInfoList.isNullOrEmpty()) {
