@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v3.2.0-rc.4](#v320-rc4)
+   - [Changelog since v3.2.0-rc.3](#changelog-since-v320-rc3)
+
 - [v3.2.0-rc.3](#v320-rc3)
    - [Changelog since v3.2.0-rc.2](#changelog-since-v320-rc2)
 
@@ -13,6 +16,56 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v3.2.0-rc.4
+## 2025-03-27
+### Changelog since v3.2.0-rc.3
+#### 新增
+
+##### 流水线
+- [新增] feat：开启了 PAC 的流水线支持UI编辑分支版本以及手动执行分支版本 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11506)
+
+##### 研发商店
+- [新增] feat：研发商店组件上架支持自定义版本号 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11545)
+- [新增] feat:OP后台访问镜像管理组件信息，去掉权限校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11362)
+
+##### 环境管理
+- [新增] feat：环境-节点管理列表支持按照状态等字段搜索 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11445)
+
+##### 权限中心
+- [新增] feat：支持用户主动退出项目 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11319)
+
+##### 调度
+- [新增] feat: 优化Agent超时导致的任务无法正常启动 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11546)
+
+##### 未分类
+- [新增] pnpm 10 不兼容问题 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11560)
+
+#### 优化
+
+##### 项目管理
+- [优化] pref:完善获取服务跳转地址权限校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11567)
+- [优化] pref: 蓝盾服务首页支持定制化跳转 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11510)
+
+##### 未分类
+- [优化] chore: 升级github action cache 版本到v4 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11566)
+- [优化] Readme 错别字修正 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11531)
+
+#### 修复
+
+##### 流水线
+- [修复] bug: 模板实例化的流水线审核记录状态不正确 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11527)
+- [修复] bug: webhook触发指定流水线版本号异常 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11535)
+- [修复] bug: 子流水线循环检查时，解析子流水线参数时，项目ID可能为空字符串 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11528)
+
+##### 研发商店
+- [修复] bug:研发商店组件审核发布时录入T_STORE_RELEASE表的首次发布人有误 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11366)
+
+##### 环境管理
+- [修复] bug: 导入构建机时listNew接口会因构建机过多而报错 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11553)
+
+##### 未分类
+- [修复] bug: MutableSet.toList()需线程安全 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11548)
+
 # v3.2.0-rc.3
 ## 2025-03-07
 ### Changelog since v3.2.0-rc.2
