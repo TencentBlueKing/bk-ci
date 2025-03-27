@@ -22,7 +22,8 @@
                             :key="idx"
                         >
                             <p
-                                :class="[currentSearchTab === item.countKey ? 'active' : '']"
+                                :class="[currentMode === item.countKey ? 'active' : '']"
+                                v-bk-overflow-tips="{ content: `${$t(item.i18nKey)}${countMap[item.countKey] ?? 0}` }"
                                 @click="handleChangeSearchTab(item.countKey)"
                             >
                                 <Logo
@@ -31,7 +32,7 @@
                                     :name="item.icon"
                                 />
                                 <span>{{ $t(item.i18nKey) }}</span>
-                                <!-- <span class="nav-num">{{ countMap[item.countKey] ?? 0 }}</span> -->
+                                <span class="nav-num">({{ countMap[item.countKey] ?? 0 }})</span>
                             </p>
                         </li>
                     </ul>
@@ -195,29 +196,39 @@
             id: 'updater'
         }
     ])
-    // const countMap = ref({})
-    const currentSearchTab = ref('ALL')
+    const countMap = ref({})
+    const currentMode = ref('all')
     const searchTab = ref([
         {
             i18nKey: ALL_SOURCE,
             icon: 'template-application',
-            countKey: 'ALL'
+            countKey: 'all'
         },
         {
             i18nKey: CUSTOM_SOURCE,
             icon: 'template-view',
-            countKey: 'CUSTOM'
+            countKey: 'custom'
         },
         {
             i18nKey: MARKET_SOURCE,
             icon: 'template-view',
-            countKey: 'MARKET'
+            countKey: 'market'
         }
     ])
+    const modeMap = {
+        all: 'ALL',
+        custom: 'CUSTOMIZE',
+        market: 'CONSTRAINT'
+    }
     const projectId = computed(() => proxy.$route.params.projectId)
     const templateViewId = computed(() => {
         return proxy.$route.params.viewId
     })
+    const searchParams = computed(() => searchValue.value.reduce((acc, filter) => {
+        acc[filter.id] = filter.values.map(val => val.id).join(',')
+        return acc
+    }, {}))
+
     watch(() => searchValue.value, () => {
         fetchTableData()
     })
@@ -225,14 +236,47 @@
         searchValue.value = []
     })
     onMounted(() => {
-        fetchTableData()
+        searchValue.value = echoQueryParameters()
         hasPipelineTemplatePermission()
     })
 
-    // function sourceFilterMethod (value, row, column) {
-    //     const property = column.property
-    //     return row[property] === value
-    // }
+    async function fetchTypeCount () {
+        try {
+            const postData = {
+                projectId: projectId.value,
+                ...searchParams.value
+            }
+            const res = await proxy.$store.dispatch('templates/getSourceCount', postData)
+            countMap.value = res
+        } catch (error) {
+            console.log('error', error)
+        }
+    }
+
+    function echoQueryParameters () {
+        const { mode, ...restQuery } = proxy.$route.query
+        currentMode.value = mode || 'all'
+        const result = []
+        if (restQuery) {
+            for (const [key, value] of Object.entries(restQuery)) {
+                const filterItem = filterData.value.find(item => item.id === key)
+                if (filterItem) {
+                    result.push({
+                        id: key,
+                        name: filterItem.name,
+                        values: [
+                            {
+                                id: value,
+                                name: value
+                            }
+                        ]
+                    })
+                }
+            }
+            return result
+        }
+    }
+
     async function hasPipelineTemplatePermission () {
         try {
             hasCreatePermission.value = await proxy.$store.dispatch('templates/hasPipelineTemplatePermission', {
@@ -244,16 +288,24 @@
         }
     }
             
-    async function fetchTableData (params = {}) {
+    async function fetchTableData () {
         isLoading.value = true
         try {
             const param = {
                 projectId: projectId.value,
                 page: pagination.value.current,
                 pageSize: pagination.value.limit,
+                ...(currentMode.value !== 'all' && { mode: modeMap[currentMode.value] }),
                 ...(templateViewId.value !== ALL_TEMPLATE_VIEW_ID && { type: TEMPLATE_VIEW_ID_MAP[templateViewId.value] }),
-                ...params
+                ...searchParams.value
             }
+            proxy.$router.replace({
+                query: {
+                    mode: currentMode.value,
+                    ...searchParams.value
+                }
+            })
+            fetchTypeCount()
             const res = await proxy.$store.dispatch('templates/getTemplateList', param)
             tableData.value = (res.records || []).map(x => {
                 x.updateTime = dayjs(x.updateTime).format('YYYY-MM-DD HH:mm:ss')
@@ -276,7 +328,7 @@
                         handler: toRelativeStore,
                         hasPermission: x.canEdit,
                         disablePermissionApi: true,
-                        isShow: x.source === 'MARKET',
+                        isShow: x.mode === 'CUSTOMIZE',
                         permissionData: {
                             projectId: projectId.value,
                             resourceType: 'pipeline_template',
@@ -289,7 +341,7 @@
                         handler: convertToCustom,
                         hasPermission: x.canEdit,
                         disablePermissionApi: true,
-                        isShow: x.source === 'CUSTOM',
+                        isShow: x.source === 'MARKET',
                         permissionData: {
                             projectId: projectId.value,
                             resourceType: 'pipeline_template',
@@ -299,7 +351,7 @@
                     },
                     {
                         text: i18n.t('template.export'), // 导出
-                        // handler: toRelativeStore,
+                        handler: exportTemplate,
                         hasPermission: x.canEdit,
                         disablePermissionApi: true,
                         isShow: true,
@@ -351,21 +403,11 @@
         showInstallTemplateDialog.value = true
     }
     function handleChangeSearchTab (key) {
-        currentSearchTab.value = key
-        // fetchTableData({currentSearchTab: key})
+        currentMode.value = key
+        fetchTableData()
     }
-    // function formatValue (originVal) {
-    //     return originVal.reduce((acc, filter) => {
-    //         acc[filter.id] = filter.values.map(val => val.id).join(',')
-    //         return acc
-    //     }, {})
-    // }
     function handleSearchChange (value) {
-        const formatVal = value.reduce((acc, filter) => {
-            acc[filter.id] = filter.values.map(val => val.id).join(',')
-            return acc
-        }, {})
-        fetchTableData(formatVal)
+        searchValue.value = value
     }
     function handleClear () {
         searchValue.value = []
@@ -476,6 +518,38 @@
             isLoading.value = false
         }
     }
+    /**
+     * 导出模板
+     * @param row
+     */
+    async function exportTemplate (row) {
+        try {
+            const params = {
+                projectId: projectId.value,
+                templateId: row.id
+            }
+            const res = await proxy.$store.dispatch('templates/exportYamlTemplate', params, {
+                responseType: 'blob'
+            })
+            const blob = new Blob([res], { type: 'application/x-yaml' })
+            const url = window.URL || window.webkitURL || window.moxURL
+
+            const a = document.createElement('a')
+            a.href = url.createObjectURL(blob)
+            a.download = `${row.name}.yaml`
+            a.click()
+            window.URL.revokeObjectURL(url)
+        } catch (error) {
+            bkMessage({
+                message: error.message || error,
+                theme: 'error'
+            })
+        }
+    }
+    /**
+     * 复制模板
+     * @param row
+     */
     async function copyConfirmHandler (row) {
         const valid = await validator.validate()
         if (!valid) return
@@ -493,19 +567,24 @@
                 name: copyTemp.value.templateName
             }
         }
-        proxy.$store.dispatch('templates/templateCopy', postData).then((templateId) => {
+        try {
+            const res = await proxy.$store.dispatch('templates/templateCopy', postData)
             copyCancelHandler()
             bkMessage({ message: i18n.t('template.copySuc'), theme: 'success' })
-            // router.push({
-            //     name: 'templateEdit',
-            //     params: { templateId }
-            // })
-        }).catch((err) => {
-            const message = err.message || err
+            proxy.$router.push({
+                name: 'TemplateOverview',
+                params: {
+                    templateId: res.templateId,
+                    version: res.version,
+                    type: 'instanceList'
+                }
+            })
+        } catch (error) {
+            const message = error.message || error
             bkMessage({ message, theme: 'error' })
-        }).finally(() => {
+        } finally {
             isLoading.value = false
-        })
+        }
     }
     function copyCancelHandler () {
         copyTemp.value.isShow = false
@@ -544,45 +623,58 @@
                 display: flex;
             }
 
-            .search-tab {
-                display: inline-flex;
-                padding: 4px;
-                margin-left: 8px;
-                background: #EAEBF0;
-                height: 32px;
-                border-radius: 2px;
+            .search-group {
+                display: flex;
 
-                li{
-                    width: 90px;
-                    height: 24px;
-                    line-height: 24px;
-                    font-size: 12px;
-                    color: #4D4F56;
-                    text-align: center;
+                .search-tab {
+                    display: flex;
+                    padding: 4px;
+                    margin-left: 8px;
+                    background: #EAEBF0;
+                    height: 32px;
                     border-radius: 2px;
-                    cursor: pointer;
+    
+                    li{
+                        height: 24px;
+                        line-height: 24px;
+                        font-size: 12px;
+                        color: #4D4F56;
+                        text-align: center;
+                        border-radius: 2px;
+                        cursor: pointer;
 
-                    svg {
-                        vertical-align: middle;
-                        color: #979BA5;
-                        margin-right: 4px;
+                        p {
+                            padding: 0 12px;
+                            max-width: 120px;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            white-space: nowrap;
+                        }
+    
+                        svg {
+                            vertical-align: middle;
+                            color: #979BA5;
+                            margin-right: 4px;
+                        }
                     }
-                }
-
-                .active {
-                    background-color: #fff;
-                    color: $primaryColor;
-                    border-radius: 2px;
-  
-                    svg {
+    
+                    .active {
+                        padding: 0 12px;
+                        background-color: #fff;
                         color: $primaryColor;
+                        border-radius: 2px;
+      
+                        svg {
+                            color: $primaryColor;
+                        }
                     }
                 }
+    
             }
-
             .search-input {
                 background: white;
                 flex: 1;
+                min-width: 200px;
                 margin-left: 10vw;
                 ::placeholder {
                     color: #c4c6cc;

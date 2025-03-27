@@ -53,6 +53,14 @@ const actions = {
     },
     importTemplateFromStore (_, { projectId, params }) {
         return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/create/market`, params)
+    },
+    getSourceCount (_, params) {
+        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${params.projectId}/getSource2Count`, params).then(response => {
+            return response.data
+        })
+    },
+    exportYamlTemplate (_, { projectId, templateId, version }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/export`, version)
     }
 
 }

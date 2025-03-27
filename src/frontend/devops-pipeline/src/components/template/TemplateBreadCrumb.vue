@@ -56,7 +56,7 @@
         setup (props) {
             const { t } = useI18n()
             const manageRoute = {
-                name: 'pipelinesTemplate'
+                name: 'TemplateManageList'
             }
             const breadCrumbs = computed(() => [
                 {
