@@ -42,6 +42,7 @@ import com.tencent.devops.store.common.service.StoreFileService.Companion.fileSe
 import com.tencent.devops.store.common.utils.StoreFileAnalysisUtil
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_COMPONENT_CONFIG_YML_FORMAT_ERROR
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_PACKAGE_FILE_NOT_FOUND
+import com.tencent.devops.store.constant.StoreMessageCode.STORE_VERSION_IS_NOT_FINISH
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_FILE_PATH_ERROR
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID
 import com.tencent.devops.store.pojo.common.BK_STORE_FIRST_PUBLISHER_FLAG
@@ -54,6 +55,7 @@ import com.tencent.devops.store.pojo.common.KEY_STORE_ID
 import com.tencent.devops.store.pojo.common.KEY_STORE_PACKAGE_FILE
 import com.tencent.devops.store.pojo.common.StoreReleaseBaseInfo
 import com.tencent.devops.store.pojo.common.StoreReleaseInfo
+import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreBaseCreateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreBaseUpdateRequest
@@ -160,6 +162,16 @@ abstract class StorePackageDeployService {
     }
 
     private fun checkBkConfig(bkConfigMap: MutableMap<String, Any>): List<String> {
+        val storeId = bkConfigMap[KEY_STORE_ID] as? String
+        storeId?.let {
+            val record = storeBaseQueryDao.getComponentById(dslContext, it)
+            if (record != null && record.status != StoreStatusEnum.INIT.name) {
+                throw ErrorCodeException(
+                    errorCode = STORE_VERSION_IS_NOT_FINISH,
+                    params = arrayOf(record.storeCode, record.version)
+                )
+            }
+        }
         val osInfoList = bkConfigMap[KEY_OS] as? List<Map<String, Any>>
         val voidFields = mutableListOf<String>()
         if (osInfoList.isNullOrEmpty()) {
