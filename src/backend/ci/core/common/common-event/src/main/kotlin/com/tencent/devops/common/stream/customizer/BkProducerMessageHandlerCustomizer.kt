@@ -10,7 +10,7 @@ class BkProducerMessageHandlerCustomizer : ProducerMessageHandlerCustomizer<Mess
         if (handler is AmqpOutboundEndpoint) {
             logger.info("handler customizer success , destinationName: $destinationName , handler: ${handler.beanName}")
             handler.rabbitTemplate?.isUsePublisherConnection = false // 生产者和消费者共享连接池, 提高性能
-        }else{
+        } else {
             logger.info("handler customizer failed , destinationName: $destinationName , handler: ${handler.javaClass}")
         }
     }

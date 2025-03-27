@@ -8,5 +8,4 @@ import com.tencent.devops.common.stream.constants.StreamBinder
  * 给extend mq初始化用
  */
 @Event(destination = "extend.init", binder = StreamBinder.EXTEND_RABBIT)
-class ExtendInitEvent : IEvent() {
-}
+class ExtendInitEvent : IEvent()
