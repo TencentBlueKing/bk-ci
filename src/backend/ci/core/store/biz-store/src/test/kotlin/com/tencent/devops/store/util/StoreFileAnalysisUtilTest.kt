@@ -25,20 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo
+package com.tencent.devops.store.util
 
-import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.store.common.utils.StoreFileAnalysisUtil
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
-@Schema(title = "研发商店-归档组件包请求报文体")
-data class ArchiveStorePkgRequest(
-    @get:Schema(title = "组件标识", required = true)
-    val storeCode: String,
-    @get:Schema(title = "组件类型", required = true)
-    val storeType: StoreTypeEnum,
-    @get:Schema(title = "版本号", required = true)
-    val version: String,
-    @get:Schema(title = "发布类型", required = true)
-    val releaseType: ReleaseTypeEnum = ReleaseTypeEnum.COMPATIBILITY_FIX
-)
+class StoreFileAnalysisUtilTest {
+
+    @Test
+    fun regexAnalysisTest() {
+        val input = "插件发布测试描述:\${{indexFile(\"cat2.png\")}}||插件发布测试描述:\${{indexFile(\"cat.png\")}}"
+        val pathList = mutableListOf<String>()
+        val result = mutableMapOf<String, String>()
+        StoreFileAnalysisUtil.regexAnalysis(
+            input = input,
+            fileDirPath = "",
+            pathList = pathList
+        )
+        pathList.forEach {
+            result[it] = "www.tested.xxx"
+        }
+        val filePathReplaceResult = StoreFileAnalysisUtil.filePathReplace(result, input)
+        Assertions.assertEquals(
+            "插件发布测试描述:![cat2.png](www.tested.xxx)||插件发布测试描述:![cat.png](www.tested.xxx)",
+            filePathReplaceResult
+        )
+    }
+}

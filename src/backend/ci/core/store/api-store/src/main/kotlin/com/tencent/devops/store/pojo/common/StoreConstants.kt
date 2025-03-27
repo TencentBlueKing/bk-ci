@@ -148,6 +148,7 @@ const val KEY_RELEASE_TYPE = "releaseType"
 const val KEY_YAML_FLAG = "yamlFlag"
 const val KEY_REPOSITORY_AUTHORIZER = "repositoryAuthorizer"
 const val KEY_URL_SCHEME = "urlScheme"
+const val KEY_STORE_PACKAGE_FILE = "storePackageFile"
 
 const val STORE_INDEX_CODE = "INDEX_CODE"
 const val STORE_INDEX_NAME = "INDEX_NAME"
@@ -182,3 +183,5 @@ const val BK_TRUSTWORTHY = "bkTrustworthy" // 可信插件
 const val BK_TRIGGER = "bkTrigger" // 触发器
 const val BK_NORMAL = "bkNormal" // 无编译环境
 const val STORE_BUS_NUM_LEN = 6 // 业务序号长度
+const val BK_STORE_DIR_PATH="store.dir.path"
+const val BK_STORE_FIRST_PUBLISHER_FLAG = "firstPublisherFlag"
