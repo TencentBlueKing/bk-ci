@@ -69,9 +69,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.util.FileSystemUtils
 
 abstract class StorePackageDeployService {
-    private val logger = LoggerFactory.getLogger(StorePackageDeployService::class.java)
 
-
+    companion object {
+        private val logger = LoggerFactory.getLogger(StorePackageDeployService::class.java)
+    }
     @Autowired
     lateinit var dslContext: DSLContext
     @Autowired
