@@ -96,7 +96,7 @@ object RtxUtil {
             I18nUtil.getCodeLanMessage(
                 messageCode = BK_EXPERIENCE_ADD_GROUP_HEADER,
                 params = arrayOf(groupName, masterId, messages.size.toString())
-            ) + "\n\n"
+            ) + "\n"
         )
         for (i in 0..1) {
             val m = messages[i]
@@ -104,7 +104,7 @@ object RtxUtil {
                 I18nUtil.getCodeLanMessage(
                     messageCode = BK_EXPERIENCE_ADD_GROUP_CONTENT,
                     params = arrayOf(i.toString(), m.name, m.version, m.outerUrl)
-                ) + "\n\n"
+                ) + "\n"
             )
         }
         body.append(I18nUtil.getCodeLanMessage(messageCode = BK_EXPERIENCE_ADD_GROUP_FOOTER))

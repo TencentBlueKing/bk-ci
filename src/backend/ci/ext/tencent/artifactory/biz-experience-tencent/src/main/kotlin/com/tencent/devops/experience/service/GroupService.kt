@@ -437,7 +437,12 @@ class GroupService @Autowired constructor(
         // 合并消息发给企微
         if (!rtxMessages.isEmpty()) {
             val groupRecord = groupDao.get(dslContext, groupId)
-            val message = RtxUtil.batchAddGroupMessage(newAddUsers, groupRecord.name, masterId, rtxMessages)
+            val message = RtxUtil.batchAddGroupMessage(
+                receivers = newAddUsers,
+                groupName = groupRecord.name,
+                masterId = masterId,
+                messages = rtxMessages
+            )
             client.get(ServiceNotifyResource::class).sendRtxNotify(message)
         }
     }
