@@ -318,6 +318,9 @@
                     },
                     "always" : {
                       "type" : "boolean"
+                    },
+                    "start-params" : {
+                      "type" : "object"
                     }
                   }
                 }
@@ -374,6 +377,9 @@
                   },
                   "always" : {
                     "type" : "boolean"
+                  },
+                  "start-params" : {
+                    "type" : "object"
                   }
                 }
               } ]
@@ -1009,6 +1015,9 @@
                   },
                   "always" : {
                     "type" : "boolean"
+                  },
+                  "start-params" : {
+                    "type" : "object"
                   }
                 }
               }
@@ -1065,6 +1074,9 @@
                 },
                 "always" : {
                   "type" : "boolean"
+                },
+                "start-params" : {
+                  "type" : "object"
                 }
               }
             } ]
@@ -2532,6 +2544,9 @@
                 }
               } ]
             },
+            "show-runs-on" : {
+              "type" : "boolean"
+            },
             "services" : {
               "type" : "object",
               "additionalProperties" : {
@@ -2601,37 +2616,35 @@
                       }, {
                         "type" : "string"
                       } ]
-                    },
-                    "properties" : {
-                      "include" : {
-                        "oneOf" : [ {
-                          "type" : "array",
-                          "items" : {
-                            "type" : "object",
-                            "additionalProperties" : {
-                              "anyOf" : [ {
-                                "type" : "string"
-                              }, {
-                                "type" : "number"
-                              }, {
-                                "type" : "boolean"
-                              } ]
-                            }
-                          }
-                        }, {
+                    }
+                  }, {
+                    "type" : "string"
+                  } ]
+                },
+                "include" : {
+                  "oneOf" : [ {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "object",
+                      "additionalProperties" : {
+                        "anyOf" : [ {
                           "type" : "string"
-                        } ]
-                      },
-                      "exclude" : {
-                        "oneOf" : [ {
-                          "type" : "array",
-                          "items" : {
-                            "type" : "object"
-                          }
                         }, {
-                          "type" : "string"
+                          "type" : "number"
+                        }, {
+                          "type" : "boolean"
                         } ]
                       }
+                    }
+                  }, {
+                    "type" : "string"
+                  } ]
+                },
+                "exclude" : {
+                  "oneOf" : [ {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "object"
                     }
                   }, {
                     "type" : "string"
