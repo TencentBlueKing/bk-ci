@@ -495,7 +495,15 @@
     "jobTemplate": "Job模板",
     "stepTemplate": "Step模板",
     "templateCoverWarning": "草稿即将覆盖警告",
-    "templateCoverWarningDesc": "{0} 编辑的草稿（从{1}创建）尚未发布。编辑分支版本将覆盖尚未发布的草稿，请确认是否继续"
+    "templateCoverWarningDesc": "{0} 编辑的草稿（从{1}创建）尚未发布。编辑分支版本将覆盖尚未发布的草稿，请确认是否继续",
+    "batchUpdateInstance": "批量升级",
+    "batchUpdateTip1": "· 开启了 PAC 的流水线实例和未开启 PAC 的流水线实例，请分批升级",
+    "batchUpdateTip2": "· 开启了 PAC，且存储 YAML 文件的代码库不一致的流水线实例，请分批升级",
+    "pipelineInstanceName": "流水线实例名称",
+    "currentVision": "当前版本",
+    "codeRepo": "所属代码库",
+    "updateInstance": "升级",
+    "handleMR": "去处理 MR"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",
