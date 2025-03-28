@@ -87,7 +87,7 @@ class CodeTGitRepositoryService @Autowired constructor(
                 url = repository.getFormatURL(),
                 type = ScmType.CODE_TGIT,
                 enablePac = repository.enablePac,
-                scmCode = repository.scmCode
+                scmCode = ScmType.CODE_TGIT.name
             )
             // Git项目ID
             val gitProjectId = getGitProjectId(repo = repository, token = credentialInfo.token)
