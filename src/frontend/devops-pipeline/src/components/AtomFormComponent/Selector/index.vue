@@ -37,6 +37,7 @@
 </template>
 
 <script>
+    import { findItemById } from '@/utils/util'
     import mixins from '../mixins'
     import selectorMixins from '../selectorMixins'
     export default {
@@ -136,13 +137,9 @@
                     this.list = transformList(res)
                     // 添加无权限查看项
                     const valueArray = mergedOptionsConf.multiple && Array.isArray(this.value) ? this.value : [this.value]
-                    const listMap = this.list.reduce((listMap, item) => {
-                        listMap[item.id] = item
-                        return listMap
-                    }, {})
 
                     valueArray.forEach(value => {
-                        if (typeof value !== 'undefined' && value !== '' && !listMap[value]) {
+                        if (typeof value !== 'undefined' && value !== '' && !findItemById(this.list, value)) {
                             this.list.splice(0, 0, {
                                 id: value,
                                 name: `******（${this.$t('editPage.noPermToView')}）`
