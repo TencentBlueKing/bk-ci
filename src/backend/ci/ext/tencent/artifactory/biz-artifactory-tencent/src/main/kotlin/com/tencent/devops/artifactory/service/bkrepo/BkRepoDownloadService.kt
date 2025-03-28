@@ -1010,7 +1010,7 @@ open class BkRepoDownloadService(
         )
         return AllowDownload(
             allow,
-            "命中仓库配置的禁用策略（如元数据不满足要求、开启了 IP限制等），或因安全漏洞、Crash等原因被禁用"
+            if (allow) "" else "命中仓库配置的禁用策略（如元数据不满足要求、开启了 IP限制等），或因安全漏洞、Crash等原因被禁用"
         )
     }
 
