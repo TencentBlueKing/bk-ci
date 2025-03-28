@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_project
 
-**文档版本：** 1.0.7
+**文档版本：** 1.0.8
 
 **文档描述：** devops_ci_project 的数据库文档
 | 表名                  | 说明       |
@@ -447,10 +447,11 @@
 |  3   | MODULE_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 模块标识  |
 |  4   | TABLE_NAME |   varchar   | 128 |   0    |    N     |  N   |       | 数据库表名称  |
 |  5   | SHARDING_NUM |   int   | 10 |   0    |    N     |  N   |   5    | 分表数量  |
-|  6   | CREATOR |   varchar   | 50 |   0    |    N     |  N   |   system    | 创建者  |
-|  7   | MODIFIER |   varchar   | 50 |   0    |    N     |  N   |   system    | 修改者  |
-|  8   | UPDATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 修改时间  |
-|  9   | CREATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 创建时间  |
+|  6   | TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 表类型  |
+|  7   | CREATOR |   varchar   | 50 |   0    |    N     |  N   |   system    | 创建者  |
+|  8   | MODIFIER |   varchar   | 50 |   0    |    N     |  N   |   system    | 修改者  |
+|  9   | UPDATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 修改时间  |
+|  10   | CREATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 创建时间  |
 
 **表名：** <a>T_USER</a>
 

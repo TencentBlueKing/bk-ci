@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_store
 
-**文档版本：** 1.0.7
+**文档版本：** 1.0.8
 
 **文档描述：** devops_ci_store 的数据库文档
 | 表名                  | 说明       |
@@ -735,10 +735,11 @@
 |  13   | PUBLISHER |   varchar   | 1024 |   0    |    N     |  N   |   system    | 发布者,对应 T_STORE_PUBLISHER_INFO 表的 PUBLISHER_NAME 字段  |
 |  14   | PUB_TIME |   datetime   | 23 |   0    |    Y     |  N   |       | 发布时间  |
 |  15   | CLASSIFY_ID |   varchar   | 32 |   0    |    N     |  N   |       | 所属分类 ID  |
-|  16   | CREATOR |   varchar   | 50 |   0    |    N     |  N   |   system    | 创建人  |
-|  17   | MODIFIER |   varchar   | 50 |   0    |    N     |  N   |   system    | 最近修改人  |
-|  18   | UPDATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 修改时间  |
-|  19   | CREATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 创建时间  |
+|  16   | BUS_NUM |   bigint   | 20 |   0    |    Y     |  N   |       | 业务序号  |
+|  17   | CREATOR |   varchar   | 50 |   0    |    N     |  N   |   system    | 创建人  |
+|  18   | MODIFIER |   varchar   | 50 |   0    |    N     |  N   |   system    | 最近修改人  |
+|  19   | UPDATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 修改时间  |
+|  20   | CREATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 创建时间  |
 
 **表名：** <a>T_STORE_BASE_ENV</a>
 
