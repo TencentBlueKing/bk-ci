@@ -42,6 +42,7 @@ import com.tencent.devops.store.common.service.StoreFileService.Companion.fileSe
 import com.tencent.devops.store.common.utils.StoreFileAnalysisUtil
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_COMPONENT_CONFIG_YML_FORMAT_ERROR
 import com.tencent.devops.store.constant.StoreMessageCode.STORE_PACKAGE_FILE_NOT_FOUND
+import com.tencent.devops.store.constant.StoreMessageCode.STORE_VERSION_IS_NOT_FINISH
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_FILE_PATH_ERROR
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID
 import com.tencent.devops.store.pojo.common.BK_STORE_FIRST_PUBLISHER_FLAG
@@ -54,6 +55,7 @@ import com.tencent.devops.store.pojo.common.KEY_STORE_ID
 import com.tencent.devops.store.pojo.common.KEY_STORE_PACKAGE_FILE
 import com.tencent.devops.store.pojo.common.StoreReleaseBaseInfo
 import com.tencent.devops.store.pojo.common.StoreReleaseInfo
+import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreBaseCreateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreBaseUpdateRequest
@@ -118,8 +120,11 @@ abstract class StorePackageDeployService {
                 )
             }
             bkConfigMap[KEY_STORE_PACKAGE_FILE] = storePackageFile
-            val codeCount =
-                storeBaseQueryDao.countByCondition(dslContext = dslContext, storeType = storeType, storeCode = storeCode)
+            val codeCount = storeBaseQueryDao.countByCondition(
+                dslContext = dslContext,
+                storeType = storeType,
+                storeCode = storeCode
+            )
             val firstPublisherFlag = codeCount == 0
             if (firstPublisherFlag) {
                 storeReleaseService.createComponent(
@@ -127,6 +132,19 @@ abstract class StorePackageDeployService {
                     storeCreateRequest = getStoreCreateRequest(storeCode, storeType, bkConfigMap)
                 )?.let {
                     bkConfigMap[KEY_STORE_ID] = it.storeId
+                }
+            } else {
+                val record = storeBaseQueryDao.getLatestComponentByCode(dslContext, storeCode, storeType)
+                if ((record != null) && record.status !in listOf(
+                        StoreStatusEnum.INIT.name,
+                        StoreStatusEnum.RELEASED.name,
+                        StoreStatusEnum.UNDERCARRIAGED.name
+                    )
+                ) {
+                    throw ErrorCodeException(
+                        errorCode = STORE_VERSION_IS_NOT_FINISH,
+                        params = arrayOf(record.storeCode, record.version)
+                    )
                 }
             }
             bkConfigMap[BK_STORE_FIRST_PUBLISHER_FLAG] = firstPublisherFlag
