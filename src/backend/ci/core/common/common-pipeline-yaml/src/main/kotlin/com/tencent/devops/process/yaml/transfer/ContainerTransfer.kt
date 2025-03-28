@@ -156,7 +156,8 @@ class ContainerTransfer @Autowired(required = false) constructor(
             ),
             dispatchType = dispatchType,
             matrixGroupFlag = job.strategy != null,
-            matrixControlOption = getMatrixControlOption(job)
+            matrixControlOption = getMatrixControlOption(job),
+            showBuildResource = job.showRunsOn ?: false
         ).apply {
             nfsSwitch = buildEnv != null
         }
@@ -253,6 +254,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
                 projectId = projectId,
                 buildType = job.dispatchType?.buildType()
             ),
+            showRunsOn = job.showBuildResource.nullIfDefault(false),
             container = null,
             services = null,
             mutex = getMutexYaml(job.mutexGroup),
