@@ -130,7 +130,10 @@
                                             />
                                         </bk-form-item>
                                     </div>
-                                    <div class="params-flex-col pt10">
+                                    <div
+                                        class="params-flex-col pt10"
+                                        :style="{ 'flex-direction': !isRepoParam(param.type) && !isFileParam(param.type) ? '' : 'column' }"
+                                    >
                                         <bk-form-item
                                             label-width="auto"
                                             class="flex-col-span-1"
@@ -267,6 +270,7 @@
 
                                             <bk-form-item
                                                 v-else
+                                                style="max-width: 100%;"
                                                 label-width="auto"
                                                 :label="$t(`editPage.${getParamsDefaultValueLabel(param.type)}`)"
                                                 :required="isBooleanParam(param.type)"
@@ -281,6 +285,8 @@
                                                     :disabled="disabled"
                                                     :value="param.defaultValue"
                                                     :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                                                    :enable-version-control="param.enableVersionControl"
+                                                    :random-sub-path="param.randomStringInPath"
                                                 />
                                             </bk-form-item>
                                         </template>
