@@ -500,7 +500,15 @@
     "jumpToViewDetails": "跳转查看详情",
     "upgradedVersion": "升级的版本",
     "selectPipelineNum": "已选择{0}条流水线",
-    "batchEdit": "批量编辑"
+    "batchEdit": "批量编辑",
+    "batchUpdateInstance": "批量升级",
+    "batchUpdateTip1": "· 开启了 PAC 的流水线实例和未开启 PAC 的流水线实例，请分批升级",
+    "batchUpdateTip2": "· 开启了 PAC，且存储 YAML 文件的代码库不一致的流水线实例，请分批升级",
+    "pipelineInstanceName": "流水线实例名称",
+    "currentVision": "当前版本",
+    "codeRepo": "所属代码库",
+    "updateInstance": "升级",
+    "handleMR": "去处理 MR"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",

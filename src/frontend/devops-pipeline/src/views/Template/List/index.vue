@@ -161,7 +161,7 @@
     const showInstallTemplateDialog = ref(false)
     const pagination = ref({
         current: 1,
-        count: 6,
+        count: 0,
         limit: 20
     })
     const copyTemp = ref({

@@ -498,7 +498,15 @@
     "jumpToViewDetails": "Jump to view details",
     "upgradedVersion": "Upgraded version",
     "selectPipelineNum": "{0} pipeline selected",
-    "batchEdit": "Batch Edit"
+    "batchEdit": "Batch Edit",
+    "batchUpdateInstance": "Batch Upgrade",
+    "batchUpdateTip1": "· For pipeline instances with PAC enabled and those without PAC enabled, please upgrade in batches.",
+    "batchUpdateTip2": "· For pipeline instances with PAC enabled, and whose code repositories storing YAML files are inconsistent, please upgrade in batches.",
+    "pipelineInstanceName": "Pipeline Instance Name",
+    "currentVision": "Current Version",
+    "codeRepo": "Code Repository",
+    "updateInstance": "Upgrade",
+    "handleMR": "Handle MR"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",

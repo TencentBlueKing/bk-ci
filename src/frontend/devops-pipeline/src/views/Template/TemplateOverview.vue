@@ -117,7 +117,7 @@
     import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
     import { AuthorityTab, ShowVariable } from '@/components/PipelineEditTabs/'
     import TemplateBreadCrumb from '@/components/template/TemplateBreadCrumb'
-    import Instance from '@/views/Template/instance'
+    import Instance from '@/views/Template/InstanceList'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
