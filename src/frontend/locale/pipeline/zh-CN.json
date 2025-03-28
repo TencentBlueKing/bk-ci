@@ -462,7 +462,10 @@
     },
     "editStoreTemplateTips": "研发商店模板不支持编辑",
     "lastModifiedDate": "更新时间",
-    "lastModifiedBy": "更新人"
+    "lastModifiedBy": "更新人",
+    "templateCoverWarning": "草稿即将覆盖警告",
+    "templateCoverWarningDesc": "{0} 编辑的草稿（从{2}创建）尚未发布。编辑分支版本将覆盖尚未发布的草稿，请确认是否继续",
+    "templateOutDateCoverWarningDesc": "已从代码库提交了新的 {2} 分支版本， {0} 编辑的草稿（于 {1} 从 {2} 创建）已过期，此操作将覆盖过期的草稿，请确认是否继续"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",
@@ -631,7 +634,8 @@
     "majorVersion": "主版本",
     "minorVersion": "特性版本",
     "fixVersion": "修正版本",
-    "paramsInvalidMsg": "流水线执行参数出错"
+    "paramsInvalidMsg": "流水线执行参数出错",
+    "versionSelectorDisableTips": " 1. 存在 PAC 分支版本时，可选择分支版本执行<br/>2. 没有 PAC 分支版本时，始终执行当前最新版本"
   },
   "details": {
     "executorInfo": "{0} {1}触发于 {2}",
@@ -1431,6 +1435,7 @@
   "hasDraftTips": "当前有正在编辑的草稿 (基于 {0})",
   "dropDraftTips": "确定放弃当前草稿，并基于 {0} 新建版本吗？",
   "createDraftTips": "确定基于历史版本 {0} 新建版本？",
+  "createBranchDraftTips": "确定基于分支版本 {0} 新建版本？",
   "mainBranch": "主路径",
   "viewAll": "查看全部版本",
   "diff": "版本对比",
@@ -1488,7 +1493,9 @@
   "pipelineSetting": "流水线设置",
   "COMMIT_TO_MASTER": "提交到默认分支",
   "CHECKOUT_BRANCH_AND_REQUEST_MERGE": "新增分支并创建 MR 到默认分支",
-  "PUSH_BRANCH_AND_REQUEST_MERGE": "提交到【{0}】分支并创建 MR",
+  "COMMIT_TO_SOURCE_BRANCH": "提交到 {0} 分支",
+  "COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE": "提交到 {0} 分支并创建 MR",
+  "COMMIT_TO_BRANCH": "提交到指定分支",
   "atomModel": "插件设置",
   "previewYaml": "预览YAML",
   "applyToYaml": "应用",

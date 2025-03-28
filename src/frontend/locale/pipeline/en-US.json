@@ -463,7 +463,10 @@
     },
     "editStoreTemplateTips": "The development store template does not support editing",
     "lastModifiedDate": "Last Modified on",
-    "lastModifiedBy": "Updater"
+    "lastModifiedBy": "Updater",
+    "templateCoverWarning": "Draft Overwrite Warning",
+    "templateCoverWarningDesc": "The draft edited by {0} (created from {2}) has not been published yet. Editing the branch version will overwrite the unpublished draft. Please confirm if you want to continue.",
+    "templateOutDateCoverWarningDesc": "A new dev branch version has been submitted to the code repository. The draft edited by {0} (created from {2} on {1}) has expired. This operation will overwrite the expired draft. Please confirm whether to continue"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
@@ -636,7 +639,8 @@
     "majorVersion": "Major Version",
     "minorVersion": "Feature Version",
     "fixVersion": "Fix Version",
-    "paramsInvalidMsg": "Params Invalid"
+    "paramsInvalidMsg": "Params Invalid",
+    "versionSelectorDisableTips": "1. When a PAC branch version exists, you can choose to execute the branch version.<br/>2. When there is no PAC branch version, the latest current version will always be executed."
   },
   "details": {
     "pipelineVersionDiffTips": "The pipeline config version has changed",
@@ -1431,6 +1435,7 @@
   "hasDraftTips": "There is a draft being edited (based on {0})",
   "dropDraftTips": "Are you sure you want to abandon the current draft and create a new version based on {0}?",
   "createDraftTips": "Are you sure you want to create a new version based on the historical version {0}?",
+  "createBranchDraftTips": "Are you sure you want to create a new version based on the branch {0}?",
   "mainBranch": "Main",
   "viewAll": "View All",
   "diff": "Diff",
@@ -1490,7 +1495,9 @@
   "pipelineSetting": "Pipeline Settings",
   "COMMIT_TO_MASTER": "Commit to Default Branch",
   "CHECKOUT_BRANCH_AND_REQUEST_MERGE": "Add New Branch and Create MR to Default Branch",
-  "PUSH_BRANCH_AND_REQUEST_MERGE": "Commit to Branch【{0}】and Create MR",
+  "COMMIT_TO_SOURCE_BRANCH": "Commit to Source Branch {0}",
+  "COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE": "Commit to Source Branch {0} and Create MR",
+  "COMMIT_TO_BRANCH": "Commit to Branch",
   "atomModel": "Plugin Settings",
   "previewYaml": "Preview YAML",
   "applyToYaml": "Apply",
