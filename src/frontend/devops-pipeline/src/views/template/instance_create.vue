@@ -282,6 +282,7 @@
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { mapGetters } from 'vuex'
     import { getParamsValuesMap, isObject } from '@/utils/util'
+    import { isFileParam } from '@/store/modules/atom/paramsConfig'
 
     export default {
         components: {
@@ -536,7 +537,12 @@
                         item.paramValues[name] = value
                         item.params.forEach((i) => {
                             if (i.id === name) {
-                                i.defaultValue = value
+                                if (isFileParam(i.type) && typeof value === 'object') {
+                                    i.defaultValue = value.directory
+                                    i.randomStringInPath = value.latestRandomStringInPath
+                                } else {
+                                    i.defaultValue = value
+                                }
                             }
                         })
                     }
