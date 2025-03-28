@@ -374,23 +374,6 @@ class GroupService @Autowired constructor(
         val oldOuterUsers = experienceGroupOuterDao.listByGroupIds(dslContext, setOf(groupId)).map { it.outer }.toSet()
         val latestOldOuterUsers = group.outerUsers
         val newAddOuterUsers = latestOldOuterUsers.subtract(oldOuterUsers).toMutableSet()
-        // 向新增人员发送最新版本体验信息
-        if (newAddOuterUsers.isNotEmpty()) {
-            sendNotificationToNewAddUser(
-                newAddUsers = newAddOuterUsers,
-                userType = NEW_ADD_OUTER_USERS,
-                groupId = groupId,
-                projectName = projectName
-            )
-        }
-        if (newAddInnerUsers.isNotEmpty()) {
-            sendNotificationToNewAddUser(
-                newAddUsers = newAddInnerUsers,
-                userType = NEW_ADD_INNER_USERS,
-                groupId = groupId,
-                projectName = projectName
-            )
-        }
 
         // 修改权限
         experienceGroupInnerDao.deleteByGroupId(dslContext, groupId)
@@ -413,7 +396,7 @@ class GroupService @Autowired constructor(
         newAddUsers: Set<String>,
         userType: String,
         groupId: Long,
-        projectName: String
+        masterId: String
     ) {
         val experienceIds = mutableSetOf<Long>()
         val groupIds = mutableSetOf<Long>()
@@ -450,9 +433,11 @@ class GroupService @Autowired constructor(
                 }
             }
         }
+
         // 合并消息发给企微
         if (!rtxMessages.isEmpty()) {
-            val message = RtxUtil.batchMessage(projectName, rtxMessages, newAddUsers)
+            val groupRecord = groupDao.get(dslContext, groupId)
+            val message = RtxUtil.batchAddGroupMessage(newAddUsers, groupRecord.name, masterId, rtxMessages)
             client.get(ServiceNotifyResource::class).sendRtxNotify(message)
         }
     }
@@ -676,13 +661,12 @@ class GroupService @Autowired constructor(
             groupName = groupCommit.name
         )
         // 向新增人员发送最新版本体验信息
-        val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
         if (newOuterUsers.isNotEmpty()) {
             sendNotificationToNewAddUser(
                 newAddUsers = newOuterUsers,
                 userType = NEW_ADD_OUTER_USERS,
                 groupId = groupId,
-                projectName = projectName
+                masterId = userId
             )
         }
         if (newInnerUsers.isNotEmpty()) {
@@ -690,7 +674,7 @@ class GroupService @Autowired constructor(
                 newAddUsers = newInnerUsers,
                 userType = NEW_ADD_INNER_USERS,
                 groupId = groupId,
-                projectName = projectName
+                masterId = userId
             )
         }
     }

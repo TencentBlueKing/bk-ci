@@ -1098,7 +1098,7 @@ class ExperienceService @Autowired constructor(
 
             // 企业微信
             if (notifyTypeList.contains(NotifyType.RTX)) {
-                val message = RtxUtil.batchMessage(projectName, messages, innerReceivers)
+                val message = RtxUtil.batchLatestMessage(projectName, messages, innerReceivers)
                 client.get(ServiceNotifyResource::class).sendRtxNotify(message)
             }
         }
