@@ -278,6 +278,7 @@ abstract class StorePackageDeployService {
         }
     }
 
+    @Suppress("NestedBlockDepth")
     private fun logoUrlAnalysis(userId: String, storeDirPath: String, logoUrl: String): String {
         var url = logoUrl
         // 远程logo资源不做处理
@@ -330,7 +331,8 @@ abstract class StorePackageDeployService {
             val newestComponentInfo = storeBaseQueryDao.getNewestComponentByCode(dslContext, storeCode, storeType)!!
             name = name ?: newestComponentInfo.name
             summary = summary ?: newestComponentInfo.summary
-            classifyCode = classifyCode ?: classifyDao.getClassify(dslContext, newestComponentInfo.classifyId)!!.classifyCode
+            classifyCode =
+                classifyCode ?: classifyDao.getClassify(dslContext, newestComponentInfo.classifyId)!!.classifyCode
         }
         val labelIdList = baseInfo.labelCodeList?.let {
             labelDao.getIdsByCodes(dslContext, it, storeType.type.toByte())
