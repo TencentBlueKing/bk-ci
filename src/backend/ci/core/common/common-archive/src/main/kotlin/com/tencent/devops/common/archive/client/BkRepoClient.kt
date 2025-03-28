@@ -1094,13 +1094,19 @@ class BkRepoClient constructor(
             .headers(getCommonHeaders(userId, projectId).toHeaders())
             .get()
             .build()
-        return doRequest(request).resolveResponse<Response<Any>>()?.let {
-            return if (it.isOk()) {
-                Pair(true, "")
-            } else {
-                Pair(false, it.message ?: "Unknown Error")
-            }
-        } ?: Pair(false, "Unknown Error")
+
+        try {
+            return doRequest(request).resolveResponse<Response<Any>>()?.let {
+                return if (it.isOk()) {
+                    Pair(true, "")
+                } else {
+                    Pair(false, it.message ?: "Unknown Error")
+                }
+            } ?: Pair(false, "Unknown Error")
+        } catch (e: Exception) {
+            logger.warn("allowDownload error: ${e.message}")
+            return Pair(false, e.message ?: "Unknown Error")
+        }
     }
 
     fun getPackageVersionInfo(
