@@ -318,6 +318,9 @@
                     },
                     "always" : {
                       "type" : "boolean"
+                    },
+                    "start-params" : {
+                      "type" : "object"
                     }
                   }
                 }
@@ -374,6 +377,9 @@
                   },
                   "always" : {
                     "type" : "boolean"
+                  },
+                  "start-params" : {
+                    "type" : "object"
                   }
                 }
               } ]
@@ -1009,6 +1015,9 @@
                   },
                   "always" : {
                     "type" : "boolean"
+                  },
+                  "start-params" : {
+                    "type" : "object"
                   }
                 }
               }
@@ -1065,6 +1074,9 @@
                 },
                 "always" : {
                   "type" : "boolean"
+                },
+                "start-params" : {
+                  "type" : "object"
                 }
               }
             } ]
