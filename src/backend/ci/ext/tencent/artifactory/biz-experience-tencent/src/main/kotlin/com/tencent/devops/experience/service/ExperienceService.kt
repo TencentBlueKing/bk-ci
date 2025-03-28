@@ -1171,7 +1171,7 @@ class ExperienceService @Autowired constructor(
      * 发给外部人员
      */
     fun sendMessageToOuterReceivers(
-        outerReceivers: MutableSet<String>,
+        outerReceivers: Set<String>,
         experienceRecord: TExperienceRecord,
         notifyTypeList: Set<NotifyType>
     ) {

@@ -410,7 +410,7 @@ class GroupService @Autowired constructor(
     }
 
     private fun sendNotificationToNewAddUser(
-        newAddUsers: MutableSet<String>,
+        newAddUsers: Set<String>,
         userType: String,
         groupId: Long,
         projectName: String
@@ -615,7 +615,8 @@ class GroupService @Autowired constructor(
             groupId = groupId,
             userIds = (originalInnerUsers - commitInnerUsers)
         )
-        (commitInnerUsers - originalInnerUsers).forEach {
+        val newInnerUsers = commitInnerUsers - originalInnerUsers
+        newInnerUsers.forEach {
             val gdfn = getGDFNByUser(it)
             experienceGroupInnerDao.create(
                 dslContext = dslContext,
@@ -635,7 +636,8 @@ class GroupService @Autowired constructor(
             groupId = groupId,
             userIds = (originalOuterUsers - commitOuterUsers)
         )
-        (commitOuterUsers - originalOuterUsers).forEach {
+        val newOuterUsers = commitOuterUsers - originalOuterUsers
+        newOuterUsers.forEach {
             experienceGroupOuterDao.create(
                 dslContext = dslContext,
                 groupId = groupId,
@@ -673,6 +675,24 @@ class GroupService @Autowired constructor(
             groupId = groupId,
             groupName = groupCommit.name
         )
+        // 向新增人员发送最新版本体验信息
+        val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
+        if (newOuterUsers.isNotEmpty()) {
+            sendNotificationToNewAddUser(
+                newAddUsers = newOuterUsers,
+                userType = NEW_ADD_OUTER_USERS,
+                groupId = groupId,
+                projectName = projectName
+            )
+        }
+        if (newInnerUsers.isNotEmpty()) {
+            sendNotificationToNewAddUser(
+                newAddUsers = newInnerUsers,
+                userType = NEW_ADD_INNER_USERS,
+                groupId = groupId,
+                projectName = projectName
+            )
+        }
     }
 
     @ActionAuditRecord(
