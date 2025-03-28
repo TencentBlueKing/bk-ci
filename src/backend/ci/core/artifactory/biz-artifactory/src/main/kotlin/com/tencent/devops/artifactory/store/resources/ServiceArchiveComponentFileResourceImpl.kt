@@ -25,20 +25,45 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo
+package com.tencent.devops.artifactory.store.resources
 
+import com.tencent.devops.artifactory.api.ServiceArchiveComponentFileResource
+import com.tencent.devops.artifactory.pojo.ArchiveStorePkgRequest
+import com.tencent.devops.artifactory.store.service.ArchiveStorePkgService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.v3.oas.annotations.media.Schema
+import java.io.InputStream
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.springframework.beans.factory.annotation.Autowired
 
-@Schema(title = "研发商店-归档组件包请求报文体")
-data class ArchiveStorePkgRequest(
-    @get:Schema(title = "组件标识", required = true)
-    val storeCode: String,
-    @get:Schema(title = "组件类型", required = true)
-    val storeType: StoreTypeEnum,
-    @get:Schema(title = "版本号", required = true)
-    val version: String,
-    @get:Schema(title = "发布类型", required = true)
-    val releaseType: ReleaseTypeEnum = ReleaseTypeEnum.COMPATIBILITY_FIX
-)
+@RestResource
+class ServiceArchiveComponentFileResourceImpl @Autowired constructor(
+    private val archiveStorePkgService: ArchiveStorePkgService
+) : ServiceArchiveComponentFileResource {
+
+    override fun archiveComponentPkg(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        version: String,
+        releaseType: ReleaseTypeEnum,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<Boolean> {
+        return Result(
+            archiveStorePkgService.archiveStorePkg(
+                userId = userId,
+                inputStream = inputStream,
+                disposition = disposition,
+                archiveStorePkgRequest = ArchiveStorePkgRequest(
+                    storeCode = storeCode,
+                    storeType = storeType,
+                    version = version,
+                    releaseType = releaseType
+                )
+            )
+        )
+    }
+}

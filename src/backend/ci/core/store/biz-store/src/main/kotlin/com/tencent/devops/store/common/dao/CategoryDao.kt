@@ -178,4 +178,11 @@ class CategoryDao {
             )
         }
     }
+
+    fun getIdsByCodes(dslContext: DSLContext, categoryCodes: List<String>, type: Byte): List<String> {
+        with(TCategory.T_CATEGORY) {
+            return dslContext.select(ID).from(this).where(CATEGORY_CODE.`in`(categoryCodes).and(TYPE.eq(type)))
+                .fetchInto(String::class.java)
+        }
+    }
 }
