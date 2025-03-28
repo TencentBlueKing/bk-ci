@@ -109,7 +109,6 @@
             this.requestTemplateByVersion()
         },
         mounted () {
-            this.addLeaveListenr()
             this.requestQualityAtom()
             this.requestMatchTemplateRules()
         },

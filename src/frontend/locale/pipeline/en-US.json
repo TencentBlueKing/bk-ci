@@ -438,6 +438,7 @@
     "templateInstantiation": "Instantiate Templates",
     "templateVersion": "Template Version",
     "applyTemplateSetting": "Apply template settings simultaneously",
+    "applyTemplateSettingTips": "After application, the instance's tags, run settings, notifications and other settings will be consistent with the template.",
     "applySettingTips": "When ticked, the template settings will be applied to instantiated pipelines",
     "newPipelineName": "Name of Instantiated Pipeline",
     "addPipelineInstance": "New Instance",
@@ -492,7 +493,12 @@
     "template": "Template",
     "uploadTemplateYamlTips": "Please upload the template YAML file",
     "templateCoverWarning": "Draft Overwrite Warning",
-    "templateCoverWarningDesc": "The draft edited by {0} (created from {1}) has not been published yet. Editing the branch version will overwrite the unpublished draft. Please confirm if you want to continue."
+    "templateCoverWarningDesc": "The draft edited by {0} (created from {1}) has not been published yet. Editing the branch version will overwrite the unpublished draft. Please confirm if you want to continue.",
+    "batchUpgrade": "Batch Upgrade",
+    "jumpToViewDetails": "Jump to view details",
+    "upgradedVersion": "Upgraded version",
+    "selectPipelineNum": "{0} pipeline selected",
+    "batchEdit": "Batch Edit"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",

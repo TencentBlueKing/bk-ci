@@ -107,7 +107,7 @@ export function dealPipelineRes ({ getters, dispatch, commit, state }, {
     pipelineRes,
     atomPropRes
 }) {
-    const { setting, model } = pipelineRes.data.modelAndSetting
+    const { setting, model } = pipelineRes?.modelAndSetting
     const atomProp = atomPropRes.data
     const elements = getters.getAllElements(model.stages)
     elements.forEach(element => { // 将os属性设置到model内
@@ -124,15 +124,15 @@ export function dealPipelineRes ({ getters, dispatch, commit, state }, {
     }
 
     commit(PIPELINE_SETTING_MUTATION, Object.assign(setting, {
-        versionUpdater: pipelineRes.data.updater,
-        versionUpdateTime: pipelineRes.data.updateTime
+        versionUpdater: pipelineRes?.updater,
+        versionUpdateTime: pipelineRes?.updateTime
     }))
-    if (!pipelineRes.data.yamlSupported) {
+    if (!pipelineRes?.yamlSupported) {
         rootCommit(commit, UPDATE_PIPELINE_MODE, UI_MODE)
     }
-    if (pipelineRes?.data?.yamlSupported) {
-        const { yaml, ...highlightMap } = pipelineRes.data.yamlPreview
-        if (pipelineRes?.data?.yamlPreview?.yaml) {
+    if (pipelineRes?.yamlSupported) {
+        const { yaml, ...highlightMap } = pipelineRes?.yamlPreview ?? {}
+        if (pipelineRes?.yamlPreview?.yaml) {
             commit(SET_PIPELINE_YAML, yaml)
         }
         commit(SET_PIPELINE_YAML_HIGHLIGHT_MAP, highlightMap)
@@ -215,16 +215,14 @@ export default {
 
         return [
             {
-                data: {
-                    modelAndSetting: {
-                        model: templateRes.resource.model,
-                        setting: templateRes.setting
-                    },
-                    updater: templateRes.resource.updater,
-                    updateTime: templateRes.resource.updateTime,
-                    yamlSupported: !!templateRes.resource.yaml,
-                    yamlPreview: templateRes.yamlPreview
-                }
+                modelAndSetting: {
+                    model: templateRes.resource.model,
+                    setting: templateRes.setting
+                },
+                updater: templateRes.resource.updater,
+                updateTime: templateRes.resource.updateTime,
+                yamlSupported: !!templateRes.resource.yaml,
+                yamlPreview: templateRes.yamlPreview
             },
             atomPropRes
         ]
@@ -237,7 +235,7 @@ export default {
                 [pipelineRes, atomPropRes] = await dispatch('requestTemplate', { version, ...params })
             } else {
                 [pipelineRes, atomPropRes] = await Promise.all([
-                    dispatch('fetchPipelineByVersion', params),
+                    dispatch('fetchPipelineByVersion', { version, ...params }),
                     request.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/projects/${params.projectId}/pipelines/${params.pipelineId}/atom/prop/list`, {
                         params: version ? { version } : {}
                     })
@@ -252,7 +250,9 @@ export default {
         }
     },
     fetchPipelineByVersion ({ commit }, { projectId, pipelineId, version }) {
-        return request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version ?? ''}`)
+        return request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version ?? ''}`).then(res => {
+            return res.data
+        })
     },
     fetchTemplateByVersion ({ commit }, { projectId, templateId, version }) {
         return request.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/${version}/details/`).then(res => {
