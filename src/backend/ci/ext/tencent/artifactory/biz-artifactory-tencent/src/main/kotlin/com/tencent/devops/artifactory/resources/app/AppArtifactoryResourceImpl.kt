@@ -31,6 +31,7 @@ import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.artifactory.api.app.AppArtifactoryResource
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GRANT_DOWNLOAD_PERMISSION
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GRANT_PIPELINE_PERMISSION
+import com.tencent.devops.artifactory.pojo.AllowDownload
 import com.tencent.devops.artifactory.pojo.AppFileInfo
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileDetailForApp
@@ -268,6 +269,24 @@ class AppArtifactoryResourceImpl @Autowired constructor(
                 md5 = fileDetail.checksums.md5,
                 buildNum = NumberUtils.toInt(fileDetail.meta[ARCHIVE_PROPS_BUILD_NO]?.toString(), 0),
                 nodeMetadata = fileDetail.nodeMetadata
+            )
+        )
+    }
+
+    override fun allowDownload(
+        userId: String,
+        realIP: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<AllowDownload> {
+        return Result(
+            bkRepoDownloadService.allowDownload(
+                userId = userId,
+                projectId = projectId,
+                artifactoryType = artifactoryType,
+                path = path,
+                ip = realIP
             )
         )
     }
