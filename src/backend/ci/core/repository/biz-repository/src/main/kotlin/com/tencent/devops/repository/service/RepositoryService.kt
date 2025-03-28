@@ -612,14 +612,6 @@ class RepositoryService @Autowired constructor(
         return compose(repository)
     }
 
-    fun serviceGetByHashId(projectId: String, repositoryConfig: RepositoryConfig): Repository {
-        val repository = getRepository(projectId, repositoryConfig)
-        ActionAuditContext.current()
-            .setInstanceId(repository.repositoryId.toString())
-            .setInstanceName(repository.aliasName)
-        return compose(repository)
-    }
-
     @ActionAuditRecord(
         actionId = ActionId.REPERTORY_VIEW,
         instance = AuditInstanceRecord(

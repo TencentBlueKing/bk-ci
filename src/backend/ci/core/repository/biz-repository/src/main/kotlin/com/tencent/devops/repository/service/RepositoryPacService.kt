@@ -38,6 +38,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineYamlResource
+import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileSyncReq
 import com.tencent.devops.repository.constant.RepositoryConstants
 import com.tencent.devops.repository.constant.RepositoryMessageCode
@@ -362,29 +363,35 @@ class RepositoryPacService @Autowired constructor(
                 repositoryId = repositoryId,
                 syncStatus = RepoYamlSyncStatusEnum.SUCCEED.name
             )
-            return
-        }
-        val commit = refApiService.findCommit(
-            projectId = projectId,
-            authRepository = authRepository,
-            sha = defaultBranch
-        )
-        repositoryDao.enablePac(
-            dslContext = dslContext,
-            userId = userId,
-            projectId = projectId,
-            repositoryId = repositoryId,
-            syncStatus = RepoYamlSyncStatusEnum.SYNC.name
-        )
-        client.get(ServicePipelineYamlResource::class).syncYamlFile(
-            userId = userId,
-            projectId = projectId,
-            yamlFileSyncReq = PipelineYamlFileSyncReq(
-                repository = repository,
-                fileTrees = fileTrees,
-                defaultBranch = defaultBranch,
-                commit = commit
+        } else {
+            val commit = refApiService.findCommit(
+                projectId = projectId,
+                authRepository = authRepository,
+                sha = defaultBranch
             )
+            repositoryDao.enablePac(
+                dslContext = dslContext,
+                userId = userId,
+                projectId = projectId,
+                repositoryId = repositoryId,
+                syncStatus = RepoYamlSyncStatusEnum.SYNC.name
+            )
+            client.get(ServicePipelineYamlResource::class).syncYamlFile(
+                userId = userId,
+                projectId = projectId,
+                yamlFileSyncReq = PipelineYamlFileSyncReq(
+                    repository = repository,
+                    fileTrees = fileTrees,
+                    defaultBranch = defaultBranch,
+                    commit = commit
+                )
+            )
+        }
+        //TODO 后续需要删除 开启PAC时，将代码库加入灰度库白名单
+        client.get(ServiceScmWebhookResource::class).addGrayRepoWhite(
+            scmCode = repository.scmCode,
+            pac = true,
+            serverRepoNames = listOf(serverRepository.fullName)
         )
     }
 

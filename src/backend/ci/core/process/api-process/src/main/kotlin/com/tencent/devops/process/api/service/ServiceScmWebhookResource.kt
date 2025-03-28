@@ -41,6 +41,7 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -97,4 +98,18 @@ interface ServiceScmWebhookResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<PipelineWebhook>>
+
+    @Operation(summary = "添加scm灰度白名单仓库")
+    @PUT
+    @Path("/{scmCode}/addGrayRepoWhite")
+    fun addGrayRepoWhite(
+        @Parameter(description = "代码库标识", required = true)
+        @PathParam("scmCode")
+        scmCode: String,
+        @Parameter(description = "是否只开启pac仓库", required = true)
+        @QueryParam("pac")
+        pac: Boolean,
+        @Parameter(description = "服务端代码仓库id列表", required = true)
+        serverRepoNames: List<String>
+    ): Result<Boolean>
 }

@@ -282,7 +282,7 @@ class TGitPushTriggerHandler(
                 changeFiles = eventPaths,
                 enableThirdFilter = enableThirdFilter,
                 thirdUrl = thirdUrl,
-                secretToken = gitScmService.getCredential(projectId, thirdSecretToken),
+                secretToken = lazy { gitScmService.getCredential(projectId, thirdSecretToken) }.value,
                 callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry,
                 failedReason = I18Variable(code = WebhookI18nConstants.THIRD_FILTER_NOT_MATCH).toJsonStr(),
                 eventType = getEventType().name
