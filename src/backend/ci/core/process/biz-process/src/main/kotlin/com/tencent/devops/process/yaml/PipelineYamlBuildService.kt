@@ -76,14 +76,14 @@ class PipelineYamlBuildService @Autowired constructor(
             1. 获取当前分支有没有存到文件blob_id对应的版本,如果存在则直接使用当前版本
             2. 如果不存在,则获取当前blob_id对应的最新版本
              */
-            val pipelineYamlVersion = pipelineYamlVersionDao.getLatestVersion(
+            val pipelineYamlVersion = pipelineYamlVersionDao.getPipelineYamlVersion(
                 dslContext = dslContext,
                 projectId = projectId,
                 repoHashId = repoHashId,
                 filePath = filePath,
                 ref = ref,
                 blobId = blobId
-            ) ?: pipelineYamlVersionDao.getLatestVersion(
+            ) ?: pipelineYamlVersionDao.getPipelineYamlVersion(
                 dslContext = dslContext,
                 projectId = projectId,
                 repoHashId = repoHashId,
