@@ -47,7 +47,7 @@ import com.tencent.devops.scm.pojo.enums.SvnFileType
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import java.util.Base64
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

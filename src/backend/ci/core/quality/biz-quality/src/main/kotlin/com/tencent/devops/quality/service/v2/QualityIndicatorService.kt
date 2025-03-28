@@ -98,7 +98,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import java.io.File
 import java.util.Base64
 import java.util.concurrent.Executors
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
@@ -260,7 +260,7 @@ class QualityIndicatorService @Autowired constructor(
             projectId = tempProjectId
         )
         val prodIndicator = if (indicatorRecords?.associateBy { it.tag }?.containsKey("IN_READY_RUNNING") == true) {
-            indicatorRecords?.filter { it.tag == "IN_READY_RUNNING" }.associateBy { it.enName }
+            indicatorRecords?.filter { it.tag == "IN_READY_RUNNING" }?.associateBy { it.enName }
         } else {
             indicatorRecords?.associateBy { it.enName }
         }

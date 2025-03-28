@@ -28,7 +28,7 @@
 package com.tencent.devops.store.common.service.action
 
 import java.util.concurrent.ConcurrentHashMap
-import javax.annotation.Priority
+import jakarta.annotation.Priority
 
 /**
  * 用于对组件进行修饰工厂类

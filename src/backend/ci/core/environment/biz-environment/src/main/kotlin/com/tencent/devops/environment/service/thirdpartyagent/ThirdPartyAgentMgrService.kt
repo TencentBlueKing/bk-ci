@@ -110,8 +110,8 @@ import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import java.time.LocalDateTime
 import java.util.Date
-import javax.ws.rs.NotFoundException
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.NotFoundException
+import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory

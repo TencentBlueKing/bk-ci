@@ -39,7 +39,7 @@ import com.tencent.devops.common.api.pojo.Page
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletResponse
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 
 @Suppress("ALL")

@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.context.request.async.DeferredResult
-import javax.ws.rs.QueryParam
+import jakarta.ws.rs.QueryParam
 
 @RestController
 @RequestMapping("/build")

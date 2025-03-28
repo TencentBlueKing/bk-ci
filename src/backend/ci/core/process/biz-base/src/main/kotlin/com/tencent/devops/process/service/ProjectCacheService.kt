@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 
 @Service
 class ProjectCacheService @Autowired constructor(private val client: Client) {

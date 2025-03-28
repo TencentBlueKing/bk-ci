@@ -31,7 +31,7 @@ import com.tencent.devops.auth.api.login.ExternalThirdLoginResource
 import com.tencent.devops.auth.service.ThirdLoginService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
