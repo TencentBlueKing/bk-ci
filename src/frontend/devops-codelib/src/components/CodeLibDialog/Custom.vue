@@ -12,25 +12,16 @@
             property="authType"
         >
             <bk-radio-group
-                v-model="codelib.authType"
-                @change="authTypeChange(codelib)"
+                v-model="codelib.credentialType"
+                @change="authTypeChangeAsCustom(codelib)"
             >
                 <bk-radio
+                    v-for="auth in providerConfig.credentialTypeList"
+                    :key="auth.credentialType"
                     class="mr20"
-                    value="OAUTH"
+                    :value="auth.credentialType"
                 >
-                    OAUTH
-                </bk-radio>
-                <bk-radio
-                    class="mr20"
-                    value="SSH"
-                >
-                    SSH
-                </bk-radio>
-                <bk-radio
-                    value="HTTP"
-                >
-                    {{ $t('codelib.用户名+密码') }}
+                    {{ auth.name }}
                 </bk-radio>
             </bk-radio-group>
 
@@ -89,6 +80,7 @@
             </bk-form-item>
             
             <bk-form-item
+                v-if="providerConfig.pacEnabled"
                 :label="$t('codelib.PACmode')"
             >
                 <div class="pac-item">
