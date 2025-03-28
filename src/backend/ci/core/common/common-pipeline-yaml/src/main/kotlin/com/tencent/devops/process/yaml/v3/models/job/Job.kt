@@ -48,6 +48,8 @@ data class Job(
     @JsonProperty("runs-on")
     @get:Schema(title = "runs-on")
     val runsOn: RunsOn = RunsOn(),
+    @JsonProperty("show-runs-on")
+    val showRunsOn: Boolean? = null,
     // val container: Container?,
     val services: List<Service>? = null,
     @get:Schema(title = "if")

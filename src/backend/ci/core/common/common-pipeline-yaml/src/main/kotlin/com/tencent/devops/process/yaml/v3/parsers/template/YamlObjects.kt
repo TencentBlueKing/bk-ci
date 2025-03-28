@@ -541,6 +541,7 @@ fun <T> YamlTemplate<T>.getJob(fromPath: TemplatePath, job: Map<String, Any>, de
         enable = YamlObjects.getNullValue("enable", job)?.toBoolean(),
         name = job["name"]?.toString(),
         runsOn = job["runs-on"],
+        showRunsOn = YamlObjects.getNullValue("show-runs-on", job)?.toBoolean(),
         mutex = if (job["mutex"] == null) {
             null
         } else {

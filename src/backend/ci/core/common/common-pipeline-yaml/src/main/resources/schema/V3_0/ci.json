@@ -2544,6 +2544,9 @@
                 }
               } ]
             },
+            "show-runs-on" : {
+              "type" : "boolean"
+            },
             "services" : {
               "type" : "object",
               "additionalProperties" : {
