@@ -243,8 +243,9 @@
                                                     v-if="isBuildResourceParam(param.type)"
                                                     style="max-width: 250px"
                                                     :popover-min-width="250"
-                                                    :url="getBuildResourceUrl(param.containerType)"
-                                                    param-id="name"
+                                                    :url="getBuildResourceUrl"
+                                                    param-id="displayName"
+                                                    param-name="displayName"
                                                     :disabled="disabled"
                                                     name="defaultValue"
                                                     :value="param.defaultValue"
@@ -421,45 +422,6 @@
                                         ></selector>
                                     </bk-form-item>
 
-                                    <template v-if="isBuildResourceParam(param.type)">
-                                        <bk-form-item
-                                            label-width="auto"
-                                            :label="$t('editPage.buildEnv')"
-                                            :is-error="errors.has(`param-${param.id}.os`)"
-                                            :error-msg="errors.first(`param-${param.id}.os`)"
-                                        >
-                                            <selector
-                                                :popover-min-width="510"
-                                                :disabled="disabled"
-                                                :list="baseOSList"
-                                                :handle-change="(name, value) => handleBuildResourceChange(name, value, index, param)"
-                                                name="os"
-                                                :data-vv-scope="`param-${param.id}`"
-                                                placeholder=""
-                                                :value="param.containerType.os"
-                                            ></selector>
-                                        </bk-form-item>
-
-                                        <bk-form-item
-                                            label-width="auto"
-                                            :label="$t('editPage.addMetaData')"
-                                            :is-error="errors.has(`param-${param.id}.buildType`)"
-                                            :error-msg="errors.first(`param-${param.id}.buildType`)"
-                                        >
-                                            <selector
-                                                :popover-min-width="510"
-                                                :disabled="disabled"
-                                                :list="getBuildTypeList(param.containerType.os)"
-                                                setting-key="type"
-                                                :handle-change="(name, value) => handleBuildResourceChange(name, value, index, param)"
-                                                name="buildType"
-                                                :data-vv-scope="`param-${param.id}`"
-                                                placeholder=""
-                                                :value="param.containerType.buildType"
-                                            ></selector>
-                                        </bk-form-item>
-                                    </template>
-
                                     <bk-form-item
                                         label-width="auto"
                                         v-if="isArtifactoryParam(param.type)"
@@ -539,7 +501,7 @@
     import {
         PROCESS_API_URL_PREFIX,
         REPOSITORY_API_URL_PREFIX,
-        STORE_API_URL_PREFIX
+        ENVIRONMENT_API_URL_PREFIX
     } from '@/store/constants'
     import SelectTypeParam from '@/components/PipelineEditTabs/components/children/select-type-param'
     import {
@@ -693,6 +655,9 @@
                     animation: 200,
                     disabled: this.disabled
                 }
+            },
+            getBuildResourceUrl () {
+                return `${ENVIRONMENT_API_URL_PREFIX}/user/envnode/${this.$route.params.projectId}/listNew?nodeType=THIRDPARTY&page=1&pageSize=100`
             }
         },
 
@@ -904,10 +869,6 @@
                     properties[val.key] = val.value
                 })
                 this.handleUpdateParam(key, properties, index)
-            },
-
-            getBuildResourceUrl ({ os, buildType }) {
-                return `/${STORE_API_URL_PREFIX}/user/pipeline/container/projects/${this.$route.params.projectId}/oss/${os}?buildType=${buildType}`
             },
 
             handleCodeTypeChange (name, value, index) {

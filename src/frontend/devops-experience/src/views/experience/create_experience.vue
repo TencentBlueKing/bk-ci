@@ -19,14 +19,14 @@
                     <template v-if="hasPermission">
                         <div class="version-name">
                             <bk-form-item
-                                label="ipa/apk/hap文件"
+                                label="ipa/apk/apks/hap 安装包"
                                 label-width="190"
                                 :required="true"
                                 property="name"
                             >
                                 <bk-input
                                     ref="releaseName"
-                                    placeholder="请从版本仓库中选择一个ipa或apk或hap文件"
+                                    placeholder="请从版本仓库中选择一个 ipa/apk/apks/hap 文件"
                                     name="releaseName"
                                     disabled
                                     v-model="createReleaseForm.name"

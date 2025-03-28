@@ -205,6 +205,22 @@
             >
             </request-selector>
             <request-selector
+                v-if="isBuildResourceParam(param.type)"
+                :popover-min-width="250"
+                :url="getBuildResourceUrl"
+                param-id="displayName"
+                param-name="displayName"
+                :disabled="disabled"
+                name="defaultValue"
+                v-validate="{ required: valueRequired }"
+                :data-vv-scope="'pipelineParam'"
+                :value="param.defaultValue"
+                :handle-change="handleChange"
+                :replace-key="param.replaceKey"
+                :search-url="param.searchUrl"
+            >
+            </request-selector>
+            <request-selector
                 v-if="isSubPipelineParam(param.type)"
                 :popover-min-width="250"
                 v-bind="subPipelineOption"
@@ -284,7 +300,7 @@
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import validMixins from '@/components/validMixins'
-    import { PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX, STORE_API_URL_PREFIX } from '@/store/constants'
+    import { PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX, ENVIRONMENT_API_URL_PREFIX } from '@/store/constants'
     import {
         CODE_LIB_OPTION,
         CODE_LIB_TYPE,
@@ -303,6 +319,7 @@
         isSubPipelineParam,
         isSvnParam,
         isTextareaParam,
+        isBuildResourceParam,
         SUB_PIPELINE_OPTION,
         isRepoParam
     } from '@/store/modules/atom/paramsConfig'
@@ -384,6 +401,9 @@
             },
             isRemoteSelect () {
                 return this.param?.payload?.type === 'remote'
+            },
+            getBuildResourceUrl () {
+                return `${ENVIRONMENT_API_URL_PREFIX}/user/envnode/${this.$route.params.projectId}/listNew?nodeType=THIRDPARTY&page=1&pageSize=100`
             }
         },
         created () {
@@ -409,6 +429,7 @@
             isSubPipelineParam,
             isFileParam,
             isRepoParam,
+            isBuildResourceParam,
             getParamsDefaultValueLabel,
             getParamsDefaultValueLabelTips,
             isSelectorParam (type) {
@@ -457,10 +478,6 @@
                     }).map(opt => ({ id: opt.key, name: opt.value }))
                     : []
                 this.optionList = final
-            },
-
-            getBuildResourceUrl ({ os, buildType }) {
-                return `/${STORE_API_URL_PREFIX}/user/pipeline/container/projects/${this.$route.params.projectId}/oss/${os}?buildType=${buildType}`
             },
 
             handleCodeTypeChange (name, value) {
