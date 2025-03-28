@@ -58,6 +58,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -230,7 +231,7 @@ class PipelineBuildFacadeService(
             )
         }
         val (pipeline, resource, debug) = pipelineRepositoryService.getBuildTriggerInfo(
-            projectId, pipelineId, null
+            projectId, pipelineId, version
         )
         if (pipeline.locked == true) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
@@ -255,9 +256,9 @@ class PipelineBuildFacadeService(
         // 获取最后一次的构建id
         val lastTimeInfo = pipelineRuntimeService.getLastTimeBuild(projectId, pipelineId, debug)
         if (lastTimeInfo?.buildParameters?.isNotEmpty() == true) {
-            val latestParamsMap = lastTimeInfo.buildParameters!!.associate { it.key to it.value }
+            val latestParamsMap = lastTimeInfo.buildParameters!!.associateBy { it.key }
             triggerContainer.params.forEach { param ->
-                val realValue = latestParamsMap[param.id]
+                val latestParam = latestParamsMap[param.id]
                 // 入参、推荐版本号参数有上一次的构建参数的时候才设置成默认值，否者依然使用默认值
                 // 当值是boolean类型的时候，需要转为boolean类型
                 param.value = when {
@@ -271,18 +272,22 @@ class PipelineBuildFacadeService(
                     }
 
                     param.defaultValue is Boolean -> {
-                        realValue?.toString()?.toBoolean()
+                        latestParam?.value?.toString()?.toBoolean()
                     }
 
                     else -> {
-                        realValue
+                        latestParam?.value
                     }
                 } ?: param.defaultValue
+                // 如果上次构建指定了最新的目录随机字符串，则填充到构建预览信息
+                param.latestRandomStringInPath =
+                    latestParam?.latestRandomStringInPath ?: param.randomStringInPath
             }
         } else {
             triggerContainer.params.forEach { param ->
                 // 如果没有上次构建的记录则直接使用默认值
                 param.value = param.defaultValue
+                param.latestRandomStringInPath = param.randomStringInPath
             }
         }
 
@@ -641,6 +646,10 @@ class PipelineBuildFacadeService(
             if (readyToBuildPipelineInfo.locked == true) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
             }
+            // 正式版本,必须使用最新版本执行
+            if (version != null && resource.status == VersionStatus.RELEASED && resource.version != version) {
+                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_NON_LATEST_RELEASE_VERSION)
+            }
 
             /**
              * 验证流水线参数构建启动参数
@@ -648,7 +657,18 @@ class PipelineBuildFacadeService(
             val triggerContainer = resource.model.getTriggerContainer()
 
             if (startType == StartType.MANUAL && !debug) {
-                if (!readyToBuildPipelineInfo.canManualStartup) {
+                // 不能通过pipelineInfo里面的canManualStartup来判断,pipelineInfo总是使用的最新版本,但是执行可以使用分支版本
+                var canManualStartup = false
+                run lit@{
+                    triggerContainer.elements.forEach {
+                        if (it is ManualTriggerElement && it.elementEnabled()) {
+                            canManualStartup = true
+                            return@lit
+                        }
+                    }
+                }
+
+                if (!canManualStartup) {
                     throw ErrorCodeException(
                         errorCode = ProcessMessageCode.DENY_START_BY_MANUAL
                     )
