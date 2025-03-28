@@ -993,7 +993,8 @@ open class BkRepoDownloadService(
     }
 
     private fun tokenRedisKey(token: String) = "artifactory:token:$token"
-    fun allowDownload(
+
+    override fun allowDownload(
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
