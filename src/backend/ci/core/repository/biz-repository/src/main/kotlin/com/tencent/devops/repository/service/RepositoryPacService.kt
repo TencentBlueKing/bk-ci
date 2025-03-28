@@ -387,7 +387,7 @@ class RepositoryPacService @Autowired constructor(
                 )
             )
         }
-        //TODO 后续需要删除 开启PAC时，将代码库加入灰度库白名单
+        // TODO 后续需要删除 开启PAC时，将代码库加入灰度库白名单
         client.get(ServiceScmWebhookResource::class).addGrayRepoWhite(
             scmCode = repository.scmCode,
             pac = true,
