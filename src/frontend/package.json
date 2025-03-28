@@ -18,7 +18,7 @@
     "@babel/plugin-transform-runtime": "^7.15.8",
     "@babel/preset-env": "^7.15.8",
     "@babel/preset-react": "^7.16.0",
-    "@babel/runtime": "^7.15.4",
+    "@babel/runtime": "^7.26.10",
     "@commitlint/cli": "^9.1.1",
     "@commitlint/config-conventional": "^16.2.4",
     "@nx/eslint": "19.5.1",
