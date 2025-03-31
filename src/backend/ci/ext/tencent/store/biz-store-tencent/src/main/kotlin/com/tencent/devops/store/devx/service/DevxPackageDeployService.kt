@@ -12,9 +12,13 @@ class DevxPackageDeployService : StorePackageDeployService() {
     override fun checkStoreReleaseExtInfo(storeReleaseInfo: StoreReleaseInfo): List<String> {
         val voidFields = mutableListOf<String>()
         val extBaseInfo = storeReleaseInfo.baseInfo.extBaseInfo
-        extBaseInfo?.get(KEY_NET_POLICY_INFO) ?: voidFields.add("extBaseInfo.$KEY_NET_POLICY_INFO")
+        extBaseInfo?.let {
+            extBaseInfo.get(KEY_NET_POLICY_INFO) ?: voidFields.add("extBaseInfo.$KEY_NET_POLICY_INFO")
+        }
         val baseFeatureInfo = storeReleaseInfo.baseInfo.baseFeatureInfo
-        baseFeatureInfo?.type ?: voidFields.add("baseFeatureInfo.type")
+        baseFeatureInfo?.let {
+            baseFeatureInfo.type ?: voidFields.add("baseFeatureInfo.type")
+        }
         return voidFields
     }
 }
