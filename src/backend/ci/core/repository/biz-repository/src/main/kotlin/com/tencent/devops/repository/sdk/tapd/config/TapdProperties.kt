@@ -28,9 +28,7 @@
 package com.tencent.devops.repository.sdk.tapd.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.context.properties.ConstructorBinding
 
-@ConstructorBinding
 @ConfigurationProperties(prefix = "tapd")
 data class TapdProperties(
     val serverUrl: String = "",
