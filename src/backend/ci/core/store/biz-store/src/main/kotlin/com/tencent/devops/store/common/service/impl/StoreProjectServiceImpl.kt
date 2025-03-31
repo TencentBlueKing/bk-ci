@@ -446,7 +446,8 @@ class StoreProjectServiceImpl @Autowired constructor(
                     projectCode = testItem.projectCode,
                     type = StoreProjectTypeEnum.TEST.type.toByte(),
                     storeType = storeType.type.toByte(),
-                    instanceId = testItem.instanceId
+                    instanceId = testItem.instanceId,
+                    instanceName = testItem.instanceName
                 )
             }
         }
@@ -475,7 +476,7 @@ class StoreProjectServiceImpl @Autowired constructor(
         val storeTestItems = mutableSetOf<StoreTestItem>()
         testProjectInfos?.forEach { testProjectInfo ->
             storeTestItems.add(
-                StoreTestItem(testProjectInfo.projectCode, testProjectInfo.instanceId)
+                StoreTestItem(testProjectInfo.projectCode, testProjectInfo.instanceId, testProjectInfo.instanceName)
             )
         }
         return storeTestItems
