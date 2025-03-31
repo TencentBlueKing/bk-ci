@@ -254,7 +254,9 @@ class WebhookGrayCompareService @Autowired constructor(
             }
 
             val matchResult = matcher.isMatch(projectId, pipelineId, repo, webHookParams)
-            logger.info("compare webhook|pipelineId: $pipelineId|matchResult: $matchResult")
+            logger.info(
+                "old webhook trigger|pipelineId:$pipelineId|element:${element.id}|matchResult:${matchResult.isMatch}"
+            )
             if (matchResult.isMatch) {
                 val params = WebhookStartParamsRegistrar.getService(element).getStartParams(
                     projectId = projectId,
@@ -355,6 +357,10 @@ class WebhookGrayCompareService @Autowired constructor(
                 webhook = webhook,
                 variables = variables,
                 element = element
+            )
+            logger.info(
+                "new webhook trigger|pipelineId:$pipelineId|element:${element.id}|" +
+                        "matchResult:${atomResponse.matchStatus}"
             )
             if (atomResponse.matchStatus == MatchStatus.SUCCESS) {
                 pipelineAndParamsMap[pipelineId] = atomResponse.outputVars

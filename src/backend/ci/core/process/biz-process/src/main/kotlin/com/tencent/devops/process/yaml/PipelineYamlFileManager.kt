@@ -68,6 +68,7 @@ import com.tencent.devops.repository.api.scm.ServiceScmRepositoryApiResource
 import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.repository.pojo.hub.ScmFilePushReq
 import com.tencent.devops.repository.pojo.hub.ScmPullRequestCreateReq
+import com.tencent.devops.scm.api.enums.ContentKind
 import com.tencent.devops.scm.api.pojo.Commit
 import com.tencent.devops.scm.api.pojo.Content
 import com.tencent.devops.scm.api.pojo.PullRequest
@@ -125,7 +126,9 @@ class PipelineYamlFileManager @Autowired constructor(
                 )
                 pipelineTriggerEventService.saveTriggerEvent(triggerEvent = triggerEvent)
 
-                fileTrees.forEach { tree ->
+                fileTrees.filter {
+                    it.kind == ContentKind.FILE && GitActionCommon.checkYamlPipelineFile(it.path)
+                }.forEach { tree ->
                     val filePath = GitActionCommon.getCiFilePath(tree.path)
                     val oldFilePath = null
                     val yamlFileEvent = PipelineYamlFileEvent(
