@@ -140,7 +140,7 @@
                 'getStage',
                 'getContainer',
                 'getElement',
-                'getAllAtomOuputList'
+                'getAllAtomOutputList'
             ]),
             editingEleIndex () {
                 if (!this.editingElementPos) {
@@ -170,7 +170,7 @@
                 return stepIdList
             },
             outputAtomList () {
-                return this.getAllAtomOuputList(this.stages)
+                return this.getAllAtomOutputList(this.stages)
             },
             renderOutputList () {
                 return this.outputAtomList.map((group, index) => ({
