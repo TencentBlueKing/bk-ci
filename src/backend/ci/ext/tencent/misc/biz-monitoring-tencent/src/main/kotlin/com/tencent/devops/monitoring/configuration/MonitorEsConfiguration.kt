@@ -33,7 +33,6 @@ import org.apache.http.auth.UsernamePasswordCredentials
 import org.apache.http.client.CredentialsProvider
 import org.apache.http.impl.client.BasicCredentialsProvider
 import org.elasticsearch.client.RestClient
-import org.elasticsearch.client.RestClientBuilder
 import org.elasticsearch.client.RestHighLevelClient
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
@@ -54,19 +53,15 @@ class MonitorEsConfiguration {
     private var password: String? = null
 
     @Bean
-    fun restHighLevelClient(restClientBuilder: RestClientBuilder): RestHighLevelClient {
-        return RestHighLevelClient(restClientBuilder)
-    }
-
-    @Bean
-    fun restClientBuilder(): RestClientBuilder {
+    fun restHighLevelClient(): RestHighLevelClient {
         val credentialsProvider: CredentialsProvider = BasicCredentialsProvider()
         credentialsProvider.setCredentials(AuthScope.ANY, UsernamePasswordCredentials(user, password))
-        return RestClient.builder(HttpHost(ip, port!!))
+        val restClientBuilder = RestClient.builder(HttpHost(ip, port!!))
             .setHttpClientConfigCallback { httpClientBuilder ->
                 httpClientBuilder.setDefaultCredentialsProvider(
                     credentialsProvider
                 )
             }
+        return RestHighLevelClient(restClientBuilder)
     }
 }

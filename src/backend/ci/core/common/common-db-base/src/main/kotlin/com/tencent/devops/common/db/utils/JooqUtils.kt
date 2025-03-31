@@ -38,6 +38,19 @@ import org.jooq.impl.DSL
 import org.springframework.dao.DeadlockLoserDataAccessException
 import java.math.BigDecimal
 import java.sql.Timestamp
+import org.jooq.DSLContext
+import org.jooq.Select
+
+/**
+ * 兼容
+ */
+fun DSLContext.fetchCountFix(query: Select<*>, isMysql8: Boolean = false): Int {
+    return if (isMysql8) {
+        this.fetchCount(query)
+    } else {
+        this.selectCount().from(query).fetchOne(0, Int::class.java)!!
+    }
+}
 
 object JooqUtils {
 

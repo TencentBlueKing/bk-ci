@@ -30,6 +30,7 @@ package com.tencent.devops.repository.dao
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.db.utils.fetchCountFix
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.TRepository
@@ -40,6 +41,8 @@ import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.RepositorySortEnum
 import com.tencent.devops.repository.pojo.enums.RepositorySortTypeEnum
+import java.time.LocalDateTime
+import jakarta.ws.rs.NotFoundException
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -48,8 +51,6 @@ import org.jooq.Result
 import org.jooq.SelectForStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
 
 @Repository
 @Suppress("ALL")
@@ -268,7 +269,7 @@ class RepositoryDao {
             dslContext = dslContext,
             projectId = projectId
         )
-        return dslContext.fetchCount(repositoryAuthorizationQuery)
+        return dslContext.fetchCountFix(repositoryAuthorizationQuery)
     }
 
     private fun buildRepositoryAuthorizationQuery(

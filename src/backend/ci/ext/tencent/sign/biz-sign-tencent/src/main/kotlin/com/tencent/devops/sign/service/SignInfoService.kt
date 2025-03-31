@@ -49,9 +49,9 @@ import java.io.File
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.util.Base64
 import java.util.regex.Pattern
 import org.apache.commons.lang3.StringUtils
-import org.jolokia.util.Base64Util
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -99,7 +99,7 @@ class SignInfoService(
                 val history = signHistoryDao.convert(it)
                 val content = signIpaInfoDao.getSignInfoRecord(dslContext, history.resignId)
                 content?.let { info ->
-                    history.ipaSignInfoStr = String(Base64Util.decode(info.requestContent))
+                    history.ipaSignInfoStr = String(Base64.getMimeDecoder().decode(info.requestContent))
                 }
                 history
             }
@@ -243,7 +243,7 @@ class SignInfoService(
 
     fun decodeIpaSignInfo(ipaSignInfoHeader: String, objectMapper: ObjectMapper): IpaSignInfo {
         try {
-            val ipaSignInfoHeaderDecode = String(Base64Util.decode(ipaSignInfoHeader))
+            val ipaSignInfoHeaderDecode = String(Base64.getMimeDecoder().decode(ipaSignInfoHeader))
             return objectMapper.readValue(ipaSignInfoHeaderDecode, IpaSignInfo::class.java)
         } catch (ignore: Throwable) {
             logger.warn("Failed to parse signature information header：$ignore")
@@ -258,7 +258,7 @@ class SignInfoService(
         try {
             val objectMapper = ObjectMapper()
             val ipaSignInfoJson = objectMapper.writeValueAsString(ipaSignInfo)
-            return Base64Util.encode(ipaSignInfoJson.toByteArray())
+            return Base64.getMimeEncoder().encodeToString(ipaSignInfoJson.toByteArray())
         } catch (ignored: Throwable) {
             logger.warn("Failed to encode signature information header：$ignored")
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_ENCODE_SIGN_INFO, defaultMessage = "编码签名信息失败")

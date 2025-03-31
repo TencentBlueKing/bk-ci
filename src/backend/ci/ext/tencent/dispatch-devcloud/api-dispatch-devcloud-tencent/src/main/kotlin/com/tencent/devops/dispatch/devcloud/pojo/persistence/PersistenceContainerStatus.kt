@@ -27,7 +27,7 @@
 
 package com.tencent.devops.dispatch.devcloud.pojo.persistence
 
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 
 enum class PersistenceContainerStatus(val status: Int) {
     PREPARING(1),

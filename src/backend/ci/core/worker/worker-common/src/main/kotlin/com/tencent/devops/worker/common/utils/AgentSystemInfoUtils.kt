@@ -117,7 +117,7 @@ object AgentSystemInfoUtils {
                 name = network.name
                 displayName = network.displayName
                 macAddr = network.macaddr
-                mtu = network.mtu
+                mtu = network.mtu.toInt()
                 ipv4Addr = network.iPv4addr.toList()
                 ipv6Addr = network.iPv6addr.toList()
                 speed = network.speed

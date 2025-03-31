@@ -40,7 +40,7 @@ import com.github.dockerjava.api.model.MountType
 import com.github.dockerjava.api.model.Volume
 import com.github.dockerjava.api.model.VolumeOptions
 import com.github.dockerjava.core.DefaultDockerClientConfig
-import com.github.dockerjava.core.DockerClientBuilder
+import com.github.dockerjava.core.DockerClientImpl
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
@@ -105,7 +105,7 @@ class DockerHostDebugService(
         logger.info("Stop container ${dockerHostBuildInfo.containerId}")
     }
 
-    private val dockerCli = DockerClientBuilder.getInstance(config).withDockerHttpClient(longHttpClient).build()
+    private val dockerCli = DockerClientImpl.getInstance(config, longHttpClient)
 
     fun createContainer(containerInfo: ContainerInfo): String {
         try {
