@@ -262,8 +262,8 @@
                         version: '1.0.0'
                     },
 
-                    env: 'insider',
-                    // env: 'production',
+                    // env: 'insider',
+                    env: 'production',
                     brandPaddingRight: 32,
                     authenticatedSession: {
                         accessToken,
