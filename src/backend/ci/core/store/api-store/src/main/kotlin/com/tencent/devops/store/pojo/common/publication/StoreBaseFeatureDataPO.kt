@@ -46,6 +46,8 @@ data class StoreBaseFeatureDataPO(
     val recommendFlag: Boolean? = null,
     @get:Schema(title = "是否官方认证")
     val certificationFlag: Boolean? = null,
+    @get:Schema(title = "是否在首页展示")
+    val showFlag: Boolean? = null,
     @get:Schema(title = "基本类型")
     val type: String? = null,
     @get:Schema(title = "研发类型")
