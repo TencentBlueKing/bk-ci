@@ -149,6 +149,9 @@ class ModelContainer @Autowired(required = false) constructor(
         if (strategy.include != null || strategy.exclude != null) {
             return getMatrixControlOptionNew(job)
         }
+        if (strategy.matrix == null) {
+            return null
+        }
         with(strategy) {
             if (matrix is Map<*, *>) {
                 val yaml = matrix as MutableMap<String, Any>
