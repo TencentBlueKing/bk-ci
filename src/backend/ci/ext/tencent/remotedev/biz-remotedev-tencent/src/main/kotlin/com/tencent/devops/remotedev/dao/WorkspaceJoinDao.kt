@@ -603,6 +603,21 @@ class WorkspaceJoinDao {
         return stepDsl.fetch().map { it["HOST_NAME"] as String }.toSet()
     }
 
+    fun fetchRunningUser(
+        dslContext: DSLContext,
+        userId: String,
+        hostName: String
+    ): List<String> {
+        return dslContext.select(TWorkspace.T_WORKSPACE.NAME).from(TWorkspace.T_WORKSPACE)
+            .leftJoin(TWorkspaceShared.T_WORKSPACE_SHARED)
+            .on(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME.eq(TWorkspace.T_WORKSPACE.NAME))
+            .where(TWorkspace.T_WORKSPACE.HOST_NAME.eq(hostName))
+            .and(TWorkspace.T_WORKSPACE.STATUS.eq(WorkspaceStatus.RUNNING.ordinal))
+            .and(TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name))
+            .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.eq(userId))
+            .fetch().map { it[TWorkspace.T_WORKSPACE.NAME] as String }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceJoinDao::class.java)
         val windowsFullFields = TWorkspace.T_WORKSPACE.fields()
