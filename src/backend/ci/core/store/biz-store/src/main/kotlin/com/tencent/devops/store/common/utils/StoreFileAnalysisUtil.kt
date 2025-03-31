@@ -190,7 +190,7 @@ object StoreFileAnalysisUtil {
             // 1. 从文件名中提取文件扩展名
             val fileName = disposition.fileName
             val index = fileName.lastIndexOf(".")
-            if (fileName.isNullOrBlank() || index == -1) {
+            if (fileName.isNullOrBlank() || fileName != "zip") {
                 throw ErrorCodeException(errorCode = USER_UPLOAD_PACKAGE_INVALID)
             }
             val fileType = fileName.substring(index + 1)
