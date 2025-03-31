@@ -32,6 +32,7 @@ import com.tencent.devops.artifactory.api.ServiceArchiveComponentPkgResource
 import com.tencent.devops.artifactory.pojo.ArchiveStorePkgRequest
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -41,6 +42,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID
 import com.tencent.devops.store.pojo.common.BK_STORE_DIR_PATH
 import com.tencent.devops.store.pojo.common.CONFIG_YML_NAME
 import com.tencent.devops.store.pojo.common.KEY_RELEASE_INFO
@@ -55,8 +57,11 @@ import java.nio.file.Paths
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.slf4j.LoggerFactory
 
 object StoreFileAnalysisUtil {
+
+    private val logger = LoggerFactory.getLogger(StoreFileAnalysisUtil::class.java)
 
     private const val BK_CI_STORE_DIR = "bk-store"
     private const val BK_CI_PATH_REGEX = "(\\\$\\{\\{indexFile\\()(\"[^\"]*\")"
@@ -171,33 +176,45 @@ object StoreFileAnalysisUtil {
         return Files.isDirectory(directory) && Files.list(directory).findFirst().isPresent
     }
 
+    /**
+     * 提取并解压商店组件包
+     * @return Pair<String, File> 第一个元素是解压后的存储路径，第二个元素是临时文件对象
+     */
     fun extractStorePackage(
         storeCode: String,
         storeType: StoreTypeEnum,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Pair<String, File> {
-        // 提取文件类型
-        val fileName = disposition.fileName
-        val index = fileName.lastIndexOf(".")
-        val fileType = fileName.substring(index + 1)
+        try {
+            // 1. 从文件名中提取文件扩展名
+            val fileName = disposition.fileName
+            val index = fileName.lastIndexOf(".")
+            if (fileName.isNullOrBlank() || index == -1) {
+                throw ErrorCodeException(errorCode = USER_UPLOAD_PACKAGE_INVALID)
+            }
+            val fileType = fileName.substring(index + 1)
 
-        // 创建临时文件
-        val uuid = UUIDUtil.generate()
-        val file = Files.createTempFile(uuid, ".$fileType").toFile()
-        file.outputStream().use {
-            inputStream.copyTo(it)
+            // 2. 创建临时文件保存上传的压缩包
+            val uuid = UUIDUtil.generate()
+            val file = Files.createTempFile(uuid, ".$fileType").toFile().apply {
+                outputStream().use { output ->
+                    inputStream.copyTo(output)
+                }
+            }
+
+            // 3. 构建解压目标路径并解压文件
+            val storePath = buildStoreArchivePath("${storeCode}_${storeType.name}") + "$fileSeparator$uuid"
+            if (!File(storePath).exists()) {
+                File(storePath).mkdirs()
+                ZipUtil.unZipFile(file, storePath, true)
+            }
+
+            return Pair(storePath, file)
+        } catch (ignored: Throwable) {
+            logger.warn("extractStorePackage unZipFile fail, message:${ignored.message}")
+            throw ignored
         }
-
-        // 解压到目标路径
-        val storePath = buildStoreArchivePath(
-            "${storeCode}_${storeType.name}"
-        ) + "$fileSeparator$uuid"
-        if (!File(storePath).exists()) {
-            ZipUtil.unZipFile(file, storePath, true)
-        }
-
-        return Pair(storePath, file)
     }
 
     fun getBkConfigMap(storeDirPath: String): MutableMap<String, Any>? {
