@@ -107,7 +107,7 @@ object RtxUtil {
             body.append(
                 I18nUtil.getCodeLanMessage(
                     messageCode = BK_EXPERIENCE_ADD_GROUP_CONTENT,
-                    params = arrayOf(i.toString(), m.name, m.version, m.outerUrl)
+                    params = arrayOf((i + 1).toString(), m.name, m.version, m.outerUrl)
                 ) + "\n"
             )
         }
