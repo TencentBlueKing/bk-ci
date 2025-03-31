@@ -190,10 +190,10 @@ object StoreFileAnalysisUtil {
             // 1. 从文件名中提取文件扩展名
             val fileName = disposition.fileName
             val index = fileName.lastIndexOf(".")
-            if (fileName.isNullOrBlank() || fileName != "zip") {
+            val fileType = fileName.substring(index + 1)
+            if (fileName.isNullOrBlank() || fileType != "zip") {
                 throw ErrorCodeException(errorCode = USER_UPLOAD_PACKAGE_INVALID)
             }
-            val fileType = fileName.substring(index + 1)
 
             // 2. 创建临时文件保存上传的压缩包
             val uuid = UUIDUtil.generate()
