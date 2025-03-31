@@ -68,6 +68,7 @@
             ...mapState('atom', [
                 'saveStatus',
                 'pipeline',
+                'templateType',
                 'pipelineInfo',
                 'pipelineWithoutTrigger',
                 'pipelineSetting'
@@ -83,6 +84,9 @@
             },
             templateId () {
                 return this.$route.params.templateId
+            },
+            routerTemplateType () {
+                return this.$route.params.templateType
             },
             currentVersionId () {
                 return this.$route.params?.version ?? this.pipelineInfo?.version
@@ -173,7 +177,8 @@
                         templateId: this.templateId,
                         model: pipeline,
                         templateSetting: this.pipelineSetting,
-                        baseVersion: this.currentVersionId
+                        baseVersion: this.currentVersionId,
+                        type: this.routerTemplateType ?? this.templateType
                     })
                     if (data) {
                         this.$showTips({

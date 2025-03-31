@@ -11,6 +11,7 @@
                         {{ $t('template.addTemplate') }}
                     </bk-button>
                     <bk-button
+                        class="ml10"
                         :disabled="!hasCreatePermission"
                         @click="handleShowInstallTemplateDialog"
                     >

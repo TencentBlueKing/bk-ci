@@ -335,7 +335,8 @@
             params: {
                 templateId: row.id,
                 version: row.releasedVersion,
-                type
+                type,
+                templateType: row.type
             }
         })
     }
