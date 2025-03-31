@@ -54,6 +54,7 @@ class StoreProjectRelDao {
         type: Byte,
         storeType: Byte,
         instanceId: String? = null,
+        instanceName: String? = null,
         version: String? = null
     ): Int {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
@@ -65,6 +66,7 @@ class StoreProjectRelDao {
                 TYPE,
                 STORE_TYPE,
                 INSTANCE_ID,
+                INSTANCE_NAME,
                 VERSION,
                 CREATOR,
                 MODIFIER
@@ -75,6 +77,7 @@ class StoreProjectRelDao {
                 type,
                 storeType,
                 instanceId,
+                instanceName,
                 version,
                 userId,
                 userId
@@ -84,6 +87,9 @@ class StoreProjectRelDao {
                 .set(UPDATE_TIME, LocalDateTime.now())
             instanceId?.let {
                 baseStep.set(INSTANCE_ID, instanceId)
+            }
+            instanceName?.let {
+                baseStep.set(INSTANCE_NAME, instanceName)
             }
             version?.let {
                 baseStep.set(VERSION, version)
