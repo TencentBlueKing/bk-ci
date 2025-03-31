@@ -38,6 +38,8 @@ data class StoreApproveReleaseRequest(
     val recommendFlag: Boolean = true,
     @get:Schema(title = "是否为官方认证", required = true)
     val certificationFlag: Boolean = false,
+    @get:Schema(title = "是否在首页展示", required = true)
+    val showFlag: Boolean = true,
     @get:Schema(title = "研发来源 SELF_DEVELOPED：自研 THIRD_PARTY：第三方", required = false)
     val rdType: RdTypeEnum? = null,
     @get:Schema(title = "权重（数值越大代表权重越高）", required = false)
