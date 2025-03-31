@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_PAC_REPO_HASH_ID
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_MANUAL_UNLOCK
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
@@ -152,11 +153,12 @@ class WebhookGrayCompareService @Autowired constructor(
     ) {
         val newMissVar = mutableSetOf<String>()
         val diffValueKeys = mutableSetOf<String>()
+        val diffValues = mutableSetOf<String>()
         oldPipelineAndParams.forEach { (pipelineId, oldParams) ->
             val newParams = newPipelineAndParams[pipelineId] ?: return@forEach
             // 部分字段存在时效性，无需对比
             oldParams.filter { !IGNORED_PARAM_KEYS.contains(it.key) }.forEach eachParam@{ (key, value) ->
-                val oldValue = value?.toString() ?: ""
+                val oldValue = value.toString()
                 // 旧值为空字符串, 新值不存在, 直接忽略
                 if (oldValue.isBlank() && !newParams.containsKey(key)) {
                     return@eachParam
@@ -166,6 +168,7 @@ class WebhookGrayCompareService @Autowired constructor(
                     val newValue = newParams[key]?.toString() ?: ""
                     if (oldValue != newValue) {
                         diffValueKeys.add(key)
+                        diffValues.add("$key:[$oldValue|$newValue]")
                     }
                 } else {
                     newMissVar.add(key)
@@ -181,8 +184,8 @@ class WebhookGrayCompareService @Autowired constructor(
         }
         if (diffValueKeys.isNotEmpty()) {
             logger.warn(
-                "compare webhook exception|var value diff|" +
-                        "scmType: $scmType|repoName: ${matcher.getRepoName()}|diffValueKeys:$diffValueKeys",
+                "compare webhook exception|var value diff|scmType: $scmType|repoName:${matcher.getRepoName()}|" +
+                        "diffValueKeys:$diffValueKeys|diffValues:$diffValues",
             )
             return
         }
@@ -348,7 +351,7 @@ class WebhookGrayCompareService @Autowired constructor(
         }
         container.elements.filterIsInstance<WebHookTriggerElement>().forEach elements@{ element ->
             if (!element.elementEnabled()) {
-                return
+                return@elements
             }
             val atomResponse = webhookTriggerMatcher.matches(
                 projectId = projectId,
@@ -373,7 +376,8 @@ class WebhookGrayCompareService @Autowired constructor(
         // 忽略的参数名
         private val IGNORED_PARAM_KEYS = listOf(
             BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME,
-            BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP
+            BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP,
+            BK_REPO_GIT_MANUAL_UNLOCK
         )
     }
 }
