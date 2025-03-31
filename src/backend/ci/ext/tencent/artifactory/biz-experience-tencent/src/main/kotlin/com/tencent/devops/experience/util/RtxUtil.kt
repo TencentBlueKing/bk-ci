@@ -86,11 +86,15 @@ object RtxUtil {
         receivers: Set<String>,
         groupName: String,
         masterId: String,
-        messages: List<Message>
+        messages: List<Message>,
+        projectName: String
     ): RtxNotifyMessage {
         val rtxNotifyMessage = RtxNotifyMessage()
         rtxNotifyMessage.addAllReceivers(receivers)
-        rtxNotifyMessage.title = I18nUtil.getCodeLanMessage(messageCode = BK_EXPERIENCE_ADD_GROUP_TITLE)
+        rtxNotifyMessage.title = I18nUtil.getCodeLanMessage(
+            messageCode = BK_EXPERIENCE_ADD_GROUP_TITLE,
+            params = arrayOf(projectName)
+        )
         val body = StringBuilder()
         body.append(
             I18nUtil.getCodeLanMessage(

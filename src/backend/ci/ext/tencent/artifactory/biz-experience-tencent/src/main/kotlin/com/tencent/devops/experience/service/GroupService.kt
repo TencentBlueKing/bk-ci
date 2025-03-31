@@ -396,7 +396,8 @@ class GroupService @Autowired constructor(
         newAddUsers: Set<String>,
         userType: String,
         groupId: Long,
-        masterId: String
+        masterId: String,
+        projectId: String
     ) {
         val experienceIds = mutableSetOf<Long>()
         val groupIds = mutableSetOf<Long>()
@@ -437,11 +438,13 @@ class GroupService @Autowired constructor(
         // 合并消息发给企微
         if (!rtxMessages.isEmpty()) {
             val groupRecord = groupDao.get(dslContext, groupId)
+            val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
             val message = RtxUtil.batchAddGroupMessage(
                 receivers = newAddUsers,
                 groupName = groupRecord.name,
                 masterId = masterId,
-                messages = rtxMessages
+                messages = rtxMessages,
+                projectName = projectName
             )
             client.get(ServiceNotifyResource::class).sendRtxNotify(message)
         }
@@ -671,7 +674,8 @@ class GroupService @Autowired constructor(
                 newAddUsers = newOuterUsers,
                 userType = NEW_ADD_OUTER_USERS,
                 groupId = groupId,
-                masterId = userId
+                masterId = userId,
+                projectId = projectId
             )
         }
         if (newInnerUsers.isNotEmpty()) {
@@ -679,7 +683,8 @@ class GroupService @Autowired constructor(
                 newAddUsers = newInnerUsers,
                 userType = NEW_ADD_INNER_USERS,
                 groupId = groupId,
-                masterId = userId
+                masterId = userId,
+                projectId = projectId
             )
         }
     }
