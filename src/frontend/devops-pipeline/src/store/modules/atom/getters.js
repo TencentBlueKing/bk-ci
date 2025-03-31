@@ -454,5 +454,42 @@ export default {
                 stages
             }
         })
+    },
+    getAllAtomOuputList: state => (stages = state.pipelineWithoutTrigger?.stages) => {
+        const list = []
+        stages.forEach((stage, stageIndex) => {
+            if (stage) {
+                (stage.containers || []).forEach((container, containerIndex) => {
+                    (container.elements || []).forEach((element, elementIndex) => {
+                        // 从api获取的output信息
+                        const apiOutput = state.atomsOutputMap?.[`${element.atomCode}@${element.version}`] || {}
+                        // 从model解析的output信息
+                        const modelOutput = element?.data?.output || {}
+                        if (Object.keys(modelOutput).length || Object.keys(apiOutput).length) {
+                            const realOutput = Object.keys(apiOutput).length > 0 ? apiOutput : modelOutput
+                            list.push({
+                                id: element.id,
+                                location: {
+                                    stageIndex,
+                                    containerIndex,
+                                    elementIndex
+                                },
+                                totalIndex: parseInt(`${stageIndex}${containerIndex}${elementIndex}`),
+                                title: `${stageIndex + 1}-${containerIndex + 1}-${elementIndex + 1}-${element.name}`,
+                                version: element.version,
+                                stepId: element.stepId,
+                                stepName: element.name,
+                                envPrefix: `jobs.${container.jobId}.steps.${element.stepId}.outputs.`,
+                                params: Object.keys(realOutput).map(item => ({
+                                    name: item,
+                                    desc: realOutput[item]?.description
+                                }))
+                            })
+                        }
+                    })
+                })
+            }
+        })
+        return list
     }
 }

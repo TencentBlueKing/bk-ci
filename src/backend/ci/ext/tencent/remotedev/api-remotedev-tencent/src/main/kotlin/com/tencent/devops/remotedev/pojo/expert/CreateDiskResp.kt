@@ -25,5 +25,6 @@ data class CreateDiskData(
 )
 
 enum class CreateDiskDataClass(val data: String) {
+    SSD("ssd"),
     HDD("hdd")
 }

@@ -1022,7 +1022,7 @@ class WorkspaceService @Autowired constructor(
             if (cgsStatus?.state != ComputerStatusEnum.NORMAL.status) {
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.WORKSPACE_CDS_ERROR.errorCode,
-                    params = arrayOf(workspaceName)
+                    params = arrayOf(workspace.hostIp ?: workspaceName)
                 )
             }
             return startCloudWorkspaceDetail(userId, workspace)

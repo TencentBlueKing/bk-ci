@@ -28,7 +28,7 @@
         REPOSITORY_API_URL_PREFIX
     } from '@/store/constants'
     import ciYamlTheme from '@/utils/ciYamlTheme'
-    import { mapGetters, mapState } from 'vuex'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     export default {
         props: {
             value: {
@@ -87,10 +87,12 @@
         computed: {
             ...mapState('atom', [
                 'commonParams',
-                'triggerParams'
+                'triggerParams',
+                'editingElementPos'
             ]),
             ...mapGetters('atom', [
-                'allPipelineParams'
+                'allPipelineParams',
+                'getAllAtomOuputList'
             ]),
             langMap () {
                 return {
@@ -103,16 +105,26 @@
                 }
             },
             pipelineParams () {
+                const { stageIndex, containerIndex, elementIndex } = this.editingElementPos
+                const currentElementPos = parseInt(`${stageIndex}${containerIndex}${elementIndex}`)
                 return [
-                    this.commonParams.reduce((acc, item) => [
+                    ...this.commonParams.reduce((acc, item) => [
                         ...acc,
                         ...item.params.map(param => param.name)
-                    ], []).join(','),
-                    this.triggerParams.reduce((acc, item) => [
+                    ], []),
+                    ...this.triggerParams.reduce((acc, item) => [
                         ...acc,
                         ...item.params.map(param => param.name)
-                    ], []).join(','),
-                    this.allPipelineParams.map(param => param.id).join(',')
+                    ], []),
+                    ...this.allPipelineParams.map(param => param.id),
+                    ...(this.getAllAtomOuputList().reduce((acc, item) => {
+                        if (!item.stepId || item.totalIndex > currentElementPos) return acc
+                        return [
+                            ...acc,
+                            ...item.params.map(param => `${item.envPrefix}${param.name}`)
+                        ]
+                    }, []))
+
                 ]
             }
         },
@@ -156,6 +168,10 @@
                 await this.initDefaultMonaco()
             }
 
+            if (this.atomsOutputMap == null) {
+                this.fetchAtomsOutput()
+            }
+
             this.isLoading = false
             this.editor.onDidChangeModelContent(event => {
                 const value = this.editor.getValue()
@@ -170,6 +186,9 @@
             this.editor?.dispose?.()
         },
         methods: {
+            ...mapActions('atom', [
+                'fetchAtomsOutput'
+            ]),
             getLang (lang) {
                 return this.langMap[lang] || lang
             },
@@ -225,33 +244,26 @@
             },
 
             async initCopilotMonaco () {
-                const [monaco, { GongfengMonacoEditor, ReleaseChannel }, accessToken] = await Promise.all([
-                import(
-                    /* webpackMode: "lazy" */
-                    /* webpackPrefetch: true */
-                    /* webpackPreload: true */
-                    /* webpackChunkName: "monaco-editor" */
-                    'monaco-editor'
-                ),
-                import(
-                    /* webpackMode: "lazy" */
-                    /* webpackPrefetch: true */
-                    /* webpackPreload: true */
-                    /* webpackChunkName: "monaco-editor" */
-                    '@tencent/gongfeng-copilot-monaco'
-                ),
-                this.getAccessToken(false)
+                const [monaco, accessToken] = await Promise.all([
+                    import(
+                        /* webpackMode: "lazy" */
+                        /* webpackPrefetch: true */
+                        /* webpackPreload: true */
+                        /* webpackChunkName: "monaco-editor" */
+                        'monaco-editor'
+                    ),
+                    this.getAccessToken(false)
                 ])
                 this.monaco = monaco
-                this.gongfengEditor = new GongfengMonacoEditor(this.monaco, {
+                this.gongfengEditor = window.GongfengMonacoEditor.create(this.monaco, {
                     app: {
                         name: 'bkci',
                         // 接入方版本号
                         version: '1.0.0'
                     },
 
-                    // env: ReleaseChannel.INSIDER,
-                    env: ReleaseChannel.PRODUCTION,
+                    env: 'insider',
+                    // env: 'production',
                     brandPaddingRight: 32,
                     authenticatedSession: {
                         accessToken,
@@ -278,9 +290,21 @@
                 this.registryCopilotContext()
             },
             registryCopilotContext () {
+                const [pipelineId, elementId, elementName, version, jobId, stepId] = this.parentElementAlias.split(':')
+                console.log('pipelineParams', this.pipelineParams)
                 this.gongfengEditor.registerContextDefinition(this.editor, {
                     variables: this.pipelineParams,
-                    workspace: this.parentElementAlias
+                    workspace: [
+                        pipelineId, elementId, elementName, version
+                    ].join(':'),
+                    options: {
+                        ...this.editingElementPos,
+                        projectId: this.$route.params.projectId,
+                        pipelineId,
+                        version,
+                        jobId,
+                        stepId
+                    }
                 })
             }
         }
