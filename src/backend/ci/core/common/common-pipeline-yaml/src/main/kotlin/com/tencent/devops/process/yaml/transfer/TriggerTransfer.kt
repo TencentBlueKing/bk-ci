@@ -300,6 +300,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     ) else null,
                     skipWip = git.skipWip
                 )
+
                 CodeEventType.MERGE_REQUEST_ACCEPT ->
                     throw PipelineTransferException(
                         errorCode = CommonMessageCode.MR_ACCEPT_EVENT_NOT_SUPPORT_TRANSFER,

@@ -34,7 +34,6 @@ import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
-import javax.ws.rs.NotFoundException
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -42,6 +41,7 @@ import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import jakarta.ws.rs.NotFoundException
 
 @Repository
 @SuppressWarnings("LongParameterList", "LongMethod", "CyclomaticComplexMethod")

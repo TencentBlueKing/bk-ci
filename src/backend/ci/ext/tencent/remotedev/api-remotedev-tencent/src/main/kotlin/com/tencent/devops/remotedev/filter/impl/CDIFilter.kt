@@ -11,12 +11,12 @@ import com.tencent.devops.remotedev.api.service.ServiceSDKResource
 import com.tencent.devops.remotedev.pojo.common.AUTH_HEADER_OAUTH2
 import com.tencent.devops.remotedev.pojo.common.DEVX_HEADER_CDI_WORKSPACE_NAME
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.container.ContainerRequestContext
-import javax.ws.rs.container.ContainerRequestFilter
-import javax.ws.rs.container.PreMatching
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.ext.Provider
+import jakarta.ws.rs.container.ContainerRequestContext
+import jakarta.ws.rs.container.ContainerRequestFilter
+import jakarta.ws.rs.container.PreMatching
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.ext.Provider
 import org.slf4j.LoggerFactory
 
 @Provider

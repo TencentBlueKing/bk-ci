@@ -41,7 +41,7 @@ import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import sun.misc.BASE64Decoder
+import java.util.Base64
 import java.util.Random
 
 @Service
@@ -61,7 +61,7 @@ class TOFService @Autowired constructor(
 
     private val okHttpClient = OkHttpClient()
     private val random = Random()
-    private val decoder = BASE64Decoder()
+    private val decoder = Base64.getDecoder()
 
     fun post(url: String, postData: Any, tofConf: Map<String, String>): TOFResult {
 
@@ -149,7 +149,7 @@ class TOFService @Autowired constructor(
             .addFormDataPart("BodyFormat", params["BodyFormat"]!!)
 
         postData.codeccAttachFileContent!!.forEach { (key, value) ->
-            val fileBody = RequestBody.create(MultipartBody.FORM, decoder.decodeBuffer(value))
+            val fileBody = RequestBody.create(MultipartBody.FORM, decoder.decode(value))
             taskBody.addFormDataPart("file", key, fileBody)
         }
 

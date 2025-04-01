@@ -1,6 +1,30 @@
 {
   "allowedLicenses": [
     {
+      "moduleLicense": "BSD License",
+      "moduleVersion": "1.08",
+      "moduleName": "com.github.virtuald:curvesapi"
+    },
+    {
+      "moduleLicense": "CC0 1.0 Universal",
+      "moduleVersion": "0.3.0",
+      "moduleName": "net.i2p.crypto:eddsa"
+    },
+    {
+      "moduleLicense": "Apache License v2.0",
+      "moduleVersion": "5.5.0",
+      "moduleName": "net.java.dev.jna:jna-platform"
+    },
+    {
+      "moduleLicense": "LGPL, version 2.1",
+      "moduleVersion": "5.5.0",
+      "moduleName": "net.java.dev.jna:jna-platform"
+    },
+    {
+      "moduleName": "jakarta.ws.rs:jakarta.ws.rs-api",
+      "desc": "Javax 类库 , 可以直接引用"
+    },
+    {
       "moduleLicense": "GNU GPL v2.0 license with classpath exception",
       "moduleName": "com.tencent.kona:kona-crypto",
       "desc": "Tencent 类库 , 可以直接引用"

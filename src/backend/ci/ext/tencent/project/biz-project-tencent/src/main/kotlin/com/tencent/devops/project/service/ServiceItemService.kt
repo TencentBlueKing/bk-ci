@@ -53,7 +53,7 @@ import com.tencent.devops.project.pojo.ItemUpdateInfo
 import com.tencent.devops.store.api.extservice.ServiceItemRelResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.USER_SERVICE_NOT_EXIST
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

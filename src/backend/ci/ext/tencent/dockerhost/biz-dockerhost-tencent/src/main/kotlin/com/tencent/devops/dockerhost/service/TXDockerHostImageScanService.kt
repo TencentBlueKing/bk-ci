@@ -4,7 +4,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.core.DefaultDockerClientConfig
-import com.github.dockerjava.core.DockerClientBuilder
+import com.github.dockerjava.core.DockerClientImpl
 import com.github.dockerjava.okhttp.OkDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.common.api.util.JsonUtil
@@ -52,7 +52,7 @@ class TXDockerHostImageScanService(
                 .readTimeout(600000)
                 .build()
 
-            longDockerClient = DockerClientBuilder.getInstance(config).withDockerHttpClient(longHttpClient).build()
+            longDockerClient = DockerClientImpl.getInstance(config, longHttpClient)
 
             // 敏感信息扫描
             val sensitiveResult = scanSensitive(logSuffix, imageHandlerContext)

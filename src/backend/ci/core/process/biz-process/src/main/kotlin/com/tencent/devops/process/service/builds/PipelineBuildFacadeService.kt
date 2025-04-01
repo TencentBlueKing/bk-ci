@@ -151,7 +151,6 @@ import jakarta.ws.rs.core.UriBuilder
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-
 /**
  *
  * @version 1.0
