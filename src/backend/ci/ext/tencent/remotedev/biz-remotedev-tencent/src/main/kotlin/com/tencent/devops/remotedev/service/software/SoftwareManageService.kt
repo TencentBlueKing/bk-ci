@@ -305,7 +305,7 @@ class SoftwareManageService @Autowired constructor(
         workspaceName: String
     ) {
         val params = "-project_id \"$projectId\" -creator \"$workspaceName\" -region_id \"$regionId\" -inner_ip \"$ip\""
-        val base64Val = Base64.getMimeEncoder().encodeToString(params.toByteArray())
+        val base64Val = Base64.getEncoder().encodeToString(params.toByteArray())
         val systemSoftwareInfoList = softwareManageDao.getSystemSoftwareList(dslContext)
         logger.info("installSoftwareFromXingyun|systemSoftwareInfoList|$systemSoftwareInfoList|params|$params")
         if (systemSoftwareInfoList.isEmpty()) {
