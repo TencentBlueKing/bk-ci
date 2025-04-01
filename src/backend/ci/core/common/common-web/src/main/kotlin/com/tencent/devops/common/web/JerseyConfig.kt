@@ -37,8 +37,8 @@ import org.springframework.beans.factory.InitializingBean
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationContextAware
 import java.lang.reflect.Modifier
-import javax.ws.rs.ApplicationPath
-import javax.ws.rs.Path
+import jakarta.ws.rs.ApplicationPath
+import jakarta.ws.rs.Path
 
 @ApplicationPath("/api")
 open class JerseyConfig : ResourceConfig(), ApplicationContextAware, InitializingBean {

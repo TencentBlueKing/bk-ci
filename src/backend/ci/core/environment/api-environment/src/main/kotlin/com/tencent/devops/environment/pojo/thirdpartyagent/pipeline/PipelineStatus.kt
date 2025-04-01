@@ -27,7 +27,7 @@
 
 package com.tencent.devops.environment.pojo.thirdpartyagent.pipeline
 
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 
 enum class PipelineStatus(val status: Int) {
     PENDING(1),

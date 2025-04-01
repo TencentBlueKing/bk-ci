@@ -3,7 +3,7 @@ package com.tencent.devops.common.web.utils
 import com.tencent.devops.common.web.constant.BkApiHandleType
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletRequest
 
 /**
  * API接口工具类

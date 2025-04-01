@@ -32,10 +32,10 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkExceptionMapper
 import com.tencent.devops.common.web.utils.I18nUtil
 import java.text.MessageFormat
-import javax.validation.ConstraintViolationException
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.ext.ExceptionMapper
+import jakarta.validation.ConstraintViolationException
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.ext.ExceptionMapper
 import org.slf4j.LoggerFactory
 
 @BkExceptionMapper

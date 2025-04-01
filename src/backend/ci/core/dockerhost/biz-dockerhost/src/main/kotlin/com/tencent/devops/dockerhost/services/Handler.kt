@@ -31,7 +31,7 @@ import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.async.ResultCallback
 import com.github.dockerjava.api.model.PullResponseItem
 import com.github.dockerjava.core.DefaultDockerClientConfig
-import com.github.dockerjava.core.DockerClientBuilder
+import com.github.dockerjava.core.DockerClientImpl
 import com.github.dockerjava.okhttp.OkDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.common.api.constant.BK_PULLING_IMAGE
@@ -67,15 +67,9 @@ abstract class Handler<T : HandlerContext> constructor(
         .readTimeout(300000)
         .build()
 
-    val httpDockerCli: DockerClient = DockerClientBuilder
-        .getInstance(config)
-        .withDockerHttpClient(httpClient)
-        .build()
+    val httpDockerCli: DockerClient = DockerClientImpl.getInstance(config, httpClient)
 
-    val httpLongDockerCli: DockerClient = DockerClientBuilder
-        .getInstance(config)
-        .withDockerHttpClient(longHttpClient)
-        .build()
+    val httpLongDockerCli: DockerClient = DockerClientImpl.getInstance(config, longHttpClient)
 
     abstract fun handlerRequest(handlerContext: T)
 

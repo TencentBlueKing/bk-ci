@@ -1,4 +1,4 @@
-FROM centos:7
+FROM fedora:42
 
 LABEL maintainer="Tencent BlueKing Devops"
 
@@ -11,9 +11,9 @@ RUN ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime &&\
     echo 'alias tailf="tail -f"' >> ~/.bashrc
 
 # 安装软件
-RUN yum install -y procps && \
-    yum install -y vi && \
-    yum install -y vim && \
-    yum install -y less && \
-    yum install -y wget && \
-    yum install -y lrzsz
+RUN dnf install -y procps && \
+    dnf install -y vi && \
+    dnf install -y vim && \
+    dnf install -y less && \
+    dnf install -y wget && \
+    dnf install -y lrzsz

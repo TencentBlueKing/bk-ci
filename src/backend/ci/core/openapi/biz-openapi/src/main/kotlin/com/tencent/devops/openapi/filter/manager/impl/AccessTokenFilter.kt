@@ -7,7 +7,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.openapi.filter.manager.ApiFilterFlowState
 import com.tencent.devops.openapi.filter.manager.ApiFilterManager
 import com.tencent.devops.openapi.filter.manager.FilterContext
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
