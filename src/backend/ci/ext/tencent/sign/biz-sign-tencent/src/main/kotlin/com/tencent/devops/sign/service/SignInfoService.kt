@@ -258,7 +258,7 @@ class SignInfoService(
         try {
             val objectMapper = ObjectMapper()
             val ipaSignInfoJson = objectMapper.writeValueAsString(ipaSignInfo)
-            return Base64.getMimeEncoder().encodeToString(ipaSignInfoJson.toByteArray())
+            return Base64.getEncoder().encodeToString(ipaSignInfoJson.toByteArray())
         } catch (ignored: Throwable) {
             logger.warn("Failed to encode signature information header：$ignored")
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_ENCODE_SIGN_INFO, defaultMessage = "编码签名信息失败")

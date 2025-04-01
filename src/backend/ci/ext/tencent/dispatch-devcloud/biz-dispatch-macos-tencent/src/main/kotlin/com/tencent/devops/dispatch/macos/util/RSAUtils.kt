@@ -39,7 +39,7 @@ object RSAUtils {
             outputStream.write(temp)
         }
         outputStream.close()
-        return Base64.getMimeEncoder().encodeToString(outputStream.toByteArray())
+        return Base64.getEncoder().encodeToString(outputStream.toByteArray())
     }
 
     /**
@@ -67,7 +67,7 @@ object RSAUtils {
         }
 
         outputStream.close()
-        return Base64.getMimeEncoder().encodeToString(outputStream.toByteArray())
+        return Base64.getEncoder().encodeToString(outputStream.toByteArray())
     }
 
     /**
