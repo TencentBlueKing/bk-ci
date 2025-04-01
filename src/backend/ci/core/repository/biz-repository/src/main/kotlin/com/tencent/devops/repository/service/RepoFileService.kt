@@ -65,8 +65,8 @@ import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import java.util.Base64
-import javax.servlet.http.HttpServletResponse
-import javax.ws.rs.NotFoundException
+import jakarta.servlet.http.HttpServletResponse
+import jakarta.ws.rs.NotFoundException
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

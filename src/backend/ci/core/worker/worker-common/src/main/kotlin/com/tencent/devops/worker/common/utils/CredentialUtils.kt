@@ -348,6 +348,8 @@ object CredentialUtils {
                     return valueList[0]
                 }
             }
+
+            else -> {}
         }
         return null
     }

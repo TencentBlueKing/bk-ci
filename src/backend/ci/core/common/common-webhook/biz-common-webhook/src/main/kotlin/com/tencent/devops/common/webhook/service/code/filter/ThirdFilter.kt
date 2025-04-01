@@ -12,7 +12,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 class ThirdFilter(
     private val projectId: String,

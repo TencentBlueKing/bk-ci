@@ -32,7 +32,6 @@ import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.utils.DefaultBindingUtils
 import java.util.Properties
 import java.util.function.Consumer
-import org.apache.pulsar.client.api.SubscriptionMode
 import org.reflections.Reflections
 import org.reflections.scanners.Scanners
 import org.reflections.util.ClasspathHelper
@@ -124,6 +123,7 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
 
             // 声明所有扫描结果的函数式声明
             setProperty("spring.cloud.stream.function.definition", definition.joinToString(";"))
+            setProperty("spring.cloud.function.definition", definition.joinToString(";"))
             return PropertiesPropertySource(STREAM_SOURCE_NAME, this)
         }
     }
@@ -144,7 +144,7 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
             // 如果队列匿名则在消费者销毁后删除该队列
             setProperty("$rabbitPropPrefix.consumer.anonymousGroupPrefix", groupName)
             setProperty("$rabbitPropPrefix.consumer.durableSubscription", "true")
-            setProperty("$pulsarPropPrefix.consumer.subscriptionMode", SubscriptionMode.NonDurable.name)
+            setProperty("$pulsarPropPrefix.consumer.subscriptionMode", "NonDurable")
         } else {
             setProperty("$bindingPrefix.group", consumer.groupName.ifBlank { "$groupName-$bindingName" })
         }
