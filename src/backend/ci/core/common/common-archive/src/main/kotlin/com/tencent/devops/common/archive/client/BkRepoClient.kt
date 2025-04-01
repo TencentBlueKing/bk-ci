@@ -99,7 +99,7 @@ import java.net.URLEncoder
 import java.nio.file.FileSystems
 import java.nio.file.Paths
 import java.util.UUID
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 import okhttp3.Credentials
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType

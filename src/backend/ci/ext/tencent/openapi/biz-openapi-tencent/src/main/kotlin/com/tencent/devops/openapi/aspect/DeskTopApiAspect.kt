@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.aspectj.lang.JoinPoint
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.annotation.Before

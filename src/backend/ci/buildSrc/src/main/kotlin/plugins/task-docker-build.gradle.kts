@@ -46,10 +46,7 @@ if (toImage.isNullOrBlank() || (toImageRepo.isNullOrBlank() && toImageTag.isNull
     val finalJvmFlags = mutableListOf(
         "-server",
         "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8080",
-        "-Xloggc:/data/workspace/$service/jvm/gc-%t.log",
-        "-XX:+PrintTenuringDistribution",
-        "-XX:+PrintGCDetails",
-        "-XX:+PrintGCDateStamps",
+        "-Xlog:gc*,gc+age=trace:file=/data/workspace/$service/jvm/gc-%t.log:time,level,tags",
         "-XX:MaxGCPauseMillis=100",
         "-XX:+UseG1GC",
         "-XX:NativeMemoryTracking=summary",
@@ -83,8 +80,6 @@ if (toImage.isNullOrBlank() || (toImageRepo.isNullOrBlank() && toImageTag.isNull
         container {
             environment = hashMapOf("INNER_NAME" to "bk-ci")
         }
-        // 缓存位置
-        System.setProperty("jib.applicationCache", "~/.gradle/jib-cache")
         // 启动参数
         container {
             jvmFlags = finalJvmFlags

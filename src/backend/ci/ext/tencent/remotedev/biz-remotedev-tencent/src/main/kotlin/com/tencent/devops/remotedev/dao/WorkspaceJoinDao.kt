@@ -1,6 +1,7 @@
 package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.common.api.model.SQLLimit
+import com.tencent.devops.common.db.utils.fetchCountFix
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TRemotedevExpertSupport
 import com.tencent.devops.model.remotedev.tables.TWindowsResourceType
@@ -43,7 +44,7 @@ class WorkspaceJoinDao {
         queryType: QueryType = QueryType.WEB,
         search: WorkspaceSearch
     ): Long {
-        return dslContext.fetchCount(
+        return dslContext.fetchCountFix(
             genFetchProjectWorkspaceCond(
                 dslContext = dslContext,
                 queryType = queryType,
@@ -601,6 +602,21 @@ class WorkspaceJoinDao {
                 .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(owners))
         }
         return stepDsl.fetch().map { it["HOST_NAME"] as String }.toSet()
+    }
+
+    fun fetchRunningUser(
+        dslContext: DSLContext,
+        userId: String,
+        hostName: String
+    ): List<String> {
+        return dslContext.select(TWorkspace.T_WORKSPACE.NAME).from(TWorkspace.T_WORKSPACE)
+            .leftJoin(TWorkspaceShared.T_WORKSPACE_SHARED)
+            .on(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME.eq(TWorkspace.T_WORKSPACE.NAME))
+            .where(TWorkspace.T_WORKSPACE.HOST_NAME.eq(hostName))
+            .and(TWorkspace.T_WORKSPACE.STATUS.eq(WorkspaceStatus.RUNNING.ordinal))
+            .and(TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name))
+            .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.eq(userId))
+            .fetch().map { it[TWorkspace.T_WORKSPACE.NAME] as String }
     }
 
     companion object {

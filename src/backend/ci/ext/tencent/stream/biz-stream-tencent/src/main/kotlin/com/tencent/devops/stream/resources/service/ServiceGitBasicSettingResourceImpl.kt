@@ -59,9 +59,9 @@ import com.tencent.devops.stream.service.StreamGitTokenService
 import com.tencent.devops.stream.service.StreamScmService
 import com.tencent.devops.stream.service.TXStreamBasicSettingService
 import com.tencent.devops.stream.util.GitCommonUtils
-import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import jakarta.ws.rs.core.Response
 
 @RestResource
 class ServiceGitBasicSettingResourceImpl @Autowired constructor(

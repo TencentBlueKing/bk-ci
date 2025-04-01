@@ -8,8 +8,8 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
-import javax.ws.rs.BadRequestException
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.BadRequestException
+import jakarta.ws.rs.NotFoundException
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

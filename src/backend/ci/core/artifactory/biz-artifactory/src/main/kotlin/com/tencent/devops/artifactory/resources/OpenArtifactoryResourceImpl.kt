@@ -40,7 +40,7 @@ import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.process.api.service.ServicePipelineRuntimeResource
 import org.slf4j.LoggerFactory
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @RestResource
 class OpenArtifactoryResourceImpl(

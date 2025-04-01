@@ -461,10 +461,13 @@ class WorkspaceService @Autowired constructor(
                 WorkspaceShared.AssignType.VIEWER -> {
                     viewers.putIfAbsent(it.workspaceName, mutableListOf(it.sharedUser))?.add(it.sharedUser)
                 }
+
+                else -> {}
             }
             if (UserUtil.isTaiUser(it.sharedUser)) {
                 taiUsers.add(it.sharedUser)
             }
+
         }
 
         val allConfig = windowsResourceConfigService.getAllType(true, null).associateBy { it.id!! }
@@ -596,6 +599,8 @@ class WorkspaceService @Autowired constructor(
                 WorkspaceShared.AssignType.OWNER -> {
                     owners.putIfAbsent(it.workspaceName, it.sharedUser)
                 }
+
+                else -> {}
             }
         }
 

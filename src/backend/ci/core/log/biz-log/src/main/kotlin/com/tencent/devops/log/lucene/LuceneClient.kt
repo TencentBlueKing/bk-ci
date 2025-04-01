@@ -35,7 +35,7 @@ import com.tencent.devops.log.service.IndexService
 import java.io.File
 import java.sql.Date
 import java.text.SimpleDateFormat
-import javax.ws.rs.core.StreamingOutput
+import jakarta.ws.rs.core.StreamingOutput
 import org.apache.lucene.document.Document
 import org.apache.lucene.document.IntPoint
 import org.apache.lucene.document.NumericDocValuesField
