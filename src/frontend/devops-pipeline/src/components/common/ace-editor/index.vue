@@ -92,7 +92,7 @@
             ]),
             ...mapGetters('atom', [
                 'allPipelineParams',
-                'getAllAtomOuputList'
+                'getAllAtomOutputList'
             ]),
             langMap () {
                 return {
@@ -107,6 +107,7 @@
             pipelineParams () {
                 const { stageIndex, containerIndex, elementIndex } = this.editingElementPos
                 const currentElementPos = parseInt(`${stageIndex}${containerIndex}${elementIndex}`)
+                if (this.readOnly) return []
                 return [
                     ...this.commonParams.reduce((acc, item) => [
                         ...acc,
@@ -117,7 +118,7 @@
                         ...item.params.map(param => param.name)
                     ], []),
                     ...this.allPipelineParams.map(param => param.id),
-                    ...(this.getAllAtomOuputList().reduce((acc, item) => {
+                    ...(this.getAllAtomOutputList().reduce((acc, item) => {
                         if (!item.stepId || item.totalIndex > currentElementPos) return acc
                         return [
                             ...acc,
@@ -262,8 +263,8 @@
                         version: '1.0.0'
                     },
 
-                    env: 'insider',
-                    // env: 'production',
+                    // env: 'insider',
+                    env: 'production',
                     brandPaddingRight: 32,
                     authenticatedSession: {
                         accessToken,

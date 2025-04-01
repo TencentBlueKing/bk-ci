@@ -28,7 +28,7 @@
 package com.tencent.devops.store.atom.service.action.impl
 
 import com.tencent.devops.store.common.service.action.impl.FirstStorePropsDecorateImpl
-import javax.annotation.Priority
+import jakarta.annotation.Priority
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import org.springframework.web.context.request.RequestContextHolder

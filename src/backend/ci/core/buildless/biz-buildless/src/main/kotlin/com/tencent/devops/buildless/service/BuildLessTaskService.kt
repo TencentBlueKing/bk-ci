@@ -101,7 +101,7 @@ class BuildLessTaskService(
                 // 校验当前容器状态是否正常
                 val buildLessPoolInfo = containerPoolExecutor.getContainerStatus(containerId)
                 if (buildLessPoolInfo != null && buildLessPoolInfo.status == ContainerStatus.BUSY) {
-                    deferredResult.setResult(buildLessPoolInfo.buildLessTask)
+                    buildLessPoolInfo.buildLessTask?.let { deferredResult.setResult(it) }
                     return
                 }
 
@@ -123,8 +123,6 @@ class BuildLessTaskService(
                 loopCount++
                 Thread.sleep(200)
             }
-
-            deferredResult.setResult(null)
         }
     }
 

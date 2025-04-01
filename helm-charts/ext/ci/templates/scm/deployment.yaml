@@ -121,10 +121,13 @@ spec:
                   - /bin/bash
                   - -c
                   - sleep 10
-      {{ if .Values.scm.hostPath.enabled -}}
       volumes:
+      {{ if .Values.scm.hostPath.enabled -}}
       - hostPath:
           path: /data
+        name: log-volume
+      {{ else -}}
+      - emptyDir: {}
         name: log-volume
       {{- end }}
 {{- end -}}

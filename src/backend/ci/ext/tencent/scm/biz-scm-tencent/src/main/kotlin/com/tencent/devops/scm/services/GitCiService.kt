@@ -52,7 +52,7 @@ import com.tencent.devops.scm.utils.GitCodeUtils
 import com.tencent.devops.scm.utils.QualityUtils
 import com.tencent.devops.scm.utils.RetryUtils
 import java.net.URLEncoder
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value

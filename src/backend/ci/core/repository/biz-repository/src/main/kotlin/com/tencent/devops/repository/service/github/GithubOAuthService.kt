@@ -54,7 +54,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.net.URLDecoder
 import java.net.URLEncoder
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @Service
 @Suppress("ALL")

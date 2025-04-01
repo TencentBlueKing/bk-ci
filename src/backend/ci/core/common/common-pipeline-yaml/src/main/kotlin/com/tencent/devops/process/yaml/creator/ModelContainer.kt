@@ -57,7 +57,7 @@ import com.tencent.devops.process.yaml.v2.models.job.Job
 import com.tencent.devops.process.yaml.v2.models.job.Mutex
 import com.tencent.devops.process.yaml.v2.utils.StreamDispatchUtils
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 

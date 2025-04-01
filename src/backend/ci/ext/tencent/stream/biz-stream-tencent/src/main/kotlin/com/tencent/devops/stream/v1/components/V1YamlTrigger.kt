@@ -50,7 +50,7 @@ import com.tencent.devops.stream.v1.service.V1GitRepositoryConfService
 import com.tencent.devops.stream.v1.utils.V1GitCIWebHookMatcher
 import java.io.BufferedReader
 import java.io.StringReader
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

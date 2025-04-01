@@ -78,7 +78,7 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import java.net.URI
 import java.time.LocalDateTime
 import java.util.concurrent.Executors
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

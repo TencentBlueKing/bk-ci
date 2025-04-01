@@ -62,7 +62,7 @@ class ApigwJobCloudApi {
     companion object {
         private const val LOG_OUTPUT_MAX_LENGTH = 4000
         private const val INTERNAL_SERVER_ERROR_CODE = 1240002
-        private val INTERNAL_SERVER_ERROR_STATUS = javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR
+        private val INTERNAL_SERVER_ERROR_STATUS = jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR
 
         private val postPathMap = mapOf(
             "executeScript" to "/api/v3/fast_execute_script",
@@ -167,7 +167,7 @@ class ApigwJobCloudApi {
                 if (INTERNAL_SERVER_ERROR_CODE == jobCloudResp.code) {
                     throw CustomException(INTERNAL_SERVER_ERROR_STATUS, errorMsg)
                 }
-                throw CustomException(javax.ws.rs.core.Response.Status.BAD_REQUEST, errorMsg)
+                throw CustomException(jakarta.ws.rs.core.Response.Status.BAD_REQUEST, errorMsg)
             } else {
                 var jsonData = ""
                 val operationResult: T? =
