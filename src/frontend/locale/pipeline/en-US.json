@@ -1691,5 +1691,20 @@
   "noDraft": "No drafts available for deletion",
   "isTaskTermination": "Are you sure you want to terminate the task execution?",
   "pipelineNameConventions": "Pipeline Naming Conventions:",
-  "addLabels": "Add Label"
+  "addLabels": "Add Label",
+  "cron": {
+    "分": "Minute",
+    "时": "Hour",
+    "日": "Day",
+    "周": "Week",
+    "月": "Month",
+    "下次：": "Next:",
+    "小时": "Hour"
+  },
+  "enterRepoAlias": "Please enter the repository alias",
+  "pacRepoNotSet": "The associated PAC repository will be automatically monitored, no need to set it",
+  "addParam": "Add",
+  "selectRepo": "Select Repository",
+  "enterAlias": "Enter Alias",
+  "monitorPac": "Monitor PAC"
 }
