@@ -310,7 +310,8 @@ class WebhookGrayCompareService @Autowired constructor(
                         )
                     } catch (ignored: Exception) {
                         logger.warn(
-                            "Failed to get new successful pipeline|projectId: $projectId|pipelineId: $pipelineId"
+                            "Failed to get new successful pipeline|projectId: $projectId|pipelineId: $pipelineId",
+                            ignored
                         )
                     }
                 }
