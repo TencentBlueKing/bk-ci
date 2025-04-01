@@ -621,8 +621,14 @@ class WorkspaceJoinDao {
 
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceJoinDao::class.java)
-        val windowsFullFields = TWorkspace.T_WORKSPACE.fields()
-            .plus(TWorkspaceWindows.T_WORKSPACE_WINDOWS.fields())
-            .toList()
+        val windowsFullFields = lazy {
+            val fields = TWorkspace.T_WORKSPACE.fields()
+                .plus(TWorkspaceWindows.T_WORKSPACE_WINDOWS.fields())
+                .toMutableList()
+            fields.remove(TWorkspace.T_WORKSPACE.ID)
+            fields.remove(TWorkspace.T_WORKSPACE.WIN_CONFIG_ID)
+            fields.remove(TWorkspaceWindows.T_WORKSPACE_WINDOWS.ID)
+            fields
+        }.value
     }
 }
