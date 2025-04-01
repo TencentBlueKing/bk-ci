@@ -273,24 +273,6 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         )
     }
 
-    override fun allowDownload(
-        userId: String,
-        realIP: String,
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        path: String
-    ): Result<AllowDownload> {
-        return Result(
-            bkRepoDownloadService.allowDownload(
-                userId = userId,
-                projectId = projectId,
-                artifactoryType = artifactoryType,
-                path = path,
-                ip = realIP
-            )
-        )
-    }
-
     override fun properties(
         userId: String,
         projectId: String,
