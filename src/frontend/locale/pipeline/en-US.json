@@ -858,7 +858,7 @@
     "addAtom": "Add Plugins",
     "copyAtom": "Duplicate",
     "copyAtomFail": "Duplicate failed",
-    "showAliasName": " Display specific resource name when running",
+    "showAlias": " Display specific resource when running",
     "resourceType": " Build Resources Type",
     "addThirdSlave": " Add Self-Hosted Agent",
     "thirdSlaveTips": " If there are several Agents under the pools, assign the ones used last time; if the agents have not been used before, then assign randomly",

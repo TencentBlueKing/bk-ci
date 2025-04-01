@@ -853,7 +853,7 @@
     "addAtom": "新增插件",
     "copyAtom": "复制插件",
     "copyAtomFail": "复制插件失败",
-    "showAliasName": "执行时显示具体资源别名",
+    "showAlias": "执行时显示具体资源",
     "resourceType": "构建资源类型",
     "addThirdSlave": "新增第三方构建机",
     "thirdSlaveTips": "若环境下包含多个节点，则优先分配上次使用过的节点；若第一次使用，则随机分配",
