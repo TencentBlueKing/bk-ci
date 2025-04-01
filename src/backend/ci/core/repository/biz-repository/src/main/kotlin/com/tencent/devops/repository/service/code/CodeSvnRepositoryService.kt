@@ -86,7 +86,7 @@ class CodeSvnRepositoryService @Autowired constructor(
                 url = repository.getFormatURL(),
                 type = ScmType.CODE_SVN,
                 enablePac = repository.enablePac,
-                scmCode = repository.scmCode
+                scmCode = ScmType.CODE_SVN.name
             )
             // 如果repository为null，则默认为TC
             repositoryCodeSvnDao.create(

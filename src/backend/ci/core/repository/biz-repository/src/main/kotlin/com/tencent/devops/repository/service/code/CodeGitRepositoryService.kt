@@ -118,7 +118,7 @@ class CodeGitRepositoryService @Autowired constructor(
                 type = ScmType.CODE_GIT,
                 atom = repository.atom,
                 enablePac = repository.enablePac,
-                scmCode = repository.scmCode
+                scmCode = ScmType.CODE_GIT.name
             )
             repositoryCodeGitDao.create(
                 dslContext = transactionContext,

@@ -82,7 +82,7 @@ class CodeGithubRepositoryService @Autowired constructor(
                 url = repository.getFormatURL(),
                 type = ScmType.GITHUB,
                 enablePac = repository.enablePac,
-                scmCode = repository.scmCode
+                scmCode = ScmType.GITHUB.name
             )
             repositoryGithubDao.create(
                 dslContext = transactionContext,

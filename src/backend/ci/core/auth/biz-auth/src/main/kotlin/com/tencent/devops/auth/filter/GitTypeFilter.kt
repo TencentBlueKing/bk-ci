@@ -30,11 +30,11 @@ package com.tencent.devops.auth.filter
 import com.tencent.devops.auth.utils.GitTypeUtils
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GIT_TYPE
 import org.springframework.stereotype.Component
-import javax.servlet.Filter
-import javax.servlet.FilterChain
-import javax.servlet.ServletRequest
-import javax.servlet.ServletResponse
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.Filter
+import jakarta.servlet.FilterChain
+import jakarta.servlet.ServletRequest
+import jakarta.servlet.ServletResponse
+import jakarta.servlet.http.HttpServletRequest
 
 /**
  * 仅在Stream的场景生效，用于区分不同的代码库源，对应不同的校验逻辑

@@ -38,8 +38,8 @@ import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.common.web.utils.I18nUtil
 import org.hibernate.validator.internal.engine.constraintvalidation.ConstraintValidatorContextImpl
 import java.util.regex.Pattern
-import javax.validation.ConstraintValidator
-import javax.validation.ConstraintValidatorContext
+import jakarta.validation.ConstraintValidator
+import jakarta.validation.ConstraintValidatorContext
 
 class BkFieldValidator : ConstraintValidator<BkField?, Any?> {
 

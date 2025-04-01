@@ -78,7 +78,7 @@ class CodeP4RepositoryService @Autowired constructor(
                 url = repository.getFormatURL(),
                 type = ScmType.CODE_P4,
                 enablePac = repository.enablePac,
-                scmCode = repository.scmCode
+                scmCode = ScmType.CODE_P4.name
             )
             repositoryCodeP4Dao.create(
                 dslContext = transactionContext,

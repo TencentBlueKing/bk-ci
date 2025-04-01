@@ -35,6 +35,9 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_PAC_REPO_HASH_ID
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_MANUAL_UNLOCK
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
@@ -111,7 +114,7 @@ class WebhookGrayCompareService @Autowired constructor(
             // 新比旧多的流水线
             val add = newPipelineAndParams.keys.minus(oldPipelineAndParams.keys)
             logger.warn(
-                "compare webhook|the number of pipelines differs|" +
+                "compare webhook exception|the number of pipelines differs|" +
                         "scmType: $scmType|repoName: ${matcher.getRepoName()}|miss:$miss|add:$add"
             )
             return false
@@ -122,7 +125,7 @@ class WebhookGrayCompareService @Autowired constructor(
             // 新比旧多的流水线
             val add = newPipelineAndParams.keys.minus(oldPipelineAndParams.keys)
             logger.warn(
-                "compare webhook|old not contains all new|" +
+                "compare webhook exception|old not contains all new|" +
                         "scmType: $scmType|repoName: ${matcher.getRepoName()}|miss:$miss|add:$add",
             )
             return false
@@ -133,7 +136,7 @@ class WebhookGrayCompareService @Autowired constructor(
             // 新比旧多的流水线
             val add = newPipelineAndParams.keys.minus(oldPipelineAndParams.keys)
             logger.warn(
-                "compare webhook|new not contains all old|" +
+                "compare webhook exception|new not contains all old|" +
                         "scmType: $scmType|repoName: ${matcher.getRepoName()}|miss:$miss|add:$add"
             )
             return false
@@ -150,10 +153,12 @@ class WebhookGrayCompareService @Autowired constructor(
     ) {
         val newMissVar = mutableSetOf<String>()
         val diffValueKeys = mutableSetOf<String>()
+        val diffValues = mutableSetOf<String>()
         oldPipelineAndParams.forEach { (pipelineId, oldParams) ->
             val newParams = newPipelineAndParams[pipelineId] ?: return@forEach
-            oldParams.forEach eachParam@{ (key, value) ->
-                val oldValue = value?.toString() ?: ""
+            // 部分字段存在时效性，无需对比
+            oldParams.filter { !IGNORED_PARAM_KEYS.contains(it.key) }.forEach eachParam@{ (key, value) ->
+                val oldValue = value.toString()
                 // 旧值为空字符串, 新值不存在, 直接忽略
                 if (oldValue.isBlank() && !newParams.containsKey(key)) {
                     return@eachParam
@@ -163,6 +168,7 @@ class WebhookGrayCompareService @Autowired constructor(
                     val newValue = newParams[key]?.toString() ?: ""
                     if (oldValue != newValue) {
                         diffValueKeys.add(key)
+                        diffValues.add("$key:[$oldValue|$newValue]")
                     }
                 } else {
                     newMissVar.add(key)
@@ -171,15 +177,15 @@ class WebhookGrayCompareService @Autowired constructor(
         }
         if (newMissVar.isNotEmpty()) {
             logger.warn(
-                "compare webhook|new miss var|" +
+                "compare webhook exception|new miss var|" +
                         "scmType: $scmType|repoName: ${matcher.getRepoName()}|newMissVar:$newMissVar",
             )
             return
         }
         if (diffValueKeys.isNotEmpty()) {
             logger.warn(
-                "compare webhook|var value diff|" +
-                        "scmType: $scmType|repoName: ${matcher.getRepoName()}|diffValueKeys:$diffValueKeys",
+                "compare webhook exception|var value diff|scmType: $scmType|repoName:${matcher.getRepoName()}|" +
+                        "diffValueKeys:$diffValueKeys|diffValues:$diffValues",
             )
             return
         }
@@ -251,6 +257,9 @@ class WebhookGrayCompareService @Autowired constructor(
             }
 
             val matchResult = matcher.isMatch(projectId, pipelineId, repo, webHookParams)
+            logger.info(
+                "old webhook trigger|pipelineId:$pipelineId|element:${element.id}|matchResult:${matchResult.isMatch}"
+            )
             if (matchResult.isMatch) {
                 val params = WebhookStartParamsRegistrar.getService(element).getStartParams(
                     projectId = projectId,
@@ -342,7 +351,7 @@ class WebhookGrayCompareService @Autowired constructor(
         }
         container.elements.filterIsInstance<WebHookTriggerElement>().forEach elements@{ element ->
             if (!element.elementEnabled()) {
-                return
+                return@elements
             }
             val atomResponse = webhookTriggerMatcher.matches(
                 projectId = projectId,
@@ -352,6 +361,10 @@ class WebhookGrayCompareService @Autowired constructor(
                 variables = variables,
                 element = element
             )
+            logger.info(
+                "new webhook trigger|pipelineId:$pipelineId|element:${element.id}|" +
+                        "matchResult:${atomResponse.matchStatus}"
+            )
             if (atomResponse.matchStatus == MatchStatus.SUCCESS) {
                 pipelineAndParamsMap[pipelineId] = atomResponse.outputVars
             }
@@ -360,5 +373,11 @@ class WebhookGrayCompareService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(WebhookGrayCompareService::class.java)
+        // 忽略的参数名
+        private val IGNORED_PARAM_KEYS = listOf(
+            BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME,
+            BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP,
+            BK_REPO_GIT_MANUAL_UNLOCK
+        )
     }
 }

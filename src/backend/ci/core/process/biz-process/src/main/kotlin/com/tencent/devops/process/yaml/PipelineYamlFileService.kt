@@ -30,9 +30,11 @@ package com.tencent.devops.process.yaml
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.model.process.tables.records.TPipelineYamlBranchFileRecord
 import com.tencent.devops.process.engine.dao.PipelineYamlBranchFileDao
+import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.common.Constansts
 import com.tencent.devops.repository.api.scm.ServiceScmFileApiResource
 import com.tencent.devops.repository.pojo.credential.AuthRepository
+import com.tencent.devops.scm.api.enums.ContentKind
 import com.tencent.devops.scm.api.pojo.Content
 import com.tencent.devops.scm.api.pojo.Tree
 import org.jooq.DSLContext
@@ -56,7 +58,9 @@ class PipelineYamlFileService @Autowired constructor(
             ref = ref,
             recursive = true,
             authRepository = authRepository
-        ).data!!
+        ).data?.filter {
+            it.kind == ContentKind.FILE && GitActionCommon.checkYamlPipelineFile(it.path)
+        } ?: emptyList()
     }
 
     fun getFileContent(

@@ -10,6 +10,7 @@ import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import com.tencent.devops.scm.api.pojo.webhook.git.AbstractCommentHook
 import com.tencent.devops.scm.api.pojo.webhook.git.IssueHook
+import com.tencent.devops.scm.api.pojo.webhook.git.PullRequestReviewHook
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -18,7 +19,7 @@ class DefaultGitHookConverter @Autowired constructor(
     private val pipelineYamlFileService: PipelineYamlFileService
 ) : WebhookConverter {
     override fun support(webhook: Webhook): Boolean {
-        return webhook is IssueHook || webhook is AbstractCommentHook
+        return webhook is IssueHook || webhook is AbstractCommentHook || webhook is PullRequestReviewHook
     }
 
     override fun convert(

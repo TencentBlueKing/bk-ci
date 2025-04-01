@@ -30,7 +30,7 @@ package com.tencent.devops.common.pipeline.pojo
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.Valid
+import jakarta.validation.Valid
 
 data class PipelineModelAndSetting(
     @get:Schema(title = "流水线模型", required = true)
