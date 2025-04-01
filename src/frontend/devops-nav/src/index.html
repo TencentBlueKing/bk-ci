@@ -160,7 +160,8 @@
         } else if ([
           /^\/console\/store\/(\w+)?/,
           /^\/console\/permission\/(\w+)?/,
-          /^\/console\/manage\/apply/
+          /^\/console\/manage\/apply/,
+          /^\/console\/platform\/(\w+)?/,
         ].some((reg) => location.pathname.match(reg))) {
           // TODO store、permission、apply project 没有projectId
           return ''
