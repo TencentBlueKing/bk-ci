@@ -82,12 +82,13 @@
                 return this.lang
             },
             elementAlias () {
-                console.log(this.element)
                 return [
                     this.$route.params.pipelineId,
                     this.element?.id,
                     this.element?.name,
-                    this.$route.params.version
+                    this.$route.params.version,
+                    this.container?.jobId,
+                    this.element?.stepId
                 ].join(':')
             }
         },

@@ -65,6 +65,12 @@ data class BuildFormProperty(
 
     @get:Schema(title = "自定义仓库通配符", required = false)
     val glob: String?,
+    @get:Schema(title = "开启文件版本管理", required = false)
+    val enableVersionControl: Boolean? = null,
+    @get:Schema(title = "目录随机字符串", required = false)
+    val randomStringInPath: String? = null,
+    @get:Schema(title = "最新的目录随机字符串", required = false)
+    var latestRandomStringInPath: String? = null,
     @get:Schema(title = "文件元数据", required = false)
     val properties: Map<String, String>?,
     @get:Schema(title = "元素标签", required = false)
@@ -93,4 +99,12 @@ data class BuildFormProperty(
     val payload: Any? = null,
     @get:Schema(title = "级联选择器属性", required = false)
     var cascadeProps: BuildCascadeProps? = null
+)
+
+@Schema(title = "构建模型-自定义路径拆分的版本控制信息")
+data class CustomFileVersionControlInfo(
+    @get:Schema(title = "完整目录", required = false)
+    var directory: String,
+    @get:Schema(title = "最新的目录随机字符串", required = false)
+    var latestRandomStringInPath: String
 )

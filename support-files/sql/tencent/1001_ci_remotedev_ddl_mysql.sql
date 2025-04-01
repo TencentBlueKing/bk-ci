@@ -558,6 +558,7 @@ CREATE TABLE IF NOT EXISTS T_WORKSPACE_USE_SNAPSHOTS
     STATUS         varchar(32)                         not null comment '工作空间状态',
     DATE           date                         not null comment '快照时间',
     CREATED_TIME   timestamp default CURRENT_TIMESTAMP not null comment '创建时间',
+    NEED_REDUCED  boolean NULL DEFAULT 0 COMMENT '是否需要减免，1 是 0 否',
     constraint uindex
         unique (WORKSPACE_NAME, DATE)
 )
