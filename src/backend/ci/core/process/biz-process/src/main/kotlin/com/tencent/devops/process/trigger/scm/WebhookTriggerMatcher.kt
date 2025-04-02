@@ -57,6 +57,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -164,6 +165,7 @@ class WebhookTriggerMatcher @Autowired constructor(
             ?: I18nUtil.getCodeLanMessage(CommonMessageCode.BK_CODE_BASE_TRIGGERING)
         // 构建历史界面——触发logo展示
         startParams[PIPELINE_WEBHOOK_TYPE] = webhookParams.codeType.name
+        logger.info("startParams: $startParams")
         // 子类代码库触发参数
         val elementStartParams = WebhookStartParamsRegistrar.getService(element).getElementStartParams(
             element = element,
@@ -196,6 +198,7 @@ class WebhookTriggerMatcher @Autowired constructor(
 
     companion object {
         const val PIPELINE_WEBHOOK_COMMIT_MESSAGE_LENGTH_MAX = 128
+        private val logger = LoggerFactory.getLogger(WebhookTriggerMatcher::class.java)
     }
 }
 
