@@ -167,7 +167,7 @@ class WebhookTriggerMatcher @Autowired constructor(
         // 子类代码库触发参数
         val elementStartParams = WebhookStartParamsRegistrar.getService(element).getElementStartParams(
             element = element,
-            variables = startParams.mapValues { it.value.toString() },
+            variables = startParams.mapValues { it.value?.toString() ?: "" },
             repo = repository,
             matcher = null,
             matchResult = matchResult,
