@@ -135,7 +135,7 @@
                             this.setNoUsePermission(true)
                             this.list.splice(0, 0, {
                                 id: this.value,
-                                name: `******（${this.$t('editPage.noPermToView')}）`
+                                name: this.$t('editPage.withoutOption')
                             })
                         } else {
                             this.setNoUsePermission(false)
@@ -147,7 +147,7 @@
                             if (value !== '' && !findItemById(this.list, value)) {
                                 this.list.splice(0, 0, {
                                     id: value,
-                                    name: `******（${this.$t('editPage.noPermToView')}）`
+                                    name: this.$t('editPage.withoutOption')
                                 })
                             }
                         })

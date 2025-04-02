@@ -399,10 +399,10 @@
         }
 
         goHomeById (projectId: string, reload: boolean = false): void {
-            const hasProjectId = this.currentPage.show_project_list
-            let path = urlJoin('/console', this.currentPage.link_new)
+            const hasProjectId = this.currentPage?.show_project_list
+            let path = urlJoin('/console', this.currentPage?.link_new)
             if (hasProjectId) {
-                if (this.currentPage.project_id_type === 'path') {
+                if (this.currentPage?.project_id_type === 'path') {
                     path = urlJoin(path, projectId)
                 } else {
                     path += `?projectId=${projectId}`
@@ -431,7 +431,7 @@
                 })
             }
             
-            if (!oldProject.routerTag || project.routerTag !== oldProject.routerTag) {
+            if (!oldProject?.routerTag || project?.routerTag !== oldProject?.routerTag) {
                 this.goHomeById(id, true)
             }
         }

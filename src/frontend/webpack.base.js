@@ -186,10 +186,6 @@ module.exports = ({ entry, isConsole = false, publicPath, dist, port = 8080, arg
             client: {
                 webSocketURL: 'ws://127.0.0.1:' + port + '/ws'
             },
-            // https: {
-            //     key: fs.readFileSync(path.join(__dirname, 'localhost+2-key.pem')),
-            //     cert: fs.readFileSync(path.join(__dirname, './localhost+2.pem'))
-            // },
             hot: isDev,
             port
         }

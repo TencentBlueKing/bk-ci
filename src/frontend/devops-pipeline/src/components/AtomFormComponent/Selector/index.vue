@@ -104,22 +104,11 @@
                 open && this.hasUrl && this.freshList()
             },
             transformList (res) {
-                const list = this.getResponseData(res, this.mergedOptionsConf.dataPath)
-                return list.map(item => {
-                    let curItem = {}
-                    if (typeof item === 'string') {
-                        curItem = {
-                            id: item,
-                            name: item
-                        }
-                    }
-                    curItem = {
-                        ...item,
-                        id: item[this.mergedOptionsConf.paramId],
-                        name: item[this.mergedOptionsConf.paramName]
-                    }
-                    return curItem
-                })
+                return this.getResponseData(res, this.mergedOptionsConf.dataPath).map(item => ({
+                    ...item,
+                    id: item[this.mergedOptionsConf.paramId || 'id'] ?? item,
+                    name: item[this.mergedOptionsConf.paramName || 'name'] ?? item
+                }))
             },
             freshList () {
                 if (this.isLackParam) { // 缺少参数时，选择列表置空
@@ -142,7 +131,7 @@
                         if (typeof value !== 'undefined' && value !== '' && !findItemById(this.list, value)) {
                             this.list.splice(0, 0, {
                                 id: value,
-                                name: `******（${this.$t('editPage.noPermToView')}）`
+                                name: this.$t('editPage.withoutOption')
                             })
                         }
                     })

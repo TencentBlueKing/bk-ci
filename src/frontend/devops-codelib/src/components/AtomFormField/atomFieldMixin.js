@@ -96,7 +96,7 @@ const atomFieldMixin = {
                     case Array.isArray(response.data): {
                         return response.data
                     }
-                    case response.data && response.data.record && Array.isArray(response.data.record): {
+                    case Array.isArray(response?.data?.record): {
                         return response.data.record
                     }
                     default: {

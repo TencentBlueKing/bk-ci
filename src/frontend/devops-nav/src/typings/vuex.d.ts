@@ -19,8 +19,17 @@ interface RootState {
     moduleLoading: boolean,
     isPermissionDialogShow: boolean
     hookMap: any
+    isShowNonDisclosureAgreement: boolean,
+    nonDisclosureAgreementConfig?: NonDisclosureAgreementConfig,
+    cancelDisclosureHandler: Function
 }
 
+interface NonDisclosureAgreementConfig {
+    signed: boolean
+    userId: string
+    schemeQrcodeUrl?: string
+    name?: string
+}
 interface Link {
     'name': string
     'link': string

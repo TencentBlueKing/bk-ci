@@ -103,7 +103,13 @@
             options: {
                 type: Array,
                 default: () => []
-            }
+            },
+            paramValues: {
+                type: Object,
+                default: () => ({})
+            },
+            // TODO: 历史遗留问题，将ID转为String, 否则对于数字ID,无法选中
+            allIdString: Boolean
         },
         data () {
             return {
@@ -179,26 +185,30 @@
                     const changeUrl = this.urlParse(url, {
                         bkPoolType: this?.container?.dispatchType?.buildType,
                         ...query,
+                        ...(this.paramValues || {}),
                         ...element
                     })
                     this.isLoading = true
                     const res = await this.$ajax.get(changeUrl)
 
                     const resData = this.getResponseData(res, this.dataPath)
-
                     // 正常情况
-                    this.list = (resData || []).map(item => ({
-                        ...item,
-                        id: item[this.paramId],
-                        name: item[this.paramName]
-                    }))
-
+                    this.list = (resData || []).map(item => {
+                        const idKey = this.paramId || 'id'
+                        const nameKey = this.paramName || 'name'
+                        const id = item[idKey] ?? item
+                        return {
+                            ...item,
+                            id: this.allIdString ? String(id) : id,
+                            name: item[nameKey] ?? item
+                        }
+                    })
                     // 单选selector时处理******
                     if (!this.multiSelect) {
                         if (this.value !== '' && !findItemById(this.list, this.value)) {
                             this.list.splice(0, 0, {
                                 id: this.value,
-                                name: `******（${this.$t('editPage.noPermToView')}）`
+                                name: this.$t('editPage.withoutOption')
                             })
                         }
                     } else {
@@ -208,7 +218,7 @@
                             if (value !== '' && !findItemById(this.list, value)) {
                                 this.list.splice(0, 0, {
                                     id: value,
-                                    name: `******（${this.$t('editPage.noPermToView')}）`
+                                    name: this.$t('editPage.withoutOption')
                                 })
                             }
                         })

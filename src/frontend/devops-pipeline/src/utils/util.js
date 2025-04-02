@@ -936,14 +936,12 @@ export function findItemById (list, id) {
     try {
         const listIdMap = list.reduce((acc, item) => {
             if (item?.id) {
-                // 统一转换为字符串
-                const strId = String(item.id)
-                acc[strId] = item
+                acc[item.id] = item
             }
             return acc
         }, {})
-        return listIdMap[String(id)] ?? null
+        return !!listIdMap[id]
     } catch (error) {
-        return null
+        return false
     }
 }

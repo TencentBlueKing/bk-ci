@@ -311,13 +311,12 @@
                             disalbed: !resource.name
                         }))
                     }
-                    console.log(this.nodeList, this.showAgentById, resources)
 
                     // 第三方构建机（节点/环境）选择添加无权限查看项
                     if (this.showAgentById && this.value !== '' && !findItemById(this.nodeList, this.value)) {
                         this.nodeList.splice(0, 0, {
                             id: this.value,
-                            name: `******（${this.$t('editPage.noPermToView')}）`
+                            name: this.$t('editPage.withoutOption')
                         })
                     }
                 } catch (err) {
