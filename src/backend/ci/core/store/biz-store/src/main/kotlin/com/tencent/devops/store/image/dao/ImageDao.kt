@@ -282,6 +282,28 @@ class ImageDao {
         }
     }
 
+
+    fun getImageStatusByCodeAndVersion(dslContext: DSLContext, imageCode: String, version: String): TImageRecord? {
+        val tImage = TImage.T_IMAGE
+        val versionCondition = if (VersionUtils.isLatestVersion(version)) {
+            tImage.VERSION.like(version.replace("*", "") + "%")
+        } else {
+            tImage.VERSION.eq(version)
+        }
+
+        val query = dslContext.selectFrom(tImage)
+            .where(tImage.IMAGE_CODE.eq(imageCode).and(versionCondition))
+            .orderBy(tImage.CREATE_TIME.desc())
+
+        if (VersionUtils.isLatestVersion(version)) {
+            val imageRecords = query.fetch()
+            return imageRecords.firstOrNull { it.imageStatus == ImageStatusEnum.RELEASED.status.toByte() }
+                ?: imageRecords.firstOrNull()
+        } else {
+            return query.limit(1).fetchOne()
+        }
+    }
+
     fun getJobImageCount(
         dslContext: DSLContext,
         projectCode: String,
