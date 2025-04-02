@@ -28,6 +28,7 @@
 package com.tencent.devops.process.trigger.scm
 
 import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_SOURCE_WEBHOOK
@@ -70,8 +71,10 @@ class WebhookManager @Autowired constructor(
                         body = request.body
                     )
                 ).data ?: return
-                logger.info("webhook request body parsed|webhookData:${webhookData.webhook}")
-                if (!webhookData.webhook.skip()) {
+                logger.info(
+                    "webhook request body parsed|webhookData:${JsonUtil.toJson(webhookData.webhook, false)}"
+                )
+                if (webhookData.webhook.skip()) {
                     logger.info("skip this webhook request|scmCode:$scmCode")
                     return
                 }
