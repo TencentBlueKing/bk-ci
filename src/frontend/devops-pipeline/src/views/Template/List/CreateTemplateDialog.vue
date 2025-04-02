@@ -109,14 +109,7 @@
         }
     }
     const templateFormRef = ref(null)
-    const templateFormData = ref({
-        projectId: projectId.value,
-        creator: userName.value,
-        type: 'PIPELINE',
-        source: 'CUSTOM',
-        name: '',
-        desc: ''
-    })
+    const templateFormData = ref(getDefaultFormData())
     const templateTypeMap = computed(() => [
         {
             name: i18n.t('template.pipelineTemplate'),
@@ -135,9 +128,11 @@
         templateFormData.value.type = type
     }
 
-    function handConfirmCreateTemplate () {
-        templateFormRef.value.validate().then(async () => {
-            await proxy.$store.dispatch('templates/createTemplate', {
+    async function handConfirmCreateTemplate () {
+        const valid = await templateFormRef.value.validate()
+        if (valid) {
+            proxy.$store.dispatch('atom/setTemplateType', templateFormData.value.type)
+            const res = await proxy.$store.dispatch('templates/createTemplate', {
                 projectId: projectId.value,
                 params: templateFormData.value
             })
@@ -147,8 +142,8 @@
             })
             templateFormData.value = getDefaultFormData()
             emit('update:value', false)
-            emit('confirm')
-        })
+            emit('confirm', res)
+        }
     }
 
     function handleCancelCreateTemplate () {

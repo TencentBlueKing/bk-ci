@@ -238,7 +238,7 @@ export default {
                 [pipelineRes, atomPropRes] = await dispatch('requestTemplate', { version, ...params })
             } else {
                 [pipelineRes, atomPropRes] = await Promise.all([
-                    dispatch('fetchPipelineByVersion', params),
+                    dispatch('fetchPipelineByVersion', { version, ...params }),
                     request.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/projects/${params.projectId}/pipelines/${params.pipelineId}/atom/prop/list`, {
                         params: version ? { version } : {}
                     })

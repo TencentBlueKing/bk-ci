@@ -49,7 +49,9 @@ const actions = {
         })
     },
     createTemplate (_, { projectId, params }) {
-        return ajax.post(`/${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/create`, params)
+        return ajax.post(`/${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/create`, params).then(response => {
+            return response.data
+        })
     },
     importTemplateFromStore (_, { projectId, params }) {
         return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/create/market`, params)

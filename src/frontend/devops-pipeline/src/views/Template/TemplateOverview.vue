@@ -308,6 +308,7 @@
                 })
             },
             goEditTemplate () {
+                this.updatePipelineMode(UI_MODE)
                 this.$router.push({
                     name: 'templateEdit',
                     params: {
