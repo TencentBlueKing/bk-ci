@@ -38,6 +38,7 @@ import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_MANUAL_UNLOCK
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_PREFIX
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
@@ -158,6 +159,9 @@ class WebhookGrayCompareService @Autowired constructor(
             val newParams = newPipelineAndParams[pipelineId] ?: return@forEach
             // 部分字段存在时效性，无需对比
             oldParams.filter { !IGNORED_PARAM_KEYS.contains(it.key) }.forEach eachParam@{ (key, value) ->
+                if (IGNORED_PARAM_PREFIX.any { key.contains(it) }) {
+                    return@eachParam
+                }
                 val oldValue = value.toString()
                 // 旧值为空字符串, 新值不存在, 直接忽略
                 if (oldValue.isBlank() && !newParams.containsKey(key)) {
@@ -379,6 +383,10 @@ class WebhookGrayCompareService @Autowired constructor(
             BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME,
             BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP,
             BK_REPO_GIT_MANUAL_UNLOCK
+        )
+        // 忽略的前缀参数
+        private val IGNORED_PARAM_PREFIX= listOf(
+            BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_PREFIX
         )
     }
 }
