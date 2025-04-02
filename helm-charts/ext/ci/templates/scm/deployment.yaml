@@ -108,12 +108,10 @@ spec:
             timeoutSeconds: 10
             failureThreshold: 20
             successThreshold: 1
-          {{ if .Values.scm.hostPath.enabled -}}
           volumeMounts:
           - mountPath: /data/workspace/scm/jvm
             name: log-volume
             subPathExpr: bkci/jvm/$(POD_NAME)
-          {{- end }}
           lifecycle:
               preStop:
                 exec:
