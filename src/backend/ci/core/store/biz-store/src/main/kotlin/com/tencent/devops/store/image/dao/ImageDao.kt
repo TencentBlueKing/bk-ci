@@ -282,7 +282,6 @@ class ImageDao {
         }
     }
 
-
     fun getImageStatusByCodeAndVersion(dslContext: DSLContext, imageCode: String, version: String): TImageRecord? {
         val tImage = TImage.T_IMAGE
         val versionCondition = if (VersionUtils.isLatestVersion(version)) {
