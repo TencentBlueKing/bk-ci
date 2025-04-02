@@ -360,13 +360,15 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
             val osName = baseEnvRecord.osName.orEmpty()
             val osArch = baseEnvRecord.osArch ?: " "
             val pkgRepoPath = baseEnvRecord.pkgPath.orEmpty()
-            val signatureFileKey = getSignatureFileKey()
+            val signatureCertFileKey = getSignatureCertFileKey()
+            val signatureOriginFileKey = getSignatureOriginFileKey()
 
             val extEnvs = storeBaseEnvExtQueryDao.getBaseExtEnvsByEnvId(
                 dslContext = dslContext,
                 envId = baseEnvRecord.id,
                 fieldNames = arrayOf(
-                    signatureFileKey,
+                    signatureCertFileKey,
+                    signatureOriginFileKey,
                     OsConfigInfo::packAppPackageScriptPath.name,
                     OsConfigInfo::appPackagePath.name,
                     OsConfigInfo::packScriptPath.name,
@@ -374,14 +376,15 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
                 )
             )
 
-            val signFilePaths = extEnvs?.find { it.fieldName == signatureFileKey }?.fieldValue ?: "[]"
+            var certSignFilePaths = extEnvs?.find { it.fieldName == signatureCertFileKey }?.fieldValue ?: "[]"
+            val originFilePaths = extEnvs?.find { it.fieldName == signatureOriginFileKey }?.fieldValue ?: "[]"
             val packScriptPath = extEnvs?.find { it.fieldName == OsConfigInfo::packScriptPath.name }?.fieldValue ?: " "
             var packAppPackageScriptPath =
                 extEnvs?.find { it.fieldName == OsConfigInfo::packAppPackageScriptPath.name }?.fieldValue ?: " "
 
             if (packScriptPath.isBlank()) queryDefaultScriptFlag = true
 
-            val pkgLocalPath = extEnvs?.find { it.fieldName == OsConfigInfo::packagePath.name }?.fieldValue ?: " "
+            val packagePath = extEnvs?.find { it.fieldName == OsConfigInfo::packagePath.name }?.fieldValue ?: " "
             var appPackagePath = extEnvs?.find { it.fieldName == OsConfigInfo::appPackagePath.name }?.fieldValue ?: " "
 
             if (appPackagePath.isBlank() && storeBaseFeatureExtQueryDao.getStoreBaseFeatureExt(
@@ -392,7 +395,7 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
                 )?.fieldValue == FrameworkCodeEnum.NODEJS_FRAMEWORK.name
             ) {
                 // 兼容nodejs框架没有配置应用程序路径的情况
-                File(pkgLocalPath).let { packageFile ->
+                File(packagePath).let { packageFile ->
                     appPackagePath = "${packageFile.parentFile.absolutePath}${File.separator}$storeCode.${
                         FilenameUtils.getExtension(packageFile.name)
                     }"
@@ -402,8 +405,14 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
                 }
             }
 
+            if (appPackagePath.isNotBlank()) {
+                val certSignFilePathSet = JsonUtil.to(certSignFilePaths, object : TypeReference<MutableSet<String>>() {})
+                certSignFilePathSet.add(appPackagePath)
+                certSignFilePaths = JsonUtil.toJson(certSignFilePathSet)
+            }
+
             val runInfo = listOf(
-                osName, osArch, pkgRepoPath, signFilePaths,
+                osName, osArch, pkgRepoPath, certSignFilePaths, originFilePaths,
                 when {
                     osName.contains("win") -> windowsSupportFileTypes.split(",")
                         .contains(pkgRepoPath.substringAfterLast("."))
@@ -411,7 +420,7 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
                     osName.contains("darwin") -> true
                     else -> false
                 }.toString(),
-                packScriptPath, pkgLocalPath, packAppPackageScriptPath, appPackagePath
+                packScriptPath, packagePath, packAppPackageScriptPath, appPackagePath
             ).joinToString(":")
 
             when {
@@ -608,8 +617,11 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         val extEnvInfo = mutableMapOf<String, Any>().apply {
             // 统一处理需要添加到extEnvInfo的字段
             listOfNotNull(
+                osConfigInfo.signature?.certSignFilePaths?.let {
+                    getSignatureCertFileKey() to JsonUtil.toJson(it)
+                },
                 osConfigInfo.signature?.originFilePaths?.let {
-                    getSignatureFileKey() to JsonUtil.toJson(it)
+                    getSignatureOriginFileKey() to JsonUtil.toJson(it)
                 },
                 osConfigInfo.packAppPackageScriptPath?.let {
                     OsConfigInfo::packAppPackageScriptPath.name to it
@@ -648,7 +660,11 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         )
     }
 
-    private fun getSignatureFileKey(): String {
+    private fun getSignatureCertFileKey(): String {
+        return "${OsConfigInfo::signature.name}_${SignatureConfigInfo::certSignFilePaths.name}"
+    }
+
+    private fun getSignatureOriginFileKey(): String {
         return "${OsConfigInfo::signature.name}_${SignatureConfigInfo::originFilePaths.name}"
     }
 
