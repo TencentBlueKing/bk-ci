@@ -265,9 +265,10 @@
     "存在需清理或交接的权限/授权": "There are permissions/authorizations that need to be cleared or handed over",
     "disclosureTitle": "<b>{0}</b> The project information is highly confidential. You have not signed the NDA and cannot access this site. Please scan the QR code to sign the agreement:",
     "signed": "Signed",
+    "scanSign": "Scan to sign",
     "noticeTitle": "Please note the following instructions (very important):",
     "disclosureAgreement": "NDA Signing",
     "countdownFresh": "Auto redirect in {0} seconds",
-    "disclosureTip0": "<em>After signing, strictly comply with confidentiality obligations. It is prohibited to disclose any information related to \"{0}\" to third parties in any way (including but not limited to photography, screenshots, written descriptions, verbal accounts, etc.)</em>",
+    "disclosureTip0": "<em>After signing, strictly comply with confidentiality obligations. It is prohibited to disclose any information related to {0} to third parties in any way (including but not limited to photography, screenshots, written descriptions, verbal accounts, etc.)</em>",
     "disclosureTip1": "In case of information leakage, we will conduct thorough investigation and impose severe penalties. <em>The leaker (both company and individual)</em> will face <em>criminal charges, compensation for breach of NDA, and other punitive measures.</em>"
 }

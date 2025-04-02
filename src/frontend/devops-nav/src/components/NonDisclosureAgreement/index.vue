@@ -11,6 +11,7 @@
     >
         <bk-alert
             type="warning"
+            class="disclosure-alert"
         >
             <p
                 slot="title"
@@ -34,6 +35,7 @@
                     :src="schemeQrcodeUrl"
                 />
             </div>
+            <span>{{ $t(signed ? 'signed' : 'scanSign') }}</span>
         </section>
         <footer>
             <p class="disclosure-tips-header">
@@ -117,6 +119,10 @@
         font-size: 14px;
         color: #4D4F56;
         font-family: MicrosoftYaHei;
+        line-height: 24px;
+    }
+    .disclosure-alert.bk-alert-warning .icon-info {
+        line-height: 24px;
     }
     .qrcode-box-area {
         position: relative;
@@ -126,6 +132,7 @@
         padding: 24px 0;
         border: 1px solid #DCDEE5;
         margin: 12px 0  16px 0;
+        flex-direction: column;
 
         .qrcode-box {
             position: relative;
@@ -133,6 +140,7 @@
             height: 140px;
             padding: 10px;
             border: 1px solid #DCDEE5;
+            margin-bottom: 12px;
             .qrcode-img {
                 width: 120px;
                 height: 120px;
