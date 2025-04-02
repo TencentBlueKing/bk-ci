@@ -29,8 +29,17 @@ package com.tencent.devops.scm
 
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
+import org.springframework.boot.autoconfigure.SpringBootApplication
 
-@MicroService
+@SpringBootApplication(
+    exclude = [org.springframework.cloud.stream.config.BindersHealthIndicatorAutoConfiguration::class,
+        org.springframework.cloud.stream.config.ChannelsEndpointAutoConfiguration::class,
+        org.springframework.cloud.stream.config.BindingsEndpointAutoConfiguration::class,
+        org.springframework.cloud.stream.config.BindingServiceConfiguration::class,
+        org.springframework.cloud.stream.function.FunctionConfiguration::class,
+        com.tencent.devops.common.stream.config.CommonEventConfiguration::class
+    ]
+)
 class Application
 
 fun main(args: Array<String>) {

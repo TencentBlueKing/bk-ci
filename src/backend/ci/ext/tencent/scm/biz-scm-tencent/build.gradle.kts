@@ -26,9 +26,7 @@
  */
 
 dependencies {
-    api(project(":core:store:api-store")){
-        exclude(group = "org.springframework.cloud", module = "spring-cloud-starter-stream-rabbit")
-    }
+    api(project(":core:store:api-store"))
     api(project(":ext:tencent:scm:api-scm-tencent"))
     api(project(":ext:tencent:misc:api-monitoring-tencent"))
     api(project(":ext:tencent:common:common-digest-tencent"))
