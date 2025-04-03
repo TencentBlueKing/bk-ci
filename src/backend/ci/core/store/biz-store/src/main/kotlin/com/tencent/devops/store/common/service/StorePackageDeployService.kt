@@ -98,7 +98,7 @@ abstract class StorePackageDeployService {
      * 一键发布组件
      * @return 发布组件返回报文
      */
-    fun deployStore(
+    fun oneClickDeployComponent(
         userId: String,
         storeCode: String,
         storeType: StoreTypeEnum,
