@@ -128,6 +128,10 @@ allprojects {
             dependency("org.jvnet.winp:winp:${Versions.Winp}")
             dependency("net.java.dev.jna:jna:${Versions.Jna}")
             dependency("org.jenkins-ci:version-number:${Versions.JenkinsVersionNumber}")
+            dependencySet("com.tencent.bk.devops.scm:${Versions.devopsScm}") {
+                entry("devops-scm-api")
+                entry("devops-scm-spring-boot-starter")
+            }
         }
     }
 

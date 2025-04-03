@@ -31,6 +31,7 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileSyncReq
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -49,6 +50,19 @@ class ServicePipelineYamlResourceImpl @Autowired constructor(
             projectId = projectId,
             repoHashId = repoHashId,
             scmType = scmType
+        )
+        return Result(true)
+    }
+
+    override fun syncYamlFile(
+        userId: String,
+        projectId: String,
+        yamlFileSyncReq: PipelineYamlFileSyncReq
+    ): Result<Boolean> {
+        pipelineYamlFacadeService.syncYamlFile(
+            userId = userId,
+            projectId = projectId,
+            yamlFileSyncReq = yamlFileSyncReq
         )
         return Result(true)
     }

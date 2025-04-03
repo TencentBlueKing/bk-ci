@@ -40,6 +40,7 @@ import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.Credential
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialInfo
+import com.tencent.devops.ticket.pojo.CredentialItemVo
 import com.tencent.devops.ticket.pojo.CredentialUpdate
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import com.tencent.devops.ticket.pojo.enums.Permission
@@ -80,6 +81,14 @@ class ServiceCredentialResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid credentialId")
         }
         return Result(credentialService.serviceGet(projectId, credentialId, publicKey))
+    }
+
+    override fun getCredentialItem(
+        projectId: String,
+        credentialId: String,
+        publicKey: String
+    ): Result<CredentialItemVo?> {
+        return Result(credentialService.getCredentialItem(projectId, credentialId, publicKey))
     }
 
     @BkTimed(extraTags = ["operate", "get"])
@@ -168,5 +177,12 @@ class ServiceCredentialResourceImpl @Autowired constructor(
             keyword = keyword
         )
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
+    }
+
+    override fun getCredentialByIds(
+        projectId: String,
+        credentialId: Set<String>
+    ): Result<List<Credential>?> {
+        return Result(credentialService.getCredentialByIds(projectId, credentialId))
     }
 }

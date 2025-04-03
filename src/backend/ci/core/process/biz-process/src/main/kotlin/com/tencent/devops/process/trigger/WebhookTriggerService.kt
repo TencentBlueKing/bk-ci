@@ -86,7 +86,7 @@ class WebhookTriggerService(
         )
     }
 
-    private fun getYamlPipelineIds(
+    fun getYamlPipelineIds(
         matcher: ScmWebhookMatcher,
         scmType: ScmType
     ): List<String> {

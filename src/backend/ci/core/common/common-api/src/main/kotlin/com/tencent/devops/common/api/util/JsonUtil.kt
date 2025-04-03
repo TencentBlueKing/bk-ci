@@ -54,6 +54,7 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.annotation.SkipLogField
+import java.lang.reflect.Type
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -302,6 +303,19 @@ object JsonUtil {
     }
 
     fun <T> to(json: String, type: Class<T>): T = getObjectMapper().readValue(json, type)
+
+    fun <T> toForType(json: String, type: Type): T {
+        val javaType = getObjectMapper().constructType(type)
+        return getObjectMapper().readValue(json, javaType)
+    }
+
+    fun toJsonForType(bean: Any, type: Type, formatted: Boolean = true): String {
+        if (ReflectUtil.isNativeType(bean) || bean is String) {
+            return bean.toString()
+        }
+        val javaType = getObjectMapper().constructType(type)
+        return getObjectMapper(formatted).writerFor(javaType).writeValueAsString(bean)!!
+    }
 
     fun <T> toOrNull(json: String?, type: Class<T>): T? {
         return json?.let { self ->

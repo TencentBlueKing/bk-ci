@@ -26,7 +26,6 @@
  */
 package com.tencent.devops.openapi.resources.apigw.v4
 
-import com.tencent.devops.common.api.enums.ScmCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
@@ -37,6 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ApigwOauthResourceV4Impl @Autowired constructor(private val client: Client) : ApigwRepositoryOauthResourceV4 {
+
     override fun isOauth(
         appCode: String?,
         apigwType: String?,
@@ -44,26 +44,11 @@ class ApigwOauthResourceV4Impl @Autowired constructor(private val client: Client
         scmCode: String
     ): Result<Boolean> {
         logger.info("OPENAPI_OAUTH_V4|$userId|verify if $scmCode oauth authorization has been performed")
-        val result = when (scmCode) {
-            ScmCode.TGIT.name -> {
-                client.get(ServiceOauthResource::class).isOAuth(
-                    userId = userId,
-                    redirectUrl = null,
-                    redirectUrlType = null
-                ).data?.status
-            }
-
-            ScmCode.GITHUB.name -> {
-                client.get(ServiceOauthResource::class).githubOAuth(
-                    userId = userId
-                ).data?.status
-            }
-
-            else -> {
-                null
-            }
-        }
-        return Result(result == AUTHORIZED_STATUS)
+        val isOauth = client.get(ServiceOauthResource::class).isScmOauth(
+            userId = userId,
+            scmCode = scmCode
+        ).data ?: false
+        return Result(isOauth)
     }
 
     companion object {

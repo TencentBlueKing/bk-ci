@@ -51,7 +51,7 @@ class SvnWebHookStartParam : ScmWebhookStartParams<CodeSVNWebHookTriggerElement>
         projectId: String,
         element: CodeSVNWebHookTriggerElement,
         repo: Repository,
-        matcher: ScmWebhookMatcher,
+        matcher: ScmWebhookMatcher?,
         variables: Map<String, String>,
         params: WebHookParams,
         matchResult: WebhookMatchResult
@@ -62,7 +62,9 @@ class SvnWebHookStartParam : ScmWebhookStartParams<CodeSVNWebHookTriggerElement>
         startParams[BK_REPO_SVN_WEBHOOK_INCLUDE_USERS] = element.includeUsers?.joinToString(",") ?: ""
         startParams[BK_REPO_SVN_WEBHOOK_EXCLUDE_USERS] = element.excludeUsers?.joinToString(",") ?: ""
         startParams[BK_REPO_SVN_WEBHOOK_FINAL_INCLUDE_PATH] = matchResult.extra[MATCH_PATHS] ?: ""
-        startParams.putAll(matcher.retrieveParams())
+        matcher?.let {
+            startParams.putAll(matcher.retrieveParams())
+        }
         return startParams
     }
 }
