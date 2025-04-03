@@ -130,7 +130,7 @@ class StoreVersionLogDao {
             .where(
                 tsb.STORE_CODE.eq(storeCode)
                     .and(tsb.STORE_TYPE.eq(storeType).and(tsb.STATUS.eq(StoreStatusEnum.RELEASED.name)))
-            )
+            ).orderBy(tsvl.UPDATE_TIME.desc())
         baseStep.limit((page - 1) * pageSize, pageSize)
         return baseStep.fetch()
     }

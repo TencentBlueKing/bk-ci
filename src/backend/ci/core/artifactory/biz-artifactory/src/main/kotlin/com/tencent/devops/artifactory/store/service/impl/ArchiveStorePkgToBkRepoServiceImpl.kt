@@ -242,18 +242,14 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
             0
         } catch (ignored: RemoteServiceException) {
             logger.error(
-                "Failed to get file size: " +
-                        "filePath=[$filePath], " +
-                        "storeType=[$storeType], " +
-                        "error=${ignored.message}"
+                "Failed to get file size: filePath=[{}], storeType=[{}], error={}",
+                filePath, storeType, ignored.message
             )
             0
         } catch (ignored: Exception) {
             logger.error(
-                "Unexpected error when getting file size:" +
-                        "filePath=[$filePath], " +
-                        "storeType=[$storeType], " +
-                        "error=${ignored.message}"
+                "Unexpected error when getting file size: filePath=[{}], storeType=[{}], error={}",
+                filePath, storeType, ignored.message
             )
             0
         }

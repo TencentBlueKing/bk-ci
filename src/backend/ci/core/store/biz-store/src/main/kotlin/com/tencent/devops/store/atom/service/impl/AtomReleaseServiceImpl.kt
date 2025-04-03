@@ -1492,7 +1492,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         }
     }
     private fun saveAtomSize(atomId: String) {
-        val atomPackageInfoList = mutableListOf<AtomPackageInfo>()
         try {
             val atomEnvRecords = marketAtomEnvInfoDao.getMarketAtomEnvInfosByAtomId(dslContext, atomId)
             atomEnvRecords?.let { records ->
@@ -1514,7 +1513,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 }
                 // 都成功时才存储
                 if (atomSizeInfoList.size == totalRecords) {
-                    val size = JsonUtil.toJson(atomPackageInfoList)
+                    val size = JsonUtil.toJson(atomSizeInfoList)
                     marketAtomVersionLogDao.updateAtomVersionByAtomId(dslContext, atomId, size)
                 } else {
                     logger.warn(

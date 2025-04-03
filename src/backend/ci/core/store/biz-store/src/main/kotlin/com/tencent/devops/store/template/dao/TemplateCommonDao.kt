@@ -160,7 +160,7 @@ class TemplateCommonDao : AbstractStoreCommonDao() {
         return with(TTemplate.T_TEMPLATE) {
             val baseStep = dslContext.select(VERSION, PUB_DESCRIPTION.`as`("CONTENT"), UPDATE_TIME, MODIFIER).from(this)
                 .where(TEMPLATE_CODE.eq(storeCode))
-                .and(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte()).and(TEMPLATE_CODE.eq(storeCode)))
+                .and(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte()))
                 .orderBy(UPDATE_TIME.desc())
             baseStep.limit((page - 1) * pageSize, pageSize).fetch()
         }
