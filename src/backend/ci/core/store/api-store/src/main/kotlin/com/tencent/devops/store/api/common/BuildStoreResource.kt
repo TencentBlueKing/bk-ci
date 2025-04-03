@@ -104,7 +104,7 @@ interface BuildStoreResource {
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Path("/deploy")
-    fun deployStore(
+    fun oneClickDeployComponent(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

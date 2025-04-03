@@ -86,7 +86,7 @@ class BuildStoreResourceImpl @Autowired constructor(
         )
     }
 
-    override fun deployStore(
+    override fun oneClickDeployComponent(
         userId: String,
         storeCode: String,
         storeType: StoreTypeEnum,
@@ -94,7 +94,7 @@ class BuildStoreResourceImpl @Autowired constructor(
         disposition: FormDataContentDisposition
     ): Result<String?> {
         return Result(
-            storePackageDeployService.deployStore(
+            storePackageDeployService.oneClickDeployComponent(
                 userId = userId,
                 storeCode = storeCode,
                 storeType = storeType,
