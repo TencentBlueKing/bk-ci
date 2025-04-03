@@ -27,7 +27,6 @@
 
 package com.tencent.devops.scm
 
-import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 
