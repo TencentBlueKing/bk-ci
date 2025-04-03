@@ -48,6 +48,7 @@ class RefreshTokenGranterTest : BkCiAbstractTest() {
         accessToken = "testAccessToken"
         clientId = "testClientId"
         userName = "testUserName"
+        passWord = "testPassword"
         grantType = "testGrantType"
         expiredTime = System.currentTimeMillis() / 1000 + 1000
         refreshToken = "testRefreshToken"

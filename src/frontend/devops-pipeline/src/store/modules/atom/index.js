@@ -38,7 +38,7 @@ export default {
         isCommendAtomPageOver: false,
         isAtomPageOver: false,
         atomList: [],
-        atomsOutputMap: {},
+        atomsOutputMap: null,
         requestAtomData: {
             recommendFlag: true,
             keyword: '',

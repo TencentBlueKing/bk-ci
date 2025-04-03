@@ -26,8 +26,8 @@
  */
 package com.tencent.devops.remotedev.filter
 
-import javax.ws.rs.container.ContainerRequestContext
-import javax.ws.rs.container.ContainerRequestFilter
+import jakarta.ws.rs.container.ContainerRequestContext
+import jakarta.ws.rs.container.ContainerRequestFilter
 
 interface ApiFilter : ContainerRequestFilter {
 

@@ -76,7 +76,7 @@ import com.tencent.devops.model.experience.tables.records.TExperienceGroupOuterR
 import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory

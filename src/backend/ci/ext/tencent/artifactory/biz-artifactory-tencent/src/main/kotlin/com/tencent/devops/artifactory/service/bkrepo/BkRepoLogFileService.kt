@@ -36,7 +36,7 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 
 @Service
 class BkRepoLogFileService @Autowired constructor(

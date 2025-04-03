@@ -94,6 +94,7 @@ object ModelParameters {
             StartType.MANUAL -> startParams[PIPELINE_START_MANUAL_USER_ID] = action.data.eventCommon.userId
             StartType.TIME_TRIGGER -> startParams[PIPELINE_START_TIME_TRIGGER_USER_ID] =
                 action.data.context.pipeline?.lastModifier ?: ""
+            else -> {}
         }
 
         startParams[CommonVariables.CI_BRANCH] = event.branch

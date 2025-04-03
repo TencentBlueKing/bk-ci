@@ -28,7 +28,7 @@
 package com.tencent.devops.process.pojo.third.enum
 
 import com.fasterxml.jackson.annotation.JsonValue
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 
 enum class BcsOperation(private val operation: String) {
     CREATE("create"),

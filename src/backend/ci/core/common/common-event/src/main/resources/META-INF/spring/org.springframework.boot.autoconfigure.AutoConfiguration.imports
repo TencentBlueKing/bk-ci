@@ -1,0 +1,2 @@
+com.tencent.devops.common.stream.pulsar.config.ExtendedBindingHandlerMappingsProviderConfiguration
+com.tencent.devops.common.stream.config.CommonEventConfiguration
