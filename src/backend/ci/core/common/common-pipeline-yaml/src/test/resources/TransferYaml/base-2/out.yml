@@ -5,11 +5,11 @@ components:
 - name: First component
   description: Some short description of the first component改
 - 
-# Comment for the second component
+  # Comment for the second component
   name: Second component
   description: Some short description of the second component改
 - - 
-# A list of possible places the third component could be got from
+    # A list of possible places the third component could be got from
     first/possible/place
   - second/possible/place改
 - {jsonStyle: [{x: y改}, {x: z}]}
