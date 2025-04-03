@@ -185,7 +185,7 @@ class ImageCommonDao : AbstractStoreCommonDao() {
                 .where(
                     image.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()).and(image.IMAGE_CODE.eq(storeCode))
                         .and(image.IMAGE_SIZE.isNotNull)
-                ).orderBy(imageLog.UPDATE_TIME.desc())
+                ).orderBy(image.UPDATE_TIME.desc())
 
         baseStep.limit((page - 1) * pageSize, pageSize)
         return baseStep.fetch()
