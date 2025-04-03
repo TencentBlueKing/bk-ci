@@ -63,6 +63,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
+import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
@@ -95,6 +96,7 @@ import com.tencent.devops.process.engine.control.lock.PipelineRefreshBuildLock
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
 import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
@@ -126,6 +128,7 @@ import com.tencent.devops.process.pojo.pipeline.BuildRecordInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
+import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.PipelineTaskPauseService
@@ -816,7 +819,9 @@ class PipelineBuildFacadeService(
         startType: StartType = StartType.WEB_HOOK,
         startValues: Map<String, String>? = null,
         userParameters: List<BuildParameters>? = null,
-        triggerReviewers: List<String>? = null
+        triggerReviewers: List<String>? = null,
+        pipelineResource: PipelineResourceVersion? = null,
+        pipelineInfo: PipelineInfo? = null
     ): String? {
 
         if (checkPermission) {
@@ -835,9 +840,13 @@ class PipelineBuildFacadeService(
         val startEpoch = System.currentTimeMillis()
         try {
             // 定时触发不存在调试的情况
-            val (readyToBuildPipelineInfo, resource, _) = pipelineRepositoryService.getBuildTriggerInfo(
-                projectId, pipelineId, null
-            )
+            val (readyToBuildPipelineInfo, resource, _) = if (pipelineResource != null && pipelineInfo != null) {
+                Triple(pipelineInfo, pipelineResource, null)
+            } else {
+                pipelineRepositoryService.getBuildTriggerInfo(
+                    projectId, pipelineId, null
+                )
+            }
             if (readyToBuildPipelineInfo.locked == true) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
             }
@@ -2674,6 +2683,141 @@ class PipelineBuildFacadeService(
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
                 params = arrayOf(buildId)
             )
+    }
+
+    fun replayBuild(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        userId: String,
+        forceTrigger: Boolean
+    ): BuildId {
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.EXECUTE,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId)),
+                    pipelineId
+                )
+            )
+        )
+        val buildInfo = checkPipelineInfo(projectId, pipelineId, buildId)
+        val buildVars = buildVariableService.getAllVariable(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            keys = setOf(PIPELINE_START_TASK_ID)
+        )
+        // 按原有的启动参数组装启动参数(排除重试次数)
+        val startParameters = buildInfo.buildParameters?.filter {
+            it.key != PIPELINE_RETRY_COUNT
+        }?.associate {
+            it.key to it.value.toString()
+        }?.toMutableMap() ?: mutableMapOf()
+        startParameters.putAll(buildVars)
+        val startType = StartType.toStartType(buildInfo.trigger)
+        // 定时触发不存在调试的情况
+        val (readyToBuildPipelineInfo, resource, _) = pipelineRepositoryService.getBuildTriggerInfo(
+            projectId, pipelineId, null
+        )
+        if (readyToBuildPipelineInfo.locked == true) {
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
+        }
+        if (readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
+        )
+        val model = resource.model
+        val triggerContainer = model.getTriggerContainer()
+        // 检查触发器是否存在
+        val checkTriggerResult = forceTrigger || when (startType) {
+            StartType.WEB_HOOK -> {
+                triggerContainer.elements.find { it.id == startParameters[PIPELINE_START_TASK_ID] }
+            }
+
+            StartType.MANUAL, StartType.SERVICE -> {
+                triggerContainer.elements.find { it is ManualTriggerElement }
+            }
+
+            StartType.REMOTE -> {
+                triggerContainer.elements.find { it is RemoteTriggerElement }
+            }
+
+            StartType.TIME_TRIGGER -> {
+                triggerContainer.elements.find { it.id == startParameters[PIPELINE_START_TASK_ID] }
+            }
+
+            StartType.PIPELINE -> {
+                EmptyElement()
+            }
+        } != null
+        if (!checkTriggerResult) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TRIGGER_CONDITION_NOT_MATCH,
+                params = arrayOf(resource.versionName ?: "")
+            )
+        }
+        return triggerPipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            startParameters = startParameters,
+            startType = if (startType == StartType.WEB_HOOK) {
+                StartType.WEB_HOOK
+            } else {
+                StartType.MANUAL
+            },
+            pipelineInfo = readyToBuildPipelineInfo,
+            pipelineResourceVersion = resource
+        )
+    }
+
+    private fun triggerPipeline(
+        startType: StartType,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        startParameters: MutableMap<String, String>,
+        pipelineInfo: PipelineInfo? = null,
+        pipelineResourceVersion: PipelineResourceVersion? = null,
+        userId: String
+    ) = when (startType) {
+        StartType.WEB_HOOK -> {
+            // webhook触发
+            webhookBuildParameterService.getBuildParameters(buildId = buildId)?.forEach { param ->
+                startParameters[param.key] = param.value.toString()
+            }
+            // webhook触发
+            BuildId(
+                webhookTriggerPipelineBuild(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    parameters = startParameters,
+                    checkPermission = false,
+                    startType = startType,
+                    pipelineInfo = pipelineInfo,
+                    pipelineResource = pipelineResourceVersion
+                )!!
+            )
+        }
+        else -> {
+            buildManualStartup(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = ChannelCode.BS,
+                values = startParameters,
+                startType = startType
+            )
+        }
     }
 
     fun buildRestart(

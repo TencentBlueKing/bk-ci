@@ -369,6 +369,8 @@ object ProcessMessageCode {
     const val ERROR_COMMIT_BRANCH_IS_NOT_EMPTY = "2101259" // 指定分支不能为空
     const val ERROR_NON_LATEST_RELEASE_VERSION = "2101266" // 当前构建版本已不是最新版本，请重新选择版本
     const val ERROR_REPO_HASH_ID_IS_NOT_EMPTY = "2101267" // 代码库信息不能为空
+    // 同样的触发参数, 已不满足当前流水线最新版本 {0} 的触发条件, 继续运行可能会产生错误, 确认继续吗
+    const val ERROR_TRIGGER_CONDITION_NOT_MATCH = "2101272"
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
