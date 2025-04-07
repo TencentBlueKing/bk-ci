@@ -1718,5 +1718,6 @@
   "noDraft": "暂无可删除的草稿",
   "isTaskTermination": "确认中止任务执行吗？",
   "pipelineNameConventions": "流水线命名规范：",
-  "addLabels": "添加标签"
+  "addLabels": "添加标签",
+  "relyChanged": "依赖字段（{0}）值已变更，请检查配置是否正确"
 }
