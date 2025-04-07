@@ -429,13 +429,13 @@
     } from 'vuex'
     import {
         isGit,
-        isGitLab,
         isGithub,
+        isGitLab,
         isP4,
-        isSvn,
-        isTGit,
         isScmGit,
-        isScmSvn
+        isScmSvn,
+        isSvn,
+        isTGit
     } from '../../config/'
     import ResetAuthDialog from './ResetAuthDialog.vue'
  

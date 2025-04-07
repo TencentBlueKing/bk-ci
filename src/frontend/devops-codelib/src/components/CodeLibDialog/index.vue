@@ -47,23 +47,23 @@
         CODE_REPOSITORY_CACHE,
         getCodelibConfig,
         isGit,
-        isGitLab,
         isGithub,
+        isGitLab,
         isP4,
-        isSvn,
-        isTGit,
         isScmGit,
-        isScmSvn
+        isScmSvn,
+        isSvn,
+        isTGit
     } from '../../config/'
     import { parsePathRegion } from '../../utils'
+    import Custom from './Custom'
     import Git from './Git'
     import Github from './Github'
     import Gitlab from './Gitlab'
+    import dialogMixin from './mixin.js'
     import P4 from './P4'
     import SVN from './SVN'
     import TGit from './TGit'
-    import Custom from './Custom'
-    import dialogMixin from './mixin.js'
     export default {
         name: 'codelib-dialog',
         components: {

@@ -19,10 +19,13 @@
                 :key="item.scmType"
                 @click="createCodelib(item.scmType, item.scmCode)"
                 :class="{
+                    'config-item': true,
                     'disabled-codelib-type': item.status !== 'SUCCESS'
                 }"
             >
-                {{ item.name }}
+                <img :src="item.logoUrl" />
+                <span class="config-name">{{ item.name }}</span>
+                <span class="config-hosts">{{ item.hosts }}</span>
             </li>
         </ul>
     </bk-dropdown-menu>
@@ -65,11 +68,12 @@
         }
         &-menu {
             > li {
-                display: block;
-                line-height: 41px;
+                display: flex;
+                align-items: center;
+                line-height: 40px;
                 padding: 0 15px;
                 color: $fontColor;
-                font-size: 14px;
+                font-size: 12px;
                 text-decoration: none;
                 white-space: nowrap;
                 cursor: pointer;
