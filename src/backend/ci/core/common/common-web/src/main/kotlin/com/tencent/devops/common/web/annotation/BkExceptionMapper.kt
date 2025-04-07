@@ -30,7 +30,7 @@ package com.tencent.devops.common.web.annotation
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
-import javax.ws.rs.ext.Provider
+import jakarta.ws.rs.ext.Provider
 
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FILE)
 @Retention(AnnotationRetention.RUNTIME)
