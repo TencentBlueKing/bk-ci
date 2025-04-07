@@ -1802,5 +1802,6 @@
   "customSource": "自定义",
   "marketSource": "研发商店",
   "groupLabel": "分组标签",
-  "notGrouped": "未分组"
+  "notGrouped": "未分组",
+  "relyChanged": "依赖字段（{0}）值已变更，请检查配置是否正确"
 }
