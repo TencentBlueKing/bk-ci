@@ -272,6 +272,9 @@ object YamlObjects {
         val matrix = strategyMap["matrix"]
         val include = strategyMap["include"]
         val exclude = strategyMap["exclude"]
+        if (matrix == null && include == null && exclude == null) {
+            return null
+        }
         return Strategy(
             matrix = matrix,
             include = include,
