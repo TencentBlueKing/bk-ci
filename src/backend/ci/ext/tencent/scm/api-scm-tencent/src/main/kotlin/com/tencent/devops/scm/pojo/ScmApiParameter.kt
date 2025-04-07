@@ -23,12 +23,14 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-dependencies {
-    api(project(":core:store:api-store"))
-    api(project(":ext:tencent:scm:api-scm-tencent"))
-    api(project(":ext:tencent:misc:api-monitoring-tencent"))
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:repository:biz-base-scm"))
-}
+package com.tencent.devops.scm.pojo
+
+data class ScmApiParameter(
+    val parameterIndex: Int,
+    val parameterType: Class<*>,
+    val parameterName: String,
+    val parameterValue: Any?
+)

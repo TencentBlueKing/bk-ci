@@ -23,12 +23,39 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-dependencies {
-    api(project(":core:store:api-store"))
-    api(project(":ext:tencent:scm:api-scm-tencent"))
-    api(project(":ext:tencent:misc:api-monitoring-tencent"))
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:repository:biz-base-scm"))
+package com.tencent.devops.scm.api
+
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.scm.pojo.ScmApiRequest
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
+
+@Tag(name = "SERVICE_SCM_API", description = "服务-SCM API")
+@Path("/service/scm/api/proxy")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceScmApiProxyResource {
+
+    @Operation(summary = "scm api接口代理")
+    @POST
+    fun proxy(
+        @Parameter(description = "服务名")
+        @QueryParam("serviceName")
+        serviceName: String,
+        @Parameter(description = "方法名")
+        @QueryParam("methodName")
+        methodName: String,
+        @Parameter(description = "请求参数")
+        request: ScmApiRequest
+    ): Result<Any?>
 }
