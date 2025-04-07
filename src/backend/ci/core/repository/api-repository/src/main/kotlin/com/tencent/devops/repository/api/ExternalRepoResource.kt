@@ -30,13 +30,14 @@ package com.tencent.devops.repository.api
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
 
 @Tag(name = "EXTERNAL_REPO", description = "外部-仓库资源")
 @Path("/external/repo/")
@@ -81,5 +82,20 @@ interface ExternalRepoResource {
         @Parameter(description = "resource")
         @QueryParam("resource")
         resource: String
+    ): Response
+
+    @Operation(summary = "源码管理oauth授权回调")
+    @GET
+    @Path("/{scmCode}/oauth/callback")
+    fun scmCallback(
+        @Parameter(description = "scmCode")
+        @PathParam("scmCode")
+        scmCode: String,
+        @Parameter(description = "code")
+        @QueryParam("code")
+        code: String,
+        @Parameter(description = "state")
+        @QueryParam("state")
+        state: String
     ): Response
 }

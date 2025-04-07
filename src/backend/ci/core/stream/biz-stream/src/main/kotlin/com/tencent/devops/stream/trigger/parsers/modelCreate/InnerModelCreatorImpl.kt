@@ -41,7 +41,7 @@ import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @Component
 class InnerModelCreatorImpl @Autowired constructor(

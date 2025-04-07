@@ -47,6 +47,7 @@ import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.audit.ActionAuditContent
@@ -68,6 +69,7 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_CREATE_
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.dao.RepositoryGithubDao
+import com.tencent.devops.repository.dao.RepositoryScmConfigDao
 import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.CodeGitRepository
@@ -97,15 +99,15 @@ import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import java.time.LocalDateTime
+import java.util.Base64
+import jakarta.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.Base64
-import javax.ws.rs.NotFoundException
 
 @Service
 @Suppress("ALL")
@@ -120,7 +122,8 @@ class RepositoryService @Autowired constructor(
     private val repositoryPermissionService: RepositoryPermissionService,
     private val githubService: IGithubService,
     private val client: Client,
-    private val repositoryGithubDao: RepositoryGithubDao
+    private val repositoryGithubDao: RepositoryGithubDao,
+    private val repositoryScmConfigDao: RepositoryScmConfigDao
 ) {
 
     @Value("\${repository.git.devopsPrivateToken}")
@@ -466,7 +469,8 @@ class RepositoryService @Autowired constructor(
                         userName = repo.userName,
                         credentialId = repo.credentialId,
                         authType = repo.authType,
-                        gitProjectId = -1L
+                        gitProjectId = -1L,
+                        credentialType = null
                     )
                 }
                 Result(gitProjectInfo)
@@ -822,12 +826,16 @@ class RepositoryService @Autowired constructor(
                 repoDetailInfoMap.putAll(codeGitRepositoryService.getRepoDetailMap(repositoryIds))
             }
         }
+        val repoLogoMap = repositoryScmConfigDao.list(dslContext, limit = PageUtil.DEFAULT_PAGE_SIZE, offset = 0)
+                .associate { it.scmCode to it.logoUrl }
         val repositoryList = repositoryRecordList.map {
             val hasEditPermission = hasEditPermissionRepoList.contains(it.repositoryId)
             val hasDeletePermission = hasDeletePermissionRepoList.contains(it.repositoryId)
             val hasUsePermission = hasUsePermissionRepoList.contains(it.repositoryId)
             val hasViewPermission = hasViewPermissionRepoList.contains(it.repositoryId)
             val repoDetailInfo = repoDetailInfoMap[it.repositoryId]
+            // 兼容老数据
+            val scmCode = it.scmCode ?: it.type
             RepositoryInfoWithPermission(
                 repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
                 aliasName = it.aliasName,
@@ -845,7 +853,9 @@ class RepositoryService @Autowired constructor(
                 createUser = it.userId,
                 updatedUser = it.updatedUser ?: it.userId,
                 atom = it.atom ?: false,
-                enablePac = it.enablePac
+                enablePac = it.enablePac,
+                scmCode = scmCode,
+                logoUrl = repoLogoMap[scmCode]
             )
         }
         return Pair(SQLPage(count, repositoryList), hasCreatePermission)

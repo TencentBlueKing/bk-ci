@@ -37,13 +37,14 @@ object ThreadPoolUtil {
         corePoolSize: Int = 1,
         maximumPoolSize: Int = 1,
         keepAliveTime: Long = 0,
-        unit: TimeUnit = TimeUnit.SECONDS
+        unit: TimeUnit = TimeUnit.SECONDS,
+        queue: LinkedBlockingQueue<Runnable> = LinkedBlockingQueue(1)
     ) = ThreadPoolExecutor(
         corePoolSize,
         maximumPoolSize,
         keepAliveTime,
         unit,
-        LinkedBlockingQueue(1),
+        queue,
         Executors.defaultThreadFactory(),
         ThreadPoolExecutor.AbortPolicy()
     )
@@ -53,6 +54,7 @@ object ThreadPoolUtil {
         maximumPoolSize: Int = 1,
         keepAliveTime: Long = 0,
         unit: TimeUnit = TimeUnit.SECONDS,
+        queue: LinkedBlockingQueue<Runnable> = LinkedBlockingQueue(1),
         actionTitle: String,
         action: (threadPoolExecutor: ThreadPoolExecutor) -> Unit
     ) {
@@ -61,7 +63,8 @@ object ThreadPoolUtil {
             corePoolSize = corePoolSize,
             maximumPoolSize = maximumPoolSize,
             keepAliveTime = keepAliveTime,
-            unit = unit
+            unit = unit,
+            queue = queue
         )
         threadPoolExecutor.submit {
             logger.info("start thread action [$actionTitle]")

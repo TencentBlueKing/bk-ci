@@ -62,6 +62,7 @@ class Token(
                         ExpressionConstants.NOT -> return Associativity.RightToLeft
                     }
                 }
+                else -> {}
             }
 
             return if (isOperator) {
@@ -120,6 +121,7 @@ class Token(
                 TokenKind.EndParameters, // ")" function call
                 TokenKind.Separator -> // ","
                     return 1
+                else -> {}
             }
 
             return 0
@@ -148,6 +150,7 @@ class Token(
                             return 2
                     }
                 }
+                else -> {}
             }
             return 0
         }
@@ -188,6 +191,8 @@ class Token(
             TokenKind.Wildcard -> return Wildcard()
 
             TokenKind.Expression -> return ExpressionValueNode(rawValue)
+
+            else -> {}
         }
 
         throw NotSupportedException("Unexpected kind '$kind' when creating node")

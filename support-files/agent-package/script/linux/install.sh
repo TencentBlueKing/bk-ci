@@ -32,17 +32,26 @@ function getServiceName()
 
 function unzip_jdk()
 {
-  echo "start unzipping jdk17(jdk17.zip) package"
-  if [[ -d "jdk17" ]]; then
-    echo "jdk17 already exists, skip unzip"
+  if [ -f "./jdk17.zip" ]; then
+    echo "start unzipping jdk17(jdk17.zip) package"
+    if [[ -d "jdk17" ]]; then
+      echo "jdk17 already exists, skip unzip"
+    else
+      unzip -q -o jdk17.zip -d jdk17
+    fi
   else
-    unzip -q -o jdk17.zip -d jdk17
+    echo "'jdk17.zip' is not exist"
   fi
-  echo "start unzipping jdk(jre.zip) package"
-  if [[ -d "jdk" ]]; then
-    echo "jdk already exists, skip unzip"
+
+  if [ -f "./jre.zip" ]; then
+    echo "start unzipping jdk(jre.zip) package"
+    if [[ -d "jdk" ]]; then
+      echo "jdk already exists, skip unzip"
+    else
+      unzip -q -o jre.zip -d jdk
+    fi
   else
-    unzip -q -o jre.zip -d jdk
+    echo "'jre.zip' is not exist"
   fi
 }
 
@@ -213,10 +222,19 @@ echo "OS: $os"
 arch1=`uname -m`
 echo "ARCH: $arch1"
 
-echo "check java17 version"
-jdk17/bin/java -version
-echo "check java version"
-jdk/bin/java -version
+if [ -d "./jdk17" ]; then
+  echo "check java17 version"
+  jdk17/bin/java -version
+else
+  echo "jdk17 folder is not exist"
+fi
+
+if [ -d "./jdk" ]; then
+  echo "check java version"
+  jdk/bin/java -version
+else
+  echo "jdk folder is not exist"
+fi
 
 echo "check if write ssh config"
 writeSSHConfig

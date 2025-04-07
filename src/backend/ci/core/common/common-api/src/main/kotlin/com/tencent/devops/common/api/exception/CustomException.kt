@@ -27,6 +27,6 @@
 
 package com.tencent.devops.common.api.exception
 
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 open class CustomException(val status: Response.Status, message: String) : RuntimeException(message)
