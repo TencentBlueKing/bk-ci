@@ -101,6 +101,18 @@ object RepositoryMessageCode {
     const val EMPTY_COMMIT_RECORD = "2115050" // 无代码变更记录
     const val REPOSITORY_NO_SUPPORT_AI_SUMMARY = "2115051" // 仅支持工蜂代码库生成AI摘要，
 
+    const val ERROR_WEBHOOK_SERVER_REPO_FULL_NAME_IS_EMPTY = "2115052" // webhook解析结果,fullName不能为空
+    const val ERROR_SCM_PROVIDER_NOT_FOUND = "2115053" // 源代码提供者{0}不存在
+    const val ERROR_SCM_CONFIG_NOT_FOUND = "2115054" // 源代码配置{0}不存在
+    const val ERROR_SCM_PROVIDER_NOT_SUPPORT_AUTH_TYPE = "2115055" // 源代码提供者不支持授权类型:{0}
+    const val ERROR_SCM_PROXY_SERVICE_NOT_FOUND = "2115056" // scm代理服务[{0}]没有发现
+    const val ERROR_SCM_PROXY_SERVICE_METHOD_NOT_FOUND = "2115057" // scm代理服务[{0}]的方法[{0}]不存在
+    const val ERROR_NOT_SUPPORT_SCM_PROVIDER_TYPE = "2115058" // 不支持的源码提供者类型:{0}
+    const val ERROR_NOT_SUPPORT_CREDENTIAL_TYPE = "2115059" // 不支持的凭证类型:{0}
+    const val ERROR_SCM_CONFIG_IN_USED_CAN_NOT_DELETE = "2115060" // 代码源[{0}]已关联代码库,不能删除
+    const val ERROR_NOT_SUPPORT_REPOSITORY_AUTH = "2115061" // 不支持的代码库鉴权方式
+    const val ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC = "2115062" // 仅支持git类型代码库开启PAC
+
     const val BK_REQUEST_FILE_SIZE_LIMIT = "bkRequestFileSizeLimit" // 请求文件不能超过1M
     const val OPERATION_ADD_CHECK_RUNS = "OperationAddCheckRuns" // 添加检测任务
     const val OPERATION_UPDATE_CHECK_RUNS = "OperationUpdateCheckRuns" // 更新检测任务
@@ -111,4 +123,5 @@ object RepositoryMessageCode {
     const val OPERATION_LIST_TAGS = "OperationListTags" // 获取Tag列表
 
     const val TRIGGER_CONDITION_PREFIX = "trigger.condition"
+    const val CREDENTIAL_TYPE_PREFIX = "CREDENTIAL_TYPE_"
 }
