@@ -287,9 +287,9 @@ class ExpertSupportService @Autowired constructor(
                 params = arrayOf("You do not have permission to apply for assistance in ${record.workspaceName}")
             )
         }
-        if (record.status.checkDeleted() || record.status.checkInProcess()) {
+        if (record.status.checkDeleted()) {
             throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(data.workspaceName)
             )
         }
