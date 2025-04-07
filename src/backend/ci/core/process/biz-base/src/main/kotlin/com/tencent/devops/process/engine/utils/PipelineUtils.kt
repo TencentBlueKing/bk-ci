@@ -52,6 +52,8 @@ object PipelineUtils {
 
     private const val ENGLISH_NAME_PATTERN = "[A-Za-z_][A-Za-z_0-9.]*"
 
+    private val PIPELINE_ID_PATTERN = Pattern.compile("(p-)?[a-f\\d]{32}")
+
     fun checkPipelineName(name: String, maxPipelineNameSize: Int) {
         if (name.toCharArray().size > maxPipelineNameSize) {
             throw ErrorCodeException(
@@ -260,5 +262,9 @@ object PipelineUtils {
             }
         }
         return filterParams
+    }
+
+    fun isPipelineId(pipelineId: String): Boolean {
+        return PIPELINE_ID_PATTERN.matcher(pipelineId).matches()
     }
 }

@@ -34,9 +34,9 @@ import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.oauth.GitOauthCallback
 import com.tencent.devops.repository.pojo.oauth.GitToken
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
@@ -132,4 +132,16 @@ interface ServiceOauthResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<AuthorizeResult>
+
+    @Operation(summary = "根据用户ID判断用户是否已经github oauth认证")
+    @GET
+    @Path("/{scmCode}/isScmOauth")
+    fun isScmOauth(
+        @Parameter(description = "用户ID", required = true)
+        @PathParam("userId")
+        userId: String,
+        @Parameter(description = "scmCode", required = true)
+        @PathParam("scmCode")
+        scmCode: String
+    ): Result<Boolean>
 }
