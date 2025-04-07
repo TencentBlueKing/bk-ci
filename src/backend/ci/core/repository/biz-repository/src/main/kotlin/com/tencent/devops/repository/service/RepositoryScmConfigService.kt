@@ -28,9 +28,13 @@
 package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.pojo.IdValue
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPlatformApi
@@ -38,6 +42,7 @@ import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.constant.RepositoryMessageCode.CREDENTIAL_TYPE_PREFIX
+import com.tencent.devops.repository.constant.RepositoryMessageCode.GIT_NOT_FOUND
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.dao.RepositoryScmConfigDao
 import com.tencent.devops.repository.dao.RepositoryScmProviderDao
@@ -53,6 +58,7 @@ import com.tencent.devops.repository.pojo.ScmConfigProps
 import com.tencent.devops.repository.pojo.enums.RepoCredentialType
 import com.tencent.devops.repository.pojo.enums.ScmConfigOauthType
 import com.tencent.devops.repository.pojo.enums.ScmConfigStatus
+import com.tencent.devops.scm.api.enums.EventAction
 import com.tencent.devops.scm.api.enums.WebhookSecretType
 import com.tencent.devops.scm.spring.properties.HttpClientProperties
 import com.tencent.devops.scm.spring.properties.Oauth2ClientProperties
@@ -433,6 +439,90 @@ class RepositoryScmConfigService @Autowired constructor(
         return RepositoryConfigLogoInfo(logoUrl)
     }
 
+    fun supportEvents(
+        userId: String,
+        projectId: String,
+        repoHashId: String?,
+        aliasName: String?,
+        repoType: String?
+    ): List<IdValue> {
+        val scmProvider = getProviderConfig(
+            projectId = projectId,
+            repoHashId = repoHashId,
+            aliasName = aliasName,
+            repoType = repoType ?: RepositoryType.ID.name
+        ) ?: return listOf()
+        return (scmProvider.webhookProps?.eventTypeList ?: emptyList()).map {
+            IdValue(
+                it,
+                eventDesc(scmProvider.providerCode, it)
+            )
+        }
+    }
+
+    fun supportEventActions(
+        userId: String,
+        projectId: String,
+        repoHashId: String?,
+        aliasName: String?,
+        repoType: String?,
+        eventType: String
+    ): List<IdValue> {
+        val scmProvider = getProviderConfig(
+            projectId = projectId,
+            repoHashId = repoHashId,
+            aliasName = aliasName,
+            repoType = repoType ?: RepositoryType.ID.name
+        ) ?: return listOf()
+        val actionMap = scmProvider.webhookProps?.eventTypeActionMap ?: emptyMap()
+        return (actionMap[eventType] ?: emptyList()).map {
+            IdValue(
+                EventAction.valueOf(it).value,
+                eventActionDesc(scmProvider.providerCode, eventType, it)
+            )
+        }
+    }
+
+    private fun getProviderConfig(scmCode: String): RepositoryScmProvider? {
+        val scmConfig = repositoryScmConfigDao.get(dslContext, scmCode) ?: throw ErrorCodeException(
+            errorCode = RepositoryMessageCode.ERROR_SCM_CONFIG_NOT_FOUND,
+            params = arrayOf(scmCode)
+        )
+        return repositoryScmProviderDao.get(dslContext, scmConfig.providerCode)
+    }
+
+    private fun getProviderConfig(
+        projectId: String,
+        repoHashId: String?,
+        aliasName: String?,
+        repoType: String
+    ): RepositoryScmProvider? {
+        var refName = ""
+        val repoInfo = when (repoType) {
+            RepositoryType.ID.name -> {
+                if (repoHashId.isNullOrBlank()) {
+                    throw ParamBlankException("repoHashId is null")
+                }
+                refName = repoHashId
+                repositoryDao.getById(dslContext, HashUtil.decodeOtherIdToLong(repoHashId))
+            }
+
+            RepositoryType.NAME.name -> {
+                if (aliasName.isNullOrBlank()) {
+                    throw ParamBlankException("aliasName is null")
+                }
+                refName = aliasName
+                repositoryDao.getByName(dslContext, projectId, aliasName)
+            }
+
+            else -> null
+        } ?: throw ErrorCodeException(
+            errorCode = GIT_NOT_FOUND,
+            params = arrayOf(refName)
+        )
+        return getProviderConfig(repoInfo.scmCode)
+    }
+
     private fun convertScmConfigVo(
         scmConfig: RepositoryScmConfig,
         providerMap: Map<String, RepositoryScmProvider>,
@@ -594,6 +684,22 @@ class RepositoryScmConfigService @Autowired constructor(
             )
         }
     }
+
+    /**
+     * 根据平台编码和事件类型获取事件描述
+     */
+    private fun eventDesc(providerCode:String, eventType: String) = I18nUtil.getCodeLanMessage(
+        messageCode = "BK_${providerCode.uppercase()}_${eventType}_DESC",
+        defaultMessage = eventType
+    )
+
+    /**
+     * 根据平台编码和事件类型获取事件动作描述
+     */
+    private fun eventActionDesc(providerCode: String, eventType: String, action: String) = I18nUtil.getCodeLanMessage(
+        messageCode = "BK_${providerCode.uppercase()}_${eventType}_ACTION_${action}_DESC",
+        defaultMessage = action
+    )
 
     companion object {
         const val SECRET_MIXER = "******"

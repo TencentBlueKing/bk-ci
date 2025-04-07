@@ -74,6 +74,9 @@ import com.tencent.devops.repository.dao.RepositoryScmConfigDao
 import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.CodeGitlabRepository
+import com.tencent.devops.repository.pojo.CodeSvnRepository
+import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.RepoOauthRefVo
 import com.tencent.devops.repository.pojo.RepoRename
@@ -81,6 +84,8 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
+import com.tencent.devops.repository.pojo.ScmGitRepository
+import com.tencent.devops.repository.pojo.ScmSvnRepository
 import com.tencent.devops.repository.pojo.enums.GithubAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
@@ -93,6 +98,8 @@ import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.repository.service.tgit.TGitOAuthService
+import com.tencent.devops.scm.api.ScmProvider
+import com.tencent.devops.scm.api.enums.ScmProviderCodes
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitCommit
@@ -100,6 +107,7 @@ import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import java.time.LocalDateTime
 import java.util.Base64
 import jakarta.ws.rs.NotFoundException
@@ -557,6 +565,8 @@ class RepositoryService @Autowired constructor(
             .setInstance(repository)
         createResource(userId = userId, projectId = projectId, repositoryId = repositoryId, repository = repository)
         enablePac(userId = userId, projectId = projectId, repositoryId = repositoryId, repository = repository)
+        // 新接入的代码源需额外手动设置webhook触发白名单，后续完全灰度完成后，移除此部分逻辑
+        enableWebhookTrigger(repository)
         return repositoryId
     }
 
@@ -1250,10 +1260,10 @@ class RepositoryService @Autowired constructor(
                 scmType = repository.getScmType()
             )
             // TODO 后续需要删除 开启PAC时，将代码库加入灰度库白名单
-            client.get(ServiceScmWebhookResource::class).addGrayRepoWhite(
+            addGrayRepoWhite(
                 scmCode = repository.scmCode,
                 pac = true,
-                serverRepoNames = listOf(repository.projectName)
+                projectNames = listOf(repository.projectName)
             )
         } catch (exception: Exception) {
             logger.error("failed to enable pac when create repository,rollback|$projectId|$repositoryId")
@@ -1646,6 +1656,53 @@ class RepositoryService @Autowired constructor(
 
             else -> 0L
         }
+    }
+
+    fun enableWebhookTrigger(repository: Repository) {
+        val scmConfig = repositoryScmConfigDao.get(dslContext, repository.scmCode) ?: return
+        // 仅有新接入的仓库需要手动加入白名单
+        val needAddWhitelist = listOf(
+            ScmProviderCodes.TSVN.name,
+            ScmProviderCodes.GITEE.name
+        ).contains(scmConfig.providerCode)
+        if (needAddWhitelist) {
+            addGrayRepoWhite(
+                scmCode = scmConfig.scmCode,
+                projectNames = listOf(getRelProjectName(repository.getScmType(), repository.getFormatURL())),
+                pac = false
+            )
+        }
+    }
+
+    /**
+     * 获取仓库名
+     */
+    fun getRelProjectName(scmType: ScmType, url: String) = when (scmType) {
+        ScmType.CODE_GIT, ScmType.CODE_TGIT, ScmType.CODE_GITLAB, ScmType.GITHUB, ScmType.SCM_GIT -> {
+            GitUtils.getProjectName(url)
+        }
+
+        ScmType.CODE_SVN, ScmType.SCM_SVN -> {
+            SvnUtils.getSvnProjectName(url)
+        }
+
+        else -> url
+    }
+
+    /**
+     * 添加灰度仓库，webhook触发时执行新的触发解析逻辑
+     * 参考:  com.tencent.devops.process.webhook.WebhookRequestService.handleRequest
+     */
+    fun addGrayRepoWhite(scmCode: String, projectNames: List<String>, pac: Boolean) {
+        // TODO 后续需要删除 开启PAC时，将代码库加入灰度库白名单
+        client.get(ServiceScmWebhookResource::class).addGrayRepoWhite(
+            scmCode = scmCode,
+            pac = pac,
+            serverRepoNames = projectNames
+        )
+        logger.info(
+            "successfully added gray repo to whitelist|$scmCode|${projectNames.joinToString(",")}|$pac"
+        )
     }
 
     companion object {
