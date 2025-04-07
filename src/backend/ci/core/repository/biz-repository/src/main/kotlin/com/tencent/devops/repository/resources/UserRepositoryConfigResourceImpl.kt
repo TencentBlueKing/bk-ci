@@ -28,6 +28,7 @@
 package com.tencent.devops.repository.resources
 
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.RestResource
@@ -132,6 +133,44 @@ class UserRepositoryConfigResourceImpl @Autowired constructor(
                 contentLength = contentLength,
                 inputStream = inputStream,
                 disposition = disposition
+            )
+        )
+    }
+
+    override fun supportEvents(
+        userId: String,
+        projectId: String,
+        repoHashId: String?,
+        aliasName: String?,
+        repoType: String?
+    ): Result<List<IdValue>> {
+        return Result(
+            repositoryScmConfigService.supportEvents(
+                userId = userId,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                aliasName = aliasName,
+                repoType = repoType
+            )
+        )
+    }
+
+    override fun supportEventActions(
+        userId: String,
+        projectId: String,
+        repoHashId: String?,
+        aliasName: String?,
+        repoType: String?,
+        eventType: String
+    ): Result<List<IdValue>> {
+        return Result(
+            repositoryScmConfigService.supportEventActions(
+                userId = userId,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                aliasName = aliasName,
+                repoType = repoType,
+                eventType = eventType
             )
         )
     }

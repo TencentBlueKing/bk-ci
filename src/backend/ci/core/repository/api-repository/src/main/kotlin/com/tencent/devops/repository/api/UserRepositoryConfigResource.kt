@@ -29,7 +29,9 @@ package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.RepositoryConfigLogoInfo
 import com.tencent.devops.repository.pojo.RepositoryScmConfigReq
@@ -176,4 +178,49 @@ interface UserRepositoryConfigResource {
         @FormDataParam("logo")
         disposition: FormDataContentDisposition
     ): Result<RepositoryConfigLogoInfo?>
+
+    @Operation(summary = "获取目标代码库支持的触发事件")
+    @GET
+    @Path("/events")
+    fun supportEvents(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "repoHashId", required = false)
+        @QueryParam("repoHashId")
+        repoHashId: String?,
+        @Parameter(description = "aliasName", required = false)
+        @QueryParam("aliasName")
+        aliasName: String?,
+        @Parameter(description = "repoType", required = false)
+        @QueryParam("repoType")
+        repoType: String? = RepositoryType.ID.name
+    ): Result<List<IdValue>>
+
+    @Operation(summary = "获取目标代码库支持的事件动作")
+    @GET
+    @Path("/events/{eventType}/actions")
+    fun supportEventActions(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "repoHashId", required = false)
+        @QueryParam("repoHashId")
+        repoHashId: String?,
+        @Parameter(description = "aliasName", required = false)
+        @QueryParam("aliasName")
+        aliasName: String?,
+        @Parameter(description = "repoType", required = false)
+        @QueryParam("repoType")
+        repoType: String? = RepositoryType.ID.name,
+        @Parameter(description = "eventType", required = false)
+        @PathParam("eventType")
+        eventType: String
+    ): Result<List<IdValue>>
 }

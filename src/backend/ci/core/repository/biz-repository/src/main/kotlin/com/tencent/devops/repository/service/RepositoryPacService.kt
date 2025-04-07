@@ -53,13 +53,10 @@ import com.tencent.devops.repository.service.hub.ScmRepositoryApiService
 import com.tencent.devops.repository.service.loader.CodeRepositoryServiceRegistrar
 import com.tencent.devops.scm.api.enums.ScmEventType
 import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
-import com.tencent.devops.scm.config.GitConfig
-import com.tencent.devops.scm.config.P4Config
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -70,13 +67,8 @@ class RepositoryPacService @Autowired constructor(
     private val client: Client,
     private val repositoryApiService: ScmRepositoryApiService,
     private val fileApiService: ScmFileApiService,
-    private val refApiService: ScmRefApiService,
-    private val gitConfig: GitConfig,
-    private val p4Config: P4Config
+    private val refApiService: ScmRefApiService
 ) {
-
-    @Value("\${scm.webhook.url:#{null}}")
-    private val webhookUrl: String = ""
 
     companion object {
         private val logger = LoggerFactory.getLogger(RepositoryPacService::class.java)
@@ -336,15 +328,15 @@ class RepositoryPacService @Autowired constructor(
             )
         }
         // 创建webhook,开启PAC时默认注册push和合并请求事件
-        val hookUrl = getHookUrl(repository.getScmType())
         repositoryApiService.createHook(
             projectId = projectId,
-            hookUrl = hookUrl,
             events = listOf(
                 ScmEventType.PUSH.value,
                 ScmEventType.PULL_REQUEST.value
             ),
-            authRepository = authRepository
+            authRepository = authRepository,
+            scmType = repository.getScmType(),
+            scmCode = repository.scmCode
         )
         // 获取yaml文件列表
         val defaultBranch = serverRepository.defaultBranch
@@ -388,35 +380,10 @@ class RepositoryPacService @Autowired constructor(
                 )
             )
         }
-        // TODO 后续需要删除 开启PAC时，将代码库加入灰度库白名单
-        client.get(ServiceScmWebhookResource::class).addGrayRepoWhite(
+        repositoryService.addGrayRepoWhite(
             scmCode = repository.scmCode,
             pac = true,
-            serverRepoNames = listOf(serverRepository.fullName)
+            projectNames = listOf(serverRepository.fullName)
         )
-    }
-
-    private fun getHookUrl(type: ScmType): String {
-        return when (type) {
-            ScmType.CODE_GIT -> {
-                gitConfig.gitHookUrl
-            }
-
-            ScmType.CODE_GITLAB -> {
-                gitConfig.gitlabHookUrl
-            }
-
-            ScmType.CODE_TGIT -> {
-                gitConfig.tGitHookUrl
-            }
-
-            ScmType.CODE_P4 -> {
-                p4Config.p4HookUrl
-            }
-
-            else -> {
-                webhookUrl
-            }
-        }
     }
 }
