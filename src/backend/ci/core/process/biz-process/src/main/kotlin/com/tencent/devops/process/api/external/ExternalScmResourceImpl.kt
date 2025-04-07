@@ -67,16 +67,16 @@ class ExternalScmResourceImpl @Autowired constructor(
         if (sourceType == "Test") {
             return Result(true)
         }
-        return Result(
-            CodeWebhookEventDispatcher.dispatchEvent(
-                streamBridge = streamBridge,
-                event = GitWebhookEvent(
-                    requestContent = body,
-                    event = event,
-                    secret = secret
-                )
+        CodeWebhookEventDispatcher.dispatchEvent(
+            streamBridge = streamBridge,
+            event = GitWebhookEvent(
+                requestContent = body,
+                event = event,
+                secret = secret,
+                traceId = traceId
             )
         )
+        return Result(true)
     }
 
     override fun webHookGitlabCommit(event: String) =

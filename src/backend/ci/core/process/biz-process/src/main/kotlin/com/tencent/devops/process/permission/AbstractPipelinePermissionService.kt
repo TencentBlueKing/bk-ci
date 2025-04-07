@@ -37,7 +37,7 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 /**
  * Pipeline专用权限校验接口

@@ -58,7 +58,7 @@ import com.tencent.devops.process.service.builds.PipelineBuildMaintainFacadeServ
 import com.tencent.devops.process.service.builds.PipelinePauseBuildFacadeService
 import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @RestResource
 @Suppress("ALL")

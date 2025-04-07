@@ -28,6 +28,6 @@
 package com.tencent.devops.environment.exception
 
 import com.tencent.devops.common.api.exception.CustomException
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 class AgentPermissionUnAuthorizedException(message: String) : CustomException(Response.Status.UNAUTHORIZED, message)
