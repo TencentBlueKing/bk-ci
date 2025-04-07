@@ -335,8 +335,8 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
             val atomSizeInfoList = atomEnvRecords.mapNotNull { record ->
                 record.pkgPath?.let { pkgPath ->
                     val nodeSize = client.get(ServiceArchiveComponentPkgResource::class)
-                        .getFileSize(StoreTypeEnum.ATOM, pkgPath).data ?: 0L
-                    if (nodeSize > 0) {
+                        .getFileSize(StoreTypeEnum.ATOM, pkgPath).data
+                    if (nodeSize != null) {
                         AtomPackageInfo(
                             osName = record.osName ?: "",
                             arch = record.osArch ?: "",

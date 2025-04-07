@@ -1499,8 +1499,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 val atomSizeInfoList = records.mapNotNull { record ->
                     record.pkgPath?.let { pkgPath ->
                         val nodeSize = client.get(ServiceArchiveComponentPkgResource::class)
-                            .getFileSize(StoreTypeEnum.ATOM, pkgPath).data ?: 0L
-                        if (nodeSize > 0) {
+                            .getFileSize(StoreTypeEnum.ATOM, pkgPath).data
+                        if (nodeSize != null) {
                             AtomPackageInfo(
                                 osName = record.osName ?: "",
                                 arch = record.osArch ?: "",

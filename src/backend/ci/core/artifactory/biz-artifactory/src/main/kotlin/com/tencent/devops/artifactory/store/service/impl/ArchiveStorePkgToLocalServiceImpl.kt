@@ -126,7 +126,7 @@ class ArchiveStorePkgToLocalServiceImpl : ArchiveStorePkgServiceImpl() {
         return "$host/ms/artifactory/api/user/artifactories/file/download/local?filePath=$pkgPath"
     }
 
-    override fun getStoreFileSize(filePath: String, storeType: StoreTypeEnum, repoName: String?): Long {
+    override fun getStoreFileSize(filePath: String, storeType: StoreTypeEnum, repoName: String?): Long? {
         if (filePath.contains("../")) {
             throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(filePath))
         }
@@ -136,7 +136,7 @@ class ArchiveStorePkgToLocalServiceImpl : ArchiveStorePkgServiceImpl() {
         return if (file.exists()) {
             file.length()
         } else {
-            0
+            null
         }
     }
 }

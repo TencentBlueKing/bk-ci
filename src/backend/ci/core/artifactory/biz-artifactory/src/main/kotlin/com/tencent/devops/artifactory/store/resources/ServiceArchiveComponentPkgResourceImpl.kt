@@ -74,7 +74,7 @@ class ServiceArchiveComponentPkgResourceImpl @Autowired constructor(
         return Result(archiveStorePkgService.getStoreFileContent(filePath, storeType, repoName))
     }
 
-    override fun getFileSize(storeType: StoreTypeEnum, filePath: String, repoName: String?): Result<Long> {
+    override fun getFileSize(storeType: StoreTypeEnum, filePath: String, repoName: String?): Result<Long?> {
         return Result(archiveStorePkgService.getStoreFileSize(filePath, storeType, repoName))
     }
 }

@@ -128,5 +128,5 @@ interface ServiceArchiveComponentPkgResource {
         @Parameter(description = "仓库名称", required = false)
         @QueryParam("repoName")
         repoName: String? = null
-    ): Result<Long>
+    ): Result<Long?>
 }
