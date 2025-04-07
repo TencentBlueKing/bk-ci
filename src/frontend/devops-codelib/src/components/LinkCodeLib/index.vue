@@ -17,9 +17,9 @@
             <li
                 v-for="item in codelibTypes"
                 :key="item.scmType"
-                @click="createCodelib(item.scmType)"
+                @click="createCodelib(item.scmType, item.scmCode)"
                 :class="{
-                    'disabled-codelib-type': item.status !== 'OK'
+                    'disabled-codelib-type': item.status !== 'SUCCESS'
                 }"
             >
                 {{ item.name }}
@@ -81,6 +81,18 @@
                 &.disabled-codelib-type {
                     color: #c4c6cc;
                     cursor: not-allowed;
+                }
+                img {
+                    width: 16px;
+                    height: 16px;
+                    margin-right: 12px;
+                }
+                .config-name {
+                    color: #313238;
+                }
+                .config-hosts {
+                    color: #979BA5;
+                    margin-left: 10px;
                 }
             }
         }
