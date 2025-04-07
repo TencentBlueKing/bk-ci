@@ -506,7 +506,8 @@ class SubPipelineStartUpService @Autowired constructor(
                     valueUrl = "",
                     valueUrlQuery = ArrayList(),
                     valueList = valueList,
-                    valueMultiple = item.type == BuildFormPropertyType.MULTIPLE
+                    valueMultiple = item.type == BuildFormPropertyType.MULTIPLE,
+                    type = item.type.value
                 )
                 parameter.add(info)
             } else {
@@ -528,7 +529,8 @@ class SubPipelineStartUpService @Autowired constructor(
                     valueUrl = "",
                     valueUrlQuery = ArrayList(),
                     valueList = valueList,
-                    valueMultiple = false
+                    valueMultiple = false,
+                    type = item.type.value
                 )
                 parameter.add(info)
             }
