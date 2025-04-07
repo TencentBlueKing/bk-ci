@@ -10,7 +10,7 @@ import (
 func initTasksApis(r *gin.RouterGroup) {
 	tasks := r.Group("/tasks")
 	{
-		tasks .GET("/:taskId/status", getTaskStatus)
+		tasks.GET("/:taskId/status", getTaskStatus)
 	}
 }
 

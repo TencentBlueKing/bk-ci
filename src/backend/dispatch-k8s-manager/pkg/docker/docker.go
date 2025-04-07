@@ -3,6 +3,7 @@ package docker
 import (
 	"encoding/base64"
 	"encoding/json"
+	"github.com/docker/docker/api/types/registry"
 	"io"
 	"strings"
 
@@ -78,7 +79,7 @@ func generateDockerAuth(user, password string) string {
 		return ""
 	}
 
-	authConfig := types.AuthConfig{
+	authConfig := registry.AuthConfig{
 		Username: user,
 		Password: password,
 	}
