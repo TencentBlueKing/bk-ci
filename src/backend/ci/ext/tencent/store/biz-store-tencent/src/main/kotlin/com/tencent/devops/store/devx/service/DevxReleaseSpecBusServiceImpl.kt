@@ -395,11 +395,9 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
                 )?.fieldValue == FrameworkCodeEnum.NODEJS_FRAMEWORK.name
             ) {
                 // 兼容nodejs框架没有配置应用程序路径的情况
-                File(packagePath).let { packageFile ->
-                    appPackagePath = "${packageFile.parentFile.absolutePath}${File.separator}$storeCode.${
-                        FilenameUtils.getExtension(packageFile.name)
-                    }"
-                }
+                val fileExtension = packagePath.substringAfterLast('.', "")
+                val fileName = packagePath.substringAfterLast(File.separator, "")
+                appPackagePath = packagePath.replace(fileName, "$storeCode.$fileExtension")
                 if (packAppPackageScriptPath.isBlank()) {
                     packAppPackageScriptPath = packScriptPath
                 }
