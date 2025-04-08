@@ -95,6 +95,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
+import com.tencent.devops.store.pojo.common.version.VersionInfo
 import com.tencent.devops.store.pojo.common.version.VersionModel
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -754,6 +755,43 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             null
         }
         return storeCommonService.getStoreShowVersionInfo(cancelFlag, showReleaseType, showVersion)
+    }
+
+    override fun getComponentUpgradeVersionInfo(
+        userId: String,
+        storeType: String,
+        storeCode: String,
+        projectCode: String,
+        instanceId: String?
+    ): VersionInfo? {
+        val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
+        val installComponentMap = storeProjectService.getProjectComponents(
+            projectCode = projectCode,
+            storeType = storeTypeEnum.type.toByte(),
+            storeProjectTypes = listOf(
+                StoreProjectTypeEnum.COMMON.type.toByte()
+            ),
+            instanceId = instanceId
+        ) ?: emptyMap()
+
+        val installVersion = installComponentMap[storeCode]
+
+        // 获取已发布的最大版本组件
+        val maxReleaseVersion = storeBaseQueryDao.getNewestComponentByCode(
+            dslContext = dslContext,
+            storeType = storeTypeEnum,
+            storeCode = storeCode,
+            status = StoreStatusEnum.RELEASED
+        )?.version
+
+        // 当存在最新发布版本且与当前安装版本不一致时返回最新发布版本
+        maxReleaseVersion?.takeIf { it != installVersion }?.let {
+            return VersionInfo(
+                versionName = it,
+                versionValue = it
+            )
+        }
+        return null
     }
 
     private fun getStoreInfos(storeInfoQuery: StoreInfoQuery): Pair<Long, List<Record>> {
