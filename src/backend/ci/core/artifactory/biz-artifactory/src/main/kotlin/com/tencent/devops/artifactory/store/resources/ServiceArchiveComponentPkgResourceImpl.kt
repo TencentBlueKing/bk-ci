@@ -28,10 +28,14 @@
 package com.tencent.devops.artifactory.store.resources
 
 import com.tencent.devops.artifactory.api.ServiceArchiveComponentPkgResource
+import com.tencent.devops.artifactory.pojo.ArchiveStorePkgRequest
 import com.tencent.devops.artifactory.store.service.ArchiveStorePkgService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.io.InputStream
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -72,5 +76,29 @@ class ServiceArchiveComponentPkgResourceImpl @Autowired constructor(
 
     override fun getFileContent(storeType: StoreTypeEnum, filePath: String, repoName: String?): Result<String> {
         return Result(archiveStorePkgService.getStoreFileContent(filePath, storeType, repoName))
+    }
+
+    override fun archiveComponentPkg(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        version: String,
+        releaseType: ReleaseTypeEnum,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<Boolean> {
+        return Result(
+            archiveStorePkgService.archiveStorePkg(
+                userId = userId,
+                inputStream = inputStream,
+                disposition = disposition,
+                archiveStorePkgRequest = ArchiveStorePkgRequest(
+                    storeCode = storeCode,
+                    storeType = storeType,
+                    version = version,
+                    releaseType = releaseType
+                )
+            )
+        )
     }
 }
