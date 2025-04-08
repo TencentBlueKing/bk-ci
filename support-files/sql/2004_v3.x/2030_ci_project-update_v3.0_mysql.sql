@@ -100,43 +100,43 @@ BEGIN
     IF NOT EXISTS(SELECT 1
                     FROM information_schema.COLUMNS
                     WHERE TABLE_SCHEMA = db
-                        AND TABLE_NAME = 'T_PROJECT_APPROVEL'
+                        AND TABLE_NAME = 'T_PROJECT_APPROVAL'
                         AND COLUMN_NAME = 'TENANT_ENGLISH_NAME') THEN
-       ALTER TABLE T_PROJECT_APPROVEL
+       ALTER TABLE T_PROJECT_APPROVAL
           ADD COLUMN `TENANT_ENGLISH_NAME` varchar(32) DEFAULT (ENGLISH_NAME) COMMENT '租户英文名';
     END IF;
 
     IF NOT EXISTS(SELECT 1
                     FROM information_schema.COLUMNS
                     WHERE TABLE_SCHEMA = db
-                        AND TABLE_NAME = 'T_PROJECT_APPROVEL'
+                        AND TABLE_NAME = 'T_PROJECT_APPROVAL'
                         AND COLUMN_NAME = 'TENANT_ID') THEN
-       ALTER TABLE T_PROJECT_APPROVEL
+       ALTER TABLE T_PROJECT_APPROVAL
           ADD COLUMN `TENANT_ID` varchar(32) DEFAULT 'default' COMMENT '租户ID';
     END IF;
 
     IF EXISTS(SELECT 1
                    FROM information_schema.statistics
                    WHERE TABLE_SCHEMA = db
-                     AND TABLE_NAME = 'T_PROJECT_APPROVEL'
+                     AND TABLE_NAME = 'T_PROJECT_APPROVAL'
                      AND INDEX_NAME = 'project_name') THEN
-      ALTER TABLE `T_PROJECT_APPROVEL` DROP INDEX `project_name`;
+      ALTER TABLE `T_PROJECT_APPROVAL` DROP INDEX `project_name`;
     END IF;
 
     IF NOT EXISTS(SELECT 1
                    FROM information_schema.statistics
                    WHERE TABLE_SCHEMA = db
-                     AND TABLE_NAME = 'T_PROJECT_APPROVEL'
+                     AND TABLE_NAME = 'T_PROJECT_APPROVAL'
                      AND INDEX_NAME = 'project_name_tenant_id') THEN
-      ALTER TABLE `T_PROJECT_APPROVEL` ADD UNIQUE KEY `project_name_tenant_id` (`PROJECT_NAME`,`TENANT_ID`) ;
+      ALTER TABLE `T_PROJECT_APPROVAL` ADD UNIQUE KEY `project_name_tenant_id` (`PROJECT_NAME`,`TENANT_ID`) ;
     END IF;
 
     IF NOT EXISTS(SELECT 1
                    FROM information_schema.statistics
                    WHERE TABLE_SCHEMA = db
-                     AND TABLE_NAME = 'T_PROJECT_APPROVEL'
+                     AND TABLE_NAME = 'T_PROJECT_APPROVAL'
                      AND INDEX_NAME = 'tenant_id_tenant_english_name') THEN
-      ALTER TABLE `T_PROJECT_APPROVEL` ADD UNIQUE KEY `tenant_id_tenant_english_name` (`TENANT_ID`,`TENANT_ENGLISH_NAME`);
+      ALTER TABLE `T_PROJECT_APPROVAL` ADD UNIQUE KEY `tenant_id_tenant_english_name` (`TENANT_ID`,`TENANT_ENGLISH_NAME`);
     END IF;
 
     COMMIT;

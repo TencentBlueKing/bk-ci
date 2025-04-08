@@ -3,6 +3,7 @@ package com.tencent.devops.common.service.tenant
 import org.springframework.beans.factory.InitializingBean
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationContextAware
+import org.springframework.core.env.get
 
 class TenantUtils : ApplicationContextAware, InitializingBean {
     private var applicationContext: ApplicationContext? = null
@@ -14,7 +15,7 @@ class TenantUtils : ApplicationContextAware, InitializingBean {
 
     override fun afterPropertiesSet() {
         enableMultiTenantMode =
-            applicationContext!!.environment.getProperty("bk.enableMultiTenantMode", Boolean::class.java) == true
+            applicationContext?.environment?.get("bk.enableMultiTenantMode") == "true"
     }
 
     companion object {
