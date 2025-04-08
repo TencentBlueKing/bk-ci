@@ -208,7 +208,7 @@ class ThirdPartyAgentHeartBeatJob @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(ThirdPartyAgentHeartBeatJob::class.java)
         private const val LOCK_KEY = "env_cron_agent_heartbeat_check"
-        private const val OK_AGENT_INTERVAL_MILLS = 10 * THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL * 1000  // 10个心跳周期内未上报的
+        private const val OK_AGENT_INTERVAL_MILLS = 10 * THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL * 1000 // 10个心跳周期内未上报的
         private const val UNIMPORT_AGENT_INTERVAL_MILLS = 2 * THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL * 1000 // 2个心跳周期内未完成导入
         private const val MAX_LOOP_MILLS = 10 * 60 * 1000L // 10 minutes
     }

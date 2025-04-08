@@ -66,7 +66,7 @@ class Watcher(id: String = "") : StopWatch(id), Closeable {
         return sb.toString()
     }
 
-    override fun close()  = stop()
+    override fun close() = stop()
 
     override fun shortSummary(): String {
         return "watcher|$id|total=$totalTimeMillis|elapsed=${elapsed()}"

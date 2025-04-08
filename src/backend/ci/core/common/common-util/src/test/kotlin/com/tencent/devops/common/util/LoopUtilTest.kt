@@ -99,7 +99,7 @@ class LoopUtilTest {
             /* actual = */
             assertThrows<IllegalArgumentException> {
                 LoopUtil.LoopVo<Long, MutableList<FakeStuPojo>>(
-                    sleepIntervalMills = -1,  // 不合理
+                    sleepIntervalMills = -1, // 不合理
                     id = 0L,
                     data = mutableListOf()
                 ).check()
@@ -110,7 +110,7 @@ class LoopUtilTest {
             /* actual = */
             assertThrows<IllegalArgumentException> {
                 LoopUtil.LoopVo<Long, MutableList<FakeStuPojo>>(
-                    sleepIntervalMills = SLEEP_INTERVAL + 1,  // 不合理 超过
+                    sleepIntervalMills = SLEEP_INTERVAL + 1, // 不合理 超过
                     id = 0L,
                     data = mutableListOf()
                 ).check()
@@ -218,7 +218,7 @@ class LoopUtilTest {
             return FakeStuPojo(
                 id = id,
                 userName = name.toString(),
-                age = random.nextInt(20, 26)  // 大学生年龄20-26岁
+                age = random.nextInt(20, 26) // 年龄20-26岁
             )
         }
     }
