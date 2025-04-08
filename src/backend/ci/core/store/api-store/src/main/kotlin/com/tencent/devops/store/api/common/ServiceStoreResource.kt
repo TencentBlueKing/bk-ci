@@ -169,7 +169,10 @@ interface ServiceStoreResource {
         projectCode: String,
         @Parameter(description = "用户ID", required = true)
         @QueryParam("userId")
-        userId: String
+        userId: String,
+        @Parameter(description = "实例ID", required = false)
+        @QueryParam("instanceId")
+        instanceId: String? = null
     ): Result<Boolean>
 
     @Operation(summary = "获取组件分类信息列表")

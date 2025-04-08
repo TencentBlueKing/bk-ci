@@ -342,6 +342,7 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
         storeType: StoreTypeEnum,
         storeCode: String,
         version: String,
+        instanceId: String?,
         osName: String?,
         osArch: String?
     ): String {
@@ -350,7 +351,8 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
             storeType = storeType,
             version = version,
             projectCode = projectId,
-            userId = userId
+            userId = userId,
+            instanceId = instanceId
         )
         if (validateResult.isNotOk() || validateResult.data == false) {
             throw ErrorCodeException(
