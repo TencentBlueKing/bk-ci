@@ -34,7 +34,7 @@ import com.tencent.devops.store.pojo.common.publication.StoreBaseEnvRequest
 import com.tencent.devops.store.pojo.common.publication.StoreBaseFeatureRequest
 import com.tencent.devops.store.pojo.common.version.VersionModel
 import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.Valid
+import jakarta.validation.Valid
 
 @Schema(title = "组件发布部署基础模型")
 data class StoreReleaseBaseInfo(
