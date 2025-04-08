@@ -81,7 +81,8 @@ class CodeGithubRepositoryService @Autowired constructor(
                 aliasName = repository.aliasName,
                 url = repository.getFormatURL(),
                 type = ScmType.GITHUB,
-                enablePac = repository.enablePac
+                enablePac = repository.enablePac,
+                scmCode = ScmType.GITHUB.name
             )
             repositoryGithubDao.create(
                 dslContext = transactionContext,
@@ -177,7 +178,8 @@ class CodeGithubRepositoryService @Autowired constructor(
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
             gitProjectId = record.gitProjectId.toLong(),
             enablePac = repository.enablePac,
-            yamlSyncStatus = repository.yamlSyncStatus
+            yamlSyncStatus = repository.yamlSyncStatus,
+            scmCode = repository.scmCode ?: ScmType.GITHUB.name
         )
     }
 

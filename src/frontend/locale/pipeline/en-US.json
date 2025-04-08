@@ -145,7 +145,7 @@
   "importPipelineLabel": "Please upload a pipeline JSON/YAML file",
   "invalidPipelineJsonOrYaml": "Invalid Pipeline JSON/YAML",
   "exportPipelineSuccess": "Export Pipeline Success",
-  "sizeLimit": "Maximum file size is 100MB. When re-uploading, if the path remains unchanged, there is no need to save the pipeline.",
+  "sizeLimit": "Upload files up to {0}MB",
   "fileUploadSuccess": "Upload Successful",
   "empty": "No Data",
   "link": "link",
@@ -625,7 +625,20 @@
     "copyToCustomArtifactory": "Copy to custom artifactory",
     "downloading": "Downloading ",
     "copySuc": " Copy {0} to custom artifactory successfully",
-    "buildMsg": "Build Message"
+    "buildMsg": "Build Message",
+    "rePlay": "Re-play",
+    "reBuildTips1": "When rebuilding, it will be re-executed with the same trigger parameters, and:",
+    "reBuildTips2": "- The BK_CI_BUILD_ID remains unchanged",
+    "reBuildTips3": "- The pipeline version used is based on the initial trigger",
+    "rePlayTips1": "After replaying, a new build will be initiated with the same trigger parameters:",
+    "rePlayTips2": "- A new BK_CI_BUILD_ID will be generated",
+    "rePlayTips3": "- The latest pipeline version will be used to run",
+    "reBuildConfirmTips": "Are you sure you want to initiate a rebuild?",
+    "rePlayConfirmTips": "Are you sure you want to replay the event for this pipeline?",
+    "rePlayInfo1": "1. When replaying, start a new Play with the same trigger parameters and the latest pipeline version.",
+    "rePlayInfo2": "2. When replaying, skip trigger detection, and it may not meet the trigger conditions of the latest version.",
+    "reBuildInfo1": "1. Rebuilding is to re-execute on the basis of the previous build.",
+    "reBuildInfo2": "2. Pipeline version, BK_CI_BUILD_ID are consistent with those when it is triggered for the first time."
   },
   "preview": {
     "build": "Build",
@@ -1056,7 +1069,7 @@
     "codelibConfigs": "Code Repositories Config",
     "timerTriggerCodelibTips": "- Git repository: Branch is optional, defaults to the default branch when not specified.\n-SVN repository: Branch is mandatory, must be a first-level subdirectory under the repository root path.",
     "timerTriggerBranchTips": "If multiple branches have changes, each branch will trigger once when conditions are met.",
-    "filePathTips": "Please enter directory, e.g., /a",
+    "filePathTips": "Please enter the directory where the file is stored, e.g., /a",
     "fileNameTips": "File name, leave blank to auto-detect",
     "enableDocker": "Enable Docker for Running Build Tasks",
     "imagePullPolicy": "Image Pull Policy",
@@ -1073,7 +1086,10 @@
     "lineBreak": "Separate multiple options with line breaks",
     "noEnglishCommas": "Each option cannot contain English commas",
     "formatSupport": "Similar to the HTML select tag, options support value=name / value formats",
-    "batchCopy": "One-click Copy"
+    "batchCopy": "One-click Copy",
+    "randomlyGenerate": "<Randomly generate>",
+    "enableVersionControl": "Enable version control",
+    "versionControlTip": "Once enabled, uploading files will automatically generate versioned paths within the directory to prevent overwriting files with the same name."
   },
   "storeMap": {
     "textarea": "Textarea",

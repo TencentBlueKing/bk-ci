@@ -48,6 +48,7 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonStatistics
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.trigger.RepoTriggerEventDetail
+import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -79,7 +80,8 @@ class PipelineTriggerEventDao {
                 EVENT_DESC,
                 REPLAY_REQUEST_ID,
                 REQUEST_PARAMS,
-                CREATE_TIME
+                CREATE_TIME,
+                EVENT_BODY
             ).values(
                 triggerEvent.requestId,
                 triggerEvent.projectId,
@@ -90,9 +92,23 @@ class PipelineTriggerEventDao {
                 triggerEvent.triggerUser,
                 JsonUtil.toJson(triggerEvent.eventDesc),
                 triggerEvent.replayRequestId,
-                triggerEvent.requestParams?.let { JsonUtil.toJson(it) },
-                triggerEvent.createTime
+                triggerEvent.requestParams?.let { JsonUtil.toJson(it, false) },
+                triggerEvent.createTime,
+                triggerEvent.eventBody?.let { JsonUtil.toJson(it, false) }
             ).onDuplicateKeyIgnore().execute()
+        }
+    }
+
+    fun update(
+        dslContext: DSLContext,
+        triggerEvent: PipelineTriggerEvent
+    ) {
+        with(T_PIPELINE_TRIGGER_EVENT) {
+            dslContext.update(this)
+                .set(EVENT_BODY, triggerEvent.eventBody?.let { JsonUtil.toJson(it, false) })
+                .where(PROJECT_ID.eq(triggerEvent.projectId))
+                .and(EVENT_ID.eq(triggerEvent.eventId))
+                .execute()
         }
     }
 
@@ -124,7 +140,7 @@ class PipelineTriggerEventDao {
                 triggerDetail.buildId,
                 triggerDetail.buildNum,
                 triggerDetail.reason,
-                triggerDetail.reasonDetail?.let { JsonUtil.toJson(it, true) },
+                triggerDetail.reasonDetail?.let { JsonUtil.toJson(it, false) },
                 LocalDateTime.now()
             ).onDuplicateKeyIgnore().execute()
         }
@@ -625,7 +641,10 @@ class PipelineTriggerEventDao {
                         it,
                         object : TypeReference<Map<String, String>>() {})
                 },
-                createTime = createTime
+                createTime = createTime,
+                eventBody = eventBody?.let {
+                    JsonUtil.to(it, Webhook::class.java)
+                }
             )
         }
     }

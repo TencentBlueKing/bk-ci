@@ -35,4 +35,7 @@ dependencies {
     api(project(":core:project:api-project"))
     api(project(":core:process:api-process"))
     api(project(":core:metrics:model-metrics"))
+
+    implementation("io.prometheus:simpleclient")
+    implementation("io.prometheus:prometheus-metrics-exposition-formats")
 }

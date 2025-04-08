@@ -35,7 +35,7 @@ import com.tencent.devops.environment.service.thirdpartyagent.BatchInstallAgentS
 import com.tencent.devops.environment.service.thirdpartyagent.DownloadAgentInstallService
 import com.tencent.devops.environment.service.thirdpartyagent.ImportService
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @RestResource
 class ExternalThirdPartyAgentResourceImpl @Autowired constructor(

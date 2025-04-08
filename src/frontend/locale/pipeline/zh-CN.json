@@ -145,7 +145,7 @@
   "importPipelineLabel": "请上传一个流水线JSON/YAML文件",
   "invalidPipelineJsonOrYaml": "非法的流水线JSON/YAML文件",
   "exportPipelineSuccess": "导出流水线成功",
-  "sizeLimit": "最大上传{0}MB，重新上传时若路径未变更，无需保存流水线",
+  "sizeLimit": "最大上传{0}MB的文件",
   "fileUploadSuccess": "上传成功",
   "empty": "暂无数据",
   "link": "链接",
@@ -620,7 +620,20 @@
     "copyToCustomArtifactory": "复制至自定义仓库",
     "downloading": "正在下载",
     "copySuc": "复制{0}至自定义仓库成功",
-    "buildMsg": "构建信息"
+    "buildMsg": "构建信息",
+    "rePlay": "重放事件",
+    "reBuildTips1": "重新构建时，将以同样的触发参数重新执行，且:",
+    "reBuildTips2": "- BK_CI_BUILD_ID 不变",
+    "reBuildTips3": "- 使用的流水线版本以首次触发为准",
+    "rePlayTips1": "重放后，将以同样的触发参数启动一次新的构建：",
+    "rePlayTips2": "- 生成新的 BK_CI_BUILD_ID",
+    "rePlayTips3": "- 使用最新的流水线版本运行",
+    "reBuildConfirmTips": "确定发起重新构建吗？",
+    "rePlayConfirmTips": "确定针对此流水线重放事件吗？",
+    "rePlayInfo1": "1. 重放时，以相同的触发参数、最新的流水线编排启动一次新的构建",
+    "rePlayInfo2": "2. 重放时，跳过触发器检测，有可能不满足最新版本的触发条件",
+    "reBuildInfo1": "1. 重新构建，是在之前的构建基础上重新执行",
+    "reBuildInfo2": "2. 流水线编排版本、BK_CI_BUILD_ID和首次触发时一致"
   },
   "preview": {
     "build": "构建",
@@ -1051,7 +1064,7 @@
     "codelibConfigs": "代码库配置",
     "timerTriggerCodelibTips": "- Git 仓库，分支非必填，缺省时为默认分支\n- SVN 仓库，分支必填，为仓库根路径下的一级子目录",
     "timerTriggerBranchTips": "若多个分支均有变更，满足条件时每个分支将触发一次",
-    "filePathTips": "请填写自定义仓库目录，如/a",
+    "filePathTips": "请输入文件存放的目录，如/a",
     "fileNameTips": "文件名，留空则自动读取",
     "enableDocker": "启用 Docker 运行构建任务",
     "imagePullPolicy": "镜像拉取策略",
@@ -1068,7 +1081,10 @@
     "lineBreak": "多个选项用换行符分隔",
     "noEnglishCommas": "每个选项不能包含英文逗号",
     "formatSupport": "与 HTML select 标签类似，选项支持 value=name / value 两种格式",
-    "batchCopy": "一键复制"
+    "batchCopy": "一键复制",
+    "randomlyGenerate": "<随机生成>",
+    "enableVersionControl": "开启版本管理",
+    "versionControlTip": "开启后，上传文件时，将在目录下自动生成版本路径，避免同名覆盖。"
   },
   "storeMap": {
     "textarea": "文本框",

@@ -28,10 +28,12 @@
 package com.tencent.devops.common.auth.mock
 
 import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthPlatformApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.mock.api.MockAuthPermissionApi
+import com.tencent.devops.common.auth.mock.api.MockAuthPlatformApi
 import com.tencent.devops.common.auth.mock.api.MockAuthProjectApi
 import com.tencent.devops.common.auth.mock.api.MockAuthResourceApi
 import com.tencent.devops.common.auth.mock.api.MockAuthTokenApi
@@ -67,4 +69,9 @@ class MockAuthAutoConfiguration {
 //    @Primary
     @ConditionalOnMissingBean(AuthProjectApi::class)
     fun authProjectApi(bkAuthPermissionApi: MockAuthPermissionApi) = MockAuthProjectApi(bkAuthPermissionApi)
+
+    @Bean
+//    @Primary
+    @ConditionalOnMissingBean(AuthPlatformApi::class)
+    fun authPlatformApi() = MockAuthPlatformApi()
 }
