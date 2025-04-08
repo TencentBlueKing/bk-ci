@@ -38,7 +38,7 @@ import com.tencent.devops.environment.pojo.AgentUpgradeType
 import com.tencent.devops.environment.service.thirdpartyagent.upgrade.AgentPropsScope
 import com.tencent.devops.environment.service.thirdpartyagent.upgrade.AgentScope
 import com.tencent.devops.environment.service.thirdpartyagent.upgrade.ProjectScope
-import com.tencent.devops.environment.utils.LoopUtil
+import com.tencent.devops.common.util.LoopUtil
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import org.jooq.DSLContext

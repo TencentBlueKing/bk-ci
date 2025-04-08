@@ -1,8 +1,8 @@
-package com.tencent.devops.environment.utils
+package com.tencent.devops.common.util
 
-import com.tencent.devops.environment.utils.LoopUtil.DEFAULT_THRESHOLD_COUNT
-import com.tencent.devops.environment.utils.LoopUtil.DEFAULT_THRESHOLD_MILLS
-import com.tencent.devops.environment.utils.LoopUtil.SLEEP_INTERVAL
+import com.tencent.devops.common.util.LoopUtil.DEFAULT_THRESHOLD_COUNT
+import com.tencent.devops.common.util.LoopUtil.DEFAULT_THRESHOLD_MILLS
+import com.tencent.devops.common.util.LoopUtil.SLEEP_INTERVAL
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

@@ -42,7 +42,7 @@ import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.service.NodeWebsocketService
 import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartAgentService
-import com.tencent.devops.environment.utils.LoopUtil
+import com.tencent.devops.common.util.LoopUtil
 import com.tencent.devops.environment.utils.ThirdPartyAgentHeartbeatUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL

@@ -1,4 +1,4 @@
-package com.tencent.devops.environment.utils
+package com.tencent.devops.common.util
 
 object LoopUtil {
 
