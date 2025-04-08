@@ -119,6 +119,7 @@
     import TemplateBreadCrumb from '@/components/template/TemplateBreadCrumb'
     import Instance from '@/views/Template/InstanceList'
     import { mapActions, mapGetters, mapState } from 'vuex'
+    import { UI_MODE } from '@/utils/pipelineConst'
 
     export default {
         components: {
@@ -219,11 +220,11 @@
         },
         created () {
             if (!this.pipelineHistoryViewable) {
+                this.updatePipelineMode(UI_MODE)
                 this.$router.push({
                     name: 'templateEdit',
                     params: {
                         ...this.$route.params,
-                        type: 'pipeline',
                         version: this.pipelineInfo?.version
                     }
                 })
@@ -246,6 +247,9 @@
                 'resetAtomModalMap',
                 'setShowVariable'
             ]),
+            ...mapActions({
+                updatePipelineMode: 'updatePipelineMode'
+            }),
             showVersionSideSlider () {
                 this.setShowVariable(false)
                 this.$refs?.versionSelectorInstance?.close?.()
@@ -306,6 +310,7 @@
                 })
             },
             goEditTemplate () {
+                this.updatePipelineMode(UI_MODE)
                 this.$router.push({
                     name: 'templateEdit',
                     params: {

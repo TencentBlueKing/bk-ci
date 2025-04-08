@@ -144,7 +144,7 @@
             :btns="emptyTipsConfig.btns"
         >
         </empty-tips>
-        <!-- <instance-compared
+        <instance-compared
             :show-compared-instance="showComparedInstance"
             :loading="dialogLoading"
             :instance-version="instanceVersion"
@@ -157,13 +157,6 @@
             @cancel="cancelHandler"
             :selected-version="selectedVersion"
         />
-        <instance-message
-            :show-instance-message="showFailedMessageDialog"
-            :show-title="false"
-            :fail-list="activeFailInstances"
-            :fail-message="activeFailMessages"
-            @cancel="hideFailedMessageDialog"
-        /> -->
     </div>
 </template>
 
@@ -172,8 +165,8 @@
     import UseInstance from '@/hook/useInstance'
     import { convertTime } from '@/utils/util'
     import emptyTips from '@/components/pipelineList/imgEmptyTips'
+    import instanceCompared from '@/components/template/instance-compared.vue'
 
-    // const { proxy, i18n, bkMessage, bkInfo, h, validator } = UseInstance()
     const { proxy, showTips, i18n } = UseInstance()
     const isInit = ref(false)
     const isLoading = ref(false)
@@ -382,6 +375,13 @@
         currentVersion.value = row.versionName
         curComparedPipeline.value = row.pipelineId
         requestVersionCompare(currentVersionId.value)
+    }
+    function cancelHandler () {
+        showComparedInstance.value = false
+    }
+    function selectedVersion (data) {
+        isInit.value = false
+        instanceVersion.value = data
     }
 
 </script>

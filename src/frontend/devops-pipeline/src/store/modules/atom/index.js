@@ -29,6 +29,7 @@ export default {
         pipeline: null,
         pipelineWithoutTrigger: null,
         pipelineYaml: '',
+        templateType: 'PIPELINE',
         pipelineSetting: null,
         template: null,
         pipelineInfo: null,

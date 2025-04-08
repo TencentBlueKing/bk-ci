@@ -64,6 +64,7 @@ import {
     SET_HIDE_SKIP_EXEC_TASK,
     SET_INSERT_STAGE_STATE,
     SET_PIPELINE,
+    SET_TEMPLATE_TYPE,
     SET_PIPELINE_EDITING,
     SET_PIPELINE_EXEC_DETAIL,
     SET_PIPELINE_INFO,
@@ -337,6 +338,63 @@ export default {
             throw error
         }
     },
+    async templateTransfer ({ getters, state }, { projectId, pipelineId, storageType, ...params }) {
+        const apis = [
+            request.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/transfer`, params, {
+                params: {
+                    storageType
+                }
+            })
+        ]
+        if (storageType === 'YAML' && !state.editfromImport) {
+            apis.push(
+                request.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/projects/${projectId}/pipelines/${pipelineId}/atom/prop/list`, {
+                    params: params.version ? { version: params.version } : {}
+                })
+            )
+        }
+        const [{ data }, atomPropRes] = await Promise.all(apis)
+        if (data.yamlInvalidMsg) {
+            throw new Error(data.yamlInvalidMsg)
+        }
+        if (storageType === 'YAML' && atomPropRes?.data) {
+            const atomProp = atomPropRes.data
+            const elements = getters.getAllElements(data.templateModel.stages)
+            elements.forEach(element => {
+                Object.assign(element, {
+                    ...atomProp[element.atomCode]
+                })
+            })
+        }
+        return data
+    },
+    async transferTemplatePipeline ({ commit, dispatch }, { projectId, pipelineId, storageType, ...params }) {
+        try {
+            const data = await dispatch('templateTransfer', { projectId, pipelineId, storageType, ...params })
+
+            switch (storageType) {
+                case 'YAML':
+                    if (data?.templateModel) {
+                        commit(SET_PIPELINE, data?.templateModel)
+                        commit(SET_PIPELINE_WITHOUT_TRIGGER, {
+                            ...(data?.templateModel ?? {}),
+                            stages: data?.templateModel.stages.slice(1)
+                        })
+                        commit(PIPELINE_SETTING_MUTATION, data?.templateSetting)
+                    }
+                    break
+                case 'MODEL':
+                    if (data?.yamlWithVersion.yamlStr) {
+                        commit(SET_PIPELINE_YAML, data?.yamlWithVersion.yamlStr)
+                    }
+                    break
+            }
+            return data
+        } catch (error) {
+            rootCommit(commit, UPDATE_PIPELINE_MODE, UI_MODE)
+            throw error
+        }
+    },
     requestCommonParams: async ({ commit }) => {
         try {
             const { data } = await request.post(`/${PROCESS_API_URL_PREFIX}/user/buildParam/common`)
@@ -364,6 +422,9 @@ export default {
     },
     setPipeline: ({ commit }, payload = null) => {
         commit(SET_PIPELINE, payload)
+    },
+    setTemplateType: ({ commit }, payload = null) => {
+        commit(SET_TEMPLATE_TYPE, payload)
     },
     setPipelineWithoutTrigger: actionCreator(SET_PIPELINE_WITHOUT_TRIGGER),
     setPipelineYaml: actionCreator(SET_PIPELINE_YAML),
@@ -932,7 +993,9 @@ export default {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/saveDraft`, draftPipeline)
     },
     saveDraftTemplate (_, { projectId, templateId, ...draftTemplate }) {
-        return request.put(`/${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/saveDraft`, draftTemplate)
+        return request.put(`/${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/saveDraft`, draftTemplate, {
+            params: templateId ? { templateId } : {}
+        })
     },
     releaseDraftPipeline (_, { projectId, pipelineId, version, params }) {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/releaseVersion/${version}`, params)

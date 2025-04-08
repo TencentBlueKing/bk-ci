@@ -11,6 +11,7 @@
                         {{ $t('template.addTemplate') }}
                     </bk-button>
                     <bk-button
+                        class="ml10"
                         :disabled="!hasCreatePermission"
                         @click="handleShowInstallTemplateDialog"
                     >
@@ -571,14 +572,7 @@
             const res = await proxy.$store.dispatch('templates/templateCopy', postData)
             copyCancelHandler()
             bkMessage({ message: i18n.t('template.copySuc'), theme: 'success' })
-            proxy.$router.push({
-                name: 'TemplateOverview',
-                params: {
-                    templateId: res.templateId,
-                    version: res.version,
-                    type: 'instanceList'
-                }
-            })
+            goTemplateOverview(res)
         } catch (error) {
             const message = error.message || error
             bkMessage({ message, theme: 'error' })
@@ -594,9 +588,19 @@
         copyTemp.value.isCopySetting = true
     }
 
-    function handleConfirmCreate () {
+    function handleConfirmCreate (createData) {
         pagination.value.current = 1
-        fetchTableData()
+        goTemplateOverview(createData)
+    }
+    function goTemplateOverview (data) {
+        proxy.$router.push({
+            name: 'TemplateOverview',
+            params: {
+                templateId: data.templateId,
+                version: data.version,
+                type: 'instanceList'
+            }
+        })
     }
 </script>
 
