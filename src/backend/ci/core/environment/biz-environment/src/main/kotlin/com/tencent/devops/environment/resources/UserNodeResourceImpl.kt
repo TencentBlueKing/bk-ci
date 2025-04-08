@@ -44,7 +44,7 @@ import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.service.NodeService
 import com.tencent.devops.environment.utils.NodeUtils
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

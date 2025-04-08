@@ -8,13 +8,12 @@ import io.kubernetes.client.openapi.models.V1Service
 import org.slf4j.LoggerFactory
 import org.springframework.cloud.client.ServiceInstance
 import org.springframework.cloud.kubernetes.client.discovery.KubernetesInformerDiscoveryClient
+import org.springframework.cloud.kubernetes.commons.discovery.DefaultKubernetesServiceInstance
 import org.springframework.cloud.kubernetes.commons.discovery.KubernetesDiscoveryProperties
-import org.springframework.cloud.kubernetes.commons.discovery.KubernetesServiceInstance
 import org.springframework.util.StringUtils
 
 @SuppressWarnings("LongParameterList", "ReturnCount")
-class BkKubernetesDiscoveryClient constructor(
-    namespace: String,
+class BkKubernetesDiscoveryClient(
     sharedInformerFactory: SharedInformerFactory,
     private val serviceLister: Lister<V1Service>,
     private val endpointsLister: Lister<V1Endpoints>,
@@ -22,7 +21,6 @@ class BkKubernetesDiscoveryClient constructor(
     endpointsInformer: SharedInformer<V1Endpoints>,
     properties: KubernetesDiscoveryProperties
 ) : KubernetesInformerDiscoveryClient(
-    namespace,
     sharedInformerFactory,
     serviceLister,
     endpointsLister,
@@ -60,7 +58,7 @@ class BkKubernetesDiscoveryClient constructor(
             val endpointPort = it.ports?.get(0)?.port ?: 80
             val addresses = it.addresses ?: emptyList()
             addresses.map { addr ->
-                KubernetesServiceInstance(
+                DefaultKubernetesServiceInstance(
                     addr.targetRef?.uid ?: "",
                     serviceName,
                     addr.ip,

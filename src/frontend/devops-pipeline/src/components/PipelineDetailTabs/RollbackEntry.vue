@@ -39,7 +39,7 @@
                 v-if="hasDraftPipeline"
                 :class="['draft-hint-content', { 'is-active-branch-version': isActiveBranchVersion }]"
             >
-                {{ isActiveBranchVersion ? $t('template.templateCoverWarningDesc', [draftCreator, draftBaseVersionName]) : $t('dropDraftTips', [versionName]) }}
+                {{ draftWarningInfo }}
             </div>
             <footer slot="footer">
                 <bk-button
@@ -67,6 +67,7 @@
         RESOURCE_ACTION
     } from '@/utils/permission'
     import { pipelineTabIdMap } from '@/utils/pipelineConst'
+    import dayjs from 'dayjs'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
@@ -109,6 +110,10 @@
                 type: String,
                 default: ''
             },
+            draftCreateTime: {
+                type: String,
+                default: ''
+            },
             isActiveDraft: Boolean,
             isActiveBranchVersion: Boolean
         },
@@ -143,11 +148,21 @@
                     case this.hasDraftPipeline:
                         return this.$t('hasDraftTips', [this.draftBaseVersionName])
                     default:
-                        return this.$t('createDraftTips', [this.versionName])
+                        return this.$t(this.isActiveBranchVersion ? 'createBranchDraftTips' : 'createDraftTips', [this.versionName])
                 }
+            },
+            draftWarningInfo () {
+                if (this.isActiveBranchVersion) {
+                    const key = this.draftBaseVersionName === this.versionName ? 'templateOutDateCoverWarningDesc' : 'templateCoverWarningDesc'
+                    return this.$t(`template.${key}`, [this.draftCreator, this.formatDraftCreateTime, this.draftBaseVersionName])
+                }
+                return this.$t('dropDraftTips', [this.versionName])
             },
             isTemplatePipeline () {
                 return this.pipelineInfo?.instanceFromTemplate ?? false
+            },
+            formatDraftCreateTime () {
+                return dayjs(this.draftCreateTime).format('YYYY-MM-DD HH:mm:ss')
             }
         },
         methods: {
@@ -176,7 +191,7 @@
                         this.showDraftConfirmDialog()
                     }
                 } else {
-                    if (this.isActiveBranchVersion) {
+                    if (this.isActiveBranchVersion && this.version !== this.pipelineInfo?.baseVersion) {
                         this.showDraftConfirmDialog()
                     } else {
                         this.goEdit(this.draftVersion ?? this.version)

@@ -6,7 +6,7 @@ import com.tencent.devops.environment.client.UsageMetrics
 import com.tencent.devops.environment.client.InfluxdbClient
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.model.AgentHostInfo
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

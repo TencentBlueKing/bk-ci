@@ -27,7 +27,7 @@
 
 package com.tencent.devops.dispatch.pojo.enums
 
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 
 enum class PipelineTaskStatus(val status: Int) {
     QUEUE(1),

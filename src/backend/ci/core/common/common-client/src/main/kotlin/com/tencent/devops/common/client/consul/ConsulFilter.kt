@@ -32,12 +32,12 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_GATEWAY_TAG
 import com.tencent.devops.common.service.BkTag
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import javax.servlet.Filter
-import javax.servlet.FilterChain
-import javax.servlet.FilterConfig
-import javax.servlet.ServletRequest
-import javax.servlet.ServletResponse
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.Filter
+import jakarta.servlet.FilterChain
+import jakarta.servlet.FilterConfig
+import jakarta.servlet.ServletRequest
+import jakarta.servlet.ServletResponse
+import jakarta.servlet.http.HttpServletRequest
 
 @Component
 class ConsulFilter @Autowired constructor(

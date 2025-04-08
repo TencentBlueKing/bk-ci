@@ -30,5 +30,4 @@ dependencies {
     api("org.apache.commons:commons-lang3")
     implementation("commons-codec:commons-codec")
     implementation("com.google.guava:guava")
-    implementation("org.jolokia:jolokia-core")
 }

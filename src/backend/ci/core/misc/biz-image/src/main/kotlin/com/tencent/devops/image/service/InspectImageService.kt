@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceDockerImageResource
+import com.tencent.devops.image.api.ServiceDockerImageResource
 import com.tencent.devops.image.pojo.CheckDockerImageRequest
 import com.tencent.devops.image.pojo.CheckDockerImageResponse
 import okhttp3.Headers.Companion.toHeaders
@@ -113,7 +113,7 @@ class InspectImageService @Autowired constructor(
         try {
             val dispatchCheckDockerImageRequestList =
                 checkDockerImageRequestList.stream().map { checkDockerImageRequest ->
-                    com.tencent.devops.dispatch.kubernetes.pojo.CheckDockerImageRequest(
+                    CheckDockerImageRequest(
                         imageName = checkDockerImageRequest.imageName,
                         registryHost = checkDockerImageRequest.registryHost,
                         registryUser = checkDockerImageRequest.registryUser,

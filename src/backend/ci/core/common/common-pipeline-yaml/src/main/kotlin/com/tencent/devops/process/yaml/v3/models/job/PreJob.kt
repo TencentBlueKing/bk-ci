@@ -50,6 +50,8 @@ data class PreJob(
     @get:Schema(title = "runs-on")
     @JsonProperty("runs-on")
     val runsOn: Any?,
+    @JsonProperty("show-runs-on")
+    val showRunsOn: Boolean? = null,
     val container: Container?,
     val services: Map<String, Service>? = null,
     @get:Schema(title = "if")

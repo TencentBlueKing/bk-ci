@@ -308,6 +308,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         val header = mutableMapOf<String, String>()
         header[BKREPO_UID] = buildVariables.variables[PIPELINE_START_USER_ID] ?: ""
         header[BKREPO_OVERRIDE] = "true"
+        header[BKREPO_COMMIT_EDGE] = "true"
 
         val metadata = mutableMapOf<String, String>()
         if (parsePipelineMetadata) {
@@ -520,6 +521,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         private const val BKREPO_METADATA = "X-BKREPO-META"
         private const val BKREPO_UID = "X-BKREPO-UID"
         private const val BKREPO_OVERRIDE = "X-BKREPO-OVERWRITE"
+        private const val BKREPO_COMMIT_EDGE = "X-BKREPO-COMMIT-EDGE"
 
         private const val BK_CI_PIPELINE_NAME = "BK_CI_PIPELINE_NAME"
         private const val BK_CI_BUILD_NUM = "BK_CI_BUILD_NUM"

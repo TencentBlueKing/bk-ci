@@ -82,7 +82,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service

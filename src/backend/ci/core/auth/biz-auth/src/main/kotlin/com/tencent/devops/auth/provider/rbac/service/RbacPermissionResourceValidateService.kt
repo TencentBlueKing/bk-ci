@@ -49,7 +49,7 @@ import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 
 class RbacPermissionResourceValidateService(
     private val permissionService: PermissionService,

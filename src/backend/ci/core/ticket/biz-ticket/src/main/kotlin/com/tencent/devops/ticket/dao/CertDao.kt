@@ -32,7 +32,7 @@ import com.tencent.devops.model.ticket.tables.TCert
 import com.tencent.devops.model.ticket.tables.records.TCertRecord
 import com.tencent.devops.ticket.constant.TicketMessageCode.CERT_NOT_FOUND
 import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository

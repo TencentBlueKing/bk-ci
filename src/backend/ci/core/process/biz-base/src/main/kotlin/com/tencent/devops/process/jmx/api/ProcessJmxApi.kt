@@ -28,7 +28,7 @@
 package com.tencent.devops.process.jmx.api
 
 import io.micrometer.core.instrument.Counter
-import io.micrometer.prometheus.PrometheusMeterRegistry
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jmx.export.MBeanExporter

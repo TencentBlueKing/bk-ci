@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_environment
 
-**文档版本：** 1.0.7
+**文档版本：** 1.0.8
 
 **文档描述：** devops_ci_environment 的数据库文档
 | 表名                  | 说明       |
@@ -258,13 +258,14 @@
 |  23   | NODE_HASH_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 节点哈希 ID  |
 |  24   | PIPELINE_REF_COUNT |   int   | 10 |   0    |    N     |  N   |   0    | 流水线 Job 引用数  |
 |  25   | LAST_BUILD_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 最近构建时间  |
-|  26   | HOST_ID |   bigint   | 20 |   0    |    Y     |  N   |       | CC 的 host_id  |
-|  27   | CLOUD_AREA_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 云区域 id，公司内为 0  |
-|  28   | AGENT_VERSION |   varchar   | 64 |   0    |    Y     |  N   |       | agent 版本  |
-|  29   | OS_TYPE |   varchar   | 64 |   0    |    Y     |  N   |       | 从 CC 中查到的 os 类型  |
-|  30   | SERVER_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 服务器 id  |
-|  31   | SYSTEM_UPDATE_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 系统任务更新数据时间  |
-|  32   | SIZE |   varchar   | 32 |   0    |    Y     |  N   |       | 机型  |
+|  26   | LAST_BUILD_PIPELINE_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 最近构建流水线 ID  |
+|  27   | HOST_ID |   bigint   | 20 |   0    |    Y     |  N   |       | CC 的 host_id  |
+|  28   | CLOUD_AREA_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 云区域 id，公司内为 0  |
+|  29   | AGENT_VERSION |   varchar   | 64 |   0    |    Y     |  N   |       | agent 版本  |
+|  30   | OS_TYPE |   varchar   | 64 |   0    |    Y     |  N   |       | 从 CC 中查到的 os 类型  |
+|  31   | SERVER_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 服务器 id  |
+|  32   | SYSTEM_UPDATE_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 系统任务更新数据时间  |
+|  33   | SIZE |   varchar   | 32 |   0    |    Y     |  N   |       | 机型  |
 
 **表名：** <a>T_PROJECT_CONFIG</a>
 

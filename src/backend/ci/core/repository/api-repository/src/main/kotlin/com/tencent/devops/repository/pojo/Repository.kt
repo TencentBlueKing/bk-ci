@@ -40,7 +40,9 @@ import io.swagger.v3.oas.annotations.media.Schema
     JsonSubTypes.Type(value = CodeGitlabRepository::class, name = CodeGitlabRepository.classType),
     JsonSubTypes.Type(value = GithubRepository::class, name = GithubRepository.classType),
     JsonSubTypes.Type(value = CodeTGitRepository::class, name = CodeTGitRepository.classType),
-    JsonSubTypes.Type(value = CodeP4Repository::class, name = CodeP4Repository.classType)
+    JsonSubTypes.Type(value = CodeP4Repository::class, name = CodeP4Repository.classType),
+    JsonSubTypes.Type(value = ScmGitRepository::class, name = ScmGitRepository.classType),
+    JsonSubTypes.Type(value = ScmSvnRepository::class, name = ScmSvnRepository.classType)
 )
 interface Repository {
     val aliasName: String
@@ -52,6 +54,7 @@ interface Repository {
     val repoHashId: String?
     val enablePac: Boolean?
     val yamlSyncStatus: String?
+    val scmCode: String
 
     fun isLegal() = url.startsWith(getStartPrefix())
 

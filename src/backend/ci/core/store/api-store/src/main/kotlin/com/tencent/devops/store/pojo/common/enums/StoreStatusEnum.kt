@@ -29,22 +29,22 @@ package com.tencent.devops.store.pojo.common.enums
 
 import com.tencent.devops.common.api.util.MessageUtil
 
-enum class StoreStatusEnum {
-    INIT, // 初始化
-    COMMITTING, // 提交中
-    BUILDING, // 构建中
-    BUILD_FAIL, // 构建失败
-    CHECKING, // 验证中
-    CHECK_FAIL, // 验证失败
-    TESTING, // 测试中
-    EDITING, // 填写信息中
-    AUDITING, // 审核中
-    AUDIT_REJECT, // 审核驳回
-    RELEASED, // 已发布
-    GROUNDING_SUSPENSION, // 上架中止
-    UNDERCARRIAGING, // 下架中
-    UNDERCARRIAGED, // 已下架
-    TESTED; // 测试结束(仅分支测试使用)
+enum class StoreStatusEnum(val isProcessing: Boolean) {
+    INIT(true), // 初始化
+    COMMITTING(true), // 提交中
+    BUILDING(true), // 构建中
+    BUILD_FAIL(true), // 构建失败
+    CHECKING(true), // 验证中
+    CHECK_FAIL(true), // 验证失败
+    TESTING(true), // 测试中
+    EDITING(true), // 填写信息中
+    AUDITING(true), // 审核中
+    AUDIT_REJECT(false), // 审核驳回
+    RELEASED(false), // 已发布
+    GROUNDING_SUSPENSION(false), // 上架中止
+    UNDERCARRIAGING(false), // 下架中
+    UNDERCARRIAGED(false), // 已下架
+    TESTED(false); // 测试结束(仅分支测试使用)
 
     fun getI18n(language: String): String {
         return MessageUtil.getMessageByLocale(
@@ -56,16 +56,7 @@ enum class StoreStatusEnum {
     companion object {
 
         fun getProcessingStatusList(): List<String> {
-            return listOf(
-                INIT.name,
-                COMMITTING.name,
-                BUILDING.name,
-                BUILD_FAIL.name,
-                CHECKING.name,
-                CHECK_FAIL.name,
-                TESTING.name,
-                AUDITING.name
-            )
+            return values().filter { it.isProcessing }.map { it.name }
         }
 
         fun getTestStatusList(): List<String> {

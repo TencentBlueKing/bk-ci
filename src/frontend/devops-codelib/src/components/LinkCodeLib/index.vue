@@ -17,12 +17,15 @@
             <li
                 v-for="item in codelibTypes"
                 :key="item.scmType"
-                @click="createCodelib(item.scmType)"
+                @click="createCodelib(item.scmType, item.scmCode)"
                 :class="{
-                    'disabled-codelib-type': item.status !== 'OK'
+                    'config-item': true,
+                    'disabled-codelib-type': item.status !== 'SUCCESS'
                 }"
             >
-                {{ item.name }}
+                <img :src="item.logoUrl" />
+                <span class="config-name">{{ item.name }}</span>
+                <span class="config-hosts">{{ item.hosts }}</span>
             </li>
         </ul>
     </bk-dropdown-menu>
@@ -57,11 +60,12 @@
         }
         &-menu {
             > li {
-                display: block;
-                line-height: 41px;
+                display: flex;
+                align-items: center;
+                line-height: 40px;
                 padding: 0 15px;
                 color: $fontColor;
-                font-size: 14px;
+                font-size: 12px;
                 text-decoration: none;
                 white-space: nowrap;
                 cursor: pointer;
@@ -73,6 +77,18 @@
                 &.disabled-codelib-type {
                     color: #c4c6cc;
                     cursor: not-allowed;
+                }
+                img {
+                    width: 16px;
+                    height: 16px;
+                    margin-right: 12px;
+                }
+                .config-name {
+                    color: #313238;
+                }
+                .config-hosts {
+                    color: #979BA5;
+                    margin-left: 10px;
                 }
             }
         }

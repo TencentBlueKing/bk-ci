@@ -9,7 +9,7 @@ import java.util.TimeZone
 import java.util.TreeMap
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
-import javax.xml.bind.DatatypeConverter
+import jakarta.xml.bind.DatatypeConverter
 
 object TencentCloudSignatureUtil {
     private val UTF8 = StandardCharsets.UTF_8

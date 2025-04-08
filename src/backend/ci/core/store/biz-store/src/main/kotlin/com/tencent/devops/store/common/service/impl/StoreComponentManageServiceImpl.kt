@@ -57,6 +57,7 @@ import com.tencent.devops.store.common.handler.StoreDeleteCodeRepositoryHandler
 import com.tencent.devops.store.common.handler.StoreDeleteDataPersistHandler
 import com.tencent.devops.store.common.handler.StoreDeleteHandlerChain
 import com.tencent.devops.store.common.handler.StoreDeleteRepoFileHandler
+import com.tencent.devops.store.common.lock.StoreCodeLock
 import com.tencent.devops.store.common.service.StoreBaseInstallService
 import com.tencent.devops.store.common.service.StoreComponentManageService
 import com.tencent.devops.store.common.service.StoreManagementExtraService
@@ -371,7 +372,13 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         )
         val bkStoreContext = handlerRequest.bkStoreContext
         bkStoreContext[AUTH_HEADER_USER_ID] = userId
-        StoreDeleteHandlerChain(handlerList).handleRequest(handlerRequest)
+        StoreCodeLock(redisOperation, handlerRequest.storeType, handlerRequest.storeCode).use { lock ->
+            if (lock.tryLock()) {
+                StoreDeleteHandlerChain(handlerList).handleRequest(handlerRequest)
+            } else {
+                throw ErrorCodeException(errorCode = CommonMessageCode.LOCK_FAIL)
+            }
+        }
         return Result(
             status = bkStoreContext[STATUS]?.toString()?.toInt() ?: 0,
             data = true,

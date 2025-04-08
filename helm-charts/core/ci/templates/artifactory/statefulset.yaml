@@ -151,7 +151,7 @@ spec:
           volumeMounts:
             - name: storage
               mountPath: {{ .Values.persistence.mountPath }}
-            - mountPath: /data/workspace/dispatch/jvm
+            - mountPath: /data/workspace/artifactory/jvm
               name: log-volume
               subPathExpr: bkci/jvm/$(POD_NAME)
           lifecycle:

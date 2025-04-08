@@ -32,7 +32,7 @@ import com.tencent.devops.model.ticket.tables.records.TCertEnterpriseRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 
 @Suppress("ALL")
 @Repository

@@ -26,6 +26,8 @@
                     :disabled="disabled"
                     :placeholder="param.placeholder"
                     :is-diff-param="highlightChangedParam && param.isChanged"
+                    :enable-version-control="param.enableVersionControl"
+                    :random-sub-path="param.latestRandomStringInPath"
                 />
             </section>
             <span
@@ -162,6 +164,15 @@
                                 })
                             }
                         }
+                    }
+
+                    if (isFileParam(param.type)) {
+                        // 预览时，重新上传文件，会把文件类型的value变成对象而非字符串，这时要更新随机串回显到页面上
+                        const paramValue = this.paramValues[param.id]
+                        const newRandomString = paramValue?.latestRandomStringInPath
+                        const defaultRandomString = param.latestRandomStringInPath ?? param.randomStringInPath
+                        restParam.latestRandomStringInPath = newRandomString ?? defaultRandomString
+                        restParam.value = typeof paramValue === 'object' ? paramValue?.directory : paramValue
                     }
                     return {
                         ...param,

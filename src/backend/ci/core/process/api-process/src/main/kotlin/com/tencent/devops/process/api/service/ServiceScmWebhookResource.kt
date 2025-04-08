@@ -37,15 +37,16 @@ import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "SERVICE_SCM", description = "服务-SCM")
 @Path("/service/scm")
@@ -97,4 +98,18 @@ interface ServiceScmWebhookResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<PipelineWebhook>>
+
+    @Operation(summary = "添加scm灰度白名单仓库")
+    @PUT
+    @Path("/{scmCode}/addGrayRepoWhite")
+    fun addGrayRepoWhite(
+        @Parameter(description = "代码库标识", required = true)
+        @PathParam("scmCode")
+        scmCode: String,
+        @Parameter(description = "是否只开启pac仓库", required = true)
+        @QueryParam("pac")
+        pac: Boolean,
+        @Parameter(description = "服务端代码仓库id列表", required = true)
+        serverRepoNames: List<String>
+    ): Result<Boolean>
 }

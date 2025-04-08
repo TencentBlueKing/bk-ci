@@ -58,7 +58,7 @@ import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.PipelineRecentUseService
 import com.tencent.devops.process.service.PipelineVersionFacadeService
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @RestResource
 @Suppress("ALL")

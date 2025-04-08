@@ -94,19 +94,10 @@
                     </bk-button>
                 </div>
                 <div class="address-content">
-                    <Icon
+                    <img
                         class="codelib-type-icon"
-                        :name="codelibIconMap[curRepo.type]"
-                        size="16"
+                        :src="curRepo.logoUrl"
                     />
-                    <!-- <a
-                        v-if="repoInfo.url && repoInfo.url.startsWith('http')"
-                        class="codelib-address"
-                        v-bk-overflow-tips
-                        @click="handleToRepo(repoInfo.url)"
-                    >
-                        {{ repoInfo.url }}
-                    </a> -->
                     <p
                         class="codelib-address"
                         v-bk-overflow-tips
@@ -674,6 +665,10 @@
                 .copy-icon {
                     opacity: 1;
                 }
+            }
+            .codelib-type-icon {
+                width: 16px;
+                height: 16px;
             }
         }
         .codelib-address {

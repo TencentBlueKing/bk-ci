@@ -27,7 +27,7 @@
 
 package com.tencent.devops.repository.service.oauth2
 
-import com.tencent.devops.repository.pojo.oauth.Oauth2AccessToken
+import com.tencent.devops.repository.pojo.oauth.OauthTokenInfo
 
 /**
  * oauth2 token存储服务
@@ -35,7 +35,12 @@ import com.tencent.devops.repository.pojo.oauth.Oauth2AccessToken
 interface IOauth2TokenStoreService {
     fun support(scmCode: String): Boolean
 
-    fun get(userId: String, scmCode: String): Oauth2AccessToken?
+    fun get(userId: String, scmCode: String): OauthTokenInfo?
+
+    fun store(
+        scmCode: String,
+        oauthTokenInfo: OauthTokenInfo
+    )
 
     fun delete(userId: String, scmCode: String)
 }

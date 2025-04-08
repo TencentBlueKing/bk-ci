@@ -30,19 +30,19 @@ package com.tencent.devops.image.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.dockerjava.api.model.AuthConfig
 import com.github.dockerjava.core.DefaultDockerClientConfig
-import com.github.dockerjava.core.DockerClientBuilder
+import com.github.dockerjava.core.DockerClientImpl
 import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.dockerjava.core.command.PushImageResultCallback
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.image.config.DockerConfig
 import com.tencent.devops.image.pojo.PushImageParam
 import com.tencent.devops.image.pojo.PushImageTask
 import com.tencent.devops.image.pojo.enums.TaskStatus
 import com.tencent.devops.image.utils.CommonUtils
-import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -51,7 +51,8 @@ import java.time.LocalDateTime
 import java.util.UUID
 import java.util.concurrent.Executors
 
-@Service@Suppress("ALL")
+@Service
+@Suppress("ALL")
 class PushImageService @Autowired constructor(
     private val client: Client,
     private val dockerConfig: DockerConfig,
@@ -73,7 +74,7 @@ class PushImageService @Autowired constructor(
         .withRegistryPassword(SecurityUtil.decrypt(dockerConfig.registryPassword!!))
         .build()
 
-    private val dockerClient = DockerClientBuilder.getInstance(dockerClientConfig).build()
+    private val dockerClient = DockerClientImpl.getInstance(dockerClientConfig)
 
     fun pushImage(pushImageParam: PushImageParam): PushImageTask? {
         val taskId = UUID.randomUUID().toString()
@@ -111,20 +112,24 @@ class PushImageService @Autowired constructor(
     }
 
     private fun syncPushImage(pushImageParam: PushImageParam, task: PushImageTask) {
-        logger.info("[${pushImageParam.buildId}]|push image, taskId:" +
-            " ${task.taskId}, pushImageParam: ${pushImageParam.outStr()}")
+        logger.info(
+            "[${pushImageParam.buildId}]|push image, taskId:" +
+                    " ${task.taskId}, pushImageParam: ${pushImageParam.outStr()}"
+        )
 
         val fromImage =
             "${dockerConfig.imagePrefix}/paas/${pushImageParam.projectId}/" +
-                "${pushImageParam.srcImageName}:${pushImageParam.srcImageTag}"
+                    "${pushImageParam.srcImageName}:${pushImageParam.srcImageTag}"
         logger.info("Source image：$fromImage")
         val toImageRepo = "${pushImageParam.repoAddress}/${pushImageParam.namespace}/${pushImageParam.targetImageName}"
         try {
             pullImage(fromImage)
             logger.info("[${pushImageParam.buildId}]|Pull image success, image name and tag: $fromImage")
             dockerClient.tagImageCmd(fromImage, toImageRepo, pushImageParam.targetImageTag).exec()
-            logger.info("[${pushImageParam.buildId}]|Tag image success, image name and tag: " +
-                "$toImageRepo:${pushImageParam.targetImageTag}")
+            logger.info(
+                "[${pushImageParam.buildId}]|Tag image success, image name and tag: " +
+                        "$toImageRepo:${pushImageParam.targetImageTag}"
+            )
             buildLogPrinter.addLine(
                 buildId = pushImageParam.buildId,
                 message = "Target image：$toImageRepo:${pushImageParam.targetImageTag}",
@@ -134,8 +139,10 @@ class PushImageService @Autowired constructor(
                 stepId = null
             )
             pushImageToRepo(pushImageParam)
-            logger.info("[${pushImageParam.buildId}]|Push image success, image name and tag:" +
-                " $toImageRepo:${pushImageParam.targetImageTag}")
+            logger.info(
+                "[${pushImageParam.buildId}]|Push image success, image name and tag:" +
+                        " $toImageRepo:${pushImageParam.targetImageTag}"
+            )
 
             task.apply {
                 taskStatus = TaskStatus.SUCCESS.name
@@ -159,8 +166,10 @@ class PushImageService @Autowired constructor(
             }
             try {
                 dockerClient.removeImageCmd("$toImageRepo:${pushImageParam.targetImageTag}").exec()
-                logger.info("[${pushImageParam.buildId}]|Remove local source image success: " +
-                    "$toImageRepo:${pushImageParam.targetImageTag}")
+                logger.info(
+                    "[${pushImageParam.buildId}]|Remove local source image success: " +
+                            "$toImageRepo:${pushImageParam.targetImageTag}"
+                )
             } catch (e: Throwable) {
                 logger.error("[${pushImageParam.buildId}]|Docker rmi failed, msg: ${e.message}")
             }
@@ -188,7 +197,7 @@ class PushImageService @Autowired constructor(
         }
         val image =
             "${pushImageParam.repoAddress}/${pushImageParam.namespace}/" +
-                "${pushImageParam.targetImageName}:${pushImageParam.targetImageTag}"
+                    "${pushImageParam.targetImageName}:${pushImageParam.targetImageTag}"
         val builder = DefaultDockerClientConfig.createDefaultConfigBuilder()
             .withDockerHost(dockerConfig.dockerHost)
             .withDockerConfig(dockerConfig.dockerConfig)
@@ -201,7 +210,7 @@ class PushImageService @Autowired constructor(
             builder.withRegistryPassword(password)
         }
         val dockerClientConfig = builder.build()
-        val dockerClient = DockerClientBuilder.getInstance(dockerClientConfig).build()
+        val dockerClient = DockerClientImpl.getInstance(dockerClientConfig)
         try {
             val authConfig = AuthConfig()
                 .withUsername(userName)

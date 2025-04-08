@@ -29,7 +29,7 @@ package com.tencent.devops.dockerhost.services
 
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.core.DefaultDockerClientConfig
-import com.github.dockerjava.core.DockerClientBuilder
+import com.github.dockerjava.core.DockerClientImpl
 import com.github.dockerjava.okhttp.OkDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.dockerhost.config.DockerHostConfig
@@ -80,7 +80,7 @@ class DockerHostImageService(
                 .readTimeout(300000)
                 .build()
 
-            dockerClient = DockerClientBuilder.getInstance(config).withDockerHttpClient(longHttpClient).build()
+            dockerClient = DockerClientImpl.getInstance(config, longHttpClient)
 
             val imageHandlerContext = ImageHandlerContext(
                 projectId = projectId,

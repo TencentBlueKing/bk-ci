@@ -27,7 +27,7 @@
 
 package com.tencent.devops.store.common.service.action
 
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 
 /**
  * 装饰组件信息

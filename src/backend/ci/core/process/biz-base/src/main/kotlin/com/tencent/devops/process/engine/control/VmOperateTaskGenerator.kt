@@ -38,7 +38,7 @@ import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import javax.xml.bind.Element
+import jakarta.xml.bind.Element
 import org.springframework.stereotype.Component
 
 /**

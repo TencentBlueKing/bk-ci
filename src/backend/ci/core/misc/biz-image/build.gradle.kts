@@ -38,7 +38,7 @@ dependencies {
     api(project(":core:log:api-log"))
     api(project(":core:dispatch:api-dispatch-kubernetes"))
     api("org.apache.commons:commons-compress")
-    api("com.github.docker-java:docker-java")
+    api("com.github.docker-java:docker-java-core")
     api("org.glassfish.jersey.core:jersey-client")
     api("org.glassfish.jersey.core:jersey-server")
     api("org.glassfish.jersey.core:jersey-common")

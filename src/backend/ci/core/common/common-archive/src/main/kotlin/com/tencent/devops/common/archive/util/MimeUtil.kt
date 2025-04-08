@@ -36,7 +36,7 @@ object MimeUtil {
     const val STREAM_MIME_TYPE = "application/octet-stream"
     private const val HTML_MIME_TYPE = "text/html"
 
-    private val mimeMappings = MimeMappings(MimeMappings.DEFAULT).apply {
+    private val mimeMappings = MimeMappings.lazyCopy(MimeMappings.DEFAULT).apply {
         add("yaml", YAML_MIME_TYPE)
         add("tgz", TGZ_MIME_TYPE)
         add("ico", ICO_MIME_TYPE)

@@ -41,7 +41,7 @@ import com.tencent.devops.process.dao.PipelineAtomReplaceHistoryDao
 import com.tencent.devops.process.dao.PipelineAtomReplaceItemDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.service.template.TemplateFacadeService
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory

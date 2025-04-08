@@ -194,3 +194,15 @@ export const isTGit = judgementCodelibType('codeTGit')
  * @param {string} typeName
  */
 export const isP4 = judgementCodelibType('codeP4')
+
+export const isScmGit = judgementCodelibType('scmGit')
+export const isScmSvn = judgementCodelibType('scmSvn')
+
+/**
+ * 根据传入的代码库scmType，转为驼峰格式
+ * @param {string} type
+ * @returns
+ */
+export function convertToCamelCase (type) {
+    return type.toLowerCase().replace(/_(.)/g, (_, group1) => group1.toUpperCase())
+}

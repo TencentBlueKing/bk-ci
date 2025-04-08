@@ -28,6 +28,7 @@
 
 package com.tencent.devops.process.pojo.trigger
 
+import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
@@ -54,5 +55,7 @@ data class PipelineTriggerEvent(
     @get:Schema(title = "事件请求参数, 记录手动/openapi/定时/远程触发启动参数")
     val requestParams: Map<String, String>? = null,
     @get:Schema(title = "触发时间")
-    val createTime: LocalDateTime
+    val createTime: LocalDateTime,
+    @get:Schema(title = "事件体")
+    val eventBody: Webhook? = null
 )

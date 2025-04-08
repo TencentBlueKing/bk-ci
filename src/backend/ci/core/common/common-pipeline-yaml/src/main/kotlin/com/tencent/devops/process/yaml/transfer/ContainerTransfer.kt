@@ -156,7 +156,8 @@ class ContainerTransfer @Autowired(required = false) constructor(
             ),
             dispatchType = dispatchType,
             matrixGroupFlag = job.strategy != null,
-            matrixControlOption = getMatrixControlOption(job)
+            matrixControlOption = getMatrixControlOption(job),
+            showBuildResource = job.showRunsOn ?: false
         ).apply {
             nfsSwitch = buildEnv != null
         }
@@ -253,6 +254,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
                 projectId = projectId,
                 buildType = job.dispatchType?.buildType()
             ),
+            showRunsOn = job.showBuildResource.nullIfDefault(false),
             container = null,
             services = null,
             mutex = getMutexYaml(job.mutexGroup),
@@ -339,9 +341,14 @@ class ContainerTransfer @Autowired(required = false) constructor(
 
     @Suppress("UNCHECKED_CAST")
     private fun getMatrixControlOption(job: Job): MatrixControlOption? {
-
         val strategy = job.strategy ?: return null
 
+        if (strategy.include != null || strategy.exclude != null) {
+            return getMatrixControlOptionNew(job)
+        }
+        if (strategy.matrix == null) {
+            return null
+        }
         with(strategy) {
             if (matrix is Map<*, *>) {
                 val yaml = matrix as MutableMap<String, Any>
@@ -373,6 +380,38 @@ class ContainerTransfer @Autowired(required = false) constructor(
                     maxConcurrency = maxParallel
                 )
             }
+        }
+    }
+
+    private fun getMatrixControlOptionNew(job: Job): MatrixControlOption? {
+
+        val strategy = job.strategy ?: return null
+
+        with(strategy) {
+            val strategyStr = if (matrix is Map<*, *>) {
+                YamlUtil.toYaml(matrix)
+            } else {
+                matrix.toString()
+            }
+
+            val includeCaseStr = if (include is List<*>) {
+                YamlUtil.toYaml(include)
+            } else {
+                include.toString()
+            }
+
+            val excludeCaseStr = if (exclude is List<*>) {
+                YamlUtil.toYaml(exclude)
+            } else {
+                exclude.toString()
+            }
+            return MatrixControlOption(
+                strategyStr = strategyStr,
+                includeCaseStr = includeCaseStr,
+                excludeCaseStr = excludeCaseStr,
+                fastKill = fastKill,
+                maxConcurrency = maxParallel
+            )
         }
     }
 
@@ -483,7 +522,9 @@ class ContainerTransfer @Autowired(required = false) constructor(
             return null
         }
         return Strategy(
-            matrix = matrixControlOption.convertMatrixToYamlConfig() ?: return null,
+            matrix = matrixControlOption.convertMatrixToYamlStrategy(),
+            include = matrixControlOption.convertMatrixToYamlInclude(),
+            exclude = matrixControlOption.convertMatrixToYamlExclude(),
             fastKill = matrixControlOption.fastKill,
             maxParallel = matrixControlOption.maxConcurrency
         )

@@ -11585,7 +11585,7 @@ POM License:
 
 --------------------------------------------------------------------------------
 
-190. Group: javax.ws.rs  Name: javax.ws.rs-api  Version: 2.0
+190. Group: jakarta.ws.rs  Name: jakarta.ws.rs-api  Version: 2.0
 
 Manifest Project URL: http://www.oracle.com/
 
@@ -92784,4 +92784,3 @@ POM License: The Apache License, Version 2.0 - http://www.apache.org/licenses/LI
 
 
 This report was generated at Fri Sep 08 16:30:13 CST 2023.
-

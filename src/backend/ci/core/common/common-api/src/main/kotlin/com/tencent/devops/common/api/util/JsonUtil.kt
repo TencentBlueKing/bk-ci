@@ -36,6 +36,10 @@ import com.fasterxml.jackson.databind.MapperFeature
 import com.fasterxml.jackson.databind.Module
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.databind.introspect.AnnotatedMember
+import com.fasterxml.jackson.databind.introspect.AnnotatedMethod
+import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair
+import com.fasterxml.jackson.databind.introspect.NopAnnotationIntrospector
 import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.databind.ser.FilterProvider
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter
@@ -50,12 +54,15 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.annotation.SkipLogField
+import java.lang.reflect.Type
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter.ISO_DATE
 import java.time.format.DateTimeFormatter.ISO_DATE_TIME
 import java.time.format.DateTimeFormatter.ISO_TIME
+import java.util.Locale
+import kotlin.collections.HashSet
 
 /**
  *
@@ -130,17 +137,38 @@ object JsonUtil {
     }
 
     private fun ObjectMapper.objectMapperInit() {
+
         registerModule(javaTimeModule())
-        registerModule(KotlinModule())
+        registerModule(KotlinModule.Builder().build())
         enable(SerializationFeature.INDENT_OUTPUT)
         enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
         enable(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature())
         setSerializationInclusion(JsonInclude.Include.NON_NULL)
         disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
         disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+        setAnnotationIntrospector(specialAnnotationIntrospector())
         jsonModules.forEach { jsonModule ->
             registerModule(jsonModule)
         }
+    }
+
+    /**
+     * 用于兼容老版本is开头的方法
+     */
+    private fun ObjectMapper.specialAnnotationIntrospector(): AnnotationIntrospectorPair {
+        val oldAnnotationIntrospectorPair = object : NopAnnotationIntrospector() {
+            override fun findImplicitPropertyName(member: AnnotatedMember?): String? {
+                if (member == null) return null
+                if (member is AnnotatedMethod && member.name.startsWith("is")) {
+                    return member.name.substringAfter("is")
+                        .replaceFirstChar { it.lowercase(Locale.getDefault()) }
+                }
+                return null
+            }
+        }
+        val annotationIntrospectorPair =
+            AnnotationIntrospectorPair(oldAnnotationIntrospectorPair, serializationConfig.annotationIntrospector)
+        return annotationIntrospectorPair
     }
 
     private fun jsonMapper(): JsonMapper {
@@ -157,7 +185,7 @@ object JsonUtil {
 
     private val skipEmptyObjectMapper = ObjectMapper().apply {
         registerModule(javaTimeModule())
-        registerModule(KotlinModule())
+        registerModule(KotlinModule.Builder().build())
         enable(SerializationFeature.INDENT_OUTPUT)
         enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
         enable(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature())
@@ -275,6 +303,19 @@ object JsonUtil {
     }
 
     fun <T> to(json: String, type: Class<T>): T = getObjectMapper().readValue(json, type)
+
+    fun <T> toForType(json: String, type: Type): T {
+        val javaType = getObjectMapper().constructType(type)
+        return getObjectMapper().readValue(json, javaType)
+    }
+
+    fun toJsonForType(bean: Any, type: Type, formatted: Boolean = true): String {
+        if (ReflectUtil.isNativeType(bean) || bean is String) {
+            return bean.toString()
+        }
+        val javaType = getObjectMapper().constructType(type)
+        return getObjectMapper(formatted).writerFor(javaType).writeValueAsString(bean)!!
+    }
 
     fun <T> toOrNull(json: String?, type: Class<T>): T? {
         return json?.let { self ->

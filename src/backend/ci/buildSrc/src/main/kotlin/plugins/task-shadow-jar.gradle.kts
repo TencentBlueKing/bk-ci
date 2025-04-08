@@ -40,6 +40,8 @@ tasks {
         manifest {
             attributes(mapOf("Implementation-Version" to project.version))
         }
+
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     }
 
     named<ShadowJar>("shadowJar") {

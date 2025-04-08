@@ -11,6 +11,11 @@
       "desc": "Tencent 类库 , 可以直接引用"
     },
     {
+      "category": "Apache 2.0",
+      "moduleName": "com.squareup.okio:okio",
+      "desc": "Apache 2.0 类型, 本身没有带License,只能手动添加"
+    },
+    {
       "moduleLicense": "GNU General Public License (GPL)",
       "moduleName": "org.tmatesoft.sqljet:sqljet",
       "desc": "https://sqlite.org/copyright.html 属于公共领域完全不需要许可,使用上不受任何限制."
@@ -21,13 +26,13 @@
       "desc": "向mysql免费申请MySQL Ready Partner (free) , 可允许绕开GPL协议,可以使用双协议而不冲突"
     },
     {
-      "moduleVersion": "8.0.31",
+      "moduleVersion": "8.0.33",
       "moduleName": "mysql:mysql-connector-java",
       "desc": "上同 com.mysql:mysql-connector-j "
     },
     {
       "moduleName": "com.h2database:h2",
-      "moduleLicense": "MPL 2.0 or EPL 1.0",
+      "moduleLicense": "MPL 2.0",
       "desc": "https://h2database.com/html/license.html h2 允许集成并分发他们, 使用EPL 1.0 或 MPL 2.0 ,没有传染性"
     },
     {
@@ -91,7 +96,7 @@
     {
       "moduleLicense": "CDDL 1.1",
       "moduleVersion": "2.0",
-      "moduleName": "javax.ws.rs:javax.ws.rs-api"
+      "moduleName": "jakarta.ws.rs:jakarta.ws.rs-api"
     },
     {
       "moduleLicense": "EPL 2.0",
@@ -101,7 +106,7 @@
     {
       "moduleLicense": "\n                Dual license consisting of the CDDL v1.1 and GPL v2\n            ",
       "moduleVersion": "1.1",
-      "moduleName": "javax.websocket:javax.websocket-api",
+      "moduleName": "jakarta.websocket:jakarta.websocket-api",
       "category": "CDDL",
       "desc": "双协议, 选CDDL v1.1"
     },
@@ -179,6 +184,10 @@
     },
     {
       "moduleLicense": "ASL 2.0",
+      "category": "Apache 2.0"
+    },
+    {
+      "moduleLicense": "AL 2.0",
       "category": "Apache 2.0"
     },
     {
@@ -301,6 +310,11 @@
       "desc": ""
     },
     {
+      "moduleLicense": "CDDL 1.1",
+      "category": "CDDL",
+      "desc": ""
+    },
+    {
       "moduleLicense": "Eclipse Distribution License (New BSD License)",
       "category": "BSD"
     },
@@ -335,6 +349,11 @@
       "desc": "本项目仅Maven依赖, 不涉及修改源码,EPL协议允许被链接或调用EPL程序，不构成传染"
     },
     {
+      "moduleLicense": "Eclipse Public License, Version 2.0",
+      "category": "EPL",
+      "desc": "本项目仅Maven依赖, 不涉及修改源码,EPL协议允许被链接或调用EPL程序，不构成传染"
+    },
+    {
       "moduleLicense": "MIT",
       "category": "MIT"
     },
@@ -354,6 +373,12 @@
       "moduleLicense": "MIT-0"
     },
     {
+      "moduleLicense": "SPDX-License-Identifier: MIT"
+    },
+    {
+      "moduleLicense": "Plexus"
+    },
+    {
       "moduleLicense": "Creative Commons Legal Code",
       "desc": "本项目仅Maven依赖, 不涉及修改源码, 不构成传染"
     },
@@ -363,6 +388,9 @@
     },
     {
       "moduleLicense": "WTFPL"
+    },
+    {
+      "moduleLicense": null
     }
   ]
 }

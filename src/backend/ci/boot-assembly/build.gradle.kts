@@ -47,5 +47,5 @@ dependencies {
 }
 
 configurations.all {
-    exclude(group = "javax.ws.rs", module = "jsr311-api")
+    exclude(group = "jakarta.ws.rs", module = "jsr311-api")
 }

@@ -59,6 +59,7 @@ class OpenProjectAuthCallBackResourceImpl @Autowired constructor(
             CallbackMethodEnum.SEARCH_INSTANCE -> {
                 return authProjectService.searchProjectInstances(callBackInfo.filter.keyword, tenantId, page, token)
             }
+            else -> {}
         }
         return null
     }

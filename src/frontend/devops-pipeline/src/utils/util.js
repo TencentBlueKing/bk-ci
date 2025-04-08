@@ -21,6 +21,7 @@ import {
     ALL_PIPELINE_VIEW_ID
 } from '@/store/constants'
 import { v4 as uuidv4 } from 'uuid'
+import { isFileParam } from '@/store/modules/atom/paramsConfig'
 
 export function isVNode (node) {
     return typeof node === 'object' && Object.prototype.hasOwnProperty.call(node, 'componentOptions')
@@ -633,7 +634,14 @@ export function getQueryParamString (query) {
 export function getParamsValuesMap (params = [], valueKey = 'defaultValue', initValues = {}) {
     if (!Array.isArray(params)) return {}
     return params.reduce((values, param) => {
-        if (param.id) {
+        if (!param.id) return values
+
+        if (isFileParam(param.type) && param.enableVersionControl) {
+            values[param.id] = {
+                directory: initValues[param.id] ?? param[valueKey],
+                latestRandomStringInPath: (valueKey === 'defaultValue' ? param.randomStringInPath : param.latestRandomStringInPath) || ''
+            }
+        } else {
             values[param.id] = initValues[param.id] ?? param[valueKey]
         }
         return values

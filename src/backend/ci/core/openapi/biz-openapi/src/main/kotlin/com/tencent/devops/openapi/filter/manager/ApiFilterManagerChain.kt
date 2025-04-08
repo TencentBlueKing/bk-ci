@@ -27,8 +27,8 @@
 
 package com.tencent.devops.openapi.filter.manager
 
-import javax.ws.rs.container.ContainerRequestContext
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.container.ContainerRequestContext
+import jakarta.ws.rs.core.Response
 
 interface ApiFilterManagerChain {
 

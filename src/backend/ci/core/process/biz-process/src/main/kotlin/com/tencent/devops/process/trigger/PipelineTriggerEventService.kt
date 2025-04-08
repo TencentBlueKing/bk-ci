@@ -40,7 +40,6 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.web.utils.I18nUtil.getCodeLanMessage
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.EVENT_REPLAY_DESC
@@ -106,6 +105,15 @@ class PipelineTriggerEventService @Autowired constructor(
         )?.eventId ?: getEventId()
     }
 
+    fun getEventIdOrNull(projectId: String, requestId: String, eventSource: String): Long? {
+        return pipelineTriggerEventDao.getEventByRequestId(
+            dslContext = dslContext,
+            projectId = projectId,
+            requestId = requestId,
+            eventSource = eventSource
+        )?.eventId
+    }
+
     fun saveEvent(
         triggerEvent: PipelineTriggerEvent,
         triggerDetail: PipelineTriggerDetail
@@ -130,10 +138,25 @@ class PipelineTriggerEventService @Autowired constructor(
         )
     }
 
+    fun updateTriggerEvent(triggerEvent: PipelineTriggerEvent) {
+        pipelineTriggerEventDao.update(
+            dslContext = dslContext,
+            triggerEvent = triggerEvent
+        )
+    }
+
     fun saveTriggerDetail(triggerDetail: PipelineTriggerDetail) {
         pipelineTriggerEventDao.saveDetail(
             dslContext = dslContext,
             triggerDetail = triggerDetail
+        )
+    }
+
+    fun getTriggerEvent(projectId: String, eventId: Long): PipelineTriggerEvent? {
+        return pipelineTriggerEventDao.getTriggerEvent(
+            dslContext = dslContext,
+            projectId = projectId,
+            eventId = eventId
         )
     }
 
@@ -476,9 +499,19 @@ class PipelineTriggerEventService @Autowired constructor(
      */
     private fun PipelineTriggerEventVo.getBuildNumUrl(): String? {
         return if (status == PipelineTriggerStatus.SUCCEED.name) {
-            val linkUrl = "${HomeHostUtil.innerServerHost()}/console" +
-                "/pipeline/$projectId/$pipelineId/detail/$buildId/executeDetail"
-            MessageFormat.format(PIPELINE_BUILD_URL_PATTERN, linkUrl, buildNum)
+            when {
+                !buildId.isNullOrBlank() -> {
+                    val linkUrl = "/console/pipeline/$projectId/$pipelineId/detail/$buildId/executeDetail"
+                    MessageFormat.format(PIPELINE_BUILD_URL_PATTERN, linkUrl, buildNum)
+                }
+
+                !reasonDetailList.isNullOrEmpty() -> {
+                    reasonDetailList!![0]
+                }
+
+                else ->
+                    null
+            }
         } else {
             null
         }

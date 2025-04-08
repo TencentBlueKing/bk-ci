@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.pojo
 
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 
 enum class SubscriptionType(val type: Int) {
     ALL(0),

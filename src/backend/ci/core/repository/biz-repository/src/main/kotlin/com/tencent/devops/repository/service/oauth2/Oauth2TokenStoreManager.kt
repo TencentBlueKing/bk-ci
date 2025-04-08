@@ -27,18 +27,22 @@
 
 package com.tencent.devops.repository.service.oauth2
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.repository.pojo.oauth.Oauth2AccessToken
+import com.tencent.devops.repository.pojo.oauth.OauthTokenInfo
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class Oauth2TokenStoreManager @Autowired constructor(
-    private val oauth2TokenStoreServices: List<IOauth2TokenStoreService>
+    private val oauth2TokenStoreServices: List<IOauth2TokenStoreService>,
+    private val defaultOauth2TokenStoreService: DefaultOauth2TokenStoreService
 ) {
 
-    fun get(userId: String, scmCode: String): Oauth2AccessToken? {
+    fun get(userId: String, scmCode: String): OauthTokenInfo? {
         return getTokenStoreService(scmCode).get(userId, scmCode)
+    }
+
+    fun store(scmCode: String, oauthTokenInfo: OauthTokenInfo) {
+        getTokenStoreService(scmCode).store(scmCode = scmCode, oauthTokenInfo = oauthTokenInfo)
     }
 
     fun delete(userId: String, scmCode: String) {
@@ -46,6 +50,8 @@ class Oauth2TokenStoreManager @Autowired constructor(
     }
 
     private fun getTokenStoreService(scmCode: String): IOauth2TokenStoreService {
-        return oauth2TokenStoreServices.find { it.support(scmCode) } ?: throw ErrorCodeException(errorCode = "")
+        return oauth2TokenStoreServices.find {
+            it.support(scmCode)
+        } ?: defaultOauth2TokenStoreService
     }
 }

@@ -29,10 +29,10 @@ package com.tencent.devops.common.web
 
 import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource
 import io.swagger.v3.oas.models.PathItem
-import javax.ws.rs.Path
-import javax.ws.rs.core.HttpHeaders
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.UriInfo
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.core.HttpHeaders
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.UriInfo
 
 @Path("/swagger.json")
 class SwaggerResource : OpenApiResource() {

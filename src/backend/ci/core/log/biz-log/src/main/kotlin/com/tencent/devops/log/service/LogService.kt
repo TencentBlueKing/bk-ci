@@ -34,7 +34,7 @@ import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.log.event.LogStorageEvent
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @Suppress("LongParameterList", "TooManyFunctions")
 interface LogService {

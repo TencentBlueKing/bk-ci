@@ -39,10 +39,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Cookie
-import javax.ws.rs.core.NewCookie
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.UriBuilder
+import jakarta.ws.rs.core.Cookie
+import jakarta.ws.rs.core.NewCookie
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.UriBuilder
 
 @Service
 class ThirdLoginService @Autowired constructor(

@@ -50,10 +50,12 @@ class ServiceEnvironmentAuthResourceImpl @Autowired constructor(
             CallbackMethodEnum.LIST_INSTANCE -> {
                 return authEnvService.getEnv(projectId, page.offset.toInt(), page.limit.toInt(), token)
             }
+
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
                 val ids = callBackInfo.filter.idList.map { it.toString() }
                 return authEnvService.getEnvInfo(ids, token)
             }
+
             CallbackMethodEnum.SEARCH_INSTANCE -> {
                 return authEnvService.searchEnv(
                     projectId = projectId,
@@ -63,6 +65,8 @@ class ServiceEnvironmentAuthResourceImpl @Autowired constructor(
                     token = token
                 )
             }
+
+            else -> {}
         }
         return null
     }
@@ -75,10 +79,12 @@ class ServiceEnvironmentAuthResourceImpl @Autowired constructor(
             CallbackMethodEnum.LIST_INSTANCE -> {
                 authNodeService.getNode(projectId, page.offset.toInt(), page.limit.toInt(), token)
             }
+
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
                 val ids = callBackInfo.filter.idList.map { it.toString() }
                 authNodeService.getNodeInfo(ids, token)
             }
+
             CallbackMethodEnum.SEARCH_INSTANCE -> {
                 authNodeService.searchNode(
                     projectId = projectId,

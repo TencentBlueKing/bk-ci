@@ -27,6 +27,7 @@
 package com.tencent.devops.repository.service.code
 
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
+import com.tencent.devops.repository.pojo.RepoCondition
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.scm.pojo.GitFileInfo
@@ -72,6 +73,16 @@ interface CodeRepositoryService<T> {
     fun getGitFileTree(projectId: String, userId: String, record: TRepositoryRecord): List<GitFileInfo>
 
     fun getPacRepository(externalId: String): TRepositoryRecord?
+
+    fun listByCondition(
+        repoCondition: RepoCondition,
+        limit: Int,
+        offset: Int
+    ): List<Repository>? = emptyList()
+
+    fun countByCondition(
+        repoCondition: RepoCondition
+    ): Long = 0L
 
     fun addResourceAuthorization(
         projectId: String,

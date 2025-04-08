@@ -29,6 +29,8 @@ package com.tencent.devops.process.webhook
 
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.ScsConsumerBuilder
+import com.tencent.devops.process.trigger.event.ScmWebhookRequestEvent
+import com.tencent.devops.process.trigger.scm.WebhookManager
 import com.tencent.devops.process.webhook.listener.WebhookEventListener
 import com.tencent.devops.process.webhook.pojo.event.commit.GitWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.GithubWebhookEvent
@@ -98,4 +100,9 @@ class WebhookMQConfiguration @Autowired constructor() {
     fun replayEventConsumer(
         @Autowired webhookEventListener: WebhookEventListener
     ) = ScsConsumerBuilder.build<ReplayWebhookEvent> { webhookEventListener.handleReplayEvent(it) }
+
+    @EventConsumer
+    fun scmWebhookRequestEventConsumer(
+        @Autowired webhookManager: WebhookManager
+    ) = ScsConsumerBuilder.build<ScmWebhookRequestEvent> { webhookManager.handleRequestEvent(it) }
 }

@@ -281,6 +281,22 @@ class RepoPipelineRefDao {
         }
     }
 
+    fun countPipelineRefs(
+        dslContext: DSLContext,
+        projectId: String,
+        repositoryIds: List<Long>
+    ): Map<Long, Int> {
+        return with(TRepositoryPipelineRef.T_REPOSITORY_PIPELINE_REF) {
+            dslContext.select(PROJECT_ID, REPOSITORY_ID, DSL.count())
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPOSITORY_ID.`in`(repositoryIds))
+                .and(ATOM_CATEGORY.eq(RepoAtomCategoryEnum.TRIGGER.name))
+                .groupBy(PROJECT_ID, REPOSITORY_ID)
+                .fetch().map { it.value2() to it.value3() }.toMap()
+        }
+    }
+
     fun listByIds(
         dslContext: DSLContext,
         ids: List<Long>

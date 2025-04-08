@@ -65,5 +65,9 @@ data class RepositoryInfoWithPermission(
     @get:Schema(title = "插件仓库", required = true)
     val atom: Boolean? = false,
     @get:Schema(title = "是否启用pac", required = true)
-    val enablePac: Boolean? = false
+    val enablePac: Boolean? = false,
+    @get:Schema(title = "代码库标识", required = true)
+    val scmCode: String? = null,
+    @get:Schema(title = "代码库Logo地址", required = true)
+    val logoUrl: String? = null
 )

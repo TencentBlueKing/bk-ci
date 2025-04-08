@@ -38,7 +38,9 @@ data class GitWebhookEvent(
     override var delayMills: Int = 0,
     override val commitEventType: CommitEventType = CommitEventType.GIT,
     override val event: String,
-    override val secret: String?
+    override val secret: String?,
+    override var traceId: String? = null,
+    val headers: Map<String, String>? = null
 ) : ICodeWebhookEvent(
     requestContent = requestContent,
     retryTime = retryTime,

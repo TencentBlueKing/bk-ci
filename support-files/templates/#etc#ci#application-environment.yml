@@ -13,6 +13,7 @@ environment:
   agent-package: __BK_CI_HOME__/agent-package
   agentCollectorOn: __BK_CI_ENVIRONMENT_AGENT_COLLECTOR_ON__
   certFilePath: __BK_CI_FQDN_CERT__
+  jdkCompatibility: false
 
 influxdb:
   server: __BK_CI_INFLUXDB_ADDR__

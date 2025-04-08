@@ -34,12 +34,12 @@ import com.tencent.devops.store.pojo.common.StoreProjectInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import javax.ws.rs.Consumes
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.PUT
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "OP_STORE_PROJECT", description = "OP-组件-项目")
 @Path("/op/store/project")
