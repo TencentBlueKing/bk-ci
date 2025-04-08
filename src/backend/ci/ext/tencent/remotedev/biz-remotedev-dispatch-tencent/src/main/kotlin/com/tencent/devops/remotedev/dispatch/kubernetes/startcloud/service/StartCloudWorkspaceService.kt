@@ -77,8 +77,9 @@ class StartCloudWorkspaceService @Autowired constructor(
         workspaceName: String,
         userId: String,
         size: String,
-        mountType: WorkspaceMountType
+        mountType: WorkspaceMountType,
+        forceRestart: Boolean?
     ): Result<CreateDiskResp> {
-        return Result(remoteDevService.createDisk(workspaceName, userId, size, mountType))
+        return Result(remoteDevService.createDisk(workspaceName, userId, size, mountType, forceRestart))
     }
 }

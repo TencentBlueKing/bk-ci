@@ -45,7 +45,14 @@ class UserExpertSupportResourceImpl @Autowired constructor(
 
     @AuditEntry(actionId = TencentActionId.CGS_CREATE_DISK)
     override fun createDisk(userId: String, workspaceName: String, size: String): Result<CreateDiskResp> {
-        return Result(expertSupportService.createDisk(workspaceName = workspaceName, userId = userId, size = size))
+        return Result(
+            expertSupportService.createDisk(
+                workspaceName = workspaceName,
+                userId = userId,
+                size = size,
+                forceRestart = null
+            )
+        )
     }
 
     override fun expandDiskDetail(userId: String, workspaceName: String): Result<ExpandDiskTaskDetail?> {

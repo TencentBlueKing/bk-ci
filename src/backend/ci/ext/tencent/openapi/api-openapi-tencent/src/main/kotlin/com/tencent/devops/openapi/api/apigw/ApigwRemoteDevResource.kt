@@ -23,6 +23,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
+import com.tencent.devops.remotedev.pojo.expert.DeleteDiskData
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
@@ -733,7 +734,10 @@ interface ApigwRemoteDevResource {
         workspaceName: String,
         @Parameter(description = "磁盘大小", required = true)
         @QueryParam("size")
-        size: String
+        size: String,
+        @Parameter(description = "是否强制重启", required = false)
+        @QueryParam("forceRestart")
+        forceRestart: Boolean?
     ): Result<CreateDiskResp>
 
     @Operation(summary = "获取工作空间磁盘列表", tags = ["v4_app_remotedev_workspace_disk_list"])
@@ -747,6 +751,16 @@ interface ApigwRemoteDevResource {
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<List<VmDiskInfo>?>
+
+    @Operation(summary = "卸载并回收磁盘", tags = ["v4_app_remotedev_workspace_delete_disk"])
+    @POST
+    @Path("/workspace_delete_disk")
+    fun deleteDisk(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: DeleteDiskData
+    ): Result<CreateDiskResp>
 
     @Operation(summary = "云桌面调整配置", tags = ["v4_app_remotedev_workspace_upgrade"])
     @POST

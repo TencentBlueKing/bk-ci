@@ -36,4 +36,10 @@ interface ServiceRemoteDevInterface {
         workspaceName: String,
         operator: String
     )
+
+    fun workspaceDeleteDiskCallback(
+        taskId: String,
+        workspaceName: String,
+        operator: String
+    )
 }
