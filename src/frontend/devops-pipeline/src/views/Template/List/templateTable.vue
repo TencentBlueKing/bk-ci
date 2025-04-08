@@ -28,7 +28,10 @@
                     class="template-name select-text"
                     @click="goTemplateOverview(row, 'instanceList')"
                 >
-                    <img :src="row.logoUrl">
+                    <img
+                        class="img-icon"
+                        :src="row.logoUrl"
+                    >
                     <span :title="row.name">{{ row.name }}</span>
                     <img
                         v-if="row.enablePac"
@@ -365,12 +368,15 @@
 .template-name {
     display: flex;
     align-items: center;
-    img {
+    .img-icon {
         vertical-align: middle;
         margin-right: 12px;
+        width: 32px;
+        height: 32px;
     }
     .pac-code-icon {
         margin: 0 0 0 12px;
+        vertical-align: middle;
     }
     span {
         @include ellipsis();

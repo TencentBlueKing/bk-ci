@@ -65,7 +65,7 @@ const actions = {
         return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/export`, version)
     },
     requestInstanceList (_, { projectId, templateId, page, pageSize, ...params }) {
-        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/Instances/v2/projects/${projectId}/templates/${templateId}?page=${page}&pageSize=${pageSize}`, { params }).then(response => {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}?page=${page}&pageSize=${pageSize}`, { params }).then(response => {
             return response.data
         })
     }
