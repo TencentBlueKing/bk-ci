@@ -27,14 +27,18 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
+import com.tencent.bkrepo.common.api.constant.DEFAULT_PAGE_NUMBER
+import com.tencent.bkrepo.common.api.constant.DEFAULT_PAGE_SIZE
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.service.RepoSearchService
 import com.tencent.devops.artifactory.util.RepoUtils
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_FILE_NAME
+import com.tencent.devops.common.archive.pojo.QueryData
 import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.auth.api.AuthPermission
 import org.slf4j.LoggerFactory
@@ -69,15 +73,26 @@ class BkRepoSearchService @Autowired constructor(
                 props.add(Pair(it.key, it.value))
             }
         }
-        val queryData = bkRepoClient.queryByNameAndMetadata(
-            userId,
-            projectId,
-            listOf(RepoUtils.PIPELINE_REPO, RepoUtils.CUSTOM_REPO, RepoUtils.IMAGE_REPO),
-            fileNameSet.toList(),
-            props.associate { it },
-            page,
-            pageSize
-        )
+        val queryData = try {
+            bkRepoClient.queryByNameAndMetadata(
+                userId,
+                projectId,
+                listOf(RepoUtils.PIPELINE_REPO, RepoUtils.CUSTOM_REPO, RepoUtils.IMAGE_REPO),
+                fileNameSet.toList(),
+                props.associate { it },
+                page,
+                pageSize
+            )
+        } catch (e: RemoteServiceException) {
+            logger.info("search failed: ${e.message}")
+            QueryData(
+                pageNumber = DEFAULT_PAGE_NUMBER,
+                pageSize = DEFAULT_PAGE_SIZE,
+                totalRecords = 0,
+                totalPages = 0,
+                records = emptyList()
+            )
+        }
         val nodeList = queryData.records
 
         val pipelineHasPermissionList = getHasPermissionPipelineIdList(nodeList, userId, projectId)
