@@ -391,7 +391,8 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         storeType: StoreTypeEnum,
         version: String,
         projectCode: String,
-        userId: String
+        userId: String,
+        instanceId: String?
     ): Result<Boolean> {
         // 检查组件的状态是否符合下载条件
         val baseRecord = storeBaseQueryDao.getComponent(
@@ -423,7 +424,10 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         val checkFlag = publicFlag == true || storeMemberDao.isStoreMember(
             dslContext = dslContext, userId = userId, storeCode = storeCode, storeType = storeType.type.toByte()
         ) || storeProjectService.isInstalledByProject(
-            projectCode = projectCode, storeCode = storeCode, storeType = storeType.type.toByte()
+            projectCode = projectCode,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte(),
+            instanceId = instanceId
         )
         if (!checkFlag) {
             if (projectCode.isNotBlank()) {

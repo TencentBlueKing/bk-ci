@@ -336,13 +336,25 @@ class StoreProjectRelDao {
      * 判断组件是否被项目安装
      * 无论初始化项目、调试项目还是协作项目，均视为已安装
      */
-    fun isInstalledByProject(dslContext: DSLContext, projectCode: String, storeCode: String, storeType: Byte): Boolean {
+    fun isInstalledByProject(
+        dslContext: DSLContext,
+        projectCode: String,
+        storeCode: String,
+        storeType: Byte,
+        instanceId: String? = null
+    ): Boolean {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            val conditions = mutableListOf<Condition>().apply {
+                add(STORE_CODE.eq(storeCode))
+                add(STORE_TYPE.eq(storeType))
+                add(PROJECT_CODE.eq(projectCode))
+                if (!instanceId.isNullOrBlank()) {
+                    add(INSTANCE_ID.eq(instanceId))
+                }
+            }
             return dslContext.selectCount()
                 .from(this)
-                .where(PROJECT_CODE.eq(projectCode))
-                .and(STORE_CODE.eq(storeCode))
-                .and(STORE_TYPE.eq(storeType))
+                .where(conditions)
                 .fetchOne(0, Long::class.java) != 0L
         }
     }
