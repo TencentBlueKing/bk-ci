@@ -58,7 +58,8 @@ class BkRepoSearchService @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Pair<Long, List<FileInfo>> {
-        logger.info("search, userId: $userId, projectId: $projectId, searchProps: $searchProps, page: $page, pageSize: $pageSize")
+        logger.info("search, userId: $userId, projectId: $projectId, " +
+            "searchProps: $searchProps, page: $page, pageSize: $pageSize")
         val fileNameSet = mutableSetOf<String>()
         searchProps.fileNames?.forEach {
             fileNameSet.add(it)
@@ -136,7 +137,11 @@ class BkRepoSearchService @Autowired constructor(
         return Pair(queryData.totalRecords, fileInfoList)
     }
 
-    override fun searchFileAndProperty(userId: String, projectId: String, searchProps: SearchProps): Pair<Long, List<FileInfo>> {
+    override fun searchFileAndProperty(
+        userId: String,
+        projectId: String,
+        searchProps: SearchProps
+    ): Pair<Long, List<FileInfo>> {
         logger.info("searchFileAndProperty, projectId: $projectId, searchProps: $searchProps")
         val fileNameSet = mutableSetOf<String>()
         searchProps.fileNames?.forEach {
@@ -186,7 +191,8 @@ class BkRepoSearchService @Autowired constructor(
         regexPath: String,
         customized: Boolean
     ): Pair<Long, List<FileInfo>> {
-        logger.info("serviceSearchFileByRegex, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, regexPath: $regexPath")
+        logger.info("serviceSearchFileByRegex, projectId: $projectId, " +
+            "pipelineId: $pipelineId, buildId: $buildId, regexPath: $regexPath")
         var queryPath = regexPath
         if (!regexPath.startsWith("/")) {
             queryPath = "/$queryPath"
@@ -212,7 +218,8 @@ class BkRepoSearchService @Autowired constructor(
         customized: Boolean?,
         generateShortUrl: Boolean
     ): Pair<Long, List<FileInfo>> {
-        logger.info("serviceSearchFileAndProperty, projectId: $projectId, searchProps: $searchProps, customized: $customized")
+        logger.info("serviceSearchFileAndProperty, projectId: $projectId, " +
+            "searchProps: $searchProps, customized: $customized")
         val repoNames = when (customized) {
             null -> listOf(RepoUtils.CUSTOM_REPO, RepoUtils.PIPELINE_REPO, RepoUtils.IMAGE_REPO)
             true -> listOf(RepoUtils.CUSTOM_REPO)
