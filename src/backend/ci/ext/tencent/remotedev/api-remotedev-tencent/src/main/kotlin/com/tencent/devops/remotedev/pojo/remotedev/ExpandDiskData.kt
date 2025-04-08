@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.pojo.remotedev
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
@@ -27,7 +28,7 @@ data class ExpandDiskValidateResp(
  * @param pvcClass 磁盘类型(如hdd/ssd)
  * @param pvcSize 磁盘大小
  * @param pvcName 磁盘唯一名称
- * @param isSystemVolume 是否系统盘
+ * @param systemVolume 是否系统盘
  */
 @Schema(title = "机器上的磁盘信息")
 data class VmDiskInfo(
@@ -37,8 +38,9 @@ data class VmDiskInfo(
     val pvcSize: String,
     @get:Schema(title = "磁盘唯一名称")
     val pvcName: String,
+    @JsonProperty("isSystemVolume")
     @get:Schema(title = "是否系统盘")
-    val isSystemVolume: Boolean,
+    val systemVolume: Boolean,
     @get:Schema(title = "创建磁盘时间")
     val createdAt: String?
 )

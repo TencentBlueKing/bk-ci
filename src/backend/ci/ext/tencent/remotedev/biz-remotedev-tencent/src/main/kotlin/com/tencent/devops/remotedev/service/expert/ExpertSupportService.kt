@@ -623,7 +623,7 @@ class ExpertSupportService @Autowired constructor(
         val pvcId = when (data.disk) {
             OpDiskOperatorDiskType.D -> {
                 val disk = diskList.getOrNull(1)
-                if (disk?.isSystemVolume == false) {
+                if (disk?.systemVolume == false) {
                     disk.pvcName
                 } else {
                     null
