@@ -47,7 +47,7 @@ import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.remotedev.TaskResp
-import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
+import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfoApi
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import io.swagger.v3.oas.annotations.Operation
@@ -750,7 +750,7 @@ interface ApigwRemoteDevResource {
         @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String
-    ): Result<List<VmDiskInfo>?>
+    ): Result<List<VmDiskInfoApi>?>
 
     @Operation(summary = "卸载并回收磁盘", tags = ["v4_app_remotedev_workspace_delete_disk"])
     @POST

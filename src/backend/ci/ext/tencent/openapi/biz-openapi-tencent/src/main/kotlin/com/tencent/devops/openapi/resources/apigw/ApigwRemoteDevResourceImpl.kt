@@ -46,7 +46,7 @@ import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.remotedev.TaskResp
-import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
+import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfoApi
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import java.time.LocalDateTime
@@ -524,9 +524,14 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         )
     }
 
-    override fun fetchWorkspaceDiskList(userId: String, workspaceName: String): Result<List<VmDiskInfo>?> {
+    override fun fetchWorkspaceDiskList(userId: String, workspaceName: String): Result<List<VmDiskInfoApi>?> {
         logger.info("fetchWorkspaceDiskList |$userId|$workspaceName")
-        return client.get(ServiceRemoteDevResource::class).fetchDiskList(userId, workspaceName)
+        val data = client.get(ServiceRemoteDevResource::class).fetchDiskList(userId, workspaceName)
+        return Result(
+            status = data.status,
+            message = data.message,
+            data = data.data?.map { VmDiskInfoApi(it) }
+        )
     }
 
     override fun deleteDisk(userId: String, data: DeleteDiskData): Result<CreateDiskResp> {
