@@ -34,7 +34,7 @@ class TenantUtils : ApplicationContextAware, InitializingBean {
 
         fun parseEnglishName(tenantId: String? = null, tenantEnglishName: String): String {
             return if (enableMultiTenantMode && !tenantId.isNullOrBlank()) {
-                "$tenantId-$tenantEnglishName"
+                "$tenantId.$tenantEnglishName"
             } else {
                 tenantEnglishName
             }
