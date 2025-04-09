@@ -600,20 +600,25 @@ class StoreProjectRelDao {
         }
     }
 
-    fun getProjectInfoByStoreCode(
+    fun getProjectRelInfo(
         dslContext: DSLContext,
         storeCode: String,
         storeType: Byte,
-        storeProjectType: StoreProjectTypeEnum? = null
+        storeProjectType: StoreProjectTypeEnum? = null,
+        projectCode: String? = null,
+        instanceId: String? = null
     ): Result<TStoreProjectRelRecord>? {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(STORE_CODE.eq(storeCode))
-            conditions.add(STORE_TYPE.eq(storeType))
-            if (storeProjectType != null) {
-                conditions.add(TYPE.eq(storeProjectType.type.toByte()))
+            val conditions = mutableListOf<Condition>().apply {
+                add(STORE_CODE.eq(storeCode))
+                add(STORE_TYPE.eq(storeType))
+                storeProjectType?.let { add(TYPE.eq(it.type.toByte())) }
+                projectCode?.takeIf { it.isNotBlank() }?.let { add(PROJECT_CODE.eq(it)) }
+                instanceId?.takeIf { it.isNotBlank() }?.let { add(INSTANCE_ID.eq(it)) }
             }
-            return dslContext.selectFrom(this).where(conditions).fetch()
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .fetch()
         }
     }
 
@@ -635,26 +640,6 @@ class StoreProjectRelDao {
                 .where(conditions)
                 .limit(1)
                 .fetchOne()
-        }
-    }
-
-    /**
-     * 判断组件是否被用户安装
-     */
-    fun isInstalledByUser(
-        dslContext: DSLContext,
-        userId: String,
-        storeCode: String,
-        storeType: Byte
-    ): Boolean {
-        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
-            return dslContext.selectCount()
-                .from(this)
-                .where(CREATOR.eq(userId))
-                .and(STORE_CODE.eq(storeCode))
-                .and(STORE_TYPE.eq(storeType))
-                .and(TYPE.eq(StoreProjectTypeEnum.COMMON.type.toByte()))
-                .fetchOne(0, Long::class.java) != 0L
         }
     }
 }

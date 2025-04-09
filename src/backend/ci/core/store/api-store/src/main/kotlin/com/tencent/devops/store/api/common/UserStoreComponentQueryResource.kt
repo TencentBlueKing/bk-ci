@@ -341,6 +341,12 @@ interface UserStoreComponentQueryResource {
         projectCode: String? = null,
         @Parameter(description = "实例ID", required = false)
         @QueryParam("instanceId")
-        instanceId: String? = null
+        instanceId: String? = null,
+        @Parameter(description = "操作系统名称", required = false)
+        @QueryParam("osName")
+        osName: String? = null,
+        @Parameter(description = "操作系统架构", required = false)
+        @QueryParam("osArch")
+        osArch: String? = null
     ): Result<VersionInfo?>
 }

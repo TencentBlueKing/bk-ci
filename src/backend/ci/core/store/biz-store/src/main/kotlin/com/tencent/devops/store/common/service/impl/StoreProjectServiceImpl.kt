@@ -471,7 +471,7 @@ class StoreProjectServiceImpl @Autowired constructor(
                 params = arrayOf(storeCode)
             )
         }
-        val testProjectInfos = storeProjectRelDao.getProjectInfoByStoreCode(
+        val testProjectInfos = storeProjectRelDao.getProjectRelInfo(
             dslContext = dslContext,
             storeCode = storeCode,
             storeType = storeType.type.toByte(),

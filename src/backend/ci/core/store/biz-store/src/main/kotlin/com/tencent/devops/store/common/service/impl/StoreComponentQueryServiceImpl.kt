@@ -762,62 +762,74 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         storeType: String,
         storeCode: String,
         projectCode: String,
-        instanceId: String?
+        instanceId: String?,
+        osName: String?,
+        osArch: String?
     ): VersionInfo? {
         val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
-        // 获取已安装的组件信息
-        val installedComponents = storeProjectService.getProjectComponents(
-            projectCode = projectCode,
+        // 获取已安装组件关系信息
+        val installedRel = storeProjectRelDao.getProjectRelInfo(
+            dslContext = dslContext,
+            storeCode = storeCode,
             storeType = storeTypeEnum.type.toByte(),
-            storeProjectTypes = listOf(StoreProjectTypeEnum.COMMON.type.toByte()),
+            storeProjectType = StoreProjectTypeEnum.COMMON,
             instanceId = instanceId
-        ) ?: emptyMap()
+        )?.firstOrNull()
 
-        val installedVersion = installedComponents[storeCode]
+        // 判断测试环境标志
+        val isTestEnv = storeProjectRelDao.getProjectRelInfo(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeTypeEnum.type.toByte(),
+            storeProjectType = StoreProjectTypeEnum.TEST,
+            projectCode = projectCode,
+            instanceId = instanceId
+        )?.firstOrNull() != null
 
-        // 查询组件最新已发布版本
-        val latestRelease = storeBaseQueryDao.getNewestComponentByCode(
+        // 获取最新可用版本
+        val statusList = if (isTestEnv) StoreStatusEnum.getTestStatusList() else listOf(StoreStatusEnum.RELEASED.name)
+        val latestVersion = storeBaseQueryDao.getMaxVersionComponentByCode(
             dslContext = dslContext,
             storeType = storeTypeEnum,
             storeCode = storeCode,
-            status = StoreStatusEnum.RELEASED
-        )
-        val latestReleaseVersion = latestRelease?.version
+            statusList = statusList
+        )?.takeIf { it.version.isNotBlank() } ?: return null
 
-        latestReleaseVersion?.takeUnless { it.isBlank() }?.let { validLatestVersion ->
-            // 获取最新发布版本的业务号
-            val latestReleaseBusNum = storeBaseQueryDao.getMaxBusNumByCode(
-                dslContext = dslContext,
-                storeCode = storeCode,
-                storeType = storeTypeEnum,
-                version = validLatestVersion
-            ) ?: return@let
-
-            installedVersion?.takeUnless { it.isBlank() }?.let { currentVersion ->
-                // 获取当前安装版本的业务号
-                val currentBusNum = storeBaseQueryDao.getMaxBusNumByCode(
-                    dslContext = dslContext,
-                    storeCode = storeCode,
-                    storeType = storeTypeEnum,
-                    version = currentVersion
-                )
-                // 比较业务号，判断是否需要更新
-                if (currentBusNum != null && latestReleaseBusNum > currentBusNum) {
-                    return VersionInfo(
-                        versionName = validLatestVersion,
-                        versionValue = currentVersion
-                    )
-                }
-            } ?: run {
-                // 未安装时直接返回最新版本
-                return VersionInfo(
-                    versionName = validLatestVersion,
-                    versionValue = validLatestVersion
-                )
-            }
+        // 处理版本比对逻辑
+        return when {
+            installedRel == null -> createVersionInfo(latestVersion.version)  // 全新安装
+            isUpdateRequired(
+                storeId = latestVersion.id,
+                installedTime = installedRel.createTime,
+                osName = osName,
+                osArch = osArch
+            ) -> createVersionInfo(latestVersion.version, installedRel.version)
+            else -> null
         }
-        return null
     }
+
+    private fun isUpdateRequired(
+        storeId: String,
+        installedTime: LocalDateTime,
+        osName: String?,
+        osArch: String?
+    ): Boolean {
+        val envRecord = storeBaseEnvQueryDao.getBaseEnvsByStoreId(
+            dslContext = dslContext,
+            storeId = storeId,
+            osName = osName,
+            osArch = osArch
+        )?.firstOrNull()
+        return envRecord?.updateTime.let { packageTime ->
+            installedTime < packageTime
+        }
+    }
+
+    private fun createVersionInfo(latestVersion: String, currentVersion: String = latestVersion) =
+        VersionInfo(
+            versionName = latestVersion,
+            versionValue = currentVersion.takeIf { it.isNotBlank() } ?: latestVersion
+        )
 
     private fun getStoreInfos(storeInfoQuery: StoreInfoQuery): Pair<Long, List<Record>> {
         if (storeInfoQuery.getSpecQueryFlag()) {
