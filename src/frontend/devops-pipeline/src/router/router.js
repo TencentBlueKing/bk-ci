@@ -34,6 +34,8 @@ const templateGroup = () => import(/* webpackChunkName: "pipelinesTemplate" */'.
 const templateEntry = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/TemplateEntry')
 const TemplateOverview = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/TemplateOverview')
 const templateEdit = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/edit.vue')
+const InstanceEntry = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/Instance/InstanceEntry.vue')
+
 // const templateSetting = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/setting.vue')
 // const templateInstanceCreate = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/instance_create.vue')
 // const templatePermission = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/template/permission.vue')
@@ -171,6 +173,12 @@ const routes = [
                         path: ':type?',
                         name: 'TemplateOverview',
                         component: TemplateOverview
+                    },
+                    {
+                        // 模板实例化创建 / 实例化升级
+                        path: 'instance/:type',
+                        name: 'instanceEntry',
+                        component: InstanceEntry
                     }
                 ]
             },

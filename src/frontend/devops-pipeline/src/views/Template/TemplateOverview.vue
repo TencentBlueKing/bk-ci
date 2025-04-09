@@ -297,9 +297,11 @@
             },
             switchToReleaseVersion () {
                 this.$router.push({
+                    name: 'instanceEntry',
                     params: {
                         ...this.$route.params,
-                        version: this.pipelineInfo?.releaseVersion
+                        version: this.pipelineInfo?.releaseVersion,
+                        type: 'create'
                     }
                 })
             },

@@ -33,9 +33,9 @@
 <script setup name='InstallTemplateDialog'>
     import { ref, computed, defineProps, defineEmits } from 'vue'
     import UseInstance from '@/hook/useInstance'
-    import StoreTemplateList from '@/components/template/install/StoreTemplateList'
-    import Repository from '@/components/template/install/Repository'
-    import LocalFile from '@/components/template/install/LocalFile'
+    import StoreTemplateList from '@/components/template/Install/StoreTemplateList'
+    import Repository from '@/components/template/Install/Repository'
+    import LocalFile from '@/components/template/Install/LocalFile'
     import {
         INSTALL_TYPE_STORE,
         INSTALL_TYPE_REPOSITORY,
