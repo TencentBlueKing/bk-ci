@@ -29,6 +29,7 @@ package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.common.api.constant.KEY_PIPELINE_ID
 import com.tencent.devops.common.api.constant.KEY_VERSION
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseFeature
@@ -59,6 +60,27 @@ import java.time.LocalDateTime
 @Suppress("TooManyFunctions")
 @Repository
 class StoreBaseQueryDao {
+
+    fun getMaxVersionComponentByCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        statusList: List<String>? = null
+    ): TStoreBaseRecord? {
+        return with(TStoreBase.T_STORE_BASE) {
+            dslContext.selectFrom(this)
+                .where(
+                    STORE_TYPE.eq(storeType.type.toByte())
+                        .and(STORE_CODE.eq(storeCode))
+                        .let { conditions ->
+                            statusList?.let { conditions.and(STATUS.`in`(it)) } ?: conditions
+                        }
+                )
+                .orderBy(BUS_NUM.desc())
+                .limit(1)
+                .fetchOne()
+        }
+    }
 
     fun getNewestComponentByCode(
         dslContext: DSLContext,
