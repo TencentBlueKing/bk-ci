@@ -68,6 +68,12 @@ const actions = {
         return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}?page=${page}&pageSize=${pageSize}`, { params }).then(response => {
             return response.data
         })
+    },
+    requestTemplateChangelogs (_, { projectId, templateId, ...params }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/operationLog`, { params }).then(response => response.data)
+    },
+    requestTemplateOperatorList (_, { projectId, templateId, ...params }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/operatorList`, { params }).then(response => response.data)
     }
 }
 

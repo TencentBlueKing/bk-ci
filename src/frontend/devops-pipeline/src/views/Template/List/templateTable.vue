@@ -380,7 +380,6 @@
         margin-right: 12px;
 
         img {
-            vertical-align: middle;
             width: 100%;
         }
     }
