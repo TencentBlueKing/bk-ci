@@ -51,8 +51,8 @@ class OPProjectResourceImpl @Autowired constructor(
     private val projectTagService: ProjectTagService
 ) : OPProjectResource {
 
-    override fun list(userId: String): Result<List<ProjectVO>> {
-        return Result(projectService.list(userId,))
+    override fun list(userId: String, tenantId: String?): Result<List<ProjectVO>> {
+        return Result(projectService.list(userId, tenantId))
     }
 
     override fun setGrayProject(projectGraySetRequest: OpProjectGraySetRequest): Result<Boolean> {
