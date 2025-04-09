@@ -48,8 +48,6 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import java.math.BigDecimal
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -58,6 +56,8 @@ import org.jooq.SelectOnConditionStep
 import org.jooq.UpdateSetFirstStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.math.BigDecimal
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -112,8 +112,8 @@ class MarketAtomDao : AtomBaseDao() {
         if (!keyword.isNullOrEmpty()) {
             conditions.add(
                 ta.NAME.contains(keyword)
-                .or(ta.SUMMARY.contains(keyword))
-                .or(ta.ATOM_CODE.contains(keyword))
+                    .or(ta.SUMMARY.contains(keyword))
+                    .or(ta.ATOM_CODE.contains(keyword))
             )
         }
         if (rdType != null) {
@@ -373,7 +373,8 @@ class MarketAtomDao : AtomBaseDao() {
         marketAtomCreateRequest: MarketAtomCreateRequest
     ) {
         with(TAtom.T_ATOM) {
-            dslContext.insertInto(this,
+            dslContext.insertInto(
+                this,
                 ID,
                 NAME,
                 ATOM_CODE,
@@ -437,8 +438,10 @@ class MarketAtomDao : AtomBaseDao() {
         val a = TClassify.T_CLASSIFY.`as`("a")
         val classifyId = dslContext.select(a.ID)
             .from(a)
-            .where(a.CLASSIFY_CODE.eq(marketAtomUpdateRequest.classifyCode)
-                .and(a.TYPE.eq(0)))
+            .where(
+                a.CLASSIFY_CODE.eq(marketAtomUpdateRequest.classifyCode)
+                    .and(a.TYPE.eq(0))
+            )
             .fetchOne(0, String::class.java)
         with(TAtom.T_ATOM) {
             dslContext.update(this)
@@ -476,11 +479,14 @@ class MarketAtomDao : AtomBaseDao() {
         val a = TClassify.T_CLASSIFY.`as`("a")
         val classifyId = dslContext.select(a.ID)
             .from(a)
-            .where(a.CLASSIFY_CODE.eq(atomRequest.classifyCode)
-                .and(a.TYPE.eq(0)))
+            .where(
+                a.CLASSIFY_CODE.eq(atomRequest.classifyCode)
+                    .and(a.TYPE.eq(0))
+            )
             .fetchOne(0, String::class.java)
         with(TAtom.T_ATOM) {
-            dslContext.insertInto(this,
+            dslContext.insertInto(
+                this,
                 ID,
                 NAME,
                 ATOM_CODE,
@@ -515,7 +521,8 @@ class MarketAtomDao : AtomBaseDao() {
                 MODIFIER,
                 BRANCH_TEST_FLAG
             )
-                .values(id,
+                .values(
+                    id,
                     atomRequest.name,
                     atomRecord.atomCode,
                     atomRecord.serviceScope,
@@ -765,9 +772,11 @@ class MarketAtomDao : AtomBaseDao() {
         with(TAtom.T_ATOM) {
             return dslContext.select(ID).from(this)
                 .where(ATOM_CODE.eq(atomCode).and(ID.notEqual(atomId)))
-                .and(ATOM_STATUS.`in`(
-                    listOf(AtomStatusEnum.TESTING.status.toByte(), AtomStatusEnum.AUDITING.status.toByte())
-                ))
+                .and(
+                    ATOM_STATUS.`in`(
+                        listOf(AtomStatusEnum.TESTING.status.toByte(), AtomStatusEnum.AUDITING.status.toByte())
+                    )
+                )
                 .orderBy(UPDATE_TIME.desc())
                 .limit(1)
                 .fetchOne(0, String::class.java)

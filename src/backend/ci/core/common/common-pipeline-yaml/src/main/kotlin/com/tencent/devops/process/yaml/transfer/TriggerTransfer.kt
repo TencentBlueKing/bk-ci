@@ -891,6 +891,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
             CodeEventType.CHANGE_CONTENT -> triggerOn.changeContent = rule
             CodeEventType.SHELVE_COMMIT -> triggerOn.shelveCommit = rule
             CodeEventType.SHELVE_SUBMIT -> triggerOn.shelveSubmit = rule
+            else -> {}
         }
     }
 }

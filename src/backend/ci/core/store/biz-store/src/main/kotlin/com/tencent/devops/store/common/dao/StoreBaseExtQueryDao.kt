@@ -44,7 +44,7 @@ class StoreBaseExtQueryDao {
         }
     }
 
-    fun getBaseExtByEnvId(
+    fun getBaseExtByStoreId(
         dslContext: DSLContext,
         storeId: String,
         fieldName: String? = null

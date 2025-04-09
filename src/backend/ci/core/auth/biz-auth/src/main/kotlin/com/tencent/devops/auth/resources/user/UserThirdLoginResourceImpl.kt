@@ -30,7 +30,7 @@ package com.tencent.devops.auth.resources.user
 import com.tencent.devops.auth.api.login.UserThirdLoginResource
 import com.tencent.devops.auth.service.ThirdLoginService
 import com.tencent.devops.common.web.RestResource
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

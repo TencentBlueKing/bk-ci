@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE_VERSION
+import com.tencent.devops.model.process.tables.TPipelineResourceVersion
 import com.tencent.devops.model.process.tables.records.TPipelineResourceVersionRecord
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
@@ -336,7 +337,8 @@ class PipelineResourceVersionDao {
         excludeVersion: Int? = null,
         creator: String? = null,
         versionName: String? = null,
-        description: String? = null
+        description: String? = null,
+        buildOnly: Boolean? = false
     ): List<PipelineVersionSimple> {
         with(T_PIPELINE_RESOURCE_VERSION) {
             val query = dslContext.selectFrom(this)
@@ -374,6 +376,12 @@ class PipelineResourceVersionDao {
             maxQueryVersion?.let {
                 query.and(VERSION.le(maxQueryVersion))
             }
+            if (buildOnly == true) {
+                query.and(
+                    STATUS.ne(VersionStatus.RELEASED.name)
+                        .or(VERSION.eq(getLatestReleaseVersion(dslContext, pipelineId, projectId)))
+                )
+            }
             val list = query.orderBy(
                 RELEASE_TIME.desc(), VERSION.desc()
             ).limit(limit).offset(offset).fetch(sampleMapper)
@@ -381,6 +389,16 @@ class PipelineResourceVersionDao {
             return list
         }
     }
+
+    private fun TPipelineResourceVersion.getLatestReleaseVersion(
+        dslContext: DSLContext,
+        pipelineId: String,
+        projectId: String
+    ) = dslContext.select(VERSION).from(this)
+        .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+        .and(STATUS.eq(VersionStatus.RELEASED.name).or(STATUS.isNull))
+        .orderBy(RELEASE_TIME.desc(), VERSION.desc())
+        .limit(1)
 
     fun listPipelineVersionInList(
         dslContext: DSLContext,
@@ -425,7 +443,8 @@ class PipelineResourceVersionDao {
         includeDraft: Boolean?,
         versionName: String?,
         creator: String?,
-        description: String?
+        description: String?,
+        buildOnly: Boolean? = false
     ): Int {
         with(T_PIPELINE_RESOURCE_VERSION) {
             val query = dslContext.select(DSL.count(PIPELINE_ID))
@@ -453,6 +472,12 @@ class PipelineResourceVersionDao {
             }
             creator?.let { query.and(CREATOR.eq(creator)) }
             description?.let { query.and(DESCRIPTION.like("%$description%")) }
+            if (buildOnly == true) {
+                query.and(
+                    STATUS.ne(VersionStatus.RELEASED.name)
+                        .or(VERSION.eq(getLatestReleaseVersion(dslContext, pipelineId, projectId)))
+                )
+            }
             return query.fetchOne(0, Int::class.java)!!
         }
     }
@@ -471,7 +496,7 @@ class PipelineResourceVersionDao {
                     BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
                         .or(BRANCH_ACTION.isNull)
                 )
-            return query.fetchCount()
+            return query.count()
         }
     }
 

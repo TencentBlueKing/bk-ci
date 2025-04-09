@@ -96,6 +96,60 @@ BEGIN
         ADD COLUMN `MAX_CON_RUNNING_QUEUE_SIZE` int(11) DEFAULT NULL COMMENT '并发构建数量限制,值为-1时表示取系统默认值。';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_TRIGGER_EVENT'
+                    AND COLUMN_NAME = 'EVENT_BODY') THEN
+        ALTER TABLE `T_PIPELINE_TRIGGER_EVENT`
+            ADD COLUMN `EVENT_BODY` longtext NULL COMMENT '事件体';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_YAML_BRANCH_FILE'
+                    AND COLUMN_NAME = 'UPDATE_TIME') THEN
+        ALTER TABLE `T_PIPELINE_YAML_BRANCH_FILE`
+            ADD COLUMN `UPDATE_TIME`  datetime not null  default CURRENT_TIMESTAMP comment '更新时间';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_YAML_BRANCH_FILE'
+                    AND COLUMN_NAME = 'COMMIT_ID') THEN
+        ALTER TABLE `T_PIPELINE_YAML_BRANCH_FILE`
+            ADD COLUMN `COMMIT_ID` varchar(64) null comment '文件commitId';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_YAML_BRANCH_FILE'
+                    AND COLUMN_NAME = 'BLOB_ID') THEN
+        ALTER TABLE `T_PIPELINE_YAML_BRANCH_FILE`
+            ADD COLUMN `BLOB_ID`   varchar(64) not null comment '文件blob_id';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_YAML_BRANCH_FILE'
+                    AND COLUMN_NAME = 'COMMIT_TIME') THEN
+        ALTER TABLE `T_PIPELINE_YAML_BRANCH_FILE`
+            ADD COLUMN `COMMIT_TIME`  datetime not null default CURRENT_TIMESTAMP not null comment '提交时间';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_YAML_BRANCH_FILE'
+                    AND COLUMN_NAME = 'DELETED') THEN
+        ALTER TABLE `T_PIPELINE_YAML_BRANCH_FILE`
+            ADD COLUMN `DELETED` bit not null default b'0' comment '是否删除';
+    END IF;
+
 
   IF EXISTS(SELECT 1
               FROM information_schema.statistics

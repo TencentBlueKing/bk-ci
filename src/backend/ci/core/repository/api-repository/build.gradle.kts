@@ -29,6 +29,7 @@ dependencies {
     api(project(":core:common:common-api"))
     api(project(":core:common:common-scm"))
     api(project(":core:common:common-auth:common-auth-api"))
+    api("com.tencent.bk.devops.scm:devops-scm-api")
 }
 
 plugins {

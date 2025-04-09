@@ -32,7 +32,7 @@ import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.VersionModel
 import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.Valid
+import jakarta.validation.Valid
 
 @Schema(title = "工作台-组件基础信息请求报文体")
 data class StoreBaseUpdateRequest(
@@ -55,6 +55,7 @@ data class StoreBaseUpdateRequest(
     @get:Schema(title = "描述", required = false)
     val description: String? = null,
     @get:Schema(title = "版本信息", required = true)
+    @field:Valid
     val versionInfo: VersionModel,
     @get:Schema(title = "标签列表", required = false)
     val labelIdList: ArrayList<String>? = null,

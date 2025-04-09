@@ -48,6 +48,8 @@ data class Job(
     @JsonProperty("runs-on")
     @get:Schema(title = "runs-on")
     val runsOn: RunsOn = RunsOn(),
+    @JsonProperty("show-runs-on")
+    val showRunsOn: Boolean? = null,
     // val container: Container?,
     val services: List<Service>? = null,
     @get:Schema(title = "if")
@@ -141,7 +143,10 @@ data class ServiceWith(
 )
 
 data class Strategy(
-    val matrix: Any,
+    val matrix: Any? = null,
+    val include: Any? = null,
+    val exclude: Any? = null,
+
     @get:Schema(title = "fast-kill")
     @JsonProperty("fast-kill")
     val fastKill: Boolean? = null,

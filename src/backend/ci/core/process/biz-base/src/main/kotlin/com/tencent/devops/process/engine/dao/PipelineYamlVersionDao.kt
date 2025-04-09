@@ -91,12 +91,13 @@ class PipelineYamlVersionDao {
         }
     }
 
-    fun getLatestVersion(
+    fun getPipelineYamlVersion(
         dslContext: DSLContext,
         projectId: String,
         repoHashId: String,
         filePath: String,
         ref: String? = null,
+        commitId: String? = null,
         blobId: String? = null,
         branchAction: String? = null
     ): PipelineYamlVersion? {
@@ -106,6 +107,7 @@ class PipelineYamlVersionDao {
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .and(FILE_PATH.eq(filePath))
                 .let { if (ref != null) it.and(REF.eq(ref)) else it }
+                .let { if (commitId != null) it.and(COMMIT_ID.eq(ref)) else it }
                 .let { if (blobId != null) it.and(BLOB_ID.eq(blobId)) else it }
                 .let { if (branchAction != null) it.and(BRANCH_ACTION.eq(branchAction)) else it }
                 .orderBy(COMMIT_TIME.desc())
@@ -115,7 +117,7 @@ class PipelineYamlVersionDao {
         }
     }
 
-    fun getLatestVersion(
+    fun getPipelineYamlVersion(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
@@ -130,6 +132,29 @@ class PipelineYamlVersionDao {
                 .limit(1)
                 .fetchOne()
             return record?.let { convert(it) }
+        }
+    }
+
+    /**
+     * 获取分支列表
+     */
+    fun listRef(
+        dslContext: DSLContext,
+        projectId: String,
+        repoHashId: String,
+        filePath: String,
+        branchAction: String,
+        excludeRef: String? = null
+    ): List<String> {
+        with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
+            val query = dslContext.select(REF).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPO_HASH_ID.eq(repoHashId))
+                .and(FILE_PATH.eq(filePath))
+                .and(BRANCH_ACTION.eq(branchAction))
+                .let { if (excludeRef != null) it.and(REF.notEqual(excludeRef)) else it }
+
+            return query.groupBy(REF).fetch().map { it.value1() }
         }
     }
 

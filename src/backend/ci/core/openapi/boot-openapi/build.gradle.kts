@@ -29,6 +29,6 @@ dependencies {
     api(project(":core:openapi:biz-openapi"))
     api("org.springframework.boot:spring-boot-starter-aop")
     api("io.jsonwebtoken:jjwt-api")
-    runtime("io.jsonwebtoken:jjwt-impl")
-    runtime("io.jsonwebtoken:jjwt-jackson")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson")
 }

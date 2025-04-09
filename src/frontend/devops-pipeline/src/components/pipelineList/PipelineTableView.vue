@@ -491,7 +491,7 @@
                 <template
                     v-else-if="props.row.hasPermission && !props.row.delete"
                 >
-                    <span v-if="!props.row.released">
+                    <span v-if="!(props.row.released || props.row.onlyBranchVersion)">
                         <bk-button
                             text
                             class="exec-pipeline-btn"
@@ -1183,7 +1183,7 @@
                 white-space: nowrap;
                 max-width: 100%;
             }
-           
+
         }
     }
     .hidden-count {
