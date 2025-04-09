@@ -39,7 +39,7 @@ import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.core.MediaType
 
-@Tag(name = "BUILD_PROJECT", description = "蓝盾项目列表接口")
+@Tag(name = "SIGNATURE_CALLBACK", description = "签名回调接口")
 @Path("/open/signature")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
