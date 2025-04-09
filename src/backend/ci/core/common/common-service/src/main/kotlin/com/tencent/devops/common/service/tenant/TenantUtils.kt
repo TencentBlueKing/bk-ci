@@ -34,10 +34,20 @@ class TenantUtils : ApplicationContextAware, InitializingBean {
         }
 
         fun parseEnglishName(tenantId: String? = null, tenantEnglishName: String): String {
-            return if (enableMultiTenantMode && !tenantId.isNullOrBlank()) {
+            return if (tenantEnglishName.contains(".")) {
+                tenantEnglishName
+            } else if (enableMultiTenantMode && !tenantId.isNullOrBlank()) {
                 "$tenantId.$tenantEnglishName"
             } else {
                 tenantEnglishName
+            }
+        }
+
+        fun getTenantIdByEnglishName(tenantEnglishName: String): String {
+            return if (tenantEnglishName.contains(".")) {
+                tenantEnglishName.split(".")[0]
+            } else {
+                DEFAULT_TENANT_ID
             }
         }
     }
