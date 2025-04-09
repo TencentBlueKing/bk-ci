@@ -28,7 +28,6 @@
 package com.tencent.devops.store.common.service.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.store.common.dao.StoreBaseFeatureManageDao
@@ -99,11 +98,15 @@ class OpStoreComponentServiceImpl @Autowired constructor(
         )
         val releaseType = ReleaseTypeEnum.getReleaseTypeObj(releaseRecord.releaseType.toInt())!!
         val version = record.version
-        val latestFlag = if (releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE || version == INIT_VERSION) {
-            // 历史大版本下的小版本更新或者首个版本上架审核时，不更新latestFlag
-            null
-        } else {
-            passFlag
+        val firstVersion = storeBaseQueryDao.getFirstComponent(
+            dslContext = dslContext, storeCode = storeCode, storeType = storeType
+        )?.version
+        val latestFlag = when {
+            releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE || version == firstVersion -> {
+                // 历史大版本下的小版本更新或者首个版本上架审核时，不更新latestFlag
+                null
+            }
+            else -> passFlag
         }
         if (passFlag) {
             // 审核通过则发布插件
@@ -115,7 +118,8 @@ class OpStoreComponentServiceImpl @Autowired constructor(
                     storeType = storeType,
                     version = version,
                     status = storeStatus,
-                    releaseType = releaseType
+                    releaseType = releaseType,
+                    publisher = record.modifier
                 )
             )
         }

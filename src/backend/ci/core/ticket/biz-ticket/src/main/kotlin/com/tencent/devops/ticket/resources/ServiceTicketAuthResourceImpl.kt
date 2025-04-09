@@ -55,6 +55,7 @@ class ServiceTicketAuthResourceImpl @Autowired constructor(
                     token = token
                 )
             }
+
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
                 val ids = callBackInfo.filter.idList.map { it.toString() }
                 return authCertService.getCertInfo(
@@ -63,6 +64,7 @@ class ServiceTicketAuthResourceImpl @Autowired constructor(
                     token = token
                 )
             }
+
             CallbackMethodEnum.SEARCH_INSTANCE -> {
                 return authCertService.searchCert(
                     projectId = projectId ?: "",
@@ -72,6 +74,8 @@ class ServiceTicketAuthResourceImpl @Autowired constructor(
                     token = token
                 )
             }
+
+            else -> {}
         }
         return null
     }
@@ -89,6 +93,7 @@ class ServiceTicketAuthResourceImpl @Autowired constructor(
                     token = token
                 )
             }
+
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
                 val ids = callBackInfo.filter.idList.map { it.toString() }
                 return authCredentialService.getCredentialInfo(
@@ -97,6 +102,7 @@ class ServiceTicketAuthResourceImpl @Autowired constructor(
                     token = token
                 )
             }
+
             CallbackMethodEnum.SEARCH_INSTANCE -> {
                 return authCredentialService.searchCredential(
                     projectId = projectId ?: "",
@@ -106,6 +112,8 @@ class ServiceTicketAuthResourceImpl @Autowired constructor(
                     token = token
                 )
             }
+
+            else -> {}
         }
         return null
     }

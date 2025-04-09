@@ -133,7 +133,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicInteger
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @Suppress(
     "LongParameterList",
@@ -1044,6 +1044,21 @@ class PipelineRepositoryService constructor(
                         ) ?: throw ErrorCodeException(
                             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_DRAFT_EXISTS
                         )
+                        val pipelineInfo = getPipelineInfo(projectId = projectId, pipelineId = pipelineId)
+                        // 将草稿版本发布成分支版本,需要把最新状态转换成分支版本
+                        if (pipelineInfo != null &&
+                            pipelineInfo.version == draftVersion.version &&
+                            pipelineInfo.latestVersionStatus == VersionStatus.COMMITTING
+                        ) {
+                            pipelineInfoDao.update(
+                                dslContext = transactionContext,
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                userId = userId,
+                                // 进行过至少一次发布版本后，取消仅有草稿/分支的状态
+                                latestVersionStatus = VersionStatus.BRANCH
+                            )
+                        }
                         version = draftVersion.version
                         versionName = branchName
                         branchAction = BranchVersionAction.ACTIVE
@@ -1394,18 +1409,8 @@ class PipelineRepositoryService constructor(
                     VersionStatus.COMMITTING -> {
                         Triple(pipelineInfo, targetResource, true)
                     }
-                    VersionStatus.BRANCH -> {
-                        Triple(pipelineInfo, targetResource, false)
-                    }
                     else -> {
-                        val releaseVersion = getPipelineResourceVersion(
-                            projectId = projectId,
-                            pipelineId = pipelineId
-                        ) ?: throw ErrorCodeException(
-                            statusCode = Response.Status.NOT_FOUND.statusCode,
-                            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
-                        )
-                        Triple(pipelineInfo, releaseVersion, false)
+                        Triple(pipelineInfo, targetResource, false)
                     }
                 }
             }
@@ -2287,6 +2292,14 @@ class PipelineRepositoryService constructor(
             list = events.map { (key, value) ->
                 value.copy(secretToken = value.secretToken?.let { AESUtil.encrypt(aesKey, it) })
             }
+        )
+    }
+
+    fun getReleaseVersionRecord(projectId: String, pipelineId: String): PipelineResourceVersion? {
+        return pipelineResourceVersionDao.getReleaseVersionRecord(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
         )
     }
 }
