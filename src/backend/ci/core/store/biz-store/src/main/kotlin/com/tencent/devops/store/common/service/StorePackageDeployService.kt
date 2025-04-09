@@ -198,7 +198,7 @@ abstract class StorePackageDeployService {
         try {
             val firstPublisherFlag = bkConfigMap[BK_STORE_FIRST_PUBLISHER_FLAG] as Boolean
             val storeReleaseInfo = bkConfigMap[KEY_RELEASE_INFO] as? StoreReleaseInfo
-            if(firstPublisherFlag && storeReleaseInfo?.baseInfo != null) {
+            if (firstPublisherFlag && storeReleaseInfo?.baseInfo != null) {
                 voidFields.addAll(validateBaseInfo(storeReleaseInfo.baseInfo))
             }
             storeReleaseInfo?.baseInfo?.let {
