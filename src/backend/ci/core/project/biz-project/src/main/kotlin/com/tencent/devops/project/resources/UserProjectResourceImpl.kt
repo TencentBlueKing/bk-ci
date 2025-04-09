@@ -66,6 +66,7 @@ class UserProjectResourceImpl @Autowired constructor(
 
     override fun list(
         userId: String,
+        tenantId: String?,
         accessToken: String?,
         enabled: Boolean?,
         unApproved: Boolean?,
@@ -79,13 +80,15 @@ class UserProjectResourceImpl @Autowired constructor(
                 enabled = enabled,
                 unApproved = unApproved ?: false,
                 sortType = sortType ?: ProjectSortType.PROJECT_NAME,
-                collation = collation ?: ProjectCollation.DEFAULT
+                collation = collation ?: ProjectCollation.DEFAULT,
+                tenantId = tenantId
             )
         )
     }
 
     override fun listProjectsForApply(
         userId: String,
+        tenantId: String?,
         accessToken: String?,
         projectName: String?,
         projectId: String?,
@@ -99,7 +102,8 @@ class UserProjectResourceImpl @Autowired constructor(
                 projectName = projectName,
                 projectId = projectId,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                tenantId = tenantId
             )
         )
     }
@@ -137,7 +141,12 @@ class UserProjectResourceImpl @Autowired constructor(
     }
 
     @AuditEntry(actionId = PROJECT_CREATE)
-    override fun create(userId: String, tenantId: String?, projectCreateInfo: ProjectCreateInfo, accessToken: String?): Result<Boolean> {
+    override fun create(
+        userId: String,
+        tenantId: String?,
+        projectCreateInfo: ProjectCreateInfo,
+        accessToken: String?
+    ): Result<Boolean> {
         // 创建项目
         projectCreateInfo.tenantId = TenantUtils.getTenantId(tenantId)
         projectService.create(

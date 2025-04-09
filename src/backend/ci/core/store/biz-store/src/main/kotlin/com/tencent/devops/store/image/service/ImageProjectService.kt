@@ -43,8 +43,15 @@ import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
+import com.tencent.devops.store.common.service.StoreCommonService
+import com.tencent.devops.store.common.service.StoreProjectService
+import com.tencent.devops.store.common.service.StoreUserService
+import com.tencent.devops.store.common.service.action.StoreDecorateFactory
+import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.common.utils.image.MultiSourceDataPaginator
+import com.tencent.devops.store.common.utils.image.PagableDataSource
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_AGENT_TYPE_SCOPE
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_CODE
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_DOCKER_FILE_CONTENT
@@ -71,6 +78,7 @@ import com.tencent.devops.store.image.dao.ImageDao
 import com.tencent.devops.store.image.dao.MarketImageDao
 import com.tencent.devops.store.image.dao.MarketImageFeatureDao
 import com.tencent.devops.store.image.exception.ImageNotExistException
+import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_NAME
 import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_CODE
@@ -94,20 +102,12 @@ import com.tencent.devops.store.pojo.image.enums.MarketImageSortTypeEnum
 import com.tencent.devops.store.pojo.image.response.ImageDetail
 import com.tencent.devops.store.pojo.image.response.JobImageItem
 import com.tencent.devops.store.pojo.image.response.JobMarketImageItem
-import com.tencent.devops.store.common.service.StoreCommonService
-import com.tencent.devops.store.common.service.StoreProjectService
-import com.tencent.devops.store.common.service.StoreUserService
-import com.tencent.devops.store.common.service.action.StoreDecorateFactory
-import com.tencent.devops.store.common.utils.image.MultiSourceDataPaginator
-import com.tencent.devops.store.common.utils.image.PagableDataSource
-import com.tencent.devops.store.common.utils.VersionUtils
-import com.tencent.devops.store.pojo.common.InstallStoreReq
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 import kotlin.math.ceil
 
 @Suppress("ALL")
@@ -288,7 +288,7 @@ class ImageProjectService @Autowired constructor(
         val totalPages = PageUtil.calTotalPage(pageSize, totalSize)
         return Page(
             count = totalSize, page = page ?: 1, pageSize = pageSize
-            ?: totalSize.toInt(), totalPages = totalPages, records = jobImageItemList
+                ?: totalSize.toInt(), totalPages = totalPages, records = jobImageItemList
         )
     }
 
@@ -1026,7 +1026,8 @@ class ImageProjectService @Autowired constructor(
         projectCodeList: ArrayList<String>,
         imageCode: String,
         channelCode: ChannelCode,
-        interfaceName: String? = "Anon interface"
+        interfaceName: String? = "Anon interface",
+        tenantId: String?
     ): Result<Boolean> {
         logger.info("$interfaceName:installImage:Input:($userId,$projectCodeList,$imageCode)")
         // 判断镜像标识是否合法
@@ -1038,7 +1039,8 @@ class ImageProjectService @Autowired constructor(
             userId = userId,
             storeCode = image.imageCode,
             storeType = StoreTypeEnum.IMAGE,
-            projectCodeList = projectCodeList
+            projectCodeList = projectCodeList,
+            tenantId = tenantId
         )
         if (validateInstallResult.isNotOk()) {
             return validateInstallResult
@@ -1052,7 +1054,8 @@ class ImageProjectService @Autowired constructor(
                 storeType = StoreTypeEnum.IMAGE
             ),
             publicFlag = imageFeature.publicFlag,
-            channelCode = channelCode
+            channelCode = channelCode,
+            tenantId = tenantId
         )
     }
 }

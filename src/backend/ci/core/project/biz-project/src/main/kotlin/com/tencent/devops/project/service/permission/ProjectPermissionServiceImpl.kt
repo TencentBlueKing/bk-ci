@@ -70,11 +70,11 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         )
     }
 
-    override fun getUserProjects(userId: String): List<String> {
+    override fun getUserProjects(userId: String, tenantId: String?): List<String> {
         return authProjectApi.getUserProjects(
             serviceCode = projectAuthServiceCode,
             userId = userId,
-            supplier = supplierForPermission
+            supplier = { projectDao.listProjectCodes(dslContext, tenantId) }
         )
     }
 
@@ -136,6 +136,7 @@ class ProjectPermissionServiceImpl @Autowired constructor(
     override fun filterProjects(
         userId: String,
         permission: AuthPermission,
-        resourceType: String?
-    ): List<String>? = supplierForPermission()
+        resourceType: String?,
+        tenantId: String?
+    ): List<String>? = projectDao.listProjectCodes(dslContext, tenantId)
 }

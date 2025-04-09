@@ -51,11 +51,12 @@ class ServiceStoreComponentResourceImpl @Autowired constructor(
     private val storeComponentManageService: StoreComponentManageService
 ) : ServiceStoreComponentResource {
 
-    override fun installComponent(userId: String, installStoreReq: InstallStoreReq): Result<Boolean> {
+    override fun installComponent(userId: String, tenantId: String?, installStoreReq: InstallStoreReq): Result<Boolean> {
         return storeComponentManageService.installComponent(
             userId = userId,
             channelCode = ChannelCode.BS,
-            installStoreReq = installStoreReq
+            installStoreReq = installStoreReq,
+            tenantId = tenantId
         )
     }
 

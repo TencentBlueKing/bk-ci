@@ -88,11 +88,12 @@ class ProjectDao {
         }
     }
 
-    fun listProjectCodes(dslContext: DSLContext): List<String> {
+    fun listProjectCodes(dslContext: DSLContext, tenantId: String? = null): List<String> {
         return with(TProject.T_PROJECT) {
             dslContext.select(ENGLISH_NAME)
                 .from(this)
                 .where(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
+                .let { if (tenantId != null) it.and(TENANT_ID.eq(tenantId)) else it }
                 .fetch(ENGLISH_NAME, String::class.java)
         }
     }

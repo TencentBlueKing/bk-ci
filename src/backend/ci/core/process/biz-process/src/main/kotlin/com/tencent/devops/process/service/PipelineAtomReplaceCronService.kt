@@ -46,6 +46,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceBaseRecord
 import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceItemRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
@@ -656,6 +657,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                             val projectManager = getProjectManager(projectId) // 获取项目管理员
                             val installFlag = client.get(ServiceMarketAtomResource::class).installAtom(
                                 userId = projectManager,
+                                tenantId = TenantUtils.getTenantIdByEnglishName(projectId),
                                 channelCode = channelCode,
                                 installAtomReq = InstallAtomReq(arrayListOf(projectId), toAtomCode)
                             ).data
@@ -683,7 +685,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                         if (toAtomInputParamNameList?.size != toAtomInputParamMap.size) {
                             val message =
                                 "bus[$busId] plugin: $fromAtomCode: ${atomVersionReplaceInfo.fromAtomVersion} " +
-                                    "cannot be replaced by plugin: $toAtomCode: $toAtomVersion, parameter mapping error"
+                                        "cannot be replaced by plugin: $toAtomCode: $toAtomVersion, parameter mapping error"
                             logger.warn(message)
                             throw ErrorCodeException(
                                 errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
@@ -778,9 +780,11 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             is MarketBuildAtomElement -> {
                 element.data[ATOM_INPUT] as? Map<String, Any>
             }
+
             is MarketBuildLessAtomElement -> {
                 element.data[ATOM_INPUT] as? Map<String, Any>
             }
+
             else -> {
                 JsonUtil.toMap(element)
             }
@@ -793,9 +797,11 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             is MarketBuildAtomElement -> {
                 element.data[ATOM_NAMESPACE] as? String
             }
+
             is MarketBuildLessAtomElement -> {
                 element.data[ATOM_NAMESPACE] as? String
             }
+
             else -> {
                 JsonUtil.toMap(element)[ATOM_NAMESPACE] as? String
             }

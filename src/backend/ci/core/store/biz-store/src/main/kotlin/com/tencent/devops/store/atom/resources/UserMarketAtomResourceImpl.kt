@@ -32,22 +32,22 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.UserMarketAtomResource
+import com.tencent.devops.store.atom.service.MarketAtomService
+import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.pojo.atom.AtomDevLanguage
 import com.tencent.devops.store.pojo.atom.AtomOutput
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListItem
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
-import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.atom.MyAtomResp
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
+import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
-import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.atom.service.MarketAtomService
-import com.tencent.devops.store.common.service.StoreProjectService
+import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -120,15 +120,16 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         return marketAtomService.getAtomVersionsByCode(userId, atomCode, page, pageSize)
     }
 
-    override fun installAtom(userId: String, installAtomReq: InstallAtomReq): Result<Boolean> {
-        return marketAtomService.installAtom(userId, ChannelCode.BS, installAtomReq)
+    override fun installAtom(userId: String, tenantId: String?, installAtomReq: InstallAtomReq): Result<Boolean> {
+        return marketAtomService.installAtom(userId, ChannelCode.BS, installAtomReq, tenantId)
     }
 
     override fun getInstalledProjects(
         userId: String,
+        tenantId: String?,
         atomCode: String
     ): Result<List<InstalledProjRespItem?>> {
-        return storeProjectService.getInstalledProjects(userId, atomCode, StoreTypeEnum.ATOM)
+        return storeProjectService.getInstalledProjects(userId, atomCode, StoreTypeEnum.ATOM, tenantId)
     }
 
     override fun listLanguage(): Result<List<AtomDevLanguage?>> {
@@ -148,9 +149,11 @@ class UserMarketAtomResourceImpl @Autowired constructor(
     }
 
     override fun getAtomYmlV2Info(userId: String, atomCode: String, defaultShowFlag: Boolean?): Result<String?> {
-        return Result(marketAtomService.generateCiV2Yaml(
-            atomCode = atomCode,
-            defaultShowFlag = defaultShowFlag ?: false)
+        return Result(
+            marketAtomService.generateCiV2Yaml(
+                atomCode = atomCode,
+                defaultShowFlag = defaultShowFlag ?: false
+            )
         )
     }
 

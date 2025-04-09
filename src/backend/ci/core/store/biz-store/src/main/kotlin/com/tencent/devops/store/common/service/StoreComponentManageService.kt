@@ -28,7 +28,8 @@ interface StoreComponentManageService {
     fun installComponent(
         userId: String,
         channelCode: ChannelCode,
-        installStoreReq: InstallStoreReq
+        installStoreReq: InstallStoreReq,
+        tenantId: String?
     ): Result<Boolean>
 
     /**

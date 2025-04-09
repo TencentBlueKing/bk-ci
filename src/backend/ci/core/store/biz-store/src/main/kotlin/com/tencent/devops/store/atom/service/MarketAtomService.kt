@@ -111,7 +111,8 @@ interface MarketAtomService {
     fun installAtom(
         userId: String,
         channelCode: ChannelCode,
-        installAtomReq: InstallAtomReq
+        installAtomReq: InstallAtomReq,
+        tenantId: String?
     ): Result<Boolean>
 
     /**

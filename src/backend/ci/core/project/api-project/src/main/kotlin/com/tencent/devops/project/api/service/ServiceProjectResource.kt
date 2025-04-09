@@ -74,7 +74,10 @@ interface ServiceProjectResource {
     fun list(
         @Parameter(description = "用户ID", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String
+        userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String?
     ): Result<List<ProjectVO>>
 
     @GET

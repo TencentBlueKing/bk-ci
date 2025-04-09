@@ -56,9 +56,10 @@ class UserTemplateResourceImpl @Autowired constructor(
 
     override fun getInstalledProjects(
         userId: String,
+        tenantId: String?,
         templateCode: String
     ): Result<List<InstalledProjRespItem?>> {
-        return storeProjectService.getInstalledProjects(userId, templateCode, StoreTypeEnum.TEMPLATE)
+        return storeProjectService.getInstalledProjects(userId, templateCode, StoreTypeEnum.TEMPLATE, tenantId)
     }
 
     override fun getMyTemplates(
@@ -72,12 +73,14 @@ class UserTemplateResourceImpl @Autowired constructor(
 
     override fun installTemplate(
         userId: String,
+        tenantId: String?,
         installTemplateReq: InstallTemplateReq
     ): Result<Boolean> {
         val installResult = marketTemplateService.installTemplate(
             userId = userId,
             channelCode = ChannelCode.BS,
-            installTemplateReq = installTemplateReq
+            installTemplateReq = installTemplateReq,
+            tenantId = tenantId
         )
         return Result(
             status = installResult.status,
@@ -88,12 +91,14 @@ class UserTemplateResourceImpl @Autowired constructor(
 
     override fun installTemplateNew(
         userId: String,
+        tenantId: String?,
         installTemplateReq: InstallTemplateReq
     ): Result<InstallTemplateResp> {
         return marketTemplateService.installTemplate(
             userId = userId,
             channelCode = ChannelCode.BS,
-            installTemplateReq = installTemplateReq
+            installTemplateReq = installTemplateReq,
+            tenantId = tenantId
         )
     }
 

@@ -99,7 +99,8 @@ interface MarketTemplateService {
     fun installTemplate(
         userId: String,
         channelCode: ChannelCode,
-        installTemplateReq: InstallTemplateReq
+        installTemplateReq: InstallTemplateReq,
+        tenantId: String?
     ): Result<InstallTemplateResp>
 
     /**

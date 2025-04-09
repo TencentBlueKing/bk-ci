@@ -118,16 +118,16 @@ import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
 import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.project.util.exception.ProjectNotExistException
+import jakarta.ws.rs.NotFoundException
+import java.io.File
+import java.io.InputStream
+import java.util.regex.Pattern
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
-import java.io.File
-import java.io.InputStream
-import java.util.regex.Pattern
-import jakarta.ws.rs.NotFoundException
 
 @Suppress("ALL")
 abstract class AbsProjectServiceImpl @Autowired constructor(
@@ -417,7 +417,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     ): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
         val projectVO = ProjectUtils.packagingBean(record)
-        val englishNames = getProjectFromAuth(userId, accessToken)
+        val englishNames = getProjectFromAuth(
+            userId = userId,
+            accessToken = accessToken,
+            tenantId = TenantUtils.getTenantIdByEnglishName(englishName)
+        )
         if (englishNames.isEmpty()) {
             return null
         }
@@ -830,14 +834,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         enabled: Boolean?,
         unApproved: Boolean,
         sortType: ProjectSortType?,
-        collation: ProjectCollation?
+        collation: ProjectCollation?,
+        tenantId: String?
     ): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
             val projectsWithVisitPermission = getProjectFromAuth(
                 userId = userId,
-                accessToken = accessToken
+                accessToken = accessToken,
+                tenantId = tenantId
             ).toSet()
             if (projectsWithVisitPermission.isEmpty() && !unApproved) {
                 return emptyList()
@@ -847,14 +853,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 val projectsWithManagePermission = getProjectFromAuth(
                     userId = userId,
                     accessToken = accessToken,
-                    permission = AuthPermission.MANAGE
+                    permission = AuthPermission.MANAGE,
+                    tenantId = tenantId
                 )
                 val projectsWithPipelineTemplateCreatePerm = try {
                     getProjectFromAuth(
                         userId = userId,
                         accessToken = accessToken,
                         permission = AuthPermission.CREATE,
-                        resourceType = AuthResourceType.PIPELINE_TEMPLATE.value
+                        resourceType = AuthResourceType.PIPELINE_TEMPLATE.value,
+                        tenantId = tenantId
                     )
                 } catch (ex: Exception) {
                     emptyList()
@@ -862,7 +870,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 val projectsWithViewPermission = getProjectFromAuth(
                     userId = userId,
                     accessToken = accessToken,
-                    permission = AuthPermission.VIEW
+                    permission = AuthPermission.VIEW,
+                    tenantId = tenantId
                 )
                 projectDao.listByEnglishName(
                     dslContext = dslContext,
@@ -931,16 +940,21 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         projectName: String?,
         projectId: String?,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        tenantId: String?
     ): Pagination<ProjectByConditionDTO> {
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
         val projectsResp = mutableListOf<ProjectByConditionDTO>()
         // 拉取出该用户有访问权限的项目
-        val hasVisitPermissionProjectIds = getProjectFromAuth(userId, accessToken)
+        val hasVisitPermissionProjectIds = getProjectFromAuth(
+            userId = userId,
+            accessToken = accessToken,
+            tenantId = tenantId
+        )
         projectDao.listProjectsForApply(
             dslContext = dslContext,
             projectName = projectName,
-            projectId = projectId,
+            projectId = projectId?.let { TenantUtils.parseEnglishName(tenantId, it) },
             authEnglishNameList = hasVisitPermissionProjectIds,
             offset = sqlLimit.offset,
             limit = sqlLimit.limit
@@ -1002,12 +1016,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     /**
      * 获取所有项目信息
      */
-    override fun list(userId: String): List<ProjectVO> {
+    override fun list(userId: String, tenantId: String?): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
 
-            val projects = getProjectFromAuth(userId, null)
+            val projects = getProjectFromAuth(userId = userId, accessToken = null, tenantId = tenantId)
             logger.info("projects：$projects")
             val list = ArrayList<ProjectVO>()
             projectDao.listByEnglishName(dslContext, projects, null, null, null).map {
@@ -1613,13 +1627,14 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     abstract fun deleteAuth(projectId: String, accessToken: String?)
 
-    abstract fun getProjectFromAuth(userId: String?, accessToken: String?): List<String>
+    abstract fun getProjectFromAuth(userId: String?, accessToken: String?, tenantId: String?): List<String>
 
     abstract fun getProjectFromAuth(
         userId: String,
         accessToken: String?,
         permission: AuthPermission,
-        resourceType: String? = null
+        resourceType: String? = null,
+        tenantId: String?
     ): List<String>?
 
     abstract fun isShowUserManageIcon(routerTag: String?): Boolean

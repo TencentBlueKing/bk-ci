@@ -47,6 +47,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -671,7 +672,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     override fun installTemplate(
         userId: String,
         channelCode: ChannelCode,
-        installTemplateReq: InstallTemplateReq
+        installTemplateReq: InstallTemplateReq,
+        tenantId: String?
     ): Result<InstallTemplateResp> {
         logger.info("installTemplate userId: $userId,channelCode: $channelCode,installTemplateReq: $installTemplateReq")
         val templateCode = installTemplateReq.templateCode
@@ -706,7 +708,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             storeCode = template.templateCode,
             storeType = StoreTypeEnum.TEMPLATE,
             projectCodeList = projectCodeList,
-            channelCode = channelCode
+            channelCode = channelCode,
+            tenantId = tenantId
         )
         logger.info("validateInstallResult is: $validateInstallResult")
         if (validateInstallResult.isNotOk()) {
@@ -789,7 +792,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 storeType = StoreTypeEnum.TEMPLATE
             ),
             publicFlag = template.publicFlag,
-            channelCode = channelCode
+            channelCode = channelCode,
+            tenantId = tenantId
         )
         val result = if (projectCodeList.isEmpty()) {
             installStoreComponentResult
@@ -1002,7 +1006,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                         storeType = storeType
                     ),
                     publicFlag = storeBaseInfo.publicFlag,
-                    channelCode = ChannelCode.BS
+                    channelCode = ChannelCode.BS,
+                    tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
                 )
             }
         }

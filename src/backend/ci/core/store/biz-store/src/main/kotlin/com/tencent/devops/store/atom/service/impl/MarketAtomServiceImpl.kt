@@ -929,7 +929,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     override fun installAtom(
         userId: String,
         channelCode: ChannelCode,
-        installAtomReq: InstallAtomReq
+        installAtomReq: InstallAtomReq,
+        tenantId: String?
     ): Result<Boolean> {
         // 判断插件标识是否合法
         logger.info("installAtom params:[$userId|$channelCode|$installAtomReq]")
@@ -950,7 +951,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 storeType = StoreTypeEnum.ATOM
             ),
             publicFlag = atom.defaultFlag,
-            channelCode = channelCode
+            channelCode = channelCode,
+            tenantId = tenantId
         )
     }
 

@@ -91,11 +91,12 @@ class ApigwAtomResourceV3Impl @Autowired constructor(private val client: Client)
         appCode: String?,
         apigwType: String?,
         userId: String,
+        tenantId: String?,
         channelCode: ChannelCode?,
         installAtomReq: InstallAtomReq
     ): Result<Boolean> {
         logger.info("OPENAPI_ATOM_V3|$appCode|$userId|install Atom: $channelCode, $installAtomReq")
-        return client.get(ServiceMarketAtomResource::class).installAtom(userId, channelCode, installAtomReq)
+        return client.get(ServiceMarketAtomResource::class).installAtom(userId, tenantId, channelCode, installAtomReq)
     }
 
     companion object {

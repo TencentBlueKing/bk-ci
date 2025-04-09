@@ -1007,7 +1007,8 @@ class EnvService @Autowired constructor(
         envHashId: String,
         search: String?,
         page: Int = 1,
-        pageSize: Int = 20
+        pageSize: Int = 20,
+        tenantId: String?
     ): Page<SharedProjectInfo> {
         val limitTmp = if (pageSize >= 1000) {
             1000
@@ -1015,7 +1016,8 @@ class EnvService @Autowired constructor(
             pageSize
         }
         val projectList = client.get(ServiceProjectResource::class).list(
-            userId = userId
+            userId = userId,
+            tenantId = tenantId
         ).data
             ?.filter { it.englishName != projectId && (search.isNullOrBlank() || it.projectName.contains(search)) }
             ?.map {

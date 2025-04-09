@@ -41,12 +41,13 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceTemplateResourceImpl @Autowired constructor(
     private val marketTemplateService: MarketTemplateService
 ) : ServiceTemplateResource {
-    override fun installTemplate(userId: String, installTemplateReq: InstallTemplateReq): Result<Boolean> {
+    override fun installTemplate(userId: String, tenantId: String?, installTemplateReq: InstallTemplateReq): Result<Boolean> {
         // 可见与可安装鉴权在marketTemplateService中实现
         val installResult = marketTemplateService.installTemplate(
             userId = userId,
             channelCode = ChannelCode.BS,
-            installTemplateReq = installTemplateReq
+            installTemplateReq = installTemplateReq,
+            tenantId = tenantId
         )
         return Result(
             status = installResult.status,

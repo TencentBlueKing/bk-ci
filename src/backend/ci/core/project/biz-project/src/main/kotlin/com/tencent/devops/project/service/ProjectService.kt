@@ -52,8 +52,8 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.PluginDetailsDisplayOrder
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import java.io.InputStream
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 
 @Suppress("ALL")
 interface ProjectService {
@@ -164,7 +164,8 @@ interface ProjectService {
         enabled: Boolean? = null,
         unApproved: Boolean,
         sortType: ProjectSortType? = null,
-        collation: ProjectCollation? = null
+        collation: ProjectCollation? = null,
+        tenantId: String?
     ): List<ProjectVO>
 
     fun listProjectsForApply(
@@ -173,10 +174,11 @@ interface ProjectService {
         projectName: String?,
         projectId: String?,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        tenantId: String?
     ): Pagination<ProjectByConditionDTO>
 
-    fun list(userId: String): List<ProjectVO>
+    fun list(userId: String, tenantId: String?): List<ProjectVO>
 
     fun list(projectCodes: Set<String>, enabled: Boolean?): List<ProjectVO>
 

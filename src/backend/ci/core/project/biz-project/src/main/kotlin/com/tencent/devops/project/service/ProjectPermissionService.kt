@@ -52,14 +52,15 @@ interface ProjectPermissionService {
         resourceUpdateInfo: ResourceUpdateInfo
     )
 
-    fun getUserProjects(userId: String): List<String>
+    fun getUserProjects(userId: String, tenantId: String?): List<String>
 
     fun getUserProjectsAvailable(userId: String): Map<String, String>
 
     fun filterProjects(
         userId: String,
         permission: AuthPermission,
-        resourceType: String? = null
+        resourceType: String? = null,
+        tenantId: String?
     ): List<String>?
 
     fun verifyUserProjectPermission(

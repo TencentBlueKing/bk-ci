@@ -181,7 +181,7 @@ class RbacProjectPermissionService(
         }
     }
 
-    override fun getUserProjects(userId: String): List<String> {
+    override fun getUserProjects(userId: String, tenantId: String?): List<String> {
         return authProjectApi.getUserProjects(
             serviceCode = projectAuthServiceCode,
             userId = userId,
@@ -232,7 +232,8 @@ class RbacProjectPermissionService(
     override fun filterProjects(
         userId: String,
         permission: AuthPermission,
-        resourceType: String?
+        resourceType: String?,
+        tenantId: String?
     ): List<String>? {
         return authProjectApi.getUserProjectsByPermission(
             serviceCode = projectAuthServiceCode,
