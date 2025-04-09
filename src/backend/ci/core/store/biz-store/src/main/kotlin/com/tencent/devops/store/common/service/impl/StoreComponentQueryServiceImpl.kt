@@ -765,31 +765,56 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         instanceId: String?
     ): VersionInfo? {
         val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
-        val installComponentMap = storeProjectService.getProjectComponents(
+        // 获取已安装的组件信息
+        val installedComponents = storeProjectService.getProjectComponents(
             projectCode = projectCode,
             storeType = storeTypeEnum.type.toByte(),
-            storeProjectTypes = listOf(
-                StoreProjectTypeEnum.COMMON.type.toByte()
-            ),
+            storeProjectTypes = listOf(StoreProjectTypeEnum.COMMON.type.toByte()),
             instanceId = instanceId
         ) ?: emptyMap()
 
-        val installVersion = installComponentMap[storeCode]
+        val installedVersion = installedComponents[storeCode]
 
-        // 获取已发布的最大版本组件
-        val maxReleaseVersion = storeBaseQueryDao.getNewestComponentByCode(
+        // 查询组件最新已发布版本
+        val latestRelease = storeBaseQueryDao.getNewestComponentByCode(
             dslContext = dslContext,
             storeType = storeTypeEnum,
             storeCode = storeCode,
             status = StoreStatusEnum.RELEASED
-        )?.version
+        )
+        val latestReleaseVersion = latestRelease?.version
 
-        // 当存在最新发布版本且与当前安装版本不一致时返回最新发布版本
-        maxReleaseVersion?.takeIf { it != installVersion }?.let {
-            return VersionInfo(
-                versionName = it,
-                versionValue = it
-            )
+        latestReleaseVersion?.takeUnless { it.isBlank() }?.let { validLatestVersion ->
+            // 获取最新发布版本的业务号
+            val latestReleaseBusNum = storeBaseQueryDao.getMaxBusNumByCode(
+                dslContext = dslContext,
+                storeCode = storeCode,
+                storeType = storeTypeEnum,
+                version = validLatestVersion
+            ) ?: return@let
+
+            installedVersion?.takeUnless { it.isBlank() }?.let { currentVersion ->
+                // 获取当前安装版本的业务号
+                val currentBusNum = storeBaseQueryDao.getMaxBusNumByCode(
+                    dslContext = dslContext,
+                    storeCode = storeCode,
+                    storeType = storeTypeEnum,
+                    version = currentVersion
+                )
+                // 比较业务号，判断是否需要更新
+                if (currentBusNum != null && latestReleaseBusNum > currentBusNum) {
+                    return VersionInfo(
+                        versionName = validLatestVersion,
+                        versionValue = currentVersion
+                    )
+                }
+            } ?: run {
+                // 未安装时直接返回最新版本
+                return VersionInfo(
+                    versionName = validLatestVersion,
+                    versionValue = validLatestVersion
+                )
+            }
         }
         return null
     }
