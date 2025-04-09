@@ -11,6 +11,7 @@
 <script>
 
     import Logo from '@/components/Logo'
+    import { TEMPLATE_TYPE } from '@/utils/pipelineConst'
     import { computed, defineComponent } from 'vue'
 
     export default defineComponent({
@@ -20,7 +21,7 @@
         props: {
             templateType: {
                 type: String,
-                default: 'PIPELINE'
+                default: TEMPLATE_TYPE.PIPELINE
             },
             templateName: {
                 type: String,

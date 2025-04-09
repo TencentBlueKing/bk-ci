@@ -39,6 +39,9 @@
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
     import {
+        TEMPLATE_TYPE
+    } from '@/utils/pipelineConst'
+    import {
         convertMStoStringByRule,
         showPipelineCheckMsg
     } from '@/utils/util'
@@ -173,7 +176,8 @@
                         templateId: this.templateId,
                         model: pipeline,
                         templateSetting: this.pipelineSetting,
-                        baseVersion: this.currentVersionId
+                        baseVersion: this.currentVersionId,
+                        type: TEMPLATE_TYPE.PIPELINE
                     })
                     if (data) {
                         this.$showTips({

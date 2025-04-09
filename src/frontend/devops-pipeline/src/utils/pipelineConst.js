@@ -309,3 +309,10 @@ export const TARGET_ACTION_ENUM = {
     CHECKOUT_BRANCH_AND_REQUEST_MERGE: 'CHECKOUT_BRANCH_AND_REQUEST_MERGE', // 新增分支并创建 MR 到默认分支
     COMMIT_TO_BRANCH: 'COMMIT_TO_BRANCH' // 提交到指定分支
 }
+
+export const TEMPLATE_TYPE = {
+    PIPELINE: 'PIPELINE',
+    STAGE: 'STAGE',
+    JOB: 'JOB',
+    STEP: 'STEP'
+}

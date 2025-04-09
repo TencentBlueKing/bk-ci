@@ -931,8 +931,8 @@ export default {
     saveDraftPipeline (_, { projectId, ...draftPipeline }) {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/saveDraft`, draftPipeline)
     },
-    saveDraftTemplate (_, { projectId, templateId, ...draftTemplate }) {
-        return request.put(`/${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/saveDraft`, draftTemplate)
+    saveDraftTemplate (_, { projectId, ...draftTemplate }) {
+        return request.put(`/${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/saveDraft`, draftTemplate)
     },
     releaseDraftPipeline (_, { projectId, pipelineId, version, params }) {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/releaseVersion/${version}`, params)

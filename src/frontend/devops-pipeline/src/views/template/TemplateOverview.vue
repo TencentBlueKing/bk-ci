@@ -156,7 +156,6 @@
             activeChild () {
                 return this.getNavComponent(this.activeMenuItem)
             },
-
             asideNav () {
                 return [
                     {
@@ -217,6 +216,16 @@
                 return this.$route.params.isDirectShowVersion || false
             }
         },
+        watch: {
+            '$route.params.version' (newVal) {
+                this.requestPipeline({
+                    projectId: this.projectId,
+                    templateId: this.templateId,
+                    version: newVal
+                })
+                this.selectPipelineVersion(newVal)
+            }
+        },
         created () {
             if (!this.pipelineHistoryViewable) {
                 this.$router.push({
@@ -254,8 +263,15 @@
             closeVersionSideSlider () {
                 this.showVersionSideslider = false
             },
-            handleVersionChange () {
+            handleVersionChange (version) {
                 // TODO:
+                this.$router.push({
+                    name: 'TemplateOverview',
+                    params: {
+                        ...this.$route.params,
+                        version
+                    }
+                })
             },
             getNavComponent (type) {
                 switch (type) {
