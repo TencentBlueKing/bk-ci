@@ -165,8 +165,12 @@ export default {
     setSaveStatus ({ commit }, status) {
         commit(SET_SAVE_STATUS, status)
     },
-    requestPipelineSummary ({ commit }, { projectId, pipelineId }) {
-        const url = `/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/detail`
+    requestPipelineSummary ({ commit }, { projectId, pipelineId, type, templateId }) {
+        let id = pipelineId
+        if (type === 'instanceList') {
+            id = templateId
+        }
+        const url = `/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${id}/detail`
 
         return request.get(url).then(response => {
             commit(SET_PIPELINE_INFO, response.data)

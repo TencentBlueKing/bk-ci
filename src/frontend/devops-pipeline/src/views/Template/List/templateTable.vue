@@ -28,10 +28,14 @@
                     class="template-name select-text"
                     @click="goTemplateOverview(row, 'instanceList')"
                 >
-                    <img
+                    <span
                         class="img-icon"
-                        :src="row.logoUrl"
                     >
+                        <img
+                            v-if="row.logoUrl"
+                            :src="row.logoUrl"
+                        />
+                    </span>
                     <span :title="row.name">{{ row.name }}</span>
                     <img
                         v-if="row.enablePac"
@@ -91,6 +95,7 @@
                     >
                         <Logo
                             size="14"
+                            class="ml5"
                             name="is-store"
                         />
                     </bk-badge>
@@ -311,7 +316,7 @@
             desc: 200,
             type: 100,
             lastedVersion: 80,
-            source: 80,
+            source: 100,
             debugPipelineCount: 80,
             instancePipelineCount: '',
             updater: '',
@@ -369,10 +374,15 @@
     display: flex;
     align-items: center;
     .img-icon {
-        vertical-align: middle;
-        margin-right: 12px;
+        display: inline-block;
         width: 32px;
         height: 32px;
+        margin-right: 12px;
+
+        img {
+            vertical-align: middle;
+            width: 100%;
+        }
     }
     .pac-code-icon {
         margin: 0 0 0 12px;
@@ -385,6 +395,7 @@
 .source-name {
     display: flex;
     align-items: center;
+    height: 30px;
     span {
         flex-shrink: 0;
     }

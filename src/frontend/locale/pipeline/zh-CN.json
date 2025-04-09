@@ -503,7 +503,10 @@
     "currentVision": "当前版本",
     "codeRepo": "所属代码库",
     "updateInstance": "升级",
-    "handleMR": "去处理 MR"
+    "handleMR": "去处理 MR",
+    "editTemplate": "编辑模板",
+    "instanceList": "实例列表",
+    "templateConfig": "模板配置"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",

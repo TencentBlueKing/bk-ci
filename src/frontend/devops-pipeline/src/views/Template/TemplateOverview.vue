@@ -30,7 +30,7 @@
                     @click="goEditTemplate"
                     size="small"
                 >
-                    {{ $t('编辑模板') }}
+                    {{ $t('template.editTemplate') }}
                 </bk-button>
                 <bk-button
                     @click="switchToReleaseVersion"
@@ -45,7 +45,7 @@
             <section class="template-detail-overview-section">
                 <aside class="template-detail-entry-aside">
                     <header class="template-detail-entry-aside-header">
-                        流水线模板
+                        {{ $t('template.pipelineTemplate') }}
                     </header>
                     <ul
                         v-for="item in asideNav"
@@ -85,6 +85,7 @@
 
                 <section class="template-detail-entry-center">
                     <component
+                        v-if="pipelineHistoryViewable"
                         :is="activeChild.component"
                         v-bind="activeChild.props"
                     />
@@ -119,7 +120,6 @@
     import TemplateBreadCrumb from '@/components/template/TemplateBreadCrumb'
     import Instance from '@/views/Template/InstanceList'
     import { mapActions, mapGetters, mapState } from 'vuex'
-    import { UI_MODE } from '@/utils/pipelineConst'
 
     export default {
         components: {
@@ -164,7 +164,7 @@
                         title: this.$t('executeInfo'),
                         children: [
                             {
-                                title: this.$t('实例列表'),
+                                title: this.$t('template.instanceList'),
                                 name: 'instanceList'
                             }
                         ].map((child) => ({
@@ -173,7 +173,7 @@
                         }))
                     },
                     {
-                        title: this.$t('模板配置'),
+                        title: this.$t('template.templateConfig'),
                         children: [
                             {
                                 title: this.$t('pipelineModel'),
@@ -220,7 +220,6 @@
         },
         created () {
             if (!this.pipelineHistoryViewable) {
-                this.updatePipelineMode(UI_MODE)
                 this.$router.push({
                     name: 'templateEdit',
                     params: {
@@ -247,9 +246,6 @@
                 'resetAtomModalMap',
                 'setShowVariable'
             ]),
-            ...mapActions({
-                updatePipelineMode: 'updatePipelineMode'
-            }),
             showVersionSideSlider () {
                 this.setShowVariable(false)
                 this.$refs?.versionSelectorInstance?.close?.()
@@ -308,7 +304,6 @@
                 })
             },
             goEditTemplate () {
-                this.updatePipelineMode(UI_MODE)
                 this.$router.push({
                     name: 'templateEdit',
                     params: {

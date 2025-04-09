@@ -43,7 +43,6 @@
     import {
         showPipelineCheckMsg
     } from '@/utils/util'
-    import { UI_MODE } from '@/utils/pipelineConst'
 
     export default {
         components: {
@@ -98,9 +97,6 @@
                 'requestTemplateSummary',
                 'saveDraftTemplate'
             ]),
-            ...mapActions({
-                updatePipelineMode: 'updatePipelineMode'
-            }),
             formatParams (pipeline) {
                 const params = pipeline.stages[0].containers[0].params
                 const paramList
@@ -141,7 +137,6 @@
                     templateId
                 })
                 
-                this.updatePipelineMode(UI_MODE)
                 this.$router.push({
                     name: 'templateEdit',
                     params: {

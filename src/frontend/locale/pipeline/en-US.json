@@ -500,7 +500,10 @@
     "currentVision": "Current Version",
     "codeRepo": "Code Repository",
     "updateInstance": "Upgrade",
-    "handleMR": "Handle MR"
+    "handleMR": "Handle MR",
+    "editTemplate": "Edit Template",
+    "instanceList": "Instance list",
+    "templateConfig": "Template config"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
