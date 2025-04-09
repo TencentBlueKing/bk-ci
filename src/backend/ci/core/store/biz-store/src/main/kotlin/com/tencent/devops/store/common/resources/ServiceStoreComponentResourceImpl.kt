@@ -43,6 +43,7 @@ import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.version.VersionInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -72,6 +73,24 @@ class ServiceStoreComponentResourceImpl @Autowired constructor(
             storeType = storeType,
             storeCode = storeCode,
             unInstallReq = unInstallReq
+        )
+    }
+
+    override fun getStoreUpgradeVersionInfo(
+        userId: String,
+        storeType: String,
+        storeCode: String,
+        projectCode: String?,
+        instanceId: String?
+    ): Result<VersionInfo?> {
+        return Result(
+            storeComponentQueryService.getComponentUpgradeVersionInfo(
+                userId = userId,
+                storeCode = storeCode,
+                storeType = storeType,
+                projectCode = projectCode ?: "",
+                instanceId = instanceId
+            )
         )
     }
 

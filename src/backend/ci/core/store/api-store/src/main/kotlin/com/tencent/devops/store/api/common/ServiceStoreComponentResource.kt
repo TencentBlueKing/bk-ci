@@ -39,6 +39,7 @@ import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
+import com.tencent.devops.store.pojo.common.version.VersionInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -225,4 +226,27 @@ interface ServiceStoreComponentResource {
         @Parameter(description = "卸载组件请求包体", required = true)
         unInstallReq: UnInstallReq
     ): Result<Boolean>
+
+    @Operation(summary = "获取组件升级版本信息")
+    @Path("/types/{storeType}/codes/{storeCode}/component/upgrade/version/info/get")
+    @GET
+    fun getStoreUpgradeVersionInfo(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: String,
+        @Parameter(description = "组件代码", required = true)
+        @PathParam("storeCode")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeCode: String,
+        @Parameter(description = "项目代码", required = false)
+        @QueryParam("projectCode")
+        projectCode: String? = null,
+        @Parameter(description = "实例ID", required = false)
+        @QueryParam("instanceId")
+        instanceId: String? = null
+    ): Result<VersionInfo?>
 }
