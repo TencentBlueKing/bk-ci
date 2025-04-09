@@ -94,7 +94,6 @@ object StoreMessageCode {
     // 研发商店: 拉取文件[{0}]失败，失败原因：{1}
     const val USER_PULL_FILE_FAIL = "2120041"
 
-
     const val USER_TEMPLATE_VERSION_IS_NOT_FINISH = "2120201" // 研发商店：模板{0}的{1}版本发布未结束，请稍后再试
     const val USER_TEMPLATE_RELEASE_STEPS_ERROR = "2120202" // 研发商店：模板发布流程状态变更顺序不正确
     const val USER_TEMPLATE_ATOM_VISIBLE_DEPT_IS_INVALID = "2120203" // 研发商店：模板的可见范围不在插件{0}的可见范围之内，如有需要请联系插件的发布者

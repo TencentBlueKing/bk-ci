@@ -235,5 +235,4 @@ object StoreFileAnalysisUtil {
             null
         }
     }
-
 }
