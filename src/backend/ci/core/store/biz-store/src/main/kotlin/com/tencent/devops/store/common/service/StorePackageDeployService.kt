@@ -170,7 +170,7 @@ abstract class StorePackageDeployService {
             storeReleaseService.updateComponent(userId, getStoreUpdateRequest(storeCode, storeType, bkConfigMap))?.let {
                 bkConfigMap[KEY_STORE_ID] = it.storeId
             }
-            return bkConfigMap[KEY_STORE_ID] as? String
+            return bkConfigMap[KEY_STORE_ID]?.toString()
         } finally {
             storePackageFile.delete()
             FileSystemUtils.deleteRecursively(File(storeDirPath).parentFile)
