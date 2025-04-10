@@ -283,23 +283,20 @@ class ImageDao {
     }
 
     fun getImageStatusByCodeAndVersion(dslContext: DSLContext, imageCode: String, version: String): TImageRecord? {
-        val tImage = TImage.T_IMAGE
-        val versionCondition = if (VersionUtils.isLatestVersion(version)) {
-            tImage.VERSION.like(version.replace("*", "") + "%")
-        } else {
-            tImage.VERSION.eq(version)
-        }
-
-        val query = dslContext.selectFrom(tImage)
-            .where(tImage.IMAGE_CODE.eq(imageCode).and(versionCondition))
-            .orderBy(tImage.CREATE_TIME.desc())
-
-        if (VersionUtils.isLatestVersion(version)) {
-            val imageRecords = query.fetch()
-            return imageRecords.firstOrNull { it.imageStatus == ImageStatusEnum.RELEASED.status.toByte() }
-                ?: imageRecords.firstOrNull()
-        } else {
-            return query.limit(1).fetchOne()
+        return with(TImage.T_IMAGE) {
+            val conditions = mutableListOf(IMAGE_CODE.eq(imageCode))
+            if (VersionUtils.isLatestVersion(version)) {
+                conditions.add(VERSION.like(version.replace("*", "") + "%"))
+                conditions.add(IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()))
+            } else {
+                conditions.add(VERSION.eq(version))
+            }
+            dslContext.selectFrom(this)
+                .where(conditions)
+                .orderBy(CREATE_TIME.desc())
+                .limit(1)
+                .fetch()
+                .firstOrNull()
         }
     }
 

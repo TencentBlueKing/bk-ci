@@ -57,11 +57,13 @@ import com.tencent.devops.store.common.service.StoreMemberService
 import com.tencent.devops.store.common.service.StoreTotalStatisticService
 import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
+import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.store.common.utils.image.ImageUtil
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.USER_IMAGE_VERSION_NOT_EXIST
+import com.tencent.devops.store.constant.StoreMessageCode.USER_IMAGE_VERSION_NOT_RELEASE
 import com.tencent.devops.store.image.dao.Constants
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_CODE
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_FEATURE_PUBLIC_FLAG
@@ -856,16 +858,23 @@ abstract class ImageService @Autowired constructor() {
     }
 
     fun getImageStatusByCodeAndVersion(
-        imageCode: String,
-        imageVersion: String
+        imageCode: String, imageVersion: String
     ): String {
         logger.info("getImageStatusByCodeAndVersion:Input:($imageCode,$imageVersion)")
-        val imageRecord =
-            imageDao.getImageStatusByCodeAndVersion(dslContext, imageCode, imageVersion) ?: throw ErrorCodeException(
-                errorCode = USER_IMAGE_VERSION_NOT_EXIST,
-                defaultMessage = "image is null,imageCode=$imageCode, imageVersion=$imageVersion",
+        val imageRecord = imageDao.getImageStatusByCodeAndVersion(dslContext, imageCode, imageVersion)
+        if (imageRecord == null) {
+            val errorMessage = if (VersionUtils.isLatestVersion(imageVersion)) {
+                "Image not found: Code=$imageCode, Version=$imageVersion"
+            } else {
+                "The image identified as $imageCode has no published version or no version number under the major version $imageVersion"
+            }
+            logger.error(errorMessage)
+            throw ErrorCodeException(
+                errorCode = if (VersionUtils.isLatestVersion(imageVersion)) USER_IMAGE_VERSION_NOT_EXIST else USER_IMAGE_VERSION_NOT_RELEASE,
+                defaultMessage = errorMessage,
                 params = arrayOf(imageCode, imageVersion)
             )
+        }
         return ImageStatusEnum.getImageStatus(imageRecord.imageStatus.toInt())
     }
 
