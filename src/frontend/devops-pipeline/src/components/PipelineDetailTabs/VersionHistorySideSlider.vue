@@ -255,7 +255,9 @@
                 requestPipelineSummary: 'atom/requestPipelineSummary',
                 requestPipelineVersionList: 'pipelines/requestPipelineVersionList',
                 requestTemplateVersionList: 'pipelines/requestTemplateVersionList',
-                deletePipelineVersion: 'pipelines/deletePipelineVersion'
+                deletePipelineVersion: 'pipelines/deletePipelineVersion',
+                deleteTempalteVersion: 'templates/deleteTempalteVersion',
+                requestTemplateSummary: 'atom/requestTemplateSummary'
             }),
             handleShown () {
                 this.handlePageChange(1)
@@ -315,27 +317,32 @@
             },
             async deleteVersion (row) {
                 if (this.releaseVersion !== row.version) {
-                    const { projectId, pipelineId } = this.$route.params
+                    const { projectId, pipelineId, templateId } = this.$route.params
                     const content = this.$t('deleteVersionConfirm', [row.versionName])
                     const confirm = await navConfirm({
                         content,
                         type: 'error',
                         theme: 'danger'
                     })
+                    const params = {
+                        projectId,
+                        version: row.version,
+                        ...(this.isTemplate ? { templateId } : { pipelineId })
+                    }
                     if (confirm) {
                         try {
-                            await this.deletePipelineVersion({
-                                projectId,
-                                pipelineId,
-                                version: row.version
-                            })
+                            if (this.isTemplate) {
+                                await this.deleteTempalteVersion(params)
+                                this.requestTemplateSummary(this.$route.params)
+                            } else {
+                                await this.deletePipelineVersion(params)
+                                this.requestPipelineSummary(this.$route.params)
+                            }
                             this.handlePageChange(1)
                             this.$showTips({
                                 message: this.$t('delete') + this.$t('version') + this.$t('success'),
                                 theme: 'success'
                             })
-
-                            this.requestPipelineSummary(this.$route.params)
                         } catch (err) {
                             this.$showTips({
                                 message: err.message || err,
