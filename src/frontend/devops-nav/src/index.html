@@ -47,7 +47,7 @@
     var BK_SHARED_RES_URL = '<%= BK_SHARED_RES_URL %>'
     var BK_IAM_URL_PREFIX = '__BK_CI_IAM_URL_PREFIX__'
   </script>
-  <script> 
+  <script>
 
     // 动态加载js
     function importScript(src, oHead, fOnload) {
@@ -142,8 +142,8 @@
     function setProjectIdCookie(projectId) {
       try {
         if (projectId.startsWith('git_')) {
-            console.log('current project is from stream')
-            return
+          console.log('current project is from stream')
+          return
         }
         if (projectId) {
           var subDomains = getSubDomain()
@@ -216,26 +216,27 @@
           <style>
             /* 模态背景 */
             #devops-login-modal-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background-color: rgba(0, 0, 0, 0.5);
-                display: none;
-                justify-content: center;
-                align-items: center;
+              position: fixed;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              background-color: rgba(0, 0, 0, 0.5);
+              display: none;
+              justify-content: center;
+              align-items: center;
             }
+
             /* 模态窗口 */
             #devops-login-modal {
-                background-color: #fff;
-                padding: 20px;
-                border-radius: 10px;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-                width: 680px;
-                height: 500px;
+              background-color: #fff;
+              padding: 20px;
+              border-radius: 10px;
+              box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+              width: 680px;
+              height: 500px;
             }
-        </style>
+          </style>
 </head>
 
 <body>
@@ -255,10 +256,10 @@
       </div>
     </div>
   </div>
-    <div id="devops-login-modal-overlay">
-        <div id="devops-login-modal">
-        </div>
+  <div id="devops-login-modal-overlay">
+    <div id="devops-login-modal">
     </div>
+  </div>
   <!-- devops:assets -->
   <!-- end devops:assets -->
 
@@ -337,15 +338,13 @@
       )
     }
 
-    function fetchDiclosurePrjoectList () {
-        try {
-            return asyncGet(
-                API_URL_PREFIX + '/project/api/user/signature/listSignatureProjects'
-            )
-            
-        } catch (error) {
-            return []
-        }
+    function fetchDiclosurePrjoectList() {
+      return asyncGet(
+        API_URL_PREFIX + '/project/api/user/signature/listSignatureProjects'
+      ).catch((e) => {
+        return false;
+        return []
+      })
     }
 
     function fetchProjectById(projectId) {
