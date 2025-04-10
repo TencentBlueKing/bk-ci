@@ -99,9 +99,14 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
         if (window.diclosurePrjoectList?.includes(to.params.projectId)) {
             for await (const signed of showNonDisclosureAgreement(store, to.params.projectId)) {
                 if (signed) {
-                    setTimeout(() => {
+                    if (store.state.cancelDisclosureHandler === 'function') {
+                        // 已开始签署
+                        setTimeout(() => {
+                            resolveRoute(to, from, next)
+                        }, 3000)
+                    } else {
                         resolveRoute(to, from, next)
-                    }, 3000)
+                    }
                     break
                 }
             }
@@ -262,11 +267,6 @@ async function* showNonDisclosureAgreement (store, projectId) {
     let timeoutId
     let cancelled = false
     
-    // Add cancel handler in store
-    store.dispatch('setCancelHandler', () => {
-        cancelled = true
-        if (timeoutId) clearTimeout(timeoutId)
-    })
     // eslint-disable-next-line no-unmodified-loop-condition
     while (!cancelled) {
         try {
@@ -278,6 +278,12 @@ async function* showNonDisclosureAgreement (store, projectId) {
 
             if (!store.state.isShowNonDisclosureAgreement) {
                 store.dispatch('toggleSignatureDialog', true)
+
+                // Add cancel handler in store
+                store.dispatch('setCancelHandler', () => {
+                    cancelled = true
+                    if (timeoutId) clearTimeout(timeoutId)
+                })
             }
 
             yield false
