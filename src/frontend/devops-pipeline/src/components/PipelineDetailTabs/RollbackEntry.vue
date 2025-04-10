@@ -12,7 +12,7 @@
                 permissionData: {
                     projectId: projectId,
                     resourceType: 'pipeline',
-                    resourceCode: pipelineId,
+                    resourceCode: rollbackId,
                     action: RESOURCE_ACTION.EDIT
                 }
             }"
@@ -101,7 +101,7 @@
                 type: String,
                 required: true
             },
-            pipelineId: {
+            rollbackId: {
                 type: String,
                 required: true
             },
@@ -168,7 +168,7 @@
                                         templateId: this.pipelineInfo?.templateId,
                                         curVersionId: this.pipelineInfo?.templateVersion
                                     },
-                                    hash: `#${this.pipelineId}`
+                                    hash: `#${this.rollbackId}`
                                 })
                             }
                         })
@@ -206,7 +206,7 @@
                 } catch (error) {
                     this.handleError(error, {
                         projectId: this.projectId,
-                        resourceCode: this.pipelineId,
+                        resourceCode: this.rollbackId,
                         action: this.$permissionResourceAction.EDIT
                     })
                 } finally {

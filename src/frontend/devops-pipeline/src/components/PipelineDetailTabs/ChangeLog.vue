@@ -40,7 +40,7 @@
 
 <script>
     import { convertTime } from '@/utils/util'
-    import { mapActions } from 'vuex'
+    import { mapActions, mapGetters } from 'vuex'
     export default {
         data () {
             return {
@@ -56,6 +56,9 @@
             }
         },
         computed: {
+            ...mapGetters({
+                isTemplate: 'atom/isTemplate'
+            }),
             columns () {
                 return [{
                     prop: 'operator',
@@ -100,8 +103,7 @@
                         creator: this.filterCreator,
                         page,
                         pageSize: limit,
-                        ...(templateId ? { templateId } : {}),
-                        ...(pipelineId ? { pipelineId } : {})
+                        ...(this.isTemplate ? { templateId } : { pipelineId })
                     }
                 
                     const changeLogs = pipelineId
@@ -125,8 +127,7 @@
                 const { projectId, pipelineId, templateId } = this.$route.params
                 const params = {
                     projectId,
-                    ...(templateId ? { templateId } : {}),
-                    ...(pipelineId ? { pipelineId } : {})
+                    ...(this.isTemplate ? { templateId } : { pipelineId })
                 }
                 try {
                     const fetchOperatorList = templateId

@@ -474,7 +474,7 @@
      */
     function deleteTemplate (row) {
         if (!row.canEdit) return
-        const title = row.source === 'CUSTOM' ? i18n.t('template.deleteCustom') : i18n.t('template.deleteStore')
+        const title = row.mode === 'CONSTRAINT' ? i18n.t('template.deleteStore') : i18n.t('template.deleteCustom')
 
         bkInfo({
             title,
