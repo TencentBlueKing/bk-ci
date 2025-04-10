@@ -1590,7 +1590,7 @@
   "versionRuleA": "附加位：流水线其他信息修改版本，如名称、描述、运行设置等",
   "willRelease": "待发布",
   "clickToAddStage": "点击添加第一个流水线Stage",
-  "buildMsg": "构建信息",
+  "buildMsg": "构建",
   "executeStepPreview": "预览待执行的步骤",
   "yamlFilePathErrorTip": "YAML 文件路径需要以yml或者yaml结尾",
   "yamlFilePathPlaceholder": "build.yml 或者 build.yaml",
@@ -1689,5 +1689,7 @@
   "noDraft": "暂无可删除的草稿",
   "isTaskTermination": "确认中止任务执行吗？",
   "pipelineNameConventions": "流水线命名规范：",
-  "addLabels": "添加标签"
+  "addLabels": "添加标签",
+  "groupLabel": "分组标签",
+  "notGrouped": "未分组"
 }
