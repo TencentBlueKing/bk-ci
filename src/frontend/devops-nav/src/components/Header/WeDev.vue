@@ -1,34 +1,27 @@
 <template>
-    <div
+    <a
         class="we-dev-logo-area"
+        target="_blank"
+        href="https://wedev.woa.com/"
     >
         <Icon
-            name="we"
+            name="w"
             :size="26"
         />
         <Icon
             class="we-dev-logo"
-            :name="weName"
-            :size="size"
+            name="edev"
+            :size="50"
         />
-    </div>
+    </a>
 </template>
 
 <script>
     import Icon from '@/components/Icon/index.vue'
-    import { defineComponent, ref } from 'vue'
+    import { defineComponent } from 'vue'
     export default defineComponent({
         components: {
             Icon
-        },
-        setup () {
-            const weName = ref('wedev')
-            const size = ref(90)
-            
-            return {
-                weName,
-                size
-            }
         }
     })
 </script>
@@ -36,7 +29,7 @@
 <style lang="scss">
     .we-dev-logo-area {
         position: relative;
-        transition: all .3s ease;
+        transition: all .3s ease-in-out;
         background-color: #30304E;
         display: flex;
         height: 100%;
@@ -44,16 +37,22 @@
         padding: 0 12px;
         overflow: hidden;
         width: 50px;
+        cursor: pointer;
         
         &:hover {
             .we-dev-logo {
-                transform: scaleX(1);
+                transform: translateX(28px);
                 opacity: 1;
             }
-            width: 114px;
+            width: 106px;
+        }
+        &:not(:hover) {
+            &:first-child {
+                opacity: .4;
+            }
         }
         > svg {
-            transition: all .3s ease;
+            transition: all .3s ease-in-out;
             display: block;
             overflow: visible;
         }
@@ -61,9 +60,9 @@
             position: absolute;
             overflow: hidden;
             left: 12px;
-            opacity: 0;
-            transform: scaleX(0);
             transform-origin: left center;
+            transform: translateX(0);
+            opacity: 0;
         }
     }
 </style>
