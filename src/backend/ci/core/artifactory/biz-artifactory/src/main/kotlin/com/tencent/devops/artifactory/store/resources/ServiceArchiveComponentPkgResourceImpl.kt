@@ -28,14 +28,10 @@
 package com.tencent.devops.artifactory.store.resources
 
 import com.tencent.devops.artifactory.api.ServiceArchiveComponentPkgResource
-import com.tencent.devops.artifactory.pojo.ArchiveStorePkgRequest
 import com.tencent.devops.artifactory.store.service.ArchiveStorePkgService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import java.io.InputStream
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
