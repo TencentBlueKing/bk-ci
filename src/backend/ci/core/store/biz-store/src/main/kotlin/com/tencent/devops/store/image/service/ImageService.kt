@@ -858,7 +858,8 @@ abstract class ImageService @Autowired constructor() {
     }
 
     fun getImageStatusByCodeAndVersion(
-        imageCode: String, imageVersion: String
+        imageCode: String,
+        imageVersion: String
     ): String {
         logger.info("getImageStatusByCodeAndVersion:Input:($imageCode,$imageVersion)")
         val imageRecord = imageDao.getImageStatusByCodeAndVersion(dslContext, imageCode, imageVersion)
@@ -869,7 +870,6 @@ abstract class ImageService @Autowired constructor() {
                 "The published version of the image identified as $imageCode was not found under the major version $imageVersion, " +
                         "or the image does not exist under the major version."
             }
-            logger.error(errorMessage)
             throw ErrorCodeException(
                 errorCode = if (VersionUtils.isLatestVersion(imageVersion)) USER_IMAGE_VERSION_NOT_EXIST else USER_IMAGE_VERSION_NOT_RELEASE,
                 defaultMessage = errorMessage,
