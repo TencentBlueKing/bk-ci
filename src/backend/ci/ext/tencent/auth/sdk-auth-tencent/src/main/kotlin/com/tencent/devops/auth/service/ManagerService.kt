@@ -69,7 +69,10 @@ class ManagerService @Autowired constructor(
         logger.info("isManagerPermission $userId| $projectId| ${resourceType.value} | ${authPermission.value}")
         // 需要签订保密协议的项目，不允许超管和reporter直接查看，需要走正常权限校验逻辑
         val projectsOfSignature = redisOperation.get(PROJECTS_OF_SIGNATURE)?.split(",") ?: emptyList()
-        if (projectsOfSignature.contains(projectId)) return false
+        if (projectsOfSignature.contains(projectId)) {
+            logger.info("This project requires a contract to be signed before visit.$userId|$projectId")
+            return false
+        }
         // 从缓存内获取用户管理员信息，若缓存击穿，调用auth服务获取源数据，并刷入内存
         val manageInfo = if (userPermissionMap.getIfPresent(userId) == null) {
             val remoteManagerInfo = client.get(ServiceManagerUserResource::class).getManagerInfo(userId)
