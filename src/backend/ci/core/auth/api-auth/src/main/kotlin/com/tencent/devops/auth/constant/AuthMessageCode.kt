@@ -150,4 +150,5 @@ object AuthMessageCode {
     const val ERROR_HANDOVER_HANDLE = "2121095" // 该交接申请单正在被处理中，请耐心等待
     const val ERROR_REPERTORY_HANDOVER_AUTHORIZATION = "2121096" // 交接操作不合法，用户没有对应代码库授权的权限
     const val ERROR_SINGLE_GROUP_REMOVE = "2121098" // 由于直接退出用户组，会导致授权失效，必须进行用户组移交
+    const val ERROR_USER_CONTRACT_NOT_SIGNED = "2121099"
 }
