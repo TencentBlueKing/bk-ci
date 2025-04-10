@@ -73,6 +73,7 @@ class PreBuildAgentMgrService @Autowired constructor(
         nodeStingId: String?
     ): ThirdPartyAgentStaticInfo {
         val gateway = slaveGatewayService.getGateway(zoneName)?.removePrefix("http://")
+        val fileGateway = slaveGatewayService.getFileGateway(zoneName)
         val secretKey = generateSecretKey()
 
         var result: ThirdPartyAgentStaticInfo? = null
@@ -111,7 +112,8 @@ class PreBuildAgentMgrService @Autowired constructor(
                 os = os,
                 secretKey = SecurityUtil.encrypt(secretKey),
                 gateway = gateway,
-                ip = initIp ?: ""
+                ip = initIp ?: "",
+                fileGateway = fileGateway
             )
             val agentRecord = thirdPartyAgentDao.getAgent(context, agentId)!!
             val agentHashId = HashUtil.encodeLongId(agentId)

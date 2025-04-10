@@ -89,7 +89,8 @@ class ThirdPartyAgentDao {
         os: OS,
         secretKey: String,
         gateway: String?,
-        ip: String?
+        ip: String?,
+        fileGateway: String?
     ): Long {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.insertInto(
@@ -101,7 +102,8 @@ class ThirdPartyAgentDao {
                 CREATED_USER,
                 CREATED_TIME,
                 GATEWAY,
-                IP
+                IP,
+                FILE_GATEWAY
             )
                 .values(
                     projectId,
@@ -111,7 +113,8 @@ class ThirdPartyAgentDao {
                     userId,
                     LocalDateTime.now(),
                     gateway ?: "",
-                    ip ?: ""
+                    ip ?: "",
+                    fileGateway ?: ""
                 )
                 .returning(ID)
                 .fetchOne()!!.id
