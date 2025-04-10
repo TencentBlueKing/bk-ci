@@ -19,9 +19,8 @@ object LoopUtil {
      * 所以调用该方法要自行判断是否真正完成循环，否则还需要再调用一次本方法
      * @return 返回整个循环中的度量数据
      */
-    @Throws(IllegalArgumentException::class)
     fun <ID, DATA> doLoop(vo: LoopVo<ID, DATA>, runFunc: (vo: LoopVo<ID, DATA>) -> Unit): LoopMetrics {
-        vo.check()
+        vo.correctCtrlArgs() // 为保护系统，将错误的控制参数修正为默认值
         vo.finish = false // 重置状态
         val metrics = LoopMetrics(startTime = System.currentTimeMillis(), lastSleepTime = System.currentTimeMillis())
         do {
@@ -55,16 +54,15 @@ object LoopUtil {
         // 控制参数：间隔多个ms会被休息100ms， 默认5000ms
         var sleepIntervalMills: Long = SLEEP_INTERVAL,
     ) {
-        @Throws(IllegalArgumentException::class)
-        fun check() {
+        fun correctCtrlArgs() {
             if (thresholdCount <= 0 || thresholdCount > DEFAULT_THRESHOLD_COUNT) {
-                throw IllegalArgumentException("thresholdCount must be > 0 and < $DEFAULT_THRESHOLD_COUNT")
+                thresholdCount = DEFAULT_THRESHOLD_COUNT
             }
             if (thresholdMills <= 0 || thresholdMills > DEFAULT_THRESHOLD_MILLS) {
-                throw IllegalArgumentException("thresholdMills must be > 0 and < $DEFAULT_THRESHOLD_MILLS")
+                thresholdMills = DEFAULT_THRESHOLD_MILLS
             }
             if (sleepIntervalMills <= 0 || sleepIntervalMills > SLEEP_INTERVAL) {
-                throw IllegalArgumentException("sleepIntervalMills must be > 0 and < $SLEEP_INTERVAL")
+                sleepIntervalMills = SLEEP_INTERVAL
             }
         }
     }

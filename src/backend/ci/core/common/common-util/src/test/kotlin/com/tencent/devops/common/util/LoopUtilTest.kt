@@ -6,7 +6,6 @@ import com.tencent.devops.common.util.LoopUtil.SLEEP_INTERVAL
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import kotlin.math.ceil
@@ -33,73 +32,79 @@ class LoopUtilTest {
     @ParameterizedTest
     @ValueSource(
         ints = [
+            -1000 /*负数非法*/,
             -1 /*负数非法*/,
             0 /* 0不合理*/,
             DEFAULT_THRESHOLD_COUNT + 1 /*超出上限*/
         ]
     )
-    fun testCheckThresholdCount(threshold: Int) {
-        val expectedThrowMsg = "thresholdCount must be > 0 and < $DEFAULT_THRESHOLD_COUNT"
-        assertEquals(
-            /* expected = */ expectedThrowMsg,
-            /* actual = */
-            assertThrows<IllegalArgumentException> {
-                LoopUtil.LoopVo<Long, MutableList<FakeStuPojo>>(
-                    thresholdCount = threshold,
-                    id = 0L,
-                    data = mutableListOf()
-                ).check()
-            }.message
-        )
+    fun testCheckThresholdCountIllegal(threshold: Int) {
+        val vo = LoopUtil.LoopVo<Long, Any>(id = 0L, data = true, thresholdCount = threshold)
+        assertEquals(threshold, vo.thresholdCount)
+        vo.correctCtrlArgs()
+        assertEquals(DEFAULT_THRESHOLD_COUNT, vo.thresholdCount)
+    }
+
+    @Test
+    fun testCheckThresholdCountLegal() {
+        for (count in 1..DEFAULT_THRESHOLD_COUNT) {
+            val vo = LoopUtil.LoopVo<Long, Any>(id = 0L, data = true, thresholdCount = count)
+            assertEquals(count, vo.thresholdCount)
+            vo.correctCtrlArgs()
+            assertEquals(count, vo.thresholdCount)
+        }
     }
 
     @ParameterizedTest
     @ValueSource(
         longs = [
+            -1000 /*负数非法*/,
             -1L /*负数非法*/,
+            0 /* 0不合理*/,
             DEFAULT_THRESHOLD_MILLS + 1 /*超出上限*/
         ]
     )
-    fun testCheckThresholdMills(thresholdMills: Long) {
-        val expectedThrowMsg = "thresholdMills must be > 0 and < $DEFAULT_THRESHOLD_MILLS"
-        assertEquals(
-            /* expected = */ expectedThrowMsg,
-            /* actual = */
-            assertThrows<IllegalArgumentException> {
-                LoopUtil.LoopVo<Long, MutableList<FakeStuPojo>>(
-                    thresholdMills = -1L, // 不合理
-                    id = 0L,
-                    data = mutableListOf()
-                ).check()
-            }.message
-        )
+    fun testCheckThresholdMillsIllegal(thresholdMills: Long) {
+        val vo = LoopUtil.LoopVo<Long, Any>(id = 0L, data = true, thresholdMills = thresholdMills)
+        assertEquals(thresholdMills, vo.thresholdMills)
+        vo.correctCtrlArgs()
+        assertEquals(DEFAULT_THRESHOLD_MILLS, vo.thresholdMills)
     }
 
     @Test
-    fun testCheckSleepIntervalMills() {
-        val expectedThrowMsg = "sleepIntervalMills must be > 0 and < $SLEEP_INTERVAL"
-        assertEquals(
-            /* expected = */ expectedThrowMsg,
-            /* actual = */
-            assertThrows<IllegalArgumentException> {
-                LoopUtil.LoopVo<Long, MutableList<FakeStuPojo>>(
-                    sleepIntervalMills = -1, // 不合理
-                    id = 0L,
-                    data = mutableListOf()
-                ).check()
-            }.message
-        )
-        assertEquals(
-            /* expected = */ expectedThrowMsg,
-            /* actual = */
-            assertThrows<IllegalArgumentException> {
-                LoopUtil.LoopVo<Long, MutableList<FakeStuPojo>>(
-                    sleepIntervalMills = SLEEP_INTERVAL + 1, // 不合理 超过
-                    id = 0L,
-                    data = mutableListOf()
-                ).check()
-            }.message
-        )
+    fun testCheckThresholdMillsLegal() {
+        for (thresholdMills in 1..DEFAULT_THRESHOLD_MILLS) {
+            val vo = LoopUtil.LoopVo<Long, Any>(id = 0L, data = true, thresholdMills = thresholdMills)
+            assertEquals(thresholdMills, vo.thresholdMills)
+            vo.correctCtrlArgs()
+            assertEquals(thresholdMills, vo.thresholdMills)
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        longs = [
+            -3 /*负数非法*/,
+            -1 /*负数非法*/,
+            0 /* 0不合理*/,
+            SLEEP_INTERVAL + 1 /*超出上限*/
+        ]
+    )
+    fun testCheckSleepIntervalMillsIllegal(sleepIntervalMills: Long) {
+        val vo = LoopUtil.LoopVo<Long, Any>(id = 0L, data = true, sleepIntervalMills = sleepIntervalMills)
+        assertEquals(sleepIntervalMills, vo.sleepIntervalMills)
+        vo.correctCtrlArgs()
+        assertEquals(SLEEP_INTERVAL, vo.sleepIntervalMills)
+    }
+
+    @Test
+    fun testCheckSleepIntervalMillsLegal() {
+        for (sleepIntervalMills in 1..SLEEP_INTERVAL) {
+            val vo = LoopUtil.LoopVo<Long, Any>(id = 0L, data = true, sleepIntervalMills = sleepIntervalMills)
+            assertEquals(sleepIntervalMills, vo.sleepIntervalMills)
+            vo.correctCtrlArgs()
+            assertEquals(sleepIntervalMills, vo.sleepIntervalMills)
+        }
     }
 
     @Test
