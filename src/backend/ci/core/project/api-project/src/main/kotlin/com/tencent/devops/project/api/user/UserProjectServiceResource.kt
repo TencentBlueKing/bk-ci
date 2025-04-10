@@ -34,15 +34,15 @@ import com.tencent.devops.project.pojo.service.ServiceListVO
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.PUT
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "USER_PROJECT_SERVICE", description = "项目服务管理接口")
 @Path("/user")
@@ -75,4 +75,18 @@ interface UserProjectServiceResource {
         @QueryParam("collector")
         collector: Boolean
     ): Result<Boolean>
+
+    @GET
+    @Path("/services/{serviceId}/url/get")
+    @Operation(summary = "查询服务跳转地址")
+    fun getServiceUrl(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String?,
+        @Parameter(description = "服务ID", required = true)
+        @PathParam("serviceId")
+        serviceId: Long
+    ): Result<String>
 }

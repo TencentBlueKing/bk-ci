@@ -126,14 +126,14 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
-import java.time.LocalDateTime
-import java.util.concurrent.atomic.AtomicInteger
-import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.concurrent.atomic.AtomicInteger
+import jakarta.ws.rs.core.Response
 
 @Suppress(
     "LongParameterList",
@@ -1044,6 +1044,21 @@ class PipelineRepositoryService constructor(
                         ) ?: throw ErrorCodeException(
                             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_DRAFT_EXISTS
                         )
+                        val pipelineInfo = getPipelineInfo(projectId = projectId, pipelineId = pipelineId)
+                        // 将草稿版本发布成分支版本,需要把最新状态转换成分支版本
+                        if (pipelineInfo != null &&
+                            pipelineInfo.version == draftVersion.version &&
+                            pipelineInfo.latestVersionStatus == VersionStatus.COMMITTING
+                        ) {
+                            pipelineInfoDao.update(
+                                dslContext = transactionContext,
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                userId = userId,
+                                // 进行过至少一次发布版本后，取消仅有草稿/分支的状态
+                                latestVersionStatus = VersionStatus.BRANCH
+                            )
+                        }
                         version = draftVersion.version
                         versionName = branchName
                         branchAction = BranchVersionAction.ACTIVE
@@ -1390,17 +1405,13 @@ class PipelineRepositoryService constructor(
                     errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
                     params = arrayOf(version.toString())
                 )
-                return if (targetResource.status == VersionStatus.COMMITTING) {
-                    Triple(pipelineInfo, targetResource, true)
-                } else {
-                    val releaseVersion = getPipelineResourceVersion(
-                        projectId = projectId,
-                        pipelineId = pipelineId
-                    ) ?: throw ErrorCodeException(
-                        statusCode = Response.Status.NOT_FOUND.statusCode,
-                        errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
-                    )
-                    Triple(pipelineInfo, releaseVersion, false)
+                return when (targetResource.status) {
+                    VersionStatus.COMMITTING -> {
+                        Triple(pipelineInfo, targetResource, true)
+                    }
+                    else -> {
+                        Triple(pipelineInfo, targetResource, false)
+                    }
                 }
             }
         }

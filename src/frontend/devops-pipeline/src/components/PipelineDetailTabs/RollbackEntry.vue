@@ -24,7 +24,7 @@
         </bk-button>
         <bk-dialog
             v-model="isShowConfirmDialog"
-            :width="666"
+            :width="480"
             footer-position="center"
             theme="primary"
         >
@@ -37,25 +37,25 @@
             </header>
             <div
                 v-if="hasDraftPipeline"
-                class="draft-hint-content"
+                :class="['draft-hint-content', { 'is-active-branch-version': isActiveBranchVersion }]"
             >
-                {{ $t('dropDraftTips', [versionName]) }}
+                {{ draftWarningInfo }}
             </div>
             <footer slot="footer">
                 <bk-button
                     theme="primary"
                     @click="rollback"
                 >
-                    {{ $t('newVersion') }}
+                    {{ $t(isActiveBranchVersion ? 'resume' : 'newVersion') }}
                 </bk-button>
                 <bk-button
-                    v-if="hasDraftPipeline"
+                    v-if="hasDraftPipeline && !isActiveBranchVersion"
                     @click="goEdit(draftVersion)"
                 >
                     {{ $t('editDraft') }}
                 </bk-button>
                 <bk-button @click="close">
-                    {{ $t('thinkthink') }}
+                    {{ $t(isActiveBranchVersion ? 'cancel' : 'thinkthink') }}
                 </bk-button>
             </footer>
         </bk-dialog>
@@ -63,11 +63,11 @@
 </template>
 
 <script>
-    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
     import { pipelineTabIdMap } from '@/utils/pipelineConst'
+    import dayjs from 'dayjs'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
@@ -106,7 +106,16 @@
                 type: String,
                 required: true
             },
-            isActiveDraft: Boolean
+            draftCreator: {
+                type: String,
+                default: ''
+            },
+            draftCreateTime: {
+                type: String,
+                default: ''
+            },
+            isActiveDraft: Boolean,
+            isActiveBranchVersion: Boolean
         },
         data () {
             return {
@@ -125,7 +134,7 @@
             isRollback () {
                 const { baseVersion, releaseVersion } = (this.pipelineInfo ?? {})
                 const isReleaseVersion = this.version === releaseVersion
-                return !(this.isActiveDraft || baseVersion === this.version || (isReleaseVersion && !this.hasDraftPipeline))
+                return !(this.isActiveDraft || baseVersion === this.version || this.isActiveBranchVersion || (isReleaseVersion && !this.hasDraftPipeline))
             },
             operateName () {
                 return this.isRollback
@@ -133,16 +142,34 @@
                     : this.$t('edit')
             },
             draftHintTitle () {
-                return this.hasDraftPipeline ? this.$t('hasDraftTips', [this.draftBaseVersionName]) : this.$t('createDraftTips', [this.versionName])
+                switch (true) {
+                    case this.hasDraftPipeline && this.isActiveBranchVersion:
+                        return this.$t('template.templateCoverWarning')
+                    case this.hasDraftPipeline:
+                        return this.$t('hasDraftTips', [this.draftBaseVersionName])
+                    default:
+                        return this.$t(this.isActiveBranchVersion ? 'createBranchDraftTips' : 'createDraftTips', [this.versionName])
+                }
+            },
+            draftWarningInfo () {
+                if (this.isActiveBranchVersion) {
+                    const key = this.draftBaseVersionName === this.versionName ? 'templateOutDateCoverWarningDesc' : 'templateCoverWarningDesc'
+                    return this.$t(`template.${key}`, [this.draftCreator, this.formatDraftCreateTime, this.draftBaseVersionName])
+                }
+                return this.$t('dropDraftTips', [this.versionName])
             },
             isTemplatePipeline () {
                 return this.pipelineInfo?.instanceFromTemplate ?? false
+            },
+            formatDraftCreateTime () {
+                return dayjs(this.draftCreateTime).format('YYYY-MM-DD HH:mm:ss')
             }
         },
         methods: {
-            ...mapActions('pipelines', [
-                'rollbackPipelineVersion'
-            ]),
+            ...mapActions({
+                requestPipelineSummary: 'atom/requestPipelineSummary',
+                rollbackPipelineVersion: 'pipelines/rollbackPipelineVersion'
+            }),
             handleClick () {
                 if (this.isRollback) {
                     if (this.isTemplatePipeline) {
@@ -164,7 +191,11 @@
                         this.showDraftConfirmDialog()
                     }
                 } else {
-                    this.goEdit(this.draftVersion ?? this.version)
+                    if (this.isActiveBranchVersion && this.version !== this.pipelineInfo?.baseVersion) {
+                        this.showDraftConfirmDialog()
+                    } else {
+                        this.goEdit(this.draftVersion ?? this.version)
+                    }
                 }
             },
             showDraftConfirmDialog () {
@@ -176,18 +207,13 @@
             async rollback () {
                 try {
                     this.loading = true
-                    const { version, versionName } = await this.rollbackPipelineVersion({
+
+                    const { version } = await this.rollbackPipelineVersion({
                         ...this.$route.params,
                         version: this.version
                     })
-                    this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
-                        version,
-                        versionName,
-                        baseVersion: this.version,
-                        baseVersionName: this.versionName,
-                        canDebug: true,
-                        canRelease: true
-                    })
+
+                    await this.requestPipelineSummary(this.$route.params)
 
                     if (version) {
                         this.goEdit(version)
@@ -239,5 +265,12 @@
     }
     .draft-hint-content {
         text-align: center;
+        &.is-active-branch-version {
+            background: #F5F6FA;
+            padding: 16px 12px;
+            margin: 0 8px;
+            border-radius: 2px;
+            text-align: left;
+        }
     }
 </style>

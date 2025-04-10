@@ -58,8 +58,13 @@ class UserScmResourceImpl @Autowired constructor(
         )
     }
 
-    override fun listBranches(projectId: String, repositoryId: String, repositoryType: RepositoryType?) =
-        scmProxyService.listBranches(projectId, getRepositoryConfig(repositoryId, repositoryType))
+    override fun listBranches(
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?,
+        search: String?
+    ) =
+        scmProxyService.listBranches(projectId, getRepositoryConfig(repositoryId, repositoryType), search)
 
     override fun listTags(projectId: String, repositoryId: String, repositoryType: RepositoryType?) =
         scmProxyService.listTags(projectId, getRepositoryConfig(repositoryId, repositoryType))

@@ -211,6 +211,7 @@ class PipelineTransferYamlService @Autowired constructor(
                         modelAndSetting = PipelineModelAndSetting(model, setting)
                     )
                 }
+                else -> {}
             }
         } finally {
             watcher.stop()

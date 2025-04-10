@@ -101,8 +101,4 @@ class BkProcessDatabaseShardingAlgorithm : StandardShardingAlgorithm<String> {
     }
 
     override fun init(props: Properties?) = Unit
-
-    override fun getProps(): Properties? {
-        return null
-    }
 }

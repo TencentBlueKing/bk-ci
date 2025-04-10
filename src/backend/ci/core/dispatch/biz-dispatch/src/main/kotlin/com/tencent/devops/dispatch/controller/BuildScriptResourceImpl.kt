@@ -34,7 +34,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.api.BuildScriptResource
 import com.tencent.devops.dispatch.service.DownloadScriptService
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

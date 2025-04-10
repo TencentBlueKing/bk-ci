@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.api.annotation
 
-import javax.ws.rs.NameBinding
+import jakarta.ws.rs.NameBinding
 
 @Target(AnnotationTarget.FUNCTION, AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)

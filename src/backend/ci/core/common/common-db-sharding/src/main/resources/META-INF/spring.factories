@@ -1,5 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.tencent.devops.common.db.config.BkShardingDataSourceConfiguration,\
-com.tencent.devops.common.db.config.BkShardingJooqConfiguration,\
-com.tencent.devops.common.db.service.ShardingRoutingRuleManageService,\
-com.tencent.devops.common.db.config.BkShardingMQConfiguration

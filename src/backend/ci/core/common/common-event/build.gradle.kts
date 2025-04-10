@@ -1,3 +1,5 @@
+import org.gradle.internal.impldep.org.junit.experimental.categories.Categories.CategoryFilter.exclude
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -27,7 +29,7 @@
 
 dependencies {
     api(project(":core:common:common-service"))
-    api("org.apache.pulsar:pulsar-client") {
+    compileOnly("org.apache.pulsar:pulsar-client") {
         // 暂时无需消息加解密能力，为避免版本冲突排除
         exclude("org.bouncycastle")
     }

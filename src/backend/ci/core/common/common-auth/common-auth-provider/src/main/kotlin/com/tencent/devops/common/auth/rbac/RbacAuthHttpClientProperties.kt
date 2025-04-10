@@ -29,10 +29,8 @@
 package com.tencent.devops.common.auth.rbac
 
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.context.properties.ConstructorBinding
 
 @ConfigurationProperties("auth.http.client")
-@ConstructorBinding
 data class RbacAuthHttpClientProperties(
     val connectionRequestTimeout: Int = 3000,
     val connectionTimeout: Int = 5000,
