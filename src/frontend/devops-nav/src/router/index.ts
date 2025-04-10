@@ -96,7 +96,7 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
     }
     
     router.beforeEach(async (to, from, next) => {
-        if (window.diclosurePrjoectList.includes(to.params.projectId)) {
+        if (window.diclosurePrjoectList?.includes(to.params.projectId)) {
             for await (const signed of showNonDisclosureAgreement(store, to.params.projectId)) {
                 if (signed) {
                     setTimeout(() => {
