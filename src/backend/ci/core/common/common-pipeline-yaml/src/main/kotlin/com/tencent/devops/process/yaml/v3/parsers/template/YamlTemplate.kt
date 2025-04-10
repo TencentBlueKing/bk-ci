@@ -29,6 +29,7 @@ package com.tencent.devops.process.yaml.v3.parsers.template
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_YAML_FORMAT_EXCEPTION
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_YAML_FORMAT_EXCEPTION_LENGTH_LIMIT_EXCEEDED
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
@@ -39,14 +40,18 @@ import com.tencent.devops.common.pipeline.pojo.transfer.format
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.pojo.YamlVersion
+import com.tencent.devops.process.yaml.v3.check.Gate
+import com.tencent.devops.process.yaml.v3.check.GateTemplate
+import com.tencent.devops.process.yaml.v3.check.PreStageCheck
+import com.tencent.devops.process.yaml.v3.check.PreTemplateStageCheck
 import com.tencent.devops.process.yaml.v3.enums.TemplateType
 import com.tencent.devops.process.yaml.v3.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v3.models.Extends
 import com.tencent.devops.process.yaml.v3.models.GitNotices
 import com.tencent.devops.process.yaml.v3.models.ITemplateFilter
 import com.tencent.devops.process.yaml.v3.models.PacNotices
-import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYamlParser
 import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYamlIParser
+import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYamlParser
 import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYamlV3Parser
 import com.tencent.devops.process.yaml.v3.models.Variable
 import com.tencent.devops.process.yaml.v3.models.job.PreJob
@@ -55,10 +60,6 @@ import com.tencent.devops.process.yaml.v3.models.stage.PreStage
 import com.tencent.devops.process.yaml.v3.parsers.template.models.GetTemplateParam
 import com.tencent.devops.process.yaml.v3.parsers.template.models.NoReplaceTemplate
 import com.tencent.devops.process.yaml.v3.parsers.template.models.TemplateDeepTreeNode
-import com.tencent.devops.process.yaml.v3.check.Gate
-import com.tencent.devops.process.yaml.v3.check.GateTemplate
-import com.tencent.devops.process.yaml.v3.check.PreStageCheck
-import com.tencent.devops.process.yaml.v3.check.PreTemplateStageCheck
 
 @Suppress("ALL")
 class YamlTemplate<T>(
@@ -290,16 +291,28 @@ class YamlTemplate<T>(
     ) {
         val variableMap = mutableMapOf<String, Variable>()
         variables.forEach { (key, value) ->
-            val newVariable = replaceVariableTemplate(mapOf(key to value), filePath, deepTree)
             if (key == Constants.TEMPLATE_KEY) {
-                // 通过取交集判断除template关键字之外的ID是否重复
-                TemplateYamlUtil.checkDuplicateKey(
-                    filePath = filePath,
-                    keys = variables.keys,
-                    newKeys = newVariable.keys
+                throw YamlFormatException(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ERROR_YAML_FORMAT_EXCEPTION,
+                        params = arrayOf(
+                            "variables",
+                            "变量名",
+                            "除了template关键字的其他字符串",
+                            "template作为关键字保留"
+                        )
+                    )
                 )
             }
-            variableMap.putAll(newVariable)
+            if (value !is Map<*, *>) {
+                variableMap[key] = Variable(value.toString())
+            } else {
+                variableMap[key] = YamlObjects.getVariable(
+                    fromPath = filePath,
+                    key = key,
+                    variable = YamlObjects.transValue(filePath, TemplateType.VARIABLE.text, value)
+                )
+            }
         }
         preYamlObject.variables = variableMap
     }

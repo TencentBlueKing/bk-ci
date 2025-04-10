@@ -467,7 +467,6 @@ class WorkspaceService @Autowired constructor(
             if (UserUtil.isTaiUser(it.sharedUser)) {
                 taiUsers.add(it.sharedUser)
             }
-
         }
 
         val allConfig = windowsResourceConfigService.getAllType(true, null).associateBy { it.id!! }
@@ -571,11 +570,13 @@ class WorkspaceService @Autowired constructor(
             WorkspaceStatus.DELETED,
             WorkspaceStatus.PREPARING,
             WorkspaceStatus.DELIVERING_FAILED
-        )
+        ),
+        userId: String? = null
     ): List<WeSecProjectWorkspace> {
         val startTime = System.currentTimeMillis()
         val owners = mutableMapOf<String, String>()
         val viewers = mutableMapOf<String, MutableList<String>>()
+        val projectGameIds = mutableMapOf<String, Int>()
 
         val result = workspaceJoinDao.fetchWindowsWorkspacesSimple(
             dslContext = dslContext,
@@ -663,6 +664,19 @@ class WorkspaceService @Autowired constructor(
             } else {
                 null
             }
+
+            projectGameIds.getOrPut(res.projectId) {
+                workspaceCommon.getGameIdAndAppId(res.projectId, res.ownerType).second.toInt()
+            }
+            val resourceId = if (userId != null && userId != res.createUserId) {
+                workspaceSharedDao.fetchWorkspaceSharedInfo(
+                    dslContext = dslContext,
+                    workspaceName = res.workspaceName,
+                    sharedUsers = listOf(userId)
+                ).firstOrNull()?.resourceId
+            } else {
+                workspaceWindows[name]?.resourceId
+            }
             WeSecProjectWorkspace(
                 workspaceName = name,
                 projectId = res.projectId,
@@ -681,7 +695,9 @@ class WorkspaceService @Autowired constructor(
                 zoneType = specZoneConfig[res.zoneId]?.type?.name
                     ?: defaultZoneConfig[res.zoneId?.removeSuffixNumb()]?.type?.name,
                 viewers = viewers[name],
-                nodeIp = cdsInfo[res.hostIp]?.node
+                nodeIp = cdsInfo[res.hostIp]?.node,
+                curLaunchId = res.curLaunchId ?: projectGameIds[res.projectId],
+                resourceId = resourceId
             )
         }
 
