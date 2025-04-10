@@ -47,7 +47,8 @@ export const DEFAULT_PARAM = {
         type: STRING,
         typeDesc: 'string',
         required: true,
-        readOnly: false
+        readOnly: false,
+        category: ''
     },
     [TEXTAREA]: {
         id: 'textarea',
@@ -57,7 +58,8 @@ export const DEFAULT_PARAM = {
         type: TEXTAREA,
         typeDesc: 'textarea',
         required: true,
-        readOnly: false
+        readOnly: false,
+        category: ''
     },
     [BOOLEAN]: {
         id: 'bool',
@@ -69,7 +71,8 @@ export const DEFAULT_PARAM = {
         type: BOOLEAN,
         typeDesc: 'bool',
         required: true,
-        readOnly: false
+        readOnly: false,
+        category: ''
     },
     [ENUM]: {
         id: 'select',
@@ -82,7 +85,8 @@ export const DEFAULT_PARAM = {
         typeDesc: 'enum',
         options: [],
         required: true,
-        readOnly: false
+        readOnly: false,
+        category: ''
     },
     [MULTIPLE]: {
         id: 'multiple',
@@ -95,7 +99,8 @@ export const DEFAULT_PARAM = {
         type: MULTIPLE,
         typeDesc: 'multiple',
         required: true,
-        readOnly: false
+        readOnly: false,
+        category: ''
     },
     [CHECKBOX]: {
         id: 'checkbox',
@@ -106,7 +111,8 @@ export const DEFAULT_PARAM = {
         type: CHECKBOX,
         typeDesc: 'checkbox',
         required: true,
-        readOnly: false
+        readOnly: false,
+        category: ''
     },
     [SVN_TAG]: {
         id: 'svntag',
@@ -121,7 +127,8 @@ export const DEFAULT_PARAM = {
         type: SVN_TAG,
         typeDesc: 'svntag',
         required: true,
-        readOnly: false
+        readOnly: false,
+        category: ''
     },
     [GIT_REF]: {
         id: 'gitref',
@@ -135,7 +142,8 @@ export const DEFAULT_PARAM = {
         type: GIT_REF,
         typeDesc: 'gitref',
         required: true,
-        readOnly: false
+        readOnly: false,
+        category: ''
     },
     [REPO_REF]: {
         id: 'reporef',
@@ -149,7 +157,8 @@ export const DEFAULT_PARAM = {
         type: REPO_REF,
         typeDesc: 'reporef',
         required: true,
-        readOnly: false
+        readOnly: false,
+        category: ''
     },
     [CODE_LIB]: {
         id: 'codelib',
@@ -163,7 +172,8 @@ export const DEFAULT_PARAM = {
         type: CODE_LIB,
         typeDesc: 'codelib',
         required: true,
-        readOnly: false
+        readOnly: false,
+        category: ''
     },
     [SUB_PIPELINE]: {
         id: 'subPipeline',
@@ -176,7 +186,8 @@ export const DEFAULT_PARAM = {
         type: SUB_PIPELINE,
         typeDesc: 'subPipeline',
         required: true,
-        readOnly: false
+        readOnly: false,
+        category: ''
     },
     [CUSTOM_FILE]: {
         id: 'file',
@@ -189,7 +200,8 @@ export const DEFAULT_PARAM = {
         type: CUSTOM_FILE,
         typeDesc: 'custom_file',
         required: true,
-        readOnly: false
+        readOnly: false,
+        category: ''
     }
 }
 
