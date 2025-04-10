@@ -34,12 +34,12 @@ class LoopUtilTest {
     @ValueSource(
         ints = [
             -1 /*负数非法*/,
-            1 /* 1不需要循环，不合理*/,
+            0 /* 0不合理*/,
             DEFAULT_THRESHOLD_COUNT + 1 /*超出上限*/
         ]
     )
     fun testCheckThresholdCount(threshold: Int) {
-        val expectedThrowMsg = "thresholdCount must be > 1 and < $DEFAULT_THRESHOLD_COUNT"
+        val expectedThrowMsg = "thresholdCount must be > 0 and < $DEFAULT_THRESHOLD_COUNT"
         assertEquals(
             /* expected = */ expectedThrowMsg,
             /* actual = */

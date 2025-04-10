@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.util.LoopUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.environment.constant.THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL
 import com.tencent.devops.environment.dao.NodeDao
@@ -42,7 +43,6 @@ import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.service.NodeWebsocketService
 import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartAgentService
-import com.tencent.devops.common.util.LoopUtil
 import com.tencent.devops.environment.utils.ThirdPartyAgentHeartbeatUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -51,8 +51,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
+import kotlin.math.ceil
 import kotlin.math.max
-import kotlin.math.min
 
 @Component
 @Suppress("ALL", "UNUSED")
@@ -85,7 +85,7 @@ class ThirdPartyAgentHeartBeatJob @Autowired constructor(
 
     private fun checkOKAgent() {
         val totalRecordCount = thirdPartyAgentDao.countAgentByStatus(dslContext, setOf(AgentStatus.IMPORT_OK))
-        val lc = min(1, (totalRecordCount / PageUtil.DEFAULT_PAGE_SIZE).toInt()) // 算出循环次数
+        val lc = max(ceil(totalRecordCount / PageUtil.DEFAULT_PAGE_SIZE.toFloat()).toInt(), 1) // 算出循环次数
         val vo = LoopUtil.LoopVo<Long, Any>(id = 0L, data = true, thresholdMills = MAX_LOOP_MILLS, thresholdCount = lc)
         justDoItByLoop(vo = vo, tip = "checkOnlineAgent", func = this::checkOnlineAgent)
     }
@@ -132,7 +132,7 @@ class ThirdPartyAgentHeartBeatJob @Autowired constructor(
 
     private fun checkUnImportAgent() {
         val totalRecordCount = thirdPartyAgentDao.countAgentByStatus(dslContext, setOf(AgentStatus.UN_IMPORT_OK))
-        val lc = min(1, (totalRecordCount / PageUtil.DEFAULT_PAGE_SIZE).toInt()) // 算出循环次数
+        val lc = max(ceil(totalRecordCount / PageUtil.DEFAULT_PAGE_SIZE.toFloat()).toInt(), 1) // 算出循环次数
         val vo = LoopUtil.LoopVo<Long, Any>(id = 0L, data = true, thresholdMills = MAX_LOOP_MILLS, thresholdCount = lc)
         justDoItByLoop(vo = vo, tip = "checkUnImportAgent", func = this::checkUnImportAgent)
     }
@@ -165,7 +165,7 @@ class ThirdPartyAgentHeartBeatJob @Autowired constructor(
 
     private fun checkExceptionAgent() {
         val totalRecordCount = thirdPartyAgentDao.countAgentByStatus(dslContext, setOf(AgentStatus.IMPORT_EXCEPTION))
-        val lc = min(1, (totalRecordCount / PageUtil.DEFAULT_PAGE_SIZE).toInt()) // 算出循环次数
+        val lc = max(ceil(totalRecordCount / PageUtil.DEFAULT_PAGE_SIZE.toFloat()).toInt(), 1) // 算出循环次数
         val vo = LoopUtil.LoopVo<Long, Any>(id = 0L, data = true, thresholdMills = MAX_LOOP_MILLS, thresholdCount = lc)
         justDoItByLoop(vo, "checkExceptionAgent", this::deleteExceptionAgent)
     }

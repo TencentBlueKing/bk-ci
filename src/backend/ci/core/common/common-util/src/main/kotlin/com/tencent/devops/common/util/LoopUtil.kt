@@ -57,8 +57,8 @@ object LoopUtil {
     ) {
         @Throws(IllegalArgumentException::class)
         fun check() {
-            if (thresholdCount <= 1 || thresholdCount > DEFAULT_THRESHOLD_COUNT) {
-                throw IllegalArgumentException("thresholdCount must be > 1 and < $DEFAULT_THRESHOLD_COUNT")
+            if (thresholdCount <= 0 || thresholdCount > DEFAULT_THRESHOLD_COUNT) {
+                throw IllegalArgumentException("thresholdCount must be > 0 and < $DEFAULT_THRESHOLD_COUNT")
             }
             if (thresholdMills <= 0 || thresholdMills > DEFAULT_THRESHOLD_MILLS) {
                 throw IllegalArgumentException("thresholdMills must be > 0 and < $DEFAULT_THRESHOLD_MILLS")
