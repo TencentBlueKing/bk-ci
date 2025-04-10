@@ -292,7 +292,7 @@
                         routeType = noRecordVersion ? pipelineTabIdMap.pipeline : this.$route.params.type
                     }
                 }
-                this.$router.replace({
+                this.$router.push({
                     params: {
                         ...this.$route.params,
                         version: versionId,
