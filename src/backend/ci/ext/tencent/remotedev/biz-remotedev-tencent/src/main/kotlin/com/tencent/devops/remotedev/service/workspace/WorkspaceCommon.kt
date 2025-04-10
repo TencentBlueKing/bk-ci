@@ -791,10 +791,9 @@ class WorkspaceCommon @Autowired constructor(
         if (projectId.isNullOrBlank() || ownerType == WorkspaceOwnerType.PERSONAL) {
             return config.devcouldAppName to config.devcouldCurLaunchId
         }
-        return projectStartAppLinkDao.getAppId(dslContext, projectId)?.let { projectId to it } ?: kotlin.run {
-            remotedevProjectService.migrateOldData(projectId)
-            checkNotNull(projectStartAppLinkDao.getAppId(dslContext, projectId)?.let { projectId to it })
-        }
+        return checkNotNull(
+            projectStartAppLinkDao.getAppId(dslContext, projectId)?.let { projectId to it }
+        ) { "Not found project $projectId appId" }
     }
 
     fun devxEnvNodeInit(
