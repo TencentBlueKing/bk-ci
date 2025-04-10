@@ -167,6 +167,7 @@
                             disabled
                             :param-values="constantValues"
                             :params="constantParams"
+                            sort-category
                         />
                     </div>
                 </section>
@@ -195,6 +196,7 @@
                             disabled
                             :param-values="otherValues"
                             :params="otherParams"
+                            sort-category
                         >
                             <template
                                 slot="versionParams"
