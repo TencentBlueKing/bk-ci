@@ -862,20 +862,12 @@ abstract class ImageService @Autowired constructor() {
         imageVersion: String
     ): String {
         logger.info("getImageStatusByCodeAndVersion:Input:($imageCode,$imageVersion)")
-        val imageRecord = imageDao.getImageStatusByCodeAndVersion(dslContext, imageCode, imageVersion)
-        if (imageRecord == null) {
-            val errorMessage = if (VersionUtils.isLatestVersion(imageVersion)) {
-                "The published version of the image identified as $imageCode was not found under the major version $imageVersion, " +
-                        "or the image does not exist under the major version."
-            } else {
-                "image is null,imageCode=$imageCode, imageVersion=$imageVersion"
-            }
-            throw ErrorCodeException(
-                errorCode = if (VersionUtils.isLatestVersion(imageVersion)) USER_IMAGE_VERSION_NOT_RELEASE else USER_IMAGE_VERSION_NOT_EXIST,
-                defaultMessage = errorMessage,
+        val imageRecord =
+            imageDao.getImage(dslContext, imageCode, imageVersion) ?: throw ErrorCodeException(
+                errorCode = USER_IMAGE_VERSION_NOT_EXIST,
+                defaultMessage = "image is null,imageCode=$imageCode, imageVersion=$imageVersion",
                 params = arrayOf(imageCode, imageVersion)
             )
-        }
         return ImageStatusEnum.getImageStatus(imageRecord.imageStatus.toInt())
     }
 
@@ -1258,4 +1250,23 @@ abstract class ImageService @Autowired constructor() {
         }
         return Result(true)
     }
+
+
+    fun getImageReleasedStatus(imageCode: String, imageVersion: String): Boolean {
+
+        if (VersionUtils.isLatestVersion(imageVersion)) {
+            val count = imageDao.countImageRelease(dslContext, imageCode, imageVersion)
+            return count > 0
+        } else {
+            val imageRecord = imageDao.getImage(dslContext, imageCode, imageVersion)
+                ?: throw ErrorCodeException(
+                    errorCode = USER_IMAGE_VERSION_NOT_EXIST,
+                    defaultMessage = "image is null,imageCode=$imageCode, imageVersion=$imageVersion",
+                    params = arrayOf(imageCode, imageVersion)
+                )
+
+            return imageRecord.imageStatus == ImageStatusEnum.RELEASED.status.toByte()
+        }
+    }
+
 }

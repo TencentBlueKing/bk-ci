@@ -282,21 +282,15 @@ class ImageDao {
         }
     }
 
-    fun getImageStatusByCodeAndVersion(dslContext: DSLContext, imageCode: String, version: String): TImageRecord? {
+    fun countImageRelease(dslContext: DSLContext, imageCode: String, version: String): Long {
         return with(TImage.T_IMAGE) {
-            val conditions = mutableListOf(IMAGE_CODE.eq(imageCode))
-            if (VersionUtils.isLatestVersion(version)) {
-                conditions.add(VERSION.like(version.replace("*", "") + "%"))
-                conditions.add(IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()))
-            } else {
-                conditions.add(VERSION.eq(version))
-            }
-            dslContext.selectFrom(this)
-                .where(conditions)
-                .orderBy(CREATE_TIME.desc())
-                .limit(1)
-                .fetch()
-                .firstOrNull()
+            dslContext.selectCount()
+                .from(this)
+                .where(
+                    IMAGE_CODE.eq(imageCode).and(VERSION.like(VersionUtils.generateQueryVersion(version)))
+                        .and(IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()))
+                )
+                .fetchOne(0, Long::class.java)!!
         }
     }
 

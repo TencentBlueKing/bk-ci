@@ -111,9 +111,8 @@ class PipelineTemplateService @Autowired constructor(
     }
 
     private fun isRelease(imageCode: String, imageVersion: String): Boolean {
-        val imageStatus = client.get(ServiceStoreImageResource::class)
-            .getImageStatusByCodeAndVersion(imageCode, imageVersion).data
-        return ImageStatusEnum.RELEASED.name == imageStatus
+        return client.get(ServiceStoreImageResource::class)
+            .getImageReleasedStatus(imageCode, imageVersion).data!!
     }
 
     companion object {

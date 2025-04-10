@@ -118,7 +118,6 @@ object StoreMessageCode {
     const val USER_IMAGE_NOT_EXIST = "2120309" // 镜像[{0}]不存在
     const val USER_IMAGE_VERSION_NOT_EXIST = "2120310" // 标识为{0}版本号为{1}的镜像不存在
     const val USER_IMAGE_PROJECT_IS_INVALID = "2120311" // 研发商店：容器镜像[{0}]在项目[{1}]下不可用，请联系镜像发布者调整可见范围，调整后手动安装镜像
-    const val USER_IMAGE_VERSION_NOT_RELEASE = "2120312" // 未找到标识为{0}的镜像在大版本{1}下的已发布版本，或该大版本下不存在此镜像。
 
     const val USER_SERVICE_RELEASED_IS_NOT_ALLOW_DELETE = "2120401" // 研发商店：扩展服务{0}已发布到商店，请先下架再删除
     const val USER_SERVICE_USED_IS_NOT_ALLOW_DELETE = "2120402" // 研发商店：扩展服务{0}已安装到其他项目下使用，请勿移除

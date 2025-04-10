@@ -105,4 +105,13 @@ class ServiceStoreImageResourceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun getImageReleasedStatus(imageCode: String, imageVersion: String): Result<Boolean> {
+        return Result(
+            imageService.getImageReleasedStatus(
+                imageCode = imageCode,
+                imageVersion = imageVersion
+            )
+        )
+    }
 }
