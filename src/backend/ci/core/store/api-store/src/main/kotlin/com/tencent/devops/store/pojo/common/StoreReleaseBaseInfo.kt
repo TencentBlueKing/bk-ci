@@ -34,7 +34,7 @@ import com.tencent.devops.store.pojo.common.publication.StoreBaseEnvRequest
 import com.tencent.devops.store.pojo.common.publication.StoreBaseFeatureRequest
 import com.tencent.devops.store.pojo.common.version.VersionModel
 import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.Valid
+import jakarta.validation.Valid
 
 @Schema(title = "组件发布部署基础模型")
 data class StoreReleaseBaseInfo(
@@ -57,9 +57,9 @@ data class StoreReleaseBaseInfo(
     @get:Schema(title = "版本信息", required = true)
     val versionInfo: VersionModel,
     @get:Schema(title = "标签标识列表", required = false)
-    val labelCodeList : List<String>? = null,
+    val labelCodeList: List<String>? = null,
     @get:Schema(title = "组件所属范畴", required = false)
-    val categoryCodeList : List<String>? = null,
+    val categoryCodeList: List<String>? = null,
     @get:Schema(title = "基础扩展信息", required = false)
     val extBaseInfo: MutableMap<String, Any>? = null,
     @get:Schema(title = "特性信息", required = false)

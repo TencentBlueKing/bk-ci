@@ -184,21 +184,21 @@ abstract class StorePackageDeployService {
             voidFields.add(KEY_OS)
         }
         // 校验os必填字段
-        osInfoList?.forEachIndexed { index,osInfo ->
-            if(osInfo[KEY_OS_NAME] == null) {
+        osInfoList?.forEachIndexed { index, osInfo ->
+            if (osInfo[KEY_OS_NAME] == null) {
                 voidFields.add("$KEY_OS.$index.$KEY_OS_NAME")
             }
-            if(osInfo[KEY_PACKAGE_PATH] == null) {
+            if (osInfo[KEY_PACKAGE_PATH] == null) {
                 voidFields.add("$KEY_OS.$index.$KEY_PACKAGE_PATH")
             }
-            if(osInfo[KEY_DEFAULT_FLAG] == null) {
+            if (osInfo[KEY_DEFAULT_FLAG] == null) {
                 voidFields.add("$KEY_OS.$index.$KEY_DEFAULT_FLAG")
             }
         }
         try {
             val firstPublisherFlag = bkConfigMap[BK_STORE_FIRST_PUBLISHER_FLAG] as Boolean
             val storeReleaseInfo = bkConfigMap[KEY_RELEASE_INFO] as? StoreReleaseInfo
-            if(firstPublisherFlag && storeReleaseInfo?.baseInfo != null) {
+            if (firstPublisherFlag && storeReleaseInfo?.baseInfo != null) {
                 voidFields.addAll(validateBaseInfo(storeReleaseInfo.baseInfo))
             }
             storeReleaseInfo?.baseInfo?.let {
@@ -220,7 +220,6 @@ abstract class StorePackageDeployService {
             baseInfo.summary.takeIf { it.isNullOrBlank() }?.let { KEY_SUMMARY }
         ).map { "$KEY_RELEASE_INFO.baseInfo.$it" }
     }
-
 
     private fun getStoreCreateRequest(
         storeCode: String,
