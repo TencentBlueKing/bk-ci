@@ -350,6 +350,6 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(AbsUserProjectServiceServiceImpl::class.java)
         // 平台管理界面
         const val SERVICE_ENGLISH_NAME_PLATFORM = "Platform"
-        const val SERVICE_ITEM_STATUS_PLANNING = "ok"
+        const val SERVICE_ITEM_STATUS_PLANNING = "planning"
     }
 }
