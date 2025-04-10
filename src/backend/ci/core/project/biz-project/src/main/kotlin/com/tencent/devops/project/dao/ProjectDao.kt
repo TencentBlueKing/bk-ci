@@ -93,7 +93,7 @@ class ProjectDao {
             dslContext.select(ENGLISH_NAME)
                 .from(this)
                 .where(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
-                .let { if (tenantId != null) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
                 .fetch(ENGLISH_NAME, String::class.java)
         }
     }
@@ -739,11 +739,10 @@ class ProjectDao {
                     if (null == searchName) it else {
                         it.and(PROJECT_NAME.like("%$searchName%"))
                     }
-                    if (!TenantUtils.isMultiTenantMode()) it else {
+                    if (useTenantCondition(tenantId)) {
                         it.and(TENANT_ID.eq(tenantId))
-                    }
-                }
-                .fetchOne()!!.value1()
+                    } else it
+                }.fetchOne()!!.value1()
         }
     }
 
@@ -1004,6 +1003,8 @@ class ProjectDao {
                 .fetch(ENGLISH_NAME, String::class.java)
         }
     }
+
+    private fun useTenantCondition(tenantId: String?) = TenantUtils.isMultiTenantMode() && null != tenantId
 
     companion object {
         private val UNSUCCESSFUL_CREATE_STATUS = listOf(
