@@ -2,17 +2,20 @@ package com.tencent.devops.project.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.auth.api.service.ServiceDeptResource
+import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
-import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
@@ -30,11 +33,10 @@ import org.springframework.stereotype.Service
 @Service
 class ProjectSignatureManageService(
     private val objectMapper: ObjectMapper,
-    private val authProjectApi: AuthProjectApi,
-    private val redisOperation: RedisOperation,
-    private val projectAuthServiceCode: ProjectAuthServiceCode,
     private val client: Client,
-    private val projectService: ProjectService
+    private val redisOperation: RedisOperation,
+    private val projectService: ProjectService,
+    private val tokenService: ClientTokenService,
 ) {
     @Value("\${signature.url:}")
     private lateinit var signatureUrl: String
@@ -60,6 +62,16 @@ class ProjectSignatureManageService(
                 userId = userId,
                 signed = true
             )
+        }
+        val isProjectUser = client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+            token = tokenService.getSystemToken(),
+            userId = userId,
+            projectCode = projectId,
+            action = ActionId.PROJECT_VISIT,
+            resourceCode = AuthResourceType.PROJECT.value
+        ).data ?: false
+        if (!isProjectUser) {
+            throw PermissionForbiddenException("The user does not have permission to visit the project!")
         }
         logger.info("get signature status :$projectId|$userId")
         val projectNames = try {
