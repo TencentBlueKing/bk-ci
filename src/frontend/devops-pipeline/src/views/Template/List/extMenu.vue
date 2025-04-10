@@ -15,32 +15,34 @@
         :on-show="handleShowMenu"
         :on-hide="handleHideMenu"
     >
-        <div :class="`dot-menu-trigger ${extCls}`">
-            <span
-                :class="[{ 'has-show': hasShow }, 'show-more']"
-            >
-                {{ $t('more') }}
-            </span>
+        <div
+            :class="`dot-menu-trigger ${extCls}`"
+        >
+            <i class="devops-icon icon-more" />
         </div>
         <ul
             v-if="config.length > 0"
             class="dot-menu-list"
             slot="content"
         >
-            <li
-                v-perm="item.permissionData ? {
-                    hasPermission: item.hasPermission,
-                    disablePermissionApi: item.disablePermissionApi,
-                    permissionData: item.permissionData
-                } : {}"
-                :class="[{ 'is-disable': item.disable, 'bk-permission-disable': !item.hasPermission }, 'dot-menu-item']"
+            <template
                 v-for="(item, index) of config"
-                v-bk-tooltips="getTooltips(item)"
-                :key="index"
-                @click.stop="clickMenuItem(item)"
             >
-                {{ item.text }}
-            </li>
+                <li
+                    v-perm="item.permissionData ? {
+                        hasPermission: item.hasPermission,
+                        disablePermissionApi: item.disablePermissionApi,
+                        permissionData: item.permissionData
+                    } : {}"
+                    :class="[{ 'is-disable': item.disable, 'bk-permission-disable': !item.hasPermission }, 'dot-menu-item']"
+                    :key="index"
+                    v-bk-tooltips="getTooltips(item)"
+                    @click.stop="clickMenuItem(item)"
+                    v-if="item.isShow"
+                >
+                    {{ item.text }}
+                </li>
+            </template>
         </ul>
     </bk-popover>
 </template>
@@ -91,11 +93,12 @@
 </script>
 
 <style lang="scss">
-     @import '../../scss/conf';
+     @import '@/scss/conf';
 
     .template-ext-menu {
         height: 40px;
         display: flex;
+        align-items: center;
         .dot-menu-trigger {
             display: flex;
             align-items: center;
@@ -105,7 +108,7 @@
             cursor: pointer;
             border-radius: 50%;
             &:hover {
-                background: rgba(0, 0, 0, 0) !important;
+                background: #EAEBF0 !important;
                 color: $primaryColor;
             }
         }
@@ -192,7 +195,7 @@
             padding: 0 20px;
             color: $fontWeightColor;
             background-color: #fff;
-            text-align: center;
+            text-align: left;
             cursor: pointer;
             &:hover {
                 background-color: $primaryLightColor;

@@ -6,34 +6,56 @@
         }"
     >
         <pipeline-header>
-            <logo
-                size="24"
-                name="pipeline"
-                slot="logo"
-            />
-            <bk-breadcrumb
-                slot="title"
-                separator-class="devops-icon icon-angle-right"
-            >
-                <bk-breadcrumb-item
-                    class="pipeline-breadcrumb-item"
-                    :to="pipelineListRoute"
+            <template v-if="routeName === 'PipelineListAuth'">
+                <logo
+                    size="24"
+                    name="pipeline"
+                    slot="logo"
+                />
+                <bk-breadcrumb
+                    slot="title"
+                    separator-class="devops-icon icon-angle-right"
                 >
-                    {{ $t('pipeline') }}
-                </bk-breadcrumb-item>
-                <template v-if="routeName === 'PipelineListAuth'">
                     <bk-breadcrumb-item
                         class="pipeline-breadcrumb-item"
+                        :to="pipelineListRoute"
                     >
-                        {{ $t('pipelineGroup') }}
+                        {{ $t('pipeline') }}
                     </bk-breadcrumb-item>
-                    <bk-breadcrumb-item
-                        class="pipeline-breadcrumb-item"
+                    <template>
+                        <bk-breadcrumb-item
+                            class="pipeline-breadcrumb-item"
+                        >
+                            {{ $t('pipelineGroup') }}
+                        </bk-breadcrumb-item>
+                        <bk-breadcrumb-item
+                            class="pipeline-breadcrumb-item"
+                        >
+                            {{ groupName }}
+                        </bk-breadcrumb-item>
+                    </template>
+                </bk-breadcrumb>
+            </template>
+
+            <div
+                slot="middle"
+                v-else
+            >
+                <bk-tab
+                    :active.sync="activeTab"
+                    type="unborder-card"
+                    :label-height="60"
+                    ext-cls="middle-panel"
+                    @tab-change="go"
+                >
+                    <bk-tab-panel
+                        v-for="(panel, index) in modelMenu"
+                        v-bind="panel"
+                        :key="index"
                     >
-                        {{ groupName }}
-                    </bk-breadcrumb-item>
-                </template>
-            </bk-breadcrumb>
+                    </bk-tab-panel>
+                </bk-tab>
+            </div>
 
             <bk-dropdown-menu
                 slot="right"
@@ -89,7 +111,8 @@
         data () {
             return {
                 isLoading: false,
-                toggleIsMore: false
+                toggleIsMore: false,
+                activeTab: 'PipelineManageList'
             }
         },
         computed: {
@@ -125,10 +148,6 @@
                         routeName: 'pipelinesGroup'
                     },
                     {
-                        label: 'templateManage',
-                        routeName: 'pipelinesTemplate'
-                    },
-                    {
                         label: 'pluginManage',
                         routeName: 'atomManage'
                     },
@@ -137,9 +156,34 @@
                         routeName: 'pipelinesAudit'
                     }
                 ]
+            },
+            modelMenu () {
+                return [
+                    {
+                        label: this.$t('pipeline'),
+                        name: 'PipelineManageList'
+                    },
+                    {
+                        label: this.$t('templateName'),
+                        name: 'TemplateManageList'
+                    }
+                ]
             }
 
         },
+        watch: {
+            '$route.name': {
+                handler (name) {
+                    const curModel = this.modelMenu.find(i => i.name === name)
+                    if (curModel) {
+                        this.activeTab = curModel.name
+                        this.go(curModel.name)
+                    }
+                },
+                immediate: true
+            }
+        },
+
         methods: {
             go (name) {
                 this.$router.push({ name })
@@ -178,6 +222,14 @@
             &.active {
                 color: $primaryColor;
             }
+        }
+    }
+    .middle-panel {
+        .bk-tab-section {
+            display: none;
+        }
+        .bk-tab-header {
+            background-image: none !important;
         }
     }
 </style>

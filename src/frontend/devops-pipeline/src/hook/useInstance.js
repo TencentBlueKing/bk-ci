@@ -17,37 +17,20 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/**
- * @desc router 配置
- * @example 路由组件名统一首字母大写
- */
+import { getCurrentInstance } from 'vue'
+export default function useInstance () {
+    const vm = getCurrentInstance()
+    const proxy = vm.proxy
 
-import { getCacheViewId, getTemplateCacheViewId } from '@/utils/util'
-import Vue from 'vue'
-import Router from 'vue-router'
-import pipelines from './router'
-
-Vue.use(Router)
-
-const createRouter = (store, isInIframe) => {
-    const router = new Router({
-        mode: 'history',
-        routes: pipelines
-    })
-    router.beforeEach((to, from, next) => {
-        if (['PipelineManageList', 'TemplateManageList'].includes(to.name) && !to.params.viewId) {
-            next({
-                ...to,
-                params: {
-                    ...to.params,
-                    viewId: to.name === 'PipelineManageList' ? getCacheViewId(to.params.projectId) : getTemplateCacheViewId()
-                }
-            })
-        } else {
-            next()
-        }
-    })
-    return router
+    return {
+        vm,
+        proxy,
+        bkMessage: proxy.$bkMessage,
+        bkInfo: proxy.$bkInfo,
+        i18n: proxy.$i18n,
+        showTips: proxy.$showTips,
+        validator: proxy.$validator,
+        userInfo: proxy.$userInfo,
+        h: proxy.$createElement
+    }
 }
-
-export default createRouter

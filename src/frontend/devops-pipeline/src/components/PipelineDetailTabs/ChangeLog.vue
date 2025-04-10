@@ -63,9 +63,7 @@
                 }, {
                     prop: 'operateTime',
                     label: this.$t('audit.operateTime'),
-                    formatter: (row) => {
-                        return convertTime(row.operateTime)
-                    }
+                    formatter: row => convertTime(row.operateTime)
                 }, {
                     prop: 'operationLogStr',
                     label: this.$t('audit.operateLogDesc')
@@ -87,18 +85,29 @@
                 'requestPipelineChangelogs',
                 'requestPipelineOperatorList'
             ]),
-            async getChangelogs (page, limit) {
+            ...mapActions('templates', [
+                'requestTemplateChangelogs',
+                'requestTemplateOperatorList'
+            ]),
+
+            async getChangelogs (page = this.pagination.current, limit = this.pagination.limit) {
+                this.isLoading = true
                 try {
-                    this.isLoading = true
-                    const { projectId, pipelineId } = this.$route.params
-                    const { limit: pageSize, current } = this.pagination
-                    const changeLogs = await this.requestPipelineChangelogs({
+                    const { projectId, pipelineId, templateId } = this.$route.params
+
+                    const params = {
                         projectId,
-                        pipelineId,
                         creator: this.filterCreator,
-                        page: page ?? current,
-                        pageSize: limit ?? pageSize
-                    })
+                        page,
+                        pageSize: limit,
+                        ...(templateId ? { templateId } : {}),
+                        ...(pipelineId ? { pipelineId } : {})
+                    }
+                
+                    const changeLogs = pipelineId
+                        ? await this.requestPipelineChangelogs(params)
+                        : await this.requestTemplateChangelogs(params)
+                
                     Object.assign(this.pagination, {
                         current: changeLogs.page,
                         limit: changeLogs.pageSize,
@@ -111,16 +120,22 @@
                     this.isLoading = false
                 }
             },
-            async init (page, limit) {
+
+            async init (page = this.pagination.current, limit = this.pagination.limit) {
+                const { projectId, pipelineId, templateId } = this.$route.params
+                const params = {
+                    projectId,
+                    ...(templateId ? { templateId } : {}),
+                    ...(pipelineId ? { pipelineId } : {})
+                }
                 try {
-                    const { projectId, pipelineId } = this.$route.params
+                    const fetchOperatorList = templateId
+                        ? this.requestTemplateOperatorList(params)
+                        : this.requestPipelineOperatorList(params)
 
                     const [, operatorList] = await Promise.all([
                         this.getChangelogs(page, limit),
-                        this.requestPipelineOperatorList({
-                            projectId,
-                            pipelineId
-                        })
+                        fetchOperatorList
                     ])
                     this.operatorList = operatorList
                 } catch (error) {

@@ -8,15 +8,29 @@
                 <TemplateBreadCrumb
                     :template-name="pipeline?.name"
                     :is-loading="!pipeline"
+                >
+                    <span class="template-edit-header-tag">
+                        <bk-tag>
+                            <span
+                                v-bk-overflow-tips
+                                class="edit-header-draft-tag"
+                            >
+                                {{ currentVersionName }}
+                            </span>
+                        </bk-tag>
+                    </span>
+                </TemplateBreadCrumb>
+                <mode-switch
+                    :save="saveTemplateDraft"
                 />
-                <aside>
+                <aside class="template-edit-right-aside">
                     <bk-button
                         theme="primary"
                         @click="saveTemplateDraft"
                         :disabled="saveStatus"
                         outline
                     >
-                        {{ $t('save') }}
+                        {{ $t('saveDraft') }}
                     </bk-button>
                     <ReleaseButton
                         :can-release="canRelease && !isEditing"
@@ -34,13 +48,11 @@
 </template>
 
 <script>
+    import ModeSwitch from '@/components/ModeSwitch'
     import TemplateBreadCrumb from '@/components/template/TemplateBreadCrumb'
     import {
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
-    import {
-        TEMPLATE_TYPE
-    } from '@/utils/pipelineConst'
     import {
         convertMStoStringByRule,
         showPipelineCheckMsg
@@ -53,6 +65,7 @@
         components: {
             TemplateBreadCrumb,
             ReleaseButton,
+            ModeSwitch,
             Edit
         },
         props: {
@@ -60,17 +73,20 @@
         },
         data () {
             return {
-                isLoading: true
+                isLoading: true,
+                confirmMsg: this.$t('editPage.confirmMsg')
             }
         },
         computed: {
             ...mapGetters('atom', [
                 'checkPipelineInvalid',
-                'isEditing'
+                'isEditing',
+                'getDraftBaseVersionName'
             ]),
             ...mapState('atom', [
                 'saveStatus',
                 'pipeline',
+                'templateType',
                 'pipelineInfo',
                 'pipelineWithoutTrigger',
                 'pipelineSetting'
@@ -87,11 +103,23 @@
             templateId () {
                 return this.$route.params.templateId
             },
+            routerTemplateType () {
+                return this.$route.params.templateType
+            },
             currentVersionId () {
                 return this.$route.params?.version ?? this.pipelineInfo?.version
             },
             TEMPLATE_RESOURCE_ACTION () {
                 return TEMPLATE_RESOURCE_ACTION
+            },
+            baseVersionName () {
+                return this.pipelineInfo?.baseVersionName ?? '--'
+            },
+            currentVersionName () {
+                if (this.pipelineInfo?.canDebug) {
+                    return this.$t('editPage.draftVersion', [this.getDraftBaseVersionName])
+                }
+                return this.baseVersionName
             }
         },
         watch: {
@@ -112,7 +140,6 @@
             this.requestTemplateByVersion()
         },
         mounted () {
-            this.addLeaveListenr()
             this.requestQualityAtom()
             this.requestMatchTemplateRules()
         },
@@ -177,7 +204,7 @@
                         model: pipeline,
                         templateSetting: this.pipelineSetting,
                         baseVersion: this.currentVersionId,
-                        type: TEMPLATE_TYPE.PIPELINE
+                        type: this.routerTemplateType ?? this.templateType
                     })
                     if (data) {
                         this.$showTips({
@@ -256,6 +283,16 @@
 
             localConvertMStoString (num) {
                 return convertMStoStringByRule(new Date().getTime() - num)
+            },
+            addLeaveListenr () {
+                window.addEventListener('beforeunload', this.leaveSure)
+            },
+            removeLeaveListenr () {
+                window.removeEventListener('beforeunload', this.leaveSure)
+            },
+            leaveSure (e) {
+                e.returnValue = this.confirmMsg
+                return this.confirmMsg
             }
         }
     }
@@ -263,19 +300,36 @@
 
 <style lang="scss">
     @import './../../scss/conf';
+    @import '@/scss/mixins/ellipsis';
 
     .template-edit {
         .template-edit-header {
+            width: 100%;
             height: 48px;
             display: flex;
+            justify-content: space-between;
             align-items: center;
+            align-self: stretch;
             background-color: white;
             box-shadow: 0 2px 5px 0 #333c4808;
             border-bottom: 1px solid $borderLightColor;
             padding: 0 0 0 24px;
-            > aside {
+            .template-edit-header-tag {
+                display: flex;
+                align-items: center;
+                grid-gap: 8px;
+                line-height: 1;
+                .bk-tag {
+                    margin: 0;
+                    max-width: 222px;
+                    .edit-header-draft-tag {
+                        @include ellipsis();
+                        width: 100%;
+                    }
+                }
+            }
+            .template-edit-right-aside {
                 height: 100%;
-                margin-left: auto;
                 display: flex;
                 justify-self: flex-end;
                 align-items: center;
@@ -284,6 +338,7 @@
         }
         .template-edit-wrapper {
             overflow: hidden;
+            height: calc(100% - 48px);
         }
     }
 

@@ -30,7 +30,7 @@
                     @click="goEditTemplate"
                     size="small"
                 >
-                    {{ $t('编辑模板') }}
+                    {{ $t('template.editTemplate') }}
                 </bk-button>
                 <bk-button
                     @click="switchToReleaseVersion"
@@ -45,7 +45,7 @@
             <section class="template-detail-overview-section">
                 <aside class="template-detail-entry-aside">
                     <header class="template-detail-entry-aside-header">
-                        流水线模板
+                        {{ $t('template.pipelineTemplate') }}
                     </header>
                     <ul
                         v-for="item in asideNav"
@@ -85,6 +85,7 @@
 
                 <section class="template-detail-entry-center">
                     <component
+                        v-if="pipelineHistoryViewable"
                         :is="activeChild.component"
                         v-bind="activeChild.props"
                     />
@@ -117,7 +118,7 @@
     import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
     import { AuthorityTab, ShowVariable } from '@/components/PipelineEditTabs/'
     import TemplateBreadCrumb from '@/components/template/TemplateBreadCrumb'
-    import Instance from '@/views/template/instance'
+    import Instance from '@/views/Template/InstanceList'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
@@ -162,7 +163,7 @@
                         title: this.$t('executeInfo'),
                         children: [
                             {
-                                title: this.$t('实例列表'),
+                                title: this.$t('template.instanceList'),
                                 name: 'instanceList'
                             }
                         ].map((child) => ({
@@ -171,7 +172,7 @@
                         }))
                     },
                     {
-                        title: this.$t('模板配置'),
+                        title: this.$t('template.templateConfig'),
                         children: [
                             {
                                 title: this.$t('pipelineModel'),
@@ -232,7 +233,6 @@
                     name: 'templateEdit',
                     params: {
                         ...this.$route.params,
-                        type: 'pipeline',
                         version: this.pipelineInfo?.version
                     }
                 })
@@ -313,9 +313,11 @@
             },
             switchToReleaseVersion () {
                 this.$router.push({
+                    name: 'instanceEntry',
                     params: {
                         ...this.$route.params,
-                        version: this.pipelineInfo?.releaseVersion
+                        version: this.pipelineInfo?.releaseVersion,
+                        type: 'create'
                     }
                 })
             },

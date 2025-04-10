@@ -17,37 +17,39 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/**
- * @desc router 配置
- * @example 路由组件名统一首字母大写
- */
+// 安装/导入模板类型
+export const INSTALL_TYPE_STORE = 'INSTALL_TYPE_STORE'
+export const INSTALL_TYPE_REPOSITORY = 'INSTALL_TYPE_REPOSITORY'
+export const INSTALL_TYPE_LOCAL = 'INSTALL_TYPE_LOCAL'
 
-import { getCacheViewId, getTemplateCacheViewId } from '@/utils/util'
-import Vue from 'vue'
-import Router from 'vue-router'
-import pipelines from './router'
+// 模板列表表格缓存(用于记录表格列宽\隐藏列\视图ID等)
+export const CACHE_TEMPLATE_TABLE_WIDTH_MAP = 'CACHE_TEMPLATE_TABLE_WIDTH_MAP'
+export const TEMPLATE_TABLE_COLUMN_CACHE = 'TEMPLATE_TABLE_COLUMN_CACHE'
+export const TEMPLATE_VIEW_ID_CACHE = 'TEMPLATE_VIEW_ID_CACHE'
 
-Vue.use(Router)
-
-const createRouter = (store, isInIframe) => {
-    const router = new Router({
-        mode: 'history',
-        routes: pipelines
-    })
-    router.beforeEach((to, from, next) => {
-        if (['PipelineManageList', 'TemplateManageList'].includes(to.name) && !to.params.viewId) {
-            next({
-                ...to,
-                params: {
-                    ...to.params,
-                    viewId: to.name === 'PipelineManageList' ? getCacheViewId(to.params.projectId) : getTemplateCacheViewId()
-                }
-            })
-        } else {
-            next()
-        }
-    })
-    return router
+// 模板操作权限类型
+export const TEMPLATE_ACTION_MAP = {
+    MANAGE: 'MANAGE',
+    CREATE: 'CREATE',
+    EDIT: 'EDIT',
+    DELETE: 'DELETE',
+    VIEW: 'VIEW'
 }
 
-export default createRouter
+// 模板列表视图ID
+export const ALL_TEMPLATE_VIEW_ID = 'allTemplate'
+export const PIPELINE_TEMPLATE_VIEW_ID = 'pipelineTemplate'
+export const STAGE_TEMPLATE_VIEW_ID = 'stageTemplate'
+export const JOB_TEMPLATE_VIEW_ID = 'jobTemplate'
+export const STEP_TEMPLATE_VIEW_ID = 'stepTemplate'
+export const TEMPLATE_VIEW_ID_MAP = {
+    [ALL_TEMPLATE_VIEW_ID]: 'ALL',
+    [PIPELINE_TEMPLATE_VIEW_ID]: 'PIPELINE',
+    [STAGE_TEMPLATE_VIEW_ID]: 'STAGE',
+    [JOB_TEMPLATE_VIEW_ID]: 'JOB',
+    [STEP_TEMPLATE_VIEW_ID]: 'STEP'
+}
+
+export const ALL_SOURCE = 'allSource'
+export const CUSTOM_SOURCE = 'customSource'
+export const MARKET_SOURCE = 'marketSource'
