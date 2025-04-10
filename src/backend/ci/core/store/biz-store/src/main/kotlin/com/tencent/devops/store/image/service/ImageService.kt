@@ -864,7 +864,7 @@ abstract class ImageService @Autowired constructor() {
         val imageRecord = imageDao.getImageStatusByCodeAndVersion(dslContext, imageCode, imageVersion)
         if (imageRecord == null) {
             val errorMessage = if (VersionUtils.isLatestVersion(imageVersion)) {
-                "Image not found: Code=$imageCode, Version=$imageVersion"
+                "image is null,imageCode=$imageCode, imageVersion=$imageVersion"
             } else {
                 "The image identified as $imageCode has no published version or no version number under the major version $imageVersion"
             }
