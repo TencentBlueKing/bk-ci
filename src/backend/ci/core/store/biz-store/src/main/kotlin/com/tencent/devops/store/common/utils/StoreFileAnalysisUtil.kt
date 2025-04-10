@@ -145,12 +145,12 @@ object StoreFileAnalysisUtil {
         file: File
     ): Result<Boolean?> {
         val serviceUrlPrefix = client.getServiceUrl(ServiceArchiveComponentPkgResource::class)
-        val serviceUrl = "$serviceUrlPrefix/service/artifactories/component/pkg/archive" +
+        val serviceUrl = "$serviceUrlPrefix/service/artifactories/store/component/pkg/archive" +
                 "?userId=$userId&storeType=${archiveStorePkgRequest.storeType.name}" +
                 "&storeCode=${archiveStorePkgRequest.storeCode}&version=${archiveStorePkgRequest.version}" +
                 "&releaseType=${archiveStorePkgRequest.releaseType.name}"
         OkhttpUtils.uploadFile(
-            url = serviceUrl.toString(),
+            url = serviceUrl,
             uploadFile = file,
             headers = mapOf(AUTH_HEADER_USER_ID to userId)
         ).use { response ->

@@ -135,12 +135,7 @@ abstract class StorePackageDeployService {
                 }
             } else {
                 val record = storeBaseQueryDao.getLatestComponentByCode(dslContext, storeCode, storeType)
-                if ((record != null) && record.status !in listOf(
-                        StoreStatusEnum.INIT.name,
-                        StoreStatusEnum.RELEASED.name,
-                        StoreStatusEnum.UNDERCARRIAGED.name
-                    )
-                ) {
+                if ((record != null) && record.status !in StoreStatusEnum.getStoreFinalStatusList()) {
                     throw ErrorCodeException(
                         errorCode = STORE_VERSION_IS_NOT_FINISH,
                         params = arrayOf(record.storeCode, record.version)
