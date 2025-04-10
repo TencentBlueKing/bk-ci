@@ -866,7 +866,8 @@ abstract class ImageService @Autowired constructor() {
             val errorMessage = if (VersionUtils.isLatestVersion(imageVersion)) {
                 "image is null,imageCode=$imageCode, imageVersion=$imageVersion"
             } else {
-                "The image identified as $imageCode has no published version or no version number under the major version $imageVersion"
+                "The published version of the image identified as $imageCode was not found under the major version $imageVersion, " +
+                        "or the image does not exist under the major version."
             }
             logger.error(errorMessage)
             throw ErrorCodeException(
