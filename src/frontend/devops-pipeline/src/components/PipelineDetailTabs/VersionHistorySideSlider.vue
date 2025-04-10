@@ -99,7 +99,7 @@
                             class="pipeline-history-version-operate"
                         >
                             <bk-button
-                                v-if="props.row.isDraft"
+                                v-if="props.row.isDraft && !isTemplate"
                                 text
                                 @click="goDebugRecords"
                             >
@@ -109,7 +109,7 @@
                                 v-if="props.row.canRollback"
                                 :has-permission="canEdit"
                                 :version="props.row.version"
-                                :pipeline-id="$route.params.pipelineId"
+                                :rollback-id="isTemplate ? $route.params.ptemplateId : $route.params.pipelineId"
                                 :project-id="$route.params.projectId"
                                 :version-name="props.row.versionName"
                                 :draft-base-version-name="draftBaseVersionName"

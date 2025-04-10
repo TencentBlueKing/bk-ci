@@ -158,7 +158,7 @@
                 class="template-operate"
             >
                 <span
-                    @click="goTemplateOverview(row, 'instanceList')"
+                    @click="goInstanceEntry(row)"
                     :class="['action', row.canEdit ? 'create-permission' : 'not-create-permission']"
                 >
                     <span v-if="row.type === 'PIPELINE'">
@@ -345,6 +345,16 @@
                 version: row.releasedVersion,
                 type,
                 templateType: row.type
+            }
+        })
+    }
+    function goInstanceEntry (row) {
+        proxy.$router.push({
+            name: 'instanceEntry',
+            params: {
+                templateId: row.id,
+                version: row.releaseVersion,
+                type: 'create'
             }
         })
     }
