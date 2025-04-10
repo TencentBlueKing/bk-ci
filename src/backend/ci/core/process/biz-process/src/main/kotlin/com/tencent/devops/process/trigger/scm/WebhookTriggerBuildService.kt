@@ -153,7 +153,7 @@ class WebhookTriggerBuildService @Autowired constructor(
         } catch (ignored: Exception) {
             logger.error(
                 "Failed to trigger by webhook|" +
-                        "projectId:$projectId|pipelineId:$pipelineId|repoHashId:${repository.repoHashId}",
+                        "projectId: $projectId|pipelineId: $pipelineId|repoHashId: ${repository.repoHashId}",
                 ignored
             )
             webhookTriggerManager.fireError(context, ignored)
@@ -164,8 +164,8 @@ class WebhookTriggerBuildService @Autowired constructor(
         with(event) {
             logger.info(
                 "[PAC_PIPELINE]|Start to trigger yaml pipeline|eventId:$eventId|" +
-                        "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|" +
-                        "ref:$ref|blobId:$blobId"
+                        "projectId: $projectId|repoHashId: $repoHashId|filePath: $filePath|" +
+                        "ref: $ref|blobId: $blobId"
             )
             val triggerEvent = pipelineTriggerEventService.getTriggerEvent(projectId = projectId, eventId = eventId)
                 ?: throw throw ErrorCodeException(
@@ -210,15 +210,16 @@ class WebhookTriggerBuildService @Autowired constructor(
                 )
             } ?: run {
                 logger.info(
-                    "[PAC_PIPELINE]|trigger yaml pipeline not found pipeline version|eventId:$eventId|" +
-                            "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|blobId:$blobId"
+                    "[PAC_PIPELINE]|trigger yaml pipeline not found pipeline version|eventId: $eventId|" +
+                            "projectId: $projectId|repoHashId: $repoHashId|filePath: $filePath|blobId: $blobId"
                 )
                 return
             }
             logger.info(
                 "[PAC_PIPELINE]|find yaml pipeline trigger version|eventId:$eventId|" +
-                        "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref|blobId:$blobId|" +
-                        "pipelineId:${pipelineYamlVersion.pipelineId}|version:${pipelineYamlVersion.version}"
+                        "projectId: $projectId|repoHashId: $repoHashId|filePath: $filePath|" +
+                        "ref: $ref|blobId: $blobId|" +
+                        "pipelineId: ${pipelineYamlVersion.pipelineId}|version: ${pipelineYamlVersion.version}"
             )
             trigger(
                 projectId = projectId,
@@ -255,9 +256,8 @@ class WebhookTriggerBuildService @Autowired constructor(
             frequencyLimit = false
         )
         logger.info(
-            "trigger successfully by webhook|eventId:${context.eventId}|" +
-                    "projectId:$projectId|pipelineId:$pipelineId|" +
-                    "version:${resource.version}"
+            "success to trigger by webhook|eventId:${context.eventId}|" +
+                    "projectId: $projectId|pipelineId: $pipelineId|version: ${resource.version}"
         )
         context.buildId = buildId
         context.startParams = startParams

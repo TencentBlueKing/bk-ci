@@ -30,9 +30,6 @@ package com.tencent.devops.process.trigger.scm
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
-import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO
-import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_GROUP
-import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_NAME
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_SOURCE_WEBHOOK
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_HASH_ID
@@ -42,7 +39,6 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_URL
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BLOCK
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_COMMIT_MESSAGE
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_QUEUE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REPO
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REPO_TYPE
@@ -55,7 +51,6 @@ import com.tencent.devops.process.trigger.scm.rule.WebhookRuleManager
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -117,6 +112,7 @@ class WebhookTriggerMatcher @Autowired constructor(
                 startParams = startParams,
                 element = element,
                 repository = repository,
+                variables = variables,
                 webhookParams = webHookParams,
                 matchResult = matchResult
             )
@@ -136,6 +132,7 @@ class WebhookTriggerMatcher @Autowired constructor(
         startParams: MutableMap<String, Any>,
         element: WebHookTriggerElement,
         repository: Repository,
+        variables: Map<String, String>,
         webhookParams: WebHookParams,
         matchResult: WebhookMatchResult
     ) {
@@ -167,7 +164,7 @@ class WebhookTriggerMatcher @Autowired constructor(
         // 子类代码库触发参数
         val elementStartParams = WebhookStartParamsRegistrar.getService(element).getElementStartParams(
             element = element,
-            variables = startParams.mapValues { it.value.toString() },
+            variables = variables,
             repo = repository,
             matcher = null,
             matchResult = matchResult,
@@ -181,16 +178,7 @@ class WebhookTriggerMatcher @Autowired constructor(
         startParams: MutableMap<String, Any>,
         webhook: Webhook
     ) {
-        val serverRepository = webhook.repository()
         val webhookOutputs = webhook.outputs().filter { it.key != BK_REPO_SOURCE_WEBHOOK }
-
-        startParams[PIPELINE_WEBHOOK_EVENT_TYPE] = webhook.eventType
-        if (serverRepository is GitScmServerRepository) {
-            startParams[PIPELINE_GIT_REPO] = serverRepository.fullName
-            startParams[PIPELINE_GIT_REPO_NAME] = serverRepository.name
-            startParams[PIPELINE_GIT_REPO_GROUP] = serverRepository.group
-        }
-
         startParams.putAll(webhookOutputs)
     }
 

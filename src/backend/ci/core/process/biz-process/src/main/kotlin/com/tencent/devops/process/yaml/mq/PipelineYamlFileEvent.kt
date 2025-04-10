@@ -59,7 +59,10 @@ data class PipelineYamlFileEvent(
     @get:Schema(title = "旧的文件路径,重命名时才有值", required = false)
     val oldFilePath: String? = null,
     @get:Schema(
-        title = "文件来源分支, push: 提交的分支,mr: 根据mr的状态,可能是源分支也可能是目标分支,fork库，源分支由组+分支组成",
+        title = "文件来源分支, " +
+                "push: 提交的分支," +
+                "mr: 根据mr的状态,可能是源分支也可能是目标分支，合并前是源分支,合并后是目标分支," +
+                "fork库，源分支由组+分支组成",
         required = true
     )
     val ref: String,
