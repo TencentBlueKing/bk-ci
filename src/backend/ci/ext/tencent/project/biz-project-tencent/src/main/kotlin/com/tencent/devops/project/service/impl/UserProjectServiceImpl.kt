@@ -145,7 +145,7 @@ class UserProjectServiceImpl @Autowired constructor(
                             .ifBlank { it.name },
                         link = it.link ?: "",
                         linkNew = it.linkNew ?: "",
-                        status = getPermStatus(it, userId),
+                        status = getPlatformStatus(it, userId),
                         injectType = it.injectType ?: "",
                         iframeUrl = replaceUrl(
                             url = genUrl(url = it.iframeUrl, grayUrl = it.grayIframeUrl, projectId = projectId),
@@ -326,16 +326,12 @@ class UserProjectServiceImpl @Autowired constructor(
         return result
     }
 
-    private fun getPermStatus(tServiceRecord: TServiceRecord, userId: String): String {
-        val isRbacCluster = bkTag.getLocalTag().contains("rbac")
+    private fun getPlatformStatus(tServiceRecord: TServiceRecord, userId: String): String {
         return when {
-            // 如果是rbac项目,那么旧版权限中心需要隐藏
-            tServiceRecord.englishName == "Perm" && isRbacCluster -> SERVICE_ITEM_STATUS_PLANNING
-            // 如果不是rbac项目,那么新版权限中心需要隐藏
-            tServiceRecord.englishName == "Permission" && !isRbacCluster -> SERVICE_ITEM_STATUS_PLANNING
             // 平台管理界面，需要校验权限
             tServiceRecord.englishName == SERVICE_ENGLISH_NAME_PLATFORM &&
-                    !apiPlatformApi.validateUserPlatformPermission(userId)  -> SERVICE_ITEM_STATUS_PLANNING
+                    apiPlatformApi.validateUserPlatformPermission(userId) -> SERVICE_ITEM_STATUS_OK
+
             else -> tServiceRecord.status
         }
     }
