@@ -29,7 +29,7 @@
 <style lang="scss">
     .we-dev-logo-area {
         position: relative;
-        transition: all .3s ease-in-out;
+        transition: all .25s ease-in-out;
         background-color: #30304E;
         display: flex;
         height: 100%;
@@ -44,15 +44,17 @@
                 transform: translateX(28px);
                 opacity: 1;
             }
-            width: 106px;
+            width: 102px;
         }
         &:not(:hover) {
-            &:first-child {
-                opacity: .4;
+            svg {
+                &:first-child {
+                   opacity: .4;
+                }
             }
         }
         > svg {
-            transition: all .3s ease-in-out;
+            transition: all .25s ease-in-out;
             display: block;
             overflow: visible;
         }
