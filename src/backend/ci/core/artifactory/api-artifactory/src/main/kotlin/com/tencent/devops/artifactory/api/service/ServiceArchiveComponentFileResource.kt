@@ -43,8 +43,8 @@ import java.io.InputStream
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.glassfish.jersey.media.multipart.FormDataParam
 
-@Tag(name = "SERVICE_ARTIFACTORY", description = "仓库-组件")
-@Path("/service/artifactories/component")
+@Tag(name = "SERVICE_ARTIFACTORY_STORE", description = "仓库-研发商店")
+@Path("/service/artifactories/store/component")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceArchiveComponentFileResource {

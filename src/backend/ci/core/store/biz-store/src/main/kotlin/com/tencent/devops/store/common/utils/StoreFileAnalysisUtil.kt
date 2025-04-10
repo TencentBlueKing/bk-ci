@@ -28,7 +28,7 @@
 package com.tencent.devops.store.common.utils
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.artifactory.api.ServiceArchiveComponentPkgResource
+import com.tencent.devops.artifactory.api.ServiceArchiveComponentFileResource
 import com.tencent.devops.artifactory.pojo.ArchiveStorePkgRequest
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -144,13 +144,13 @@ object StoreFileAnalysisUtil {
         archiveStorePkgRequest: ArchiveStorePkgRequest,
         file: File
     ): Result<Boolean?> {
-        val serviceUrlPrefix = client.getServiceUrl(ServiceArchiveComponentPkgResource::class)
-        val serviceUrl = "$serviceUrlPrefix/service/artifactories/component/pkg/archive" +
+        val serviceUrlPrefix = client.getServiceUrl(ServiceArchiveComponentFileResource::class)
+        val serviceUrl = "$serviceUrlPrefix/service/artifactories/store/component/pkg/archive" +
                 "?userId=$userId&storeType=${archiveStorePkgRequest.storeType.name}" +
                 "&storeCode=${archiveStorePkgRequest.storeCode}&version=${archiveStorePkgRequest.version}" +
                 "&releaseType=${archiveStorePkgRequest.releaseType.name}"
         OkhttpUtils.uploadFile(
-            url = serviceUrl.toString(),
+            url = serviceUrl,
             uploadFile = file,
             headers = mapOf(AUTH_HEADER_USER_ID to userId)
         ).use { response ->
