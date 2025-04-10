@@ -118,31 +118,4 @@ interface ServiceArchiveComponentPkgResource {
         @QueryParam("repoName")
         repoName: String? = null
     ): Result<String>
-
-    @Operation(summary = "归档组件包文件")
-    @POST
-    @Path("/pkg/archive")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    fun archiveComponentPkg(
-        @Parameter(description = "userId", required = true)
-        @QueryParam("userId")
-        userId: String,
-        @Parameter(description = "组件类型", required = true)
-        @QueryParam("storeType")
-        storeType: StoreTypeEnum,
-        @Parameter(description = "组件标识", required = true)
-        @QueryParam("storeCode")
-        storeCode: String,
-        @Parameter(description = "组件版本号", required = true)
-        @QueryParam("version")
-        version: String,
-        @Parameter(description = "发布类型", required = true)
-        @QueryParam("releaseType")
-        releaseType: ReleaseTypeEnum,
-        @Parameter(description = "文件", required = true)
-        @FormDataParam("file")
-        inputStream: InputStream,
-        @FormDataParam("file")
-        disposition: FormDataContentDisposition
-    ): Result<Boolean>
 }
