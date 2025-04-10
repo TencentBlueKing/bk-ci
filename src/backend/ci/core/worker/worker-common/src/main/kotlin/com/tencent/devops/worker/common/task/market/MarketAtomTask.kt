@@ -476,10 +476,9 @@ open class MarketAtomTask : ITask() {
                     queryCacheFlag = cacheFlag
                 )
 
-                val shouldCache = atomData.authFlag != true
-                        && checkSha1(atomExecuteFile, atomData.shaContent!!)
-                        && cacheFlag
-                        && !fileCacheDir.contains(buildId)
+                val shouldCache = atomData.authFlag != true && checkSha1(
+                    atomExecuteFile, atomData.shaContent!!
+                ) && cacheFlag && !fileCacheDir.contains(buildId)
 
                 if (shouldCache) {
                     // 无需鉴权的插件包且插件包内容是完整的才放入缓存中
