@@ -62,7 +62,8 @@ class OPRepositoryResourceImpl @Autowired constructor(
     }
 
     override fun updateGitProjectId() {
-        opRepositoryService.updateGitProjectId(
+        opRepositoryService.updateAction(
+            "updateGitProjectId",
             listOf(
                 { opRepositoryService.updateCodeGitProjectId() },
                 { opRepositoryService.updateGitLabProjectId() }
@@ -71,7 +72,8 @@ class OPRepositoryResourceImpl @Autowired constructor(
     }
 
     override fun updateGithubProjectId() {
-        opRepositoryService.updateGitProjectId(
+        opRepositoryService.updateAction(
+            "updateGitProjectId",
             listOf { opRepositoryService.updateCodeGithubProjectId() }
         )
     }
@@ -100,6 +102,19 @@ class OPRepositoryResourceImpl @Autowired constructor(
         opRepositoryService.removeRepositoryPipelineRef(
             projectId = projectId,
             repoHashId = repoHashId
+        )
+        return Result(true)
+    }
+
+    override fun updateRepoCredentialType(projectId: String?, repoHashId: String?): Result<Boolean> {
+        opRepositoryService.updateAction(
+            "updateRepoCredentialType",
+            listOf {
+                opRepositoryService.updateRepoCredentialType(
+                    projectId = projectId,
+                    repoHashId = repoHashId
+                )
+            }
         )
         return Result(true)
     }

@@ -338,6 +338,8 @@ auth:
     expirationTime: "__BK_CI_API_TOKEN_EXPIRED_MILLISECOND__"
   gateway:
     devopsToken: __BK_CI_DEVOPS_TOKEN__
+  platform:
+    manager: admin
 
 #bk esb config for cd plugin in pipeline
 esb:

@@ -33,6 +33,7 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.ticket.pojo.Credential
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialInfo
+import com.tencent.devops.ticket.pojo.CredentialItemVo
 import com.tencent.devops.ticket.pojo.CredentialSettingUpdate
 import com.tencent.devops.ticket.pojo.CredentialUpdate
 import com.tencent.devops.ticket.pojo.CredentialWithPermission
@@ -113,4 +114,6 @@ interface CredentialService {
     fun getCredentialByIds(projectId: String?, credentialIds: Set<String>): List<Credential>?
 
     fun searchByCredentialId(projectId: String, offset: Int, limit: Int, credentialId: String): SQLPage<Credential>
+
+    fun getCredentialItem(projectId: String, credentialId: String, publicKey: String): CredentialItemVo?
 }
