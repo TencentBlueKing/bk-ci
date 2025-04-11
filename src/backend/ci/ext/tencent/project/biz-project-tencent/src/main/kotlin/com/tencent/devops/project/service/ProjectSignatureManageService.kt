@@ -13,7 +13,9 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
@@ -37,7 +39,9 @@ class ProjectSignatureManageService(
     private val redisOperation: RedisOperation,
     private val projectService: ProjectService,
     private val tokenService: ClientTokenService,
-) {
+    private val authProjectApi: AuthProjectApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode
+    ) {
     @Value("\${signature.url:}")
     private lateinit var signatureUrl: String
 
@@ -63,13 +67,12 @@ class ProjectSignatureManageService(
                 signed = true
             )
         }
-        val isProjectUser = client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            token = tokenService.getSystemToken(),
-            userId = userId,
+        val isProjectUser = authProjectApi.isProjectUser(
+            user = userId,
             projectCode = projectId,
-            action = ActionId.PROJECT_VISIT,
-            resourceCode = AuthResourceType.PROJECT.value
-        ).data ?: false
+            serviceCode = pipelineAuthServiceCode,
+            group = null
+        )
         if (!isProjectUser) {
             throw PermissionForbiddenException("The user does not have permission to visit the project.")
         }
