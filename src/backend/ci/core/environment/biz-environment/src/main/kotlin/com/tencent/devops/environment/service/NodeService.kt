@@ -406,6 +406,7 @@ class NodeService @Autowired constructor(
             permissionMap[AuthPermission.DELETE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
         }
         val thirdPartyAgentNodeIds = nodeRecordList.filter { it.nodeType == NodeType.THIRDPARTY.name }.map { it.nodeId }
+        if (thirdPartyAgentNodeIds.isEmpty()) return emptyList()
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds, projectId)
                 .associateBy { it.nodeId }
@@ -516,6 +517,7 @@ class NodeService @Autowired constructor(
         )
         if (nodeListResult.isEmpty()) return emptyList()
         val thirdPartyAgentNodeIds = nodeRecordList.filter { it.nodeType == NodeType.THIRDPARTY.name }.map { it.nodeId }
+        if (thirdPartyAgentNodeIds.isEmpty()) return emptyList()
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds, projectId)
                 .associateBy { it.nodeId }
@@ -870,6 +872,9 @@ class NodeService @Autowired constructor(
     }
 
     fun refreshGateway(oldToNewMap: Map<String, String>): Boolean {
+        if (oldToNewMap.isEmpty()) {
+            return false
+        }
         return try {
             slaveGatewayDao.refreshGateway(dslContext, oldToNewMap)
             thirdPartyAgentDao.refreshGateway(dslContext, oldToNewMap)

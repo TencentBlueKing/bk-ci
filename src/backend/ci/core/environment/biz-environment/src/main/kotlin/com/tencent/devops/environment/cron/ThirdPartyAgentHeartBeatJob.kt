@@ -29,8 +29,13 @@ package com.tencent.devops.environment.cron
 
 import com.tencent.devops.common.api.enums.AgentAction
 import com.tencent.devops.common.api.enums.AgentStatus
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.util.LoopUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.environment.constant.THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL
 import com.tencent.devops.environment.dao.NodeDao
@@ -45,6 +50,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.time.LocalDateTime
+import kotlin.math.ceil
+import kotlin.math.max
 
 @Component
 @Suppress("ALL", "UNUSED")
@@ -56,14 +64,15 @@ class ThirdPartyAgentHeartBeatJob @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val webSocketDispatcher: WebSocketDispatcher,
     private val nodeWebsocketService: NodeWebsocketService,
-    private val thirdpartyAgentService: ThirdPartAgentService
+    private val thirdPartAgentService: ThirdPartAgentService
 ) {
 
-    @Scheduled(initialDelay = 5000, fixedDelay = 3000)
+    @Scheduled(initialDelay = 5000, fixedDelay = 10000)
     fun heartbeat() {
         RedisLock(redisOperation = redisOperation, lockKey = LOCK_KEY, expiredTimeInSeconds = 600).use { lock ->
 
             if (!lock.tryLock()) {
+                logger.info("$LOCK_KEY had locked!")
                 return
             }
             checkOKAgent()
@@ -75,22 +84,32 @@ class ThirdPartyAgentHeartBeatJob @Autowired constructor(
     }
 
     private fun checkOKAgent() {
-        val nodeRecords = thirdPartyAgentDao.listByStatus(
-            dslContext,
-            setOf(AgentStatus.IMPORT_OK)
-        )
-        if (nodeRecords.isEmpty()) {
-            return
-        }
-        nodeRecords.forEach { record ->
-            val heartbeatTime = thirdPartyAgentHeartbeatUtils.getHeartbeatTime(record.id, record.projectId)
-                ?: return@forEach
+        val totalRecordCount = thirdPartyAgentDao.countAgentByStatus(dslContext, setOf(AgentStatus.IMPORT_OK))
+        val lc = max(ceil(totalRecordCount / PageUtil.DEFAULT_PAGE_SIZE.toFloat()).toInt(), 1) // 算出循环次数
+        val vo = LoopUtil.LoopVo<Long, Any>(id = 0L, data = true, thresholdMills = MAX_LOOP_MILLS, thresholdCount = lc)
+        justDoItByLoop(vo = vo, tip = "checkOnlineAgent", func = this::checkOnlineAgent)
+    }
 
-            val escape = System.currentTimeMillis() - heartbeatTime
+    private fun checkOnlineAgent(vo: LoopUtil.LoopVo<Long, Any>) {
+        val records = thirdPartyAgentDao.listByStatusGtId(dslContext, setOf(AgentStatus.IMPORT_OK), vo.id)
+        records.ifEmpty {
+            vo.finish = true
+            return
+        }.forEach { record ->
+            if (record.nodeId == null) {
+                vo.id = max(vo.id, record.id)
+                return@forEach
+            }
+            val heartbeatTime = thirdPartyAgentHeartbeatUtils.getHeartbeatTime(record.id, record.projectId)
             // 50s
-            if (escape > 10 * THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL * 1000) {
+            if (heartbeatTime != null && System.currentTimeMillis() - heartbeatTime > OK_AGENT_INTERVAL_MILLS) {
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
+                    val nodeRecord = nodeDao.get(context, record.projectId, record.nodeId)
+                    if (nodeRecord == null || nodeRecord.nodeStatus == NodeStatus.DELETED.name) {
+                        deleteAgent(context, record.projectId, record.id)
+                        return@transaction
+                    }
                     thirdPartyAgentDao.updateStatus(
                         dslContext = context,
                         id = record.id,
@@ -98,37 +117,37 @@ class ThirdPartyAgentHeartBeatJob @Autowired constructor(
                         projectId = record.projectId,
                         status = AgentStatus.IMPORT_EXCEPTION
                     )
-                    thirdpartyAgentService.addAgentAction(
+                    thirdPartAgentService.addAgentAction(
                         projectId = record.projectId,
                         agentId = record.id,
                         action = AgentAction.OFFLINE
                     )
-                    if (record.nodeId == null) {
-                        return@transaction
-                    }
-                    val nodeRecord = nodeDao.get(context, record.projectId, record.nodeId)
-                    if (nodeRecord == null || nodeRecord.nodeStatus == NodeStatus.DELETED.name) {
-                        deleteAgent(context, record.projectId, record.id)
-                    }
                     nodeDao.updateNodeStatus(context, setOf(record.nodeId), NodeStatus.ABNORMAL)
                 }
             }
+
+            vo.id = max(vo.id, record.id)
         }
     }
 
     private fun checkUnImportAgent() {
-        val nodeRecords = thirdPartyAgentDao.listByStatus(
-            dslContext,
-            setOf(AgentStatus.UN_IMPORT_OK)
-        )
-        if (nodeRecords.isEmpty()) {
+        val totalRecordCount = thirdPartyAgentDao.countAgentByStatus(dslContext, setOf(AgentStatus.UN_IMPORT_OK))
+        val lc = max(ceil(totalRecordCount / PageUtil.DEFAULT_PAGE_SIZE.toFloat()).toInt(), 1) // 算出循环次数
+        val vo = LoopUtil.LoopVo<Long, Any>(id = 0L, data = true, thresholdMills = MAX_LOOP_MILLS, thresholdCount = lc)
+        justDoItByLoop(vo = vo, tip = "checkUnImportAgent", func = this::checkUnImportAgent)
+    }
+
+    private fun checkUnImportAgent(vo: LoopUtil.LoopVo<Long, Any>) {
+        val records = thirdPartyAgentDao.listByStatusGtId(dslContext, setOf(AgentStatus.UN_IMPORT_OK), vo.id)
+        records.ifEmpty {
+            vo.finish = true // 没有数据完成任务
             return
-        }
-        nodeRecords.forEach { record ->
+        }.forEach { record ->
+            vo.id = max(vo.id, record.id)
             val heartbeatTime = thirdPartyAgentHeartbeatUtils.getHeartbeatTime(record.id, record.projectId)
                 ?: return@forEach
             val escape = System.currentTimeMillis() - heartbeatTime
-            if (escape > 2 * THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL * 1000) {
+            if (escape > UNIMPORT_AGENT_INTERVAL_MILLS) {
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
                     thirdPartyAgentDao.updateStatus(
@@ -145,16 +164,19 @@ class ThirdPartyAgentHeartBeatJob @Autowired constructor(
     }
 
     private fun checkExceptionAgent() {
-        // Trying to delete the third party agents
-        val exceptionRecord = thirdPartyAgentDao.listByStatus(
-            dslContext,
-            setOf(AgentStatus.IMPORT_EXCEPTION)
-        )
-        if (exceptionRecord.isEmpty()) {
-            return
-        }
+        val totalRecordCount = thirdPartyAgentDao.countAgentByStatus(dslContext, setOf(AgentStatus.IMPORT_EXCEPTION))
+        val lc = max(ceil(totalRecordCount / PageUtil.DEFAULT_PAGE_SIZE.toFloat()).toInt(), 1) // 算出循环次数
+        val vo = LoopUtil.LoopVo<Long, Any>(id = 0L, data = true, thresholdMills = MAX_LOOP_MILLS, thresholdCount = lc)
+        justDoItByLoop(vo, "checkExceptionAgent", this::deleteExceptionAgent)
+    }
 
-        exceptionRecord.forEach { record ->
+    private fun deleteExceptionAgent(vo: LoopUtil.LoopVo<Long, Any>) {
+        val records = thirdPartyAgentDao.listByStatusGtId(dslContext, setOf(AgentStatus.IMPORT_EXCEPTION), vo.id)
+        records.ifEmpty {
+            vo.finish = true // 没有数据完成任务
+            return
+        }.forEach { record ->
+            vo.id = max(vo.id, record.id)
             if (record.nodeId == null) {
                 return@forEach
             }
@@ -170,8 +192,23 @@ class ThirdPartyAgentHeartBeatJob @Autowired constructor(
         thirdPartyAgentDao.delete(dslContext, agentId, projectId)
     }
 
+    private fun <T> justDoItByLoop(vo: LoopUtil.LoopVo<Long, T>, tip: String, func: (LoopUtil.LoopVo<Long, T>) -> Any) {
+        val watcher = Watcher("${tip}_${DateTimeUtil.toDateTime(LocalDateTime.now())}")
+        watcher.use {
+            watcher.start()
+            do {
+                val met = LoopUtil.doLoop(vo) { func(it) }
+                logger.info("$tip| metrics: $met")
+            } while (!vo.finish)
+        }
+        LogUtils.printCostTimeWE(watcher, OK_AGENT_INTERVAL_MILLS, MAX_LOOP_MILLS)
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ThirdPartyAgentHeartBeatJob::class.java)
         private const val LOCK_KEY = "env_cron_agent_heartbeat_check"
+        private const val OK_AGENT_INTERVAL_MILLS = 10 * THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL * 1000 // 10个心跳周期内未上报的
+        private const val UNIMPORT_AGENT_INTERVAL_MILLS = 2 * THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL * 1000 // 2个心跳周期内未完成导入
+        private const val MAX_LOOP_MILLS = 10 * 60 * 1000L // 10 minutes
     }
 }

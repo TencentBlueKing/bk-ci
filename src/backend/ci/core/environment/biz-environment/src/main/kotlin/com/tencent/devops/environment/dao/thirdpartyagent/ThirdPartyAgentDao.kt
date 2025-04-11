@@ -30,18 +30,19 @@ package com.tencent.devops.environment.dao.thirdpartyagent
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.environment.constant.T_ENVIRONMENT_THIRDPARTY_AGENT_MASTER_VERSION
 import com.tencent.devops.environment.constant.T_ENVIRONMENT_THIRDPARTY_AGENT_NODE_ID
 import com.tencent.devops.model.environment.tables.TEnvironmentThirdpartyAgent
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
-import java.time.LocalDateTime
-import jakarta.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.UpdateSetMoreStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
+import jakarta.ws.rs.NotFoundException
 
 @Repository
 @Suppress("ALL")
@@ -145,26 +146,45 @@ class ThirdPartyAgentDao {
         }
     }
 
-    fun listByStatus(
+    fun listByStatusGtId(
         dslContext: DSLContext,
-        status: Set<AgentStatus>
+        status: Set<AgentStatus>,
+        startId: Long,
+        limit: Int = PageUtil.MAX_PAGE_SIZE
     ): List<TEnvironmentThirdpartyAgentRecord> {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.selectFrom(this)
-                .where(STATUS.`in`(status.map { it.status }))
+                .where(ID.gt(startId)).let { where ->
+                    if (status.isNotEmpty()) {
+                        where.and(STATUS.`in`(status.map { s -> s.status }))
+                    }
+                    where
+                }
+                .orderBy(ID.asc())
+                .limit(limit)
                 .fetch()
         }
     }
 
-    fun listByStatusAndProject(
+    fun listByStatusAndProjectGtId(
         dslContext: DSLContext,
         status: Set<AgentStatus>,
-        projects: Set<String>
+        projects: Set<String>,
+        startId: Long,
+        limit: Int
     ): List<TEnvironmentThirdpartyAgentRecord> {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.selectFrom(this)
-                .where(PROJECT_ID.`in`(projects))
-                .and(STATUS.`in`(status.map { it.status }))
+                .where(ID.gt(startId)).let { where ->
+                    if (projects.isNotEmpty()) {
+                        where.and(PROJECT_ID.`in`(projects))
+                    }
+                    if (status.isNotEmpty()) {
+                        where.and(STATUS.`in`(status.map { s -> s.status }))
+                    }
+                    where
+                }.orderBy(ID.asc())
+                .limit(limit)
                 .fetch()
         }
     }
@@ -176,6 +196,9 @@ class ThirdPartyAgentDao {
         status: AgentStatus,
         os: OS
     ): Int {
+        if (nodeIds.isEmpty()) {
+            throw IllegalArgumentException("Node IDs cannot be empty")
+        }
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.selectCount()
                 .from(this)
@@ -249,8 +272,12 @@ class ThirdPartyAgentDao {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.update(this)
                 .set(STATUS, status.status)
-                .where(ID.`in`(ids))
-                .and(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId)).let { where ->
+                    if (ids.isNotEmpty()) {
+                        where.and(ID.`in`(ids))
+                    }
+                    where
+                }
                 .execute()
         }
     }
@@ -366,6 +393,9 @@ class ThirdPartyAgentDao {
         ids: Set<Long>,
         projectId: String
     ): List<TEnvironmentThirdpartyAgentRecord> {
+        if (ids.isEmpty()) {
+            throw IllegalArgumentException("ids cannot be empty")
+        }
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.selectFrom(this)
                 .where(ID.`in`(ids))
@@ -403,6 +433,9 @@ class ThirdPartyAgentDao {
         nodeIds: Collection<Long>,
         projectId: String
     ): Result<TEnvironmentThirdpartyAgentRecord> {
+        if (nodeIds.isEmpty()) {
+            throw IllegalArgumentException("The node IDs must be non-empty")
+        }
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.selectFrom(this)
                 .where(NODE_ID.`in`(nodeIds))
@@ -458,6 +491,7 @@ class ThirdPartyAgentDao {
     }
 
     fun saveAgentEnvs(dslContext: DSLContext, agentIds: Set<Long>, envStr: String) {
+        if (agentIds.isEmpty()) { throw IllegalArgumentException("The agent IDs must be non-empty") }
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             dslContext.update(this)
                 .set(AGENT_ENVS, envStr)
@@ -481,6 +515,9 @@ class ThirdPartyAgentDao {
     }
 
     fun refreshGateway(dslContext: DSLContext, oldToNewMap: Map<String, String>) {
+        if (oldToNewMap.isEmpty()) {
+            return
+        }
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             dslContext.transaction { configuration ->
                 val updates = mutableListOf<UpdateSetMoreStep<TEnvironmentThirdpartyAgentRecord>>()
@@ -506,6 +543,17 @@ class ThirdPartyAgentDao {
                 }
                 transactionContext.batch(updates).execute()
             }
+        }
+    }
+
+    fun countAgentByStatus(dslContext: DSLContext, status: Set<AgentStatus>): Long {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            return dslContext.selectCount().from(this).let { from ->
+                if (status.isNotEmpty()) {
+                    from.where(STATUS.`in`(status))
+                }
+                from
+            }.fetchOne(0, Long::class.java)!!
         }
     }
 }
