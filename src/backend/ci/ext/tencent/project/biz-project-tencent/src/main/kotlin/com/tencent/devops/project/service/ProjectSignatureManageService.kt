@@ -2,7 +2,6 @@ package com.tencent.devops.project.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.auth.api.service.ServiceDeptResource
-import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
@@ -12,12 +11,9 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
-import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
@@ -38,10 +34,9 @@ class ProjectSignatureManageService(
     private val client: Client,
     private val redisOperation: RedisOperation,
     private val projectService: ProjectService,
-    private val tokenService: ClientTokenService,
     private val authProjectApi: AuthProjectApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode
-    ) {
+) {
     @Value("\${signature.url:}")
     private lateinit var signatureUrl: String
 
