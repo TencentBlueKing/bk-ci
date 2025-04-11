@@ -282,6 +282,18 @@ class ImageDao {
         }
     }
 
+    fun countImageRelease(dslContext: DSLContext, imageCode: String, version: String): Long {
+        return with(TImage.T_IMAGE) {
+            dslContext.selectCount()
+                .from(this)
+                .where(
+                    IMAGE_CODE.eq(imageCode).and(VERSION.like(VersionUtils.generateQueryVersion(version)))
+                        .and(IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()))
+                )
+                .fetchOne(0, Long::class.java)!!
+        }
+    }
+
     fun getJobImageCount(
         dslContext: DSLContext,
         projectCode: String,
