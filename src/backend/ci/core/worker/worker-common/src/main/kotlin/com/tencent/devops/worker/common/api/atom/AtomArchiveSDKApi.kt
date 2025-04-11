@@ -95,7 +95,8 @@ interface AtomArchiveSDKApi : WorkerRestApiSDK {
         projectId: String,
         atomFilePath: String,
         file: File,
-        authFlag: Boolean
+        authFlag: Boolean,
+        queryCacheFlag: Boolean
     )
 
     fun getAtomDevLanguageEnvVars(
