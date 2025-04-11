@@ -25,19 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.common.pipeline.pojo.element.atom
 
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 
-data class PipelineTimer(
-    val projectId: String,
-    val pipelineId: String,
-    val startUser: String,
-    val crontabExpressions: List<String>,
-    val channelCode: ChannelCode,
-    val repoHashId: String?,
-    val branchs: List<String>?,
-    val noScm: Boolean?,
-    val taskId: String,
-    val startParam: Map<String, String>?
+data class BeforeDeleteTimerTriggerParam(
+    override val userId: String,
+    override val projectId: String,
+    override val pipelineId: String,
+    override val channelCode: ChannelCode,
+    val deleteTimerBranch: Boolean = false
+) : BeforeDeleteParam(
+    userId,
+    projectId,
+    pipelineId,
+    channelCode
 )

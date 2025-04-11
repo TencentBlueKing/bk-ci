@@ -45,6 +45,8 @@ data class PipelineTimerBuildEvent(
     override val pipelineId: String,
     override val userId: String,
     val channelCode: ChannelCode,
+    val taskId: String?,
+    val startParam: Map<String, String>?,
     override var actionType: ActionType = ActionType.START,
     override var delayMills: Int = 0
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
