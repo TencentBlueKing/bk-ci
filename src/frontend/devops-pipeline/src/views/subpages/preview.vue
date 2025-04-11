@@ -73,7 +73,7 @@
                     />
 
                     {{ $t('buildParams') }}
-                    <template v-if="paramList.length > 0">
+                    <template v-if="hasPipelineParams">
                         <span class="collapse-trigger-divider">|</span>
                         <span
                             v-if="useLastParams"
@@ -106,7 +106,7 @@
                     >
                     </bk-alert>
                     <pipeline-params-form
-                        v-if="paramList.length > 0"
+                        v-if="hasPipelineParams"
                         ref="paramsForm"
                         :param-values="paramsValues"
                         :highlight-changed-param="showChangedParamsAlert"
@@ -172,7 +172,7 @@
                     </div>
                 </section>
             </template>
-            <template v-if="otherParams.length > 0">
+            <template v-if="hasOtherParams">
                 <section class="params-content-item">
                     <header
                         :class="['params-collapse-trigger', {
@@ -352,6 +352,18 @@
             changedParams () {
                 return [...this.paramList, ...this.versionParamList].filter(p => p.isChanged)
             },
+            hasOtherParams () {
+                if (!this.isVisibleVersion) {
+                    return [...this.otherParams, ...this.versionParamList].length
+                }
+                return this.otherParams.length
+            },
+            hasPipelineParams () {
+                if (this.isVisibleVersion) {
+                    return [...this.paramList, ...this.versionParamList].length
+                }
+                return this.paramList.length
+            },
             resetDefaultParamsTips () {
                 return this.$t(this.isDebugPipeline ? 'debugParamsTips' : 'restoreDetaulParamsTips')
             },
@@ -472,16 +484,25 @@
             },
             updateParams (valueKey = 'defaultValue') {
                 this.showChangedParamsAlert = valueKey === 'value'
-                this.versionParamValues = getParamsValuesMap(this.versionParamList, valueKey)
-                if (this.isVisibleVersion) {
-                    this.paramsValues = getParamsValuesMap(this.paramList, valueKey)
-                }
+                this.paramsValues = getParamsValuesMap(this.paramList, valueKey)
                 this.setExecuteParams({
                     pipelineId: this.pipelineId,
                     params: {
                         ...this.paramsValues
                     }
                 })
+                if (this.isVisibleVersion) {
+                    this.versionParamValues = getParamsValuesMap(this.versionParamList, valueKey)
+                    this.setExecuteParams({
+                        pipelineId: this.pipelineId,
+                        params: {
+                            ...this.versionParamValues
+                        }
+                    })
+                }
+                if (this.isVisibleVersion && this.buildNo.buildNoType === 'CONSISTENT') {
+                    this.handleBuildNoChange('currentBuildNo', this.buildNo?.lastBuildNo ?? this.buildNo.buildNo)
+                }
             },
             async handleValidate () {
                 const result = await this.validateForm()
@@ -528,11 +549,7 @@
                 this.handleChange('versionParam', ...args)
             },
             handleBuildNoChange (name, value) {
-                if (name === 'currentBuildNo') {
-                    this.buildNo.currentBuildNo = value
-                } else {
-                    this.buildNo.buildNo = value
-                }
+                this.buildNo[name] = value
 
                 this.setExecuteParams({
                     pipelineId: this.pipelineId,
