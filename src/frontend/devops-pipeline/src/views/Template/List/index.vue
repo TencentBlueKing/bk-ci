@@ -150,7 +150,8 @@
         TEMPLATE_ACTION_MAP,
         ALL_SOURCE,
         CUSTOM_SOURCE,
-        MARKET_SOURCE
+        MARKET_SOURCE,
+        TEMPLATE_MODE
     } from '@/store/modules/templates/constants'
 
     const { proxy, i18n, bkMessage, bkInfo, h, validator } = UseInstance()
@@ -474,7 +475,7 @@
      */
     function deleteTemplate (row) {
         if (!row.canEdit) return
-        const title = row.source === 'CUSTOM' ? i18n.t('template.deleteCustom') : i18n.t('template.deleteStore')
+        const title = row.mode === TEMPLATE_MODE.CONSTRAINT ? i18n.t('template.deleteStore') : i18n.t('template.deleteCustom')
 
         bkInfo({
             title,

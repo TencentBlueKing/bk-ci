@@ -432,7 +432,7 @@
     "templateInstantiation": "模板实例化",
     "templateVersion": "模板版本",
     "applyTemplateSetting": "同时应用模板设置",
-    "applyTemplateSettingTips": "勾选则表示把模板的设置应用到实例化的流水线",
+    "applyTemplateSettingTips": "应用后，实例的标签、运行设置、通知等设置信息将和模版保持一致，",
     "templateVersionErrTips": "请先选择模板版本",
     "notificationSetting": "通知设置",
     "parallelSetting": "并发策略",
@@ -496,6 +496,11 @@
     "stepTemplate": "Step模板",
     "templateCoverWarning": "草稿即将覆盖警告",
     "templateCoverWarningDesc": "{0} 编辑的草稿（从{1}创建）尚未发布。编辑分支版本将覆盖尚未发布的草稿，请确认是否继续",
+    "batchUpgrade": "批量升级",
+    "jumpToViewDetails": "跳转查看详情",
+    "upgradedVersion": "升级的版本",
+    "selectPipelineNum": "已选择{0}条流水线",
+    "batchEdit": "批量编辑",
     "batchUpdateInstance": "批量升级",
     "batchUpdateTip1": "· 开启了 PAC 的流水线实例和未开启 PAC 的流水线实例，请分批升级",
     "batchUpdateTip2": "· 开启了 PAC，且存储 YAML 文件的代码库不一致的流水线实例，请分批升级",
@@ -506,7 +511,9 @@
     "handleMR": "去处理 MR",
     "editTemplate": "编辑模板",
     "instanceList": "实例列表",
-    "templateConfig": "模板配置"
+    "templateConfig": "模板配置",
+    "rollback": "回滚至此版本",
+    "selectTemplateUpgradedVersion": "请选择升级的版本"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",

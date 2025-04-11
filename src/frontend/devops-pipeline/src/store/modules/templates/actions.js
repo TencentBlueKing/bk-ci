@@ -68,6 +68,18 @@ const actions = {
         return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}?page=${page}&pageSize=${pageSize}`, { params }).then(response => {
             return response.data
         })
+    },
+    requestTemplateChangelogs (_, { projectId, templateId, ...params }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/operationLog`, { params }).then(response => response.data)
+    },
+    requestTemplateOperatorList (_, { projectId, templateId, ...params }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/operatorList`, { params }).then(response => response.data)
+    },
+    deleteTempalteVersion (_, { projectId, templateId, version }) {
+        return ajax.delete(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/${version}`)
+    },
+    rollbackTemplateVersion (_, { projectId, templateId, version }) {
+        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/rollbackDraft?version=${version}`).then(response => response.data)
     }
 }
 

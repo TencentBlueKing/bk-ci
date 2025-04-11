@@ -166,6 +166,7 @@
     import { convertTime } from '@/utils/util'
     import emptyTips from '@/components/pipelineList/imgEmptyTips'
     import instanceCompared from '@/components/template/instance-compared.vue'
+    import { SET_INSTANCE_LIST } from '@/store/modules/templates/constants'
 
     const { proxy, showTips, i18n } = UseInstance()
     const isInit = ref(false)
@@ -215,6 +216,7 @@
     const projectId = computed(() => proxy.$route.params.projectId)
     const pipelineId = computed(() => proxy.$route.params.pipelineId)
     const templateId = computed(() => proxy.$route.params.templateId)
+    const pipelineInfo = computed(() => proxy.$store?.state?.atom?.pipelineInfo)
     const searchParams = computed(() => searchValue.value.reduce((acc, filter) => {
         acc[filter.id] = filter.values.map(val => val.id).join(',')
         return acc
@@ -382,6 +384,20 @@
     function selectedVersion (data) {
         isInit.value = false
         instanceVersion.value = data
+    }
+    function toPipelineHistory () {
+        // to do..
+    }
+    function batchUpdateInstance () {
+        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, selectItemList.value)
+        proxy.$router.push({
+            name: 'instanceEntry',
+            params: {
+                ...proxy.$route.params,
+                version: pipelineInfo.value?.releaseVersion,
+                type: 'upgrade'
+            }
+        })
     }
 
 </script>

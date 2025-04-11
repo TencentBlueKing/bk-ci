@@ -24,7 +24,7 @@ import mutations from './mutations'
 export default {
     namespaced: true,
     state: {
-        
+        instanceList: [] // 实例列表选中的实例数据
     },
     mutations,
     actions,

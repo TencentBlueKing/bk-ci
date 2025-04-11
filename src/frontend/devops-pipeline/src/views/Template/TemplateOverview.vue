@@ -7,7 +7,7 @@
         <header>
             <TemplateBreadCrumb
                 :template-name="pipelineInfo?.name"
-                :is-loading="!pipelineInfo"
+                :is-loading="!pipelineInfo || switchingVersion"
             />
             <p class="template-version-area">
                 <pac-tag
@@ -26,18 +26,28 @@
             </p>
 
             <p class="template-operate-area">
+                <template v-if="!isHistoryVersion">
+                    <bk-button
+                        @click="goEditTemplate(pipelineInfo?.version)"
+                        size="small"
+                    >
+                        {{ $t('template.editTemplate') }}
+                    </bk-button>
+                    <bk-button
+                        @click="handleToInstanceEntry"
+                        theme="primary"
+                        size="small"
+                    >
+                        {{ $t('template.instantiate') }}
+                    </bk-button>
+                </template>
                 <bk-button
-                    @click="goEditTemplate"
-                    size="small"
-                >
-                    {{ $t('template.editTemplate') }}
-                </bk-button>
-                <bk-button
-                    @click="switchToReleaseVersion"
+                    v-else
+                    @click="rollback"
                     theme="primary"
                     size="small"
                 >
-                    {{ $t('template.instantiate') }}
+                    {{ $t('template.rollback') }}
                 </bk-button>
             </p>
         </header>
@@ -73,7 +83,8 @@
                                 :class="[
                                     'nav-child-title',
                                     {
-                                        active: child.active
+                                        active: child.active,
+                                        'nav-child-disabled': child.disabled
                                     }
                                 ]"
                             >
@@ -120,6 +131,7 @@
     import TemplateBreadCrumb from '@/components/template/TemplateBreadCrumb'
     import Instance from '@/views/Template/InstanceList'
     import { mapActions, mapGetters, mapState } from 'vuex'
+    import { pipelineTabIdMap } from '@/utils/pipelineConst'
 
     export default {
         components: {
@@ -140,8 +152,8 @@
             }
         },
         computed: {
-            ...mapState('atom', ['pipeline', 'pipelineSetting', 'pipelineInfo']),
-            ...mapGetters('atom', ['pacEnabled', 'yamlInfo', 'pipelineHistoryViewable']),
+            ...mapState('atom', ['pipeline', 'pipelineSetting', 'pipelineInfo', 'switchingVersion']),
+            ...mapGetters('atom', ['pacEnabled', 'yamlInfo', 'pipelineHistoryViewable', 'isReleaseVersion', 'isBranchVersion']),
             projectId () {
                 return this.$route.params.projectId
             },
@@ -149,7 +161,7 @@
                 return this.$route.params.templateId
             },
             currentVersion () {
-                return parseInt(this.$route.params.version)
+                return this.$route.params.version ? parseInt(this.$route.params.version) : this.releaseVersion
             },
             activeMenuItem () {
                 return this.$route.params.type || 'instanceList'
@@ -169,7 +181,8 @@
                             }
                         ].map((child) => ({
                             ...child,
-                            active: this.activeMenuItem === child.name
+                            active: this.activeMenuItem === child.name,
+                            disabled: !this.isReleaseVersion && !this.isBranchVersion
                         }))
                     },
                     {
@@ -209,13 +222,25 @@
                             }
                         ].map((child) => ({
                             ...child,
-                            active: this.activeMenuItem === child.name
+                            active: this.activeMenuItem === child.name,
+                            disabled: !this.isReleaseVersion
                         }))
                     }
                 ]
             },
             isDirectShowVersion () {
                 return this.$route.params.isDirectShowVersion || false
+            },
+            releaseVersion () {
+                return this.pipelineInfo?.releaseVersion
+            },
+            isHistoryVersion () {
+                return this.releaseVersion !== this.currentVersion
+            }
+        },
+        watch: {
+            currentVersion () {
+                this.$nextTick(this.init)
             }
         },
         created () {
@@ -227,16 +252,12 @@
                         version: this.pipelineInfo?.version
                     }
                 })
+            } else if (this.isHistoryVersion) {
+                this.handleVersionChange(this.releaseVersion)
             } else {
-                this.requestPipeline({
-                    projectId: this.projectId,
-                    templateId: this.templateId,
-                    version: this.pipelineInfo?.version
-                })
-                this.selectPipelineVersion(this.pipelineInfo?.version)
+                this.init()
             }
         },
-
         methods: {
             ...mapActions('atom', [
                 'selectPipelineVersion',
@@ -244,8 +265,32 @@
                 'setPipeline',
                 'setPipelineWithoutTrigger',
                 'resetAtomModalMap',
-                'setShowVariable'
+                'setShowVariable',
+                'setSwitchingPipelineVersion'
             ]),
+            ...mapActions({
+                rollbackTemplateVersion: 'templates/rollbackTemplateVersion',
+                requestTemplateSummary: 'atom/requestTemplateSummary'
+            }),
+            async init () {
+                try {
+                    if (this.currentVersion) {
+                        this.setSwitchingPipelineVersion(true)
+                        await this.requestPipeline({
+                            projectId: this.projectId,
+                            templateId: this.templateId,
+                            version: this.currentVersion
+                        })
+                    }
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message
+                    })
+                } finally {
+                    this.setSwitchingPipelineVersion(false)
+                }
+            },
             showVersionSideSlider () {
                 this.setShowVariable(false)
                 this.$refs?.versionSelectorInstance?.close?.()
@@ -254,8 +299,23 @@
             closeVersionSideSlider () {
                 this.showVersionSideslider = false
             },
-            handleVersionChange () {
-                // TODO:
+            handleVersionChange (versionId, version) {
+                let routeType = this.$route.params.type || 'instanceList'
+
+                if (version) {
+                    this.selectPipelineVersion(version)
+                    if (this.releaseVersion) {
+                        const noRecordVersion = ['instanceList'].includes(this.$route.params.type) && !(versionId === this.releaseVersion || version.isBranchVersion)
+                        routeType = noRecordVersion ? pipelineTabIdMap.pipeline : this.$route.params.type
+                    }
+                }
+                this.$router.push({
+                    params: {
+                        ...this.$route.params,
+                        version: versionId,
+                        type: routeType
+                    }
+                })
             },
             getNavComponent (type) {
                 switch (type) {
@@ -296,21 +356,42 @@
                 })
             },
             switchToReleaseVersion () {
-                this.$router.push({
-                    params: {
-                        ...this.$route.params,
-                        version: this.pipelineInfo?.releaseVersion
-                    }
-                })
+                this.handleVersionChange(this.releaseVersion)
             },
-            goEditTemplate () {
+            goEditTemplate (version) {
                 this.$router.push({
                     name: 'templateEdit',
                     params: {
                         ...this.$route.params,
-                        version: this.pipelineInfo?.version
+                        version
                     }
                 })
+            },
+            handleToInstanceEntry () {
+                this.$router.push({
+                    name: 'instanceEntry',
+                    params: {
+                        ...this.$route.params,
+                        version: this.pipelineInfo?.releaseVersion,
+                        type: 'create'
+                    }
+                })
+            },
+            async rollback () {
+                // TODO 版本路径变更
+                try {
+                    const { version } = await this.rollbackTemplateVersion({
+                        ...this.$route.params,
+                        version: this.currentVersion
+                    })
+                    await this.requestTemplateSummary(this.$route.params)
+
+                    if (version) {
+                        this.goEditTemplate(version)
+                    }
+                } catch (error) {
+                    console.log(error)
+                }
             }
         }
     }

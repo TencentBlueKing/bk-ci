@@ -53,3 +53,11 @@ export const TEMPLATE_VIEW_ID_MAP = {
 export const ALL_SOURCE = 'allSource'
 export const CUSTOM_SOURCE = 'customSource'
 export const MARKET_SOURCE = 'marketSource'
+
+export const TEMPLATE_MODE = {
+    CUSTOMIZE: 'CUSTOMIZE',
+    CONSTRAINT: 'CONSTRAINT',
+    PUBLIC: 'PUBLIC'
+}
+
+export const SET_INSTANCE_LIST = 'SET_INSTANCE_LIST'
