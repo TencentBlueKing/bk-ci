@@ -71,7 +71,7 @@ class ProjectSignatureManageService(
             resourceCode = AuthResourceType.PROJECT.value
         ).data ?: false
         if (!isProjectUser) {
-            throw PermissionForbiddenException("The user does not have permission to visit the project!")
+            throw PermissionForbiddenException("The user does not have permission to visit the project.")
         }
         logger.info("get signature status :$projectId|$userId")
         val projectNames = try {
