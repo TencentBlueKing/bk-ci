@@ -77,6 +77,9 @@ const actions = {
     },
     deleteTempalteVersion (_, { projectId, templateId, version }) {
         return ajax.delete(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/${version}`)
+    },
+    rollbackTemplateVersion (_, { projectId, templateId, version }) {
+        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/rollbackDraft?version=${version}`).then(response => response.data)
     }
 }
 

@@ -11,7 +11,10 @@
             :btns="noPermissionTipsConfig.btns"
         >
         </empty-tips>
-        <YamlPipelineEditor v-else-if="isCodeMode" />
+        <YamlPipelineEditor
+            v-else-if="isCodeMode"
+            :editable="!isTemplatePipeline"
+        />
         <template v-else>
             <show-variable
                 v-if="currentTab === 'pipeline' && pipeline"
@@ -71,6 +74,7 @@
     import { navConfirm } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import YamlPipelineEditor from './YamlPipelineEditor'
+    import { TEMPLATE_MODE } from '@/store/modules/templates/constants'
 
     export default {
         components: {
@@ -130,7 +134,8 @@
             ]),
             ...mapGetters({
                 isCodeMode: 'isCodeMode',
-                getPipelineSubscriptions: 'atom/getPipelineSubscriptions'
+                getPipelineSubscriptions: 'atom/getPipelineSubscriptions',
+                isTemplate: 'atom/isTemplate'
             }),
             pipelineVersion () {
                 return this.pipelineInfo?.version
@@ -148,7 +153,7 @@
                 return this.panels.find((panel) => panel.name === this.currentTab)
             },
             isTemplatePipeline () {
-                return this.pipelineInfo?.instanceFromTemplate ?? false
+                return (this.pipelineInfo?.mode === TEMPLATE_MODE.CONSTRAINT && this.isTemplate) ?? false
             },
             panels () {
                 return [
@@ -157,6 +162,7 @@
                         label: this.$t('pipeline'),
                         component: 'PipelineEditTab',
                         bindData: {
+                            editable: !this.isTemplatePipeline,
                             pipeline: this.pipelineWithoutTrigger,
                             isLoading: !this.pipelineWithoutTrigger
                         }

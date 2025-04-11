@@ -509,7 +509,8 @@
     "handleMR": "Handle MR",
     "editTemplate": "Edit Template",
     "instanceList": "Instance list",
-    "templateConfig": "Template config"
+    "templateConfig": "Template config",
+    "rollback": "Rollback Version"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
