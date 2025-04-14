@@ -91,7 +91,9 @@ module.exports = class BundleWebpackPlugin {
                     }
                 }
                 if (this.isDev) {
-                    fs.writeFileSync(this.DEBUG_ASSETS_BUNDLE_JSON_FILE, JSON.stringify(assetsMap))
+                    fs.writeFileSync(this.DEBUG_ASSETS_BUNDLE_JSON_FILE, JSON.stringify(assetsMap), {
+                        recursive: true,
+                    })
                 } 
                 
                 callback()
