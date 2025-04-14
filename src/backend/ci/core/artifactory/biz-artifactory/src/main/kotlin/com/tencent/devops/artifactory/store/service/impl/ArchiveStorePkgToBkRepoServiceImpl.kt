@@ -8,6 +8,7 @@ import com.tencent.devops.artifactory.store.config.BkRepoStoreConfig
 import com.tencent.devops.artifactory.util.DefaultPathUtils
 import com.tencent.devops.common.api.constant.STATIC
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.config.BkRepoClientConfig
 import com.tencent.devops.store.pojo.common.CONFIG_YML_NAME
@@ -195,7 +196,8 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
     override fun createPkgShareUri(
         userId: String,
         storeType: StoreTypeEnum,
-        pkgPath: String
+        pkgPath: String,
+        queryCacheFlag: Boolean
     ): String {
         val repoPrefixUrl = getRepoPrefixUrl(storeType)
         val temporaryAccessUrls = bkRepoClient.createTemporaryAccessUrl(
@@ -213,7 +215,11 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
         )
         return when {
             temporaryAccessUrls.isEmpty() -> ""
-            else -> temporaryAccessUrls[0].url
+            else -> ApiUtil.appendUrlQueryParam(
+                originalUrl = temporaryAccessUrls[0].url,
+                paramName = "queryCacheFlag",
+                paramValue = queryCacheFlag.toString()
+            )
         }
     }
 
