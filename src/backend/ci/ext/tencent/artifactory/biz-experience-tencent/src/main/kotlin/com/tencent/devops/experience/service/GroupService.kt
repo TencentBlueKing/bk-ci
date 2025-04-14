@@ -70,9 +70,12 @@ import com.tencent.devops.experience.pojo.group.GroupUpdate
 import com.tencent.devops.experience.pojo.group.GroupUsers
 import com.tencent.devops.experience.pojo.group.GroupV2
 import com.tencent.devops.experience.util.DateUtil
+import com.tencent.devops.experience.util.Message
+import com.tencent.devops.experience.util.RtxUtil
 import com.tencent.devops.model.experience.tables.records.TExperienceGroupDepartmentRecord
 import com.tencent.devops.model.experience.tables.records.TExperienceGroupInnerRecord
 import com.tencent.devops.model.experience.tables.records.TExperienceGroupOuterRecord
+import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
@@ -361,6 +364,8 @@ class GroupService @Autowired constructor(
             remark = group.remark,
             updator = userId
         )
+        // 项目名称
+        val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
         // 新增内部人员
         val oldInnerUsers = experienceGroupInnerDao.listByGroupIds(dslContext, setOf(groupId)).map { it.userId }.toSet()
         val latestInnerUsers = group.innerUsers
@@ -369,21 +374,6 @@ class GroupService @Autowired constructor(
         val oldOuterUsers = experienceGroupOuterDao.listByGroupIds(dslContext, setOf(groupId)).map { it.outer }.toSet()
         val latestOldOuterUsers = group.outerUsers
         val newAddOuterUsers = latestOldOuterUsers.subtract(oldOuterUsers).toMutableSet()
-        // 向新增人员发送最新版本体验信息
-        if (newAddOuterUsers.isNotEmpty()) {
-            sendNotificationToNewAddUser(
-                newAddUsers = newAddOuterUsers,
-                userType = NEW_ADD_OUTER_USERS,
-                groupId = groupId
-            )
-        }
-        if (newAddInnerUsers.isNotEmpty()) {
-            sendNotificationToNewAddUser(
-                newAddUsers = newAddInnerUsers,
-                userType = NEW_ADD_INNER_USERS,
-                groupId = groupId
-            )
-        }
 
         // 修改权限
         experienceGroupInnerDao.deleteByGroupId(dslContext, groupId)
@@ -403,9 +393,11 @@ class GroupService @Autowired constructor(
     }
 
     private fun sendNotificationToNewAddUser(
-        newAddUsers: MutableSet<String>,
+        newAddUsers: Set<String>,
         userType: String,
-        groupId: Long
+        groupId: Long,
+        masterId: String,
+        projectId: String
     ) {
         val experienceIds = mutableSetOf<Long>()
         val groupIds = mutableSetOf<Long>()
@@ -414,8 +406,9 @@ class GroupService @Autowired constructor(
             experienceGroupDao.listRecordIdByGroupIds(dslContext, groupIds)
                 .map { it.value1() }.toSet()
         )
-        experienceIds.forEach continuing@{ experienceId ->
-            val experienceRecord = experienceDao.get(dslContext, experienceId)
+        val records = experienceDao.list(dslContext, experienceIds)
+        val rtxMessages = mutableListOf<Message>()
+        records.forEach continuing@{ experienceRecord ->
             if (DateUtil.isExpired(experienceRecord.endDate) || !experienceRecord.online) {
                 return@continuing
             }
@@ -431,21 +424,29 @@ class GroupService @Autowired constructor(
                 }
 
                 NEW_ADD_INNER_USERS -> {
-                    val notifyTypeList = objectMapper.readValue<Set<NotifyType>>(experienceRecord.notifyTypes)
-                    val pcUrl = experienceService.getPcUrl(experienceRecord.projectId, experienceId)
-                    val appUrl = experienceService.getShortExternalUrl(experienceId)
-                    val projectName =
-                        client.get(ServiceProjectResource::class).get(experienceRecord.projectId).data!!.projectName
-                    experienceService.sendMessageToInnerReceivers(
-                        notifyTypeList = notifyTypeList,
-                        projectName = projectName,
-                        innerReceivers = newAddUsers,
-                        experienceRecord = experienceRecord,
-                        pcUrl = pcUrl,
-                        appUrl = appUrl
+                    rtxMessages.add(
+                        Message(
+                            name = experienceRecord.name,
+                            version = experienceRecord.version,
+                            outerUrl = experienceService.getShortExternalUrl(experienceRecord.id)
+                        )
                     )
                 }
             }
+        }
+
+        // 合并消息发给企微
+        if (!rtxMessages.isEmpty()) {
+            val groupRecord = groupDao.get(dslContext, groupId)
+            val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
+            val message = RtxUtil.batchAddGroupMessage(
+                receivers = newAddUsers,
+                groupName = groupRecord.name,
+                masterId = masterId,
+                messages = rtxMessages,
+                projectName = projectName
+            )
+            client.get(ServiceNotifyResource::class).sendRtxNotify(message)
         }
     }
 
@@ -607,7 +608,8 @@ class GroupService @Autowired constructor(
             groupId = groupId,
             userIds = (originalInnerUsers - commitInnerUsers)
         )
-        (commitInnerUsers - originalInnerUsers).forEach {
+        val newInnerUsers = commitInnerUsers - originalInnerUsers
+        newInnerUsers.forEach {
             val gdfn = getGDFNByUser(it)
             experienceGroupInnerDao.create(
                 dslContext = dslContext,
@@ -627,7 +629,8 @@ class GroupService @Autowired constructor(
             groupId = groupId,
             userIds = (originalOuterUsers - commitOuterUsers)
         )
-        (commitOuterUsers - originalOuterUsers).forEach {
+        val newOuterUsers = commitOuterUsers - originalOuterUsers
+        newOuterUsers.forEach {
             experienceGroupOuterDao.create(
                 dslContext = dslContext,
                 groupId = groupId,
@@ -665,6 +668,25 @@ class GroupService @Autowired constructor(
             groupId = groupId,
             groupName = groupCommit.name
         )
+        // 向新增人员发送最新版本体验信息
+        if (newOuterUsers.isNotEmpty()) {
+            sendNotificationToNewAddUser(
+                newAddUsers = newOuterUsers,
+                userType = NEW_ADD_OUTER_USERS,
+                groupId = groupId,
+                masterId = userId,
+                projectId = projectId
+            )
+        }
+        if (newInnerUsers.isNotEmpty()) {
+            sendNotificationToNewAddUser(
+                newAddUsers = newInnerUsers,
+                userType = NEW_ADD_INNER_USERS,
+                groupId = groupId,
+                masterId = userId,
+                projectId = projectId
+            )
+        }
     }
 
     @ActionAuditRecord(

@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.auth.api.AuthPlatformApi
 import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
@@ -71,7 +72,8 @@ class UserProjectServiceImpl @Autowired constructor(
     authProjectApi: AuthProjectApi,
     pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val tofService: TOFService,
-    private val bkTag: BkTag
+    private val bkTag: BkTag,
+    private val apiPlatformApi: AuthPlatformApi
 ) : AbsUserProjectServiceServiceImpl(
     dslContext,
     serviceTypeDao,
@@ -80,7 +82,8 @@ class UserProjectServiceImpl @Autowired constructor(
     gray,
     redisOperation,
     authProjectApi,
-    pipelineAuthServiceCode
+    pipelineAuthServiceCode,
+    apiPlatformApi
 ) {
 
     @Value("\${project.container.url:#{null}}")
@@ -142,7 +145,7 @@ class UserProjectServiceImpl @Autowired constructor(
                             .ifBlank { it.name },
                         link = it.link ?: "",
                         linkNew = it.linkNew ?: "",
-                        status = getPermStatus(it),
+                        status = getPlatformStatus(it, userId),
                         injectType = it.injectType ?: "",
                         iframeUrl = replaceUrl(
                             url = genUrl(url = it.iframeUrl, grayUrl = it.grayIframeUrl, projectId = projectId),
@@ -323,13 +326,12 @@ class UserProjectServiceImpl @Autowired constructor(
         return result
     }
 
-    private fun getPermStatus(tServiceRecord: TServiceRecord): String {
-        val isRbacCluster = bkTag.getLocalTag().contains("rbac")
+    private fun getPlatformStatus(tServiceRecord: TServiceRecord, userId: String): String {
         return when {
-            // 如果是rbac项目,那么旧版权限中心需要隐藏
-            tServiceRecord.englishName == "Perm" && isRbacCluster -> "planning"
-            // 如果不是rbac项目,那么新版权限中心需要隐藏
-            tServiceRecord.englishName == "Permission" && !isRbacCluster -> "planning"
+            // 平台管理界面，需要校验权限
+            tServiceRecord.englishName == SERVICE_ENGLISH_NAME_PLATFORM &&
+                    apiPlatformApi.validateUserPlatformPermission(userId) -> SERVICE_ITEM_STATUS_OK
+
             else -> tServiceRecord.status
         }
     }

@@ -28,6 +28,10 @@
 package com.tencent.devops.experience.util
 
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_EXPERIENCE_ADD_GROUP_CONTENT
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_EXPERIENCE_ADD_GROUP_FOOTER
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_EXPERIENCE_ADD_GROUP_HEADER
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_EXPERIENCE_ADD_GROUP_TITLE
 import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_LATEST_EXPERIENCE_VERSION_INFO
 import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_LATEST_EXPERIENCE_VERSION_SHARING
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
@@ -54,7 +58,7 @@ object RtxUtil {
         return message
     }
 
-    fun batchMessage(
+    fun batchLatestMessage(
         projectName: String,
         messages: List<Message>,
         receivers: Set<String>
@@ -74,6 +78,40 @@ object RtxUtil {
                 ) + "\n\n"
             )
         }
+        rtxNotifyMessage.body = body.toString()
+        return rtxNotifyMessage
+    }
+
+    fun batchAddGroupMessage(
+        receivers: Set<String>,
+        groupName: String,
+        masterId: String,
+        messages: List<Message>,
+        projectName: String
+    ): RtxNotifyMessage {
+        val rtxNotifyMessage = RtxNotifyMessage()
+        rtxNotifyMessage.addAllReceivers(receivers)
+        rtxNotifyMessage.title = I18nUtil.getCodeLanMessage(
+            messageCode = BK_EXPERIENCE_ADD_GROUP_TITLE,
+            params = arrayOf(projectName)
+        )
+        val body = StringBuilder()
+        body.append(
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_EXPERIENCE_ADD_GROUP_HEADER,
+                params = arrayOf(groupName, masterId, messages.size.toString())
+            ) + "\n"
+        )
+        for (i in 0..1) {
+            val m = messages[i]
+            body.append(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_EXPERIENCE_ADD_GROUP_CONTENT,
+                    params = arrayOf((i + 1).toString(), m.name, m.version, m.outerUrl)
+                ) + "\n"
+            )
+        }
+        body.append(I18nUtil.getCodeLanMessage(messageCode = BK_EXPERIENCE_ADD_GROUP_FOOTER))
         rtxNotifyMessage.body = body.toString()
         return rtxNotifyMessage
     }

@@ -35,6 +35,8 @@ import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.ScmGitRepository
+import com.tencent.devops.repository.pojo.ScmSvnRepository
 import com.tencent.devops.repository.service.code.CodeRepositoryService
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
@@ -99,6 +101,12 @@ object CodeRepositoryServiceRegistrar {
             }
             ScmType.CODE_P4 -> {
                 getService(CodeP4Repository::class.java)
+            }
+            ScmType.SCM_GIT -> {
+                getService(ScmGitRepository::class.java)
+            }
+            ScmType.SCM_SVN -> {
+                getService(ScmSvnRepository::class.java)
             }
             else -> throw IllegalArgumentException("Unknown repository type")
         }

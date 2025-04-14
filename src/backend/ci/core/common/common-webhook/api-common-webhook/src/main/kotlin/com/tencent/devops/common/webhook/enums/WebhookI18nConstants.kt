@@ -152,4 +152,10 @@ object WebhookI18nConstants {
 
     // 事件回放
     const val EVENT_REPLAY_DESC = "bkEventReplayDesc"
+
+    // 触发条件不匹配默认文案
+    const val TRIGGER_CONDITION_NOT_MATCH = "bkTriggerConditionNotMatch"
+
+    // 代码库开启PAC事件描述
+    const val ENABLE_PAC_EVENT_DESC = "bkRepoEnablePacEventDesc"
 }

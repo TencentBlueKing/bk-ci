@@ -27,16 +27,19 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
+import com.tencent.bkrepo.common.api.constant.HttpHeaders
 import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.service.LogFileService
 import com.tencent.devops.artifactory.util.RepoUtils.LOG_REPO
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import jakarta.ws.rs.NotFoundException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import jakarta.ws.rs.NotFoundException
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 
 @Service
 class BkRepoLogFileService @Autowired constructor(
@@ -48,6 +51,12 @@ class BkRepoLogFileService @Autowired constructor(
 
     @Value("\${bkrepo.bkrepoDevnetUrl}")
     private var bkRepoDevnetHost: String? = null
+
+    @Value("\${bkrepo.bkrepoDevxUrl}")
+    private var bkRepoDevxUrl: String? = null
+
+    @Value("\${devopsGateway.devx}")
+    private var devopsGatewayDevx: String? = null
 
     override fun getPluginLogUrl(
         userId: String,
@@ -77,7 +86,13 @@ class BkRepoLogFileService @Autowired constructor(
             timeoutInSeconds = (24 * 3600).toLong(),
             type = TokenType.DOWNLOAD
         )
-        return Url("${HomeHostUtil.getHost(bkRepoDevnetHost!!)
-        }/generic/temporary/download/$projectId/log$fullPath?token=$token&download=true")
+        val request = (RequestContextHolder.currentRequestAttributes() as ServletRequestAttributes).request
+        val referer = request.getHeader(HttpHeaders.REFERER).orEmpty()
+        val host = if (referer.contains(devopsGatewayDevx!!)) {
+            HomeHostUtil.getHost(bkRepoDevxUrl!!)
+        } else  {
+            HomeHostUtil.getHost(bkRepoDevnetHost!!)
+        }
+        return Url("$host/generic/temporary/download/$projectId/log$fullPath?token=$token&download=true")
     }
 }

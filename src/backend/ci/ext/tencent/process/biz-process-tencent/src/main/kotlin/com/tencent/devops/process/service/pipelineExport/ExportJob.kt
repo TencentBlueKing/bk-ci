@@ -77,6 +77,7 @@ object ExportJob {
                                 if (job.jobControlOption?.customVariables?.isEmpty() == true) null
                                 else ifString
                             }
+
                             JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> {
                                 val ifString = ExportCondition.parseNameAndValueWithOr(
                                     context = context,
@@ -86,6 +87,7 @@ object ExportJob {
                                 if (job.jobControlOption?.customVariables?.isEmpty() == true) null
                                 else ifString
                             }
+
                             else -> null
                         },
                         steps = ExportStep.getV2StepFromJob(
@@ -106,6 +108,7 @@ object ExportJob {
                         } else null
                     )
                 }
+
                 VMBuildContainer.classType -> {
                     val job = it as VMBuildContainer
                     val timeoutMinutes = job.jobControlOption?.timeout ?: 480
@@ -123,6 +126,7 @@ object ExportJob {
                                 needs = job.buildEnv
                             )
                         }
+
                         is DockerDispatchType -> {
                             val (containerImage, credentials) = allInfo.getImageNameAndCredentials(
                                 allInfo.userId,
@@ -143,6 +147,7 @@ object ExportJob {
                                 needs = job.buildEnv
                             )
                         }
+
                         is PublicDevCloudDispathcType -> {
                             val (containerImage, credentials) = allInfo.getImageNameAndCredentials(
                                 allInfo.userId,
@@ -163,18 +168,20 @@ object ExportJob {
                                 needs = job.buildEnv
                             )
                         }
+
                         is MacOSDispatchType -> {
                             RunsOn(
                                 selfHosted = null,
                                 poolName = I18nUtil.getCodeLanMessage(
                                     messageCode = BK_BUILD_CLUSTERS_THROUGH
                                 ) + I18nUtil.getCodeLanMessage(
-                                            messageCode = BK_NOTE_DEFAULT_XCODE_VERSION
-                                        ),
+                                    messageCode = BK_NOTE_DEFAULT_XCODE_VERSION
+                                ),
                                 container = null,
                                 agentSelector = null
                             )
                         }
+
                         else -> {
                             RunsOn(
                                 selfHosted = null,
@@ -204,6 +211,7 @@ object ExportJob {
                                 if (job.jobControlOption?.customVariables?.isEmpty() == true) null
                                 else ifString
                             }
+
                             JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> {
                                 val ifString = ExportCondition.parseNameAndValueWithOr(
                                     context = context,
@@ -213,6 +221,7 @@ object ExportJob {
                                 if (job.jobControlOption?.customVariables?.isEmpty() == true) null
                                 else ifString
                             }
+
                             else -> null
                         },
                         steps = ExportStep.getV2StepFromJob(
@@ -232,6 +241,7 @@ object ExportJob {
                         } else null
                     )
                 }
+
                 else -> {
                     logger.error("get jobs from stage failed, unknown classType:(${it.getClassType()})")
                 }
@@ -247,7 +257,9 @@ object ExportJob {
             return null
         }
         return Strategy(
-            matrix = matrixControlOption.convertMatrixToYamlConfig() ?: return null,
+            matrix = matrixControlOption.convertMatrixToYamlStrategy(),
+            include = matrixControlOption.convertMatrixToYamlInclude(),
+            exclude = matrixControlOption.convertMatrixToYamlExclude(),
             fastKill = matrixControlOption.fastKill,
             maxParallel = matrixControlOption.maxConcurrency
         )

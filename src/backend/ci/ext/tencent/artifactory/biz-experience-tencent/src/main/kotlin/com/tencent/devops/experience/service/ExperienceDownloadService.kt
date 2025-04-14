@@ -30,6 +30,7 @@ package com.tencent.devops.experience.service
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
+import com.tencent.devops.artifactory.pojo.AllowDownload
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.artifactory.pojo.HapJson5Info
 import com.tencent.devops.artifactory.pojo.TokenForJsonRequest
@@ -588,6 +589,29 @@ class ExperienceDownloadService @Autowired constructor(
             logger.error("report speed error", e)
             return false
         }
+    }
+
+    fun allowDownload(
+        userId: String,
+        realIP: String,
+        experienceHashId: String?,
+        projectId: String?,
+        artifactoryType: ArtifactoryType?,
+        path: String?
+    ): AllowDownload {
+        var finalProjectId = projectId
+        var finalArtifactoryType = artifactoryType
+        var finalPath = path
+        if (!experienceHashId.isNullOrBlank()) {
+            val experienceId = HashUtil.decodeIdToLong(experienceHashId)
+            experienceDao.get(dslContext, experienceId).let {
+                finalProjectId = it.projectId
+                finalArtifactoryType = ArtifactoryType.valueOf(it.artifactoryType)
+                finalPath = it.artifactoryPath
+            }
+        }
+        return client.get(ServiceArtifactoryDownLoadResource::class)
+            .allowDownload(userId, realIP, finalProjectId!!, finalArtifactoryType!!, finalPath!!).data!!
     }
 
     companion object {
