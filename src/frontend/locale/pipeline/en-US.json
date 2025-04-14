@@ -511,7 +511,9 @@
     "instanceList": "Instance list",
     "templateConfig": "Template config",
     "rollback": "Rollback Version",
-    "selectTemplateUpgradedVersion": "Please select the upgraded version"
+    "selectTemplateUpgradedVersion": "Please select the upgraded version",
+    "repositoryPlaceholder": "Please select the code repository"
+    
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
