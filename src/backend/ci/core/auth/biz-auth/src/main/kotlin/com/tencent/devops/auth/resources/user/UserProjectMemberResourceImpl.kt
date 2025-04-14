@@ -28,6 +28,7 @@
 package com.tencent.devops.auth.resources.user
 
 import com.tencent.devops.auth.api.user.UserProjectMemberResource
+import com.tencent.devops.auth.service.UserProjectPermissionService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -36,11 +37,16 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserProjectMemberResourceImpl @Autowired constructor(
-    val permissionProjectService: PermissionProjectService
+    val permissionProjectService: PermissionProjectService,
+    val userProjectPermissionService: UserProjectPermissionService
 ) : UserProjectMemberResource {
     override fun checkManager(userId: String, projectId: String): Result<Boolean> {
         val result = permissionProjectService.checkProjectManager(userId, projectId) ||
             permissionProjectService.isProjectUser(userId, projectId, BkAuthGroup.CI_MANAGER)
         return Result(result)
+    }
+
+    override fun checkMember(userId: String, projectId: String): Result<Boolean> {
+       return Result(userProjectPermissionService.checkMember(userId, projectId))
     }
 }

@@ -57,4 +57,16 @@ interface UserProjectMemberResource {
         @Parameter(description = "项目Id", required = true)
         projectId: String
     ): Result<Boolean>
+
+    @GET
+    @Path("/projectId/{projectId}/checkMember")
+    @Operation(summary = "判断指定用户是否属于该项目")
+    fun checkMember(
+        @Parameter(description = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+    ): Result<Boolean>
 }

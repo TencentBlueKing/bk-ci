@@ -802,10 +802,23 @@ class AuthResourceGroupMemberDao {
         }
     }
 
+    fun isProjectMember(dslContext: DSLContext, projectCode: String, userId: String): Boolean {
+        return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
+            dslContext.selectCount()
+                .from(this)
+                .where(
+                    PROJECT_CODE.eq(projectCode).and(RESOURCE_TYPE.eq(PROJECT))
+                        .and(MEMBER_TYPE.eq(MemberType.USER.type))
+                )
+                .and(MEMBER_ID.eq(userId)).fetchOne(0, Int::class.java)!! > 0
+        }
+    }
+
     companion object {
         private const val TABLE_NAME = "resourceMemberUnionAuthorizationMember"
         private const val MEMBER_ID = "$TABLE_NAME.MEMBER_ID"
         private const val MEMBER_NAME = "$TABLE_NAME.MEMBER_NAME"
         private const val MEMBER_TYPE = "$TABLE_NAME.MEMBER_TYPE"
+        private const val PROJECT = "project"
     }
 }
