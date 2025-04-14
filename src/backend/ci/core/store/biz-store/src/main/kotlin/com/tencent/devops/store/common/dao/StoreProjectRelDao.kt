@@ -613,7 +613,7 @@ class StoreProjectRelDao {
                 add(STORE_CODE.eq(storeCode))
                 add(STORE_TYPE.eq(storeType))
                 storeProjectType?.let { add(TYPE.eq(it.type.toByte())) }
-                projectCode?.takeIf { it.isNotBlank() }?.let { add(PROJECT_CODE.eq(it)) }
+                projectCode?.let { add(PROJECT_CODE.eq(it)) }
                 instanceId?.takeIf { it.isNotBlank() }?.let { add(INSTANCE_ID.eq(it)) }
             }
             return dslContext.selectFrom(this)
