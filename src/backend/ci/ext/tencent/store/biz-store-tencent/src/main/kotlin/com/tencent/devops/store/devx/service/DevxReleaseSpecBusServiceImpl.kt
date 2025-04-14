@@ -524,8 +524,6 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
             baseEnvRecords.forEach { baseEnvRecord ->
                 storePkgEnvInfos.add(createStorePkgEnvInfo(baseEnvRecord))
             }
-        } else {
-            storePkgEnvInfos.add(StorePkgEnvInfo(osName = OSType.WINDOWS.name.lowercase(), defaultFlag = true))
         }
         return storePkgEnvInfos
     }
