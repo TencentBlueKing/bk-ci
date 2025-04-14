@@ -28,7 +28,6 @@
 package com.tencent.devops.auth.resources.user
 
 import com.tencent.devops.auth.api.user.UserProjectMemberResource
-import com.tencent.devops.auth.service.UserProjectPermissionService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
