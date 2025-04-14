@@ -369,7 +369,10 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
             version = version,
             osName = osName,
             osArch = osArch
-        ).data ?: throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+        ).data
+        if (storePkgEnvInfos.isNullOrEmpty()) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+        }
         val storePkgEnvInfo = storePkgEnvInfos[0]
         val queryCacheFlag = storeBaseInfo.status !in StoreStatusEnum.getTestStatusList()
         return createPkgShareUri(
