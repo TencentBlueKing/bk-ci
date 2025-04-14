@@ -196,7 +196,8 @@
                             storageType: this.pipelineMode,
                             model,
                             templateSetting: pipelineSetting,
-                            yaml: pipelineYaml
+                            yaml: pipelineYaml,
+                            type: this.pipelineInfo?.type
                         }
                         : {
                             projectId,

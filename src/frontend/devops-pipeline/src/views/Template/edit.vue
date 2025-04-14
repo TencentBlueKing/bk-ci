@@ -199,7 +199,8 @@
                         templateId: this.templateId,
                         model: pipeline,
                         templateSetting: this.pipelineSetting,
-                        baseVersion: this.currentVersionId
+                        baseVersion: this.currentVersionId,
+                        type: this.pipelineInfo?.type
                     })
                     if (data) {
                         this.$showTips({

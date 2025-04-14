@@ -26,25 +26,27 @@
             </p>
 
             <p class="template-operate-area">
-                <template v-if="!isHistoryVersion">
-                    <bk-button
-                        @click="goEditTemplate(pipelineInfo?.version)"
-                    >
-                        {{ $t('template.editTemplate') }}
-                    </bk-button>
-                    <bk-button
-                        @click="handleToInstanceEntry"
-                        theme="primary"
-                    >
-                        {{ $t('template.instantiate') }}
-                    </bk-button>
-                </template>
+                <RollbackEntry
+                    v-if="isReleasePipeline || onlyBranchPipeline"
+                    :text="false"
+                    :has-permission="canEdit"
+                    :version="currentVersion"
+                    :draft-version="pipelineInfo?.version"
+                    :pipeline-id="templateId"
+                    :project-id="projectId"
+                    :version-name="activePipelineVersion?.versionName"
+                    :draft-base-version-name="draftBaseVersionName"
+                    :is-active-draft="activePipelineVersion?.isDraft"
+                    :is-active-branch-version="isActiveBranchVersion"
+                    :draft-creator="activePipelineVersion?.creator"
+                >
+                </RollbackEntry>
                 <bk-button
-                    v-else
-                    @click="rollback"
+                    v-if="canInstantiate"
+                    @click="handleToInstanceEntry"
                     theme="primary"
                 >
-                    {{ $t('rollback') }}
+                    {{ $t('template.instantiate') }}
                 </bk-button>
             </p>
         </header>
@@ -122,6 +124,7 @@
         ChangeLog,
         PipelineConfig
     } from '@/components/PipelineDetailTabs'
+    import RollbackEntry from '@/components/PipelineDetailTabs/RollbackEntry'
     import VersionHistorySideSlider from '@/components/PipelineDetailTabs/VersionHistorySideSlider'
     import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
     import { AuthorityTab, ShowVariable } from '@/components/PipelineEditTabs/'
@@ -133,6 +136,7 @@
     export default {
         components: {
             Instance,
+            RollbackEntry,
             VersionSelector,
             PipelineConfig,
             AuthorityTab,
@@ -149,8 +153,25 @@
             }
         },
         computed: {
-            ...mapState('atom', ['pipeline', 'pipelineSetting', 'pipelineInfo', 'switchingVersion']),
-            ...mapGetters('atom', ['pacEnabled', 'yamlInfo', 'pipelineHistoryViewable', 'isReleaseVersion', 'isBranchVersion']),
+            ...mapState('atom', [
+                'pipeline',
+                'pipelineSetting',
+                'pipelineInfo',
+                'switchingVersion',
+                'activePipelineVersion'
+            ]),
+            ...mapGetters('atom', [
+                'pacEnabled',
+                'yamlInfo',
+                'pipelineHistoryViewable',
+                'isReleaseVersion',
+                'isBranchVersion',
+                'isReleasePipeline',
+                'onlyBranchPipeline'
+            ]),
+            canEdit () {
+                return this.pipelineInfo?.permissions?.canEdit ?? true
+            },
             projectId () {
                 return this.$route.params.projectId
             },
@@ -230,8 +251,8 @@
             releaseVersion () {
                 return this.pipelineInfo?.releaseVersion
             },
-            isHistoryVersion () {
-                return this.releaseVersion !== this.currentVersion
+            canInstantiate () {
+                return this.releaseVersion === this.currentVersion || this.isBranchVersion
             }
         },
         watch: {
@@ -351,9 +372,6 @@
                     }
                 })
             },
-            switchToReleaseVersion () {
-                this.handleVersionChange(this.releaseVersion)
-            },
             goEditTemplate (version) {
                 this.$router.push({
                     name: 'templateEdit',
@@ -372,22 +390,6 @@
                         type: 'create'
                     }
                 })
-            },
-            async rollback () {
-                // TODO 版本路径变更
-                try {
-                    const { version } = await this.rollbackTemplateVersion({
-                        ...this.$route.params,
-                        version: this.currentVersion
-                    })
-                    await this.requestTemplateSummary(this.$route.params)
-
-                    if (version) {
-                        this.goEditTemplate(version)
-                    }
-                } catch (error) {
-                    console.log(error)
-                }
             }
         }
     }

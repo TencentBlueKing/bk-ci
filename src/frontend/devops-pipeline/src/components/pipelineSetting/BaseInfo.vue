@@ -27,12 +27,12 @@
             <bk-form-item
                 v-if="isTemplate"
                 :label="$t('template.type')"
-                :disabled="!editable"
+                disabled
                 :required="true"
             >
                 <bk-radio-group
-                    v-model="pipelineSetting.type"
-                    :disabled="!editable"
+                    :value="pipelineInfo?.type"
+                    disabled
                 >
                     <bk-radio-button
                         v-for="item in templateTypeList"
@@ -133,7 +133,7 @@
     import Logo from '@/components/Logo'
     import SyntaxStyleConfiguration from '@/components/syntaxStyleConfiguration'
     import { TEMPLATE_TYPE } from '@/utils/pipelineConst'
-    import { mapGetters } from 'vuex'
+    import { mapGetters, mapState } from 'vuex'
 
     export default {
         name: 'bkdevops-base-info-setting-tab',
@@ -157,6 +157,9 @@
             }
         },
         computed: {
+            ...mapState('atom', [
+                'pipelineInfo'
+            ]),
             ...mapGetters({
                 tagGroupList: 'pipelines/getTagGroupList',
                 isTemplate: 'atom/isTemplate'
