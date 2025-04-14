@@ -38,6 +38,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.tags.Tags
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
@@ -73,7 +74,8 @@ interface CDIResource {
                 responseCode = "401",
                 description = "未授权，提供的token无效或缺失"
             )
-        ]
+        ],
+        tags = ["REMOTE_DEV_SDK", "prefix:/remotedev/api"]
     )
     @GET
     @Path("/workspace_detail")
@@ -107,7 +109,8 @@ interface CDIResource {
                 responseCode = "401",
                 description = "未授权，提供的token无效或缺失"
             )
-        ]
+        ],
+        tags = ["REMOTE_DEV_SDK", "prefix:/remotedev/api"]
     )
     @GET
     @Path("/login_user_id")
@@ -141,7 +144,8 @@ interface CDIResource {
                 responseCode = "401",
                 description = "未授权，提供的token无效或缺失"
             )
-        ]
+        ],
+        tags = ["REMOTE_DEV_SDK", "prefix:/remotedev/api"]
     )
     @POST
     @Path("/notify")
