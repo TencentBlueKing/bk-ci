@@ -55,12 +55,12 @@ class BkProjectMemberCheckAspect constructor(
                 defaultMessage = "projectId or userId cannot be empty or null!"
             )
         }
-        val hasProjectManagePermission = userProjectPermissionService.checkMember(
+        val isProjectMember = userProjectPermissionService.checkMember(
             userId = userId!!,
             projectCode = projectId!!
         )
 
-        if (!hasProjectManagePermission) {
+        if (!isProjectMember) {
             throw PermissionForbiddenException(
                 message = I18nUtil.getCodeLanMessage(AuthMessageCode.ERROR_USER_NOT_EXIST_IN_PROJECT)
             )
