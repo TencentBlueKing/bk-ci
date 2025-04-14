@@ -262,7 +262,7 @@ class PipelineBuildFacadeService(
         var lastBuildNoValue: Int? = null
         if (lastTimeInfo?.buildParameters?.isNotEmpty() == true) {
             val latestParamsMap = lastTimeInfo.buildParameters!!.associateBy { it.key }
-            lastBuildNoValue = latestParamsMap[BUILD_NO]?.value?.toIntOrNull()
+            lastBuildNoValue = latestParamsMap[BUILD_NO]?.value?.toString()?.toIntOrNull()
             triggerContainer.params.forEach { param ->
                 val latestParam = latestParamsMap[param.id]
                 // 入参、推荐版本号参数有上一次的构建参数的时候才设置成默认值，否者依然使用默认值
