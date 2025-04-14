@@ -803,7 +803,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 installedTime = installedRel.createTime,
                 osName = osName,
                 osArch = osArch
-            ) -> createVersionInfo(latestVersion.version, installedRel.version)
+            ) -> createVersionInfo(latestVersion.version, latestVersion.version)
             else -> null
         }
     }
