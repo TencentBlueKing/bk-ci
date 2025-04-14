@@ -59,3 +59,5 @@ export const TEMPLATE_MODE = {
     CONSTRAINT: 'CONSTRAINT',
     PUBLIC: 'PUBLIC'
 }
+
+export const SET_INSTANCE_LIST = 'SET_INSTANCE_LIST'

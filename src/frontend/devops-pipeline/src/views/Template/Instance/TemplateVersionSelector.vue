@@ -3,7 +3,11 @@
         <span class="selector-prepend">
             {{ isInstanceCreateType ? $t('template.templateVersion') : $t('template.upgradedVersion') }}
         </span>
-        <bk-select class="version-selector"></bk-select>
+        <bk-select
+            class="version-selector"
+            :placeholder="$t('template.selectTemplateUpgradedVersion')"
+        >
+        </bk-select>
         <bk-button
             class="preview-btn"
             outline
@@ -44,10 +48,16 @@
 <script setup>
     import { defineProps } from 'vue'
     import Logo from '@/components/Logo'
-    
+    import UseInstance from '@/hook/useInstance'
     defineProps({
         isInstanceCreateType: Boolean
     })
+    
+    const { proxy } = UseInstance()
+    console.log(proxy, 'proxy')
+    function handleJumpToViewDetails () {
+
+    }
 </script>
 
 <style lang="scss">

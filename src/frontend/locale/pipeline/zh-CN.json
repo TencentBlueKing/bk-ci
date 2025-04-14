@@ -515,7 +515,9 @@
     "PIPELINE": "流水线模板",
     "STAGE": "Stage模板",
     "JOB": "Job模板",
-    "STEP": "Step模板"
+    "STEP": "Step模板",
+    "selectTemplateUpgradedVersion": "请选择升级的版本",
+    "repositoryPlaceholder": "请选择代码库"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",

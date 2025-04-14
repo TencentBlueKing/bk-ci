@@ -43,6 +43,7 @@
                 <bk-resize-layout
                     class="instance-contents-layout"
                     :initial-divide="300"
+                    collapsible
                     :min="300"
                     :max="500"
                 >
@@ -50,7 +51,9 @@
                         slot="aside"
                         :is-instance-create-type="isInstanceCreateViewType"
                     />
-                    <router-view slot="main" />
+                    <div slot="main">
+                        123
+                    </div>
                 </bk-resize-layout>
             </main>
         </template>
@@ -91,6 +94,10 @@
             })
         }
     }
+
+    function handleBatchUpgrade () {
+
+    }
     function handleGoBack () {
         proxy.$router.push({
             name: 'TemplateOverview',
@@ -113,15 +120,14 @@
         height: 48px;
         display: flex;
         align-items: center;
+        justify-content: space-between;
         background-color: white;
         box-shadow: 0 2px 5px 0 #333c4808;
         border-bottom: 1px solid $borderLightColor;
         padding: 0 0 0 24px;
         > aside {
             height: 100%;
-            margin-left: auto;
             display: flex;
-            justify-self: flex-end;
             align-items: center;
             grid-gap: 10px;
         }

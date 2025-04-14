@@ -33,7 +33,7 @@
                         {{ $t('template.editTemplate') }}
                     </bk-button>
                     <bk-button
-                        @click="switchToReleaseVersion"
+                        @click="handleToInstanceEntry"
                         theme="primary"
                     >
                         {{ $t('template.instantiate') }}
@@ -360,6 +360,16 @@
                     params: {
                         ...this.$route.params,
                         version
+                    }
+                })
+            },
+            handleToInstanceEntry () {
+                this.$router.push({
+                    name: 'instanceEntry',
+                    params: {
+                        ...this.$route.params,
+                        version: this.pipelineInfo?.releaseVersion,
+                        type: 'create'
                     }
                 })
             },
