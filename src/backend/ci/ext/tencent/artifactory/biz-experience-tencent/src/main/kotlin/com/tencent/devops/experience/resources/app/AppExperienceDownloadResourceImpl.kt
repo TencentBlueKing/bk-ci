@@ -27,6 +27,8 @@
 
 package com.tencent.devops.experience.resources.app
 
+import com.tencent.devops.artifactory.pojo.AllowDownload
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -68,5 +70,25 @@ class AppExperienceDownloadResourceImpl @Autowired constructor(
         params: ReportSpeedParam
     ): Result<Boolean> {
         return Result(experienceDownloadService.reportSpeed(userId, params))
+    }
+
+    override fun allowDownload(
+        userId: String,
+        realIP: String,
+        experienceHashId: String?,
+        projectId: String?,
+        artifactoryType: ArtifactoryType?,
+        path: String?
+    ): Result<AllowDownload> {
+        return Result(
+            experienceDownloadService.allowDownload(
+                userId = userId,
+                realIP = realIP,
+                experienceHashId = experienceHashId,
+                projectId = projectId,
+                artifactoryType = artifactoryType,
+                path = path
+            )
+        )
     }
 }

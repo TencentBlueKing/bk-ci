@@ -27,6 +27,9 @@
 
 package com.tencent.devops.experience.api.app
 
+import com.tencent.devops.artifactory.pojo.AllowDownload
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_REAL_IP
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PLATFORM
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
@@ -98,4 +101,28 @@ interface AppExperienceDownloadResource {
         @Parameter(description = "上报下载速度参数", required = true)
         params: ReportSpeedParam
     ): Result<Boolean>
+
+    @Operation(summary = "是否允许下载")
+    @Path("/allowDownload")
+    @GET
+    fun allowDownload(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "用户IP", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_REAL_IP)
+        realIP: String,
+        @Parameter(description = "体验ID", required = false)
+        @QueryParam("experienceHashId")
+        experienceHashId: String?,
+        @Parameter(description = "项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String?,
+        @Parameter(description = "版本仓库类型", required = false)
+        @QueryParam("artifactoryType")
+        artifactoryType: ArtifactoryType?,
+        @Parameter(description = "路径", required = false)
+        @QueryParam("path")
+        path: String?
+    ): Result<AllowDownload>
 }
