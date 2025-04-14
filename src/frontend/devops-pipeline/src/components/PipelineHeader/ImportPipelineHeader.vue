@@ -13,16 +13,6 @@
                 :loading="saveStatus"
                 outline
                 theme="primary"
-                v-perm="{
-                    hasPermission: canEdit,
-                    disablePermissionApi: true,
-                    permissionData: {
-                        projectId,
-                        resourceType: 'pipeline',
-                        resourceCode: pipelineId,
-                        action: RESOURCE_ACTION.EDIT
-                    }
-                }"
                 @click="saveDraft"
             >
                 {{ $t("saveDraft") }}
@@ -37,6 +27,7 @@
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
+    import { TEMPLATE_TYPE } from '@/utils/pipelineConst'
     import {
         showPipelineCheckMsg
     } from '@/utils/util'
@@ -63,8 +54,7 @@
                 'saveStatus',
                 'pipelineWithoutTrigger',
                 'pipelineSetting',
-                'pipelineYaml',
-                'pipelineInfo'
+                'pipelineYaml'
             ]),
             ...mapGetters({
                 isEditing: 'atom/isEditing',
@@ -73,17 +63,8 @@
             projectId () {
                 return this.$route.params.projectId
             },
-            pipelineId () {
-                return this.$route.params.pipelineId
-            },
             isTemplate () {
-                return this.pipelineInfo?.isTemplate
-            },
-            currentVersionId () {
-                return this.$route.params?.version ?? this.pipelineInfo?.version
-            },
-            canEdit () {
-                return this.pipelineInfo?.permissions?.canEdit ?? true
+                return !!TEMPLATE_TYPE[this.pipelineSetting?.type]
             }
         },
         methods: {
@@ -113,7 +94,7 @@
             },
 
             async handleSaveTemplatePipelineDraft (params) {
-                const { data: { templateId } } = await this.saveDraftTemplate(params)
+                const { data: { templateId, version } } = await this.saveDraftTemplate(params)
 
                 this.$showTips({
                     message: this.$t('editPage.saveDraftSuccess', [this.pipelineSetting.pipelineName]),
@@ -131,7 +112,7 @@
                     params: {
                         ...this.$route.params,
                         type: 'pipeline',
-                        version: this.pipelineInfo?.version,
+                        version,
                         templateId
                     }
                 })
@@ -191,7 +172,7 @@
                             model,
                             templateSetting: pipelineSetting,
                             yaml: pipelineYaml,
-                            type: this.pipelineInfo?.type
+                            type: pipelineSetting?.type
                         }
                         : {
                             projectId,
@@ -213,11 +194,7 @@
                     if (e.code === 2101244) {
                         showPipelineCheckMsg(this.$bkMessage, e.message, this.$createElement)
                     } else {
-                        this.handleError(e, {
-                            projectId: this.$route.params.projectId,
-                            resourceCode: this.pipeline.pipelineId,
-                            action: this.$permissionResourceAction.EDIT
-                        })
+                        this.handleError(e)
                     }
                 } finally {
                     this.setSaveStatus(false)
