@@ -237,7 +237,7 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
                 s?.forEach {
                     val status = when {
                         it.englishName == SERVICE_ENGLISH_NAME_PLATFORM &&
-                                !apiPlatformApi.validateUserPlatformPermission(userId) -> SERVICE_ITEM_STATUS_PLANNING
+                                apiPlatformApi.validateUserPlatformPermission(userId) -> SERVICE_ITEM_STATUS_OK
 
                         else -> it.status
                     }
@@ -350,6 +350,6 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(AbsUserProjectServiceServiceImpl::class.java)
         // 平台管理界面
         const val SERVICE_ENGLISH_NAME_PLATFORM = "Platform"
-        const val SERVICE_ITEM_STATUS_PLANNING = "planning"
+        const val SERVICE_ITEM_STATUS_OK = "ok"
     }
 }

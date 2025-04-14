@@ -503,8 +503,7 @@ class RepositoryScmConfigService @Autowired constructor(
                 }
             }
             if (request.webhookEnabled) {
-                if (scmProvider.webhookSecretType == WebhookSecretType.APP.name &&
-                    !webhookSecret.isNullOrEmpty()
+                if (scmProvider.webhookSecretType == WebhookSecretType.APP.name && webhookSecret.isNullOrEmpty()
                 ) {
                     throw IllegalArgumentException("webhookSecret can not empty")
                 }
