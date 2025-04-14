@@ -39,6 +39,7 @@
                     <span class="input-seg">=</span>
                     <bk-input
                         v-model="parameter.value"
+                        :type="parameter.type === 'textarea' ? 'textarea' : 'text'"
                         class="input-com"
                         :disabled="disabled"
                         :title="parameter.value"
@@ -94,6 +95,11 @@
                     }
                 },
                 deep: true
+            },
+            subParamsKeyList (newVal) {
+                if (newVal) {
+                    this.initData()
+                }
             }
         },
         created () {
@@ -104,9 +110,16 @@
             initData () {
                 let values = this.atomValue[this.name] || []
                 if (!Array.isArray(values)) values = JSON.parse(values)
+
+                const typeMap = new Map()
+                this.subParamsKeyList.forEach(item => {
+                    typeMap.set(item.key, item.type)
+                })
+ 
                 this.parameters = values.map(i => {
                     return {
                         ...i,
+                        type: typeMap.get(i.key) || 'text',
                         value: isObject(i.value) ? JSON.stringify(i.value) : i.value
                     }
                 })
@@ -124,12 +137,16 @@
 
             handleChangeKey (key, index) {
                 this.parameters[index].key = isObject(key) ? JSON.stringify(key) : key
-                const defaultValue = this.subParamsKeyList.find(i => i.key === key)?.value
+                const subParamsKeyItem = this.subParamsKeyList.find(i => i.key === key)
+                const defaultValue = subParamsKeyItem?.value
+                const type = subParamsKeyItem?.type
+                    
                 if (defaultValue) {
                     this.parameters[index].value = isObject(defaultValue) ? JSON.stringify(defaultValue) : defaultValue
                 } else {
                     this.parameters[index].value = ''
                 }
+                this.parameters[index].type = type || 'text'
                 this.updateParameters()
             },
 
