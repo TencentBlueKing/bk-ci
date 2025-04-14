@@ -31,7 +31,8 @@ data class BuildNo(
     var buildNo: Int, // 用于保存编排中定义的构建号初始值
     val buildNoType: BuildNoType,
     var required: Boolean? = false,
-    var currentBuildNo: Int? = null // 用于替换当前的最新值，如果是创建流水线则不传值
+    var currentBuildNo: Int? = null, // 用于替换当前的最新值，如果是创建流水线则不传值
+    var lastBuildNo: Int? = null // 用于保存流水线最后一次构建的构建号，用于判断流水线是否需要重新构建
 )
 
 enum class BuildNoType {

@@ -136,6 +136,7 @@ import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.util.TaskUtils
+import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
@@ -258,8 +259,10 @@ class PipelineBuildFacadeService(
 
         // 获取最后一次的构建id
         val lastTimeInfo = pipelineRuntimeService.getLastTimeBuild(projectId, pipelineId, debug)
+        var lastBuildNoValue: Int? = null
         if (lastTimeInfo?.buildParameters?.isNotEmpty() == true) {
             val latestParamsMap = lastTimeInfo.buildParameters!!.associateBy { it.key }
+            lastBuildNoValue = latestParamsMap[BUILD_NO]?.value?.toIntOrNull()
             triggerContainer.params.forEach { param ->
                 val latestParam = latestParamsMap[param.id]
                 // 入参、推荐版本号参数有上一次的构建参数的时候才设置成默认值，否者依然使用默认值
@@ -335,6 +338,7 @@ class PipelineBuildFacadeService(
                 projectId = projectId,
                 pipelineId = pipelineId
             ) ?: buildNo
+            lastBuildNo = lastBuildNoValue
         }
 
         return BuildManualStartupInfo(
