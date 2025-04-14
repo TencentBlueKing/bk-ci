@@ -49,7 +49,7 @@
                             </bk-select>
                         </div>
                     </div>
-                    <section v-if="curParamsList.length || targetParamsList.length || curTplParamsList.length || targetTplParamsList.length">
+                    <section v-if="curParamsList.length || targetParamsList.length || curTplParamsList.length || targetTplParamsList?.length">
                         <div class="update-version-compared compared-title">
                             <div class="update-before">{{ $t('var') }}</div>
                         </div>
@@ -127,13 +127,34 @@
             loading: Boolean,
             instanceVersion: String,
             curVersion: String,
-            versionList: Array,
-            curParamsList: Array,
-            curTplParamsList: Array,
-            targetParamsList: Array,
-            targetTplParamsList: Array,
-            curStages: Array,
-            targetStages: Array,
+            versionList: {
+                type: Array,
+                default: []
+            },
+            curParamsList: {
+                type: Array,
+                default: []
+            },
+            curTplParamsList: {
+                type: Array,
+                default: []
+            },
+            targetParamsList: {
+                type: Array,
+                default: []
+            },
+            targetTplParamsList: {
+                type: Array,
+                default: []
+            },
+            curStages: {
+                type: Array,
+                default: []
+            },
+            targetStages: {
+                type: Array,
+                default: []
+            },
             selectedVersion: Function
         },
         data () {

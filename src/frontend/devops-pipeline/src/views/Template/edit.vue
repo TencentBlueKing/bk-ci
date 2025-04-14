@@ -27,7 +27,7 @@
                     <bk-button
                         theme="primary"
                         @click="saveTemplateDraft"
-                        :disabled="saveStatus"
+                        :disabled="saveStatus || !isEditing"
                         outline
                     >
                         {{ $t('saveDraft') }}
@@ -86,7 +86,6 @@
             ...mapState('atom', [
                 'saveStatus',
                 'pipeline',
-                'templateType',
                 'pipelineInfo',
                 'pipelineWithoutTrigger',
                 'pipelineSetting'
@@ -103,23 +102,20 @@
             templateId () {
                 return this.$route.params.templateId
             },
-            routerTemplateType () {
-                return this.$route.params.templateType
-            },
             currentVersionId () {
                 return this.$route.params?.version ?? this.pipelineInfo?.version
             },
             TEMPLATE_RESOURCE_ACTION () {
                 return TEMPLATE_RESOURCE_ACTION
             },
-            baseVersionName () {
-                return this.pipelineInfo?.baseVersionName ?? '--'
+            versionName () {
+                return this.pipelineInfo?.versionName ?? '--'
             },
             currentVersionName () {
                 if (this.pipelineInfo?.canDebug) {
                     return this.$t('editPage.draftVersion', [this.getDraftBaseVersionName])
                 }
-                return this.baseVersionName
+                return this.versionName
             }
         },
         watch: {
@@ -203,8 +199,7 @@
                         templateId: this.templateId,
                         model: pipeline,
                         templateSetting: this.pipelineSetting,
-                        baseVersion: this.currentVersionId,
-                        type: this.routerTemplateType ?? this.templateType
+                        baseVersion: this.currentVersionId
                     })
                     if (data) {
                         this.$showTips({

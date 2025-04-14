@@ -38,7 +38,7 @@
         "vue": "~2.7.16",
         "vue-echarts": "^6.0.2",
         "vue-i18n": "~8.26.1",
-        "vue-i18n-bridge": "^9.14.1",
+        "vue-i18n-bridge": "~9.4.1",
         "vue-json-viewer": "^2.2.5",
         "vue-router": "3.6.5",
         "vuedraggable": "^2.16.0",

@@ -42,13 +42,13 @@ import {
     RESET_ATOM_MODAL_MAP,
     RESET_PIPELINE_SETTING_MUNTATION,
     SELECT_PIPELINE_VERSION,
-    SET_ATOMS,
-    SET_ATOMS_CLASSIFY,
     SET_ATOM_EDITING,
     SET_ATOM_MODAL,
     SET_ATOM_MODAL_FETCHING,
     SET_ATOM_PAGE_OVER,
     SET_ATOM_VERSION_LIST,
+    SET_ATOMS,
+    SET_ATOMS_CLASSIFY,
     SET_ATOMS_OUTPUT_MAP,
     SET_COMMEND_ATOM_COUNT,
     SET_COMMEND_ATOM_PAGE_OVER,
@@ -62,13 +62,13 @@ import {
     SET_HIDE_SKIP_EXEC_TASK,
     SET_INSERT_STAGE_STATE,
     SET_PIPELINE,
-    SET_TEMPLATE_TYPE,
     SET_PIPELINE_EDITING,
     SET_PIPELINE_EXEC_DETAIL,
     SET_PIPELINE_INFO,
     SET_PIPELINE_WITHOUT_TRIGGER,
     SET_PIPELINE_YAML,
     SET_PIPELINE_YAML_HIGHLIGHT_MAP,
+    SET_PLUGIN_HEAD_TAB,
     SET_REMOTE_TRIGGER_TOKEN,
     SET_REQUEST_ATOM_DATA,
     SET_SAVE_STATUS,
@@ -77,7 +77,6 @@ import {
     SET_STORE_LOADING,
     SET_STORE_SEARCH,
     SET_TEMPLATE,
-    SET_PLUGIN_HEAD_TAB,
     SWITCHING_PIPELINE_VERSION,
     TOGGLE_ATOM_SELECTOR_POPUP,
     TOGGLE_STAGE_REVIEW_PANEL,
@@ -156,11 +155,6 @@ export default {
             return state
         }
         Object.assign(state.pipeline, pipeline)
-    },
-    [SET_TEMPLATE_TYPE]: (state, templateType) => {
-        return Object.assign(state, {
-            templateType
-        })
     },
     [SET_PIPELINE_WITHOUT_TRIGGER]: (state, pipeline = null) => {
         Vue.set(state, 'pipelineWithoutTrigger', pipeline)

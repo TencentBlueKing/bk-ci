@@ -28,14 +28,12 @@
             <p class="template-operate-area">
                 <bk-button
                     @click="goEditTemplate"
-                    size="small"
                 >
                     {{ $t('template.editTemplate') }}
                 </bk-button>
                 <bk-button
                     @click="switchToReleaseVersion"
                     theme="primary"
-                    size="small"
                 >
                     {{ $t('template.instantiate') }}
                 </bk-button>
@@ -110,18 +108,18 @@
 
 <script>
     import Logo from '@/components/Logo'
-import PacTag from '@/components/PacTag'
-import {
-ChangeLog,
-PipelineConfig
-} from '@/components/PipelineDetailTabs'
-import VersionHistorySideSlider from '@/components/PipelineDetailTabs/VersionHistorySideSlider'
-import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
-import { AuthorityTab, ShowVariable } from '@/components/PipelineEditTabs/'
-import TemplateBreadCrumb from '@/components/template/TemplateBreadCrumb'
-import { pipelineTabIdMap } from '@/utils/pipelineConst'
-import Instance from '@/views/Template/InstanceList'
-import { mapActions, mapGetters, mapState } from 'vuex'
+    import PacTag from '@/components/PacTag'
+    import {
+        ChangeLog,
+        PipelineConfig
+    } from '@/components/PipelineDetailTabs'
+    import VersionHistorySideSlider from '@/components/PipelineDetailTabs/VersionHistorySideSlider'
+    import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
+    import { AuthorityTab, ShowVariable } from '@/components/PipelineEditTabs/'
+    import TemplateBreadCrumb from '@/components/template/TemplateBreadCrumb'
+    import { pipelineTabIdMap } from '@/utils/pipelineConst'
+    import Instance from '@/views/Template/InstanceList'
+    import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
         components: {
@@ -227,16 +225,6 @@ import { mapActions, mapGetters, mapState } from 'vuex'
         watch: {
             currentVersion () {
                 this.$nextTick(this.init)
-            }
-        },
-        watch: {
-            '$route.params.version' (newVal) {
-                this.requestPipeline({
-                    projectId: this.projectId,
-                    templateId: this.templateId,
-                    version: newVal
-                })
-                this.selectPipelineVersion(newVal)
             }
         },
         created () {

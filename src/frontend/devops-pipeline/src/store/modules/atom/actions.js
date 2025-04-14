@@ -76,7 +76,6 @@ import {
     SET_SHOW_VARIABLE,
     SET_STAGE_TAG_LIST,
     SET_STORE_SEARCH,
-    SET_TEMPLATE_TYPE,
     SWITCHING_PIPELINE_VERSION,
     TOGGLE_ATOM_SELECTOR_POPUP,
     TOGGLE_STAGE_REVIEW_PANEL,
@@ -422,9 +421,6 @@ export default {
     },
     setPipeline: ({ commit }, payload = null) => {
         commit(SET_PIPELINE, payload)
-    },
-    setTemplateType: ({ commit }, payload = null) => {
-        commit(SET_TEMPLATE_TYPE, payload)
     },
     setPipelineWithoutTrigger: actionCreator(SET_PIPELINE_WITHOUT_TRIGGER),
     setPipelineYaml: actionCreator(SET_PIPELINE_YAML),

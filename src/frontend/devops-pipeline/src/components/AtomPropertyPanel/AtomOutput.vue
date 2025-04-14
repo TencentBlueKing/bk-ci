@@ -88,13 +88,13 @@
 </template>
 
 <script>
-    import copyIcon from '@/components/copyIcon'
+    import CopyIcon from '@/components/CopyIcon'
     import validMixins from '../validMixins'
     import atomMixin from './atomMixin'
     export default {
         name: 'atom-output',
         components: {
-            copyIcon
+            CopyIcon
         },
         mixins: [atomMixin, validMixins],
         data () {

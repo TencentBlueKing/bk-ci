@@ -1600,8 +1600,8 @@ importers:
         specifier: ~8.26.1
         version: 8.26.8(vue@2.7.16)
       vue-i18n-bridge:
-        specifier: ^9.14.1
-        version: 9.14.1(@vue/composition-api@1.7.2(vue@2.7.16))(vue@2.7.16)
+        specifier: ~9.4.1
+        version: 9.4.1(@vue/composition-api@1.7.2(vue@2.7.16))(vue@2.7.16)
       vue-json-viewer:
         specifier: ^2.2.5
         version: 2.2.22(vue@2.7.16)
@@ -2409,11 +2409,11 @@ importers:
         specifier: ~2.7.16
         version: 2.7.16
       vue-i18n:
-        specifier: ~8.26.1
-        version: 8.26.8(vue@2.7.16)
+        specifier: 8.26.1
+        version: 8.26.1(vue@2.7.16)
       vue-i18n-bridge:
-        specifier: 9.14.1
-        version: 9.14.1(@vue/composition-api@1.7.2(vue@2.7.16))(vue@2.7.16)
+        specifier: 9.4.1
+        version: 9.4.1(@vue/composition-api@1.7.2(vue@2.7.16))(vue@2.7.16)
     devDependencies:
       '@babel/core':
         specifier: ^7.15.8
@@ -4131,6 +4131,10 @@ packages:
     resolution: {integrity: sha512-rG5/hlNW6Qfve41go37szEf0mVLcfhYuOu83JcY0jZKasnwsrcZYYWDzebCcuO5I/6Sy1JFWo9p+nvkQS1Dy+w==}
     engines: {node: '>= 16'}
 
+  '@intlify/core-base@9.4.1':
+    resolution: {integrity: sha512-WIwx+elsZbxSMxRG5+LC+utRohFvmZMoDevfKOfnYMLbpCjCSavqTfHJAtfsY6ruowzqXeKkeLhRHbYbjoJx5g==}
+    engines: {node: '>= 16'}
+
   '@intlify/devtools-if@9.1.10':
     resolution: {integrity: sha512-SHaKoYu6sog3+Q8js1y3oXLywuogbH1sKuc7NSYkN3GElvXSBaMoCzW+we0ZSFqj/6c7vTNLg9nQ6rxhKqYwnQ==}
     engines: {node: '>= 10'}
@@ -4141,6 +4145,10 @@ packages:
 
   '@intlify/message-compiler@9.14.1':
     resolution: {integrity: sha512-MY8hwukJBnXvGAncVKlHsqKDQ5ZcQx4peqEmI8wBUTXn4pezrtTGYXNoz81cLyEEHB+L/zlKWVBSh5TiX4gYoQ==}
+    engines: {node: '>= 16'}
+
+  '@intlify/message-compiler@9.4.1':
+    resolution: {integrity: sha512-aN2N+dUx320108QhH51Ycd2LEpZ+NKbzyQ2kjjhqMcxhHdxtOnkgdx+MDBhOy/CObwBmhC3Nygzc6hNlfKvPNw==}
     engines: {node: '>= 16'}
 
   '@intlify/message-resolver@9.1.10':
@@ -4159,12 +4167,20 @@ packages:
     resolution: {integrity: sha512-XjHu6PEQup9MnP1x0W9y0nXXfq9jFftAYSfV11hryjtH4XqXP8HrzMvXI+ZVifF+jZLszaTzIhvukllplxTQTg==}
     engines: {node: '>= 16'}
 
+  '@intlify/shared@9.4.1':
+    resolution: {integrity: sha512-A51elBmZWf1FS80inf/32diO9DeXoqg9GR9aUDHFcfHoNDuT46Q+fpPOdj8jiJnSHSBh8E1E+6qWRhAZXdK3Ng==}
+    engines: {node: '>= 16'}
+
   '@intlify/vue-devtools@9.1.10':
     resolution: {integrity: sha512-5l3qYARVbkWAkagLu1XbDUWRJSL8br1Dj60wgMaKB0+HswVsrR6LloYZTg7ozyvM621V6+zsmwzbQxbVQyrytQ==}
     engines: {node: '>= 10'}
 
   '@intlify/vue-devtools@9.14.1':
     resolution: {integrity: sha512-twkyipsHAVXesM0edbQ8oaePUaQdgjlftX6udQvNsgItXf3qK+gLM6NFEduvoruexOWi7iipLXL5Luk7B9yf9Q==}
+    engines: {node: '>= 16'}
+
+  '@intlify/vue-devtools@9.4.1':
+    resolution: {integrity: sha512-WY6TtlraUiXlC8xM7dxY3GPZLgPL/sqAi/A+sqsiXwu/UPuErkN5OvVd5jXV2DSLOwTCGhm7QK+scvPBUANTsQ==}
     engines: {node: '>= 16'}
 
   '@isaacs/cliui@8.0.2':
@@ -7739,7 +7755,7 @@ packages:
     resolution: {integrity: sha512-FUpKc+1FNBsHUr9IsfSGCovr8VuGOiiuzlgCyppKBjJi2jYTOFLN3oiiNRMIvYqbFzF38mqKj4BgcevzU5/kIA==}
 
   cssstyle@2.3.0:
-    resolution: {integrity: sha512-AZL67abkUzIuvcHqk7c09cezpGNcxUxU4Ioi/05xHk4DQeTkWmGYftIE6ctU6AEt+Gn4n1lDStOtj7FKycP71A==}
+    resolution: {integrity: sha512-AZL67abkUzIuvcHqk7c09cezpGNcxUxU4Ioi/05xHk4DQeTkWmGYftIE6ctU6AEt+Gn4n1lDStOtj7FKycP71A==, tarball: https://mirrors.cloud.tencent.com/npm/cssstyle/-/cssstyle-2.3.0.tgz}
     engines: {node: '>=8'}
 
   csstype@3.1.3:
@@ -7869,7 +7885,7 @@ packages:
     engines: {node: '>=0.10.0'}
 
   decimal.js@10.4.3:
-    resolution: {integrity: sha512-VBBaLc1MgL5XpzgIP7ny5Z6Nx3UrRkIViUkPUdtl9aya5amy3De1gsUUSB1g3+3sExYNjCAsAznmukyxCb1GRA==}
+    resolution: {integrity: sha512-VBBaLc1MgL5XpzgIP7ny5Z6Nx3UrRkIViUkPUdtl9aya5amy3De1gsUUSB1g3+3sExYNjCAsAznmukyxCb1GRA==, tarball: https://mirrors.cloud.tencent.com/npm/decimal.js/-/decimal.js-10.4.3.tgz}
 
   decode-uri-component@0.2.2:
     resolution: {integrity: sha512-FqUYQ+8o158GyGTrMFJms9qh3CqTKvAqgqsTnkLI8sKu0028orqBhxNMFkFen0zGyg6epACD32pjVk58ngIErQ==}
@@ -10259,7 +10275,7 @@ packages:
     resolution: {integrity: sha512-UVU9dibq2JcFWxQPA6KCqj5O42VOmAY3zQUfEKxU0KpTGXwNoCjkX1e13eHNvw/xPynt6pU0rZ1htjWTNTSXsg==}
 
   jsdom@16.7.0:
-    resolution: {integrity: sha512-u9Smc2G1USStM+s/x1ru5Sxrl6mPYCbByG1U/hUmqaVsm4tbNyS7CicOSRyuGQYZhTu0h84qkZZQ/I+dzizSVw==}
+    resolution: {integrity: sha512-u9Smc2G1USStM+s/x1ru5Sxrl6mPYCbByG1U/hUmqaVsm4tbNyS7CicOSRyuGQYZhTu0h84qkZZQ/I+dzizSVw==, tarball: https://mirrors.cloud.tencent.com/npm/jsdom/-/jsdom-16.7.0.tgz}
     engines: {node: '>=10'}
     peerDependencies:
       canvas: ^2.5.0
@@ -10268,7 +10284,7 @@ packages:
         optional: true
 
   jsdom@7.2.2:
-    resolution: {integrity: sha512-kYeYuos/pYp0V/V8VAoGnUc0va0UZjTjwCsldBFZNBrOi9Q5kUXrvsw6W5/lQllB7hKXBARC4HRk1Sfk4dPFtA==}
+    resolution: {integrity: sha512-kYeYuos/pYp0V/V8VAoGnUc0va0UZjTjwCsldBFZNBrOi9Q5kUXrvsw6W5/lQllB7hKXBARC4HRk1Sfk4dPFtA==, tarball: https://mirrors.cloud.tencent.com/npm/jsdom/-/jsdom-7.2.2.tgz}
 
   jsesc@0.5.0:
     resolution: {integrity: sha512-uZz5UnB7u4T9LvwmFqXii7pZSouaRPorGs5who1Ip7VO0wxanFvBL7GkM6dTHlgX+jhBApRetaWpnDabOeTcnA==}
@@ -11774,7 +11790,7 @@ packages:
     resolution: {integrity: sha512-VrZ7eOd3T1Fk4XWNXMgiGBK/z0MG48BWG2uQNU4I72fkQuKUTZpl+u9k+CxEG0twMVzSmXEEz12z5Fnw1jIQFA==}
 
   parse5@5.1.1:
-    resolution: {integrity: sha512-ugq4DFI0Ptb+WWjAdOK16+u/nHfiIrcE+sh8kZMaM0WllQKLI9rOUq6c2b7cwPkXdzfQESqvoqK6ug7U/Yyzug==}
+    resolution: {integrity: sha512-ugq4DFI0Ptb+WWjAdOK16+u/nHfiIrcE+sh8kZMaM0WllQKLI9rOUq6c2b7cwPkXdzfQESqvoqK6ug7U/Yyzug==, tarball: https://mirrors.cloud.tencent.com/npm/parse5/-/parse5-5.1.1.tgz}
 
   parse5@6.0.1:
     resolution: {integrity: sha512-Ofn/CTFzRGTTxwpNEs9PP93gXShHcTq255nzRYSKe8AkVpZY7e1fpmTfOyoIvjP5HG7Z2ZM7VS9PPhQGW2pOpw==}
@@ -11824,7 +11840,7 @@ packages:
     engines: {node: '>=8'}
 
   path-key@4.0.0:
-    resolution: {integrity: sha512-haREypq7xkM7ErfgIyA0z+Bj4AGKlMSdlQE2jvJo6huWD1EdkKYV+G/T4nq0YEF2vgTT8kqMFKo1uHn950r4SQ==}
+    resolution: {integrity: sha512-haREypq7xkM7ErfgIyA0z+Bj4AGKlMSdlQE2jvJo6huWD1EdkKYV+G/T4nq0YEF2vgTT8kqMFKo1uHn950r4SQ==, tarball: https://mirrors.cloud.tencent.com/npm/path-key/-/path-key-4.0.0.tgz}
     engines: {node: '>=12'}
 
   path-parse@1.0.7:
@@ -14528,7 +14544,7 @@ packages:
     resolution: {integrity: sha512-dTpowEjclQ7Kgx5SdBkqRzVhERQXov8/l9Ft9dVM9fmg0W0KQSVaXX9T4i6twCPNtYiZM53lpSSUAwJbFPOHxA==}
 
   tr46@2.1.0:
-    resolution: {integrity: sha512-15Ih7phfcdP5YxqiB+iDtLoaTz4Nd35+IiAv0kQ5FNKHzXgdWqPoTIqEDDJmXceQt4JZk6lVPT8lnDlPpGDppw==}
+    resolution: {integrity: sha512-15Ih7phfcdP5YxqiB+iDtLoaTz4Nd35+IiAv0kQ5FNKHzXgdWqPoTIqEDDJmXceQt4JZk6lVPT8lnDlPpGDppw==, tarball: https://mirrors.cloud.tencent.com/npm/tr46/-/tr46-2.1.0.tgz}
     engines: {node: '>=8'}
 
   transliteration@2.1.11:
@@ -14708,7 +14724,7 @@ packages:
     resolution: {integrity: sha512-KNNZtayBCtmnNmbo5mG47p1XsCyrx6iVqomjcZnec/1Y5GGARaxPs6r49RnSPeUP3YjNYiU9sQHAtY4BBvnZwg==}
 
   typedarray-to-buffer@3.1.5:
-    resolution: {integrity: sha512-zdu8XMNEDepKKR+XYOXAVPtWui0ly0NtohUscw+UmaHiAWT8hrV1rr//H6V+0DvJ3OQ19S979M0laLfX8rm82Q==}
+    resolution: {integrity: sha512-zdu8XMNEDepKKR+XYOXAVPtWui0ly0NtohUscw+UmaHiAWT8hrV1rr//H6V+0DvJ3OQ19S979M0laLfX8rm82Q==, tarball: https://mirrors.cloud.tencent.com/npm/typedarray-to-buffer/-/typedarray-to-buffer-3.1.5.tgz}
 
   typedarray.prototype.slice@1.0.3:
     resolution: {integrity: sha512-8WbVAQAUlENo1q3c3zZYuy5k9VzBQvp8AX9WOtbvyWlLM1v5JaSRmjubLjzHF4JFtptjH/5c/i95yaElvcjC0A==}
@@ -15207,8 +15223,22 @@ packages:
       '@vue/composition-api':
         optional: true
 
+  vue-i18n-bridge@9.4.1:
+    resolution: {integrity: sha512-qYfbLtnaZC4lMkDKAZlIdgAUONmK2H5VQ1BsVTgOXD0omN61ilpwIltdWeqWvIz3DMQRoHX7LnCswDI7Ekrjyw==}
+    engines: {node: '>= 16'}
+    peerDependencies:
+      '@vue/composition-api': ^1.0.0-rc.1
+    peerDependenciesMeta:
+      '@vue/composition-api':
+        optional: true
+
   vue-i18n@8.18.2:
     resolution: {integrity: sha512-0X5nBTCZAVjlwcrPaYJwNs3iipBBTv0AUHwQUOa8yP3XbQGWKbRHqBb3OhCYtum/IHDD21d/df5Xd2VgyxbxfA==}
+    peerDependencies:
+      vue: ^2
+
+  vue-i18n@8.26.1:
+    resolution: {integrity: sha512-N6GpogueNQqmAye6lkUySlrXAZqBs9DYz8+8LHxm4IV7hEP/KWQL9VUCV8oJ0DS1asUTlvI2qKm2MydRgoPJFQ==}
     peerDependencies:
       vue: ^2
 
@@ -15566,7 +15596,7 @@ packages:
     engines: {node: '>=4.0.0'}
 
   whatwg-encoding@1.0.5:
-    resolution: {integrity: sha512-b5lim54JOPN9HtzvK9HFXvBma/rnfFeqsic0hSpjtDbVxR3dJKLc+KB4V6GgiGOvl7CY/KNh8rxSo9DKQrnUEw==}
+    resolution: {integrity: sha512-b5lim54JOPN9HtzvK9HFXvBma/rnfFeqsic0hSpjtDbVxR3dJKLc+KB4V6GgiGOvl7CY/KNh8rxSo9DKQrnUEw==, tarball: https://mirrors.cloud.tencent.com/npm/whatwg-encoding/-/whatwg-encoding-1.0.5.tgz}
 
   whatwg-fetch@3.6.20:
     resolution: {integrity: sha512-EqhiFU6daOA8kpjOWTL0olhVOF3i7OrFzSYiGsEMB8GcXS+RrzauAERX65xMeNWVqxA6HXH2m69Z9LaKKdisfg==}
@@ -15725,7 +15755,7 @@ packages:
     engines: {node: '>=12'}
 
   xmlchars@2.2.0:
-    resolution: {integrity: sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw==}
+    resolution: {integrity: sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw==, tarball: https://mirrors.cloud.tencent.com/npm/xmlchars/-/xmlchars-2.2.0.tgz}
 
   xpath@0.0.34:
     resolution: {integrity: sha512-FxF6+rkr1rNSQrhUNYrAFJpRXNzlDoMxeXN5qI84939ylEv3qqPFKa85Oxr6tDaJKqwW6KKyo2v26TSv3k6LeA==}
@@ -17731,6 +17761,11 @@ snapshots:
       '@intlify/message-compiler': 9.14.1
       '@intlify/shared': 9.14.1
 
+  '@intlify/core-base@9.4.1':
+    dependencies:
+      '@intlify/message-compiler': 9.4.1
+      '@intlify/shared': 9.4.1
+
   '@intlify/devtools-if@9.1.10':
     dependencies:
       '@intlify/shared': 9.1.10
@@ -17746,6 +17781,11 @@ snapshots:
       '@intlify/shared': 9.14.1
       source-map-js: 1.2.1
 
+  '@intlify/message-compiler@9.4.1':
+    dependencies:
+      '@intlify/shared': 9.4.1
+      source-map-js: 1.2.1
+
   '@intlify/message-resolver@9.1.10': {}
 
   '@intlify/runtime@9.1.10':
@@ -17758,6 +17798,8 @@ snapshots:
 
   '@intlify/shared@9.14.1': {}
 
+  '@intlify/shared@9.4.1': {}
+
   '@intlify/vue-devtools@9.1.10':
     dependencies:
       '@intlify/message-resolver': 9.1.10
@@ -17768,6 +17810,11 @@ snapshots:
     dependencies:
       '@intlify/core-base': 9.14.1
       '@intlify/shared': 9.14.1
+
+  '@intlify/vue-devtools@9.4.1':
+    dependencies:
+      '@intlify/core-base': 9.4.1
+      '@intlify/shared': 9.4.1
 
   '@isaacs/cliui@8.0.2':
     dependencies:
@@ -32258,7 +32305,23 @@ snapshots:
     transitivePeerDependencies:
       - vue
 
+  vue-i18n-bridge@9.4.1(@vue/composition-api@1.7.2(vue@2.7.16))(vue@2.7.16):
+    dependencies:
+      '@intlify/core-base': 9.4.1
+      '@intlify/shared': 9.4.1
+      '@intlify/vue-devtools': 9.4.1
+      '@vue/devtools-api': 6.6.1
+      vue-demi: 0.14.7(@vue/composition-api@1.7.2(vue@2.7.16))(vue@2.7.16)
+    optionalDependencies:
+      '@vue/composition-api': 1.7.2(vue@2.7.16)
+    transitivePeerDependencies:
+      - vue
+
   vue-i18n@8.18.2(vue@2.7.16):
+    dependencies:
+      vue: 2.7.16
+
+  vue-i18n@8.26.1(vue@2.7.16):
     dependencies:
       vue: 2.7.16
 

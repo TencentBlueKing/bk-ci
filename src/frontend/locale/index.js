@@ -1,5 +1,4 @@
 import axios from 'axios'
-import Vue from 'vue'
 import { lang, locale } from 'bk-magic-vue'
 import cookies from 'js-cookie'
 import VueI18n from 'vue-i18n'
@@ -88,12 +87,13 @@ function getLanguageCode (lang) {
     return 'ZH'
 }
 
-export default (r, initSetLocale = false) => {
+export default (r, Vue, initSetLocale = false) => {
     const { messages, localeList } = importAll(r)
     
     const initLocale = getLsLocale()
     const lang = getLanguageCode(initLocale.split('_')[0].toLocaleUpperCase())
 
+    Vue.use(VueI18n, { bridge: true })
     const i18n = createI18n({
         legacy: false,
         locale: initLocale,

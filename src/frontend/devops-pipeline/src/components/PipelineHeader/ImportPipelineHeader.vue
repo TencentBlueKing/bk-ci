@@ -33,16 +33,16 @@
 
 <script>
     import ModeSwitch from '@/components/ModeSwitch'
+    import TemplateBreadCrumb from '@/components/template/TemplateBreadCrumb.vue'
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
-    import { mapActions, mapGetters, mapState } from 'vuex'
-    import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
-    import TemplateBreadCrumb from '@/components/template/TemplateBreadCrumb.vue'
     import {
         showPipelineCheckMsg
     } from '@/utils/util'
+    import { mapActions, mapGetters, mapState } from 'vuex'
+    import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
 
     export default {
         components: {
@@ -61,7 +61,6 @@
             ]),
             ...mapState('atom', [
                 'pipeline',
-                'templateType',
                 'saveStatus',
                 'pipelineWithoutTrigger',
                 'pipelineSetting',
@@ -124,19 +123,19 @@
 
             async handleSaveTemplatePipelineDraft (params) {
                 const { data: { version, versionName, templateId } } = await this.saveDraftTemplate(params)
-                
+
                 this.$showTips({
                     message: this.$t('editPage.saveDraftSuccess', [this.pipelineSetting.pipelineName]),
                     theme: 'success'
                 })
                 this.setPipelineEditing(false)
                 this.updatePipelineInfo(version, versionName)
- 
+
                 await this.requestTemplateSummary({
                     projectId: this.$route.params.projectId,
                     templateId
                 })
-                
+
                 this.$router.push({
                     name: 'templateEdit',
                     params: {
@@ -149,7 +148,7 @@
             },
             async handleSavePipelineDraft (params) {
                 const { data: { version, versionName, pipelineId } } = await this.saveDraftPipeline(params)
-                
+
                 this.setPipelineEditing(false)
                 this.updatePipelineInfo(version, versionName)
 
@@ -158,7 +157,7 @@
                     message: this.$t('editPage.saveDraftSuccess', [this.pipelineSetting.pipelineName]),
                     limit: 1
                 })
-                
+
                 this.$router.replace({
                     name: 'pipelinesEdit',
                     params: {
@@ -178,9 +177,14 @@
                         ],
                         ...(this.isTemplatePipeline && { name: this.pipelineSetting.pipelineName })
                     })
-                    const { pipelineSetting, checkPipelineInvalid, pipelineYaml, templateType } = this
+                    const { pipelineSetting, checkPipelineInvalid, pipelineYaml } = this
                     const { inValid, message } = checkPipelineInvalid(pipeline.stages, pipelineSetting)
                     const { projectId } = this.$route.params
+                    const model = {
+                        ...pipeline,
+                        name: pipelineSetting.pipelineName,
+                        desc: pipelineSetting.desc
+                    }
                     if (inValid) {
                         throw new Error(message)
                     }
@@ -190,24 +194,15 @@
                         ? {
                             projectId,
                             storageType: this.pipelineMode,
-                            model: {
-                                ...pipeline,
-                                name: pipelineSetting.pipelineName,
-                                desc: pipelineSetting.desc
-                            },
+                            model,
                             templateSetting: pipelineSetting,
-                            type: templateType,
                             yaml: pipelineYaml
                         }
                         : {
                             projectId,
                             storageType: this.pipelineMode,
                             modelAndSetting: {
-                                model: {
-                                    ...pipeline,
-                                    name: pipelineSetting.pipelineName,
-                                    desc: pipelineSetting.desc
-                                },
+                                model,
                                 setting: pipelineSetting
                             },
                             yaml: pipelineYaml

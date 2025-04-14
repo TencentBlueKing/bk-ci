@@ -186,16 +186,16 @@
 </template>
 
 <script setup>
-    import { onMounted, ref, computed, defineProps } from 'vue'
-    import ExtMenu from './extMenu'
     import Logo from '@/components/Logo'
     import TemplateEmpty from '@/components/common/exception'
     import UseInstance from '@/hook/useInstance'
     import {
-        TEMPLATE_TABLE_COLUMN_CACHE,
-        CACHE_TEMPLATE_TABLE_WIDTH_MAP
+        CACHE_TEMPLATE_TABLE_WIDTH_MAP,
+        TEMPLATE_TABLE_COLUMN_CACHE
     } from '@/store/modules/templates/constants'
     import { convertTime } from '@/utils/util'
+    import { computed, defineProps, onMounted, ref } from 'vue'
+    import ExtMenu from './extMenu'
 
     const { proxy, i18n } = UseInstance()
     defineProps({
@@ -343,8 +343,7 @@
             params: {
                 templateId: row.id,
                 version: row.releasedVersion,
-                type,
-                templateType: row.type
+                type
             }
         })
     }

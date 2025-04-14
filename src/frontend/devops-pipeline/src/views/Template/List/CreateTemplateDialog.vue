@@ -66,9 +66,10 @@
 </template>
 
 <script setup name='CreateTemplateDialog'>
-    import { onMounted, ref, computed, defineProps } from 'vue'
     import UseInstance from '@/hook/useInstance'
-    const { proxy, i18n, bkMessage, userInfo } = UseInstance()
+    import { TEMPLATE_TYPE } from '@/utils/pipelineConst'
+    import { computed, defineProps, onMounted, ref } from 'vue'
+    const { proxy, bkMessage, userInfo, t } = UseInstance()
     defineProps({
         value: {
             type: Boolean,
@@ -84,11 +85,11 @@
             name: [
                 {
                     required: true,
-                    message: i18n.t('template.pleaseEnterTemplateName'),
+                    message: t('template.pleaseEnterTemplateName'),
                     trigger: 'blur'
                 },
                 {
-                    message: i18n.t('template.nameTips'),
+                    message: t('template.nameTips'),
                     validator: (val) => {
                         console.log(val)
                         return val
@@ -110,16 +111,14 @@
     }
     const templateFormRef = ref(null)
     const templateFormData = ref(getDefaultFormData())
-    const templateTypeMap = computed(() => [
-        {
-            name: i18n.t('template.pipelineTemplate'),
-            value: 'PIPELINE',
-            isActive: templateFormData.value.type === 'PIPELINE'
-        }
-    ])
+    const templateTypeMap = computed(() => Object.keys(TEMPLATE_TYPE).map(key => ({
+        name: t(`template.${key}`),
+        value: key,
+        isActive: templateFormData.value.type === key
+    })))
     const templateTypeTips = computed(() => {
         const tipsMap = {
-            PIPELINE: i18n.t('template.pipelineTypeTips')
+            PIPELINE: t('template.pipelineTypeTips')
         }
         return tipsMap[templateFormData.value.type] || ''
     })
@@ -131,14 +130,13 @@
     async function handConfirmCreateTemplate () {
         const valid = await templateFormRef.value.validate()
         if (valid) {
-            proxy.$store.dispatch('atom/setTemplateType', templateFormData.value.type)
             const res = await proxy.$store.dispatch('templates/createTemplate', {
                 projectId: projectId.value,
                 params: templateFormData.value
             })
             bkMessage({
                 theme: 'success',
-                message: i18n.t('创建模板成功')
+                message: t('创建模板成功')
             })
             templateFormData.value = getDefaultFormData()
             emit('update:value', false)

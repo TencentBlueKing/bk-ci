@@ -83,6 +83,7 @@
 <script>
     import NamingConventionTip from '@/components/namingConventionTip.vue'
     import { convertTime } from '@/utils/util'
+    import { mapGetters } from 'vuex'
     export default {
         components: {
             NamingConventionTip
@@ -103,9 +104,9 @@
             }
         },
         computed: {
-            isTemplate () {
-                return this.basicInfo?.isTemplate ?? false
-            },
+            ...mapGetters('atom', [
+                'isTemplate'
+            ]),
             panels () {
                 return [{
                     name: 'baseInfo',
@@ -131,7 +132,7 @@
                         },
                         {
                             key: 'template.templateType',
-                            value: this.$t(`template.${basicInfo?.type.toLowerCase()}Template`)
+                            value: this.$t(`template.${basicInfo?.type}`)
                         },
                         {
                             key: 'label',

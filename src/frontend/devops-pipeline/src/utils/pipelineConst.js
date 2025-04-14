@@ -311,8 +311,8 @@ export const TARGET_ACTION_ENUM = {
 }
 
 export const TEMPLATE_TYPE = {
-    PIPELINE: 'PIPELINE',
-    STAGE: 'STAGE',
-    JOB: 'JOB',
-    STEP: 'STEP'
+    PIPELINE: 'PIPELINE'
+    // STAGE: 'STAGE',
+    // JOB: 'JOB',
+    // STEP: 'STEP'
 }

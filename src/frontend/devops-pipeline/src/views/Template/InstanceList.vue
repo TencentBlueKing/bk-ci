@@ -161,11 +161,11 @@
 </template>
 
 <script setup>
-    import { computed, onMounted, ref, watch } from 'vue'
-    import UseInstance from '@/hook/useInstance'
-    import { convertTime } from '@/utils/util'
     import emptyTips from '@/components/pipelineList/imgEmptyTips'
     import instanceCompared from '@/components/template/instance-compared.vue'
+    import UseInstance from '@/hook/useInstance'
+    import { convertTime } from '@/utils/util'
+    import { computed, onMounted, ref, watch } from 'vue'
 
     const { proxy, showTips, i18n } = UseInstance()
     const isInit = ref(false)
@@ -314,7 +314,7 @@
                 pipelineId: curComparedPipeline.value
             })
 
-            versionList.value = res.versions
+            versionList.value = res.versions ?? []
             const curVersion = versionList.find(val => {
                 return val.version === parseInt(versionId)
             })

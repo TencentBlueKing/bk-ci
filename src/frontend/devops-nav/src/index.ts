@@ -62,7 +62,7 @@ Vue.component('DevopsFormItem', DevopsFormItem)
 Vue.component('BigSelect', BigSelect)
 Vue.component('undeploy', Undeploy)
 
-const { lang, i18n, dynamicLoadModule, setLocale, localeList } = createLocale(require.context('@locale/nav/', false, /\.json$/), true)
+const { lang, i18n, dynamicLoadModule, setLocale, localeList } = createLocale(require.context('@locale/nav/', false, /\.json$/), Vue, true)
 const { BkciDocs } = createDocs(lang, window.BK_CI_VERSION)
 
 // @ts-ignore

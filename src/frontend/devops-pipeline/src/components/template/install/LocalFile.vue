@@ -10,10 +10,10 @@
 </template>
 
 <script setup name='localFile'>
-    import { nextTick, computed, defineProps, defineExpose } from 'vue'
     import UseInstance from '@/hook/useInstance'
     import { CODE_MODE } from '@/utils/pipelineConst'
-    const { proxy, i18n, showTips } = UseInstance()
+    import { computed, defineExpose, defineProps, nextTick } from 'vue'
+    const { proxy, t, showTips } = UseInstance()
     const routeProjectId = computed(() => proxy.$route.params.projectId)
     const props = defineProps([
         {
@@ -29,10 +29,10 @@
             try {
                 if (fileObj.type === 'application/x-yaml' || fileObj.name.endsWith('.yaml') || fileObj.name.endsWith('.yml')) {
                     const yaml = e.target.result
-                    
+
                     const isValid = !!yaml
                     const code = isValid ? 0 : 1
-                    const message = isValid ? null : i18n.t('invalidPipelineJsonOrYaml')
+                    const message = isValid ? null : t('invalidPipelineJsonOrYaml')
 
                     onSuccess({
                         code,
@@ -48,7 +48,7 @@
                 console.log(e)
                 onSuccess({
                     code: 1,
-                    message: i18n.t('invalidPipelineJsonOrYaml'),
+                    message: t('invalidPipelineJsonOrYaml'),
                     result: ''
                 }, fileObj)
             } finally {
@@ -87,17 +87,17 @@
                 yaml: result
             })
             const newPipelineName = templateModel.name
-                    
+
             const pipeline = {
                 ...templateModel,
                 name: newPipelineName
             }
             proxy.$store.dispatch('atom/setPipelineSetting', {
                 ...templateSetting.setting,
-                pipelineName: newPipelineName
+                pipelineName: newPipelineName,
+                type: templateType
             })
             proxy.$store.dispatch('atom/setPipeline', pipeline)
-            proxy.$store.dispatch('atom/setTemplateType', templateType)
             proxy.$store.dispatch('atom/setPipelineWithoutTrigger', {
                 ...pipeline,
                 stages: templateModel.stages.slice(1)
@@ -122,7 +122,7 @@
         height: 200px;
         margin-top: 30px;
         margin-bottom: 20px;
-       
+
         .tips {
             margin-top: 10px;
         }
