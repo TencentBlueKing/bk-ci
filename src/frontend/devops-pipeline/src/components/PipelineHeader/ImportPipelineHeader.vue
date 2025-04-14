@@ -1,7 +1,7 @@
 <template>
     <div class="pipeline-import-edit-header">
         <template-bread-crumb
-            v-if="isTemplatePipeline"
+            v-if="isTemplate"
             :template-name="pipeline?.name"
             :is-loading="!pipeline"
         />
@@ -34,7 +34,6 @@
 <script>
     import ModeSwitch from '@/components/ModeSwitch'
     import TemplateBreadCrumb from '@/components/template/TemplateBreadCrumb.vue'
-    import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
@@ -77,8 +76,8 @@
             pipelineId () {
                 return this.$route.params.pipelineId
             },
-            isTemplatePipeline () {
-                return this.$route.params.isTemplatePipeline
+            isTemplate () {
+                return this.pipelineInfo?.isTemplate
             },
             currentVersionId () {
                 return this.$route.params?.version ?? this.pipelineInfo?.version
@@ -93,6 +92,7 @@
                 'saveDraftPipeline',
                 'setSaveStatus',
                 'updateContainer',
+                'requestPipelineSummary',
                 'requestTemplateSummary',
                 'saveDraftTemplate'
             ]),
@@ -112,24 +112,14 @@
                 })
             },
 
-            updatePipelineInfo (version, versionName) {
-                this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
-                    canDebug: true,
-                    canRelease: false,
-                    version,
-                    versionName
-                })
-            },
-
             async handleSaveTemplatePipelineDraft (params) {
-                const { data: { version, versionName, templateId } } = await this.saveDraftTemplate(params)
+                const { data: { templateId } } = await this.saveDraftTemplate(params)
 
                 this.$showTips({
                     message: this.$t('editPage.saveDraftSuccess', [this.pipelineSetting.pipelineName]),
                     theme: 'success'
                 })
                 this.setPipelineEditing(false)
-                this.updatePipelineInfo(version, versionName)
 
                 await this.requestTemplateSummary({
                     projectId: this.$route.params.projectId,
@@ -147,15 +137,19 @@
                 })
             },
             async handleSavePipelineDraft (params) {
-                const { data: { version, versionName, pipelineId } } = await this.saveDraftPipeline(params)
+                const { data: { pipelineId } } = await this.saveDraftPipeline(params)
 
                 this.setPipelineEditing(false)
-                this.updatePipelineInfo(version, versionName)
 
                 this.$bkMessage({
                     theme: 'success',
                     message: this.$t('editPage.saveDraftSuccess', [this.pipelineSetting.pipelineName]),
                     limit: 1
+                })
+
+                await this.requestPipelineSummary({
+                    projectId: this.$route.params.projectId,
+                    pipelineId
                 })
 
                 this.$router.replace({
@@ -175,7 +169,7 @@
                             this.pipeline.stages[0],
                             ...this.pipelineWithoutTrigger.stages
                         ],
-                        ...(this.isTemplatePipeline && { name: this.pipelineSetting.pipelineName })
+                        ...(this.isTemplate && { name: this.pipelineSetting.pipelineName })
                     })
                     const { pipelineSetting, checkPipelineInvalid, pipelineYaml } = this
                     const { inValid, message } = checkPipelineInvalid(pipeline.stages, pipelineSetting)
@@ -190,7 +184,7 @@
                     }
                     // 清除流水线参数渲染过程中添加的key
                     this.formatParams(pipeline)
-                    const params = this.isTemplatePipeline
+                    const params = this.isTemplate
                         ? {
                             projectId,
                             storageType: this.pipelineMode,
@@ -210,7 +204,7 @@
                         }
 
                     // 请求执行构建
-                    if (this.isTemplatePipeline) {
+                    if (this.isTemplate) {
                         await this.handleSaveTemplatePipelineDraft(params)
                     } else {
                         await this.handleSavePipelineDraft(params)
