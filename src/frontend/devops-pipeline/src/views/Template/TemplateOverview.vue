@@ -26,16 +26,25 @@
             </p>
 
             <p class="template-operate-area">
+                <template v-if="!isHistoryVersion">
+                    <bk-button
+                        @click="goEditTemplate(pipelineInfo?.version)"
+                    >
+                        {{ $t('template.editTemplate') }}
+                    </bk-button>
+                    <bk-button
+                        @click="switchToReleaseVersion"
+                        theme="primary"
+                    >
+                        {{ $t('template.instantiate') }}
+                    </bk-button>
+                </template>
                 <bk-button
-                    @click="goEditTemplate"
-                >
-                    {{ $t('template.editTemplate') }}
-                </bk-button>
-                <bk-button
-                    @click="switchToReleaseVersion"
+                    v-else
+                    @click="rollback"
                     theme="primary"
                 >
-                    {{ $t('template.instantiate') }}
+                    {{ $t('rollback') }}
                 </bk-button>
             </p>
         </header>
@@ -220,6 +229,9 @@
             },
             releaseVersion () {
                 return this.pipelineInfo?.releaseVersion
+            },
+            isHistoryVersion () {
+                return this.releaseVersion !== this.currentVersion
             }
         },
         watch: {
@@ -236,7 +248,7 @@
                         version: this.pipelineInfo?.version
                     }
                 })
-            } else if (this.releaseVersion !== this.currentVersion) {
+            } else if (this.isHistoryVersion) {
                 this.handleVersionChange(this.releaseVersion)
             } else {
                 this.init()
@@ -252,6 +264,10 @@
                 'setShowVariable',
                 'setSwitchingPipelineVersion'
             ]),
+            ...mapActions({
+                rollbackTemplateVersion: 'templates/rollbackTemplateVersion',
+                requestTemplateSummary: 'atom/requestTemplateSummary'
+            }),
             async init () {
                 try {
                     if (this.currentVersion) {
@@ -338,14 +354,30 @@
             switchToReleaseVersion () {
                 this.handleVersionChange(this.releaseVersion)
             },
-            goEditTemplate () {
+            goEditTemplate (version) {
                 this.$router.push({
                     name: 'templateEdit',
                     params: {
                         ...this.$route.params,
-                        version: this.pipelineInfo?.version
+                        version
                     }
                 })
+            },
+            async rollback () {
+                // TODO 版本路径变更
+                try {
+                    const { version } = await this.rollbackTemplateVersion({
+                        ...this.$route.params,
+                        version: this.currentVersion
+                    })
+                    await this.requestTemplateSummary(this.$route.params)
+
+                    if (version) {
+                        this.goEditTemplate(version)
+                    }
+                } catch (error) {
+                    console.log(error)
+                }
             }
         }
     }
