@@ -38,15 +38,10 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserProjectMemberResourceImpl @Autowired constructor(
     val permissionProjectService: PermissionProjectService,
-    val userProjectPermissionService: UserProjectPermissionService
 ) : UserProjectMemberResource {
     override fun checkManager(userId: String, projectId: String): Result<Boolean> {
         val result = permissionProjectService.checkProjectManager(userId, projectId) ||
             permissionProjectService.isProjectUser(userId, projectId, BkAuthGroup.CI_MANAGER)
         return Result(result)
-    }
-
-    override fun checkMember(userId: String, projectId: String): Result<Boolean> {
-       return Result(userProjectPermissionService.checkMember(userId, projectId))
     }
 }
