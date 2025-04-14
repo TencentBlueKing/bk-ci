@@ -165,6 +165,23 @@ export const DEFAULT_PARAM = {
         required: true,
         readOnly: false
     },
+    [CONTAINER_TYPE]: {
+        id: 'buildResource',
+        name: 'buildResource',
+        defaultValue: '',
+        defalutValueLabel: 'defaultValue',
+        defaultValueLabelTips: 'defaultValueDesc',
+        // containerType: {
+        //     os: 'LINUX',
+        //     buildType: 'DOCKER'
+        // },
+        desc: '',
+        options: [],
+        type: CONTAINER_TYPE,
+        typeDesc: 'buildResource',
+        required: true,
+        readOnly: false
+    },
     [ARTIFACTORY]: {
         id: 'artifactory',
         defaultValue: '',
@@ -197,6 +214,7 @@ export const DEFAULT_PARAM = {
         defaultValue: '',
         defalutValueLabel: 'fileDefaultValueLabel',
         defaultValueLabelTips: 'customFileLabelTips',
+        enableVersionControl: false,
         desc: '',
         type: CUSTOM_FILE,
         typeDesc: 'custom_file',

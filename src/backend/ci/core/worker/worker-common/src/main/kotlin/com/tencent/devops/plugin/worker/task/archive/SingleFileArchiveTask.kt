@@ -64,7 +64,7 @@ class SingleFileArchiveTask : ITask() {
             repoName = if (isCustomize.toBoolean()) "custom" else "pipeline",
             path = if (isCustomize.toBoolean()) "/" else "/${buildVariables.pipelineId}/${buildVariables.buildId}",
             type = TokenType.UPLOAD,
-            expireSeconds = TaskUtil.getTimeOut(buildTask)?.times(60)
+            expireSeconds = TaskUtil.getTimeOut(buildTask).times(60)
         )
         try {
             val count = if (isCustomize.toBoolean()) {

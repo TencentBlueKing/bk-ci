@@ -99,7 +99,7 @@ class StartWorkspaceService @Autowired constructor(
     }
 
     private val userEnvCache = Caffeine.newBuilder()
-        .expireAfterWrite(Duration.ofMinutes(1))
+        .expireAfterWrite(Duration.ofSeconds(5))
         .build<String, List<String>>()
 
     fun cachingLoginUsers(

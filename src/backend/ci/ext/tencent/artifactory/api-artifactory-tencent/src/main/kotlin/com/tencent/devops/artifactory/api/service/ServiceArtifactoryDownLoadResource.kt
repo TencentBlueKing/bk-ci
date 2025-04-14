@@ -27,11 +27,13 @@
 
 package com.tencent.devops.artifactory.api.service
 
+import com.tencent.devops.artifactory.pojo.AllowDownload
 import com.tencent.devops.artifactory.pojo.ApkDefenderRequest
 import com.tencent.devops.artifactory.pojo.TokenForJsonRequest
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.auth.AUTH_HEADER_BUILD_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_REAL_IP
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_REGION
@@ -42,15 +44,15 @@ import com.tencent.devops.common.archive.pojo.defender.ApkDefenderTasks
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "SERVICE_ARTIFACTORY", description = "版本仓库-仓库资源")
 @Path("/service/artifactories")
@@ -181,4 +183,25 @@ interface ServiceArtifactoryDownLoadResource {
     fun createTokenForJson(
         tokenForJsonRequest: TokenForJsonRequest
     ): Result<String>
+
+    @Operation(summary = "是否允许下载")
+    @Path("/{projectId}/{artifactoryType}/allowDownload")
+    @GET
+    fun allowDownload(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "用户IP", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_REAL_IP)
+        realIP: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "版本仓库类型", required = true)
+        @PathParam("artifactoryType")
+        artifactoryType: ArtifactoryType,
+        @Parameter(description = "路径", required = true)
+        @QueryParam("path")
+        path: String
+    ): Result<AllowDownload>
 }

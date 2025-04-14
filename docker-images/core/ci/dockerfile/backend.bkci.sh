@@ -5,7 +5,7 @@ source service.env
 export JAVA_TOOL_OPTIONS="$JAVA_TOOL_OPTIONS $JAVA_TOOL_OPTIONS_TMP"
 
 MEM_OPTS="-XX:+UseContainerSupport -Xss512k -XX:MaxMetaspaceSize=500m -XX:CompressedClassSpaceSize=100m -XX:ReservedCodeCacheSize=400m -XX:-UseAdaptiveSizePolicy -XX:MaxGCPauseMillis=100"
-GC_LOG="-Xloggc:/data/workspace/$MS_NAME/jvm/gc-%t.log -XX:+PrintTenuringDistribution -XX:+PrintGCDetails -XX:+PrintGCDateStamps"
+GC_LOG="-Xlog:gc*,gc+age=trace:file=/data/workspace/$MS_NAME/jvm/gc-%t.log:time,level,tags"
 API_PORT=80
 
 echo "create log dir"

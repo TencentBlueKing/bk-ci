@@ -44,14 +44,12 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.auth.enums.AuthSystemType
-import com.tencent.devops.common.auth.service.BkAccessTokenApi
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.Profile
-import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
@@ -98,11 +96,9 @@ class TxProjectServiceImpl @Autowired constructor(
     private val tofService: TOFService,
     private val authProjectApi: AuthProjectApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
-    private val config: CommonConfig,
     private val projectDispatcher: SampleEventDispatcher,
     private val managerService: ManagerService,
     private val tokenService: ClientTokenService,
-    private val bkAccessTokenApi: BkAccessTokenApi,
     private val projectExtPermissionService: ProjectExtPermissionService,
     private val projectTagService: ProjectTagService,
     private val bkTag: BkTag,

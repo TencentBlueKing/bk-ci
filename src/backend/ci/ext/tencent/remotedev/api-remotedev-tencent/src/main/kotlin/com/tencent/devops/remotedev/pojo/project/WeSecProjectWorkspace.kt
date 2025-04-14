@@ -75,7 +75,11 @@ data class WeSecProjectWorkspace(
     @get:Schema(title = "共享人")
     val viewers: List<String>? = emptyList(),
     @get:Schema(title = "母机IP")
-    val nodeIp: String? = null
+    val nodeIp: String? = null,
+    @get:Schema(title = "start客户端所需唯一索引")
+    val curLaunchId: Int? = null,
+    @get:Schema(title = "resourceId")
+    val resourceId: String? = null
 )
 
 @Schema(title = "组织信息")

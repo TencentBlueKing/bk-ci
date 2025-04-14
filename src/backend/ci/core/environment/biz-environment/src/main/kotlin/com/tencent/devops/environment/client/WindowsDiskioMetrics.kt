@@ -33,7 +33,7 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import org.influxdb.dto.Query
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 
 @Component
 @AgentMetrics(metricsType = UsageMetrics.MetricsType.DISK, osTypes = [OS.WINDOWS])

@@ -26,6 +26,8 @@
                     :disabled="disabled"
                     :placeholder="param.placeholder"
                     :is-diff-param="highlightChangedParam && param.isChanged"
+                    :enable-version-control="param.enableVersionControl"
+                    :random-sub-path="param.latestRandomStringInPath"
                 />
                 <span
                     class="meta-data"
@@ -70,6 +72,7 @@
         getBranchOption,
         GIT_REF,
         isArtifactoryParam,
+        isBuildResourceParam,
         isCodelibParam,
         isEnumParam,
         isFileParam,
@@ -145,7 +148,7 @@
                         }
 
                         // codeLib 接口返回的数据没有匹配的默认值,导致回显失效，兼容加上默认值
-                        if (param.type === CODE_LIB) {
+                        if (param.type === CODE_LIB || isBuildResourceParam(param.type)) {
                             const value = this.paramValues[param.id]
                             const listItemIndex = restParam.list && restParam.list.findIndex(i => i.value === value)
                             if (listItemIndex < 0 && value) {
@@ -153,6 +156,13 @@
                                     key: value,
                                     value: value
                                 })
+                            }
+                            if (isBuildResourceParam(param.type)) {
+                                restParam.toggleVisible = (isShow) => {
+                                    if (isShow) {
+                                        this.fetchBuildResourceList(param)
+                                    }
+                                }
                             }
                         }
                     }
@@ -178,6 +188,15 @@
                                 })
                             }
                         }
+                    }
+
+                    if (isFileParam(param.type)) {
+                        // 预览时，重新上传文件，会把文件类型的value变成对象而非字符串，这时要更新随机串回显到页面上
+                        const paramValue = this.paramValues[param.id]
+                        const newRandomString = paramValue?.latestRandomStringInPath
+                        const defaultRandomString = param.latestRandomStringInPath ?? param.randomStringInPath
+                        restParam.latestRandomStringInPath = newRandomString ?? defaultRandomString
+                        restParam.value = typeof paramValue === 'object' ? paramValue?.directory : paramValue
                     }
                     return {
                         ...param,
@@ -257,6 +276,19 @@
             },
             showFileUploader (type) {
                 return isFileParam(type) && this.$route.path.indexOf('preview') > -1
+            },
+            async fetchBuildResourceList (param) {
+                try {
+                    const { data } = await this.$ajax.get(`environment/api/user/envnode/${this.$route.params.projectId}/listNew?nodeType=THIRDPARTY&page=1&pageSize=100`)
+                    const list = data.records.map(item => ({
+                        key: item.displayName,
+                        value: item.displayName
+                    }))
+                    param.list = list
+                    param.options = list
+                } catch (error) {
+                    console.log(error)
+                }
             }
         }
     }

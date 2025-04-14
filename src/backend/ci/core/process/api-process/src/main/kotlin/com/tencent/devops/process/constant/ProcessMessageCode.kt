@@ -369,6 +369,13 @@ object ProcessMessageCode {
     const val ERROR_COMMIT_BRANCH_IS_NOT_EMPTY = "2101259" // 指定分支不能为空
     const val ERROR_NON_LATEST_RELEASE_VERSION = "2101266" // 当前构建版本已不是最新版本，请重新选择版本
     const val ERROR_REPO_HASH_ID_IS_NOT_EMPTY = "2101267" // 代码库信息不能为空
+    // 同样的触发参数, 已不满足当前流水线最新版本 {0} 的触发条件, 继续运行可能会产生错误, 确认继续吗
+    const val ERROR_TRIGGER_CONDITION_NOT_MATCH = "2101272"
+
+    const val ERROR_TRIGGER_EVENT_BODY_NOT_FOUND = "2101268" // 触发事件体不存在
+    const val ERROR_PAC_DEFAULT_BRANCH_FILE_DELETED = "2101269" // 默认分支yaml文件已删除
+    const val ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC = "2101270" // 仅支持git类型代码库开启PAC
+    const val ERROR_NOT_REPOSITORY_PUSH_PERMISSION = "2101271" // 用户 [{0}] 没有仓库 [{1}] PUSH权限
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
@@ -582,4 +589,22 @@ object ProcessMessageCode {
     // [xxx]流水线循环调用[xxx]流水线，形成循环依赖
     const val BK_OTHER_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_MESSAGE =
         "bkOtherSubPipelineCircularDependencyErrorMessage"
+
+    // [<a href={0}>{1}</a>]创建成功,版本:{2}
+    const val BK_YAML_PIPELINE_CREATE_SUCCESS = "bkYamlPipelineCreateSuccess"
+    // [<a href={0}>{1}</a>]更新成功,版本:{2}
+    const val BK_YAML_PIPELINE_UPDATE_SUCCESS = "bkYamlPipelineUpdateSuccess"
+    // [<a href={0}>{1}</a>]删除版本成功,版本:{2}
+    const val BK_YAML_PIPELINE_DELETE_VERSION_SUCCESS = "bkYamlPipelineDeleteVersionSuccess"
+    // [{0}]删除成功,流水线ID:{1}
+    const val BK_YAML_PIPELINE_DELETE_SUCCESS = "bkYamlPipelineDeleteSuccess"
+
+    // 创建流水线失败
+    const val BK_YAML_PIPELINE_CREATE_FAILED = "bkYamlPipelineCreateFailed"
+    // [<a href={0}>{1}</a>]更新失败
+    const val BK_YAML_PIPELINE_UPDATE_FAILED = "bkYamlPipelineUpdateFailed"
+    // [<a href={0}>{1}</a>]删除版本失败,版本:{2}
+    const val BK_YAML_PIPELINE_DELETE_VERSION_FAILED = "bkYamlPipelineDeleteVersionFailed"
+    // [<a href={0}>{1}</a>]删除失败
+    const val BK_YAML_PIPELINE_DELETE_FAILED = "bkYamlPipelineDeleteFailed"
 }

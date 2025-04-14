@@ -27,6 +27,9 @@
 
 package com.tencent.devops.experience.api.app
 
+import com.tencent.devops.artifactory.pojo.AllowDownload
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_REAL_IP
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PLATFORM
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
@@ -39,14 +42,14 @@ import com.tencent.devops.experience.pojo.download.ReportSpeedParam
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "APP_EXPERIENCE_DOWNLOAD", description = "版本体验-下载管理")
 @Path("/app/experiences/download")
@@ -98,4 +101,28 @@ interface AppExperienceDownloadResource {
         @Parameter(description = "上报下载速度参数", required = true)
         params: ReportSpeedParam
     ): Result<Boolean>
+
+    @Operation(summary = "是否允许下载")
+    @Path("/allowDownload")
+    @GET
+    fun allowDownload(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "用户IP", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_REAL_IP)
+        realIP: String,
+        @Parameter(description = "体验ID", required = false)
+        @QueryParam("experienceHashId")
+        experienceHashId: String?,
+        @Parameter(description = "项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String?,
+        @Parameter(description = "版本仓库类型", required = false)
+        @QueryParam("artifactoryType")
+        artifactoryType: ArtifactoryType?,
+        @Parameter(description = "路径", required = false)
+        @QueryParam("path")
+        path: String?
+    ): Result<AllowDownload>
 }

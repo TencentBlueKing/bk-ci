@@ -91,6 +91,15 @@ import com.tencent.devops.common.archive.util.closeQuietly
 import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import java.io.File
+import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
+import java.net.URLEncoder
+import java.nio.file.FileSystems
+import java.nio.file.Paths
+import java.util.UUID
+import jakarta.ws.rs.NotFoundException
 import okhttp3.Credentials
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType
@@ -104,15 +113,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Sort.Direction
 import org.springframework.stereotype.Component
 import org.springframework.util.FileCopyUtils
-import java.io.File
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
-import java.net.URLEncoder
-import java.nio.file.FileSystems
-import java.nio.file.Paths
-import java.util.UUID
-import javax.ws.rs.NotFoundException
 
 @Component
 class BkRepoClient constructor(
@@ -1075,6 +1075,38 @@ class BkRepoClient constructor(
             )
             .build()
         doRequest(request)
+    }
+
+
+    @SuppressWarnings("ReturnCount")
+    fun allowDownload(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        path: String,
+        ip: String
+    ): Pair<Boolean/*是否可以下载*/, String/*错误信息*/> {
+        logger.info("allowDownload, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, ip: $ip")
+        val url = "${getGatewayUrl()}/bkrepo/api/service/generic/allow/download/" +
+                "$projectId/$repoName/$path?ip=$ip&fromApp=true"
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
+            .get()
+            .build()
+
+        try {
+            return doRequest(request).resolveResponse<Response<Any>>()?.let {
+                return if (it.isOk()) {
+                    Pair(true, "")
+                } else {
+                    Pair(false, it.message ?: "Unknown Error")
+                }
+            } ?: Pair(false, "Unknown Error")
+        } catch (e: Exception) {
+            logger.warn("allowDownload error: ${e.message}")
+            return Pair(false, e.message ?: "Unknown Error")
+        }
     }
 
     fun getPackageVersionInfo(

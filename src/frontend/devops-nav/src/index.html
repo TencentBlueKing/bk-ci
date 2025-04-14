@@ -169,7 +169,8 @@
           || query.has(X_DEVOPS_PROJECT_ID.toLocaleLowerCase())
         ) {
           return query.get('projectCode') || query.get('project_code') || query.get(X_DEVOPS_PROJECT_ID.toLocaleLowerCase()) || ''
-        } else if (location.pathname.match(/^\/console\/(store|permission|manage)\/(\w+)?/)) {
+        } else if (location.pathname.match(/^\/console\/(store|permission|manage|platform)\/(\w+)?/)) {
+
           // TODO store没有projectId
           return ''
         } else {

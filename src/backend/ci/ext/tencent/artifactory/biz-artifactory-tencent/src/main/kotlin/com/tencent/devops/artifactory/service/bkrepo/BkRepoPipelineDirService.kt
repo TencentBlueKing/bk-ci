@@ -42,7 +42,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.utils.I18nUtil
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

@@ -617,6 +617,7 @@
                 requestGlobalEnvs()
             }
             this.toggleAtomSelectorPopup(!atomCode)
+            this.requestInterceptAtom()
         },
 
         methods: {

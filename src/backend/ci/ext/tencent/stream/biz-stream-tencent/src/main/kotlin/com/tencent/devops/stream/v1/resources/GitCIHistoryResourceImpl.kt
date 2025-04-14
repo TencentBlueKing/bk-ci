@@ -40,7 +40,7 @@ import com.tencent.devops.stream.v1.pojo.V1GitCIBuildBranch
 import com.tencent.devops.stream.v1.pojo.V1GitCIBuildHistory
 import com.tencent.devops.stream.v1.service.V1GitCIHistoryService
 import com.tencent.devops.stream.v1.service.V1GitRepositoryConfService
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

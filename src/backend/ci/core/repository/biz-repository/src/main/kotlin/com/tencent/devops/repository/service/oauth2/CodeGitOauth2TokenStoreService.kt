@@ -27,11 +27,12 @@
 
 package com.tencent.devops.repository.service.oauth2
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.repository.dao.GitTokenDao
-import com.tencent.devops.repository.pojo.CodeGitRepository
-import com.tencent.devops.repository.pojo.oauth.Oauth2AccessToken
+import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.repository.pojo.oauth.OauthTokenInfo
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -49,25 +50,39 @@ class CodeGitOauth2TokenStoreService @Autowired constructor(
     @Value("\${aes.git:#{null}}")
     private val aesKey: String = ""
 
+    // 兼容历史数据,直接用scmType的值代替scmCode
     override fun support(scmCode: String): Boolean {
-        return scmCode == CodeGitRepository.SCM_CODE
+        return scmCode == ScmType.CODE_GIT.name
     }
 
-    override fun get(userId: String, scmCode: String): Oauth2AccessToken? {
+    override fun get(userId: String, scmCode: String): OauthTokenInfo? {
         return gitTokenDao.getAccessToken(dslContext, userId)?.let {
-            Oauth2AccessToken(
-                BkCryptoUtil.decryptSm4OrAes(aesKey, it.accessToken),
-                it.tokenType,
-                it.expiresIn,
-                BkCryptoUtil.decryptSm4OrAes(aesKey, it.refreshToken),
-                it.createTime.timestampmilli(),
-                userId = it.userId,
+            OauthTokenInfo(
+                accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.accessToken),
+                tokenType = it.tokenType,
+                expiresIn = it.expiresIn,
+                refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.refreshToken),
+                createTime = it.createTime.timestampmilli(),
+                userId = userId,
                 operator = it.operator
             )
         }
     }
 
+    override fun store(scmCode: String, oauthTokenInfo: OauthTokenInfo) {
+        val gitToken = with(oauthTokenInfo) {
+            GitToken(
+                accessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, accessToken),
+                refreshToken = refreshToken?.let { BkCryptoUtil.encryptSm4ButAes(aesKey, it) } ?: "",
+                tokenType = tokenType,
+                expiresIn = expiresIn ?: 0L,
+                operator = operator
+            )
+        }
+        gitTokenDao.saveAccessToken(dslContext, oauthTokenInfo.userId, gitToken)
+    }
+
     override fun delete(userId: String, scmCode: String) {
-        gitTokenDao.deleteToken(dslContext, userId)
+        gitTokenDao.deleteToken(dslContext = dslContext, userId = userId)
     }
 }

@@ -13,7 +13,7 @@ import com.tencent.devops.stream.service.StreamPipelineService
 import com.tencent.devops.stream.trigger.TXManualTriggerService
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @RestResource
 class AppStreamTriggerResourceImpl @Autowired constructor(
