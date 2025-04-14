@@ -108,10 +108,10 @@ import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpart
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
-import java.time.LocalDateTime
-import java.util.Date
 import jakarta.ws.rs.NotFoundException
 import jakarta.ws.rs.core.Response
+import java.time.LocalDateTime
+import java.util.Date
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -147,10 +147,25 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val thirdPartAgentService: ThirdPartAgentService
 ) {
 
-    fun getAgentDetailById(userId: String, projectId: String, agentHashId: String): ThirdPartyAgentDetail? {
+    fun getAgentDetailById(
+        userId: String,
+        projectId: String,
+        agentHashId: String,
+        checkPermission: Boolean = false
+    ): ThirdPartyAgentDetail? {
         val id = HashUtil.decodeIdToLong(agentHashId)
         val agentRecord = thirdPartyAgentDao.getAgent(dslContext, id = id) ?: return null
-
+        if (checkPermission && !environmentPermissionService.checkNodePermission(
+                userId = userId,
+                projectId = projectId,
+                nodeId = agentRecord.nodeId,
+                permission = AuthPermission.VIEW
+            )
+        ) {
+            throw PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(ERROR_NODE_NO_VIEW_PERMISSSION)
+            )
+        }
         return getThirdPartyAgentDetail(agentRecord, userId, true)
     }
 
