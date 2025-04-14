@@ -162,11 +162,11 @@
 
 <script setup>
     import emptyTips from '@/components/pipelineList/imgEmptyTips'
-import instanceCompared from '@/components/template/instance-compared.vue'
-import UseInstance from '@/hook/useInstance'
-import { SET_INSTANCE_LIST } from '@/store/modules/templates/constants'
-import { convertTime } from '@/utils/util'
-import { computed, onMounted, ref, watch } from 'vue'
+    import instanceCompared from '@/components/template/instance-compared.vue'
+    import UseInstance from '@/hook/useInstance'
+    import { SET_INSTANCE_LIST } from '@/store/modules/templates/constants'
+    import { convertTime } from '@/utils/util'
+    import { computed, onMounted, ref, watch } from 'vue'
 
     const { proxy, showTips, i18n } = UseInstance()
     const isInit = ref(false)
