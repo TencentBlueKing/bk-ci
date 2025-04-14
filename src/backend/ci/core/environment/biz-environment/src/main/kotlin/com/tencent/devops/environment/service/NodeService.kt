@@ -781,8 +781,7 @@ class NodeService @Autowired constructor(
         }
         return nodes.map { NodeStringIdUtils.getNodeBaseInfo(it) }
     }
-
-
+    
     fun getByDisplayName(
         userId: String,
         projectId: String,
