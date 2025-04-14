@@ -773,6 +773,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             storeCode = storeCode,
             storeType = storeTypeEnum.type.toByte(),
             storeProjectType = StoreProjectTypeEnum.COMMON,
+            projectCode = projectCode,
             instanceId = instanceId
         )?.firstOrNull()
 
