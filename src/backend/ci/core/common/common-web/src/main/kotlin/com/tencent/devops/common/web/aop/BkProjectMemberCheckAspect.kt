@@ -1,7 +1,9 @@
 package com.tencent.devops.common.web.aop
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_NEED_PARAM_
 import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_IS_INVALID
+import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_IS_NULL
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.service.ServiceUserProjectMemberPermissionResource
@@ -30,14 +32,7 @@ class BkProjectMemberCheckAspect constructor(
     fun doBefore(jp: JoinPoint) {
         val parameterValue = jp.args
         val parameterNames = (jp.signature as MethodSignature).parameterNames
-        if (PROJECT_ID !in parameterNames || USER_ID !in parameterNames) {
-            logger.warn("The request parameters for this method are incorrect: $parameterValue|$parameterNames")
-            throw ErrorCodeException(
-                errorCode = PARAMETER_IS_INVALID,
-                defaultMessage = "The request parameters for this method are incorrect." +
-                        "projectId and userId are required."
-            )
-        }
+        checkParameterName(parameterNames)
         var projectId: String? = null
         var userId: String? = null
         parameterNames.forEachIndexed { index, name ->
@@ -46,12 +41,8 @@ class BkProjectMemberCheckAspect constructor(
                 USER_ID -> userId = parameterValue[index]?.toString() ?: ""
             }
         }
-        if (userId.isNullOrEmpty() || projectId.isNullOrEmpty()) {
-            throw ErrorCodeException(
-                errorCode = PARAMETER_IS_INVALID,
-                defaultMessage = "projectId or userId cannot be empty or null!"
-            )
-        }
+
+        checkParameterValue(userId, projectId)
         val isProjectMember = checkProjectMember(
             userId = userId!!,
             projectId = projectId!!
@@ -68,6 +59,38 @@ class BkProjectMemberCheckAspect constructor(
     private fun checkProjectMember(userId: String, projectId: String): Boolean {
         return client.get(ServiceUserProjectMemberPermissionResource::class)
             .checkMember(userId, projectId).data!!
+    }
+
+    private fun checkParameterValue(userId: String?, projectId: String?) {
+        val (invalid, field) = when {
+            projectId.isNullOrEmpty() -> true to PROJECT_ID
+            userId.isNullOrEmpty() -> true to USER_ID
+            else -> false to ""
+        }
+        if (invalid) {
+            throw ErrorCodeException(
+                errorCode = PARAMETER_IS_NULL,
+                params = arrayOf(field),
+                defaultMessage = "projectId or userId cannot be empty or null!"
+            )
+        }
+    }
+
+    private fun checkParameterName(parameterNames: Array<String>) {
+        val (invalid, field) = when {
+            PROJECT_ID !in parameterNames -> true to PROJECT_ID
+            USER_ID !in parameterNames -> true to USER_ID
+            else -> false to ""
+        }
+        if (invalid) {
+            logger.warn("The request parameters for this method are incorrect: $parameterNames")
+            throw ErrorCodeException(
+                errorCode = ERROR_NEED_PARAM_,
+                params = arrayOf(field),
+                defaultMessage = "The request parameters for this method are incorrect." +
+                        "projectId and userId are required."
+            )
+        }
     }
 }
 
