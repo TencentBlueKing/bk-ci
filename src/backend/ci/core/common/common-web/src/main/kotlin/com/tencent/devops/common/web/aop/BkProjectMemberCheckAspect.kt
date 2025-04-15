@@ -1,9 +1,10 @@
-package com.tencent.devops.auth.aspect
+package com.tencent.devops.common.web.aop
 
-import com.tencent.devops.auth.constant.AuthMessageCode
-import com.tencent.devops.auth.service.UserProjectPermissionService
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_IS_INVALID
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.service.ServiceUserProjectMemberPermissionResource
 import org.aspectj.lang.JoinPoint
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.annotation.Before
@@ -13,10 +14,10 @@ import org.slf4j.LoggerFactory
 
 @Aspect
 class BkProjectMemberCheckAspect constructor(
-    private val userProjectPermissionService: UserProjectPermissionService,
+    private val client: Client,
 ) {
 
-    @Pointcut("@annotation(com.tencent.devops.common.auth.api.BkProjectMemberCheck)")
+    @Pointcut("@annotation(com.tencent.devops.common.web.annotation.BkProjectMemberCheck)")
     fun pointCut() = Unit
 
     companion object {
@@ -51,17 +52,22 @@ class BkProjectMemberCheckAspect constructor(
                 defaultMessage = "projectId or userId cannot be empty or null!"
             )
         }
-        val isProjectMember = userProjectPermissionService.checkMember(
+        val isProjectMember = checkProjectMember(
             userId = userId!!,
-            projectCode = projectId!!
+            projectId = projectId!!
         )
 
         if (!isProjectMember) {
             throw ErrorCodeException(
-                errorCode = AuthMessageCode.ERROR_USER_NOT_EXIST_IN_PROJECT,
+                errorCode = CommonMessageCode.ERROR_USER_NOT_EXIST_IN_PROJECT,
                 params = arrayOf(projectId!!, userId!!)
             )
         }
+    }
+
+    private fun checkProjectMember(userId: String, projectId: String): Boolean {
+        return client.get(ServiceUserProjectMemberPermissionResource::class)
+            .checkMember(userId, projectId).data!!
     }
 }
 

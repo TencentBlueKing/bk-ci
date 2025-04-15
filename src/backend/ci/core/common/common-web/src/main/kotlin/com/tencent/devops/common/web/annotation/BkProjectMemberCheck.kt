@@ -1,4 +1,4 @@
-package com.tencent.devops.common.auth.api
+package com.tencent.devops.common.web.annotation
 
 
 /**
