@@ -78,7 +78,6 @@ class StoreBaseQueryDao {
                 .limit(1)
                 .fetchOne()
         }
-
     }
 
     fun getNewestComponentByCode(
