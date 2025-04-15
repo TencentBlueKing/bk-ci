@@ -42,8 +42,8 @@ class BkProjectMemberCheckAspect constructor(
         var userId: String? = null
         parameterNames.forEachIndexed { index, name ->
             when (name) {
-                PROJECT_ID -> projectId = parameterValue[index].toString()
-                USER_ID -> userId = parameterValue[index].toString()
+                PROJECT_ID -> projectId = parameterValue[index]?.toString() ?: ""
+                USER_ID -> userId = parameterValue[index]?.toString() ?: ""
             }
         }
         if (userId.isNullOrEmpty() || projectId.isNullOrEmpty()) {
