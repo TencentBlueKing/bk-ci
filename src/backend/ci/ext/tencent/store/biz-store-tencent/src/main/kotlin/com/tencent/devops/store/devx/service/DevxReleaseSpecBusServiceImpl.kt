@@ -403,7 +403,8 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
             }
 
             if (appPackagePath.isNotBlank()) {
-                val certSignFilePathSet = JsonUtil.to(certSignFilePaths, object : TypeReference<MutableSet<String>>() {})
+                val certSignFilePathSet =
+                    JsonUtil.to(certSignFilePaths, object : TypeReference<MutableSet<String>>() {})
                 certSignFilePathSet.add(appPackagePath)
                 certSignFilePaths = JsonUtil.toJson(certSignFilePathSet)
             }
@@ -460,37 +461,43 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         }
 
         if (queryDefaultScriptFlag) {
-            // 用户没有配置脚本，则需查出平台默认的打包脚本
             storeBaseFeatureExtQueryDao.getStoreBaseFeatureExt(
                 dslContext = dslContext,
                 storeCode = storeCode,
                 storeType = storeType,
                 fieldName = KEY_FRAMEWORK_CODE
-            )?.fieldValue?.let { frameworkCode ->
-                storeBuildInfoDao.getStoreBuildInfoByLanguage(
-                    dslContext = dslContext,
-                    language = frameworkCode,
-                    storeType = storeType
-                )?.script?.takeIf { it.isNotBlank() }
-            }?.let { script ->
-                if (JsonSchemaUtil.validateJson(script)) {
-                    JsonUtil.toMap(script).forEach { (os, value) ->
-                        when (os.lowercase()) {
-                            OS.WINDOWS.name.lowercase() -> startParamMap[KEY_WINDOWS_DEFAULT_SCRIPT] = value.toString()
-                            OS.LINUX.name.lowercase() -> startParamMap[KEY_LINUX_DEFAULT_SCRIPT] = value.toString()
-                            OS.MACOS.name.lowercase() -> startParamMap[KEY_DARWIN_DEFAULT_SCRIPT] = value.toString()
-                        }
-                    }
-                } else {
-                    listOf(KEY_WINDOWS_DEFAULT_SCRIPT, KEY_LINUX_DEFAULT_SCRIPT, KEY_DARWIN_DEFAULT_SCRIPT)
-                        .forEach { startParamMap[it] = script }
+            )?.fieldValue
+                ?.let { frameworkCode ->
+                    storeBuildInfoDao.getStoreBuildInfoByLanguage(
+                        dslContext = dslContext,
+                        language = frameworkCode,
+                        storeType = storeType
+                    )?.script
+                        ?.takeIf { it.isNotBlank() }
                 }
-            }
+                ?.apply {
+                    processScriptContent(this, startParamMap)
+                }
         }
-
         return startParamMap
     }
 
+    private fun processScriptContent(script: String, startParamMap: MutableMap<String, String>) {
+        if (JsonSchemaUtil.validateJson(script)) {
+            JsonUtil.toMap(script).forEach { (os, value) ->
+                val osKey = when (os.lowercase()) {
+                    OS.WINDOWS.name.lowercase() -> KEY_WINDOWS_DEFAULT_SCRIPT
+                    OS.LINUX.name.lowercase() -> KEY_LINUX_DEFAULT_SCRIPT
+                    OS.MACOS.name.lowercase() -> KEY_DARWIN_DEFAULT_SCRIPT
+                    else -> null
+                }
+                osKey?.let { startParamMap[it] = value.toString() }
+            }
+        } else {
+            listOf(KEY_WINDOWS_DEFAULT_SCRIPT, KEY_LINUX_DEFAULT_SCRIPT, KEY_DARWIN_DEFAULT_SCRIPT)
+                .forEach { startParamMap[it] = script }
+        }
+    }
 
     override fun getStoreRunPipelineStatus(buildId: String?, startFlag: Boolean): StoreStatusEnum? {
         return if (!buildId.isNullOrBlank() || !startFlag) {
