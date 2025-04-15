@@ -14,7 +14,6 @@ import eventBus from '@/utils/eventBus'
 import iframeUtil from '@/utils/iframeUtil'
 import App from '@/views/App.vue'
 import Vue from 'vue'
-import { castToVueI18n } from 'vue-i18n-bridge'
 import createDocs from '../../common-lib/docs'
 
 import createLocale from '../../locale'
@@ -22,6 +21,7 @@ import createLocale from '../../locale'
 import '@/assets/scss/index.scss'
 import Undeploy from '@/components/Undeploy/index.vue'
 import bsWebSocket from '@/utils/bsWebSocket.js'
+// @ts-ignore next-line
 import { BkPermission, PermissionDirective, handleNoPermission } from 'bk-permission'
 import 'bk-permission/dist/main.css'
 import VeeValidate from 'vee-validate'
@@ -168,12 +168,10 @@ Vue.mixin({
     }
 })
 
-const castVuei18n = castToVueI18n(i18n)
-Vue.use(castVuei18n)
-
 window.devops = new Vue({
     el: '#devops-root',
-    i18n: castVuei18n,
+    // @ts-ignore next-line
+    i18n,
     router,
     store,
     render (h) {
