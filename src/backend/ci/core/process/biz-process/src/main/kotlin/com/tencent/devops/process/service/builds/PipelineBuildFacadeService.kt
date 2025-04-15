@@ -62,6 +62,7 @@ import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
@@ -334,7 +335,10 @@ class PipelineBuildFacadeService(
         BuildPropertyCompatibilityTools.fix(params)
 
         val currentBuildNo = triggerContainer.buildNo?.apply {
-            currentBuildNo = if (buildNoType == SUCCESS_BUILD_INCREMENT || buildNoType == EVERY_BUILD_INCREMENT) {
+            currentBuildNo = if (
+                buildNoType == BuildNoType.SUCCESS_BUILD_INCREMENT ||
+                buildNoType == BuildNoType.EVERY_BUILD_INCREMENT
+            ) {
                 pipelineRepositoryService.getBuildNo(projectId = projectId, pipelineId = pipelineId)
             } else {
                 buildNo
