@@ -640,10 +640,10 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         // 生成包在仓库中的路径
         val pkgRepoPath = listOfNotNull(
             "$storeCode/$version",
-            configOsName.takeIf { it.isNotBlank() },
-            configOsArch?.takeIf { it.isNotBlank() },
+            configOsName.takeUnless { it.isBlank() },
+            configOsArch.takeUnless { it.isNullOrBlank() },
             pkgName
-        ).joinToString("/")
+        ).filterNot { it.isBlank() }.joinToString("/")
 
         return StorePkgEnvInfo(
             pkgName = pkgName,

@@ -421,7 +421,7 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
             storeCode = baseRecord.storeCode,
             storeName = baseRecord.name,
             storeType = StoreTypeEnum.getStoreTypeObj(baseRecord.storeType.toInt()),
-            version = baseRecord.name,
+            version = baseRecord.version,
             status = baseRecord.status,
             logoUrl = baseRecord.logoUrl,
             publisher = baseRecord.publisher,
