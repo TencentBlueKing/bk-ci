@@ -61,9 +61,10 @@
                     this.$emit('handle-change', file.name)
                     const formData = new FormData()
                     setTimeout(async () => {
+                        const path = typeof this.filePath === 'string' ? this.filePath : this.filePath.directory
                         formData.append('file', file.origin)
                         formData.append('projectId', this.$route.params.projectId)
-                        formData.append('path', this.filePath)
+                        formData.append('path', path)
                         
                         const response = await this.$ajax.post(`${this.uploadAcrtifactUrl}`, formData, {
                             headers: {

@@ -30,6 +30,7 @@ dependencies {
     api(project(":core:common:common-event"))
     api(project(":core:common:common-web"))
     api(project(":core:auth:api-auth"))
+    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
 }
 
 plugins {

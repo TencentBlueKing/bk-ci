@@ -35,6 +35,7 @@ import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.oauth.GitOauthCallback
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.repository.service.github.IGithubService
+import com.tencent.devops.repository.service.oauth2.Oauth2TokenStoreManager
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.tgit.TGitOAuthService
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,7 +44,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceOauthResourceImpl @Autowired constructor(
     private val gitOauthService: IGitOauthService,
     private val tGitOAuthService: TGitOAuthService,
-    private val githubService: IGithubService
+    private val githubService: IGithubService,
+    private val oauth2TokenStoreManager: Oauth2TokenStoreManager
 ) : ServiceOauthResource {
     override fun gitGet(userId: String): Result<GitToken?> {
         return Result(gitOauthService.getAccessToken(userId))
@@ -105,6 +107,12 @@ class ServiceOauthResourceImpl @Autowired constructor(
                 resetType = "",
                 refreshToken = false
             )
+        )
+    }
+
+    override fun isScmOauth(userId: String, scmCode: String): Result<Boolean> {
+        return Result(
+            oauth2TokenStoreManager.get(userId = userId, scmCode = scmCode) != null
         )
     }
 }

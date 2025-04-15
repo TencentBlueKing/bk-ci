@@ -167,7 +167,7 @@ MEM_OPTS="-Xms256m -Xmx512m"
 CLASSPATH=".:lib/*"
 SPRING_CONFIG_LOCATION="file:./application.yml"
 SPRING_CLOUD_CONFIG_ENABLED=false
-JAVA_TOOL_OPTIONS="-Dspring.main.allow-circular-references=true -Djava.security.egd=file:/dev/urandom -Dcertificate.file= -Dservice.log.dir=./logs/ -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=utf8 -XX:NewRatio=1 -XX:SurvivorRatio=8 -XX:+UseConcMarkSweepGC"
+JAVA_TOOL_OPTIONS="-Dspring.main.allow-circular-references=true -Djava.security.egd=file:/dev/urandom -Dcertificate.file= -Dservice.log.dir=./logs/ -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=utf8 -XX:NewRatio=1 -XX:SurvivorRatio=8 -XX:+UseG1GC"
 EOF
 
 echo "copy classes:"

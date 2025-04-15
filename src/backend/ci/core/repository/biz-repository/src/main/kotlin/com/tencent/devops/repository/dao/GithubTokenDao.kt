@@ -136,14 +136,13 @@ class GithubTokenDao {
 
     /**
      * 删除token
-     * @param operator 蓝盾平台操作人用户名
      */
     fun delete(
         dslContext: DSLContext,
-        operator: String
+        userId: String
     ) {
         with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
-            dslContext.deleteFrom(this).where(OPERATOR.eq(operator))
+            dslContext.deleteFrom(this).where(USER_ID.eq(userId))
         }
     }
 }

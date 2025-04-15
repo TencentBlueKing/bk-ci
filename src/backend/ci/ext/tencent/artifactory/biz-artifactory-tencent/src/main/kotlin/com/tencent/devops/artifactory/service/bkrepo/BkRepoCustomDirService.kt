@@ -47,8 +47,8 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.web.utils.I18nUtil
 import java.io.InputStream
-import javax.ws.rs.BadRequestException
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.BadRequestException
+import jakarta.ws.rs.NotFoundException
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

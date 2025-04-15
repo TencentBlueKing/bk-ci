@@ -46,7 +46,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import java.util.Properties
 import javax.sql.DataSource
 import org.apache.shardingsphere.driver.api.ShardingSphereDataSourceFactory
-import org.apache.shardingsphere.infra.config.algorithm.AlgorithmConfiguration
+import org.apache.shardingsphere.infra.algorithm.core.config.AlgorithmConfiguration
 import org.apache.shardingsphere.sharding.api.config.ShardingRuleConfiguration
 import org.apache.shardingsphere.sharding.api.config.rule.ShardingTableRuleConfiguration
 import org.apache.shardingsphere.sharding.api.config.strategy.sharding.NoneShardingStrategyConfiguration
@@ -64,6 +64,9 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 import org.springframework.transaction.annotation.EnableTransactionManagement
+import org.apache.shardingsphere.broadcast.api.config.BroadcastRuleConfiguration
+import org.apache.shardingsphere.sharding.api.config.rule.ShardingTableReferenceRuleConfiguration
+import org.apache.shardingsphere.single.api.config.SingleRuleConfiguration
 
 @Suppress("LongParameterList", "MagicNumber", "ComplexMethod")
 @Configuration
@@ -262,7 +265,11 @@ class BkShardingDataSourceConfiguration {
         bindingTableGroupConfigs: List<BindingTableGroupConfig>? = null,
         registry: MeterRegistry
     ): DataSource {
+        val singleRuleConfiguration = SingleRuleConfiguration() // 单表不再自动加载
         val shardingRuleConfig = ShardingRuleConfiguration()
+        val broadcastRuleConfig = BroadcastRuleConfiguration(mutableListOf())
+        // 生成单表规则
+        singleRuleConfiguration.tables = listOf("*.*")
         // 设置分片表的路由规则
         val dataSourceSize = dataSourceConfigs.size
         val bkTableRuleConfigs = shardingRuleConfig.tables
@@ -279,7 +286,7 @@ class BkShardingDataSourceConfiguration {
             }
         }
         // 设置广播表的路由规则
-        val broadcastTables = shardingRuleConfig.broadcastTables
+        val broadcastTables = broadcastRuleConfig.tables
         val broadcastTableRuleConfigs = tableRuleConfigs?.filter { it.broadcastFlag == true }
         if (!broadcastTableRuleConfigs.isNullOrEmpty()) {
             broadcastTableRuleConfigs.forEach { broadcastTableRuleConfig ->
@@ -290,7 +297,12 @@ class BkShardingDataSourceConfiguration {
         val bindingTableGroups = shardingRuleConfig.bindingTableGroups
         if (!bindingTableGroupConfigs.isNullOrEmpty()) {
             bindingTableGroupConfigs.forEach { bindingTableGroupConfig ->
-                bindingTableGroups.add(bindingTableGroupConfig.rule)
+                bindingTableGroups.add(
+                    ShardingTableReferenceRuleConfiguration(
+                        bindingTableGroupConfig.index.toString(),
+                        bindingTableGroupConfig.rule
+                    )
+                )
             }
         }
         // 生成db分片算法配置
@@ -314,7 +326,7 @@ class BkShardingDataSourceConfiguration {
         dataSourceProperties.setProperty("sql-show", shardingLogSwitch.toString())
         return ShardingSphereDataSourceFactory.createDataSource(
             dataSourceMap(dataSourcePrefixName, dataSourceConfigs, registry),
-            listOf(shardingRuleConfig),
+            listOf(singleRuleConfiguration, shardingRuleConfig, broadcastRuleConfig),
             dataSourceProperties
         )
     }
@@ -369,7 +381,7 @@ class BkShardingDataSourceConfiguration {
         val shardingTableRuleConfig = ShardingTableRuleConfiguration(tableName, actualDataNodes)
         logger.info(
             "BkShardingDataSourceConfiguration table:$tableName|databaseShardingStrategy: $databaseShardingStrategy|" +
-                "tableShardingStrategy:$tableShardingStrategy|actualDataNodes:$actualDataNodes "
+                    "tableShardingStrategy:$tableShardingStrategy|actualDataNodes:$actualDataNodes "
         )
         // 设置表的分库策略
         shardingTableRuleConfig.databaseShardingStrategy = if (databaseShardingStrategy != null) {

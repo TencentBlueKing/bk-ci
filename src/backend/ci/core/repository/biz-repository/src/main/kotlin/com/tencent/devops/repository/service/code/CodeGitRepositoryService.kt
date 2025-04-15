@@ -50,12 +50,15 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_SECRET_
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.RepoCondition
+import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.repository.pojo.enums.RepoCredentialType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
-import com.tencent.devops.repository.service.CredentialService
+import com.tencent.devops.repository.service.RepoCredentialService
 import com.tencent.devops.repository.service.permission.RepositoryAuthorizationService
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.IGitService
@@ -79,7 +82,7 @@ class CodeGitRepositoryService @Autowired constructor(
     private val repositoryDao: RepositoryDao,
     private val repositoryCodeGitDao: RepositoryCodeGitDao,
     private val dslContext: DSLContext,
-    private val credentialService: CredentialService,
+    private val credentialService: RepoCredentialService,
     private val scmService: IScmService,
     private val gitOauthService: IGitOauthService,
     private val scmOauthService: IScmOauthService,
@@ -114,7 +117,8 @@ class CodeGitRepositoryService @Autowired constructor(
                 url = repository.getFormatURL(),
                 type = ScmType.CODE_GIT,
                 atom = repository.atom,
-                enablePac = repository.enablePac
+                enablePac = repository.enablePac,
+                scmCode = ScmType.CODE_GIT.name
             )
             repositoryCodeGitDao.create(
                 dslContext = transactionContext,
@@ -123,7 +127,8 @@ class CodeGitRepositoryService @Autowired constructor(
                 userName = repository.userName,
                 credentialId = repository.credentialId,
                 authType = repository.authType,
-                gitProjectId = gitProjectId
+                gitProjectId = gitProjectId,
+                credentialType = credentialInfo.credentialType
             )
         }
         return repositoryId
@@ -204,7 +209,8 @@ class CodeGitRepositoryService @Autowired constructor(
                 userName = repository.userName,
                 credentialId = repository.credentialId,
                 authType = repository.authType,
-                gitProjectId = gitProjectId
+                gitProjectId = gitProjectId,
+                credentialType = credentialInfo.credentialType
             )
             // 重置授权管理
             repositoryAuthorizationService.batchModifyHandoverFrom(
@@ -236,7 +242,9 @@ class CodeGitRepositoryService @Autowired constructor(
             gitProjectId = record.gitProjectId,
             atom = repository.atom,
             enablePac = repository.enablePac,
-            yamlSyncStatus = repository.yamlSyncStatus
+            yamlSyncStatus = repository.yamlSyncStatus,
+            scmCode = repository.scmCode ?: ScmType.CODE_GIT.name,
+            credentialType = record.credentialType ?: RepoCredentialType.OAUTH.name
         )
     }
 
@@ -470,7 +478,8 @@ class CodeGitRepositoryService @Autowired constructor(
         // 凭证信息
         return if (repository.authType == RepoAuthType.OAUTH) {
             RepoCredentialInfo(
-                token = gitOauthService.getAccessToken(repository.userName)?.accessToken ?: ""
+                token = gitOauthService.getAccessToken(repository.userName)?.accessToken ?: "",
+                credentialType = RepoCredentialType.OAUTH.name
             )
         } else {
             credentialService.getCredentialInfo(
@@ -551,6 +560,26 @@ class CodeGitRepositoryService @Autowired constructor(
                 )
             }
         }
+    }
+
+    override fun listByCondition(
+        repoCondition: RepoCondition,
+        limit: Int,
+        offset: Int
+    ): List<Repository>? {
+        return repositoryCodeGitDao.listByCondition(
+            dslContext = dslContext,
+            repoCondition = repoCondition,
+            limit = limit,
+            offset = offset
+        )
+    }
+
+    override fun countByCondition(repoCondition: RepoCondition): Long {
+        return repositoryCodeGitDao.countByCondition(
+            dslContext = dslContext,
+            repoCondition = repoCondition
+        )
     }
 
     companion object {

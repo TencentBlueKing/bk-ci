@@ -170,7 +170,7 @@ setup_ci__ms_service_env (){
   env_line_append "$service_env" "CLASSPATH" ".:lib/*"
   env_line_append "$service_env" "SPRING_CONFIG_LOCATION" "file:./application.yml"
   env_line_append "$service_env" "SPRING_CLOUD_CONFIG_ENABLED" false
-  env_line_append "$service_env" "JAVA_TOOL_OPTIONS" "-Dspring.main.allow-circular-references=true -Djava.security.egd=file:/dev/urandom -Dcertificate.file= -Dservice.log.dir=./logs/ -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=utf8 -XX:NewRatio=1 -XX:SurvivorRatio=8 -XX:+UseConcMarkSweepGC"
+  env_line_append "$service_env" "JAVA_TOOL_OPTIONS" "-Dspring.main.allow-circular-references=true -Djava.security.egd=file:/dev/urandom -Dcertificate.file= -Dservice.log.dir=./logs/ -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=utf8 -XX:NewRatio=1 -XX:SurvivorRatio=8 -XX:+UseG1GC"
 }
 
 # 微服务启动env.

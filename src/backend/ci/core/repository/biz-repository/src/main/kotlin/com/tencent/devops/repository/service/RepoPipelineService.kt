@@ -269,6 +269,17 @@ class RepoPipelineService @Autowired constructor(
         return SQLPage(count = count, records = triggerRecords)
     }
 
+    fun countPipelineRefs(
+        projectId: String,
+        repositoryIds: List<Long>
+    ): Map<Long, Int> {
+        return repoPipelineRefDao.countPipelineRefs(
+            dslContext = dslContext,
+            projectId = projectId,
+            repositoryIds = repositoryIds
+        )
+    }
+
     private fun translateCondition(triggerCondition: String): Map<String, Any> {
         val elementProps = JsonUtil.to(triggerCondition, object : TypeReference<List<ElementProp>>() {})
         return elementProps.associateBy(

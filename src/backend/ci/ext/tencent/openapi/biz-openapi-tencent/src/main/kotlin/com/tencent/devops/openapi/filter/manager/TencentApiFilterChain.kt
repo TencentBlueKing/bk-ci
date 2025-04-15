@@ -35,7 +35,7 @@ import com.tencent.devops.openapi.filter.manager.impl.Oauth2ApiFilter
 import com.tencent.devops.openapi.filter.manager.impl.RemoteDevCdsTokenApiFilter
 import com.tencent.devops.openapi.filter.manager.impl.RemoteDevOauthTokenApiFilter
 import com.tencent.devops.openapi.filter.manager.impl.TencentApigwApiFilter
-import javax.ws.rs.container.ContainerRequestContext
+import jakarta.ws.rs.container.ContainerRequestContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
