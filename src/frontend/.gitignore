@@ -13,7 +13,9 @@ devops-gitci/src/conf
 *.pem
 dist/
 .pnpm-global/
-
+src/assets/static/main.*.dll.js
+src/assets/static/main.dll.js
+src/assets/static/manifest.json
 
 
 .nx/cache
