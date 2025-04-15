@@ -33,7 +33,7 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.Environm
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentShare
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentUnShare
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentUserCreate
-import com.tencent.devops.remotedev.pojo.remotedev.GetResourceEstimateByVm
+import com.tencent.devops.remotedev.pojo.remotedev.ResourceEstimateByVmResponse
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.ResourceEstimateByVmRequest
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceRedisUtils
@@ -130,7 +130,7 @@ class StartCloudInterfaceService @Autowired constructor(
         zoneId: String,
         machineType: String,
         quotaType: QuotaType? = null
-    ): GetResourceEstimateByVm {
+    ): ResourceEstimateByVmResponse {
         return workspaceBcsClient.startGetResourceEstimateByVm(
             ResourceEstimateByVmRequest(
                 zoneId = zoneId,

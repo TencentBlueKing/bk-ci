@@ -37,7 +37,7 @@ import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.remotedev.pojo.remotedev.FetchWinPoolData
-import com.tencent.devops.remotedev.pojo.remotedev.GetResourceEstimateByVm
+import com.tencent.devops.remotedev.pojo.remotedev.ResourceEstimateByVmResponse
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmRespData
 import java.time.Duration
@@ -91,7 +91,7 @@ class StartCloudService @Autowired constructor(
         zoneId: String,
         machineType: String,
         quotaType: QuotaType?
-    ): Result<GetResourceEstimateByVm> {
+    ): Result<ResourceEstimateByVmResponse> {
         return Result(startCloudInterfaceService.startGetResourceEstimateByVm(
             specifyTaints = specifyTaints,
             zoneId = zoneId,

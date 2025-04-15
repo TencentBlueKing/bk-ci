@@ -33,6 +33,7 @@ class CDIApiSwagger {
         }
     )
 
+    @Suppress("NestedBlockDepth")
     private fun loadSwagger(): OpenAPI {
         val bean = SwaggerConfiguration()
             .resourcePackages(setOf("com.tencent.devops"))

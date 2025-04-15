@@ -34,7 +34,7 @@ import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.remotedev.pojo.remotedev.FetchWinPoolData
-import com.tencent.devops.remotedev.pojo.remotedev.GetResourceEstimateByVm
+import com.tencent.devops.remotedev.pojo.remotedev.ResourceEstimateByVmResponse
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmRespData
 
@@ -72,7 +72,7 @@ interface ServiceStartCloudInterface {
         zoneId: String,
         machineType: String,
         quotaType: QuotaType? = null
-    ): Result<GetResourceEstimateByVm>
+    ): Result<ResourceEstimateByVmResponse>
 
     fun getWorkspaceInfoByEid(
         eid: String

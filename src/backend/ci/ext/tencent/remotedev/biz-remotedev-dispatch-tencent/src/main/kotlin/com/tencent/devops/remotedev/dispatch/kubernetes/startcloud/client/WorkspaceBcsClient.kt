@@ -21,7 +21,6 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.Environm
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateExpandDisk
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateInf
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateRsp
-import com.tencent.devops.remotedev.pojo.remotedev.GetResourceEstimateByVm
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.ListCgsResp
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.ListCgsRespData
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.ResourceEstimateByVmRequest
@@ -33,6 +32,7 @@ import com.tencent.devops.remotedev.pojo.image.ListVmImagesResp
 import com.tencent.devops.remotedev.pojo.image.StandardVmImage
 import com.tencent.devops.remotedev.pojo.remotedev.BcsResp
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
+import com.tencent.devops.remotedev.pojo.remotedev.ResourceEstimateByVmResponse
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmResp
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmRespData
@@ -339,7 +339,7 @@ class WorkspaceBcsClient @Autowired constructor(
         }
     }
 
-    fun startGetResourceEstimateByVm(requestBody: ResourceEstimateByVmRequest): GetResourceEstimateByVm {
+    fun startGetResourceEstimateByVm(requestBody: ResourceEstimateByVmRequest): ResourceEstimateByVmResponse {
         val url = "$bcsCloudUrl/api/v1/remotedevenv/resource/vm/estimate"
         val body = JsonUtil.toJson(requestBody, false)
         logger.info("request url: $url")
@@ -352,14 +352,17 @@ class WorkspaceBcsClient @Autowired constructor(
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
-                logger.info("get startGetResourceEstimateByVm response: ${response.rid()}|${response.code}|$responseContent")
+                logger.info(
+                    "get startGetResourceEstimateByVm response: ${response.rid()}" +
+                        "|${response.code}|$responseContent"
+                )
                 if (!response.isSuccessful) {
                     throw WorkspaceDispatchException(
                         " 获取startGetResourceEstimateByVm接口异常: ${response.code}"
                     )
                 }
 
-                val resp: BcsResp<GetResourceEstimateByVm> = jacksonObjectMapper().readValue(responseContent)
+                val resp: BcsResp<ResourceEstimateByVmResponse> = jacksonObjectMapper().readValue(responseContent)
                 when (resp.code) {
                     WorkspaceStartCloudClient.OK -> {
                         if (resp.data == null) {
