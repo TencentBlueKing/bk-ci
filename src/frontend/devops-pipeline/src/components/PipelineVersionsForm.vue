@@ -147,6 +147,9 @@
                             v-validate.initial="'required|numeric'"
                             :value="buildNo.currentBuildNo"
                             :handle-change="handleBuildNoChange"
+                            :class="{
+                                'is-diff-param': highlightChangedParam && buildNo.isChanged
+                            }"
                         />
                         <span class="bk-form-help is-danger">{{ errors.first('currentBuildNo') }}</span>
                         <span

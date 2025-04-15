@@ -100,9 +100,9 @@
                     class="params-collapse-content"
                 >
                     <bk-alert
-                        v-if="showChangedParamsAlert && changedParams.length"
+                        v-if="showChangedParamsAlert && changedParamsLength"
                         type="warning"
-                        :title="$t('paramChangeTips', [changedParams.length])"
+                        :title="$t('paramChangeTips', [changedParamsLength])"
                     >
                     </bk-alert>
                     <pipeline-params-form
@@ -349,8 +349,12 @@
             useLastParams () {
                 return this.isDebugPipeline || this.startupInfo?.useLatestParameters
             },
-            changedParams () {
-                return [...this.paramList, ...this.versionParamList].filter(p => p.isChanged)
+            changedParamsLength () {
+                const length = [...this.paramList, ...this.versionParamList].filter(p => p.isChanged).length
+                if (this.buildNo.isChanged) {
+                    return length + 1
+                }
+                return length
             },
             hasOtherParams () {
                 if (!this.isVisibleVersion) {
@@ -499,9 +503,17 @@
                             ...this.versionParamValues
                         }
                     })
-                }
-                if (this.isVisibleVersion && this.buildNo.buildNoType === 'CONSISTENT') {
-                    this.handleBuildNoChange('currentBuildNo', this.buildNo?.lastBuildNo ?? this.buildNo.buildNo)
+                    if (this.buildNo.buildNoType === 'CONSISTENT' && this.buildNo.currentBuildNo !== this.buildNo.lastBuildNo) {
+                        this.buildNo.currentBuildNo = this.buildNo.lastBuildNo
+                        this.buildNo.isChanged = true
+
+                        this.setExecuteParams({
+                            pipelineId: this.pipelineId,
+                            params: {
+                                buildNo: this.buildNo
+                            }
+                        })
+                    }
                 }
             },
             async handleValidate () {
