@@ -334,10 +334,11 @@ class PipelineBuildFacadeService(
         BuildPropertyCompatibilityTools.fix(params)
 
         val currentBuildNo = triggerContainer.buildNo?.apply {
-            currentBuildNo = pipelineRepositoryService.getBuildNo(
-                projectId = projectId,
-                pipelineId = pipelineId
-            ) ?: buildNo
+            currentBuildNo = if (buildNoType == SUCCESS_BUILD_INCREMENT || buildNoType == EVERY_BUILD_INCREMENT) {
+                pipelineRepositoryService.getBuildNo(projectId = projectId, pipelineId = pipelineId)
+            } else {
+                buildNo
+            }
             lastBuildNo = lastBuildNoValue
         }
 
