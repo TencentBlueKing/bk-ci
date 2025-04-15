@@ -323,10 +323,16 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun getWindowsQuota(
         userId: String,
         type: QuotaType?,
-        zoneType: WindowsResourceZoneConfigType
+        zoneType: WindowsResourceZoneConfigType,
+        specifyTaints: String?
     ): Result<Map<String, Map<String, Int>>> {
         logger.info("getWindowsQuota $userId|$type|$zoneType")
-        return client.get(ServiceRemoteDevResource::class).getWindowsQuota(userId, type, zoneType)
+        return client.get(ServiceRemoteDevResource::class).getWindowsQuota(
+            userId = userId,
+            type = type,
+            zoneType = zoneType,
+            specifyTaints = specifyTaints
+        )
     }
 
     override fun updateUsageLimit(

@@ -152,7 +152,8 @@ class WindowsResourceConfigService @Autowired constructor(
         searchCustom: Boolean?,
         quotaType: QuotaType?,
         zoneType: WindowsResourceZoneConfigType,
-        withProjectLimit: String?
+        withProjectLimit: String?,
+        specifyTaints: String?
     ): Map<String, Map<String, Int>> {
         // 自定义镜像为显卡配额，固定镜像为资源池中的配额加上显卡配额
         val res = mutableMapOf<String, MutableMap<String, Int>>()
@@ -178,7 +179,7 @@ class WindowsResourceConfigService @Autowired constructor(
         }
 
         SpringContextUtil.getBean(ServiceStartCloudInterface::class.java).getResourceVm(
-            ResourceVmReq(null, null, internal)
+            ResourceVmReq(zoneId = null, machineType = null, internal = internal, specifyTaints = specifyTaints)
         ).data?.forEach { resource ->
             if (CommonUtil.zoneIdCheck(
                     quotaType = quotaType,
@@ -242,14 +243,16 @@ class WindowsResourceConfigService @Autowired constructor(
         windowsZone: WindowsResourceZoneConfig,
         windowsConfig: WindowsResourceTypeConfig,
         newNum: Int,
-        quotaType: QuotaType
+        quotaType: QuotaType,
+        specifyTaints: String? = null
     ): List<String> {
         val data = kotlin.runCatching {
             SpringContextUtil.getBean(ServiceStartCloudInterface::class.java).getResourceVm(
                 ResourceVmReq(
                     zoneId = windowsZone.zoneShortName.replace(Regex("\\d+"), ""),
                     machineType = windowsConfig.size,
-                    internal = quotaType.getInternal()
+                    internal = quotaType.getInternal(),
+                    specifyTaints = specifyTaints
                 )
             ).data
         }.getOrElse {

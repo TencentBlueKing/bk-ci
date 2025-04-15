@@ -445,7 +445,10 @@ interface ApigwRemoteDevResource {
         @Parameter(description = "地域类型", required = true)
         @QueryParam("zoneType")
         @DefaultValue("DEFAULT")
-        zoneType: WindowsResourceZoneConfigType
+        zoneType: WindowsResourceZoneConfigType,
+        @Parameter(description = "创建时指定污点标签", required = true)
+        @QueryParam("specifyTaints")
+        specifyTaints: String?
     ): Result<Map<String, Map<String, Int>>>
 
     @Operation(summary = "更新项目/个人在使用云桌面上的配额", tags = ["v4_app_remotedev_usage_limit"])
