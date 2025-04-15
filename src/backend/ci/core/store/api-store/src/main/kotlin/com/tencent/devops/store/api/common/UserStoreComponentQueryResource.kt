@@ -48,6 +48,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DefaultValue
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.Path
@@ -336,9 +337,10 @@ interface UserStoreComponentQueryResource {
         @PathParam("storeCode")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeCode: String,
-        @Parameter(description = "项目代码", required = false)
+        @Parameter(description = "项目代码", required = true)
         @QueryParam("projectCode")
-        projectCode: String? = null,
+        @DefaultValue("")
+        projectCode: String = "",
         @Parameter(description = "实例ID", required = false)
         @QueryParam("instanceId")
         instanceId: String? = null,

@@ -74,8 +74,11 @@ object ApiUtil {
 
         // 解析现有参数到 Map
         val params = uri.query?.split("&")
-            ?.associate { it.split("=").let { pair -> pair[0] to pair.getOrNull(1) } }
-            ?.toMutableMap() ?: mutableMapOf()
+            ?.associateTo(mutableMapOf()) {
+                it.split("=", limit = 2).let { parts ->
+                    parts.first() to parts.getOrNull(1)
+                }
+            } ?: mutableMapOf()
 
         // 更新参数
         params[encodedName] = encodedValue

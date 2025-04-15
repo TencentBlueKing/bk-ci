@@ -767,15 +767,6 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         osArch: String?
     ): VersionInfo? {
         val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
-        // 获取已安装组件关系信息
-        val installedRel = storeProjectRelDao.getProjectRelInfo(
-            dslContext = dslContext,
-            storeCode = storeCode,
-            storeType = storeTypeEnum.type.toByte(),
-            storeProjectType = StoreProjectTypeEnum.COMMON,
-            projectCode = projectCode,
-            instanceId = instanceId
-        )?.firstOrNull()
 
         // 判断测试环境标志
         val isTestEnv = storeProjectRelDao.getProjectRelInfo(
@@ -795,6 +786,16 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             storeCode = storeCode,
             statusList = statusList
         )?.takeIf { it.version.isNotBlank() } ?: return null
+
+        // 获取已安装组件关系信息
+        val installedRel = storeProjectRelDao.getProjectRelInfo(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeTypeEnum.type.toByte(),
+            storeProjectType = StoreProjectTypeEnum.COMMON,
+            projectCode = projectCode,
+            instanceId = instanceId
+        )?.firstOrNull()
 
         // 处理版本比对逻辑
         return when {

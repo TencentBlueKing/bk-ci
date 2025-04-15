@@ -225,7 +225,7 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
         userId: String,
         storeType: String,
         storeCode: String,
-        projectCode: String?,
+        projectCode: String,
         instanceId: String?,
         osName: String?,
         osArch: String?
@@ -235,7 +235,7 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
                 userId = userId,
                 storeCode = storeCode,
                 storeType = storeType,
-                projectCode = projectCode ?: "",
+                projectCode = projectCode,
                 instanceId = instanceId,
                 osName = osName,
                 osArch = osArch

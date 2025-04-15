@@ -70,11 +70,11 @@ class StoreBaseQueryDao {
         return with(TStoreBase.T_STORE_BASE) {
             dslContext.selectFrom(this)
                 .where(
-                    STORE_TYPE.eq(storeType.type.toByte())
-                        .and(STORE_CODE.eq(storeCode))
-                        .let { conditions ->
-                            statusList?.let { conditions.and(STATUS.`in`(it)) } ?: conditions
-                        }
+                    DSL.and(
+                        STORE_TYPE.eq(storeType.type.toByte()),
+                        STORE_CODE.eq(storeCode),
+                        statusList?.let { STATUS.`in`(it) }
+                    )
                 )
                 .orderBy(BUS_NUM.desc())
                 .limit(1)
