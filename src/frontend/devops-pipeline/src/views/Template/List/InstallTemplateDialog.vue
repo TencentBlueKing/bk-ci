@@ -31,16 +31,16 @@
 </template>
 
 <script setup name='InstallTemplateDialog'>
-    import { ref, computed, defineProps, defineEmits } from 'vue'
+    import LocalFile from '@/components/Template/Install/LocalFile'
+    import Repository from '@/components/Template/Install/Repository'
+    import StoreTemplateList from '@/components/Template/Install/StoreTemplateList'
     import UseInstance from '@/hook/useInstance'
-    import StoreTemplateList from '@/components/template/Install/StoreTemplateList'
-    import Repository from '@/components/template/Install/Repository'
-    import LocalFile from '@/components/template/Install/LocalFile'
     import {
-        INSTALL_TYPE_STORE,
+        INSTALL_TYPE_LOCAL,
         INSTALL_TYPE_REPOSITORY,
-        INSTALL_TYPE_LOCAL
+        INSTALL_TYPE_STORE
     } from '@/store/modules/templates/constants'
+    import { computed, defineEmits, defineProps, ref } from 'vue'
 
     const { proxy, i18n, bkMessage } = UseInstance()
     defineProps({
@@ -86,7 +86,7 @@
     function handleCancelInstall () {
         emit('update:value', false)
     }
-            
+
     function handleConfirmInstall () {
         switch (activeTab.value) {
             case INSTALL_TYPE_STORE:

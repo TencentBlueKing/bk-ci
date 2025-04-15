@@ -23,7 +23,7 @@
 
 <script>
     import ModeSwitch from '@/components/ModeSwitch'
-    import TemplateBreadCrumb from '@/components/template/TemplateBreadCrumb.vue'
+    import TemplateBreadCrumb from '@/components/Template/TemplateBreadCrumb.vue'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'

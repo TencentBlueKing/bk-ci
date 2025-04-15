@@ -21,7 +21,7 @@
                     </bk-button>
                     <bk-button
                         v-if="isInstanceCreateViewType"
-                       
+
                         theme="primary"
                         @click="handle "
                     >
@@ -61,11 +61,11 @@
 </template>
 
 <script setup name="InstanceEntry">
-    import TemplateBreadCrumb from '@/components/template/TemplateBreadCrumb'
-    import TemplateVersionSelector from './TemplateVersionSelector'
-    import InstanceAside from './InstanceAside'
-    import { ref, computed, onMounted, watch } from 'vue'
+    import TemplateBreadCrumb from '@/components/Template/TemplateBreadCrumb'
     import UseInstance from '@/hook/useInstance'
+    import { computed, onMounted, ref, watch } from 'vue'
+    import InstanceAside from './InstanceAside'
+    import TemplateVersionSelector from './TemplateVersionSelector'
     const { proxy } = UseInstance()
 
     const isLoading = ref(false)
@@ -111,7 +111,7 @@
         requestTemplateByVersion()
     })
 </script>
- 
+
 <style lang="scss">
 @import './../../../scss/conf';
 

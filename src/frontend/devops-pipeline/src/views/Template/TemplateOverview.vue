@@ -5,50 +5,7 @@
         }]"
     >
         <header>
-            <TemplateBreadCrumb
-                :template-name="pipelineInfo?.name"
-                :is-loading="!pipelineInfo || switchingVersion"
-            />
-            <p class="template-version-area">
-                <pac-tag
-                    v-if="pacEnabled"
-                    class="template-version-area-pac-tag"
-                />
-                <VersionSelector
-                    :value="currentVersion"
-                    ref="versionSelectorInstance"
-                    @change="handleVersionChange"
-                    @showAllVersion="showVersionSideSlider"
-                    :include-draft="false"
-                    refresh-list-on-expand
-                    is-template
-                />
-            </p>
-
-            <p class="template-operate-area">
-                <RollbackEntry
-                    v-if="isReleasePipeline || onlyBranchPipeline"
-                    :text="false"
-                    :has-permission="canEdit"
-                    :version="currentVersion"
-                    :draft-version="pipelineInfo?.version"
-                    :pipeline-id="templateId"
-                    :project-id="projectId"
-                    :version-name="activePipelineVersion?.versionName"
-                    :draft-base-version-name="draftBaseVersionName"
-                    :is-active-draft="activePipelineVersion?.isDraft"
-                    :is-active-branch-version="isActiveBranchVersion"
-                    :draft-creator="activePipelineVersion?.creator"
-                >
-                </RollbackEntry>
-                <bk-button
-                    v-if="canInstantiate"
-                    @click="handleToInstanceEntry"
-                    theme="primary"
-                >
-                    {{ $t('template.instantiate') }}
-                </bk-button>
-            </p>
+            <HisotryHeader />
         </header>
         <main class="template-detail-entry-main">
             <section class="template-detail-overview-section">
@@ -109,43 +66,30 @@
                 :is-direct-show-version="isDirectShowVersion"
             />
         </main>
-        <VersionHistorySideSlider
-            :show-version-sideslider="showVersionSideslider"
-            is-template
-            @close="closeVersionSideSlider"
-        />
     </div>
 </template>
 
 <script>
     import Logo from '@/components/Logo'
-    import PacTag from '@/components/PacTag'
     import {
         ChangeLog,
         PipelineConfig
     } from '@/components/PipelineDetailTabs'
-    import RollbackEntry from '@/components/PipelineDetailTabs/RollbackEntry'
-    import VersionHistorySideSlider from '@/components/PipelineDetailTabs/VersionHistorySideSlider'
-    import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
+
     import { AuthorityTab, ShowVariable } from '@/components/PipelineEditTabs/'
-    import TemplateBreadCrumb from '@/components/template/TemplateBreadCrumb'
-    import { pipelineTabIdMap } from '@/utils/pipelineConst'
+    import HisotryHeader from '@/components/PipelineHeader/HistoryHeader'
     import Instance from '@/views/Template/InstanceList'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
         components: {
+            HisotryHeader,
             Instance,
-            RollbackEntry,
-            VersionSelector,
             PipelineConfig,
             AuthorityTab,
             ChangeLog,
             Logo,
-            PacTag,
-            TemplateBreadCrumb,
-            ShowVariable,
-            VersionHistorySideSlider
+            ShowVariable
         },
         data () {
             return {
@@ -255,85 +199,10 @@
                 return this.releaseVersion === this.currentVersion || this.isBranchVersion
             }
         },
-        watch: {
-            currentVersion () {
-                this.$nextTick(this.init)
-            }
-        },
-        created () {
-            if (!this.pipelineHistoryViewable) {
-                this.$router.push({
-                    name: 'templateEdit',
-                    params: {
-                        ...this.$route.params,
-                        version: this.pipelineInfo?.version
-                    }
-                })
-            } else if (this.releaseVersion !== this.currentVersion) {
-                this.handleVersionChange(this.releaseVersion)
-            } else {
-                this.init()
-            }
-        },
         methods: {
             ...mapActions('atom', [
-                'selectPipelineVersion',
-                'requestPipeline',
-                'setPipeline',
-                'setPipelineWithoutTrigger',
-                'resetAtomModalMap',
-                'setShowVariable',
-                'setSwitchingPipelineVersion'
+                'setShowVariable'
             ]),
-            ...mapActions({
-                rollbackTemplateVersion: 'templates/rollbackTemplateVersion',
-                requestTemplateSummary: 'atom/requestTemplateSummary'
-            }),
-            async init () {
-                try {
-                    if (this.currentVersion) {
-                        this.setSwitchingPipelineVersion(true)
-                        await this.requestPipeline({
-                            projectId: this.projectId,
-                            templateId: this.templateId,
-                            version: this.currentVersion
-                        })
-                    }
-                } catch (error) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: error.message
-                    })
-                } finally {
-                    this.setSwitchingPipelineVersion(false)
-                }
-            },
-            showVersionSideSlider () {
-                this.setShowVariable(false)
-                this.$refs?.versionSelectorInstance?.close?.()
-                this.showVersionSideslider = true
-            },
-            closeVersionSideSlider () {
-                this.showVersionSideslider = false
-            },
-            handleVersionChange (versionId, version) {
-                let routeType = this.$route.params.type || 'instanceList'
-
-                if (version) {
-                    this.selectPipelineVersion(version)
-                    if (this.releaseVersion) {
-                        const noRecordVersion = ['instanceList'].includes(this.$route.params.type) && !(versionId === this.releaseVersion || version.isBranchVersion)
-                        routeType = noRecordVersion ? pipelineTabIdMap.pipeline : this.$route.params.type
-                    }
-                }
-                this.$router.push({
-                    params: {
-                        ...this.$route.params,
-                        version: versionId,
-                        type: routeType
-                    }
-                })
-            },
             getNavComponent (type) {
                 switch (type) {
                     case 'pipeline':

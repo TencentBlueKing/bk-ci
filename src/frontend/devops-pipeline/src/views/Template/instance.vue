@@ -225,13 +225,13 @@
 
 <script>
     import emptyTips from '@/components/pipelineList/imgEmptyTips'
-    import instanceCompared from '@/components/template/instance-compared.vue'
-    import instanceMessage from '@/components/template/instance-message.vue'
-    import {
-        RESOURCE_ACTION,
-        TEMPLATE_RESOURCE_ACTION
-    } from '@/utils/permission'
-    import { convertTime } from '@/utils/util'
+import instanceCompared from '@/components/Template/instance-compared.vue'
+import instanceMessage from '@/components/Template/instance-message.vue'
+import {
+RESOURCE_ACTION,
+TEMPLATE_RESOURCE_ACTION
+} from '@/utils/permission'
+import { convertTime } from '@/utils/util'
 
     export default {
         components: {

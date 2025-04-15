@@ -102,7 +102,7 @@
 <script>
     import emptyTips from '@/components/pipelineList/imgEmptyTips'
     import FormField from '@/components/AtomPropertyPanel/FormField'
-    import templateTable from '@/components/template/templateTable'
+    import templateTable from '@/components/Template/templateTable'
 
     import {
         TEMPLATE_RESOURCE_ACTION,
