@@ -68,18 +68,18 @@ class StoreBaseQueryDao {
         statusList: List<String>? = null
     ): TStoreBaseRecord? {
         return with(TStoreBase.T_STORE_BASE) {
+            val conditions = mutableListOf<Condition>().apply {
+                add(STORE_TYPE.eq(storeType.type.toByte()))
+                add(STORE_CODE.eq(storeCode))
+                statusList?.takeIf { it.isNotEmpty() }?.let { add(STATUS.`in`(it)) }
+            }
             dslContext.selectFrom(this)
-                .where(
-                    DSL.and(
-                        STORE_TYPE.eq(storeType.type.toByte()),
-                        STORE_CODE.eq(storeCode),
-                        statusList?.let { STATUS.`in`(it) }
-                    )
-                )
+                .where(conditions)
                 .orderBy(BUS_NUM.desc())
                 .limit(1)
                 .fetchOne()
         }
+
     }
 
     fun getNewestComponentByCode(

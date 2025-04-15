@@ -434,14 +434,14 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
             return Result(storeBaseInfo)
         }
         val publicFlag = storeBaseFeatureQueryDao.getBaseFeatureByCode(dslContext, storeCode, storeType)?.publicFlag
-        val checkFlag = publicFlag == true || storeMemberDao.isStoreMember(
+        val checkFlag = publicFlag == true || (storeMemberDao.isStoreMember(
             dslContext = dslContext, userId = userId, storeCode = storeCode, storeType = storeType.type.toByte()
         ) || storeProjectService.isInstalledByProject(
             projectCode = projectCode,
             storeCode = storeCode,
             storeType = storeType.type.toByte(),
             instanceId = instanceId
-        )
+        ))
         if (!checkFlag) {
             if (projectCode.isNotBlank()) {
                 throw ErrorCodeException(

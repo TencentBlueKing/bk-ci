@@ -88,8 +88,8 @@ class ServiceStoreComponentResourceImpl @Autowired constructor(
         return Result(
             storeComponentQueryService.getComponentUpgradeVersionInfo(
                 userId = userId,
-                storeCode = storeCode,
                 storeType = storeType,
+                storeCode = storeCode,
                 projectCode = projectCode,
                 instanceId = instanceId,
                 osName = osName,
