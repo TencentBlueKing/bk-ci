@@ -77,7 +77,7 @@
                 return this.$route.params.pipelineId
             },
             isTemplate () {
-                return this.pipelineInfo?.isTemplate
+                return this.$route.params.isTemplatePipeline
             },
             currentVersionId () {
                 return this.$route.params?.version ?? this.pipelineInfo?.version
@@ -191,7 +191,7 @@
                             model,
                             templateSetting: pipelineSetting,
                             yaml: pipelineYaml,
-                            type: this.pipelineInfo?.type
+                            type: pipelineSetting.type
                         }
                         : {
                             projectId,

@@ -269,7 +269,7 @@
                         version: this.pipelineInfo?.version
                     }
                 })
-            } else if (this.isHistoryVersion) {
+            } else if (this.releaseVersion !== this.currentVersion) {
                 this.handleVersionChange(this.releaseVersion)
             } else {
                 this.init()
