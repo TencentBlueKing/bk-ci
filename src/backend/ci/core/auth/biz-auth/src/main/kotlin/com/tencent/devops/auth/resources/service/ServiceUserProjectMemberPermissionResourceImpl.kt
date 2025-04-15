@@ -6,7 +6,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.service.ServiceUserProjectMemberPermissionResource
 import org.springframework.beans.factory.annotation.Autowired
 
-
 @RestResource
 class ServiceUserProjectMemberPermissionResourceImpl @Autowired constructor(
     private val userProjectPermissionService: UserProjectPermissionService
