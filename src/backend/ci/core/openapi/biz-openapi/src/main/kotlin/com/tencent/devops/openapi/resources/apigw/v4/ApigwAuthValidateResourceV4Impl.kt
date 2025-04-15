@@ -1,5 +1,6 @@
 package com.tencent.devops.openapi.resources.apigw.v4
 
+import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -42,6 +43,26 @@ class ApigwAuthValidateResourceV4Impl @Autowired constructor(
         return client.get(ServiceProjectAuthResource::class).checkUserInProjectLevelGroup(
             token = tokenService.getSystemToken(),
             userId = userId,
+            projectCode = projectId
+        )
+    }
+
+    override fun validateUserResourcePermission(
+        appCode: String?,
+        apigwType: String?,
+        projectId: String,
+        userId: String,
+        action: String,
+        resourceType: String,
+        resourceCode: String
+    ): Result<Boolean> {
+        logger.info("OPENAPI_AUTH_VALIDATE_V4|$userId|validate_user_resource_permission|$projectId")
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            token = tokenService.getSystemToken(),
+            userId = userId,
+            action = action,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
             projectCode = projectId
         )
     }

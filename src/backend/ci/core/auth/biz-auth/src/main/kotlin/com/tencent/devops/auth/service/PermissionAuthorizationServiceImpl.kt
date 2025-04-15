@@ -101,14 +101,20 @@ class PermissionAuthorizationServiceImpl(
                 authResourceType = AuthResourceType.PIPELINE_DEFAULT,
                 authPermission = AuthPermission.EXECUTE
             )
-            val isHandoverFromHasExecutePermission = permissionService.validateUserResourcePermissionByRelation(
-                userId = record.handoverFrom,
-                action = action,
-                projectCode = projectCode,
-                resourceCode = resourceCode,
-                resourceType = resourceType,
-                relationResourceType = null
-            )
+            val isHandoverFromHasExecutePermission = try {
+                permissionService.validateUserResourcePermissionByRelation(
+                    userId = record.handoverFrom,
+                    action = action,
+                    projectCode = projectCode,
+                    resourceCode = resourceCode,
+                    resourceType = resourceType,
+                    relationResourceType = null
+                )
+            } catch (ex: Exception) {
+                // 用户账号被冻结或者离职，可能会导致接口异常。
+                logger.warn("get resource authorization | validate permission failed", ex)
+                false
+            }
             return record.copy(executePermission = isHandoverFromHasExecutePermission)
         }
         return record
