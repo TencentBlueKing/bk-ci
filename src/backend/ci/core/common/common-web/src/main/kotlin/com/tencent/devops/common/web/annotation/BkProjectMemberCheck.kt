@@ -1,6 +1,5 @@
 package com.tencent.devops.common.web.annotation
 
-
 /**
  * 蓝盾API校验
  *
@@ -9,4 +8,4 @@ package com.tencent.devops.common.web.annotation
  */
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class BkProjectMemberCheck()
+annotation class BkProjectMemberCheck
