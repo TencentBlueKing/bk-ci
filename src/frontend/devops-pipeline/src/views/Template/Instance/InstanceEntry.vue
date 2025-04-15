@@ -21,9 +21,9 @@
                     </bk-button>
                     <bk-button
                         v-if="isInstanceCreateViewType"
-
+                       
                         theme="primary"
-                        @click="handle "
+                        @click="handleBatchUpgrade"
                     >
                         {{ $t('release') }}
                     </bk-button>
@@ -51,8 +51,19 @@
                         slot="aside"
                         :is-instance-create-type="isInstanceCreateViewType"
                     />
-                    <div slot="main">
-                        123
+                    <bk-exception
+                        v-if="isInstanceCreateViewType"
+                        ext-cls="instance-contents-empty"
+                        slot="main"
+                        type="empty"
+                    >
+                        {{ $t('template.pleaseSelectTemplateVersion') }}
+                    </bk-exception>
+                    <div
+                        v-else
+                        slot="main"
+                    >
+                        <InstanceConfig />
                     </div>
                 </bk-resize-layout>
             </main>
@@ -61,11 +72,12 @@
 </template>
 
 <script setup name="InstanceEntry">
-    import TemplateBreadCrumb from '@/components/Template/TemplateBreadCrumb'
-    import UseInstance from '@/hook/useInstance'
-    import { computed, onMounted, ref, watch } from 'vue'
-    import InstanceAside from './InstanceAside'
+    import TemplateBreadCrumb from '@/components/template/TemplateBreadCrumb'
     import TemplateVersionSelector from './TemplateVersionSelector'
+    import InstanceAside from './InstanceAside'
+    import InstanceConfig from './InstanceConfig'
+    import { ref, computed, onMounted, watch } from 'vue'
+    import UseInstance from '@/hook/useInstance'
     const { proxy } = UseInstance()
 
     const isLoading = ref(false)
@@ -111,7 +123,7 @@
         requestTemplateByVersion()
     })
 </script>
-
+ 
 <style lang="scss">
 @import './../../../scss/conf';
 
@@ -135,6 +147,9 @@
     .instance-contents,
     .instance-contents-layout {
         height: 100%;
+    }
+    .instance-contents-empty {
+        margin-top: 10%;
     }
     .instance-entry-aside {
         margin-right: 24px;

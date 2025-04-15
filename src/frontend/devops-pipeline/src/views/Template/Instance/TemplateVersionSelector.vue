@@ -4,17 +4,30 @@
             {{ isInstanceCreateType ? $t('template.templateVersion') : $t('template.upgradedVersion') }}
         </span>
         <bk-select
+            v-model="versionValue"
             class="version-selector"
             :placeholder="$t('template.selectTemplateUpgradedVersion')"
+            :loading="isLoading"
+            :clearable="false"
+            @change="handleVersionChange"
         >
+            <bk-option
+                v-for="(option, index) in versionLst"
+                :key="index"
+                :id="option.version"
+                :name="option.versionName"
+            />
         </bk-select>
         <bk-button
-            class="preview-btn"
-            outline
+            :class="{
+                'preview-btn': versionValue
+            }"
+            :disabled="!versionValue"
+            @click="handlePreview"
         >
             {{ $t('pipelinesPreview') }}
         </bk-button>
-        <bk-checkbox>
+        <bk-checkbox class="apply-checkbox">
             <bk-popover
                 ext-cls="apply-tips-popover"
                 theme="light"
@@ -42,22 +55,69 @@
                 </div>
             </bk-popover>
         </bk-checkbox>
+        <pipeline-template-preview
+            v-model="isShowPreview"
+            :template-pipeline="templatePipeline"
+        />
     </div>
 </template>
 
 <script setup>
-    import { defineProps } from 'vue'
+    import { ref, defineProps, computed, onMounted } from 'vue'
     import Logo from '@/components/Logo'
     import UseInstance from '@/hook/useInstance'
+    import PipelineTemplatePreview from '@/components/PipelineTemplatePreview'
     defineProps({
         isInstanceCreateType: Boolean
     })
-    
+    const versionLst = ref([])
+    const versionValue = ref()
+    const isLoading = ref(false)
+    const isShowPreview = ref(false)
+    const templatePipeline = ref({})
     const { proxy } = UseInstance()
-    console.log(proxy, 'proxy')
+    const projectId = computed(() => proxy.$route.params?.projectId)
+    const templateId = computed(() => proxy.$route.params?.templateId)
+    async function fetchVersionList () {
+        try {
+            isLoading.value = true
+            const res = await proxy.$store.dispatch('templates/requestTemplateVersionList', {
+                projectId: projectId.value,
+                templateId: templateId.value,
+                params: {
+                    includeDraft: false,
+                    projectId: projectId.value,
+                    templateId: templateId.value
+                }
+            })
+            versionLst.value = res.records
+            isLoading.value = false
+        } catch (e) {
+            console.error(e)
+        }
+    }
+    function handleVersionChange (value) {
+        if (!value) return
+        try {
+            proxy.$store.dispatch('templates/fetchTemplateByVersion', {
+                projectId: projectId.value,
+                templateId: templateId.value,
+                version: value
+            })
+        } catch (e) {
+            console.error(e)
+        }
+    }
     function handleJumpToViewDetails () {
 
     }
+    function handlePreview () {
+        if (!versionValue.value) return
+        isShowPreview.value = true
+    }
+    onMounted(() => {
+        fetchVersionList()
+    })
 </script>
 
 <style lang="scss">
@@ -79,9 +139,9 @@
         }
         .version-selector {
             width: 260px;
+            margin-right: 20px;
         }
         .preview-btn {
-            margin: 0 20px 0 10px;
             &:hover {
                 background: #fff !important;
                 border-color: #3a84ff !important;
@@ -92,6 +152,9 @@
             border-bottom: 1px dashed #979ba5;
         }
         
+    }
+    .apply-checkbox {
+        margin-left: 15px;
     }
     .apply-tips-popover {
         .jump-btn {

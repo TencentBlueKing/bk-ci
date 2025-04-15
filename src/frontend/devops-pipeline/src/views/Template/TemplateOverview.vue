@@ -5,7 +5,7 @@
         }]"
     >
         <header>
-            <HisotryHeader />
+            <HistoryHeader />
         </header>
         <main class="template-detail-entry-main">
             <section class="template-detail-overview-section">
@@ -77,13 +77,13 @@
     } from '@/components/PipelineDetailTabs'
 
     import { AuthorityTab, ShowVariable } from '@/components/PipelineEditTabs/'
-    import HisotryHeader from '@/components/PipelineHeader/HistoryHeader'
+    import HistoryHeader from '@/components/PipelineHeader/HistoryHeader'
     import Instance from '@/views/Template/InstanceList'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
         components: {
-            HisotryHeader,
+            HistoryHeader,
             Instance,
             PipelineConfig,
             AuthorityTab,

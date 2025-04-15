@@ -11,22 +11,24 @@
             <div class="execute-build-version">
                 <span
                     class="execute-build-version-input"
-                    v-for="v in allVersionKeyList"
+                    v-for="v in renderVersionParamList"
                     :key="v"
                 >
                     <vuex-input
                         :disabled="disabled"
                         input-type="number"
-                        :name="v"
-                        :placeholder="versionConfig[v].placeholder"
+                        :name="v.id"
+                        :class="{
+                            'is-diff-param': highlightChangedParam && v.isChanged
+                        }"
+                        :placeholder="v.placeholder"
                         v-validate.initial="'required|numeric'"
-                        :value="versionParamValues[v]"
+                        :value="versionParamValues[v.id]"
                         :handle-change="handleVersionChange"
                     />
                 </span>
             </div>
         </bk-form-item>
-
         <div
             v-if="isTemplateEdit"
             class="execute-buildno-params"
@@ -138,13 +140,16 @@
                     <span class="build-label">{{ $t('buildNoBaseline.currentValue') }}</span>
                     <p>
                         <vuex-input
-                            :disabled="(isLockedNo && !isInstance) || isInstance"
+                            :disabled="(isLockedNo && !isInstance) || isInstance || disabled"
                             input-type="number"
                             name="currentBuildNo"
                             placeholder="CURRENT_BUILD_NO"
                             v-validate.initial="'required|numeric'"
                             :value="buildNo.currentBuildNo"
                             :handle-change="handleBuildNoChange"
+                            :class="{
+                                'is-diff-param': highlightChangedParam && buildNo.isChanged
+                            }"
                         />
                         <span class="bk-form-help is-danger">{{ errors.first('currentBuildNo') }}</span>
                         <span
@@ -155,7 +160,6 @@
                                 size="14"
                                 name="arrow-right"
                             />
-                            {{ buildNo.buildNo }}
                         </span>
                     </p>
                 </div>
@@ -197,19 +201,24 @@
             },
             handleBuildNoChange: {
                 type: Function,
-                default: () => () => { }
+                default: () => () => {}
             },
             handleVersionChange: {
                 type: Function,
-                default: () => () => { }
+                default: () => () => {}
             },
             handleCheckChange: {
                 type: Function,
-                default: () => () => { }
+                default: () => () => {}
             },
             isInstance: Boolean,
             isInitInstance: Boolean,
-            resetBuildNo: Boolean
+            resetBuildNo: Boolean,
+            highlightChangedParam: Boolean,
+            versionParamList: {
+                type: Array,
+                default: () => []
+            }
         },
         data () {
             return {
@@ -224,8 +233,15 @@
             ...mapGetters('atom', [
                 'buildNoRules'
             ]),
-            allVersionKeyList () {
-                return allVersionKeyList
+            renderVersionParamList () {
+                return this.versionParamList.length
+                    ? this.versionParamList
+                    : allVersionKeyList.map(v => ({
+                        id: v,
+                        value: this.versionParamValues[v],
+                        placeholder: this.versionConfig[v].placeholder,
+                        isChanged: false
+                    }))
             },
             versionConfig () {
                 return getVersionConfig()
@@ -379,5 +395,9 @@
 
 .is-not-Preview {
     display: grid;
+}
+
+.is-diff-param {
+    border-color: #FF9C01 !important;
 }
 </style>

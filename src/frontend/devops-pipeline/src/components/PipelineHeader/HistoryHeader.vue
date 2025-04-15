@@ -82,7 +82,24 @@
                 }"
                 @click="goEdit"
             >
-                {{ $t("edit") }}
+                {{ isTemplate ? $t('template.editTemplate') : $t('edit') }}
+            </bk-button>
+            <bk-button
+                v-if="isTemplate && canInstantiate"
+                theme="primary"
+                v-perm="{
+                    hasPermission: canEdit,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: uniqueId,
+                        action: RESOURCE_ACTION.EDIT
+                    }
+                }"
+                @click="handleToInstanceEntry"
+            >
+                {{ $t('template.instantiate') }}
             </bk-button>
             <template v-if="!isTemplate">
                 <template v-if="editAndExecutable">
@@ -247,6 +264,9 @@
             },
             editRouteName () {
                 return this.isTemplate ? 'templateEdit' : 'pipelinesEdit'
+            },
+            canInstantiate () {
+                return this.releaseVersion === this.currentVersion || this.isBranchVersion
             }
         },
         watch: {
@@ -278,6 +298,16 @@
                     name: this.editRouteName,
                     query: {
                         tab: pipelineTabIdMap[this.$route.params.type] ?? 'pipeline'
+                    }
+                })
+            },
+            handleToInstanceEntry () {
+                this.$router.push({
+                    name: 'instanceEntry',
+                    params: {
+                        ...this.$route.params,
+                        version: this.releaseVersion,
+                        type: 'create'
                     }
                 })
             },

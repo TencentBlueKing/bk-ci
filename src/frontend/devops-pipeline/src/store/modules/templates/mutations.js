@@ -18,11 +18,15 @@
  */
 import Vue from 'vue'
 import {
-    SET_INSTANCE_LIST
+    SET_INSTANCE_LIST,
+    SET_TEMPLATE_DETAIL
 } from './constants'
 export default {
     [SET_INSTANCE_LIST]: (state, list) => {
-        console.log(list, 111111)
         Vue.set(state, 'instanceList', list)
+    },
+    [SET_TEMPLATE_DETAIL]: (state, data) => {
+        Vue.set(state, 'templateDetail', data.detail)
+        Vue.set(state, 'templateVersion', data.version)
     }
 }

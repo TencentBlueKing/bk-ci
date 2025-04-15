@@ -17,11 +17,14 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import ajax from '@/utils/request'
 import {
     PROCESS_API_URL_PREFIX
     // STORE_API_URL_PREFIX
 } from '@/store/constants'
-import ajax from '@/utils/request'
+import {
+    SET_TEMPLATE_DETAIL
+} from './constants'
 const actions = {
     hasPipelineTemplatePermission (_, { projectId, permission }) {
         return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/hasPipelineTemplatePermission?&permission=${permission}`).then(response => {
@@ -80,6 +83,22 @@ const actions = {
     },
     rollbackTemplateVersion (_, { projectId, templateId, version }) {
         return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/rollbackDraft?version=${version}`).then(response => response.data)
+    },
+    requestTemplateVersionList (_, { projectId, templateId, params }) {
+        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/versions`, params).then(response => response.data)
+    },
+    fetchTemplateByVersion ({ commit }, { projectId, templateId, version }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/${version}/details/`).then(res => {
+            commit(SET_TEMPLATE_DETAIL, {
+                detail: res.data,
+                version
+            })
+        })
+    },
+    fetchPipelineDetailById ({ commit }, { projectId, templateId, pipelineIds }) {
+        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}/pipelines`, pipelineIds).then(res => {
+            return res.data
+        })
     }
 }
 

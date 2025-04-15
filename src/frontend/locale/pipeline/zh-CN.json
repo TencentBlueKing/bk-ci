@@ -498,7 +498,7 @@
     "templateCoverWarningDesc": "{0} 编辑的草稿（从{1}创建）尚未发布。编辑分支版本将覆盖尚未发布的草稿，请确认是否继续",
     "batchUpgrade": "批量升级",
     "jumpToViewDetails": "跳转查看详情",
-    "upgradedVersion": "升级的版本",
+    "upgradedVersion": "升级版本",
     "selectPipelineNum": "已选择{0}条流水线",
     "batchEdit": "批量编辑",
     "batchUpdateInstance": "批量升级",
@@ -517,7 +517,10 @@
     "JOB": "Job模板",
     "STEP": "Step模板",
     "selectTemplateUpgradedVersion": "请选择升级的版本",
-    "repositoryPlaceholder": "请选择代码库"
+    "repositoryPlaceholder": "请选择代码库",
+    "pleaseSelectTemplateVersion": "请选择模板版本",
+    "instanceConfig": "实例配置",
+    "pipelineBuildParams": "流水线入参"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",
@@ -1638,7 +1641,7 @@
   "versionRuleA": "附加位：流水线其他信息修改版本，如名称、描述、运行设置等",
   "willRelease": "待发布",
   "clickToAddStage": "点击添加第一个流水线Stage",
-  "buildMsg": "构建信息",
+  "buildMsg": "构建",
   "executeStepPreview": "预览待执行的步骤",
   "yamlFilePathErrorTip": "YAML 文件路径需要以yml或者yaml结尾",
   "yamlFilePathPlaceholder": "build.yml 或者 build.yaml",
@@ -1745,5 +1748,7 @@
   "pipelineTemplate": "流水线模板",
   "allSource": "全部",
   "customSource": "自定义",
-  "marketSource": "研发商店"
+  "marketSource": "研发商店",
+  "groupLabel": "分组标签",
+  "notGrouped": "未分组"
 }
