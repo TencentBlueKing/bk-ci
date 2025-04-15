@@ -106,7 +106,6 @@ import com.tencent.devops.store.pojo.devx.constants.KEY_REPOSITORY_ID
 import com.tencent.devops.store.pojo.devx.constants.KEY_SOURCE_TYPE
 import com.tencent.devops.store.pojo.devx.enums.SourceCodeEnum
 import org.apache.commons.codec.digest.DigestUtils
-import org.apache.commons.io.FilenameUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
