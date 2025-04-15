@@ -2,7 +2,7 @@
     <div class="file-upload">
         <bk-upload
             accept=".yaml, .yml, application/x-yaml"
-            :with-credentials="true"
+            with-credentials
             :custom-request="handleSelect"
         />
         <p class="tips">{{ $t('template.uploadTemplateYamlTips') }}</p>

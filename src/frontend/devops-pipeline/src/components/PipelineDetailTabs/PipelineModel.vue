@@ -4,6 +4,7 @@
             :editable="false"
             :show-header="false"
             :pipeline="pipelineWithoutTrigger"
+            is-preview
             v-on="$listeners"
         >
         </pipeline>

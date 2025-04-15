@@ -128,19 +128,23 @@
     }
 
     async function handConfirmCreateTemplate () {
-        const valid = await templateFormRef.value.validate()
-        if (valid) {
-            const res = await proxy.$store.dispatch('templates/createTemplate', {
-                projectId: projectId.value,
-                params: templateFormData.value
-            })
-            bkMessage({
-                theme: 'success',
-                message: t('创建模板成功')
-            })
-            templateFormData.value = getDefaultFormData()
-            emit('update:value', false)
-            emit('confirm', res)
+        try {
+            const valid = await templateFormRef.value.validate()
+            if (valid) {
+                const res = await proxy.$store.dispatch('templates/createTemplate', {
+                    projectId: projectId.value,
+                    params: templateFormData.value
+                })
+                bkMessage({
+                    theme: 'success',
+                    message: t('创建模板成功')
+                })
+                templateFormData.value = getDefaultFormData()
+                emit('update:value', false)
+                emit('confirm', res)
+            }
+        } catch (error) {
+            bkMessage({ theme: 'error', message: error.message || error })
         }
     }
 
