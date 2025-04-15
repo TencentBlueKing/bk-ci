@@ -1,4 +1,4 @@
-package com.tencent.devops.openapi.resources.apigw.desktop
+package com.tencent.devops.remotedev.resources.user
 
 import com.tencent.devops.artifactory.api.ServiceArchiveComponentPkgResource
 import com.tencent.devops.common.api.pojo.Result
