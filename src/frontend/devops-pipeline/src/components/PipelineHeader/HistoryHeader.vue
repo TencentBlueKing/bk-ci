@@ -123,7 +123,7 @@
     import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
     import VersionHistorySideSlider from '@/components/PipelineDetailTabs/VersionHistorySideSlider'
     import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
-    import TemplateBreadCrumb from '@/components/template/TemplateBreadCrumb.vue'
+    import TemplateBreadCrumb from '@/components/Template/TemplateBreadCrumb.vue'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'

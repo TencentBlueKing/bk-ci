@@ -41,7 +41,7 @@
 
 <script>
     import Logo from '@/components/Logo'
-    import TemplateNameCrumbItem from '@/components/template/TemplateNameCrumbItem'
+    import TemplateNameCrumbItem from '@/components/Template/TemplateNameCrumbItem'
     import { computed, defineComponent } from 'vue'
     import { useI18n } from 'vue-i18n-bridge'
 

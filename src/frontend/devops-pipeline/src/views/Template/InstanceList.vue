@@ -162,7 +162,7 @@
 
 <script setup>
     import emptyTips from '@/components/pipelineList/imgEmptyTips'
-    import instanceCompared from '@/components/template/instance-compared.vue'
+    import instanceCompared from '@/components/Template/instance-compared.vue'
     import UseInstance from '@/hook/useInstance'
     import { SET_INSTANCE_LIST } from '@/store/modules/templates/constants'
     import { convertTime } from '@/utils/util'
