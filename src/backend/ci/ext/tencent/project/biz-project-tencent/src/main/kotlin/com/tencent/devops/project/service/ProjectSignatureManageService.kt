@@ -161,12 +161,19 @@ class ProjectSignatureManageService(
 
     private fun buildProjectInfo(projectNames: List<String>): String {
         if (projectNames.isEmpty()) return ""
-        val firstName = "《${projectNames.first()}》"
-        val otherNames = "《".plus(projectNames.drop(1).joinToString("》/《 ")).plus("》")
-        return I18nUtil.getCodeLanMessage(
-            messageCode = ProjectMessageCode.BK_SIGNATURE_PROJECT_INFORMATION,
-            params = arrayOf(firstName, otherNames)
-        )
+        return if (projectNames.size == 1) {
+            I18nUtil.getCodeLanMessage(
+                messageCode = ProjectMessageCode.BK_SIGNATURE_PROJECT_INFORMATION,
+                params = arrayOf("《${projectNames.first()}》")
+            )
+        } else {
+            val firstName = "《${projectNames.first()}》"
+            val otherNames = "《".plus(projectNames.drop(1).joinToString("》/《 ")).plus("》")
+            I18nUtil.getCodeLanMessage(
+                messageCode = ProjectMessageCode.BK_SIGNATURE_PROJECTS_INFORMATION,
+                params = arrayOf(firstName, otherNames)
+            )
+        }
     }
 
     fun callback(
