@@ -2,7 +2,6 @@ package com.tencent.devops.common.web.aop
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_NEED_PARAM_
-import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_IS_INVALID
 import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_IS_NULL
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
