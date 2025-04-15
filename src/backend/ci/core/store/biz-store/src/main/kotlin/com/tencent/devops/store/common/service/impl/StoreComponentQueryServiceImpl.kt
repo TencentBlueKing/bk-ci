@@ -799,7 +799,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
 
         // 处理版本比对逻辑
         return when {
-            installedRel == null -> createVersionInfo(latestVersion.version)  // 全新安装
+            installedRel == null -> createVersionInfo(latestVersion.version)
             isUpdateRequired(
                 storeId = latestVersion.id,
                 installedTime = installedRel.createTime,
