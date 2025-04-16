@@ -6,6 +6,11 @@
     >
         <header>
             <HisotryHeader />
+            <ext-menu
+                type="template"
+                :data="pipelineInfo"
+                :config="templateActions"
+            />
         </header>
         <main class="template-detail-entry-main">
             <section class="template-detail-overview-section">
@@ -66,201 +71,190 @@
                 :is-direct-show-version="isDirectShowVersion"
             />
         </main>
+        <CopyTemplateDialog
+            :copy-temp="copyTemp"
+            @confirm="copyConfirmHandler"
+            @cancel="copyCancelHandler"
+        />
     </div>
 </template>
 
-<script>
+<script setup>
+    import { computed } from 'vue'
     import Logo from '@/components/Logo'
+    import CopyTemplateDialog from '@/components/Template/CopyTemplateDialog.vue'
     import {
         ChangeLog,
         PipelineConfig
     } from '@/components/PipelineDetailTabs'
-
     import { AuthorityTab, ShowVariable } from '@/components/PipelineEditTabs/'
     import HisotryHeader from '@/components/PipelineHeader/HistoryHeader'
     import Instance from '@/views/Template/InstanceList'
-    import { mapActions, mapGetters, mapState } from 'vuex'
+    import ExtMenu from './List/extMenu'
+    import UseInstance from '@/hook/useInstance'
+    import useTemplateActions from '@/hook/useTemplateActions'
+    import {
+        RESOURCE_ACTION,
+        TEMPLATE_RESOURCE_ACTION
+    } from '@/utils/permission'
 
-    export default {
-        components: {
-            HisotryHeader,
-            Instance,
-            PipelineConfig,
-            AuthorityTab,
-            ChangeLog,
-            Logo,
-            ShowVariable
-        },
-        data () {
-            return {
-                showVersionSideslider: false
-            }
-        },
-        computed: {
-            ...mapState('atom', [
-                'pipeline',
-                'pipelineSetting',
-                'pipelineInfo',
-                'switchingVersion',
-                'activePipelineVersion'
-            ]),
-            ...mapGetters('atom', [
-                'pacEnabled',
-                'yamlInfo',
-                'pipelineHistoryViewable',
-                'isReleaseVersion',
-                'isBranchVersion',
-                'isReleasePipeline',
-                'onlyBranchPipeline'
-            ]),
-            canEdit () {
-                return this.pipelineInfo?.permissions?.canEdit ?? true
-            },
-            projectId () {
-                return this.$route.params.projectId
-            },
-            templateId () {
-                return this.$route.params.templateId
-            },
-            currentVersion () {
-                return this.$route.params.version ? parseInt(this.$route.params.version) : this.releaseVersion
-            },
-            activeMenuItem () {
-                return this.$route.params.type || 'instanceList'
-            },
-            activeChild () {
-                return this.getNavComponent(this.activeMenuItem)
-            },
-            asideNav () {
-                return [
-                    {
-                        title: this.$t('executeInfo'),
-                        children: [
-                            {
-                                title: this.$t('template.instanceList'),
-                                name: 'instanceList'
-                            }
-                        ].map((child) => ({
-                            ...child,
-                            active: this.activeMenuItem === child.name,
-                            disabled: !this.isReleaseVersion && !this.isBranchVersion
-                        }))
-                    },
-                    {
-                        title: this.$t('template.templateConfig'),
-                        children: [
-                            {
-                                title: this.$t('pipelineModel'),
-                                name: 'pipeline'
-                            },
-                            {
-                                title: this.$t('triggerConf'),
-                                name: 'trigger'
-                            },
-                            {
-                                title: this.$t('notifyConf'),
-                                name: 'notice'
-                            },
-                            {
-                                title: this.$t('baseConf'),
-                                name: 'setting'
-                            }
-                        ].map((child) => ({
-                            ...child,
-                            active: this.activeMenuItem === child.name
-                        }))
-                    },
-                    {
-                        title: this.$t('more'),
-                        children: [
-                            {
-                                title: this.$t('authSetting'),
-                                name: 'permission'
-                            },
-                            {
-                                title: this.$t('operationLog'),
-                                name: 'changeLog'
-                            }
-                        ].map((child) => ({
-                            ...child,
-                            active: this.activeMenuItem === child.name,
-                            disabled: !this.isReleaseVersion
-                        }))
-                    }
-                ]
-            },
-            isDirectShowVersion () {
-                return this.$route.params.isDirectShowVersion || false
-            },
-            releaseVersion () {
-                return this.pipelineInfo?.releaseVersion
-            },
-            canInstantiate () {
-                return this.releaseVersion === this.currentVersion || this.isBranchVersion
-            }
-        },
-        methods: {
-            ...mapActions('atom', [
-                'setShowVariable'
-            ]),
-            getNavComponent (type) {
-                switch (type) {
-                    case 'pipeline':
-                    case 'trigger':
-                    case 'notice':
-                    case 'setting':
-                        return {
-                            component: 'PipelineConfig',
-                            showVar: type === 'pipeline'
-                        }
-                    case 'permission':
-                        return {
-                            component: 'AuthorityTab'
-                        }
-                    case 'versionHistory':
-                        return {
-                            component: 'VersionHistory'
-                        }
-                    case 'changeLog':
-                        return {
-                            component: 'ChangeLog'
-                        }
-                    default:
-                        return {
-                            component: 'Instance'
-                        }
+    const {
+        copyTemp,
+        copyTemplate,
+        exportTemplate,
+        deleteTemplate,
+        copyConfirmHandler,
+        copyCancelHandler
+    } = useTemplateActions()
+    const { proxy, t } = UseInstance()
+
+    const pipeline = computed(() => proxy.$store?.state?.atom?.pipeline)
+    const pipelineInfo = computed(() => proxy.$store?.state?.atom?.pipelineInfo)
+
+    const pipelineHistoryViewable = computed(() => proxy.$store?.getters['atom/pipelineHistoryViewable'])
+    const isReleaseVersion = computed(() => proxy.$store?.getters['atom/isReleaseVersion'])
+    const isBranchVersion = computed(() => proxy.$store?.getters['atom/isBranchVersion'])
+
+    const projectId = computed(() => proxy.$route.params.projectId)
+    const activeMenuItem = computed(() => proxy.$route.params.type || 'instanceList')
+    const activeChild = computed(() => getNavComponent(activeMenuItem.value))
+    const canEdit = computed(() => pipelineInfo.value.canEdit)
+    const canDelete = computed(() => pipelineInfo.value?.canDelete)
+    const templateId = computed(() => pipelineInfo.value?.id)
+    const isDirectShowVersion = computed(() => proxy.$route.params.isDirectShowVersion || false)
+    const asideNav = computed(() => [
+        {
+            title: t('executeInfo'),
+            children: [
+                {
+                    title: t('template.instanceList'),
+                    name: 'instanceList'
                 }
-            },
-            switchType (child) {
-                if (child.disabled) return
-                this.$router.push({
-                    name: 'TemplateOverview',
-                    params: {
-                        ...this.$route.params,
-                        type: child.name
-                    }
-                })
-            },
-            goEditTemplate (version) {
-                this.$router.push({
-                    name: 'templateEdit',
-                    params: {
-                        ...this.$route.params,
-                        version
-                    }
-                })
-            },
-            handleToInstanceEntry () {
-                this.$router.push({
-                    name: 'instanceEntry',
-                    params: {
-                        ...this.$route.params,
-                        version: this.pipelineInfo?.releaseVersion,
-                        type: 'create'
-                    }
-                })
+            ].map((child) => ({
+                ...child,
+                active: activeMenuItem.value === child.name,
+                disabled: !isReleaseVersion.value && !isBranchVersion.value
+            }))
+        },
+        {
+            title: t('template.templateConfig'),
+            children: [
+                {
+                    title: t('pipelineModel'),
+                    name: 'pipeline'
+                },
+                {
+                    title: t('triggerConf'),
+                    name: 'trigger'
+                },
+                {
+                    title: t('notifyConf'),
+                    name: 'notice'
+                },
+                {
+                    title: t('baseConf'),
+                    name: 'setting'
+                }
+            ].map((child) => ({
+                ...child,
+                active: activeMenuItem.value === child.name
+            }))
+        },
+        {
+            title: t('more'),
+            children: [
+                {
+                    title: t('authSetting'),
+                    name: 'permission'
+                },
+                {
+                    title: t('operationLog'),
+                    name: 'changeLog'
+                }
+            ].map((child) => ({
+                ...child,
+                active: activeMenuItem.value === child.name,
+                disabled: !isReleaseVersion.value
+            }))
+        }
+    ])
+    const templateActions = computed(() => [
+        {
+            text: t('template.export'), // 导出
+            handler: () => exportTemplate(pipelineInfo.value),
+            hasPermission: !canEdit.value,
+            disablePermissionApi: true,
+            isShow: true,
+            permissionData: {
+                projectId: projectId.value,
+                resourceType: 'pipeline_template',
+                resourceCode: templateId,
+                action: TEMPLATE_RESOURCE_ACTION.EDIT
+            }
+        },
+        {
+            text: t('copy'), // 复制
+            handler: () => copyTemplate(pipelineInfo.value),
+            hasPermission: !canEdit.value,
+            disablePermissionApi: true,
+            isShow: true,
+            permissionData: {
+                projectId: projectId.value,
+                resourceType: 'pipeline_template',
+                resourceCode: projectId.value,
+                action: RESOURCE_ACTION.CREATE
+            }
+        },
+        {
+            text: t('delete'),
+            handler: () => deleteTemplate(pipelineInfo.value, goTemplateManageList),
+            hasPermission: !canDelete.value,
+            disablePermissionApi: true,
+            isShow: true,
+            permissionData: {
+                projectId: projectId.value,
+                resourceType: 'pipeline_template',
+                resourceCode: templateId,
+                action: TEMPLATE_RESOURCE_ACTION.EDIT
             }
         }
+    ])
+
+    function getNavComponent (type) {
+        console.log(pipelineInfo.value, 'pipelineInfo')
+        switch (type) {
+            case 'pipeline':
+            case 'trigger':
+            case 'notice':
+            case 'setting':
+                return {
+                    component: PipelineConfig,
+                    showVar: type === 'pipeline'
+                }
+            case 'permission':
+                return {
+                    component: AuthorityTab
+                }
+            case 'changeLog':
+                return {
+                    component: ChangeLog
+                }
+            default:
+                return {
+                    component: Instance
+                }
+        }
+    }
+    function switchType (child) {
+        if (child.disabled) return
+        proxy.$router.push({
+            name: 'TemplateManageList'
+        })
+    }
+    function goTemplateManageList () {
+        proxy.$router.push({
+            name: 'TemplateManageList'
+        })
     }
 </script>
 
