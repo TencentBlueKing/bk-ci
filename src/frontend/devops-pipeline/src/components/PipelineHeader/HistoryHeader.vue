@@ -67,6 +67,13 @@
                 {{ operateName }}
             </RollbackEntry>
             <bk-button
+                v-if="isTemplate && releaseVersion === currentVersion"
+                @click="handleToInstanceEntry"
+                theme="primary"
+            >
+                {{ $t('template.instantiate') }}
+            </bk-button>
+            <bk-button
                 v-else-if="onlyBranchPipeline && activePipelineVersion?.version === releaseVersion"
                 theme="primary"
                 outline
