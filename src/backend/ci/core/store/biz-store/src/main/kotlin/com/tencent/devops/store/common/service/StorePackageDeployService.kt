@@ -55,6 +55,7 @@ import com.tencent.devops.store.pojo.common.KEY_STORE_ID
 import com.tencent.devops.store.pojo.common.KEY_STORE_PACKAGE_FILE
 import com.tencent.devops.store.pojo.common.StoreReleaseBaseInfo
 import com.tencent.devops.store.pojo.common.StoreReleaseInfo
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreBaseCreateRequest
@@ -321,8 +322,10 @@ abstract class StorePackageDeployService {
         var summary = baseInfo.summary
         var classifyCode = baseInfo.classifyCode
         // 非首次发布并且必填参数为空时沿用上次发布填写数据
+        var releaseType = baseInfo.versionInfo.releaseType
         if (!firstPublisherFlag) {
             val newestComponentInfo = storeBaseQueryDao.getNewestComponentByCode(dslContext, storeCode, storeType)!!
+            releaseType = handedReleaseType(storeCode, storeType, baseInfo)
             name = name ?: newestComponentInfo.name
             summary = summary ?: newestComponentInfo.summary
             classifyCode =
@@ -346,7 +349,7 @@ abstract class StorePackageDeployService {
                 description = baseInfo.description,
                 versionInfo = VersionModel(
                     publisher = baseInfo.versionInfo.publisher,
-                    releaseType = baseInfo.versionInfo.releaseType,
+                    releaseType = releaseType,
                     version = baseInfo.versionInfo.version,
                     versionContent = baseInfo.versionInfo.versionContent
                 ),
@@ -357,5 +360,27 @@ abstract class StorePackageDeployService {
                 baseEnvInfos = baseInfo.baseEnvInfos
             )
         )
+    }
+
+    /**
+     * 处理发布类型
+     */
+    private fun handedReleaseType(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        baseInfo: StoreReleaseBaseInfo
+    ): ReleaseTypeEnum {
+        val version = baseInfo.versionInfo.version
+        val status = storeBaseQueryDao.getComponent(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType,
+            version = version
+        )?.status
+        return if (status== StoreStatusEnum.GROUNDING_SUSPENSION.name) {
+            ReleaseTypeEnum.CANCEL_RE_RELEASE
+        } else {
+            baseInfo.versionInfo.releaseType
+        }
     }
 }
