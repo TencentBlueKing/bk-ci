@@ -1982,8 +1982,6 @@ class PipelineRepositoryService constructor(
                 errorCode = ProcessMessageCode.ERROR_RESTORE_PIPELINE_NOT_FOUND
             )
 
-            existModel.name = pipeline.pipelineName
-
             if (pipeline.channel != channelCode.name) {
                 throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -1992,10 +1990,25 @@ class PipelineRepositoryService constructor(
                 )
             }
 
+            // 如果流水线名称已经重复,则使用含有日期的流水线名,否则使用原来的流水线名
+            val existPipelineName = isPipelineExist(
+                projectId = projectId,
+                pipelineName = existModel.name,
+                channelCode = channelCode,
+                excludePipelineId = pipelineId
+            )
+            val pipelineName = if (existPipelineName) {
+                existModel.name = pipeline.pipelineName
+                pipeline.pipelineName
+            } else {
+                existModel.name
+            }
+
             pipelineInfoDao.restore(
                 dslContext = transactionContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
+                pipelineName = pipelineName,
                 userId = userId,
                 channelCode = channelCode
             )
