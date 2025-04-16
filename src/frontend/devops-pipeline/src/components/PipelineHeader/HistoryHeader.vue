@@ -30,7 +30,7 @@
                 {{ $t("switchToReleaseVersion") }}
             </bk-button>
             <badge
-                v-if="isReleaseVersion"
+                v-if="!isTemplate && isReleaseVersion"
                 class="pipeline-exec-badge"
                 :project-id="projectId"
                 :pipeline-id="uniqueId"
@@ -84,7 +84,13 @@
             >
                 {{ $t("edit") }}
             </bk-button>
-            <template v-if="!isTemplate">
+            <bk-button
+                v-if="isTemplate && isReleaseVersion"
+                @click="handleToInstanceEntry"
+            >
+                {{ $t('template.instantiate') }}
+            </bk-button>
+            <template v-else-if="isTemplate">
                 <template v-if="editAndExecutable">
                     <span v-bk-tooltips="tooltip">
                         <bk-button
@@ -341,6 +347,16 @@
                         ...this.$route.params,
                         version: versionId,
                         type: routeType
+                    }
+                })
+            },
+            handleToInstanceEntry () {
+                this.$router.push({
+                    name: 'instanceEntry',
+                    params: {
+                        ...this.$route.params,
+                        version: this.pipelineInfo?.releaseVersion,
+                        type: 'create'
                     }
                 })
             }
