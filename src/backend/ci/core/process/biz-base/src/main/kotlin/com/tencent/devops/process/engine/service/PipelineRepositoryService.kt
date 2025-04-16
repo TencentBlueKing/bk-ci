@@ -1641,10 +1641,8 @@ class PipelineRepositoryService constructor(
             ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
-        val pipelineSetting = pipelineSettingDao.getSetting(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId
+        val pipelineVersionSimple = pipelineResourceVersionDao.getPipelineVersionSimple(
+            dslContext, projectId, pipelineId, record.version
         )
 
         val pipelineResult = DeletePipelineResult(pipelineId, record.pipelineName, record.version)
@@ -1687,12 +1685,12 @@ class PipelineRepositoryService constructor(
                         desc = "DELETE BY $userId in $deleteTime"
                     )
                     // 同时要对对应setting version中的name做设置,不然恢复时流水线详情展示的名称不对
-                    pipelineSetting?.let {
+                    pipelineVersionSimple?.settingVersion?.let {
                         pipelineSettingVersionDao.updateSetting(
                             dslContext = transactionContext,
                             projectId = projectId,
                             pipelineId = pipelineId,
-                            version = it.version,
+                            version = it,
                             name = deleteName,
                             desc = "DELETE BY $userId in $deleteTime"
                         )
@@ -1983,11 +1981,6 @@ class PipelineRepositoryService constructor(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
-        val pipelineSetting = pipelineSettingDao.getSetting(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId
-        )
         val existModel = existResource.model
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -2044,12 +2037,12 @@ class PipelineRepositoryService constructor(
                 desc = "restore BY $userId in $restoreTime"
             )
             // 恢复对应setting version中的流水线名称和描述
-            pipelineSetting?.let {
+            existResource.settingVersion?.let {
                 pipelineSettingVersionDao.updateSetting(
                     dslContext = transactionContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    version = it.version,
+                    version = it,
                     name = pipelineName,
                     desc = "restore BY $userId in $restoreTime"
                 )
