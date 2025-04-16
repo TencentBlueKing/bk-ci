@@ -101,7 +101,7 @@
             >
                 {{ $t('template.instantiate') }}
             </bk-button>
-            <template v-else-if="isTemplate">
+            <template v-else-if="!isTemplate">
                 <template v-if="editAndExecutable">
                     <span v-bk-tooltips="tooltip">
                         <bk-button

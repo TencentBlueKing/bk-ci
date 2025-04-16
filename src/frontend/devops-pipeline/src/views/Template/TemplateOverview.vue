@@ -118,7 +118,7 @@
     const projectId = computed(() => proxy.$route.params.projectId)
     const activeMenuItem = computed(() => proxy.$route.params.type || 'instanceList')
     const activeChild = computed(() => getNavComponent(activeMenuItem.value))
-    const canEdit = computed(() => pipelineInfo.value.canEdit)
+    const canEdit = computed(() => pipelineInfo.value?.canEdit)
     const canDelete = computed(() => pipelineInfo.value?.canDelete)
     const templateId = computed(() => pipelineInfo.value?.id)
     const isDirectShowVersion = computed(() => proxy.$route.params.isDirectShowVersion || false)
