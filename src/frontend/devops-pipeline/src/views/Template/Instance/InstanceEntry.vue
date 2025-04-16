@@ -23,7 +23,7 @@
                         v-if="isInstanceCreateViewType"
 
                         theme="primary"
-                        @click="handle "
+                        @click="handleBatchUpgrade"
                     >
                         {{ $t('release') }}
                     </bk-button>
@@ -51,8 +51,19 @@
                         slot="aside"
                         :is-instance-create-type="isInstanceCreateViewType"
                     />
-                    <div slot="main">
-                        123
+                    <bk-exception
+                        v-if="isInstanceCreateViewType"
+                        ext-cls="instance-contents-empty"
+                        slot="main"
+                        type="empty"
+                    >
+                        {{ $t('template.pleaseSelectTemplateVersion') }}
+                    </bk-exception>
+                    <div
+                        v-else
+                        slot="main"
+                    >
+                        <InstanceConfig />
                     </div>
                 </bk-resize-layout>
             </main>
@@ -65,6 +76,7 @@
     import UseInstance from '@/hook/useInstance'
     import { computed, onMounted, ref, watch } from 'vue'
     import InstanceAside from './InstanceAside'
+    import InstanceConfig from './InstanceConfig'
     import TemplateVersionSelector from './TemplateVersionSelector'
     const { proxy } = UseInstance()
 
@@ -135,6 +147,9 @@
     .instance-contents,
     .instance-contents-layout {
         height: 100%;
+    }
+    .instance-contents-empty {
+        margin-top: 10%;
     }
     .instance-entry-aside {
         margin-right: 24px;

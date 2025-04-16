@@ -61,3 +61,4 @@ export const TEMPLATE_MODE = {
 }
 
 export const SET_INSTANCE_LIST = 'SET_INSTANCE_LIST'
+export const SET_TEMPLATE_DETAIL = 'SET_TEMPLATE_DETAIL'

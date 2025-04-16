@@ -51,7 +51,8 @@
                         name: 'TemplateOverview',
                         params: {
                             ...proxy.$route.params,
-                            version: pipelineInfo.value?.releaseVersion
+                            version: pipelineInfo.value?.releaseVersion,
+                            type: 'instanceList'
                         }
                     })
                 }

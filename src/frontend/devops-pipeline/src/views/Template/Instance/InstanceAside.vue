@@ -14,7 +14,7 @@
                 path="template.selectPipelineNum"
             >
                 <span class="select-num">
-                    {{ 5 }}
+                    {{ renderInstanceList.length }}
                 </span>
             </i18n>
             <div class="batch-edit-btn">
@@ -97,6 +97,8 @@
     const instanceActiveIndex = ref(0)
     const editingIndex = ref(null)
     const nameInputRef = ref(null)
+    const projectId = computed(() => proxy.$route.params?.projectId)
+    const templateId = computed(() => proxy.$route.params?.templateId)
     const instanceList = computed(() => proxy.$store?.state?.templates?.instanceList)
     const currentVersionId = computed(() => proxy?.$route.params?.version)
     const renderInstanceList = computed(() => {
@@ -117,7 +119,20 @@
     function handleCopyInstance (instance, index) {
 
     }
-    onMounted(() => {
+    async function fetchPipelinesDetails () {
+        try {
+            const pipelineIds = renderInstanceList.value.map(i => i.pipelineId)
+            const res = await proxy.$store.dispatch('templates/fetchPipelineDetailById', {
+                pipelineIds,
+                projectId: projectId.value,
+                templateId: templateId.value
+            })
+            console.log(res, 11)
+        } catch (e) {
+            console.error(e)
+        }
+    }
+    function init () {
         if (!props.isInstanceCreateType && !instanceList.value.length) {
             proxy.$router.push({
                 name: 'TemplateOverview',
@@ -126,7 +141,14 @@
                     version: currentVersionId.value
                 }
             })
+            return
         }
+        if (!props.isInstanceCreateType) {
+            fetchPipelinesDetails()
+        }
+    }
+    onMounted(() => {
+        init()
     })
 </script>
 
