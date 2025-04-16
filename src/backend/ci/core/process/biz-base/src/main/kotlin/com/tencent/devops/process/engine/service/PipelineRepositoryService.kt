@@ -126,14 +126,14 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import jakarta.ws.rs.core.Response
+import java.time.LocalDateTime
+import java.util.concurrent.atomic.AtomicInteger
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.concurrent.atomic.AtomicInteger
-import jakarta.ws.rs.core.Response
 
 @Suppress(
     "LongParameterList",
@@ -1429,7 +1429,7 @@ class PipelineRepositoryService constructor(
         version: Int? = null,
         includeDraft: Boolean? = false,
         queryDslContext: DSLContext? = null,
-        editPermission: Boolean? = true
+        encryptedFlag: Boolean? = false
     ): PipelineResourceVersion? {
         // TODO 取不到则直接从旧版本表读，待下架
         val resource = if (version == null) {
@@ -1457,7 +1457,7 @@ class PipelineRepositoryService constructor(
         // 3 所有插件ENV配置合并历史值，并过滤掉默认值
         var randomSeed = 1
         val jobIdSet = mutableSetOf<String>()
-        val elementSensitiveParamInfos = if (editPermission == false && resource?.model != null) {
+        val elementSensitiveParamInfos = if (encryptedFlag == true && resource?.model != null) {
             AtomUtils.getModelElementSensitiveParamInfos(projectId, resource.model, client)
         } else {
             null

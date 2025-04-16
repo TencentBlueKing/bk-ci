@@ -85,11 +85,11 @@ import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
+import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import jakarta.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -707,7 +707,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             version = version,
             includeDraft = true,
-            editPermission = editPermission
+            encryptedFlag = !editPermission
         ) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
             params = arrayOf(version.toString())

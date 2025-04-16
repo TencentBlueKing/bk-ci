@@ -95,7 +95,7 @@ data class DetailWebsocketPush(
                 buildId = buildId!!,
                 executeCount = null,
                 channelCode = ChannelCode.BS,
-                encryptedFlag = false
+                encryptedFlag = true
             )
             message.notifyPost.message = JsonUtil.toJson(modelDetail, formatted = false)
         } catch (ignore: Exception) {

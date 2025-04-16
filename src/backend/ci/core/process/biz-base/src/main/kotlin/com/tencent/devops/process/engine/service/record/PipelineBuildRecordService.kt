@@ -170,7 +170,7 @@ class PipelineBuildRecordService @Autowired constructor(
         executeCount: Int?,
         refreshStatus: Boolean = true,
         queryDslContext: DSLContext? = null,
-        encryptedFlag: Boolean? = true
+        encryptedFlag: Boolean? = false
     ): ModelRecord? {
         // 直接取构建记录数据，防止接口传错
         val projectId = buildInfo.projectId
@@ -225,7 +225,7 @@ class PipelineBuildRecordService @Autowired constructor(
             projectId = projectId,
             pipelineId = buildInfo.pipelineId
         )
-        val elementSensitiveParamInfos = if (encryptedFlag == false) {
+        val elementSensitiveParamInfos = if (encryptedFlag == true) {
             AtomUtils.getModelElementSensitiveParamInfos(projectId, model, client)
         } else {
             null

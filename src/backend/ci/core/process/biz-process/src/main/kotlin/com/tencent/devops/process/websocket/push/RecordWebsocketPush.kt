@@ -95,7 +95,7 @@ data class RecordWebsocketPush(
                 buildId = buildId!!,
                 executeCount = executeCount,
                 channelCode = ChannelCode.BS,
-                encryptedFlag = false
+                encryptedFlag = true
             )
             message.notifyPost.message = JsonUtil.toJson(modelRecord, formatted = false)
         } catch (ignore: Exception) {

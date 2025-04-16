@@ -144,10 +144,10 @@ import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil.recommendVersionKey
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.UriBuilder
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -1553,7 +1553,7 @@ class PipelineBuildFacadeService(
             buildId = buildId,
             executeCount = null,
             channelCode = channelCode,
-            encryptedFlag = pipelinePermissionService.checkPipelinePermission(
+            encryptedFlag = !pipelinePermissionService.checkPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -1569,7 +1569,7 @@ class PipelineBuildFacadeService(
         executeCount: Int?,
         channelCode: ChannelCode,
         archiveFlag: Boolean? = false,
-        encryptedFlag: Boolean? = true
+        encryptedFlag: Boolean? = false
     ): ModelRecord {
         val queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
         val buildInfo = pipelineRuntimeService.getBuildInfo(
@@ -1640,7 +1640,7 @@ class PipelineBuildFacadeService(
             executeCount = executeCount,
             channelCode = channelCode,
             archiveFlag = archiveFlag,
-            encryptedFlag = pipelinePermissionService.checkPipelinePermission(
+            encryptedFlag = !pipelinePermissionService.checkPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
