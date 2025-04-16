@@ -80,6 +80,7 @@
             <form-field
                 :hide-colon="true"
                 :label="$t('groupLabel')"
+                :desc="$t('groupLabelTips')"
             >
                 <select-input
                     :value="param.category"

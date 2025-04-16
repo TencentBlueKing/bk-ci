@@ -1706,5 +1706,6 @@
   "pipelineNameConventions": "Pipeline Naming Conventions:",
   "addLabels": "Add Label",
   "groupLabel": "Group labels",
+  "groupLabelTips": "Variables with the same label will be displayed in the same group in the view and execution preview interface",
   "notGrouped": "Not grouped"
 }
