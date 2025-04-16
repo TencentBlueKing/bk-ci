@@ -182,7 +182,7 @@
         {
             text: t('template.export'), // 导出
             handler: () => exportTemplate(pipelineInfo.value),
-            hasPermission: !canEdit.value,
+            hasPermission: canEdit.value,
             disablePermissionApi: true,
             isShow: true,
             permissionData: {
@@ -195,7 +195,7 @@
         {
             text: t('copy'), // 复制
             handler: () => copyTemplate(pipelineInfo.value),
-            hasPermission: !canEdit.value,
+            hasPermission: canEdit.value,
             disablePermissionApi: true,
             isShow: true,
             permissionData: {
@@ -208,7 +208,7 @@
         {
             text: t('delete'),
             handler: () => deleteTemplate(pipelineInfo.value, goTemplateManageList),
-            hasPermission: !canDelete.value,
+            hasPermission: canDelete.value,
             disablePermissionApi: true,
             isShow: true,
             permissionData: {
