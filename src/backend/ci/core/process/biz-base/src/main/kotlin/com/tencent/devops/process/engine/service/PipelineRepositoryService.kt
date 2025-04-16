@@ -2034,7 +2034,7 @@ class PipelineRepositoryService constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 name = pipelineName,
-                desc = "restore BY $userId in $restoreTime"
+                desc = "RESTORE BY $userId in $restoreTime"
             )
             // 恢复对应setting version中的流水线名称和描述
             existResource.settingVersion?.let {
@@ -2044,7 +2044,7 @@ class PipelineRepositoryService constructor(
                     pipelineId = pipelineId,
                     version = it,
                     name = pipelineName,
-                    desc = "restore BY $userId in $restoreTime"
+                    desc = "RESTORE BY $userId in $restoreTime"
                 )
             }
 
