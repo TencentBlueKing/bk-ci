@@ -357,7 +357,6 @@
                 hasOauth: false,
                 oauthing: false,
                 refreshing: false,
-                filePathDir: '.ci/',
                 newReleaseVersionName: '--',
                 branchList: [],
                 scrollLoadmoreConf: {
@@ -388,6 +387,9 @@
             ...mapState('pipelines', ['isManage']),
             ...mapGetters('atom', ['pacEnabled', 'yamlInfo', 'isTemplate']),
             ...mapState('common', ['pacSupportScmTypeList']),
+            filePathDir () {
+                return `.ci/${this.isTemplate ? 'templates/' : ''}`
+            },
             pacDesc () {
                 return {
                     content: this.$t('pacDesc'),

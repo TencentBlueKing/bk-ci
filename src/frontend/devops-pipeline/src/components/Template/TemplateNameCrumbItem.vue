@@ -5,19 +5,25 @@
             :name="typeIcon"
         />
         <span @click="goHistory">{{ templateName }}</span>
+        <pac-tag
+            v-if="pacEnabled"
+            :info="yamlInfo"
+        />
     </span>
 </template>
 
 <script>
 
     import Logo from '@/components/Logo'
+    import UseInstance from '@/hook/useInstance'
     import { TEMPLATE_TYPE } from '@/utils/pipelineConst'
     import { computed, defineComponent } from 'vue'
-    import UseInstance from '@/hook/useInstance'
+    import PacTag from '@/components/PacTag'
 
     export default defineComponent({
         components: {
-            Logo
+            Logo,
+            PacTag
         },
         props: {
             templateType: {
@@ -34,7 +40,9 @@
             const typeIcon = computed(() => {
                 return `${props.templateType.toLowerCase()}-template`
             })
+            const pacEnabled = computed(() => proxy.$store.getters['atom/pacEnabled'] ?? false)
             const pipelineInfo = computed(() => proxy.$store.state?.atom.pipelineInfo)
+            const yamlInfo = computed(() => pipelineInfo.value?.yamlInfo)
             function goHistory (e) {
                 if (proxy.$route.name !== 'TemplateOverview') {
                     e.stopPropagation()
@@ -51,6 +59,8 @@
 
             return {
                 typeIcon,
+                pacEnabled,
+                yamlInfo,
                 goHistory
             }
         }
