@@ -126,6 +126,7 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -133,7 +134,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicInteger
-import jakarta.ws.rs.core.Response
 
 @Suppress(
     "LongParameterList",
@@ -1641,6 +1641,11 @@ class PipelineRepositoryService constructor(
             ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
+        val pipelineSetting = pipelineSettingDao.getSetting(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
 
         val pipelineResult = DeletePipelineResult(pipelineId, record.pipelineName, record.version)
         val lock = PipelineModelLock(redisOperation, pipelineId)
@@ -1681,6 +1686,18 @@ class PipelineRepositoryService constructor(
                         name = deleteName,
                         desc = "DELETE BY $userId in $deleteTime"
                     )
+                    // 同时要对对应setting version中的name做设置,不然恢复时流水线详情展示的名称不对
+                    pipelineSetting?.let {
+                        pipelineSettingVersionDao.updateSetting(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            version = it.version,
+                            name = deleteName,
+                            desc = "DELETE BY $userId in $deleteTime"
+                        )
+                    }
+
                     // #4201 标志关联模板为删除
                     templatePipelineDao.softDelete(
                         dslContext = transactionContext,
@@ -1966,6 +1983,11 @@ class PipelineRepositoryService constructor(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
+        val pipelineSetting = pipelineSettingDao.getSetting(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
         val existModel = existResource.model
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -2012,9 +2034,33 @@ class PipelineRepositoryService constructor(
                 userId = userId,
                 channelCode = channelCode
             )
+            val restoreTime = org.joda.time.LocalDateTime.now().toString("yyMMddHHmmSS")
+            // 恢复setting中的名称和描述
+            pipelineSettingDao.updateSetting(
+                dslContext = transactionContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                name = pipelineName,
+                desc = "restore BY $userId in $restoreTime"
+            )
+            // 恢复对应setting version中的流水线名称和描述
+            pipelineSetting?.let {
+                pipelineSettingVersionDao.updateSetting(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    version = it.version,
+                    name = pipelineName,
+                    desc = "restore BY $userId in $restoreTime"
+                )
+            }
 
             // #4012 还原与模板的绑定关系
-            templatePipelineDao.restore(dslContext = transactionContext, projectId = projectId, pipelineId = pipelineId)
+            templatePipelineDao.restore(
+                dslContext = transactionContext,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
 
             // 只初始化相关信息
             val tasks = initModel(
