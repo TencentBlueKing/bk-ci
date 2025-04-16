@@ -88,6 +88,7 @@
 
 <script setup>
     import { ref, defineProps, computed, onMounted } from 'vue'
+    import { SET_INSTANCE_LIST } from '@/store/modules/templates/constants'
     import Logo from '@/components/Logo'
     import UseInstance from '@/hook/useInstance'
     const props = defineProps({
@@ -106,6 +107,11 @@
     })
     function handleInstanceClick (index) {
         instanceActiveIndex.value = index
+        proxy.$router.replace({
+            query: {
+                pipelineId: renderInstanceList.value[instanceActiveIndex.value].pipelineId
+            }
+        })
     }
     function handleEnterChangeName (index) {
         editingIndex.value = null
@@ -127,7 +133,13 @@
                 projectId: projectId.value,
                 templateId: templateId.value
             })
-            console.log(res, 11)
+            const list = renderInstanceList.value.map(i => {
+                return {
+                    ...i,
+                    ...res[i.pipelineId]
+                }
+            })
+            proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, list)
         } catch (e) {
             console.error(e)
         }
@@ -145,6 +157,7 @@
         }
         if (!props.isInstanceCreateType) {
             fetchPipelinesDetails()
+            handleInstanceClick(instanceActiveIndex.value)
         }
     }
     onMounted(() => {
@@ -176,6 +189,8 @@
     .instance-list {
         list-style: none;
         margin-top: 20px;
+        overflow: auto;
+        height: calc(100% - 140px);
         .item {
             display: flex;
             align-items: center;
