@@ -68,7 +68,7 @@ class ThirdPartyAgentBuildDao {
             if (executeCount != null) {
                 dsl.and(EXECUTE_COUNT.eq(executeCount).or(EXECUTE_COUNT.isNull))
             }
-            return dsl.fetchOne()
+            return dsl.fetchAny()
         }
     }
 
