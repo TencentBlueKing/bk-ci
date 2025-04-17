@@ -282,7 +282,12 @@ class ImageDao {
         }
     }
 
-    fun countImageRelease(dslContext: DSLContext, imageCode: String, version: String,imageStatus:ImageStatusEnum): Long {
+    fun countImageRelease(
+        dslContext: DSLContext,
+        imageCode: String,
+        version: String,
+        imageStatus: ImageStatusEnum
+    ): Long {
         return with(TImage.T_IMAGE) {
             dslContext.selectCount()
                 .from(this)
