@@ -111,7 +111,7 @@ class PipelineTemplateService @Autowired constructor(
 
     private fun isRelease(imageCode: String, imageVersion: String): Boolean {
         return client.get(ServiceStoreImageResource::class)
-            .getImageReleasedStatus(imageCode, imageVersion).data!!
+            .isReleasedStatus(imageCode, imageVersion).data!!
     }
 
     companion object {
