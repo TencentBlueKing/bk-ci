@@ -59,12 +59,10 @@
                     >
                         {{ $t('template.pleaseSelectTemplateVersion') }}
                     </bk-exception>
-                    <div
+                    <InstanceConfig
                         v-else
                         slot="main"
-                    >
-                        <InstanceConfig />
-                    </div>
+                    />
                 </bk-resize-layout>
             </main>
         </template>

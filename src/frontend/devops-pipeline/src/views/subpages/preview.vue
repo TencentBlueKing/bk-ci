@@ -200,7 +200,7 @@
                         >
                             <template
                                 slot="versionParams"
-                                v-if="!isVisibleVersion"
+                                v-if="!isVisibleVersion && versionParamValues.length"
                             >
                                 <pipeline-versions-form
                                     class="mb20"
