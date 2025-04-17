@@ -370,11 +370,11 @@
                 releaseParams: {
                     enablePac: false,
                     targetBranch: '',
+                    targetAction: '',
+                    filePath: '',
                     scmType: '',
                     description: '',
-                    repoHashId: '',
-                    filePath: '',
-                    targetAction: ''
+                    repoHashId: ''
                 }
             }
         },
@@ -474,10 +474,17 @@
                 }
             },
             prefetchParams () {
+                const {
+                    targetBranch,
+                    targetAction,
+                    repoHashId,
+                    enablePac
+                } = this.releaseParams
                 return {
-                    targetBranch: this.releaseParams.targetBranch,
-                    targetAction: this.releaseParams.targetAction,
-                    repoHashId: this.releaseParams.repoHashId
+                    targetBranch,
+                    targetAction,
+                    repoHashId,
+                    enablePac
                 }
             }
         },
@@ -608,7 +615,7 @@
 
             async prefetchReleaseVersion (params) {
                 try {
-                    if (!this.version || (params.targetAction === TARGET_ACTION_ENUM.COMMIT_TO_BRANCH && !params.targetBranch)) {
+                    if (!this.value || !this.version || (params.targetAction === TARGET_ACTION_ENUM.COMMIT_TO_BRANCH && !params.targetBranch)) {
                         return
                     }
                     const prefetchFn = this.isTemplate ? this.prefetchTemplateVersion : this.prefetchPipelineVersion
