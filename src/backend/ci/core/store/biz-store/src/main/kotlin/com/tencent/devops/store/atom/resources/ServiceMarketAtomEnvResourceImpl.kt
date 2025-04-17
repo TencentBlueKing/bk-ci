@@ -30,9 +30,9 @@ package com.tencent.devops.store.atom.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
+import com.tencent.devops.store.atom.service.MarketAtomEnvService
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.common.version.StoreVersion
-import com.tencent.devops.store.atom.service.MarketAtomEnvService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -44,5 +44,12 @@ class ServiceMarketAtomEnvResourceImpl @Autowired constructor(private val market
         atomVersions: Set<StoreVersion>
     ): Result<Map<String, AtomRunInfo>?> {
         return marketAtomEnvService.batchGetAtomRunInfos(projectCode, atomVersions)
+    }
+
+    override fun batchGetAtomSensitiveParamInfos(
+        projectCode: String,
+        atomVersions: Set<StoreVersion>
+    ): Result<Map<String, String>?> {
+        return Result(marketAtomEnvService.batchGetAtomSensitiveParamInfos(projectCode, atomVersions))
     }
 }

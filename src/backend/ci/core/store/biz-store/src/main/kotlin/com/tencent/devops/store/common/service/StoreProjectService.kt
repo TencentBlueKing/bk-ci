@@ -92,7 +92,8 @@ interface StoreProjectService {
     fun isInstalledByProject(
         projectCode: String,
         storeCode: String,
-        storeType: Byte
+        storeType: Byte,
+        instanceId: String? = null
     ): Boolean
 
     /**
