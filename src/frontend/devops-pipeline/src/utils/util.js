@@ -931,3 +931,25 @@ export async function copyToClipboard (text) {
         document.body.removeChild(textArea)
     }
 }
+/**
+ *  根据ID判断列表中是否存在该项，并返回该项
+ * @param {{
+ *  id: number | string,
+ *  value: any
+ * }} list
+ * @param {any} id
+ * @returns any
+ */
+export function findItemById (list, id) {
+    try {
+        const listIdMap = list.reduce((acc, item) => {
+            if (item?.id) {
+                acc[item.id] = item
+            }
+            return acc
+        }, {})
+        return !!listIdMap[id]
+    } catch (error) {
+        return false
+    }
+}

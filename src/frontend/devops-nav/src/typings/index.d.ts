@@ -39,6 +39,7 @@ interface Window {
     BK_CI_VERSION: string
     PUBLIC_URL_PREFIX: string
     getLoginUrl: Function
+    diclosurePrjoectList: string[]
     attachEvent(event: string, listener: EventListener): boolean
     detachEvent(event: string, listener: EventListener): void
 }

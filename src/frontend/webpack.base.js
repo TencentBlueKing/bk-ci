@@ -1,6 +1,6 @@
 const webpack = require('webpack')
 const path = require('path')
-// const fs = require('fs')
+const fs = require('fs')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
 const { VueLoaderPlugin } = require('vue-loader')
@@ -186,10 +186,13 @@ module.exports = ({ entry, isConsole = false, publicPath, dist, port = 8080, arg
             client: {
                 webSocketURL: 'ws://127.0.0.1:' + port + '/ws'
             },
-            // https: {
-            //     key: fs.readFileSync(path.join(__dirname, 'localhost+2-key.pem')),
-            //     cert: fs.readFileSync(path.join(__dirname, './localhost+2.pem'))
-            // },
+            server: {
+                type: 'https',
+                options: {
+                    key: fs.readFileSync(path.join(__dirname, 'local.devops.woa.com.com+2-key.pem')),
+                    cert: fs.readFileSync(path.join(__dirname, './local.devops.woa.com.com+2.pem'))
+                }
+            },
             hot: isDev,
             port
         }

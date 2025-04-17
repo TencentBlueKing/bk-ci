@@ -1094,6 +1094,7 @@
     "noEnglishCommas": "每个选项不能包含英文逗号",
     "formatSupport": "与 HTML select 标签类似，选项支持 value=name / value 两种格式",
     "batchCopy": "一键复制",
+    "withoutOption": "选中项已不存在或你无权限查看",
     "randomlyGenerate": "<随机生成>",
     "enableVersionControl": "开启版本管理",
     "versionControlTip": "开启后，上传文件时，将在目录下自动生成版本路径，避免同名覆盖。"

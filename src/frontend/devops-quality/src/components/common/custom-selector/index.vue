@@ -403,7 +403,7 @@
              */
             localCoverAvatar (data) {
                 const member = data.isBkVar() ? 'un_know' : data
-                return `${USER_IMG_URL}/avatars/${member}/avatar.jpg`
+                return `${USER_IMG_URL}/${member}.png`
             },
             // 重置input
             resetInput () {
