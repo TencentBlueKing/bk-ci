@@ -156,13 +156,13 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
             ])
             const module = window.Pages[serviceAlias]
             store.registerModule(serviceAlias, module.store)
-            const dynamicRoute = {
+            const dynamicRoute = [{
                 path: '/console/',
                 component: Index,
                 children: module.routes
-            }
+            }]
             
-            router.addRoute(dynamicRoute)
+            router.addRoutes(dynamicRoute)
             setTimeout(() => {
                 store.dispatch('toggleModuleLoading', false)
             }, 100)
