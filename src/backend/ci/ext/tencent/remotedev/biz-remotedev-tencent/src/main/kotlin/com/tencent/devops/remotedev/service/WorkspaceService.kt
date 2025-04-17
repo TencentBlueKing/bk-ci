@@ -1153,19 +1153,26 @@ class WorkspaceService @Autowired constructor(
             null
         }
         val normalStatuses = setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.DISTRIBUTING)
-        return data.map { it ->
+        return data.map { env ->
             val normalNodeCount =
-                it.nodeHashIds?.count { workspaceStatus[it] in normalStatuses && cgsStatus?.get(node2HostMap[it]) == ComputerStatusEnum.NORMAL.status }
+                env.nodeHashIds?.count { workspaceStatus[it] in normalStatuses && cgsStatus?.get(node2HostMap[it]) == ComputerStatusEnum.NORMAL.status }
                     ?: 0
-            val abnormalNodeCount = (it.nodeHashIds?.size ?: 0) - normalNodeCount
+            val abnormalNodeCount = (env.nodeHashIds?.size ?: 0) - normalNodeCount
+            val currentLoginUsers = env.nodeHashIds?.flatMap { nodeHashId ->
+                nodeLoginMap[nodeHashId] ?: emptyList()
+            } ?: emptyList()
             WorkspaceEnv(
-                projectId = it.projectId,
-                envHashId = it.envHashId,
-                name = it.name,
+                projectId = env.projectId,
+                envHashId = env.envHashId,
+                name = env.name,
                 normalNodeCount = normalNodeCount,
                 abnormalNodeCount = max(abnormalNodeCount, 0),
-                inUseNodeCount = it.nodeHashIds?.count { !nodeLoginMap[it].isNullOrEmpty() } ?: 0,
-                nodeHashIds = it.nodeHashIds
+                inUseNodeCount = env.nodeHashIds?.count { nodeHashId -> !nodeLoginMap[nodeHashId].isNullOrEmpty() }
+                    ?: 0,
+                nodeHashIds = env.nodeHashIds,
+                currentLoginUsers = currentLoginUsers.mapIndexed { index, user ->
+                    if (index >= 3) user.take(1) + "*****" else user
+                }
             )
         }
     }

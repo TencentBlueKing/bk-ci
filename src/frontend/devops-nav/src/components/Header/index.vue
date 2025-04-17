@@ -1,6 +1,7 @@
 <template>
     <div class="devops-header">
         <div class="header-left-bar">
+            <Wedev />
             <router-link
                 class="header-logo"
                 to="/console/"
@@ -240,9 +241,11 @@
     import User from '../User/index.vue'
     import NavMenu from './NavMenu.vue'
     import Qrcode from './Qrcode.vue'
+    import Wedev from './WeDev.vue'
 
     @Component({
         components: {
+            Wedev,
             User,
             NavMenu,
             Qrcode,
