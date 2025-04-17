@@ -158,7 +158,8 @@ class ProjectTxInfoService @Autowired constructor(
                 projectName = it.projectName,
                 productId = it.productId,
                 productName = productService.getProductByProductId(it.productId)?.productName ?: "",
-                managers = projectManagers
+                managers = projectManagers,
+                bg = it.bgName
             )
         }
     }

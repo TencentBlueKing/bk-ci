@@ -16,6 +16,10 @@ class TxRbacSuperManagerService(
         action: String,
         resourceType: String
     ): Boolean {
+        managerService.checkUserSignatureStatus(
+            projectId = projectCode,
+            userId = userId
+        )
         val projectManageAction = RbacAuthUtils.buildAction(AuthPermission.MANAGE, AuthResourceType.PROJECT)
         if (action == projectManageAction) {
             return false
