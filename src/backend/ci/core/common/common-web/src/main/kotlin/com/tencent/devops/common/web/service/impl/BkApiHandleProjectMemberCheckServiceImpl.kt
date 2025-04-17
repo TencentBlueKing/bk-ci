@@ -1,30 +1,24 @@
 package com.tencent.devops.common.web.service.impl
 
-import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_NEED_PARAM_
 import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_IS_NULL
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.service.BkApiHandleService
 import jakarta.servlet.http.HttpServletRequest
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
 
-@Service("HANDLE_PROJECT_MEMBER_CHECK")
-class BkApiHandleProjectMemberCheckServiceImpl @Autowired constructor(
-    private val client: Client,
-    private val tokenService: ClientTokenService
-) : BkApiHandleService {
+class BkApiHandleProjectMemberCheckServiceImpl : BkApiHandleService {
 
     companion object {
         private const val PROJECT_ID = "projectId"
         private const val USER_ID = "userId"
+        private var authProjectApi = SpringContextUtil.getBean(AuthProjectApi::class.java)
     }
 
     override fun handleBuildApiService(parameterNames: Array<String>, parameterValue: Array<Any>) {
@@ -84,10 +78,6 @@ class BkApiHandleProjectMemberCheckServiceImpl @Autowired constructor(
     }
 
     private fun checkProjectMember(userId: String, projectId: String): Boolean {
-        return client.get(ServiceProjectAuthResource::class).isProjectUser(
-            token = tokenService.getSystemToken(),
-            userId = userId,
-            projectCode = projectId
-        ).data ?: false
+        return authProjectApi.checkProjectUser(user = userId, serviceCode = null, projectCode = projectId)
     }
 }

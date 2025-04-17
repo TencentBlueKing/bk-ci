@@ -123,7 +123,7 @@ interface AuthProjectApi {
      * @param projectCode 项目编码
      * @param group 项目组角色
      */
-    fun checkProjectUser(user: String, serviceCode: AuthServiceCode, projectCode: String): Boolean
+    fun checkProjectUser(user: String, serviceCode: AuthServiceCode?, projectCode: String): Boolean
 
     /**
      * 判断是否某个项目的管理员
