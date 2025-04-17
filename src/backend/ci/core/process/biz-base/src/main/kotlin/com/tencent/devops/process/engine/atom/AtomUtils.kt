@@ -297,9 +297,14 @@ object AtomUtils {
             }
         }
         if (atomVersions.isEmpty()) return null
-        return client.get(ServiceMarketAtomEnvResource::class).batchGetAtomSensitiveParamInfos(
-            projectId,
-            atomVersions
-        ).data
+        val result = client.get(ServiceMarketAtomEnvResource::class).batchGetAtomSensitiveParamInfos(
+            projectCode = projectId,
+            atomVersions = atomVersions
+        )
+        return if (result.isNotOk()) {
+            null
+        } else {
+            result.data
+        }
     }
 }

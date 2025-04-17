@@ -841,14 +841,20 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
     }
 
     override fun getAtomSensitiveParams(props: String): List<String>? {
-        val propsMap: Map<String, Any> = jacksonObjectMapper().readValue(props)
-        return propsMap["input"]?.let { input ->
+        return try {
+            val propsMap: Map<String, Any> = jacksonObjectMapper().readValue(props)
+            propsMap["input"]?.let { input ->
                 (input as? Map<*, *>)?.flatMap { (key, value) ->
                     when {
-                        value is Map<*, *> && value["isSensitive"] == true -> listOf(key.toString())
+                        value is Map<*, *> && value["isSensitive"] as? Boolean == true ->
+                            listOf(key.toString())
                         else -> emptyList()
                     }
                 }
             }?.takeIf { it.isNotEmpty() }
+        } catch (e: Exception) {
+            logger.error("Parse atom props failed, props: $props", e)
+            null
+        }
     }
 }

@@ -681,13 +681,13 @@ class OpAtomServiceImpl @Autowired constructor(
             )
             val tAtom = TAtom.T_ATOM
             result.forEach {
-                val latestFlag = it[tAtom.LATEST_FLAG] as Boolean
+                val latestFlag = it[tAtom.LATEST_FLAG] as? Boolean
                 marketAtomService.updateAtomSensitiveCacheConfig(
                     atomCode = it[tAtom.ATOM_CODE],
                     atomVersion = it[tAtom.VERSION],
                     props = it[tAtom.PROPS]
                 )
-                if (latestFlag) {
+                if (latestFlag == true) {
                     marketAtomService.updateAtomSensitiveCacheConfig(
                         atomCode = it[tAtom.ATOM_CODE],
                         atomVersion = VersionUtils.convertLatestVersion(it[tAtom.VERSION]),
