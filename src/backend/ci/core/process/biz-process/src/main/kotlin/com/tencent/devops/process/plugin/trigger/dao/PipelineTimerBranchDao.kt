@@ -1,6 +1,7 @@
 package com.tencent.devops.process.plugin.trigger.dao
 
 import com.tencent.devops.model.process.Tables.T_PIPELINE_TIMER_BRANCH
+import com.tencent.devops.model.process.tables.TPipelineTimerBranch
 import com.tencent.devops.model.process.tables.records.TPipelineTimerBranchRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -114,29 +115,40 @@ class PipelineTimerBranchDao {
     fun delete(
         dslContext: DSLContext,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        taskId: String?,
+        repoHashId: String?,
+        branch: String?
     ): Int {
         with(T_PIPELINE_TIMER_BRANCH) {
+            val conditions = buildConditions(projectId, pipelineId, taskId, repoHashId, branch)
             return dslContext.deleteFrom(this)
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(PIPELINE_ID.eq(pipelineId))
+                    .where(conditions)
                     .execute()
         }
     }
 
-    fun delete(
-        dslContext: DSLContext,
+    private fun TPipelineTimerBranch.buildConditions(
         projectId: String,
         pipelineId: String,
-        taskId: String
-    ): Int {
-        with(T_PIPELINE_TIMER_BRANCH) {
-            return dslContext.deleteFrom(this)
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(PIPELINE_ID.eq(pipelineId))
-                    .and(TASK_ID.eq(taskId))
-                    .execute()
+        taskId: String?,
+        repoHashId: String?,
+        branch: String?
+    ): List<Condition> {
+        val conditions = mutableListOf(
+            PROJECT_ID.eq(projectId),
+            PIPELINE_ID.eq(pipelineId)
+        )
+        if (taskId != null) {
+            conditions.add(TASK_ID.eq(taskId))
         }
+        if (repoHashId != null) {
+            conditions.add(REPO_HASH_ID.eq(repoHashId))
+        }
+        if (branch != null) {
+            conditions.add(BRANCH.eq(branch))
+        }
+        return conditions
     }
 
     fun deleteEmptyTaskId(

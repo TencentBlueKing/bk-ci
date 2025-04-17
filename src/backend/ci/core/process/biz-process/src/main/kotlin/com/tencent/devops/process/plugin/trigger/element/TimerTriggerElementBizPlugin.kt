@@ -119,11 +119,15 @@ class TimerTriggerElementBizPlugin constructor(
     override fun beforeDelete(element: TimerTriggerElement, param: BeforeDeleteParam) {
         if (param.pipelineId.isNotBlank()) {
             with(param) {
-                pipelineTimerService.deleteTimer(projectId, pipelineId, userId, element.id ?: "")
-                pipelineTimerService.deleteTimerBranch(projectId, pipelineId,  "").let {
-                    logger.info("$pipelineId|delete empty taskId timer branch|deleteCount=$it")
-                }
-                pipelineTimerService.deleteTimerBranch(projectId, pipelineId,  element.id ?: "").let {
+                val taskId  = element.id ?: ""
+                pipelineTimerService.deleteTimer(projectId, pipelineId, userId, taskId)
+                pipelineTimerService.deleteTimerBranch(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    repoHashId = null,
+                    branch = null,
+                    taskId = taskId
+                ).let {
                     logger.info("$pipelineId|delete [${element.id}] timer branch|deleteCount=$it")
                 }
             }

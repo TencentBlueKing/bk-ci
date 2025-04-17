@@ -34,6 +34,7 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 
 /**
@@ -186,16 +187,28 @@ open class PipelineTimerUpgradeService @Autowired constructor(
                 val model = pipelineRepositoryService.getModel(projectId, pipelineId)
                 // 流水线不存在，清除数据
                 if (model == null) {
-                    val deleteCount = pipelineTimerService.deleteTimerBranch(projectId, pipelineId)
-                    logger.warn("model is null|deleted $deleteCount timer branch|$projectId|$pipelineId")
+                    val deleteCount = pipelineTimerService.deleteTimerBranch(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        repoHashId = null,
+                        branch = null,
+                        taskId = null
+                    )
+                    logger.warn("model is null|deleted $deleteCount|$projectId|$pipelineId")
                     return@parseModel
                 }
                 val timerTriggerConfig = getTimerTriggerConfig(model)
                 // 没有触发器开启noScm，清除数据
                 val noScmTimerList = timerTriggerConfig.filter { config -> config.noScm == true }
                 if (noScmTimerList.isEmpty()) {
-                    val deleteCount = pipelineTimerService.deleteTimerBranch(projectId, pipelineId)
-                    logger.warn("noScm trigger is not exist|deleted $deleteCount timer branch|$projectId|$pipelineId")
+                    val deleteCount = pipelineTimerService.deleteTimerBranch(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        repoHashId = null,
+                        branch = null,
+                        taskId = null
+                    )
+                    logger.warn("noScm trigger is not exist|deleted $deleteCount|$projectId|$pipelineId")
                     return@parseModel
                 }
                 // 已保存的[定时触发版本信息]
@@ -217,7 +230,7 @@ open class PipelineTimerUpgradeService @Autowired constructor(
                             sourceTaskId = null,
                             targetTaskId = noScmTimerList.first().id ?: ""
                         )
-                        logger.info("change timer branch|updated $updateCount timer branch|$projectId|$pipelineId")
+                        logger.info("change timer branch|updated $updateCount|$projectId|$pipelineId")
                     }
                     // 一个触发器，配置了多条分支，其中有部分record存在taskId，仅需更新空taskId的数据即可
                     noScmTimerList.size == 1 -> {
@@ -232,9 +245,21 @@ open class PipelineTimerUpgradeService @Autowired constructor(
                                     sourceTaskId = "",
                                     targetTaskId = taskId
                                 )
+                            } catch (ignored: DuplicateKeyException) {
+                                // 主键冲突，移除脏数据
+                                val deleteCount = pipelineTimerService.deleteTimerBranch(
+                                    projectId = projectId,
+                                    pipelineId = pipelineId,
+                                    repoHashId = record.repoHashId,
+                                    branch = record.branch,
+                                    taskId = ""
+                                )
+                                logger.warn("duplicate key|deleted $deleteCount|$projectId|$pipelineId|" +
+                                        "${record.branch}|${record.repoHashId}")
+                                return@changeEmptyTaskId
                             } catch (ignored: Exception) {
                                 logger.warn(
-                                    "fail ed to update timer branch|$projectId|$pipelineId|$taskId" +
+                                    "fail to update timer branch|$projectId|$pipelineId|$taskId" +
                                             "${record.branch}|${record.repoHashId}", ignored
                                 )
                                 return@changeEmptyTaskId
@@ -247,7 +272,13 @@ open class PipelineTimerUpgradeService @Autowired constructor(
                     }
                     // 流水线存在多个触发器，存量数据中存在taskId为空的脏数据
                     noScmTimerList.size > 1 && !noRecordsHaveTaskId -> {
-                        val deleteCount = pipelineTimerService.deleteTimerBranch(projectId, pipelineId, "")
+                        val deleteCount = pipelineTimerService.deleteTimerBranch(
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            repoHashId = null,
+                            branch = null,
+                            taskId = ""
+                        )
                         logger.warn("clean empty taskId|deleted $deleteCount timer branch|$projectId|$pipelineId")
                     }
 
