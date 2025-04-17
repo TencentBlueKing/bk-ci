@@ -377,7 +377,7 @@ abstract class StorePackageDeployService {
             storeType = storeType,
             version = version
         )?.status
-        return if (status== StoreStatusEnum.GROUNDING_SUSPENSION.name) {
+        return if (status == StoreStatusEnum.GROUNDING_SUSPENSION.name) {
             ReleaseTypeEnum.CANCEL_RE_RELEASE
         } else {
             baseInfo.versionInfo.releaseType
