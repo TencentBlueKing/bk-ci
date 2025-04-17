@@ -5,7 +5,7 @@
         }]"
     >
         <header>
-            <HisotryHeader />
+            <HistoryHeader />
             <ext-menu
                 type="template"
                 :data="pipelineInfo"
@@ -80,23 +80,23 @@
 </template>
 
 <script setup>
-    import { computed } from 'vue'
     import Logo from '@/components/Logo'
-    import CopyTemplateDialog from '@/components/Template/CopyTemplateDialog.vue'
     import {
         ChangeLog,
         PipelineConfig
     } from '@/components/PipelineDetailTabs'
     import { AuthorityTab, ShowVariable } from '@/components/PipelineEditTabs/'
-    import HisotryHeader from '@/components/PipelineHeader/HistoryHeader'
-    import Instance from '@/views/Template/InstanceList'
-    import ExtMenu from './List/extMenu'
+    import HistoryHeader from '@/components/PipelineHeader/HistoryHeader.vue'
+    import CopyTemplateDialog from '@/components/Template/CopyTemplateDialog.vue'
     import UseInstance from '@/hook/useInstance'
     import useTemplateActions from '@/hook/useTemplateActions'
     import {
         RESOURCE_ACTION,
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
+    import Instance from '@/views/Template/InstanceList'
+    import { computed } from 'vue'
+    import ExtMenu from './List/extMenu'
 
     const {
         copyTemp,
@@ -118,7 +118,7 @@
     const projectId = computed(() => proxy.$route.params.projectId)
     const activeMenuItem = computed(() => proxy.$route.params.type || 'instanceList')
     const activeChild = computed(() => getNavComponent(activeMenuItem.value))
-    const canEdit = computed(() => pipelineInfo.value.canEdit)
+    const canEdit = computed(() => pipelineInfo.value?.canEdit)
     const canDelete = computed(() => pipelineInfo.value?.canDelete)
     const templateId = computed(() => pipelineInfo.value?.id)
     const isDirectShowVersion = computed(() => proxy.$route.params.isDirectShowVersion || false)

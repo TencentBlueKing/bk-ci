@@ -49,7 +49,7 @@
 
 <script>
     import ModeSwitch from '@/components/ModeSwitch'
-    import TemplateBreadCrumb from '@/components/template/TemplateBreadCrumb'
+    import TemplateBreadCrumb from '@/components/Template/TemplateBreadCrumb'
     import {
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
@@ -59,7 +59,7 @@
     } from '@/utils/util'
     import Edit from '@/views/subpages/edit'
     import { mapActions, mapGetters, mapState } from 'vuex'
-    import ReleaseButton from '../../components/PipelineHeader/ReleaseButton.vue'
+    import ReleaseButton from '@/components/PipelineHeader/ReleaseButton.vue'
 
     export default {
         components: {

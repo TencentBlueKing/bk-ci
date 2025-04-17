@@ -518,7 +518,10 @@
     "repositoryPlaceholder": "Please select the code repository",
     "addField": "Add Field",
     "keyword": "Please enter name keyword",
-    "selectAll": "Select All"
+    "selectAll": "Select All",
+    "pleaseSelectTemplateVersion": "Please select the template version",
+    "instanceConfig": "Instance Config",
+    "pipelineBuildParams": "Build Params"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
@@ -1640,7 +1643,7 @@
   "versionRuleA": "Additional bits: Modified version of other information of the pipeline, such as name, description, running settings, etc.",
   "willRelease": "To be released",
   "clickToAddStage": "Click to add the first pipeline stage",
-  "buildMsg": "Build Message",
+  "buildMsg": "Build",
   "executeStepPreview": "Preview of steps to be executed",
   "yamlFilePathErrorTip": "File path must end with .yml or .yaml",
   "yamlFilePathPlaceholder": "build.yml or build.yaml",
@@ -1747,5 +1750,7 @@
   "pipelineTemplate": "Pipeline",
   "allSource": "All",
   "customSource": "Custom",
-  "marketSource": "Store"
+  "marketSource": "Store",
+  "groupLabel": "Group labels",
+  "notGrouped": "Not grouped"
 }
