@@ -36,9 +36,7 @@ import com.tencent.bk.sdk.iam.dto.response.ResponseDTO
 import com.tencent.devops.auth.common.Constants.DEPT_LABEL
 import com.tencent.devops.auth.common.Constants.HTTP_RESULT
 import com.tencent.devops.auth.common.Constants.ID
-import com.tencent.devops.auth.common.Constants.LEVEL
 import com.tencent.devops.auth.common.Constants.NAME
-import com.tencent.devops.auth.common.Constants.PARENT
 import com.tencent.devops.auth.common.Constants.USERNAME
 import com.tencent.devops.auth.common.Constants.USER_LABEL
 import com.tencent.devops.auth.common.Constants.USER_NAME_AND_DISPLAY_NAME_LABEL
@@ -59,8 +57,9 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.pojo.EsbBaseReq
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.TimeUnit
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -68,11 +67,8 @@ import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import java.util.concurrent.CopyOnWriteArrayList
-import java.util.concurrent.TimeUnit
 
 class AuthDeptServiceImpl @Autowired constructor(
-    private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper
 ) : DeptService {
 
@@ -108,37 +104,112 @@ class AuthDeptServiceImpl @Autowired constructor(
     // 已离职成员
     private val departedMembersCache = CopyOnWriteArrayList<String>()
 
-    override fun getDeptByLevel(level: Int, accessToken: String?, userId: String): DeptInfoVo {
+
+    override fun getUserParentDept(userId: String, tenantId: String?): Int {
+        val deptSearchResponse = getUserDeptFamily(userId)
+        val deptId = getUserLastDeptId(deptSearchResponse)
+        val parentSearch = SearchRetrieveDeptEntity(
+            id = deptId,
+            bk_app_code = appCode!!,
+            bk_app_secret = appSecret!!,
+            bk_username = userId
+        )
+        val userCenterResponse = callUserCenter(RETRIEVE_DEPARTMENT, parentSearch)
+        return getParentDept(userCenterResponse)
+    }
+
+    override fun getDeptByName(deptName: String, userId: String, tenantId: String?): DeptInfoVo? {
         val search = SearchUserAndDeptEntity(
             bk_app_code = appCode!!,
             bk_app_secret = appSecret!!,
             bk_username = userId,
             fields = null,
-            lookupField = LEVEL,
-            exactLookups = level,
+            lookupField = NAME,
+            exactLookups = deptName,
             fuzzyLookups = null,
-            accessToken = accessToken
+            accessToken = null
         )
         return getDeptInfo(search)
     }
 
-    override fun getDeptByParent(parentId: Int, accessToken: String?, userId: String, pageSize: Int?): DeptInfoVo {
-        val search = SearchUserAndDeptEntity(
-            bk_app_code = appCode!!,
-            bk_app_secret = appSecret!!,
-            bk_username = userId,
-            fields = null,
-            lookupField = PARENT,
-            exactLookups = parentId,
-            fuzzyLookups = null,
-            accessToken = accessToken,
-            pageSize = pageSize ?: null
+    override fun getUserDeptInfo(userId: String, tenantId: String?): Set<String> {
+        if (userId.endsWith("@tai"))
+            return emptySet()
+        if (userDeptCache.getIfPresent(userId) != null) {
+            return userDeptCache.getIfPresent(userId)!!
+        }
+        val deptFamilyInfo = getUserDeptFamily(userId)
+        val userDeptIds = getUserDeptTreeIds(deptFamilyInfo)
+        userDeptCache.put(userId, userDeptIds)
+        return userDeptIds
+    }
+
+    override fun getUserInfo(userId: String, name: String, tenantId: String?): UserAndDeptInfoVo? {
+        return userInfoCache.getIfPresent(name) ?: getUserAndPutInCache(userId, name)
+    }
+
+    override fun getMemberInfo(
+        memberId: String,
+        memberType: ManagerScopesEnum,
+        tenantId: String?
+    ): UserAndDeptInfoVo {
+        return listMemberInfos(
+            memberIds = listOf(memberId),
+            memberType = memberType
+        ).firstOrNull() ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.USER_NOT_EXIST,
+            params = arrayOf(memberId),
+            defaultMessage = "member $memberId not exist"
         )
-        return getDeptInfo(search)
+    }
+
+    @Suppress("NestedBlockDepth")
+    override fun listMemberInfos(
+        memberIds: List<String>,
+        memberType: ManagerScopesEnum,
+        tenantId: String?
+    ): List<UserAndDeptInfoVo> {
+        val cacheResult = memberInfoCache.getAllPresent(memberIds)
+        val membersNotInCache = memberIds.filterNot { cacheResult.containsKey(it) || departedMembersCache.contains(it) }
+
+        if (membersNotInCache.isNotEmpty()) {
+            val fetchedMembers = fetchMemberInfos(membersNotInCache, memberType)
+            fetchedMembers.forEach {
+                if (it.type == ManagerScopesEnum.USER) {
+                    memberInfoCache.put(it.name, it)
+                    val departedMembers = membersNotInCache.subtract(fetchedMembers.map { it.name }.toSet())
+                    if (departedMembers.isNotEmpty()) {
+                        departedMembersCache.addAll(departedMembers)
+                    }
+                } else {
+                    memberInfoCache.put(it.id.toString(), it)
+                }
+            }
+        }
+        return memberInfoCache.getAllPresent(memberIds).values.toList()
+    }
+
+    override fun listDepartedMembers(memberIds: List<String>, tenantId: String?): List<String> {
+        val activeMembers = listMemberInfos(
+            memberIds = memberIds,
+            memberType = ManagerScopesEnum.USER
+        ).map { it.name }
+        return memberIds.subtract(activeMembers.toSet()).toList()
+    }
+
+    override fun isUserDeparted(userId: String, tenantId: String?): Boolean {
+        return if (departedMembersCache.contains(userId)) {
+            true
+        } else {
+            listMemberInfos(
+                memberIds = listOf(userId),
+                memberType = ManagerScopesEnum.USER
+            ).isEmpty()
+        }
     }
 
     @Suppress("ComplexMethod")
-    override fun getUserAndDeptByName(
+    private fun getUserAndDeptByName(
         name: String,
         accessToken: String?,
         userId: String,
@@ -206,117 +277,6 @@ class AuthDeptServiceImpl @Autowired constructor(
             else -> {}
         }
         return userAndDeptInfos
-    }
-
-    override fun getDeptUser(deptId: Int, accessToken: String?): List<String> {
-        return if (deptUserCache.getIfPresent(deptId.toString()) != null) {
-            deptUserCache.getIfPresent(deptId.toString())!!
-        } else {
-            val deptUsers = getAndRefreshDeptUser(deptId, accessToken)
-            deptUserCache.put(deptId.toString(), deptUsers)
-            deptUsers
-        }
-    }
-
-    override fun getUserParentDept(userId: String): Int {
-        val deptSearchResponse = getUserDeptFamily(userId)
-        val deptId = getUserLastDeptId(deptSearchResponse)
-        val parentSearch = SearchRetrieveDeptEntity(
-            id = deptId,
-            bk_app_code = appCode!!,
-            bk_app_secret = appSecret!!,
-            bk_username = userId
-        )
-        val userCenterResponse = callUserCenter(RETRIEVE_DEPARTMENT, parentSearch)
-        return getParentDept(userCenterResponse)
-    }
-
-    override fun getDeptByName(deptName: String, userId: String): DeptInfoVo? {
-        val search = SearchUserAndDeptEntity(
-            bk_app_code = appCode!!,
-            bk_app_secret = appSecret!!,
-            bk_username = userId,
-            fields = null,
-            lookupField = NAME,
-            exactLookups = deptName,
-            fuzzyLookups = null,
-            accessToken = null
-        )
-        return getDeptInfo(search)
-    }
-
-    override fun getUserDeptInfo(userId: String): Set<String> {
-        if (userId.endsWith("@tai"))
-            return emptySet()
-        if (userDeptCache.getIfPresent(userId) != null) {
-            return userDeptCache.getIfPresent(userId)!!
-        }
-        val deptFamilyInfo = getUserDeptFamily(userId)
-        val userDeptIds = getUserDeptTreeIds(deptFamilyInfo)
-        userDeptCache.put(userId, userDeptIds)
-        return userDeptIds
-    }
-
-    override fun getUserInfo(userId: String, name: String): UserAndDeptInfoVo? {
-        return userInfoCache.getIfPresent(name) ?: getUserAndPutInCache(userId, name)
-    }
-
-    override fun getMemberInfo(
-        memberId: String,
-        memberType: ManagerScopesEnum
-    ): UserAndDeptInfoVo {
-        return listMemberInfos(
-            memberIds = listOf(memberId),
-            memberType = memberType
-        ).firstOrNull() ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.USER_NOT_EXIST,
-            params = arrayOf(memberId),
-            defaultMessage = "member $memberId not exist"
-        )
-    }
-
-    @Suppress("NestedBlockDepth")
-    override fun listMemberInfos(
-        memberIds: List<String>,
-        memberType: ManagerScopesEnum
-    ): List<UserAndDeptInfoVo> {
-        val cacheResult = memberInfoCache.getAllPresent(memberIds)
-        val membersNotInCache = memberIds.filterNot { cacheResult.containsKey(it) || departedMembersCache.contains(it) }
-
-        if (membersNotInCache.isNotEmpty()) {
-            val fetchedMembers = fetchMemberInfos(membersNotInCache, memberType)
-            fetchedMembers.forEach {
-                if (it.type == ManagerScopesEnum.USER) {
-                    memberInfoCache.put(it.name, it)
-                    val departedMembers = membersNotInCache.subtract(fetchedMembers.map { it.name }.toSet())
-                    if (departedMembers.isNotEmpty()) {
-                        departedMembersCache.addAll(departedMembers)
-                    }
-                } else {
-                    memberInfoCache.put(it.id.toString(), it)
-                }
-            }
-        }
-        return memberInfoCache.getAllPresent(memberIds).values.toList()
-    }
-
-    override fun listDepartedMembers(memberIds: List<String>): List<String> {
-        val activeMembers = listMemberInfos(
-            memberIds = memberIds,
-            memberType = ManagerScopesEnum.USER
-        ).map { it.name }
-        return memberIds.subtract(activeMembers.toSet()).toList()
-    }
-
-    override fun isUserDeparted(userId: String): Boolean {
-        return if (departedMembersCache.contains(userId)) {
-            true
-        } else {
-            listMemberInfos(
-                memberIds = listOf(userId),
-                memberType = ManagerScopesEnum.USER
-            ).isEmpty()
-        }
     }
 
     private fun fetchMemberInfos(

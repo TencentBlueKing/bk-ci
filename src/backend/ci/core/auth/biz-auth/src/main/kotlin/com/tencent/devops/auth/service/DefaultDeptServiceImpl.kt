@@ -32,42 +32,19 @@ import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 
 class DefaultDeptServiceImpl : DeptService {
-
-    override fun getDeptByLevel(level: Int, accessToken: String?, userId: String): DeptInfoVo? {
-        return null
-    }
-
-    override fun getDeptByParent(parentId: Int, accessToken: String?, userId: String, pageSize: Int?): DeptInfoVo? {
-        return null
-    }
-
-    override fun getUserAndDeptByName(
-        name: String,
-        accessToken: String?,
-        userId: String,
-        type: ManagerScopesEnum,
-        exactLookups: Boolean?
-    ): List<UserAndDeptInfoVo?> {
-        return emptyList()
-    }
-
-    override fun getDeptUser(deptId: Int, accessToken: String?): List<String> {
-        return emptyList()
-    }
-
-    override fun getUserParentDept(userId: String): Int {
+    override fun getUserParentDept(userId: String, tenantId: String?): Int {
         return 0
     }
 
-    override fun getDeptByName(deptName: String, userId: String): DeptInfoVo? {
+    override fun getDeptByName(deptName: String, userId: String, tenantId: String?): DeptInfoVo? {
         return null
     }
 
-    override fun getUserDeptInfo(userId: String): Set<String> {
+    override fun getUserDeptInfo(userId: String, tenantId: String?): Set<String> {
         return emptySet()
     }
 
-    override fun getUserInfo(userId: String, name: String): UserAndDeptInfoVo? =
+    override fun getUserInfo(userId: String, name: String, tenantId: String?): UserAndDeptInfoVo? =
         UserAndDeptInfoVo(
             id = 0,
             name = name,
@@ -77,7 +54,8 @@ class DefaultDeptServiceImpl : DeptService {
 
     override fun getMemberInfo(
         memberId: String,
-        memberType: ManagerScopesEnum
+        memberType: ManagerScopesEnum,
+        tenantId: String?
     ): UserAndDeptInfoVo = UserAndDeptInfoVo(
         id = 0,
         name = memberId,
@@ -87,10 +65,11 @@ class DefaultDeptServiceImpl : DeptService {
 
     override fun listMemberInfos(
         memberIds: List<String>,
-        memberType: ManagerScopesEnum
+        memberType: ManagerScopesEnum,
+        tenantId: String?
     ): List<UserAndDeptInfoVo> = emptyList()
 
-    override fun listDepartedMembers(memberIds: List<String>): List<String> = emptyList()
+    override fun listDepartedMembers(memberIds: List<String>, tenantId: String?): List<String> = emptyList()
 
-    override fun isUserDeparted(userId: String): Boolean = false
+    override fun isUserDeparted(userId: String, tenantId: String?): Boolean = false
 }

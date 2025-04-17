@@ -34,7 +34,7 @@ import com.tencent.devops.common.notify.pojo.WechatNotifyPost
 import com.tencent.devops.notify.blueking.sdk.CMSApi
 
 @Suppress("ALL")
-class NotifyService(private val cmsApi: CMSApi) {
+open class NotifyService(private val cmsApi: CMSApi) {
 
     companion object {
         const val EMAIL_URL = "/api/c/compapi/cmsi/send_mail/"
@@ -45,7 +45,7 @@ class NotifyService(private val cmsApi: CMSApi) {
         const val VOICE_URL = "/api/c/compapi/cmsi/send_voice_msg/"
     }
 
-    fun post(url: String, postData: Any, tofConf: Map<String, String>? = null): NotifyResult {
+    open fun post(url: String, postData: Any, tofConf: Map<String, String>? = null): NotifyResult {
 
         val apiResp = when (url) {
             EMAIL_URL -> {
