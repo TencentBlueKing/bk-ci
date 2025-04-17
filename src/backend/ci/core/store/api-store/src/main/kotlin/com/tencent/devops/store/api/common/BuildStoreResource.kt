@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.env.StorePkgRunEnvInfo
+import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfResp
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -120,4 +121,16 @@ interface BuildStoreResource {
         @FormDataParam("file")
         disposition: FormDataContentDisposition
     ): Result<String?>
+
+    @Operation(summary = "根据组件版本ID获取组件发布版本进度")
+    @GET
+    @Path("/release/ids/{storeId}")
+    fun getProcessInfo(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "storeId", required = true)
+        @PathParam("storeId")
+        storeId: String
+    ): Result<StoreProcessInfo>
 }
