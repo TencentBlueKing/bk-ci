@@ -523,7 +523,8 @@
     "selectAll": "全选",
     "pleaseSelectTemplateVersion": "请选择模板版本",
     "instanceConfig": "实例配置",
-    "pipelineBuildParams": "流水线入参"
+    "pipelineBuildParams": "流水线入参",
+    "releasePipelineInstance": "发布流水线实例"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",
