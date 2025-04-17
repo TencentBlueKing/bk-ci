@@ -69,10 +69,10 @@ enum class StoreStatusEnum(val isProcessing: Boolean) {
 
         fun getStoreFinalStatusList(): List<String> {
             return mutableListOf(
-                StoreStatusEnum.AUDIT_REJECT.name,
-                StoreStatusEnum.RELEASED.name,
-                StoreStatusEnum.GROUNDING_SUSPENSION.name,
-                StoreStatusEnum.UNDERCARRIAGED.name
+                AUDIT_REJECT.name,
+                RELEASED.name,
+                GROUNDING_SUSPENSION.name,
+                UNDERCARRIAGED.name
             )
         }
     }
