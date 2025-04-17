@@ -42,7 +42,7 @@ data class ScmConfigBaseInfo(
     @get:Schema(title = "代码库类型,如git,svn", required = true)
     val scmType: ScmType,
     @get:Schema(title = "代码库域名,多个用;分割", required = true)
-    val hosts: String,
+    val hosts: String?,
     @get:Schema(title = "logo链接", required = true)
     val logoUrl: String?,
     @get:Schema(title = "文档链接", required = true)

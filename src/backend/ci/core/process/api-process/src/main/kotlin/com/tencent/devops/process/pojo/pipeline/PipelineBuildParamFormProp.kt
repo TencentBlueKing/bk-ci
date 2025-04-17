@@ -33,35 +33,37 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "流水线构建参数属性信息")
 open class PipelineBuildParamFormProp(
     @get:Schema(title = "参数key值", required = true)
-    open val key: String,
+    val key: String,
     @get:Schema(title = "key值是否可以更改", required = true)
-    open val keyDisable: Boolean,
+    val keyDisable: Boolean,
     @get:Schema(title = "key值前端组件类型", required = true)
-    open val keyType: String,
+    val keyType: String,
     @get:Schema(title = "key值获取方式", required = true)
-    open val keyListType: String,
+    val keyListType: String,
     @get:Schema(title = "key值获取路径", required = true)
-    open val keyUrl: String,
+    val keyUrl: String,
     @get:Schema
-    open val keyUrlQuery: List<String>,
+    val keyUrlQuery: List<String>,
     @get:Schema(title = "key值获取集合", required = true)
-    open val keyList: List<StartUpInfo>,
+    val keyList: List<StartUpInfo>,
     @get:Schema(title = "key值是否多选", required = true)
-    open val keyMultiple: Boolean,
+    val keyMultiple: Boolean,
     @get:Schema(title = "参数value值", required = true)
-    open val value: Any,
+    val value: Any,
     @get:Schema(title = "value值是否可以更改", required = true)
-    open val valueDisable: Boolean,
+    val valueDisable: Boolean,
     @get:Schema(title = "value值前端组件类型", required = true)
-    open val valueType: String,
+    val valueType: String,
     @get:Schema(title = "value值获取方式", required = true)
-    open val valueListType: String,
+    val valueListType: String,
     @get:Schema(title = "value值获取路径", required = true)
-    open val valueUrl: String,
+    val valueUrl: String,
     @get:Schema
-    open val valueUrlQuery: List<String>,
+    val valueUrlQuery: List<String>,
     @get:Schema(title = "value值获取集合", required = true)
-    open val valueList: List<StartUpInfo>,
+    val valueList: List<StartUpInfo>,
     @get:Schema(title = "value值是否多选", required = true)
-    open val valueMultiple: Boolean
+    val valueMultiple: Boolean,
+    @get:Schema(title = "参数类型", required = true)
+    val type: String? = ""
 )
