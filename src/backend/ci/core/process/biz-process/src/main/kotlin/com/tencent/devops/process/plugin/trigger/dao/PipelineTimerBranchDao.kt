@@ -157,13 +157,20 @@ class PipelineTimerBranchDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
+        sourceTaskId: String?,
         targetTaskId: String
     ): Int {
         with(T_PIPELINE_TIMER_BRANCH) {
+            val conditions = mutableListOf(
+                PROJECT_ID.eq(projectId),
+                PIPELINE_ID.eq(pipelineId)
+            )
+            if (sourceTaskId != null) {
+                conditions.add(TASK_ID.eq(sourceTaskId))
+            }
             return dslContext.update(this)
                     .set(TASK_ID, targetTaskId)
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(PIPELINE_ID.eq(pipelineId))
+                    .where(conditions)
                     .execute()
         }
     }

@@ -203,19 +203,31 @@ open class PipelineTimerUpgradeService @Autowired constructor(
                     projectId = projectId,
                     pipelineId = pipelineId
                 )
-                val emptyTaskIdRecords = timerBranchRecords.filter { record -> record.taskId.isNullOrBlank() }
-
+                // 全部都是老数据，没有taskId
+                val emptyTaskIdRecordsSize = timerBranchRecords.filter { record -> record.taskId.isNullOrBlank() }.size
+                val noRecordsHaveTaskId = emptyTaskIdRecordsSize == timerBranchRecords.size
                 when {
+                    noScmTimerList.size == 1 && noRecordsHaveTaskId -> {
+                        val updateCount = pipelineTimerService.updateTimerBranch(
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            sourceTaskId = null,
+                            targetTaskId = noScmTimerList.first().id ?: ""
+                        )
+                        logger.info("change timer branch|updated $updateCount timer branch|$projectId|$pipelineId")
+                    }
+                    // 一个触发器，配置了多条分支，其中有部分record存在taskId，仅需更新空taskId的数据即可
                     noScmTimerList.size == 1 -> {
                         val updateCount = pipelineTimerService.updateTimerBranch(
                             projectId = projectId,
                             pipelineId = pipelineId,
+                            sourceTaskId = "",
                             targetTaskId = noScmTimerList.first().id ?: ""
                         )
                         logger.info("change timer branch|updated $updateCount timer branch|$projectId|$pipelineId")
                     }
                     // 流水线存在多个触发器，存量数据中存在taskId为空的脏数据
-                    noScmTimerList.size > 1 && emptyTaskIdRecords.size != timerBranchRecords.size -> {
+                    noScmTimerList.size > 1 && !noRecordsHaveTaskId -> {
                         val deleteCount = pipelineTimerService.deleteTimerBranch(projectId, pipelineId, "")
                         logger.warn("clean empty taskId|deleted $deleteCount timer branch|$projectId|$pipelineId")
                     }
@@ -224,7 +236,7 @@ open class PipelineTimerUpgradeService @Autowired constructor(
                         logger.warn(
                             "skip upgrade timer branch|$projectId|$pipelineId|timerCount[${timerTriggerConfig.size}]|" +
                                     "timerBranchRecords[${timerBranchRecords.size}]|" +
-                                    "emptyTaskIdRecords[${emptyTaskIdRecords.size}]"
+                                    "emptyTaskIdRecords[$emptyTaskIdRecordsSize]"
                         )
                     }
                 }

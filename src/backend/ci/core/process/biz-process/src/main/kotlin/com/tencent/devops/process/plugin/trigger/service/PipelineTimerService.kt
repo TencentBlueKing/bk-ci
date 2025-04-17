@@ -332,12 +332,14 @@ open class PipelineTimerService @Autowired constructor(
     fun updateTimerBranch(
         projectId: String,
         pipelineId: String,
+        sourceTaskId: String?,
         targetTaskId: String
     ): Int {
         return pipelineTimerBranchDao.updateTimerBranch(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
+            sourceTaskId = sourceTaskId,
             targetTaskId = targetTaskId
         )
     }
