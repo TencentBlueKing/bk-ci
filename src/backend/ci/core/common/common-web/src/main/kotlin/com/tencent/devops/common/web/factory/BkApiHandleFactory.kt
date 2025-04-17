@@ -27,13 +27,13 @@
 
 package com.tencent.devops.common.web.factory
 
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.common.web.service.BkApiHandleService
 import com.tencent.devops.common.web.service.impl.BkApiHandleBuildAuthServiceImpl
 import com.tencent.devops.common.web.service.impl.BkApiHandleOpenAccessServiceImpl
 import com.tencent.devops.common.web.service.impl.BkApiHandlePipelineAccessServiceImpl
 import com.tencent.devops.common.web.service.impl.BkApiHandleProjectAccessServiceImpl
-import com.tencent.devops.common.web.service.impl.BkApiHandleProjectMemberCheckServiceImpl
 import java.util.concurrent.ConcurrentHashMap
 
 object BkApiHandleFactory {
@@ -75,7 +75,10 @@ object BkApiHandleFactory {
 
             BkApiHandleType.PROJECT_MEMBER_CHECK -> {
                 if (bkApiHandleService == null) {
-                    bkApiHandleService = BkApiHandleProjectMemberCheckServiceImpl()
+                    bkApiHandleService = SpringContextUtil.getBean(
+                        BkApiHandleService::class.java,
+                        "HANDLE_PROJECT_MEMBER_CHECK"
+                    )
                     bkApiHandleMap[type.name] = bkApiHandleService
                 }
             }

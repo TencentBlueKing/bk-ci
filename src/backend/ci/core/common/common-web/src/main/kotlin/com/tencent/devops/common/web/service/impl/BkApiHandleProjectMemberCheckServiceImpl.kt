@@ -1,23 +1,28 @@
 package com.tencent.devops.common.web.service.impl
 
+import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_NEED_PARAM_
 import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_IS_NULL
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.web.service.BkApiHandleService
 import jakarta.servlet.http.HttpServletRequest
-import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
 
-class BkApiHandleProjectMemberCheckServiceImpl : BkApiHandleService {
-
+@Service("HANDLE_PROJECT_MEMBER_CHECK")
+class BkApiHandleProjectMemberCheckServiceImpl @Autowired constructor(
+    private val client: Client,
+    private val tokenService: ClientTokenService
+) : BkApiHandleService {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(BkApiHandleProjectMemberCheckServiceImpl::class.java)
         private const val PROJECT_ID = "projectId"
         private const val USER_ID = "userId"
     }
@@ -43,9 +48,13 @@ class BkApiHandleProjectMemberCheckServiceImpl : BkApiHandleService {
             request = request
         )
 
-
-
-
+        val isMember = checkProjectMember(userId, projectId)
+        if (!isMember) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_USER_NOT_EXIST_IN_PROJECT,
+                params = arrayOf(projectId, userId)
+            )
+        }
     }
 
     private fun fetchRequiredParam(
@@ -74,8 +83,11 @@ class BkApiHandleProjectMemberCheckServiceImpl : BkApiHandleService {
             )
     }
 
-    private fun checkProjectMember(userId: String, projectId: String) {
-        SpringContextUtil.getBean(AuthProjectApi::class.java).checkProjectUser()
-
+    private fun checkProjectMember(userId: String, projectId: String): Boolean {
+        return client.get(ServiceProjectAuthResource::class).isProjectUser(
+            token = tokenService.getSystemToken(),
+            userId = userId,
+            projectCode = projectId
+        ).data ?: false
     }
 }

@@ -27,9 +27,7 @@
 
 package com.tencent.devops.common.web
 
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.aop.BkApiAspect
-import com.tencent.devops.common.web.aop.BkProjectMemberCheckAspect
 import org.springframework.beans.factory.annotation.Configurable
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.context.annotation.Bean
@@ -41,7 +39,4 @@ class BkApiAutoConfiguration {
 
     @Bean
     fun buildApiAspect() = BkApiAspect()
-
-    @Bean
-    fun buildBkProjectMemberCheckAspect(client: Client) = BkProjectMemberCheckAspect(client = client)
 }
