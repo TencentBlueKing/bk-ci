@@ -2942,7 +2942,8 @@ class PipelineBuildFacadeService(
                     valueUrl = "",
                     valueUrlQuery = ArrayList(),
                     valueList = valueList,
-                    valueMultiple = item.type == BuildFormPropertyType.MULTIPLE
+                    valueMultiple = item.type == BuildFormPropertyType.MULTIPLE,
+                    type = item.type.value
                 )
                 parameter.add(info)
             } else {
@@ -2964,7 +2965,8 @@ class PipelineBuildFacadeService(
                     valueUrl = "",
                     valueUrlQuery = ArrayList(),
                     valueList = valueList,
-                    valueMultiple = false
+                    valueMultiple = false,
+                    type = item.type.value
                 )
                 parameter.add(info)
             }

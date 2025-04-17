@@ -204,13 +204,16 @@ open class PipelineTimerUpgradeService @Autowired constructor(
                     pipelineId = pipelineId
                 )
                 // 全部都是老数据，没有taskId
-                val emptyTaskIdRecordsSize = timerBranchRecords.filter { record -> record.taskId.isNullOrBlank() }.size
-                val noRecordsHaveTaskId = emptyTaskIdRecordsSize == timerBranchRecords.size
+                val emptyTaskIdRecords = timerBranchRecords.filter { record -> record.taskId.isNullOrBlank() }
+                val noRecordsHaveTaskId = emptyTaskIdRecords.size == timerBranchRecords.size
                 when {
                     noScmTimerList.size == 1 && noRecordsHaveTaskId -> {
+                        // 批量修改
                         val updateCount = pipelineTimerService.updateTimerBranch(
                             projectId = projectId,
                             pipelineId = pipelineId,
+                            sourceBranch = null,
+                            sourceRepoHashId = null,
                             sourceTaskId = null,
                             targetTaskId = noScmTimerList.first().id ?: ""
                         )
@@ -218,13 +221,29 @@ open class PipelineTimerUpgradeService @Autowired constructor(
                     }
                     // 一个触发器，配置了多条分支，其中有部分record存在taskId，仅需更新空taskId的数据即可
                     noScmTimerList.size == 1 -> {
-                        val updateCount = pipelineTimerService.updateTimerBranch(
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            sourceTaskId = "",
-                            targetTaskId = noScmTimerList.first().id ?: ""
-                        )
-                        logger.info("change timer branch|updated $updateCount timer branch|$projectId|$pipelineId")
+                        emptyTaskIdRecords.forEach changeEmptyTaskId@{ record ->
+                            val taskId = noScmTimerList.first().id ?: ""
+                            val updateCount = try {
+                                pipelineTimerService.updateTimerBranch(
+                                    projectId = projectId,
+                                    pipelineId = pipelineId,
+                                    sourceBranch = record.branch,
+                                    sourceRepoHashId = record.repoHashId,
+                                    sourceTaskId = "",
+                                    targetTaskId = taskId
+                                )
+                            } catch (ignored: Exception) {
+                                logger.warn(
+                                    "fail ed to update timer branch|$projectId|$pipelineId|$taskId" +
+                                            "${record.branch}|${record.repoHashId}", ignored
+                                )
+                                return@changeEmptyTaskId
+                            }
+                            logger.info(
+                                "change timer branch|updated $updateCount timer branch|$projectId|$pipelineId|" +
+                                        "branch=${record.branch}|repoHashId=${record.repoHashId}"
+                            )
+                        }
                     }
                     // 流水线存在多个触发器，存量数据中存在taskId为空的脏数据
                     noScmTimerList.size > 1 && !noRecordsHaveTaskId -> {
@@ -236,7 +255,7 @@ open class PipelineTimerUpgradeService @Autowired constructor(
                         logger.warn(
                             "skip upgrade timer branch|$projectId|$pipelineId|timerCount[${timerTriggerConfig.size}]|" +
                                     "timerBranchRecords[${timerBranchRecords.size}]|" +
-                                    "emptyTaskIdRecords[$emptyTaskIdRecordsSize]"
+                                    "emptyTaskIdRecords[${emptyTaskIdRecords.size}]"
                         )
                     }
                 }

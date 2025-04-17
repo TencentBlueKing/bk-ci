@@ -157,6 +157,8 @@ class PipelineTimerBranchDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
+        sourceRepoHashId: String?,
+        sourceBranch: String?,
         sourceTaskId: String?,
         targetTaskId: String
     ): Int {
@@ -167,6 +169,12 @@ class PipelineTimerBranchDao {
             )
             if (sourceTaskId != null) {
                 conditions.add(TASK_ID.eq(sourceTaskId))
+            }
+            if (sourceRepoHashId != null) {
+                conditions.add(REPO_HASH_ID.eq(sourceRepoHashId))
+            }
+            if (sourceBranch != null) {
+                conditions.add(BRANCH.eq(sourceBranch))
             }
             return dslContext.update(this)
                     .set(TASK_ID, targetTaskId)

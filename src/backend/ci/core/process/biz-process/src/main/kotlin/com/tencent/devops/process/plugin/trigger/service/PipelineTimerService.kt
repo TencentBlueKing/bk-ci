@@ -332,6 +332,8 @@ open class PipelineTimerService @Autowired constructor(
     fun updateTimerBranch(
         projectId: String,
         pipelineId: String,
+        sourceRepoHashId: String?,
+        sourceBranch: String?,
         sourceTaskId: String?,
         targetTaskId: String
     ): Int {
@@ -339,6 +341,8 @@ open class PipelineTimerService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
+            sourceRepoHashId = sourceRepoHashId,
+            sourceBranch = sourceBranch,
             sourceTaskId = sourceTaskId,
             targetTaskId = targetTaskId
         )
