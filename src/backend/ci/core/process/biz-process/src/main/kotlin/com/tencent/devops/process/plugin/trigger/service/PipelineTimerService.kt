@@ -316,10 +316,25 @@ open class PipelineTimerService @Autowired constructor(
         )
     }
 
+    fun deleteTimerBranch(
+        projectId: String,
+        pipelineId: String,
+        taskId: String
+    ): Int {
+        return pipelineTimerBranchDao.delete(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            taskId = taskId
+        )
+    }
+
+
+
     fun deleteEmptyTaskIdTimerBranch(
         projectId: String,
         pipelineId: String
-    ) :Int {
+    ): Int {
         return pipelineTimerBranchDao.deleteEmptyTaskId(
             dslContext = dslContext,
             projectId = projectId,
@@ -331,7 +346,7 @@ open class PipelineTimerService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         targetTaskId: String
-    ) :Int {
+    ): Int {
         return pipelineTimerBranchDao.updateTimerBranch(
             dslContext = dslContext,
             projectId = projectId,

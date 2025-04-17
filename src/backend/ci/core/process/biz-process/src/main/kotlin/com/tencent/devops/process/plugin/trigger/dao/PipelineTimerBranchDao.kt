@@ -86,7 +86,7 @@ class PipelineTimerBranchDao {
         pipelineId: String?,
         limit: Int?,
         offset: Int?
-    ): List<Pair<String,String>> {
+    ): List<Pair<String, String>> {
         return with(T_PIPELINE_TIMER_BRANCH) {
             val conditions = mutableListOf<Condition>()
             if (!projectId.isNullOrBlank()) {
@@ -96,7 +96,7 @@ class PipelineTimerBranchDao {
                 conditions.add(PIPELINE_ID.eq(pipelineId))
             }
             dslContext.select(PROJECT_ID, PIPELINE_ID)
-                    .from( this)
+                    .from(this)
                     .where(conditions)
                     .groupBy(PROJECT_ID, PIPELINE_ID)
                     .orderBy(PROJECT_ID, PIPELINE_ID)
@@ -107,7 +107,7 @@ class PipelineTimerBranchDao {
                         it
                     }
                     .fetch()
-                    .map { it.getValue(PROJECT_ID) to it.getValue(PIPELINE_ID)}
+                    .map { it.getValue(PROJECT_ID) to it.getValue(PIPELINE_ID) }
         }
     }
 
@@ -115,12 +115,27 @@ class PipelineTimerBranchDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String
-    ) :Int {
+    ): Int {
         with(T_PIPELINE_TIMER_BRANCH) {
             return dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-                .execute()
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(PIPELINE_ID.eq(pipelineId))
+                    .execute()
+        }
+    }
+
+    fun delete(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        taskId: String
+    ): Int {
+        with(T_PIPELINE_TIMER_BRANCH) {
+            return dslContext.deleteFrom(this)
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(PIPELINE_ID.eq(pipelineId))
+                    .and(TASK_ID.eq(taskId))
+                    .execute()
         }
     }
 
@@ -128,7 +143,7 @@ class PipelineTimerBranchDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String
-    ) :Int {
+    ): Int {
         with(T_PIPELINE_TIMER_BRANCH) {
             return dslContext.deleteFrom(this)
                     .where(PROJECT_ID.eq(projectId))
@@ -143,7 +158,7 @@ class PipelineTimerBranchDao {
         projectId: String,
         pipelineId: String,
         targetTaskId: String
-    ) :Int {
+    ): Int {
         with(T_PIPELINE_TIMER_BRANCH) {
             return dslContext.update(this)
                     .set(TASK_ID, targetTaskId)
