@@ -1251,19 +1251,6 @@ abstract class ImageService @Autowired constructor() {
     }
 
     fun isReleasedStatus(imageCode: String, imageVersion: String, imageStatus: ImageStatusEnum): Boolean {
-
-        if (VersionUtils.isLatestVersion(imageVersion)) {
-            val count = imageDao.countImageRelease(dslContext, imageCode, imageVersion, imageStatus)
-            return count > 0
-        } else {
-            val imageRecord = imageDao.getImage(dslContext, imageCode, imageVersion)
-                ?: throw ErrorCodeException(
-                    errorCode = USER_IMAGE_VERSION_NOT_EXIST,
-                    defaultMessage = "image is null,imageCode=$imageCode, imageVersion=$imageVersion",
-                    params = arrayOf(imageCode, imageVersion)
-                )
-
-            return imageRecord.imageStatus == ImageStatusEnum.RELEASED.status.toByte()
-        }
+        return imageDao.countImageRelease(dslContext, imageCode, imageVersion, imageStatus) > 0
     }
 }
