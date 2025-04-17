@@ -291,6 +291,16 @@ const actions = {
         return ajax.get(`artifactory/api/user/artifactories/${projectId}/${artifactoryType}/show?path=${path}`).then(response => {
             return response.data
         })
+    },
+    /**
+     * 重放流水线
+     */
+    requestRePlayPipeline ({ commit, state, dispatch }, { projectId, pipelineId, buildId, forceTrigger = false }) {
+        return ajax.post(`${prefix}${projectId}/${pipelineId}/${buildId}/replayByBuild?forceTrigger=${forceTrigger}`).then(response => {
+            return response.data
+        }).catch(e => {
+            return e
+        })
     }
 }
 

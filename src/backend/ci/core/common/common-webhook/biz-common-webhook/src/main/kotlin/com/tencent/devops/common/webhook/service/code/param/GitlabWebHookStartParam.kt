@@ -56,13 +56,12 @@ class GitlabWebHookStartParam : ScmWebhookStartParams<CodeGitlabWebHookTriggerEl
         projectId: String,
         element: CodeGitlabWebHookTriggerElement,
         repo: Repository,
-        matcher: ScmWebhookMatcher,
+        matcher: ScmWebhookMatcher?,
         variables: Map<String, String>,
         params: WebHookParams,
         matchResult: WebhookMatchResult
     ): Map<String, Any> {
         val startParams = mutableMapOf<String, Any>()
-        startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID] = matcher.getRevision()
         startParams[BK_REPO_GIT_WEBHOOK_EVENT_TYPE] = params.eventType ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_INCLUDE_BRANCHS] = element.branchName ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_BRANCHS] = element.excludeBranchName ?: ""
@@ -72,12 +71,15 @@ class GitlabWebHookStartParam : ScmWebhookStartParams<CodeGitlabWebHookTriggerEl
         startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_BRANCH] =
             matchResult.extra[MATCH_BRANCH] ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_PATH] = matchResult.extra[MATCH_PATHS] ?: ""
-        startParams.putAll(
-            matcher.retrieveParams(
-                projectId = projectId,
-                repository = repo
+        matcher?.let {
+            startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID] = matcher.getRevision()
+            startParams.putAll(
+                matcher.retrieveParams(
+                    projectId = projectId,
+                    repository = repo
+                )
             )
-        )
+        }
         return startParams
     }
 }

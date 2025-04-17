@@ -30,15 +30,19 @@ package com.tencent.devops.process.webhook
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCheckRunEvent
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.dao.PipelineTriggerEventDao
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.trigger.WebhookTriggerService
+import com.tencent.devops.process.trigger.event.ScmWebhookRequestEvent
+import com.tencent.devops.process.trigger.scm.WebhookGrayCompareService
+import com.tencent.devops.process.trigger.scm.WebhookGrayService
 import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
+import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.repository.api.ServiceRepositoryWebhookResource
 import com.tencent.devops.repository.pojo.RepositoryWebhookRequest
 import org.jooq.DSLContext
@@ -54,7 +58,10 @@ class WebhookRequestService(
     private val webhookTriggerService: WebhookTriggerService,
     private val dslContext: DSLContext,
     private val pipelineTriggerEventDao: PipelineTriggerEventDao,
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService
+    private val pipelineYamlFacadeService: PipelineYamlFacadeService,
+    private val grayService: WebhookGrayService,
+    private val simpleDispatcher: SampleEventDispatcher,
+    private val webhookGrayCompareService: WebhookGrayCompareService
 ) {
 
     companion object {
@@ -71,7 +78,6 @@ class WebhookRequestService(
             return
         }
         val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = scmType, event = event)
-
         val eventTime = LocalDateTime.now()
         val requestId = MDC.get(TraceTag.BIZID)
         val repositoryWebhookRequest = RepositoryWebhookRequest(
@@ -100,18 +106,49 @@ class WebhookRequestService(
             // 日志保存异常,不影响正常触发
             logger.warn("Failed to save webhook request", ignored)
         }
-        webhookTriggerService.trigger(
-            scmType = scmType,
-            matcher = matcher,
-            requestId = requestId,
-            eventTime = eventTime
-        )
-        pipelineYamlFacadeService.trigger(
-            eventObject = event,
-            scmType = scmType,
-            requestId = requestId,
-            eventTime = eventTime
-        )
+        if (scmType == ScmType.CODE_GIT || scmType == ScmType.CODE_TGIT) {
+            webhookGrayCompareService.asyncCompareWebhook(
+                scmType = scmType,
+                request = request,
+                matcher = matcher
+            )
+        }
+        val repoName = matcher.getRepoName()
+        // 如果整个仓库都开启灰度，则全部走新逻辑
+        val grayRepo = grayService.isGrayRepo(scmType.name, repoName)
+        if (grayRepo) {
+            handleGrayRequest(scmType.name, repoName, request)
+        } else {
+            webhookTriggerService.trigger(
+                scmType = scmType,
+                matcher = matcher,
+                requestId = requestId,
+                eventTime = eventTime
+            )
+        }
+
+        // 如果pac开启灰度,也走新逻辑,会在新逻辑中判断旧的触发会不会运行
+        val pacGrayRepo = grayService.isPacGrayRepo(scmType.name, repoName)
+        when {
+            // 如果是灰度仓库,同时也是pac灰度仓库,无需重复触发
+            grayRepo && pacGrayRepo -> {
+                logger.info("The $scmType repo $repoName is gray repo and pac gray repo")
+                return
+            }
+
+            pacGrayRepo -> {
+                handleGrayRequest(scmType.name, repoName, request)
+            }
+
+            else -> {
+                pipelineYamlFacadeService.trigger(
+                    eventObject = event,
+                    scmType = scmType,
+                    requestId = requestId,
+                    eventTime = eventTime
+                )
+            }
+        }
     }
 
     fun handleReplay(replayEvent: ReplayWebhookEvent) {
@@ -168,6 +205,32 @@ class WebhookRequestService(
             pipelineId = buildInfo[2],
             buildId = buildInfo[3],
             channelCode = ChannelCode.BS
+        )
+    }
+
+    /**
+     * 处理灰度请求
+     */
+    private fun handleGrayRequest(
+        scmCode: String,
+        repoName: String,
+        request: WebhookRequest
+    ) {
+        logger.info("The scm hook is gray, repoName: $repoName, scmType: $scmCode")
+        val headers = request.headers
+        val queryParams = mutableMapOf<String, String>()
+        request.queryParams?.let {
+            queryParams.putAll(request.queryParams!!)
+        }
+        simpleDispatcher.dispatch(
+            ScmWebhookRequestEvent(
+                scmCode = scmCode,
+                request = WebhookRequest(
+                    headers = headers,
+                    queryParams = queryParams,
+                    body = request.body
+                )
+            )
         )
     }
 }

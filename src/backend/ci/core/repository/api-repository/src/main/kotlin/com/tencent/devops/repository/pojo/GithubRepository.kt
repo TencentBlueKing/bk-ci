@@ -52,11 +52,12 @@ data class GithubRepository(
     @get:Schema(title = "仓库是否开启pac", required = false)
     override val enablePac: Boolean? = false,
     @get:Schema(title = "yaml同步状态", required = false)
-    override val yamlSyncStatus: String? = null
+    override val yamlSyncStatus: String? = null,
+    @get:Schema(title = "代码库标识", required = false)
+    override val scmCode: String = ScmType.GITHUB.name
 ) : Repository {
     companion object {
         const val classType = "github"
-        const val SCM_CODE = "GITHUB"
     }
 
     override fun getStartPrefix() = "https://github.com/"
