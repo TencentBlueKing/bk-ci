@@ -501,12 +501,13 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_TIMER_BRANCH`
 (
     `PROJECT_ID`   varchar(32)  not null comment '项目ID',
     `PIPELINE_ID`  varchar(34)  not null comment '流水线ID',
+    `TASK_ID`  varchar(64)  not null comment '插件ID',
     `REPO_HASH_ID` varchar(64)  not null comment '代码库HASH ID',
     `BRANCH`       varchar(255) not null comment '分支',
     `REVISION`     varchar(40)  not null comment '提交版本',
     `CREATE_TIME`  timestamp default CURRENT_TIMESTAMP not null COMMENT '创建时间',
     `UPDATE_TIME`  timestamp default CURRENT_TIMESTAMP not null COMMENT '更新时间',
-    primary key (`PROJECT_ID`, `PIPELINE_ID`, `REPO_HASH_ID`, `BRANCH`)
+    primary key (`PROJECT_ID`, `PIPELINE_ID`, `TASK_ID`, `REPO_HASH_ID`, `BRANCH`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '定时触发分支版本';
 
 -- ----------------------------

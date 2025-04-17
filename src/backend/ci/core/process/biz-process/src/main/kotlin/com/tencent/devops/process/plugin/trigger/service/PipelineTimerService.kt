@@ -239,6 +239,7 @@ open class PipelineTimerService @Autowired constructor(
     fun saveTimerBranch(
         projectId: String,
         pipelineId: String,
+        taskId: String,
         repoHashId: String,
         branch: String,
         revision: String
@@ -247,6 +248,7 @@ open class PipelineTimerService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
+            taskId = taskId,
             repoHashId = repoHashId,
             branch = branch,
             revision = revision
@@ -256,6 +258,7 @@ open class PipelineTimerService @Autowired constructor(
     fun getTimerBranch(
         projectId: String,
         pipelineId: String,
+        taskId: String,
         repoHashId: String,
         branch: String
     ): TPipelineTimerBranchRecord? {
@@ -263,19 +266,77 @@ open class PipelineTimerService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
+            taskId = taskId,
             repoHashId = repoHashId,
             branch = branch
+        ) ?: pipelineTimerBranchDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            taskId = "",
+            repoHashId = repoHashId,
+            branch = branch
+        )
+    }
+
+    fun getTimerBranch(
+        projectId: String?,
+        pipelineId: String?,
+        limit: Int?,
+        offset: Int?
+    ): List<Pair<String, String>> {
+        return pipelineTimerBranchDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            limit = limit,
+            offset = offset
+        )
+    }
+
+    fun getTimerBranch(
+        projectId: String,
+        pipelineId: String
+    ): org.jooq.Result<TPipelineTimerBranchRecord> {
+        return pipelineTimerBranchDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
         )
     }
 
     fun deleteTimerBranch(
         projectId: String,
         pipelineId: String
-    ) {
-        pipelineTimerBranchDao.delete(
+    ) :Int {
+        return pipelineTimerBranchDao.delete(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId
+        )
+    }
+
+    fun deleteEmptyTaskIdTimerBranch(
+        projectId: String,
+        pipelineId: String
+    ) :Int {
+        return pipelineTimerBranchDao.deleteEmptyTaskId(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+    }
+
+    fun updateTimerBranch(
+        projectId: String,
+        pipelineId: String,
+        targetTaskId: String
+    ) :Int {
+        return pipelineTimerBranchDao.updateTimerBranch(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            targetTaskId = targetTaskId
         )
     }
 

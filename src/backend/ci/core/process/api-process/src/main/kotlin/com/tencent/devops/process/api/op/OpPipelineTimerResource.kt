@@ -61,4 +61,19 @@ interface OpPipelineTimerResource {
         @QueryParam("pipelineId")
         pipelineId: String?
     ): Result<Boolean>
+
+    @Operation(summary = "更新定时触发器分支版本信息")
+    @POST
+    @Path("/updateBranch")
+    fun updatePipelineTimerBranchInfo(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String?,
+        @Parameter(description = "流水线id", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?
+    ): Result<Boolean>
 }

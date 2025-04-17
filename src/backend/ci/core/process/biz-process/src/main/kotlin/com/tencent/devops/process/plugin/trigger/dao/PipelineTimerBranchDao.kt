@@ -2,7 +2,9 @@ package com.tencent.devops.process.plugin.trigger.dao
 
 import com.tencent.devops.model.process.Tables.T_PIPELINE_TIMER_BRANCH
 import com.tencent.devops.model.process.tables.records.TPipelineTimerBranchRecord
+import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -13,6 +15,7 @@ class PipelineTimerBranchDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
+        taskId: String,
         repoHashId: String,
         branch: String,
         revision: String
@@ -23,6 +26,7 @@ class PipelineTimerBranchDao {
                 this,
                 PROJECT_ID,
                 PIPELINE_ID,
+                TASK_ID,
                 REPO_HASH_ID,
                 BRANCH,
                 REVISION,
@@ -31,6 +35,7 @@ class PipelineTimerBranchDao {
             ).values(
                 projectId,
                 pipelineId,
+                taskId,
                 repoHashId,
                 branch,
                 revision,
@@ -47,6 +52,7 @@ class PipelineTimerBranchDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
+        taskId: String,
         repoHashId: String,
         branch: String
     ): TPipelineTimerBranchRecord? {
@@ -54,9 +60,54 @@ class PipelineTimerBranchDao {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
+                .and(TASK_ID.eq(taskId))
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .and(BRANCH.eq(branch))
                 .fetchAny()
+        }
+    }
+
+    fun get(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): Result<TPipelineTimerBranchRecord> {
+        return with(T_PIPELINE_TIMER_BRANCH) {
+            dslContext.selectFrom(this)
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(PIPELINE_ID.eq(pipelineId))
+                    .fetch()
+        }
+    }
+
+    fun get(
+        dslContext: DSLContext,
+        projectId: String?,
+        pipelineId: String?,
+        limit: Int?,
+        offset: Int?
+    ): List<Pair<String,String>> {
+        return with(T_PIPELINE_TIMER_BRANCH) {
+            val conditions = mutableListOf<Condition>()
+            if (!projectId.isNullOrBlank()) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
+            if (!pipelineId.isNullOrBlank()) {
+                conditions.add(PIPELINE_ID.eq(pipelineId))
+            }
+            dslContext.select(PROJECT_ID, PIPELINE_ID)
+                    .from( this)
+                    .where(conditions)
+                    .groupBy(PROJECT_ID, PIPELINE_ID)
+                    .orderBy(PROJECT_ID, PIPELINE_ID)
+                    .let {
+                        if (limit != null && offset != null) {
+                            it.limit(limit).offset(offset)
+                        }
+                        it
+                    }
+                    .fetch()
+                    .map { it.getValue(PROJECT_ID) to it.getValue(PIPELINE_ID)}
         }
     }
 
@@ -64,12 +115,41 @@ class PipelineTimerBranchDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String
-    ) {
+    ) :Int {
         with(T_PIPELINE_TIMER_BRANCH) {
-            dslContext.deleteFrom(this)
+            return dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .execute()
+        }
+    }
+
+    fun deleteEmptyTaskId(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ) :Int {
+        with(T_PIPELINE_TIMER_BRANCH) {
+            return dslContext.deleteFrom(this)
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(PIPELINE_ID.eq(pipelineId))
+                    .and(TASK_ID.isNull().or(TASK_ID.eq("")))
+                    .execute()
+        }
+    }
+
+    fun updateTimerBranch(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        targetTaskId: String
+    ) :Int {
+        with(T_PIPELINE_TIMER_BRANCH) {
+            return dslContext.update(this)
+                    .set(TASK_ID, targetTaskId)
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(PIPELINE_ID.eq(pipelineId))
+                    .execute()
         }
     }
 }

@@ -242,6 +242,7 @@ class PipelineTimerBuildListener @Autowired constructor(
                 val timerBranch = pipelineTimerService.getTimerBranch(
                     projectId = projectId,
                     pipelineId = pipelineId,
+                    taskId = taskId,
                     repoHashId = repoHashId,
                     branch = branch
                 )
@@ -261,6 +262,7 @@ class PipelineTimerBuildListener @Autowired constructor(
                     pipelineTimerService.saveTimerBranch(
                         projectId = projectId,
                         pipelineId = pipelineId,
+                        taskId = taskId,
                         repoHashId = repoHashId,
                         branch = branch,
                         revision = revision

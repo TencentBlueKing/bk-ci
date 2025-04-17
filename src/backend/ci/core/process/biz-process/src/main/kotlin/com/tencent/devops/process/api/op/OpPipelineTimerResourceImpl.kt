@@ -28,14 +28,11 @@
 package com.tencent.devops.process.api.op
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerUpgradeService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.concurrent.Executors
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
 
 @RestResource
 class OpPipelineTimerResourceImpl @Autowired constructor(
@@ -43,30 +40,46 @@ class OpPipelineTimerResourceImpl @Autowired constructor(
 ) : OpPipelineTimerResource {
     override fun updatePipelineTimerInfo(userId: String, projectId: String?, pipelineId: String?): Result<Boolean> {
         val startTime = System.currentTimeMillis()
-        val threadPoolExecutor = ThreadPoolExecutor(
-            1,
-            1,
-            0,
-            TimeUnit.SECONDS,
-            LinkedBlockingQueue(1),
-            Executors.defaultThreadFactory(),
-            ThreadPoolExecutor.AbortPolicy()
+        ThreadPoolUtil.submitAction(
+            action = {
+                logger.info("Start to update pipeline timer|projectId=$projectId|pipelineId=$pipelineId")
+                try {
+                    timerUpgradeService.upgrade(
+                        userId = userId,
+                        targetPipelineId = pipelineId,
+                        targetProjectId = projectId
+                    )
+                } catch (ignored: Exception) {
+                    logger.warn("Failed to update pipeline timer", ignored)
+                } finally {
+                    logger.info("Finish to update pipeline timer|${System.currentTimeMillis() - startTime}")
+                }
+            },
+            actionTitle = "Update pipeline timer"
         )
-        threadPoolExecutor.submit {
-            logger.info("Start to update pipeline timer|projectId=$projectId|pipelineId=$pipelineId")
-            try {
-                timerUpgradeService.upgrade(
-                    userId = userId,
-                    targetPipelineId = pipelineId,
-                    targetProjectId = projectId
-                )
-            } catch (ignored: Exception) {
-                logger.warn("Failed to update pipeline timer", ignored)
-            } finally {
-                logger.info("Finish to update pipeline timer|${System.currentTimeMillis() - startTime}")
-                threadPoolExecutor.shutdown()
-            }
-        }
+        return Result(true)
+    }
+
+    override fun updatePipelineTimerBranchInfo(
+        userId: String,
+        projectId: String?,
+        pipelineId: String?
+    ): Result<Boolean> {
+        ThreadPoolUtil.submitAction(
+            action = {
+                logger.info("Start to update pipeline timer|projectId=$projectId|pipelineId=$pipelineId")
+                try {
+                    timerUpgradeService.upgradeBranch(
+                        userId = userId,
+                        targetPipelineId = pipelineId,
+                        targetProjectId = projectId
+                    )
+                } catch (ignored: Exception) {
+                    logger.warn("Failed to update pipeline timer", ignored)
+                }
+            },
+            actionTitle = "Update pipeline timer"
+        )
         return Result(true)
     }
 

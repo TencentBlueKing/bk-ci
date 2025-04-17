@@ -46,11 +46,11 @@ open class PipelineTimerUpgradeService @Autowired constructor(
     val pipelineTimerService: PipelineTimerService,
     val timerTriggerTaskService: PipelineTimerTriggerTaskService
 ) {
-    @SuppressWarnings("NestedBlockDepth")
+    @SuppressWarnings("NestedBlockDepth", "CyclomaticComplexMethod")
     fun upgrade(userId: String, targetProjectId: String?, targetPipelineId: String?) {
-        logger.info("upgrade pipeline timer|targetProjectId=$targetProjectId|targetPipelineId=$targetPipelineId")
+        logger.info("upgrade pipeline timer|$targetProjectId|$targetPipelineId|$userId")
         var offset = 0
-        val limit = 100
+        val limit = 1000
         do {
             val records = pipelineTimerService.listPipeline(
                 projectId = targetProjectId,
@@ -152,6 +152,80 @@ open class PipelineTimerUpgradeService @Autowired constructor(
                                     "timerCount[${timerList.size}]|timerTriggerCount[${timerTriggerElements.size}]"
                         )
                         return@parseModel
+                    }
+                }
+            }
+            val count = records.size
+            offset += limit
+        } while (count == 1000)
+    }
+
+    fun upgradeBranch(
+        userId: String,
+        targetProjectId: String?,
+        targetPipelineId: String?
+    ) {
+        logger.info(
+            "upgrade pipeline timer branch|$targetProjectId|$targetPipelineId|$userId"
+        )
+        var offset = 0
+        val limit = 1000
+        do {
+            val records = pipelineTimerService.getTimerBranch(
+                projectId = targetProjectId,
+                pipelineId = targetPipelineId,
+                offset = offset,
+                limit = limit
+            )
+            if (records.isEmpty()) {
+                logger.info("timer branch is empty|projectId=$targetProjectId|pipelineId=$targetPipelineId")
+                return
+            }
+            records.forEach parseModel@{
+                val (projectId, pipelineId) = it
+                val model = pipelineRepositoryService.getModel(projectId, pipelineId)
+                // 流水线不存在，清除数据
+                if (model == null) {
+                    val deleteCount = pipelineTimerService.deleteTimerBranch(projectId, pipelineId)
+                    logger.warn("model is null|deleted $deleteCount timer branch|$projectId|$pipelineId")
+                    return@parseModel
+                }
+                val timerTriggerConfig = getTimerTriggerConfig(model)
+                // 没有触发器开启noScm，清除数据
+                val noScmTimerList = timerTriggerConfig.filter { config -> config.noScm == true }
+                if (noScmTimerList.isEmpty()) {
+                    val deleteCount = pipelineTimerService.deleteTimerBranch(projectId, pipelineId)
+                    logger.warn("noScm trigger is not exist|deleted $deleteCount timer branch|$projectId|$pipelineId")
+                    return@parseModel
+                }
+                // 已保存的[定时触发版本信息]
+                val timerBranchRecords = pipelineTimerService.getTimerBranch(
+                    projectId = projectId,
+                    pipelineId = pipelineId
+                )
+                val emptyTaskIdRecords = timerBranchRecords.filter { record -> record.taskId.isNullOrBlank() }
+
+                when {
+                    noScmTimerList.size == 1 -> {
+                        val updateCount = pipelineTimerService.updateTimerBranch(
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            targetTaskId = noScmTimerList.first().id ?: ""
+                        )
+                        logger.info("change timer branch|updated $updateCount timer branch|$projectId|$pipelineId")
+                    }
+                    // 流水线存在多个触发器，存量数据中存在taskId为空的脏数据
+                    noScmTimerList.size > 1 && emptyTaskIdRecords.size != timerBranchRecords.size -> {
+                        val deleteCount = pipelineTimerService.deleteEmptyTaskIdTimerBranch(projectId, pipelineId)
+                        logger.warn("clean empty taskId|deleted $deleteCount timer branch|$projectId|$pipelineId")
+                    }
+
+                    else -> {
+                        logger.warn(
+                            "skip upgrade timer branch|$projectId|$pipelineId|timerCount[${timerTriggerConfig.size}]|" +
+                                    "timerBranchRecords[${timerBranchRecords.size}]|" +
+                                    "emptyTaskIdRecords[${emptyTaskIdRecords.size}]"
+                        )
                     }
                 }
             }

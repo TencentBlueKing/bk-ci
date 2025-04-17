@@ -55,8 +55,8 @@ import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.pipeline.PipelineBuildParamFormProp
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
-import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
@@ -447,7 +447,7 @@ class SubPipelineStartUpService @Autowired constructor(
         includeNotRequired: Boolean?,
         parentProjectId: String = "",
         parentPipelineId: String = ""
-    ): Result<List<SubPipelineStartUpInfo>> {
+    ): Result<List<PipelineBuildParamFormProp>> {
         if (pipelineId.isBlank() || projectId.isBlank()) {
             return Result(ArrayList())
         }
@@ -466,27 +466,7 @@ class SubPipelineStartUpService @Autowired constructor(
             includeNotRequired = includeNotRequired,
             userId = oauthUser,
             version = null
-        ).map {
-            // 将参数值平移到SubPipelineStartUpInfo中
-            SubPipelineStartUpInfo(
-                key = it.key,
-                keyDisable = it.keyDisable,
-                keyType = it.keyType,
-                keyListType = it.keyListType,
-                keyUrl = it.keyUrl,
-                keyUrlQuery = it.keyUrlQuery,
-                keyList = it.keyList,
-                keyMultiple = it.keyMultiple,
-                value = it.value,
-                valueDisable = it.valueDisable,
-                valueType = it.valueType,
-                valueListType = it.valueListType,
-                valueUrl = it.valueUrl,
-                valueUrlQuery = it.valueUrlQuery,
-                valueList = it.valueList,
-                valueMultiple = it.valueMultiple
-            )
-        }
+        )
         return Result(parameter)
     }
 
