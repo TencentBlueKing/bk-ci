@@ -329,19 +329,6 @@ open class PipelineTimerService @Autowired constructor(
         )
     }
 
-
-
-    fun deleteEmptyTaskIdTimerBranch(
-        projectId: String,
-        pipelineId: String
-    ): Int {
-        return pipelineTimerBranchDao.deleteEmptyTaskId(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId
-        )
-    }
-
     fun updateTimerBranch(
         projectId: String,
         pipelineId: String,

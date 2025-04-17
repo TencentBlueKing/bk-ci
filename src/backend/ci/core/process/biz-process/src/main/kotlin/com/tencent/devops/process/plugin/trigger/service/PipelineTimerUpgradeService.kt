@@ -216,7 +216,7 @@ open class PipelineTimerUpgradeService @Autowired constructor(
                     }
                     // 流水线存在多个触发器，存量数据中存在taskId为空的脏数据
                     noScmTimerList.size > 1 && emptyTaskIdRecords.size != timerBranchRecords.size -> {
-                        val deleteCount = pipelineTimerService.deleteEmptyTaskIdTimerBranch(projectId, pipelineId)
+                        val deleteCount = pipelineTimerService.deleteTimerBranch(projectId, pipelineId, "")
                         logger.warn("clean empty taskId|deleted $deleteCount timer branch|$projectId|$pipelineId")
                     }
 
