@@ -394,7 +394,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                 storeReleaseCreateRequest = StoreReleaseCreateRequest(
                     storeCode = template.templateCode,
                     storeType = StoreTypeEnum.TEMPLATE,
-                    latestUpgrader = template.creator,
+                    latestUpgrader = template.modifier,
                     latestUpgradeTime = pubTime
                 )
             )

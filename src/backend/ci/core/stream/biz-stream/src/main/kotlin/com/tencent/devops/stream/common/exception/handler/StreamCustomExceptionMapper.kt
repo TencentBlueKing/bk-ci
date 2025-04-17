@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkExceptionMapper
 import com.tencent.devops.stream.common.exception.StreamCustomException
 import org.slf4j.LoggerFactory
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.ext.ExceptionMapper
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.ext.ExceptionMapper
 
 /**
  * 针对stream的一些特殊返回定制的 custom response

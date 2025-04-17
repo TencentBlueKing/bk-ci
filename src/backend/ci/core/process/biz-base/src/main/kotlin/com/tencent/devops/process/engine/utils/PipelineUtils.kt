@@ -43,7 +43,7 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_MAX
 import java.util.regex.Pattern
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 
 object PipelineUtils {
@@ -51,6 +51,8 @@ object PipelineUtils {
     private val logger = LoggerFactory.getLogger(PipelineUtils::class.java)
 
     private const val ENGLISH_NAME_PATTERN = "[A-Za-z_][A-Za-z_0-9.]*"
+
+    private val PIPELINE_ID_PATTERN = Pattern.compile("(p-)?[a-f\\d]{32}")
 
     fun checkPipelineName(name: String, maxPipelineNameSize: Int) {
         if (name.toCharArray().size > maxPipelineNameSize) {
@@ -260,5 +262,9 @@ object PipelineUtils {
             }
         }
         return filterParams
+    }
+
+    fun isPipelineId(pipelineId: String): Boolean {
+        return PIPELINE_ID_PATTERN.matcher(pipelineId).matches()
     }
 }

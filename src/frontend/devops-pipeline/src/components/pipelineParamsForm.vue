@@ -95,23 +95,23 @@
 </template>
 
 <script>
+    import CascadeRequestSelector from '@/components/atomFormField/CascadeRequestSelector'
     import EnumInput from '@/components/atomFormField/EnumInput'
+    import FileParamInput from '@/components/atomFormField/FileParamInput'
     import RequestSelector from '@/components/atomFormField/RequestSelector'
     import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import metadataList from '@/components/common/metadata-list'
-    import FileParamInput from '@/components/atomFormField/FileParamInput'
-    import CascadeRequestSelector from '@/components/atomFormField/CascadeRequestSelector'
     import renderSortCategoryParams from '@/components/renderSortCategoryParams'
-    import { isObject } from '@/utils/util'
     import {
         BOOLEAN,
         BOOLEAN_LIST,
         CODE_LIB,
         CONTAINER_TYPE,
         ENUM,
+        getBranchOption,
         GIT_REF,
         isCodelibParam,
         isEnumParam,
@@ -119,17 +119,17 @@
         isGitParam,
         isMultipleParam,
         isRemoteType,
+        isRepoParam,
         isSvnParam,
         MULTIPLE,
         ParamComponentMap,
+        REPO_REF,
         STRING,
         SUB_PIPELINE,
         SVN_TAG,
-        TEXTAREA,
-        REPO_REF,
-        getBranchOption,
-        isRepoParam
+        TEXTAREA
     } from '@/store/modules/atom/paramsConfig'
+    import { isObject } from '@/utils/util'
 
     export default {
 
@@ -224,6 +224,15 @@
                             }
                         }
                     }
+
+                    if (isFileParam(param.type)) {
+                        // 预览时，重新上传文件，会把文件类型的value变成对象而非字符串，这时要更新随机串回显到页面上
+                        const paramValue = this.paramValues[param.id]
+                        const newRandomString = paramValue?.latestRandomStringInPath
+                        const defaultRandomString = param.latestRandomStringInPath ?? param.randomStringInPath
+                        restParam.latestRandomStringInPath = newRandomString ?? defaultRandomString
+                        restParam.value = typeof paramValue === 'object' ? paramValue?.directory : paramValue
+                    }
                     return {
                         ...param,
                         component: this.getParamComponentType(param),
@@ -252,7 +261,7 @@
                     acc[categoryKey].push(item)
                     return acc
                 }, {})
-                
+
                 if (!(key in listMap)) {
                     return listMap
                 }

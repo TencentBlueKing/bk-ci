@@ -29,12 +29,12 @@ jobs:
           export MYSQL_PWD=root
           for i in *.sql;do echo $i;mysql -h 127.0.0.1 --port ${{ job.services.mysql.ports['3306'] }} -uroot < $i;done
         working-directory: support-files/sql
-      - name: Set up JDK 1.8
+      - name: Set up JDK 17
         uses: actions/setup-java@v1
         with:
-          java-version: 1.8
+          java-version: 17
       - name: Cache Gradle packages
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/.gradle/caches
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}

@@ -30,6 +30,7 @@ package com.tencent.devops.store.pojo.common.version
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nSourceEnum
 import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -40,7 +41,8 @@ data class VersionModel(
     var publisher: String = "",
     @get:Schema(title = "发布类型", required = true)
     var releaseType: ReleaseTypeEnum = ReleaseTypeEnum.NEW,
-    @get:Schema(title = "插件版本", required = true)
+    @get:Schema(title = "版本号", required = true)
+    @field:BkField(patternStyle = BkStyleEnum.VERSION_STYLE)
     var version: String = "",
     @get:Schema(title = "版本日志内容", required = true)
     @field:BkField(maxLength = 65535)

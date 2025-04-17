@@ -28,14 +28,14 @@
 package com.tencent.devops.metrics.config
 
 import io.micrometer.core.instrument.Clock
-import io.micrometer.prometheus.PrometheusConfig
-import io.micrometer.prometheus.PrometheusMeterRegistry
-import io.prometheus.client.CollectorRegistry
-import io.prometheus.client.exporter.common.TextFormat
+import io.micrometer.prometheusmetrics.PrometheusConfig
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import io.prometheus.metrics.expositionformats.PrometheusTextFormatWriter
+import io.prometheus.metrics.model.registry.PrometheusRegistry
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation
 import org.springframework.boot.actuate.endpoint.web.annotation.WebEndpoint
-import org.springframework.boot.actuate.metrics.export.prometheus.TextOutputFormat
+import org.springframework.boot.actuate.metrics.export.prometheus.PrometheusOutputFormat
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -77,10 +77,10 @@ class MetricsUserConfig {
     @Bean
     fun prometheusMeterRegistry(
         prometheusConfig: PrometheusConfig,
-        collectorRegistry: CollectorRegistry,
+        prometheusRegistry: PrometheusRegistry,
         clock: Clock
     ): PrometheusMeterRegistry {
-        return PrometheusMeterRegistry(prometheusConfig, collectorRegistry, clock)
+        return PrometheusMeterRegistry(prometheusConfig, prometheusRegistry, clock)
     }
 
     @Bean
@@ -96,10 +96,10 @@ class MetricsUserConfig {
     @WebEndpoint(id = "userPrometheus")
     class UserPrometheusEndpoint(private val meterRegistry: PrometheusMeterRegistry) {
 
-        @ReadOperation(producesFrom = TextOutputFormat::class)
+        @ReadOperation(producesFrom = PrometheusOutputFormat::class)
         fun scrape(): String {
             return meterRegistry.scrape(
-                TextFormat.CONTENT_TYPE_004, setOf(
+                PrometheusTextFormatWriter.CONTENT_TYPE, setOf(
                     gaugeBuildQueueKey,
                     gaugeBuildKey,
                     gaugeBuildStatusKey,

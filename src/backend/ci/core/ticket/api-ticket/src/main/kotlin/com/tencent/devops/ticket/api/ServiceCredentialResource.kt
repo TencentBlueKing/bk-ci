@@ -34,22 +34,23 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.ticket.pojo.Credential
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialInfo
+import com.tencent.devops.ticket.pojo.CredentialItemVo
 import com.tencent.devops.ticket.pojo.CredentialUpdate
 import com.tencent.devops.ticket.pojo.enums.Permission
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.OPTIONS
-import javax.ws.rs.POST
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.OPTIONS
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "SERVICE_CREDENTIAL", description = "服务-凭据资源")
 @Path("/service/credentials")
@@ -85,6 +86,21 @@ interface ServiceCredentialResource {
         @QueryParam("publicKey")
         publicKey: String
     ): Result<CredentialInfo?>
+
+    @Operation(summary = "其他服务获取凭据值")
+    @Path("/{projectId}/{credentialId}/item")
+    @GET
+    fun getCredentialItem(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "凭据ID", required = true)
+        @PathParam("credentialId")
+        credentialId: String,
+        @Parameter(description = "Base64编码的加密公钥", required = true)
+        @QueryParam("publicKey")
+        publicKey: String
+    ): Result<CredentialItemVo?>
 
     @Operation(summary = "检查凭据是否存在")
     @Path("/{projectId}/{credentialId}/")
@@ -156,4 +172,15 @@ interface ServiceCredentialResource {
         @Parameter(description = "凭据", required = true)
         credential: CredentialUpdate
     ): Result<Boolean>
+
+    @Operation(summary = "批量获取凭据")
+    @Path("/projects/getCredentialByIds")
+    @POST
+    fun getCredentialByIds(
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "凭据ID集合", required = true)
+        credentialId: Set<String>
+    ): Result<List<Credential>?>
 }

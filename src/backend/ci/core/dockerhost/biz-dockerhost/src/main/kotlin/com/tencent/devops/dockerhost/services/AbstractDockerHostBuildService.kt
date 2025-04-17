@@ -34,7 +34,7 @@ import com.github.dockerjava.api.exception.NotModifiedException
 import com.github.dockerjava.api.exception.UnauthorizedException
 import com.github.dockerjava.api.model.PullResponseItem
 import com.github.dockerjava.core.DefaultDockerClientConfig
-import com.github.dockerjava.core.DockerClientBuilder
+import com.github.dockerjava.core.DockerClientImpl
 import com.github.dockerjava.okhttp.OkDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.common.api.pojo.Result
@@ -46,9 +46,9 @@ import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
-import java.io.File
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
+import java.io.File
 
 abstract class AbstractDockerHostBuildService constructor(
     private val dockerHostConfig: DockerHostConfig,
@@ -76,15 +76,9 @@ abstract class AbstractDockerHostBuildService constructor(
         .readTimeout(300000)
         .build()
 
-    val httpDockerCli: DockerClient = DockerClientBuilder
-        .getInstance(config)
-        .withDockerHttpClient(httpClient)
-        .build()
+    val httpDockerCli: DockerClient = DockerClientImpl.getInstance(config, httpClient)
 
-    val httpLongDockerCli: DockerClient = DockerClientBuilder
-        .getInstance(config)
-        .withDockerHttpClient(longHttpClient)
-        .build()
+    val httpLongDockerCli: DockerClient = DockerClientImpl.getInstance(config, longHttpClient)
 
     abstract fun createContainer(dockerHostBuildInfo: DockerHostBuildInfo): String
 
@@ -126,7 +120,8 @@ abstract class AbstractDockerHostBuildService constructor(
         val taskId = VMUtils.genStartVMTaskId(dockerBuildInfo.vmSeqId.toString())
         // docker pull
         if (dockerBuildInfo.imagePublicFlag == true &&
-            dockerBuildInfo.imageRDType.equals(ImageRDTypeEnum.SELF_DEVELOPED.name, ignoreCase = true)) {
+            dockerBuildInfo.imageRDType.equals(ImageRDTypeEnum.SELF_DEVELOPED.name, ignoreCase = true)
+        ) {
             log(
                 buildId = dockerBuildInfo.buildId,
                 message = "Public image, directly started from the local...",
@@ -147,8 +142,8 @@ abstract class AbstractDockerHostBuildService constructor(
                 )
             } catch (t: UnauthorizedException) {
                 val errorMessage = "No permission to pull image $imageName，Please check if the image path or " +
-                    "credentials are correct. [buildId=${dockerBuildInfo.buildId}]" +
-                    "[containerHashId=${dockerBuildInfo.containerHashId}]"
+                        "credentials are correct. [buildId=${dockerBuildInfo.buildId}]" +
+                        "[containerHashId=${dockerBuildInfo.containerHashId}]"
                 logger.error(errorMessage, t)
                 // 直接失败，禁止使用本地镜像
                 throw ContainerException(
@@ -157,14 +152,14 @@ abstract class AbstractDockerHostBuildService constructor(
                 )
             } catch (t: NotFoundException) {
                 val errorMessage = "Image does not exist $imageName!!，" +
-                    "Please check if the image path or credentials are correct." +
+                        "Please check if the image path or credentials are correct." +
                         "[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
                 logger.error(errorMessage, t)
                 // 直接失败，禁止使用本地镜像
-    /*            throw ContainerException(
-                    errorCodeEnum = ErrorCodeEnum.IMAGE_NOT_EXIST_ERROR,
-                    message = errorMessage
-                )*/
+                /*            throw ContainerException(
+                                errorCodeEnum = ErrorCodeEnum.IMAGE_NOT_EXIST_ERROR,
+                                message = errorMessage
+                            )*/
             } catch (t: Throwable) {
                 logger.warn("Fail to pull the image $imageName of build ${dockerBuildInfo.buildId}", t)
                 log(

@@ -182,7 +182,8 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                 storeType = storeType,
                 storeCode = storeCode,
                 version = version,
-                storePkgEnvInfos = storePkgEnvInfos
+                storePkgEnvInfos = storePkgEnvInfos,
+                releaseType = releaseType
             )
             val updateComponentPkgInfoResult = client.get(ServiceStoreArchiveResource::class).updateComponentPkgInfo(
                 userId = userId,

@@ -27,7 +27,7 @@
   <link rel="shortcut icon" href="<%= PUBLIC_PATH_PREFIX %>/console/static/favicon.ico" type="image/x-icon" />
   <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue_2.7.16.min.js" />
   <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vuex.min.js" />
-  <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router.min.js" />
+  <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router_3.6.5.min.js" />
   <script>
     var API_URL_PREFIX = '/ms' // api接口前缀
     var PUBLIC_URL_PREFIX = '<%= PUBLIC_PATH_PREFIX %>' // 静态资源前缀
@@ -160,7 +160,8 @@
         } else if ([
           /^\/console\/store\/(\w+)?/,
           /^\/console\/permission\/(\w+)?/,
-          /^\/console\/manage\/apply/
+          /^\/console\/manage\/apply/,
+          /^\/console\/platform\/(\w+)?/,
         ].some((reg) => location.pathname.match(reg))) {
           // TODO store、permission、apply project 没有projectId
           return ''
@@ -213,7 +214,7 @@
   </div>
   <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue_2.7.16.min.js"></script>
   <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vuex.min.js"></script>
-  <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router.min.js"></script>
+  <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router_3.6.5.min.js"></script>
 
   <!-- devops:assets -->
   <!-- end devops:assets -->
