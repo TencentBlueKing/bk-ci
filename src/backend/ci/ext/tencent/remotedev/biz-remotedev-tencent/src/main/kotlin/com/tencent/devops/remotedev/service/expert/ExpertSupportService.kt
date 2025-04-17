@@ -931,7 +931,7 @@ class ExpertSupportService @Autowired constructor(
         ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to expand disk in ${data.workspaceName}")
+                params = arrayOf("You do not have permission to delete disk in ${data.workspaceName}")
             )
         }
 
