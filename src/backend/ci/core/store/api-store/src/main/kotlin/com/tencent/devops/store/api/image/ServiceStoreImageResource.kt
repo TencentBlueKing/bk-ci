@@ -121,8 +121,8 @@ interface ServiceStoreImageResource {
 
     @Operation(summary = "根据code和版本号判断镜像是否发布")
     @GET
-    @Path("/image/imageCodes/{imageCode}/imageVersions/{imageVersion}/releasedStatus")
-    fun getImageReleasedStatus(
+    @Path("/image/imageCodes/{imageCode}/imageVersions/{imageVersion}/isReleasedStatus")
+    fun isReleasedStatus(
         @Parameter(description = "镜像标识", required = true)
         @PathParam("imageCode")
         imageCode: String,

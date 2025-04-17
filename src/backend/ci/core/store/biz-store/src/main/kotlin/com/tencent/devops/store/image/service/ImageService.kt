@@ -1250,10 +1250,10 @@ abstract class ImageService @Autowired constructor() {
         return Result(true)
     }
 
-    fun getImageReleasedStatus(imageCode: String, imageVersion: String): Boolean {
+    fun isReleasedStatus(imageCode: String, imageVersion: String, imageStatus: ImageStatusEnum): Boolean {
 
         if (VersionUtils.isLatestVersion(imageVersion)) {
-            val count = imageDao.countImageRelease(dslContext, imageCode, imageVersion)
+            val count = imageDao.countImageRelease(dslContext, imageCode, imageVersion, imageStatus)
             return count > 0
         } else {
             val imageRecord = imageDao.getImage(dslContext, imageCode, imageVersion)
