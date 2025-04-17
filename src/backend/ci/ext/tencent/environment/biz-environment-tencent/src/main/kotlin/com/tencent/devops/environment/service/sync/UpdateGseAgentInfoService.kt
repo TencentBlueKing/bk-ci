@@ -66,11 +66,13 @@ class UpdateGseAgentInfoService @Autowired constructor(
         val countCmdbNodes = cmdbNodeDao.countCmdbNodes(dslContext)
         logger.info("Update gse agent, node(s) quantity: $countCmdbNodes.")
         countCmdbNodes.takeIf { it > 0 }?.run {
+            var startNodeId = 0L
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countCmdbNodes.toLong())
             for (page in 1..totalPages) {
-                val cmdbNodesRecords = cmdbNodeDao.getCmdbNodes(dslContext, page, DEFAULT_PAGE_SIZE)
+                val cmdbNodesRecords = cmdbNodeDao.getCmdbNodesGTNodeId(dslContext, startNodeId, DEFAULT_PAGE_SIZE)
                 val existNodeIdToAgentVersionMap = cmdbNodesRecords.associate {
-                    it[T_NODE_NODE_ID] as Long to
+                    startNodeId = it[T_NODE_NODE_ID] as Long
+                    startNodeId to
                         AgentVersion(
                             serverId = it[T_NODE_SERVER_ID] as? Long,
                             ip = it[T_NODE_NODE_IP] as? String,

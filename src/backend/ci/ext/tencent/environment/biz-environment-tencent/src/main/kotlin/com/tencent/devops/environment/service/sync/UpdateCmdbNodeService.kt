@@ -83,8 +83,9 @@ class UpdateCmdbNodeService @Autowired constructor(
         // 1.更新节点的公司CMDB状态与属性信息
         cmdbNodeCount.takeIf { it > 0 }.run {
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, cmdbNodeCount.toLong())
+            var nodeId = 0L
             for (page in 1..totalPages) {
-                updateCmdbNodeInfoByPage(page)
+                nodeId = updateCmdbNodeInfoByPage(nodeId, DEFAULT_PAGE_SIZE)
             }
         }
         logger.info(
@@ -96,18 +97,22 @@ class UpdateCmdbNodeService @Autowired constructor(
         logger.info("updateCmdbNodeInfo|end")
     }
 
-    private fun updateCmdbNodeInfoByPage(page: Int) {
+    private fun updateCmdbNodeInfoByPage(nodeId: Long, pageSize: Int): Long /* return nodeId */ {
         // 扫描类型为CMDB的所有节点
-        val cmdbNodeList = cmdbNodeDao.listCmdbNodes(page, DEFAULT_PAGE_SIZE)
+        val cmdbNodeList = cmdbNodeDao.listCmdbNodesGTNodeId(nodeId, pageSize)
         val nodeIpSet = cmdbNodeList.map { it.nodeIp }.toSet()
         // 查询CMDB服务器信息
         val ipToCmdbServerMap = tencentCmdbService.queryServerByIp(nodeIpSet)
 
+        var maxNodeId = nodeId
+
         // 1.在CMDB中存在的节点：更新主备负责人、操作系统名称
         val nodeAttrList = cmdbNodeList.filter {
             StringUtils.isNotBlank(it.nodeIp)
-        }.mapNotNull {
-            val oldCmdbNode = it
+        }.mapNotNull { oldCmdbNode ->
+            if (maxNodeId < oldCmdbNode.nodeId) {
+                maxNodeId = oldCmdbNode.nodeId
+            }
             val newCmdbServer = ipToCmdbServerMap[oldCmdbNode.nodeIp]
             if (oldCmdbNode.operatorOrServerIdOrOsNameChanged(newCmdbServer)) {
                 NodeUpdateAttrDTO(
@@ -140,15 +145,17 @@ class UpdateCmdbNodeService @Autowired constructor(
         val notInCmdbIpList = nodeIpSet.filterNot { ipToCmdbServerMap.containsKey(it) }
         // 找出DB中状态不为NOT_IN_CMDB的节点进行更新即可
         val statusInCmdbIpList = cmdbNodeDao.listInCmdbIps(notInCmdbIpList)
-        if (statusInCmdbIpList.isEmpty()) return
-        val affectedRowNum = cmdbNodeDao.updateNodeStatusNotInCmdbByNodeIp(statusInCmdbIpList)
-        if (affectedRowNum > 0) {
-            logger.info(
-                "updateNodeStatusNotInCmdb|affectedRowNum={}|statusInCmdbIpList={}|",
-                affectedRowNum,
-                statusInCmdbIpList
-            )
+        if (statusInCmdbIpList.isNotEmpty()) {
+            val affectedRowNum = cmdbNodeDao.updateNodeStatusNotInCmdbByNodeIp(statusInCmdbIpList)
+            if (affectedRowNum > 0) {
+                logger.info(
+                    "updateNodeStatusNotInCmdb|affectedRowNum={}|statusInCmdbIpList={}|",
+                    affectedRowNum,
+                    statusInCmdbIpList
+                )
+            }
         }
+        return maxNodeId
     }
 
     /**
@@ -163,9 +170,10 @@ class UpdateCmdbNodeService @Autowired constructor(
         val inCmdbNodeCount = cmdbNodeDao.countNodeInCmdb()
         logger.info("inCmdbNodeCount=$inCmdbNodeCount")
         inCmdbNodeCount.takeIf { it > 0 }.run {
+            var nodeId = 0L
             val pageCount = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, inCmdbNodeCount.toLong())
             for (pageNum in 1..pageCount) {
-                updateCmdbNodeCCInfoByPage(pageNum)
+                nodeId = updateCmdbNodeCCInfoByPage(nodeId, DEFAULT_PAGE_SIZE)
             }
         }
         logger.info(
@@ -174,11 +182,17 @@ class UpdateCmdbNodeService @Autowired constructor(
         )
     }
 
-    private fun updateCmdbNodeCCInfoByPage(page: Int) {
+    private fun updateCmdbNodeCCInfoByPage(nodeId: Long, pageSize: Int): Long {
+        var nextNodeId = nodeId
         // 1. 节点record："部署"类型，且在CMDB
-        val nodeRecords = cmdbNodeDao.getDeployNodesInCmdbLimit(dslContext, page, DEFAULT_PAGE_SIZE)
+        val nodeRecords = cmdbNodeDao.getDeployNodesInCmdbLimit(dslContext, nodeId, DEFAULT_PAGE_SIZE)
         // 要判断在不在CC中的所有节点serverId
-        val nodeServerIdList = nodeRecords.mapNotNull { it[T_NODE_SERVER_ID] as? Long }.toSet()
+        val nodeServerIdList = nodeRecords.mapNotNull {
+            if (it[T_NODE_NODE_ID] is Long && it[T_NODE_NODE_ID] as Long > nextNodeId) {
+                nextNodeId = it[T_NODE_NODE_ID] as Long
+            }
+            it[T_NODE_SERVER_ID] as? Long
+        }.toSet()
         // 通过serverId查询 CC信息
         val nodeCCInfoListFromServerId = if (nodeServerIdList.isNotEmpty()) {
             tencentQueryFromCCService.listHostsWithoutBiz(
@@ -239,6 +253,8 @@ class UpdateCmdbNodeService @Autowired constructor(
         if (invalidServerIdList.isNotEmpty()) {
             cmdbNodeDao.updateNodeNotInCCByServerId(dslContext, invalidServerIdList)
         }
+
+        return nextNodeId
     }
 
     private fun getNodeStatus(agentInfo: AgentVersion?): String {
