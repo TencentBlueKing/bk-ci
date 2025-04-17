@@ -615,7 +615,9 @@
 
             async prefetchReleaseVersion (params) {
                 try {
-                    if (!this.value || !this.version || (params.targetAction === TARGET_ACTION_ENUM.COMMIT_TO_BRANCH && !params.targetBranch)) {
+                    const lackTargetAction = params.enablePac && !params.targetAction
+                    const withoutBranch = params.targetAction === TARGET_ACTION_ENUM.COMMIT_TO_BRANCH && !params.targetBranch
+                    if (!this.value || !this.version || lackTargetAction || withoutBranch) {
                         return
                     }
                     const prefetchFn = this.isTemplate ? this.prefetchTemplateVersion : this.prefetchPipelineVersion
