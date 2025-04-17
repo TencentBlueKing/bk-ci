@@ -138,7 +138,10 @@ interface ApigwProjectResourceV4 {
         userId: String,
         @Parameter(description = "access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String?
+        accessToken: String?,
+        @Parameter(description = "产品Id,多个Id之间以,分隔", required = true)
+        @QueryParam("productIds")
+        productIds: String? = null
     ): Result<List<ProjectVO>>
 
     @GET

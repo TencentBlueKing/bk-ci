@@ -340,7 +340,8 @@ class ParamFacadeService @Autowired constructor(
             properties = property.properties,
             searchUrl = searchUrl,
             replaceKey = replaceKey,
-            valueNotEmpty = property.valueNotEmpty
+            valueNotEmpty = property.valueNotEmpty,
+            category = property.category
         )
     }
 

@@ -652,12 +652,14 @@ class PipelineInfoDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
+        pipelineName: String,
         userId: String,
         channelCode: ChannelCode
     ) {
         return with(T_PIPELINE_INFO) {
             dslContext.update(this).set(DELETE, false)
                 .set(UPDATE_TIME, LocalDateTime.now())
+                .set(PIPELINE_NAME, pipelineName)
                 .set(LAST_MODIFY_USER, userId)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
