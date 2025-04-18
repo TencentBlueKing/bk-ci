@@ -32,6 +32,7 @@ dependencies {
     api(project(":core:common:common-service"))
     api(project(":core:common:common-security"))
     api(project(":core:common:common-client"))
+    api(project(":core:common:common-auth:common-auth-api"))
     api("com.tencent.bk.sdk:iam-java-sdk")
     api("org.reflections:reflections")
     api("org.glassfish.jersey.media:jersey-media-multipart")

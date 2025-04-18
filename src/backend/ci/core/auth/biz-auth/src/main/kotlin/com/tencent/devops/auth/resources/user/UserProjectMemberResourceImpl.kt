@@ -36,7 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserProjectMemberResourceImpl @Autowired constructor(
-    val permissionProjectService: PermissionProjectService
+    val permissionProjectService: PermissionProjectService,
 ) : UserProjectMemberResource {
     override fun checkManager(userId: String, projectId: String): Result<Boolean> {
         val result = permissionProjectService.checkProjectManager(userId, projectId) ||
