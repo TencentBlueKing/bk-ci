@@ -68,7 +68,7 @@ class MockAuthProjectApi constructor(
         return true
     }
 
-    override fun checkProjectUser(user: String, serviceCode: AuthServiceCode?, projectCode: String): Boolean {
+    override fun checkProjectUser(user: String, serviceCode: AuthServiceCode, projectCode: String): Boolean {
         return true
     }
 

@@ -141,7 +141,7 @@ class RbacAuthProjectApi @Autowired constructor(
         ).data ?: false
     }
 
-    override fun checkProjectUser(user: String, serviceCode: AuthServiceCode?, projectCode: String): Boolean {
+    override fun checkProjectUser(user: String, serviceCode: AuthServiceCode, projectCode: String): Boolean {
         return client.get(ServiceProjectAuthResource::class).isProjectUser(
             token = tokenService.getSystemToken()!!,
             userId = user,

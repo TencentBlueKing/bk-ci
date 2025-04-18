@@ -7,6 +7,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_NEED_PARAM
 import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_IS_NULL
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.service.BkApiHandleService
 import jakarta.servlet.http.HttpServletRequest
@@ -19,6 +20,7 @@ class BkApiHandleProjectMemberCheckServiceImpl : BkApiHandleService {
         private const val PROJECT_ID = "projectId"
         private const val USER_ID = "userId"
         private var authProjectApi = SpringContextUtil.getBean(AuthProjectApi::class.java)
+        private var projectAuthServiceCode = SpringContextUtil.getBean(ProjectAuthServiceCode::class.java)
     }
 
     override fun handleBuildApiService(parameterNames: Array<String>, parameterValue: Array<Any>) {
@@ -78,6 +80,7 @@ class BkApiHandleProjectMemberCheckServiceImpl : BkApiHandleService {
     }
 
     private fun checkProjectMember(userId: String, projectId: String): Boolean {
-        return authProjectApi.checkProjectUser(user = userId, serviceCode = null, projectCode = projectId)
+//        return authProjectApi.checkProjectUser(user = userId, serviceCode = null, projectCode = projectId)
+        return false;
     }
 }
