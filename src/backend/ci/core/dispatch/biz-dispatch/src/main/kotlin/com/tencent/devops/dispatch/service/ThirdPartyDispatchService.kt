@@ -985,7 +985,7 @@ class ThirdPartyDispatchService @Autowired constructor(
 
     fun finishBuild(event: PipelineAgentShutdownEvent) {
         tpaQueueService.finishQueue(event.buildId, event.vmSeqId)
-        thirdPartyAgentBuildService.finishBuild(event.buildId, event.vmSeqId, event.buildResult)
+        thirdPartyAgentBuildService.finishBuild(event.buildId, event.vmSeqId, event.buildResult, event.executeCount)
     }
 
     companion object {
