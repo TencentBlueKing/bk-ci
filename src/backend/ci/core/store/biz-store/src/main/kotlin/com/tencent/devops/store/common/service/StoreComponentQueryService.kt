@@ -132,7 +132,6 @@ interface StoreComponentQueryService {
         osName: String? = null,
         osArch: String? = null
     ): VersionInfo?
-}
 
     /**
      * 根据组件id获取组件版本发布日志
@@ -144,3 +143,4 @@ interface StoreComponentQueryService {
         pageSize: Int
     ): Result<Page<StoreVersionLogInfo>>
 }
+
