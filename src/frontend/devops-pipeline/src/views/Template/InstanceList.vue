@@ -71,7 +71,6 @@
                     ></bk-table-column>
                     <bk-table-column
                         :label="$t('template.newestVersion')"
-                        :formatter="currentVersionFormatter"
                     >
                         <template>
                             <span>{{ currentVersionName }}</span>
@@ -168,7 +167,7 @@
     import { convertTime } from '@/utils/util'
     import { computed, onMounted, ref, watch } from 'vue'
 
-    const { proxy, showTips, i18n } = UseInstance()
+    const { proxy, showTips, t } = UseInstance()
     const isInit = ref(false)
     const isLoading = ref(false)
     const searchable = ref(false)
@@ -196,27 +195,27 @@
         content: '#update-html'
     })
     const emptyTipsConfig = ref({
-        title: i18n.t('template.instanceEmptyTitle'),
-        desc: i18n.t('template.instanceEmptyDesc'),
+        title: t('template.instanceEmptyTitle'),
+        desc: t('template.instanceEmptyDesc'),
         btns: [
             {
                 theme: 'primary',
                 size: 'normal',
-                handler: () => this.createInstance(),
-                text: i18n.t('template.addInstance')
+                handler: () => createInstance(templateId.value, 'create'),
+                text: t('template.addInstance')
             }
         ]
     })
-    const currentVersion = ref('')
-    const currentVersionId = ref('')
-    const currentVersionName = ref('')
     const curComparedPipeline = ref('')
 
     const showInstanceList = computed(() => showContent.value && (instanceList.value.length || searchable.value))
     const projectId = computed(() => proxy.$route.params.projectId)
-    const pipelineId = computed(() => proxy.$route.params.pipelineId)
     const templateId = computed(() => proxy.$route.params.templateId)
     const pipelineInfo = computed(() => proxy.$store?.state?.atom?.pipelineInfo)
+
+    const currentVersion = computed(() => pipelineInfo.value?.releaseVersion)
+    const currentVersionName = computed(() => pipelineInfo.value?.releaseVersionName)
+
     const searchParams = computed(() => searchValue.value.reduce((acc, filter) => {
         acc[filter.id] = filter.values.map(val => val.id).join(',')
         return acc
@@ -245,8 +244,6 @@
             }
             const res = await proxy.$store.dispatch('templates/requestInstanceList', postData)
             instanceList.value = res.records
-            // currentVersionId.value = res.latestVersion.version
-            // currentVersionName.value = res.latestVersion.versionName
             pagination.value.count = res.count
         } catch (err) {
             showTips({
@@ -278,31 +275,25 @@
     function isUpdating (row) {
         return row.status !== 'UPDATING' && row.hasPermission
     }
-    function currentVersionFormatter () {
-        return currentVersionName.value
-    }
     function localConvertTime (timestamp) {
         return convertTime(timestamp)
     }
-    function createInstance (pipeline, type) {
+    function createInstance (templateId, type = 'create') {
         const route = {
-            name: 'createInstance',
+            name: 'instanceEntry',
             params: {
                 projectId: projectId.value,
-                pipelineId: pipelineId.value,
-                curVersionId: currentVersionId.value
+                templateId,
+                version: pipelineInfo.value?.releaseVersion,
+                type
             }
-        }
-        if (pipeline) {
-            route.hash = type === 'single' ? `#${pipeline}` : `#${pipeline.join('&')}`
-            route.query = type === 'single' ? {} : { page: pagination.value.current, limit: pagination.value.limit }
         }
         proxy.$router.push(route)
     }
     function updateInstance (row) {
         if (row.hasPermission) {
-            const pipeline = row.pipelineId
-            createInstance(pipeline, 'single')
+            proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, [row])
+            createInstance(row.templateId, 'upgrade')
         }
     }
     async function requestVersionCompare (versionId) {
@@ -312,8 +303,8 @@
             const res = await proxy.$store.dispatch('pipelines/requestVersionCompare', {
                 projectId: projectId.value,
                 templateId: templateId.value,
-                versionId: versionId,
-                pipelineId: curComparedPipeline.value
+                version: versionId
+                // templateId: curComparedPipeline.value
             })
 
             versionList.value = res.versions ?? []
@@ -360,13 +351,10 @@
     }
     function copyAsTemplateInstance (row) {
         const route = {
-            name: 'createInstance',
+            name: 'instanceEntry',
             params: {
-                curVersionId: currentVersionId.value,
-                pipelineName: (row.pipelineName + '_copy').substring(0, 128)
-            },
-            query: {
-                pipelineId: row.pipelineId
+                version: currentVersion.value,
+                instanceName: (row.pipelineName + '_copy').substring(0, 128)
             }
         }
         proxy.$router.push(route)
@@ -374,9 +362,8 @@
     function toCompared (row) {
         showComparedInstance.value = true
         isInit.value = true
-        currentVersion.value = row.versionName
         curComparedPipeline.value = row.pipelineId
-        requestVersionCompare(currentVersionId.value)
+        requestVersionCompare(row.version)
     }
     function cancelHandler () {
         showComparedInstance.value = false

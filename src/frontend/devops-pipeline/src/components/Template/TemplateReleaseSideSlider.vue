@@ -21,6 +21,7 @@
             </p>
 
             <bk-popover
+                v-if="isUnpublishedStatus"
                 theme="light"
                 :tippy-options="{
                     arrow: false,
@@ -30,12 +31,21 @@
             >
                 <span class="release-pipeline-num">共3个实例</span>
                 <div slot="content">
-                    <span
-                        v-bk-overflow-tips
-                        class="release-pipeline-new-version"
+                    <div
+                        v-for="item in instancesList"
+                        :key="item.name"
+                        class="instance-list"
                     >
-                        {{ $t("releasePipelineVersion",[newReleaseVersionName]) }}
-                    </span>
+                        <p>
+                            <span class="instance-name">{{ item.name }}</span>
+                        </p>
+                        <span
+                            v-bk-overflow-tips
+                            class="release-pipeline-new-version"
+                        >
+                            {{ $t("releasePipelineVersion",[newReleaseVersionName]) }}
+                        </span>
+                    </div>
                 </div>
             </bk-popover>
         </header>
@@ -44,212 +54,296 @@
             v-bkloading="{ isLoading: isLoading || releasing }"
             class="release-pipeline-pac-form"
         >
-            <div
-                v-if="!pacEnabled"
-                class="release-pipeline-pac-conf"
-            >
-                <aside class="release-pipeline-pac-conf-leftside">
-                    <label for="enablePac">
-                        {{ $t("pacMode") }}
-                    </label>
-                    <bk-switcher
-                        :disabled="pacEnabled || isTemplatePipeline"
-                        theme="primary"
-                        name="enablePac"
-                        :title="isTemplatePipeline ? $t('templateYamlNotSupport') : ''"
-                        v-model="releaseParams.enablePac"
-                        @change="handlePacEnableChange"
-                    />
-                </aside>
-                <aside
-                    v-if="releaseParams.enablePac && hasPacSupportScmTypeList"
-                    class="release-pipeline-pac-conf-rightside"
+            <div v-if="isUnpublishedStatus">
+                <div
+                    v-if="!pacEnabled"
+                    class="release-pipeline-pac-conf"
                 >
-                    <label for="enablePac">
-                        {{ $t("codelibSrc") }}
-                    </label>
-                    <bk-radio-group v-model="releaseParams.scmType">
-                        <bk-radio
-                            v-for="item in pacSupportScmTypeList"
-                            :key="item.id"
-                            :value="item.id"
-                        >
-                            {{ $t(item.value) }}
-                        </bk-radio>
-                    </bk-radio-group>
-                </aside>
-            </div>
-            <bk-form
-                v-if="!releaseParams.enablePac || (releaseParams.enablePac && hasOauth)"
-                label-width="auto"
-                form-type="vertical"
-                :model="releaseParams"
-                :rules="rules"
-                ref="releaseFormRef"
-                class="release-pipeline-pac-setting"
-                error-display-type="normal"
-            >
-                <div v-if="releaseParams.enablePac && hasOauth">
-                    <header
-                        @click="togglePacCodelibSettingForm"
-                        class="release-pac-pipeline-form-header"
-                    >
-                        {{ $t("codelibSetting") }}
-                        <i
-                            :class="[
-                                'devops-icon icon-angle-right',
-                                {
-                                    'pac-codelib-form-show': showPacCodelibSetting
-                                }
-                            ]"
-                        />
-                    </header>
-                    <section v-show="showPacCodelibSetting">
-                        <label
-                            class="yaml-info-codelib-label"
-                            for="yamlCodelib"
-                        >
-                            {{ $t("yamlCodeLib") }}
-                            <i
-                                class="devops-icon icon-info-circle-shape"
-                                v-bk-tooltips="$t('yamlCodeLibDesc')"
-                            />
+                    <aside class="release-pipeline-pac-conf-leftside">
+                        <label for="enablePac">
+                            {{ $t("pacMode") }}
                         </label>
-                        <bk-form-item
-                            required
-                            property="repoHashId"
-                        >
-                            <bk-select
-                                id="yamlCodelib"
-                                :disabled="pacEnabled"
-                                searchable
-                                enable-scroll-load
-                                v-model="releaseParams.repoHashId"
-                                :scroll-loading="scrollLoadmoreConf"
-                                :loading="isInitPacRepo"
-                                :show-empty="false"
-                                :placeholder="$t('editPage.atomForm.selectTips')"
-                                :z-index="2600"
-                                @scroll-end="fetchPacEnableCodelibList(false)"
-                                @toggle="refreshPacEnableCodelibList"
-                            >
-                                <template v-if="pacEnableCodelibList.length">
-                                    <bk-option
-                                        v-for="option in pacEnableCodelibList"
-                                        :key="option.repositoryHashId"
-                                        :id="option.repositoryHashId"
-                                        :name="option.aliasName"
-                                    >
-                                    </bk-option>
-                                </template>
-                                <bk-loading
-                                    is-loading
-                                    mode="spin"
-                                    size="small"
-                                    v-else-if="isInitPacRepo"
-                                >
-                                </bk-loading>
-                                <bk-exception
-                                    v-else
-                                    scene="part"
-                                    type="empty"
-                                >
-                                    <span class="no-pac-enable-codelib-yet">
-                                        {{ $t("noPacEnableCodelibYet") }}
-                                    </span>
-                                </bk-exception>
-                                <p
-                                    class="enable-pac-codelib-link"
-                                    slot="extension"
-                                    @click="goCodelib"
-                                >
-                                    <i class="devops-icon icon-jump-link" />
-                                    {{ $t("goCodelibsEnablePac") }}
-                                </p>
-                            </bk-select>
-                        </bk-form-item>
-                        <bk-form-item
-                            property="filePath"
-                        >
-                            <table class="instance-filePath">
-                                <thead>
-                                    <tr align="left">
-                                        <th>实例</th>
-                                        <th>
-                                            <span class="yaml-path-name">YAML 文件路径</span>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr
-                                        v-for="item in instancesList"
-                                        :key="item.name"
-                                    >
-                                        <td class="instance-name">{{ item.name }}</td>
-                                        <td>
-                                            <div class="input-cell">
-                                                <span class="instance-name">{{ filePathDir }}</span>
-                                                <bk-input
-                                                    v-model="item.filePath"
-                                                    id="yamlFilePath"
-                                                    placeholder="请输入"
-                                                />
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </bk-form-item>
-                    </section>
-                </div>
-                <div class="release-pipeline-pac-submit-conf">
-                    <header class="release-pac-pipeline-form-header">
-                        {{ $t("submitSetting") }}
-                    </header>
-
-                    <bk-form-item
-                        required
-                        :label="$t('versionDesc')"
-                        property="description"
-                    >
-                        <bk-input
-                            type="textarea"
-                            maxlength="512"
-                            v-model="releaseParams.description"
-                            :placeholder="$t(
-                                releaseParams.enablePac
-                                    ? 'commitMsgPlaceholder'
-                                    : 'versionDescPlaceholder'
-                            )
-                            "
+                        <bk-switcher
+                            :disabled="pacEnabled || isTemplatePipeline"
+                            theme="primary"
+                            name="enablePac"
+                            :title="isTemplatePipeline ? $t('templateYamlNotSupport') : ''"
+                            v-model="releaseParams.enablePac"
+                            @change="handlePacEnableChange"
                         />
-                        <span
-                            class="release-pac-version-desc"
-                        >
-                            {{ $t("commitMsgDesc") }}
-                        </span>
-                    </bk-form-item>
-                    <bk-form-item
-                        v-if="releaseParams.enablePac"
-                        required
-                        :label="$t('targetBranch')"
-                        property="targetAction"
+                    </aside>
+                    <aside
+                        v-if="releaseParams.enablePac && hasPacSupportScmTypeList"
+                        class="release-pipeline-pac-conf-rightside"
                     >
-                        <bk-radio-group v-model="releaseParams.targetAction">
+                        <label for="enablePac">
+                            {{ $t("codelibSrc") }}
+                        </label>
+                        <bk-radio-group v-model="releaseParams.scmType">
                             <bk-radio
-                                v-for="option in targetActionOptions"
-                                class="pac-pipeline-dest-branch-radio"
-                                :key="option"
-                                :value="option"
+                                v-for="item in pacSupportScmTypeList"
+                                :key="item.id"
+                                :value="item.id"
                             >
-                                {{ $t(option, [baseVersionBranch]) }}
+                                {{ $t(item.value) }}
                             </bk-radio>
                         </bk-radio-group>
-                    </bk-form-item>
+                    </aside>
                 </div>
-            </bk-form>
+                <bk-form
+                    v-if="!releaseParams.enablePac || (releaseParams.enablePac && hasOauth)"
+                    label-width="auto"
+                    form-type="vertical"
+                    :model="releaseParams"
+                    :rules="rules"
+                    ref="releaseFormRef"
+                    class="release-pipeline-pac-setting"
+                    error-display-type="normal"
+                >
+                    <div v-if="releaseParams.enablePac && hasOauth">
+                        <header
+                            @click="togglePacCodelibSettingForm"
+                            class="release-pac-pipeline-form-header"
+                        >
+                            {{ $t("codelibSetting") }}
+                            <i
+                                :class="[
+                                    'devops-icon icon-angle-right',
+                                    {
+                                        'pac-codelib-form-show': showPacCodelibSetting
+                                    }
+                                ]"
+                            />
+                        </header>
+                        <section v-show="showPacCodelibSetting">
+                            <label
+                                class="yaml-info-codelib-label"
+                                for="yamlCodelib"
+                            >
+                                {{ $t("yamlCodeLib") }}
+                                <i
+                                    class="devops-icon icon-info-circle-shape"
+                                    v-bk-tooltips="$t('yamlCodeLibDesc')"
+                                />
+                            </label>
+                            <bk-form-item
+                                required
+                                property="repoHashId"
+                            >
+                                <bk-select
+                                    id="yamlCodelib"
+                                    :disabled="pacEnabled"
+                                    searchable
+                                    enable-scroll-load
+                                    v-model="releaseParams.repoHashId"
+                                    :scroll-loading="scrollLoadmoreConf"
+                                    :loading="isInitPacRepo"
+                                    :show-empty="false"
+                                    :placeholder="$t('editPage.atomForm.selectTips')"
+                                    :z-index="2600"
+                                    @scroll-end="fetchPacEnableCodelibList(false)"
+                                    @toggle="refreshPacEnableCodelibList"
+                                >
+                                    <template v-if="pacEnableCodelibList.length">
+                                        <bk-option
+                                            v-for="option in pacEnableCodelibList"
+                                            :key="option.repositoryHashId"
+                                            :id="option.repositoryHashId"
+                                            :name="option.aliasName"
+                                        >
+                                        </bk-option>
+                                    </template>
+                                    <bk-loading
+                                        is-loading
+                                        mode="spin"
+                                        size="small"
+                                        v-else-if="isInitPacRepo"
+                                    >
+                                    </bk-loading>
+                                    <bk-exception
+                                        v-else
+                                        scene="part"
+                                        type="empty"
+                                    >
+                                        <span class="no-pac-enable-codelib-yet">
+                                            {{ $t("noPacEnableCodelibYet") }}
+                                        </span>
+                                    </bk-exception>
+                                    <p
+                                        class="enable-pac-codelib-link"
+                                        slot="extension"
+                                        @click="goCodelib"
+                                    >
+                                        <i class="devops-icon icon-jump-link" />
+                                        {{ $t("goCodelibsEnablePac") }}
+                                    </p>
+                                </bk-select>
+                            </bk-form-item>
+                            <bk-form-item
+                                property="filePath"
+                            >
+                                <table class="instance-filePath">
+                                    <thead>
+                                        <tr align="left">
+                                            <th>实例</th>
+                                            <th>
+                                                <span class="yaml-path-name">YAML 文件路径</span>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr
+                                            v-for="item in instancesList"
+                                            :key="item.name"
+                                        >
+                                            <td class="instance-name">{{ item.name }}</td>
+                                            <td>
+                                                <div class="input-cell">
+                                                    <span class="instance-name">{{ filePathDir }}</span>
+                                                    <bk-input
+                                                        v-model="item.filePath"
+                                                        id="yamlFilePath"
+                                                        placeholder="请输入"
+                                                    />
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </bk-form-item>
+                        </section>
+                    </div>
+                    <div class="release-pipeline-pac-submit-conf">
+                        <header class="release-pac-pipeline-form-header">
+                            {{ $t("submitSetting") }}
+                        </header>
+    
+                        <bk-form-item
+                            required
+                            :label="$t('versionDesc')"
+                            property="description"
+                        >
+                            <bk-input
+                                type="textarea"
+                                maxlength="512"
+                                v-model="releaseParams.description"
+                                :placeholder="$t(
+                                    releaseParams.enablePac
+                                        ? 'commitMsgPlaceholder'
+                                        : 'versionDescPlaceholder'
+                                )
+                                "
+                            />
+                            <span
+                                class="release-pac-version-desc"
+                            >
+                                {{ $t("commitMsgDesc") }}
+                            </span>
+                        </bk-form-item>
+                        <bk-form-item
+                            v-if="releaseParams.enablePac"
+                            required
+                            :label="$t('targetBranch')"
+                            property="targetAction"
+                        >
+                            <bk-radio-group v-model="releaseParams.targetAction">
+                                <bk-radio
+                                    v-for="option in targetActionOptions"
+                                    class="pac-pipeline-dest-branch-radio"
+                                    :key="option"
+                                    :value="option"
+                                >
+                                    {{ $t(option, [baseVersionBranch]) }}
+                                </bk-radio>
+                            </bk-radio-group>
+                        </bk-form-item>
+                    </div>
+                </bk-form>
+            </div>
+            <div
+                slot="content"
+                v-else
+                class="release-status-main"
+            >
+                <template v-if="isReleasing">
+                    <Logo
+                        size="56"
+                        name="spinner"
+                        class="release-status-icon"
+                    />
+                    <p class="release-status-title"> 10 个实例正在发布中…</p>
+                    <p class="sub-message">你可以在当前页等待或关闭弹窗继续其他操作后续可在按钮处查看发布结果</p>
+                    <!-- <div class="release-status-content"></div> -->
+                </template>
+                <template v-else-if="isPublishSuccess">
+                    <Logo
+                        size="64"
+                        name="success"
+                        class="release-status-icon"
+                    />
+                    <p class="release-status-title"> 100 个流水线实例发布成功</p>
+                    <p class="sub-message">接下来你可以在实例列表中查看已发布的实例</p>
+                    <bk-button
+                        @click="handleClick"
+                        class="release-status-btn"
+                    >
+                        返回列表
+                    </bk-button>
+                </template>
+                <template v-else-if="isPublishFailure">
+                    <Logo
+                        size="64"
+                        name="failure"
+                        class="release-status-icon"
+                    />
+                    <p class="release-status-title"> 100 个流水线实例发布失败</p>
+                    <p class="sub-message">接下来你可以重试或关闭弹窗</p>
+                    <div class="release-status-btn">
+                        <bk-button
+                            theme="primary"
+                            @click="handleClick"
+                        >
+                            重试
+                        </bk-button>
+                        <bk-button
+                            @click="handleClick"
+                        >
+                            修改配置
+                        </bk-button>
+                        <bk-button
+                            @click="handleClick"
+                        >
+                            关闭
+                        </bk-button>
+                    </div>
+                </template>
+                <template v-else-if="isProcessingRequired">
+                    <Logo
+                        size="64"
+                        name="required"
+                        class="release-status-icon"
+                    />
+                    <p class="release-status-title">合并请求创建完成，请到代码库处理...</p>
+                    <p class="sub-message pending">版本尚未发布成功，下一步 <span>请到代码库处理合并请求</span> </p>
+                    <p class="pac-mode-message">PAC模式下，YAML 文件合入默认分支，才视为发布正式版本</p>
+                    <div class="release-status-btn">
+                        <bk-button
+                            theme="primary"
+                            @click="handleClick"
+                        >
+                            处理合并请求
+                        </bk-button>
+                        <bk-button
+                            @click="handleClick"
+                        >
+                            返回列表
+                        </bk-button>
+                    </div>
+                </template>
+            </div>
         </section>
         <footer
+            v-if="isUnpublishedStatus"
             slot="footer"
             class="release-pipeline-pac-footer"
         >
@@ -321,6 +415,17 @@
         { name: '流水线实例 2', filePath: '' },
         { name: '流水线实例 3', filePath: '' }
     ])
+    const isReleasing = ref(false)
+    const isPublishSuccess = ref(false)
+    const isPublishFailure = ref(false)
+    const isProcessingRequired = ref(false)
+
+    const isUnpublishedStatus = computed(() =>
+        !isReleasing.value
+        && !isPublishSuccess.value
+        && !isPublishFailure.value
+        && !isProcessingRequired.value
+    )
 
     const pipelineInfo = computed(() => proxy.$store?.state?.atom?.pipelineInfo)
     // const pipeline = computed(() => proxy.$store?.state?.atom?.pipeline)
@@ -483,7 +588,6 @@
             }
             const { projectId } = proxy.$route.params
             const { scmType } = releaseParams.value
-            console.log(1111)
             const response = await proxy.$store.dispatch('common/getPACRepoList', {
                 projectId,
                 repositoryType: scmType,
@@ -815,12 +919,28 @@
     }
 
     .release-pipeline-num {
-        color: #1768EF;
+        color: #3A84FF;
         cursor: pointer;
         font-size: 12px;
     }
 }
+
 .instance-version {
+
+    .instance-list {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 318px;
+        height: 32px;
+
+        .instance-name {
+            flex: 1;
+            font-size: 12px;
+            color: #4D4F56;
+        }
+    }
+
     .release-pipeline-new-version {
         background: #f5f6fa;
         border-radius: 10px;
@@ -829,14 +949,13 @@
         height: 22px;
         line-height: 22px;
         padding: 0 12px;
+        min-width: 150px;
         max-width: 300px;
     }
 
     span {
         color: #979ba5;
         font-size: 12px;
-        flex: 1;
-        flex-shrink: 0;
         @include ellipsis();
     }
 }
@@ -1024,6 +1143,7 @@
         }
     }
 }
+
 .release-info-content {
     display: flex;
     flex-direction: column;
@@ -1144,5 +1264,69 @@
     &:hover {
         color: $primaryColor;
     }
+}
+
+.release-status-main {
+    width: 100%;
+    height: 100%;
+    text-align: center;
+
+    .release-status-icon {
+        margin-top: 122px;
+        margin-bottom: 40px;
+    }
+
+    .release-status-title {
+        font-size: 24px;
+        color: #313238;
+        line-height: 32px;
+        margin-bottom: 16px;
+    }
+
+    .sub-message {
+        margin: auto;
+        width: 280px;
+        font-size: 14px;
+        color: #4D4F56;
+        text-align: center;
+    }
+
+    .pending {
+        width: 552px;
+        margin-bottom: 16px;
+        text-align: left;
+        span {
+            cursor: pointer;
+            font-weight: 700;
+        }
+    }
+
+    .pac-mode-message {
+        margin: auto;
+        text-align: left;
+        padding-left: 16px;
+        width: 552px;
+        height: 46px;
+        line-height: 46px;
+        background: #F5F7FA;
+        border-radius: 2px;
+        font-size: 14px;
+        color: #4D4F56;
+    }
+
+    .release-status-content {
+        margin: auto;
+        margin-top: 22px;
+        width: 294px;
+        height: 294px;
+        border: 1px solid #DCDEE5;
+        border-radius: 50%;
+        box-shadow: inset 0 1px 13px 0 #0000001a;
+    }
+
+    .release-status-btn {
+        margin-top: 28px;
+    }
+
 }
 </style>
