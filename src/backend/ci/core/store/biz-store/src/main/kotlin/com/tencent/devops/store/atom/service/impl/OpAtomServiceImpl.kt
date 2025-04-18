@@ -61,8 +61,8 @@ import com.tencent.devops.store.common.service.StoreI18nMessageService
 import com.tencent.devops.store.common.service.StoreLogoService
 import com.tencent.devops.store.common.service.StoreWebsocketService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
+import com.tencent.devops.store.common.utils.StoreFileAnalysisUtil
 import com.tencent.devops.store.common.utils.StoreUtils
-import com.tencent.devops.store.common.utils.TextReferenceFileAnalysisUtil
 import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_FILE_PATH_ERROR
@@ -126,7 +126,7 @@ class OpAtomServiceImpl @Autowired constructor(
 ) : OpAtomService {
 
     private val logger = LoggerFactory.getLogger(OpAtomServiceImpl::class.java)
-    private val fileSeparator: String = FileSystems.getDefault().getSeparator()
+    private val fileSeparator: String = FileSystems.getDefault().separator
 
     /**
      * op系统获取插件信息
@@ -671,7 +671,7 @@ class OpAtomServiceImpl @Autowired constructor(
             )
             val tAtom = TAtom.T_ATOM
             result.forEach {
-                val latestFlag = it[tAtom.LATEST_FLAG] as? Boolean
+                val latestFlag = it[tAtom.LATEST_FLAG]
                 marketAtomService.updateAtomSensitiveCacheConfig(
                     atomCode = it[tAtom.ATOM_CODE],
                     atomVersion = it[tAtom.VERSION],
