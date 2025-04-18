@@ -25,70 +25,54 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.store.resources
+package com.tencent.devops.artifactory.api
 
-import com.tencent.devops.artifactory.api.UserArchiveComponentPkgResource
-import com.tencent.devops.artifactory.pojo.ArchiveStorePkgRequest
-import com.tencent.devops.artifactory.store.service.ArchiveStorePkgService
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 import java.io.InputStream
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import org.springframework.beans.factory.annotation.Autowired
+import org.glassfish.jersey.media.multipart.FormDataParam
 
-@RestResource
-class UserArchiveComponentPkgResourceImpl @Autowired constructor(
-    private val archiveStorePkgService: ArchiveStorePkgService
-) : UserArchiveComponentPkgResource {
+@Tag(name = "SERVICE_ARTIFACTORY_STORE", description = "仓库-研发商店")
+@Path("/service/artifactories/store/component")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceArchiveComponentFileResource {
 
-    override fun archiveComponentPkg(
+    @Operation(summary = "归档组件包文件")
+    @POST
+    @Path("/pkg/archive")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    fun archiveComponentPkg(
+        @Parameter(description = "userId", required = true)
+        @QueryParam("userId")
         userId: String,
+        @Parameter(description = "组件类型", required = true)
+        @QueryParam("storeType")
         storeType: StoreTypeEnum,
-        storeId: String,
+        @Parameter(description = "组件标识", required = true)
+        @QueryParam("storeCode")
         storeCode: String,
+        @Parameter(description = "组件版本号", required = true)
+        @QueryParam("version")
         version: String,
+        @Parameter(description = "发布类型", required = true)
+        @QueryParam("releaseType")
         releaseType: ReleaseTypeEnum,
+        @Parameter(description = "文件", required = true)
+        @FormDataParam("file")
         inputStream: InputStream,
+        @FormDataParam("file")
         disposition: FormDataContentDisposition
-    ): Result<Boolean> {
-        return Result(
-            archiveStorePkgService.archiveStorePkg(
-                userId = userId,
-                inputStream = inputStream,
-                disposition = disposition,
-                archiveStorePkgRequest = ArchiveStorePkgRequest(
-                    storeCode = storeCode,
-                    storeType = storeType,
-                    version = version,
-                    releaseType = releaseType
-                )
-            )
-        )
-    }
-
-    override fun getComponentPkgDownloadUrl(
-        userId: String,
-        projectId: String,
-        storeType: StoreTypeEnum,
-        storeCode: String,
-        version: String,
-        instanceId: String?,
-        osName: String?,
-        osArch: String?
-    ): Result<String> {
-        return Result(
-            archiveStorePkgService.getComponentPkgDownloadUrl(
-                userId = userId,
-                projectId = projectId,
-                storeType = storeType,
-                storeCode = storeCode,
-                instanceId = instanceId,
-                version = version,
-                osName = osName,
-                osArch = osArch
-            )
-        )
-    }
+    ): Result<Boolean>
 }

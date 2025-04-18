@@ -30,21 +30,28 @@ package com.tencent.devops.store.api.common
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ENV
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfResp
-import com.tencent.devops.store.pojo.common.env.StorePkgRunEnvInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.v3.oas.annotations.tags.Tag
+import com.tencent.devops.store.pojo.common.env.StorePkgRunEnvInfo
+import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfResp
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
+import java.io.InputStream
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.glassfish.jersey.media.multipart.FormDataParam
 
 @Tag(name = "BUILD_STORE", description = "build-store")
 @Path("/build/store/")
@@ -93,4 +100,37 @@ interface BuildStoreResource {
         @QueryParam("osArch")
         osArch: String
     ): Result<StorePkgRunEnvInfo?>
+
+    @Operation(summary = "根据组件包一键部署组件")
+    @POST
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Path("/deploy")
+    fun oneClickDeployComponent(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "storeCode", required = true)
+        @FormDataParam("storeCode")
+        storeCode: String,
+        @Parameter(description = "storeType", required = true)
+        @FormDataParam("storeType")
+        storeType: StoreTypeEnum,
+        @Parameter(description = "文件", required = true)
+        @FormDataParam("file")
+        inputStream: InputStream,
+        @FormDataParam("file")
+        disposition: FormDataContentDisposition
+    ): Result<String?>
+
+    @Operation(summary = "根据组件版本ID获取组件发布版本进度")
+    @GET
+    @Path("/release/ids/{storeId}")
+    fun getProcessInfo(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "storeId", required = true)
+        @PathParam("storeId")
+        storeId: String
+    ): Result<StoreProcessInfo>
 }

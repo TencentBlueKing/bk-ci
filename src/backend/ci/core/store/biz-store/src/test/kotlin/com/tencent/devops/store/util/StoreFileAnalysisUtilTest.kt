@@ -25,16 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.publication
+package com.tencent.devops.store.util
 
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.store.common.utils.StoreFileAnalysisUtil
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
-@Schema(title = "组件发布进度信息")
-data class StoreProcessInfo(
-    @get:Schema(title = "发布进度流程操作权限", required = false)
-    var opPermission: Boolean? = null,
-    @get:Schema(title = "store组件流水线构建信息", required = false)
-    var storeBuildInfo: StoreBuildInfo? = null,
-    @get:Schema(title = "发布进度信息", required = true)
-    val processInfos: List<ReleaseProcessItem>
-)
+class StoreFileAnalysisUtilTest {
+
+    @Test
+    fun regexAnalysisTest() {
+        val input = "插件发布测试描述:\${{indexFile(\"cat2.png\")}}||插件发布测试描述:\${{indexFile(\"cat.png\")}}"
+        val pathList = mutableListOf<String>()
+        val result = mutableMapOf<String, String>()
+        StoreFileAnalysisUtil.regexAnalysis(
+            input = input,
+            fileDirPath = "",
+            pathList = pathList
+        )
+        pathList.forEach {
+            result[it] = "www.tested.xxx"
+        }
+        val filePathReplaceResult = StoreFileAnalysisUtil.filePathReplace(result, input)
+        Assertions.assertEquals(
+            "插件发布测试描述:![cat2.png](www.tested.xxx)||插件发布测试描述:![cat.png](www.tested.xxx)",
+            filePathReplaceResult
+        )
+    }
+}
