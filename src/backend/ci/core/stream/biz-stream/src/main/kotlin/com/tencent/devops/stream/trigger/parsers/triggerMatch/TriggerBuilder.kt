@@ -44,21 +44,110 @@ object TriggerBuilder {
             // T_GIT
             is GitPushEvent ->
                 buildGitPushEventElement(gitEvent, triggerOn)
+
             is GitTagPushEvent ->
                 buildGitTagEventElement(gitEvent, triggerOn)
+
             is GitMergeRequestEvent ->
                 buildGitMrEventElement(gitEvent, triggerOn)
+
             is GitIssueEvent ->
                 buildGitIssueElement(gitEvent, triggerOn)
+
             is GitReviewEvent ->
                 buildGitReviewElement(gitEvent, triggerOn)
+
             is GitNoteEvent ->
                 buildGitNoteElement(gitEvent, triggerOn)
             // GITHUB
             is GithubPushEvent ->
                 buildGithubPushEventElement(gitEvent, triggerOn)
+
             is GithubPullRequestEvent ->
                 buildGithubPrEventElement(gitEvent, triggerOn)
+
+            else -> null
+        }
+    }
+
+    fun buildCodeGitWebHookTriggerElementDefault(
+        gitEvent: CodeWebhookEvent
+    ): WebHookTriggerElement? {
+        return when (gitEvent) {
+            // T_GIT
+            is GitPushEvent ->
+                CodeGitWebHookTriggerElement(
+                    id = "0",
+                    repositoryName = gitEvent.project_id.toString(),
+                    repositoryType = TriggerRepositoryType.NAME,
+                    block = false,
+                    eventType = CodeEventType.PUSH
+                )
+
+            is GitTagPushEvent ->
+                CodeGitWebHookTriggerElement(
+                    id = "0",
+                    repositoryName = gitEvent.project_id.toString(),
+                    repositoryType = TriggerRepositoryType.NAME,
+                    block = false,
+                    eventType = CodeEventType.TAG_PUSH
+                )
+
+            is GitMergeRequestEvent ->
+                CodeGitWebHookTriggerElement(
+                    id = "0",
+                    repositoryName = gitEvent.object_attributes.target_project_id.toString(),
+                    repositoryType = TriggerRepositoryType.NAME,
+                    block = false,
+                    eventType = if (gitEvent.object_attributes.action == "merge") {
+                        CodeEventType.MERGE_REQUEST_ACCEPT
+                    } else {
+                        CodeEventType.MERGE_REQUEST
+                    }
+                )
+
+            is GitIssueEvent ->
+                CodeGitWebHookTriggerElement(
+                    id = "0",
+                    repositoryName = gitEvent.objectAttributes.projectId.toString(),
+                    repositoryType = TriggerRepositoryType.NAME,
+                    block = false,
+                    eventType = CodeEventType.ISSUES
+                )
+
+            is GitReviewEvent ->
+                CodeGitWebHookTriggerElement(
+                    id = "0",
+                    repositoryName = gitEvent.projectId.toString(),
+                    repositoryType = TriggerRepositoryType.NAME,
+                    block = false,
+                    eventType = CodeEventType.REVIEW
+                )
+
+            is GitNoteEvent ->
+                CodeGitWebHookTriggerElement(
+                    id = "0",
+                    repositoryName = gitEvent.projectId.toString(),
+                    repositoryType = TriggerRepositoryType.NAME,
+                    eventType = CodeEventType.NOTE
+                )
+            // GITHUB
+            is GithubPushEvent ->
+                CodeGithubWebHookTriggerElement(
+                    id = "0",
+                    repositoryName = gitEvent.repository.id.toString(),
+                    repositoryType = TriggerRepositoryType.NAME,
+                    eventType = CodeEventType.PUSH,
+                )
+
+            is GithubPullRequestEvent ->
+                CodeGithubWebHookTriggerElement(
+                    id = "0",
+                    repositoryName = gitEvent.pullRequest.base.repo.id.toString(),
+                    repositoryType = TriggerRepositoryType.NAME,
+                    eventType = CodeEventType.PULL_REQUEST
+                )
+
             else -> null
         }
     }
@@ -119,12 +208,16 @@ object TriggerBuilder {
         return when (objectKind) {
             StreamObjectKind.PUSH ->
                 TriggerOn(push = PushRule(), mr = null, tag = null)
+
             StreamObjectKind.TAG_PUSH ->
                 TriggerOn(push = null, mr = null, tag = TagRule())
+
             StreamObjectKind.MERGE_REQUEST ->
                 TriggerOn(push = null, mr = MrRule(), tag = null)
+
             StreamObjectKind.ISSUE ->
                 TriggerOn(push = null, mr = null, tag = null, issue = IssueRule())
+
             else -> null
         }
     }

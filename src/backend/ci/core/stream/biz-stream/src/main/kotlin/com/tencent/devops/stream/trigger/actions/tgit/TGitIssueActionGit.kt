@@ -169,10 +169,9 @@ class TGitIssueActionGit(
     }
 
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
-        val (isTrigger, _) = GitActionCommon.matchAndStartParams(
+        val isTrigger = GitActionCommon.isMatch(
             action = this,
-            triggerOn = triggerOn,
-            onlyMatch = true
+            triggerOn = triggerOn
         )
         return TriggerResult(
             trigger = TriggerBody(isTrigger),
@@ -183,6 +182,6 @@ class TGitIssueActionGit(
     }
 
     override fun getWebHookStartParam(triggerOn: TriggerOn): Map<String, String> {
-        return GitActionCommon.matchAndStartParams(this, triggerOn).second
+        return GitActionCommon.getStartParams(this, triggerOn)
     }
 }
