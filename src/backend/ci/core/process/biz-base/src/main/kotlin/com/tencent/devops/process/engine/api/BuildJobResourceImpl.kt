@@ -193,6 +193,16 @@ class BuildJobResourceImpl @Autowired constructor(
         return Result(pipelineUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId, null, null, true))
     }
 
+    override fun getBuildDispatchType(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String
+    ): Result<String?> {
+        val container = vMBuildService.getBuildContainer(projectId, pipelineId, buildId, vmSeqId)
+        return Result(container?.dispatchType?.value)
+    }
+
     companion object {
         private fun checkParam(buildId: String, vmSeqId: String, vmName: String, retryCount: String? = null) {
             if (buildId.isBlank()) {
