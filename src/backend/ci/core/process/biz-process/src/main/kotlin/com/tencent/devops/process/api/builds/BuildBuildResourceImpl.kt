@@ -120,6 +120,6 @@ class BuildBuildResourceImpl @Autowired constructor(
         vmSeqId: String
     ): Result<String?> {
         val container = vMBuildService.getBuildContainer(projectId, pipelineId, buildId, vmSeqId)
-        return Result(container?.dispatchType?.value)
+        return Result(container?.dispatchType?.buildType()?.value)
     }
 }
