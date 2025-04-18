@@ -35,7 +35,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
-import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
+import com.tencent.devops.process.pojo.pipeline.PipelineBuildParamFormProp
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
 import com.tencent.devops.process.service.SubPipelineStartUpService
 import org.springframework.beans.factory.annotation.Autowired
@@ -114,7 +114,7 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         includeNotRequired: Boolean?,
         parentProjectId: String,
         parentPipelineId: String
-    ): Result<List<SubPipelineStartUpInfo>> {
+    ): Result<List<PipelineBuildParamFormProp>> {
         checkParam(userId)
         return subPipeService.subPipelineManualStartupInfo(
             userId = userId,
