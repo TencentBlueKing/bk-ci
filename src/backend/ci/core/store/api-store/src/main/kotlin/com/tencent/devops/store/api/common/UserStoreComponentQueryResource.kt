@@ -43,6 +43,7 @@ import com.tencent.devops.store.pojo.common.media.StoreMediaInfo
 import com.tencent.devops.store.pojo.common.test.StoreTestItem
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
+import com.tencent.devops.store.pojo.common.version.StoreVersionLogInfo
 import com.tencent.devops.store.pojo.common.version.VersionInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -351,4 +352,24 @@ interface UserStoreComponentQueryResource {
         @QueryParam("osArch")
         osArch: String? = null
     ): Result<VersionInfo?>
+
+    @Operation(summary = "根据组件Code获取组件版本日志")
+    @GET
+    @Path("/types/{storeType}/codes/{storeCode}/version/logs/get")
+    fun getStoreVersionLogs(
+        @Parameter(description = "组件代码", required = true)
+        @PathParam("storeCode")
+        storeCode: String,
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        storeType: StoreTypeEnum,
+        @Parameter(description = "页码", required = true)
+        @QueryParam("page")
+        @DefaultValue("1")
+        page: Int,
+        @Parameter(description = "每页数量", required = true)
+        @QueryParam("pageSize")
+        @DefaultValue("10")
+        pageSize: Int
+    ): Result<Page<StoreVersionLogInfo>>
 }

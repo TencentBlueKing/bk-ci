@@ -1501,4 +1501,19 @@ class AtomDao : AtomBaseDao() {
             return step.fetch()
         }
     }
+
+    fun countAtom(dslContext: DSLContext): Long {
+        with(TAtom.T_ATOM) {
+            return dslContext.selectCount().from(this).where(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
+                .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun selectAtomIds(dslContext: DSLContext, offset: Long, batchSize: Long): Result<Record1<String>>? {
+        with(TAtom.T_ATOM) {
+            return dslContext.select(ID).from(this).where(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
+                .limit(offset, batchSize)
+                .fetch()
+        }
+    }
 }

@@ -39,6 +39,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.version.VersionInfo
+import com.tencent.devops.store.pojo.common.version.StoreVersionLogInfo
 
 interface StoreComponentQueryService {
 
@@ -131,4 +132,14 @@ interface StoreComponentQueryService {
         osName: String? = null,
         osArch: String? = null
     ): VersionInfo?
+
+    /**
+     * 根据组件id获取组件版本发布日志
+     */
+    fun getStoreVersionLogs(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<StoreVersionLogInfo>>
 }

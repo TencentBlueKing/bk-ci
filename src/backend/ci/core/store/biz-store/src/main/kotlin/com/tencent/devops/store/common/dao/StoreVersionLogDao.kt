@@ -32,7 +32,9 @@ import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreVersionLog
 import com.tencent.devops.model.store.tables.records.TStoreVersionLogRecord
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import org.jooq.DSLContext
+import org.jooq.Record3
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -110,5 +112,45 @@ class StoreVersionLogDao {
                 .where(STORE_ID.`in`(storeIds))
                 .execute()
         }
+    }
+
+    fun getStoreComponentVersionLogs(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: Byte,
+        page: Int,
+        pageSize: Int
+    ): Result<Record3<String, String, LocalDateTime>>? {
+        val tsb = TStoreBase.T_STORE_BASE
+        val tsvl = TStoreVersionLog.T_STORE_VERSION_LOG
+        val baseStep = dslContext.select(tsb.VERSION, tsvl.CONTENT, tsb.UPDATE_TIME)
+            .from(tsb)
+            .join(tsvl)
+            .on(tsb.ID.eq(tsvl.STORE_ID))
+            .where(
+                tsb.STORE_CODE.eq(storeCode)
+                    .and(tsb.STORE_TYPE.eq(storeType).and(tsb.STATUS.eq(StoreStatusEnum.RELEASED.name)))
+            ).orderBy(tsb.UPDATE_TIME.desc())
+        baseStep.limit((page - 1) * pageSize, pageSize)
+        return baseStep.fetch()
+    }
+
+    fun countStoreComponentVersionLogs(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: Byte
+    ): Long {
+
+        val tsb = TStoreBase.T_STORE_BASE
+        val tsvl = TStoreVersionLog.T_STORE_VERSION_LOG
+        val baseStep = dslContext.selectCount()
+            .from(tsb)
+            .join(tsvl)
+            .on(tsb.ID.eq(tsvl.STORE_ID))
+            .where(
+                tsb.STORE_CODE.eq(storeCode)
+                    .and(tsb.STORE_TYPE.eq(storeType).and(tsb.STATUS.eq(StoreStatusEnum.RELEASED.name)))
+            )
+        return baseStep.fetchOne(0, Long::class.java) ?: 0L
     }
 }
