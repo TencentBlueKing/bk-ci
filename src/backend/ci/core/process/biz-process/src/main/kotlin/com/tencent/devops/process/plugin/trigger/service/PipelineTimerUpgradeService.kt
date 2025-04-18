@@ -167,6 +167,7 @@ open class PipelineTimerUpgradeService @Autowired constructor(
         } while (count == 1000)
     }
 
+    @SuppressWarnings("NestedBlockDepth", "CyclomaticComplexMethod")
     fun upgradeBranch(
         userId: String,
         targetProjectId: String?,

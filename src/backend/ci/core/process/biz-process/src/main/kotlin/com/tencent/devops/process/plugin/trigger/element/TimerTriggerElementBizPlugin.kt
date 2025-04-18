@@ -119,7 +119,7 @@ class TimerTriggerElementBizPlugin constructor(
     override fun beforeDelete(element: TimerTriggerElement, param: BeforeDeleteParam) {
         if (param.pipelineId.isNotBlank()) {
             with(param) {
-                val taskId  = element.id ?: ""
+                val taskId = element.id ?: ""
                 pipelineTimerService.deleteTimer(projectId, pipelineId, userId, taskId)
                 pipelineTimerService.deleteTimerBranch(
                     projectId = projectId,
