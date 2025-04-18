@@ -98,6 +98,7 @@ open class PipelineTimerUpgradeService @Autowired constructor(
                                     taskId = it.taskId,
                                     userId = lastModifyUser
                                 )
+                                logger.info("delete timer task|$projectId|$pipelineId")
                                 if (result.data != true) {
                                     logger.error(
                                         "delete timer fail|projectId=$projectId|" +
@@ -129,16 +130,17 @@ open class PipelineTimerUpgradeService @Autowired constructor(
                             false
                         )
                         // 填充taskId 和 startParam
-                        if (timerRecord.taskId.isNullOrBlank() && timerRecord.crontab == crontab) {
+                        if (timerRecord.taskId.isNullOrBlank()) {
                             // 更新定时任务
-                            pipelineTimerService.updateTimer(
+                            val result = pipelineTimerService.updateTimer(
                                 projectId = projectId,
                                 pipelineId = pipelineId,
                                 taskId = timerTriggerElement.id ?: "",
                                 userId = lastModifyUser,
                                 startParam = timerTriggerElement.convertStartParams(),
                                 crontabExpressionJson = crontab
-                            )
+                            ).data
+                            logger.info("update timer task|$projectId|$pipelineId|${timerTriggerElement.id}|$result")
                         }
                     }
 
