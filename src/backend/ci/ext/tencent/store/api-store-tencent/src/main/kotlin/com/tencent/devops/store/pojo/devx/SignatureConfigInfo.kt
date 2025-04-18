@@ -31,6 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "签名配置信息")
 data class SignatureConfigInfo(
+    @get:Schema(title = "需要进行证书签名的文件相对路径列表", required = false)
+    val certSignFilePaths: List<String>? = null,
     @get:Schema(title = "安装包中需要进行sha1签名的文件相对路径列表", required = false)
     val originFilePaths: List<String>? = null
 )
