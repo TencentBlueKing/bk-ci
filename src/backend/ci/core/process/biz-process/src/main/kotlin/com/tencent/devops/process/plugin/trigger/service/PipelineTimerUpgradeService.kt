@@ -59,6 +59,10 @@ open class PipelineTimerUpgradeService @Autowired constructor(
                 offset = offset,
                 limit = limit
             )
+            if (records.isEmpty()) {
+                logger.info("timer records is empty|$targetProjectId|$targetPipelineId")
+                return
+            }
             records.forEach parseModel@{ (projectId, pipelineId) ->
                 val timerList = pipelineTimerService.listTimer(projectId, pipelineId)
                 val model = pipelineRepositoryService.getModel(
