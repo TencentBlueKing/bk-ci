@@ -223,8 +223,7 @@ class AtomCommonDao : AbstractStoreCommonDao() {
             .on(atom.ID.eq(atomVersionLog.ATOM_ID))
             .where(atom.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()).and(atom.ATOM_CODE.eq(storeCode)))
             .orderBy(atom.UPDATE_TIME.desc())
-
-        baseStep.limit((page - 1) * pageSize, pageSize)
+            .limit((page - 1) * pageSize, pageSize)
 
         return baseStep.fetch()
     }

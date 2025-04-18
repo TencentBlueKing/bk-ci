@@ -344,7 +344,7 @@ class MarketAtomEnvInfoDao {
     ): Result<TAtomEnvInfoRecord> {
         with(TAtomEnvInfo.T_ATOM_ENV_INFO) {
             return dslContext.selectFrom(this)
-                .where(ATOM_ID.`in`(atomIds)).fetch()
+                .where(ATOM_ID.`in`(atomIds.map { it.value1()})).fetch()
         }
     }
 }
