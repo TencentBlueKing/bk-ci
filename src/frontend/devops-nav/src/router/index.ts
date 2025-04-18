@@ -25,6 +25,7 @@ let mod: Route[] = []
 for (const key in window.Pages) {
     mod = mod.concat(window.Pages[key].routes)
 }
+
 const iframeRoutes = window.serviceObject.iframeRoutes.map(r => ({
     path: urlJoin('/console', r.path, ':restPath*'),
     name: r.name,
@@ -126,52 +127,57 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
     })
 
     async function resolveRoute (to, from, next) {
-        const serviceAlias = getServiceAliasByPath(to.path)
-        const currentPage = window.serviceObject.serviceMap[serviceAlias]
-        const { platformInfo } = (store.state as any).platFormConfig
-    
-        if (to.name !== from.name && platformInfo) {
-            let platformTitle = `${platformInfo.i18n.name || platformInfo.name} | ${platformInfo.i18n.brandName || platformInfo.brandName}`
-            if (currentPage) {
-                platformTitle = `${currentPage.name} | ${platformTitle}`
-            }
-            document.title = platformTitle
-        }
-        window.currentPage = currentPage
-    
-        store.dispatch('updateCurrentPage', currentPage) // update currentPage
-        if (!currentPage) { // console 首页
-            next()
-            return
-        }
+        try {
+            const serviceAlias = getServiceAliasByPath(to.path)
+            const currentPage = window.serviceObject.serviceMap[serviceAlias]
+            const { platformInfo } = (store.state as any).platFormConfig
         
-        const { css_url, js_url } = currentPage
-        if (isAmdModule(currentPage) && !loadedModule[serviceAlias]) {
-            loadedModule[serviceAlias] = true
-            store.dispatch('toggleModuleLoading', true)
-            await Promise.all([
-                importStyle(css_url, document.head),
-                importScript(js_url, document.body),
-                dynamicLoadModule(serviceAlias, i18n.locale)
-            ])
-            const module = window.Pages[serviceAlias]
-            store.registerModule(serviceAlias, module.store)
-            const dynamicRoute = [{
-                path: '/console/',
-                component: Index,
-                children: module.routes
-            }]
-            
-            router.addRoutes(dynamicRoute)
-            setTimeout(() => {
-                store.dispatch('toggleModuleLoading', false)
-            }, 100)
-            goNext(to, next)
-        } else if (isAmdModule(currentPage) && loadedModule[serviceAlias]) {
-            await dynamicLoadModule(serviceAlias, i18n.locale)
-            goNext(to, next)
-        } else {
-            goNext(to, next)
+            if (to.name !== from.name && platformInfo) {
+                let platformTitle = `${platformInfo.i18n.name || platformInfo.name} | ${platformInfo.i18n.brandName || platformInfo.brandName}`
+                if (currentPage) {
+                    platformTitle = `${currentPage.name} | ${platformTitle}`
+                }
+                document.title = platformTitle
+            }
+            window.currentPage = currentPage
+        
+            store.dispatch('updateCurrentPage', currentPage) // update currentPage
+            if (!currentPage) { // console 首页
+                next()
+                return
+            }
+            if (isAmdModule(currentPage) && !loadedModule[serviceAlias]) {
+                const { css_url, js_url } = currentPage
+                loadedModule[serviceAlias] = true
+                store.dispatch('toggleModuleLoading', true)
+                
+                await Promise.all([
+                    goNext(from, to, next),
+                    importStyle(css_url, document.head),
+                    importScript(js_url, document.body),
+                    dynamicLoadModule(serviceAlias, i18n.locale)
+                ])
+                const module = window.Pages[serviceAlias]
+                store.registerModule(serviceAlias, module.store)
+                
+                router.addRoute({
+                    path: '/console/',
+                    component: Index,
+                    children: module.routes
+                })
+                setTimeout(() => {
+                    store.dispatch('toggleModuleLoading', false)
+                }, 100)
+            } else if (isAmdModule(currentPage) && loadedModule[serviceAlias]) {
+                await dynamicLoadModule(serviceAlias, i18n.locale)
+                goNext(from, to, next)
+            } else {
+                goNext(from, to, next)
+            }
+        } catch (e) {
+            next({
+                name: '503'
+            })
         }
     }
     
@@ -247,16 +253,16 @@ function initProjectId (to): string {
     }
 }
 
-function goNext (to, next) {
+function goNext (from, to, next) {
     const newPath = initProjectId(to)
-
     // @ts-ignore
     window.setProjectIdCookie(getProjectId(to.params))
     if (to.path !== newPath) {
         next({
             path: newPath,
             query: to.query,
-            hash: to.hash
+            hash: to.hash,
+            replace: true
         })
     } else {
         next()

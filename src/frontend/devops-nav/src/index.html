@@ -197,7 +197,7 @@
 
   <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue_2.7.16.min.js" />
   <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vuex.min.js" />
-  <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router.min.js" />
+  <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router_3.6.5.js" />
   <link rel="preload" as="script" href="//pingjs.qq.com/h5/stats.js?v2.0.4" />
 
   <!-- devops:preload -->
@@ -266,7 +266,7 @@
 
   <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue_2.7.16.min.js"></script>
   <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vuex.min.js"></script>
-  <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router.min.js"></script>
+  <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router_3.6.5.js"></script>
   <script>
     loadJsAssets(true)
   </script>
@@ -377,6 +377,7 @@
     function getServiceObject(serviceList, assetsJSON) {
       var serviceMap = {}
       var iframeRoutes = []
+
       for (var i = 0; i < serviceList.length; i++) {
         var children = serviceList[i].children
         for (var j = 0; j < children.length; j++) {
@@ -494,7 +495,7 @@
         var actionArray = ['setProjectList', 'setServices', 'setUserInfo']
         var projectList = response[0]
         window.INIT_LOCALE = response.pop().language
-        window.diclosurePrjoectList = response.pop()
+        window.diclosurePrjoectList = response.pop() || []
 
         if (project && project.projectCode) {
           for (var j = 0; j < projectList.length; j++) {
