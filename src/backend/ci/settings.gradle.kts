@@ -153,6 +153,7 @@ include(":core:artifactory:model-artifactory")
 include(":core:repository")
 include(":core:repository:api-repository")
 include(":core:repository:biz-repository")
+include(":core:repository:biz-base-scm")
 include(":core:repository:boot-repository")
 include(":core:repository:model-repository")
 

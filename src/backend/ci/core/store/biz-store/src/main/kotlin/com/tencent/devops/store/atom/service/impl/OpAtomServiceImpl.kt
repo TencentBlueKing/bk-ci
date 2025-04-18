@@ -41,6 +41,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
@@ -51,6 +52,7 @@ import com.tencent.devops.store.atom.dao.MarketAtomVersionLogDao
 import com.tencent.devops.store.atom.service.AtomNotifyService
 import com.tencent.devops.store.atom.service.AtomQualityService
 import com.tencent.devops.store.atom.service.AtomReleaseService
+import com.tencent.devops.store.atom.service.MarketAtomService
 import com.tencent.devops.store.atom.service.OpAtomService
 import com.tencent.devops.store.common.dao.LabelDao
 import com.tencent.devops.store.common.service.ClassifyService
@@ -59,8 +61,9 @@ import com.tencent.devops.store.common.service.StoreI18nMessageService
 import com.tencent.devops.store.common.service.StoreLogoService
 import com.tencent.devops.store.common.service.StoreWebsocketService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
-import com.tencent.devops.store.common.utils.StoreFileAnalysisUtil
 import com.tencent.devops.store.common.utils.StoreUtils
+import com.tencent.devops.store.common.utils.TextReferenceFileAnalysisUtil
+import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_FILE_PATH_ERROR
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID
@@ -90,6 +93,7 @@ import java.io.InputStream
 import java.nio.charset.Charset
 import java.nio.file.FileSystems
 import java.time.LocalDateTime
+import java.util.concurrent.Executors
 import java.util.concurrent.ThreadPoolExecutor
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
@@ -117,7 +121,8 @@ class OpAtomServiceImpl @Autowired constructor(
     private val storeI18nMessageService: StoreI18nMessageService,
     private val storeFileService: StoreFileService,
     private val redisOperation: RedisOperation,
-    private val client: Client
+    private val client: Client,
+    private val marketAtomService: MarketAtomService
 ) : OpAtomService {
 
     private val logger = LoggerFactory.getLogger(OpAtomServiceImpl::class.java)
@@ -626,5 +631,61 @@ class OpAtomServiceImpl @Autowired constructor(
         } finally {
             threadPoolExecutor.shutdown()
         }
+    }
+
+    override fun updateAtomSensitiveCacheConfig(userId: String, atomCode: String?): Result<Boolean> {
+        Executors.newFixedThreadPool(1).submit {
+            logger.info("begin updateAtomSensitiveCacheConfig!!")
+            val statusList = listOf(
+                AtomStatusEnum.TESTING.status.toByte(),
+                AtomStatusEnum.AUDITING.status.toByte(),
+                AtomStatusEnum.RELEASED.status.toByte()
+            )
+            try {
+                if (atomCode.isNullOrBlank()) {
+                    batchUpdateAtomSensitiveCacheConfig(null, statusList)
+                } else {
+                    batchUpdateAtomSensitiveCacheConfig(atomCode, statusList)
+                }
+            } catch (ignored: Exception) {
+                logger.warn("updateAtomSensitiveCacheConfig failed", ignored)
+            }
+            logger.info("end updateAtomSensitiveCacheConfig!!")
+        }
+        return Result(true)
+    }
+
+    private fun batchUpdateAtomSensitiveCacheConfig(
+        atomCode: String? = null,
+        statusList: List<Byte>
+    ) {
+        val limit = 100
+        var offset = 0
+        do {
+            val result = atomDao.queryAtomByStatus(
+                dslContext = dslContext,
+                atomCode = atomCode,
+                statusList = statusList,
+                offset = offset,
+                limit = limit
+            )
+            val tAtom = TAtom.T_ATOM
+            result.forEach {
+                val latestFlag = it[tAtom.LATEST_FLAG] as? Boolean
+                marketAtomService.updateAtomSensitiveCacheConfig(
+                    atomCode = it[tAtom.ATOM_CODE],
+                    atomVersion = it[tAtom.VERSION],
+                    props = it[tAtom.PROPS]
+                )
+                if (latestFlag == true) {
+                    marketAtomService.updateAtomSensitiveCacheConfig(
+                        atomCode = it[tAtom.ATOM_CODE],
+                        atomVersion = VersionUtils.convertLatestVersion(it[tAtom.VERSION]),
+                        props = it[tAtom.PROPS]
+                    )
+                }
+            }
+            offset += limit
+        } while (result.size == limit)
     }
 }

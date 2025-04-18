@@ -33,10 +33,10 @@ dependencies {
     }
     api(group = "io.github.openfeign", name = "feign-jaxrs2", classifier = "jakarta") {
         exclude("io.github.openfeign", "feign-jaxrs")
-        exclude("javax.ws.rs", "javax.ws.rs-api")
+        exclude("jakarta.ws.rs", "jakarta.ws.rs-api")
     }
     api(group = "io.github.openfeign", name = "feign-jaxrs", classifier = "jakarta") {
-        exclude("javax.ws.rs", "jsr311-api")
+        exclude("jakarta.ws.rs", "jsr311-api")
     }
     api("io.github.openfeign:feign-okhttp")
     api("io.github.openfeign:feign-jackson")

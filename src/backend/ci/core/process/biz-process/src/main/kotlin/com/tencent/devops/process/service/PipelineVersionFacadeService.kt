@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
@@ -66,10 +67,12 @@ import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRepositoryVersionService
+import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReq
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
@@ -83,11 +86,11 @@ import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
+import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import jakarta.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -112,7 +115,8 @@ class PipelineVersionFacadeService @Autowired constructor(
     private val pipelineBuildDao: PipelineBuildDao,
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineAsCodeService: PipelineAsCodeService,
-    private val scmProxyService: ScmProxyService
+    private val scmProxyService: ScmProxyService,
+    private val pipelinePermissionService: PipelinePermissionService
 ) {
 
     companion object {
@@ -407,17 +411,21 @@ class PipelineVersionFacadeService @Autowired constructor(
                     )
                 }
                 pipelineYamlFacadeService.checkPushParam(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    version = draftVersion.version,
-                    versionName = branchName,
-                    repoHashId = yamlInfo.repoHashId,
-                    scmType = yamlInfo.scmType!!,
-                    filePath = filePath,
-                    content = draftVersion.yaml ?: "",
-                    targetAction = targetAction,
-                    targetBranch = request.targetBranch
+                    PipelineYamlFileReleaseReq(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        pipelineName = targetSettings.pipelineName,
+                        version = draftVersion.version,
+                        versionName = branchName,
+                        repoHashId = yamlInfo.repoHashId,
+                        scmType = yamlInfo.scmType!!,
+                        filePath = filePath,
+                        content = draftVersion.yaml ?: "",
+                        commitMessage = request.description ?: "update",
+                        targetAction = targetAction,
+                        targetBranch = request.targetBranch
+                    )
                 )
             }
 
@@ -512,19 +520,21 @@ class PipelineVersionFacadeService @Autowired constructor(
                 val yamlInfo = request.yamlInfo!!
                 // #8161 如果调用代码库同步失败则有报错或提示
                 val pushResult = pipelineYamlFacadeService.pushYamlFile(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    version = draftVersion.version,
-                    versionName = branchName,
-                    pipelineName = targetSettings.pipelineName,
-                    content = draftVersion.yaml ?: "",
-                    commitMessage = request.description ?: "update",
-                    repoHashId = yamlInfo.repoHashId,
-                    scmType = yamlInfo.scmType!!,
-                    filePath = yamlInfo.filePath,
-                    targetAction = targetAction,
-                    targetBranch = request.targetBranch
+                    PipelineYamlFileReleaseReq(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        version = draftVersion.version,
+                        versionName = branchName,
+                        pipelineName = targetSettings.pipelineName,
+                        content = draftVersion.yaml ?: "",
+                        commitMessage = request.description ?: "update",
+                        repoHashId = yamlInfo.repoHashId,
+                        scmType = yamlInfo.scmType!!,
+                        filePath = yamlInfo.filePath,
+                        targetAction = targetAction,
+                        targetBranch = request.targetBranch
+                    )
                 )
                 targetUrl = pushResult.mrUrl
             }
@@ -693,11 +703,18 @@ class PipelineVersionFacadeService @Autowired constructor(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
+        val editPermission = pipelinePermissionService.checkPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.EDIT
+        )
         val resource = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId,
             version = version,
-            includeDraft = true
+            includeDraft = true,
+            encryptedFlag = !editPermission
         ) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
             params = arrayOf(version.toString())
@@ -731,7 +748,11 @@ class PipelineVersionFacadeService @Autowired constructor(
         }
         val (yamlSupported, yamlPreview, msg) = try {
             val response = transferService.buildPreview(
-                userId, projectId, pipelineId, resource
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                resource = resource,
+                editPermission = editPermission
             )
             Triple(true, response, null)
         } catch (e: PipelineTransferException) {

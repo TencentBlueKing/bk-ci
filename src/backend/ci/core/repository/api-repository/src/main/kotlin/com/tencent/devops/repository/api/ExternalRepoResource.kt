@@ -33,6 +33,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
@@ -81,5 +82,20 @@ interface ExternalRepoResource {
         @Parameter(description = "resource")
         @QueryParam("resource")
         resource: String
+    ): Response
+
+    @Operation(summary = "源码管理oauth授权回调")
+    @GET
+    @Path("/{scmCode}/oauth/callback")
+    fun scmCallback(
+        @Parameter(description = "scmCode")
+        @PathParam("scmCode")
+        scmCode: String,
+        @Parameter(description = "code")
+        @QueryParam("code")
+        code: String,
+        @Parameter(description = "state")
+        @QueryParam("state")
+        state: String
     ): Response
 }

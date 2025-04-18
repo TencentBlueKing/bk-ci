@@ -47,5 +47,7 @@ data class AtomRunInfo(
     @get:Schema(title = "无构建环境插件是否可以在有构建环境运行标识", required = false)
     var buildLessRunFlag: Boolean?,
     @get:Schema(title = "输入字段类型信息数据", required = false)
-    var inputTypeInfos: Map<String, String>?
+    var inputTypeInfos: Map<String, String>?,
+    @get:Schema(title = "敏感输入字段列表", required = false)
+    var sensitiveParams: String? = null
 )
