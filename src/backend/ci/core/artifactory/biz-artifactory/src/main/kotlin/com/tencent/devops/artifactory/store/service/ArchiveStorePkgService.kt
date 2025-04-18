@@ -69,6 +69,7 @@ interface ArchiveStorePkgService {
         storeType: StoreTypeEnum,
         storeCode: String,
         version: String,
+        instanceId: String? = null,
         osName: String? = null,
         osArch: String? = null
     ): String

@@ -253,4 +253,16 @@ interface OpAtomResource {
         @QueryParam("atomCode")
         atomCode: String?
     ): Result<Boolean>
+
+    @Operation(summary = "更新插件敏感参数配置")
+    @POST
+    @Path("/updateAtomSensitiveCacheConfig")
+    fun updateAtomSensitiveCacheConfig(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "atomCode", required = false)
+        @QueryParam("atomCode")
+        atomCode: String?
+    ): Result<Boolean>
 }
