@@ -248,7 +248,10 @@
     function switchType (child) {
         if (child.disabled) return
         proxy.$router.push({
-            name: 'TemplateManageList'
+            params: {
+                ...proxy.$route.params,
+                type: child.name
+            }
         })
     }
     function goTemplateManageList () {
