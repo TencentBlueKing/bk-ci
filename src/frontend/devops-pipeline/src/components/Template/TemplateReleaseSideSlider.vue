@@ -400,7 +400,7 @@
         size: 'mini'
     })
     const releaseParams = ref({
-        enablePac: true,
+        enablePac: false,
         targetBranch: '',
         scmType: '',
         description: '',
@@ -478,11 +478,20 @@
         TARGET_ACTION_ENUM.CHECKOUT_BRANCH_AND_REQUEST_MERGE
     ])
     const hasPacSupportScmTypeList = computed(() => pacSupportScmTypeList.value?.length > 0)
-    const prefetchParams = computed(() => ({
-        targetBranch: releaseParams.value.targetBranch,
-        targetAction: releaseParams.value.targetAction,
-        repoHashId: releaseParams.value.repoHashId
-    }))
+    const prefetchParams = computed(() => {
+        const {
+            targetBranch,
+            targetAction,
+            repoHashId,
+            enablePac
+        } = releaseParams.value
+        return {
+            targetBranch,
+            targetAction,
+            repoHashId,
+            enablePac
+        }
+    })
 
     watch(props.value, val => {
         if (val) {
@@ -550,7 +559,9 @@
     }
     async function prefetchReleaseVersion (params) {
         try {
-            if (!props.version || (params.targetAction === TARGET_ACTION_ENUM.COMMIT_TO_BRANCH && !params.targetBranch)) {
+            const lackTargetAction = params.enablePac && !params.targetAction
+            const withoutBranch = params.targetAction === TARGET_ACTION_ENUM.COMMIT_TO_BRANCH && !params.targetBranch
+            if (!props.value || !props.version || lackTargetAction || withoutBranch) {
                 return
             }
             const datas = {
