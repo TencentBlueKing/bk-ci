@@ -27,7 +27,7 @@
 
 package com.tencent.devops.artifactory.store.resources
 
-import com.tencent.devops.artifactory.api.UserArchiveComponentPkgResource
+import com.tencent.devops.artifactory.api.ServiceArchiveComponentFileResource
 import com.tencent.devops.artifactory.pojo.ArchiveStorePkgRequest
 import com.tencent.devops.artifactory.store.service.ArchiveStorePkgService
 import com.tencent.devops.common.api.pojo.Result
@@ -39,14 +39,13 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserArchiveComponentPkgResourceImpl @Autowired constructor(
+class ServiceArchiveComponentFileResourceImpl @Autowired constructor(
     private val archiveStorePkgService: ArchiveStorePkgService
-) : UserArchiveComponentPkgResource {
+) : ServiceArchiveComponentFileResource {
 
     override fun archiveComponentPkg(
         userId: String,
         storeType: StoreTypeEnum,
-        storeId: String,
         storeCode: String,
         version: String,
         releaseType: ReleaseTypeEnum,
@@ -64,30 +63,6 @@ class UserArchiveComponentPkgResourceImpl @Autowired constructor(
                     version = version,
                     releaseType = releaseType
                 )
-            )
-        )
-    }
-
-    override fun getComponentPkgDownloadUrl(
-        userId: String,
-        projectId: String,
-        storeType: StoreTypeEnum,
-        storeCode: String,
-        version: String,
-        instanceId: String?,
-        osName: String?,
-        osArch: String?
-    ): Result<String> {
-        return Result(
-            archiveStorePkgService.getComponentPkgDownloadUrl(
-                userId = userId,
-                projectId = projectId,
-                storeType = storeType,
-                storeCode = storeCode,
-                instanceId = instanceId,
-                version = version,
-                osName = osName,
-                osArch = osArch
             )
         )
     }
