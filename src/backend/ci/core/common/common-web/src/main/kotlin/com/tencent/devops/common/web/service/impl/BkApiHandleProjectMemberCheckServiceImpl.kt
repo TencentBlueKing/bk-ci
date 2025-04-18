@@ -6,21 +6,20 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_NEED_PARAM_
 import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_IS_NULL
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.service.BkApiHandleService
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.service.ServiceUserProjectMemberPermissionResource
 
 class BkApiHandleProjectMemberCheckServiceImpl : BkApiHandleService {
 
     companion object {
         private const val PROJECT_ID = "projectId"
         private const val USER_ID = "userId"
-        private var authProjectApi = SpringContextUtil.getBean(AuthProjectApi::class.java)
-        private var projectAuthServiceCode = SpringContextUtil.getBean(ProjectAuthServiceCode::class.java)
+        private var client = SpringContextUtil.getBean(Client::class.java)
     }
 
     override fun handleBuildApiService(parameterNames: Array<String>, parameterValue: Array<Any>) {
@@ -80,7 +79,6 @@ class BkApiHandleProjectMemberCheckServiceImpl : BkApiHandleService {
     }
 
     private fun checkProjectMember(userId: String, projectId: String): Boolean {
-//        return authProjectApi.checkProjectUser(user = userId, serviceCode = null, projectCode = projectId)
-        return false;
+        return client.get(ServiceUserProjectMemberPermissionResource::class).checkMember(userId, projectId).data!!
     }
 }
