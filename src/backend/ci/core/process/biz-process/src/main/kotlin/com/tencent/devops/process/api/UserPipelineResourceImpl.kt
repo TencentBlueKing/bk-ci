@@ -458,13 +458,19 @@ class UserPipelineResourceImpl @Autowired constructor(
     }
 
     @AuditEntry(actionId = ActionId.PIPELINE_DELETE)
-    override fun softDelete(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
+    override fun softDelete(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        archiveFlag: Boolean?
+    ): Result<Boolean> {
         checkParam(userId, projectId)
         val deletePipeline = pipelineInfoFacadeService.deletePipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.BS,
+            archiveFlag = archiveFlag
         )
         auditService.createAudit(
             Audit(

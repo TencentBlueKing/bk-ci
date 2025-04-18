@@ -1634,10 +1634,11 @@ class PipelineRepositoryService constructor(
         pipelineId: String,
         userId: String,
         channelCode: ChannelCode?,
-        delete: Boolean
+        delete: Boolean,
+        opDslContext: DSLContext? = null
     ): DeletePipelineResult {
-
-        val record = pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId, channelCode)
+        val finalDslContext = opDslContext ?: dslContext
+        val record = pipelineInfoDao.getPipelineInfo(finalDslContext, projectId, pipelineId, channelCode)
             ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
@@ -1646,7 +1647,7 @@ class PipelineRepositoryService constructor(
         val lock = PipelineModelLock(redisOperation, pipelineId)
         try {
             lock.lock()
-            dslContext.transaction { configuration ->
+            finalDslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
 
                 if (delete) {

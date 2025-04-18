@@ -77,6 +77,17 @@ class MigratePipelineDataTask constructor(
                         migratingShardingDslContext = migratingShardingDslContext,
                         pipelineBuildHistoryRecords = buildHistoryRecords
                     )
+                    val buildHistoryDebugRecords = processDbMigrateDao.getPipelineBuildHistoryDebugRecords(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        limit = MEDIUM_PAGE_SIZE,
+                        offset = offset
+                    )
+                    processDbMigrateDao.migratePipelineBuildHistoryDebugData(
+                        migratingShardingDslContext = migratingShardingDslContext,
+                        pipelineBuildHistoryDebugRecords = buildHistoryDebugRecords
+                    )
                     migrateBuildLinkedData(
                         buildHistoryRecords = buildHistoryRecords,
                         processDataMigrateDao = processDbMigrateDao,
@@ -87,6 +98,20 @@ class MigratePipelineDataTask constructor(
                     )
                     offset += MEDIUM_PAGE_SIZE
                 } while (buildHistoryRecords.size == MEDIUM_PAGE_SIZE)
+                offset = 0
+                do {
+                    val buildHistoryDebugRecords = processDbMigrateDao.getPipelineBuildHistoryDebugRecords(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        limit = MEDIUM_PAGE_SIZE,
+                        offset = offset
+                    )
+                    processDbMigrateDao.migratePipelineBuildHistoryDebugData(
+                        migratingShardingDslContext = migratingShardingDslContext,
+                        pipelineBuildHistoryDebugRecords = buildHistoryDebugRecords
+                    )
+                } while (buildHistoryDebugRecords.size == MEDIUM_PAGE_SIZE)
                 // 3.3、迁移T_PIPELINE_BUILD_SUMMARY表数据
                 migratePipelineBuildSummaryData(
                     projectId = projectId,
@@ -250,6 +275,14 @@ class MigratePipelineDataTask constructor(
                     )
                     // 3.23、迁移T_PIPELINE_WEBHOOK表数据
                     migratePipelineWebhookData(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        dslContext = dslContext,
+                        migratingShardingDslContext = migratingShardingDslContext,
+                        processDataMigrateDao = processDbMigrateDao
+                    )
+                    // 3.24、迁移T_PIPELINE_TIMER_BRANCH表数据
+                    migratePipelineTimerBranchData(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         dslContext = dslContext,
@@ -929,6 +962,32 @@ class MigratePipelineDataTask constructor(
                 pipelineTimerRecord = pipelineTimerRecord
             )
         }
+    }
+
+    private fun migratePipelineTimerBranchData(
+        projectId: String,
+        pipelineId: String,
+        dslContext: DSLContext,
+        migratingShardingDslContext: DSLContext,
+        processDataMigrateDao: ProcessDataMigrateDao
+    ) {
+        var offset = 0
+        do {
+            val pipelineTimerBranchRecords = processDataMigrateDao.getPipelineTimerBranchRecords(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                limit = MEDIUM_PAGE_SIZE,
+                offset = offset
+            )
+            if (pipelineTimerBranchRecords.isNotEmpty()) {
+                processDataMigrateDao.migratePipelineTimerBranchData(
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    pipelineTimerBranchRecords = pipelineTimerBranchRecords
+                )
+            }
+            offset += MEDIUM_PAGE_SIZE
+        } while (pipelineTimerBranchRecords.size == MEDIUM_PAGE_SIZE)
     }
 
     private fun migratePipelineTriggerDetailData(
