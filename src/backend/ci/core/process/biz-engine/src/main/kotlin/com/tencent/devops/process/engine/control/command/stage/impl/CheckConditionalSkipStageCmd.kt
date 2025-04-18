@@ -59,6 +59,14 @@ class CheckConditionalSkipStageCmd constructor(
 
     override fun execute(commandContext: StageContext) {
         val stage = commandContext.stage
+        val event = commandContext.event
+        // 遇到停止/取消等行为直接结束，因为本Stage还未进入
+        if (event.actionType.isEnd() && commandContext.buildStatus.isReadyToRun()) {
+            commandContext.buildStatus = BuildStatus.CANCELED
+            commandContext.cmdFlowState = CmdFlowState.FINALLY
+            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_CANCEL|${event.stageId}")
+            return
+        }
         // 仅在初次进入Stage时进行跳过和依赖判断
         try {
             if (checkIfSkip(commandContext)) {
