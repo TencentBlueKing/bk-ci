@@ -21,7 +21,7 @@
                     </bk-button>
                     <bk-button
                         v-if="isInstanceCreateViewType"
-                       
+
                         theme="primary"
                         @click="handleBatchUpgrade"
                     >
@@ -70,12 +70,12 @@
 </template>
 
 <script setup name="InstanceEntry">
-    import TemplateBreadCrumb from '@/components/template/TemplateBreadCrumb'
-    import TemplateVersionSelector from './TemplateVersionSelector'
+    import TemplateBreadCrumb from '@/components/Template/TemplateBreadCrumb'
+    import UseInstance from '@/hook/useInstance'
+    import { computed, onMounted, ref, watch } from 'vue'
     import InstanceAside from './InstanceAside'
     import InstanceConfig from './InstanceConfig'
-    import { ref, computed, onMounted, watch } from 'vue'
-    import UseInstance from '@/hook/useInstance'
+    import TemplateVersionSelector from './TemplateVersionSelector'
     const { proxy } = UseInstance()
 
     const isLoading = ref(false)
@@ -121,7 +121,7 @@
         requestTemplateByVersion()
     })
 </script>
- 
+
 <style lang="scss">
 @import './../../../scss/conf';
 

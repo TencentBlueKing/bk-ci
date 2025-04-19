@@ -52,73 +52,18 @@
                 :type="templateViewId"
                 :data="tableData"
                 :pagination="pagination"
-                :is-loading="isLoading"
+                :is-loading="isTableLoading"
                 @limit-change="handlePageLimitChange"
                 @page-change="handlePageChange"
                 @clear="handleClear"
             />
         </div>
 
-        <bk-dialog
-            width="800"
-            v-model="copyTemp.isShow"
-            header-position="left"
-            ext-cls="form-dialog"
-            :title="copyTemp.title"
-            :close-icon="copyTemp.closeIcon"
+        <CopyTemplateDialog
+            :copy-temp="copyTemp"
             @confirm="copyConfirmHandler"
             @cancel="copyCancelHandler"
-        >
-            <template>
-                <section class="copy-pipeline bk-form">
-                    <div class="bk-form-item">
-                        <label class="bk-label">{{ $t('template.name') }}：</label>
-                        <div class="bk-form-content">
-                            <input
-                                type="text"
-                                class="bk-form-input"
-                                :placeholder="$t('template.nameInputTips')"
-                                v-model="copyTemp.templateName"
-                                :class="{ 'is-danger': copyTemp.nameHasError }"
-                                @input="copyTemp.nameHasError = false"
-                                name="copyTemplateName"
-                                v-validate="&quot;required|max:30&quot;"
-                                maxlength="30"
-                            >
-                        </div>
-                        <p
-                            v-if="errors.has('copyTemplateName')"
-                            class="error-tips err-name"
-                        >
-                            {{ $t('template.nameErrTips') }}
-                        </p>
-                    </div>
-
-                    <div class="bk-form-item">
-                        <label class="bk-label tip-bottom">{{ $t('template.applySetting') }}
-                            <span
-                                v-bk-tooltips.bottom-end="$t('template.tipsSetting')"
-                                class="bottom-end"
-                            >
-                                <i class="bk-icon icon-info-circle"></i>
-                            </span>
-                        </label>
-                        <div class="bk-form-content">
-                            <bk-radio-group v-model="copyTemp.isCopySetting">
-                                <bk-radio
-                                    v-for="(entry, key) in copySettings"
-                                    :key="key"
-                                    :value="entry.value"
-                                    class="form-radio"
-                                >
-                                    {{ entry.label }}
-                                </bk-radio>
-                            </bk-radio-group>
-                        </div>
-                    </div>
-                </section>
-            </template>
-        </bk-dialog>
+        />
         <CreateTemplateDialog
             :value.sync="showAddTemplateDialog"
             @confirm="handleConfirmCreate"
@@ -130,7 +75,7 @@
 </template>
 
 <script setup>
-    import { onMounted, ref, computed, nextTick, watch } from 'vue'
+    import { onMounted, ref, computed, watch } from 'vue'
     import dayjs from 'dayjs'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
@@ -144,20 +89,32 @@
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
     import {
-        // TEMPLATE_VIEW_ID_CACHE,
         TEMPLATE_VIEW_ID_MAP,
         ALL_TEMPLATE_VIEW_ID,
         TEMPLATE_ACTION_MAP,
         ALL_SOURCE,
         CUSTOM_SOURCE,
-        MARKET_SOURCE,
-        TEMPLATE_MODE
+        MARKET_SOURCE
     } from '@/store/modules/templates/constants'
+    import CopyTemplateDialog from '@/components/Template/CopyTemplateDialog.vue'
+    import useTemplateActions from '@/hook/useTemplateActions'
 
-    const { proxy, i18n, bkMessage, bkInfo, h, validator } = UseInstance()
+    const {
+        copyTemp,
+        isTableLoading,
+        copyTemplate,
+        exportTemplate,
+        deleteTemplate,
+        copyConfirmHandler,
+        copyCancelHandler,
+        goTemplateOverview,
+        toRelativeStore,
+        convertToCustom
+    } = useTemplateActions()
+
+    const { proxy, i18n, bkMessage } = UseInstance()
     const hasCreatePermission = ref(false)
     const searchValue = ref([])
-    const isLoading = ref(false)
     const tableData = ref([])
     const showAddTemplateDialog = ref(false)
     const showInstallTemplateDialog = ref(false)
@@ -166,20 +123,6 @@
         count: 0,
         limit: 20
     })
-    const copyTemp = ref({
-        isShow: false,
-        title: i18n.t('template.saveAsTemplate'),
-        closeIcon: false,
-        quickClose: true,
-        padding: '0 20px',
-        srcTemplateId: '',
-        templateName: '',
-        isCopySetting: true
-    })
-    const copySettings = ref([
-        { label: i18n.t('true'), value: true },
-        { label: i18n.t('false'), value: false }
-    ])
     const filterData = computed(() => [
         {
             name: i18n.t('template.name'),
@@ -291,7 +234,7 @@
     }
             
     async function fetchTableData () {
-        isLoading.value = true
+        isTableLoading.value = true
         try {
             const param = {
                 projectId: projectId.value,
@@ -314,7 +257,7 @@
                 x.templateActions = [
                     {
                         text: i18n.t('copy'), // 复制
-                        handler: copyTemplate,
+                        handler: () => copyTemplate(x),
                         hasPermission: x.canEdit,
                         disablePermissionApi: true,
                         isShow: true,
@@ -327,7 +270,7 @@
                     },
                     {
                         text: i18n.t('template.shelfStore'), // 上架研发商店
-                        handler: toRelativeStore,
+                        handler: () => toRelativeStore(x),
                         hasPermission: x.canEdit,
                         disablePermissionApi: true,
                         isShow: x.mode === 'CUSTOMIZE',
@@ -340,7 +283,7 @@
                     },
                     {
                         text: i18n.t('template.convertToCustom'), // 转为自定义
-                        handler: convertToCustom,
+                        handler: () => convertToCustom(x),
                         hasPermission: x.canEdit,
                         disablePermissionApi: true,
                         isShow: x.source === 'MARKET',
@@ -353,7 +296,7 @@
                     },
                     {
                         text: i18n.t('template.export'), // 导出
-                        handler: exportTemplate,
+                        handler: () => exportTemplate(x),
                         hasPermission: x.canEdit,
                         disablePermissionApi: true,
                         isShow: true,
@@ -366,7 +309,7 @@
                     },
                     {
                         text: i18n.t('delete'),
-                        handler: deleteTemplate,
+                        handler: () => deleteTemplate(x, fetchTableData),
                         hasPermission: x.canDelete,
                         disablePermissionApi: true,
                         isShow: true,
@@ -387,7 +330,7 @@
                 theme: 'error'
             })
         } finally {
-            isLoading.value = false
+            isTableLoading.value = false
         }
     }
     function handlePageLimitChange (limit) {
@@ -415,193 +358,9 @@
         searchValue.value = []
         fetchTableData()
     }
-    /**
-     * 复制
-     * @param row
-     */
-    function copyTemplate (row) {
-        if (!row.canEdit) return
-
-        copyTemp.value.templateName = `${row.name}_copy`
-        copyTemp.value.isShow = true
-        copyTemp.value.srcTemplateId = row.id
-    }
-    /**
-     * 上架研发商店-关联商店
-     * @param row
-     */
-    function toRelativeStore (row) {
-        if (!row.canEdit) return
-
-        const href = `${WEB_URL_PREFIX}/store/workList/template?projectCode=${projectId.value}&templateId=${row.id}`
-        window.open(href, '_blank')
-    }
-    /**
-     * 转为自定义
-     * @param row
-     */
-    async function convertToCustom (row) {
-        if (!row.canEdit) return
-        nextTick(() => {
-            bkInfo({
-                width: 480,
-                title: i18n.t('template.templateToCustom'),
-                extCls: 'custom_template',
-                subHeader: h('div', [
-                    h('p', {
-                        class: 'template-title',
-                        directives: [
-                            {
-                                name: 'bk-tooltips',
-                                value: row.name
-                            }
-                        ]
-                    }, [
-                        h('span', `${i18n.t('templateName')} : `),
-                        h('span', { class: 'template-name-info' }, row.name)
-                    ]),
-                    h('div', { class: 'custom-tip' }, i18n.t('template.customTip'))
-                ]),
-                confirmLoading: true,
-                confirmFn: () => {
-                            
-                }
-            })
-        })
-    }
-    /**
-     * 删除模板
-     * @param row
-     */
-    function deleteTemplate (row) {
-        if (!row.canEdit) return
-        const title = row.mode === TEMPLATE_MODE.CONSTRAINT ? i18n.t('template.deleteStore') : i18n.t('template.deleteCustom')
-
-        bkInfo({
-            title,
-            okText: i18n.t('delete'),
-            extCls: 'delete_template',
-            subHeader: h('div', [
-                h('p', {
-                    class: 'template-title-delete',
-                    directives: [
-                        {
-                            name: 'bk-tooltips',
-                            value: row.name
-                        }
-                    ]
-                }, [
-                    h('span', `${i18n.t('templateName')} : `),
-                    h('span', { class: 'template-name-info' }, row.name)
-                ])
-            ]),
-            confirmLoading: true,
-            confirmFn: () => {
-                confirmDeleteTemplate(row)
-            }
-        })
-    }
-    async function confirmDeleteTemplate (row) {
-        isLoading.value = true
-        try {
-            await proxy.$store.dispatch('templates/deleteTemplate', {
-                projectId: projectId.value,
-                templateId: row.id
-            })
-
-            fetchTableData()
-            bkMessage({ message: i18n.t('template.deleteSuc'), theme: 'success' })
-        } catch (err) {
-            bkMessage({
-                message: err.message || err,
-                theme: 'error'
-            })
-        } finally {
-            isLoading.value = false
-        }
-    }
-    /**
-     * 导出模板
-     * @param row
-     */
-    async function exportTemplate (row) {
-        try {
-            const params = {
-                projectId: projectId.value,
-                templateId: row.id
-            }
-            const res = await proxy.$store.dispatch('templates/exportYamlTemplate', params, {
-                responseType: 'blob'
-            })
-            const blob = new Blob([res], { type: 'application/x-yaml' })
-            const url = window.URL || window.webkitURL || window.moxURL
-
-            const a = document.createElement('a')
-            a.href = url.createObjectURL(blob)
-            a.download = `${row.name}.yaml`
-            a.click()
-            window.URL.revokeObjectURL(url)
-        } catch (error) {
-            bkMessage({
-                message: error.message || error,
-                theme: 'error'
-            })
-        }
-    }
-    /**
-     * 复制模板
-     * @param row
-     */
-    async function copyConfirmHandler (row) {
-        const valid = await validator.validate()
-        if (!valid) return
-        isLoading.value = true
-        const templateName = copyTemp.value.templateName || ''
-        if (!templateName.trim()) {
-            copyTemp.value.nameHasError = true; return
-        }
-
-        const postData = {
-            projectId: projectId.value,
-            params: {
-                srcTemplateId: copyTemp.value.srcTemplateId,
-                copySetting: copyTemp.value.isCopySetting,
-                name: copyTemp.value.templateName
-            }
-        }
-        try {
-            const res = await proxy.$store.dispatch('templates/templateCopy', postData)
-            copyCancelHandler()
-            bkMessage({ message: i18n.t('template.copySuc'), theme: 'success' })
-            goTemplateOverview(res)
-        } catch (error) {
-            const message = error.message || error
-            bkMessage({ message, theme: 'error' })
-        } finally {
-            isLoading.value = false
-        }
-    }
-    function copyCancelHandler () {
-        copyTemp.value.isShow = false
-        copyTemp.value.templateName = ''
-        copyTemp.value.pipelineId = ''
-        copyTemp.value.nameHasError = false
-        copyTemp.value.isCopySetting = true
-    }
-
     function handleConfirmCreate (createData) {
         pagination.value.current = 1
         goTemplateOverview(createData)
-    }
-    function goTemplateOverview (data) {
-        proxy.$router.push({
-            name: 'TemplateOverview',
-            params: {
-                templateId: data.templateId,
-                version: data.version,
-                type: 'instanceList'
-            }
-        })
     }
 </script>
 
@@ -687,17 +446,6 @@
             }
         }
    }
-
-}
-.form-dialog {
-    .err-name {
-        text-align: left;
-        margin-left: 150px;
-        margin-bottom: -21px;
-    }
-    .form-radio {
-        margin-right: 30px;
-    }
 }
 </style>
 <style lang="scss">

@@ -9,7 +9,6 @@
         :transfer="true"
         :tippy-options="{
             arrow: false,
-            offset: '5, 1',
             placement: 'bottom'
         }"
         :on-show="handleShowMenu"
@@ -180,7 +179,7 @@
     .dot-menu-list {
         margin: 0;
         padding: 0;
-        min-width: 100px;
+        min-width: 58px;
         list-style: none;
         border: 1px solid $borderWeightColor;
         border-radius: 2px;

@@ -516,9 +516,13 @@
     "STEP": "Step",
     "selectTemplateUpgradedVersion": "Please select the upgraded version",
     "repositoryPlaceholder": "Please select the code repository",
+    "addField": "Add Field",
+    "keyword": "Please enter name keyword",
+    "selectAll": "Select All",
     "pleaseSelectTemplateVersion": "Please select the template version",
     "instanceConfig": "Instance Config",
-    "pipelineBuildParams": "Build Params"
+    "pipelineBuildParams": "Build Params",
+    "releasePipelineInstance": "Release Pipeline Instance"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",

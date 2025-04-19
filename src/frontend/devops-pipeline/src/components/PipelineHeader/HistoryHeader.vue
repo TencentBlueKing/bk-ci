@@ -30,7 +30,7 @@
                 {{ $t("switchToReleaseVersion") }}
             </bk-button>
             <badge
-                v-if="isReleaseVersion"
+                v-if="!isTemplate && isReleaseVersion"
                 class="pipeline-exec-badge"
                 :project-id="projectId"
                 :pipeline-id="uniqueId"
@@ -101,7 +101,7 @@
             >
                 {{ $t('template.instantiate') }}
             </bk-button>
-            <template v-if="!isTemplate">
+            <template v-else-if="!isTemplate">
                 <template v-if="editAndExecutable">
                     <span v-bk-tooltips="tooltip">
                         <bk-button

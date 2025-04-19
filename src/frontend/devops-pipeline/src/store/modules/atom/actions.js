@@ -1002,6 +1002,13 @@ export default {
         })
         return res.data
     },
+
+    async prefetchTemplateVersion ({ commit }, { projectId, templateId, version, ...params }) {
+        const res = await request.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/releaseVersion/${version}/prefetch`, {
+            params
+        })
+        return res.data
+    },
     releaseDraftTemplate (_, { projectId, templateId, version, params }) {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/releaseVersion/${version}`, params)
     },

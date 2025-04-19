@@ -49,7 +49,8 @@
 
 <script>
     import ModeSwitch from '@/components/ModeSwitch'
-    import TemplateBreadCrumb from '@/components/template/TemplateBreadCrumb'
+    import ReleaseButton from '@/components/PipelineHeader/ReleaseButton.vue'
+    import TemplateBreadCrumb from '@/components/Template/TemplateBreadCrumb'
     import {
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
@@ -59,7 +60,6 @@
     } from '@/utils/util'
     import Edit from '@/views/subpages/edit'
     import { mapActions, mapGetters, mapState } from 'vuex'
-    import ReleaseButton from '../../components/PipelineHeader/ReleaseButton.vue'
 
     export default {
         components: {
@@ -83,16 +83,22 @@
                 'isEditing',
                 'getDraftBaseVersionName'
             ]),
+            ...mapGetters({
+                isCodeMode: 'isCodeMode'
+            }),
             ...mapState('atom', [
                 'saveStatus',
                 'pipeline',
                 'pipelineInfo',
                 'pipelineWithoutTrigger',
-                'pipelineSetting'
+                'pipelineSetting',
+                'pipelineYaml'
             ]),
             ...mapState([
-                'fetchError'
+                'fetchError',
+                'pipelineMode'
             ]),
+
             canRelease () {
                 return (this.pipelineInfo?.canRelease ?? false) && !this.saveStatus
             },
@@ -197,8 +203,15 @@
                     const { data } = await this.saveDraftTemplate({
                         projectId: this.projectId,
                         templateId: this.templateId,
-                        model: pipeline,
-                        templateSetting: this.pipelineSetting,
+                        storageType: this.pipelineMode,
+                        ...(this.isCodeMode
+                            ? {
+                                yaml: this.pipelineYaml
+                            }
+                            : {
+                                model: pipeline,
+                                templateSetting: this.pipelineSetting
+                            }),
                         baseVersion: this.currentVersionId,
                         type: this.pipelineInfo?.type
                     })
