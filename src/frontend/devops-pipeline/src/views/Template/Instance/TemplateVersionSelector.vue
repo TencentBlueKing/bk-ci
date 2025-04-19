@@ -27,7 +27,11 @@
         >
             {{ $t('pipelinesPreview') }}
         </bk-button>
-        <bk-checkbox class="apply-checkbox">
+        <bk-checkbox
+            v-model="useTemplateSettings"
+            class="apply-checkbox"
+            @change="handleChangeUseTemplateSettings"
+        >
             <bk-popover
                 ext-cls="apply-tips-popover"
                 theme="light"
@@ -74,6 +78,7 @@
     const versionValue = ref()
     const isLoading = ref(false)
     const isShowPreview = ref(false)
+    const useTemplateSettings = ref(false)
     const templatePipeline = ref({})
     const { proxy } = UseInstance()
     const projectId = computed(() => proxy.$route.params?.projectId)
@@ -96,17 +101,26 @@
             console.error(e)
         }
     }
-    function handleVersionChange (value) {
+    async function handleVersionChange (value) {
         if (!value) return
         try {
-            proxy.$store.dispatch('templates/fetchTemplateByVersion', {
+            const res = await proxy.$store.dispatch('templates/fetchTemplateByVersion', {
                 projectId: projectId.value,
                 templateId: templateId.value,
                 version: value
             })
+            if (!res.resource) return
+            templatePipeline.value = {
+                templateId: res.resource.templateId,
+                projectId: res.resource.projectId,
+                stages: res.resource.model.stages
+            }
         } catch (e) {
             console.error(e)
         }
+    }
+    function handleChangeUseTemplateSettings (value) {
+        console.log(value, 123)
     }
     function handleJumpToViewDetails () {
 

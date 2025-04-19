@@ -18,10 +18,11 @@
                         <form-field
                             v-for="param in list"
                             :key="param.id"
-                            :required="param.required"
+                            v-bind="param"
                             :is-error="errors.has('devops' + param.name)"
                             :error-msg="errors.first('devops' + param.name)"
                             :label="param.label || param.id"
+                            :show-operate-btn="showOperateBtn"
                         >
                             <section class="component-row">
                                 <component
@@ -33,9 +34,12 @@
                                     flex
                                     v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })"
                                     :class="{
-                                        'is-diff-param': highlightChangedParam && param.isChanged
+                                        'is-diff-param': highlightChangedParam && param.isChanged,
+                                        'is-change-param': param.isChange,
+                                        'is-new-param': param.isNew,
+                                        'is-delete-param': param.isDelete
                                     }"
-                                    :disabled="disabled"
+                                    :disabled="disabled || param.isDelete"
                                     :placeholder="param.placeholder"
                                     :is-diff-param="highlightChangedParam && param.isChanged"
                                     :enable-version-control="param.enableVersionControl"
@@ -164,6 +168,10 @@
             },
             highlightChangedParam: Boolean,
             sortCategory: {
+                type: Boolean,
+                default: false
+            },
+            showOperateBtn: {
                 type: Boolean,
                 default: false
             }
@@ -373,5 +381,23 @@
     }
     .is-diff-param {
         border-color: #FF9C01 !important;
+    }
+    .is-new-param {
+        background: #EBFAF0 !important;
+    }
+        
+    .is-change-param {
+        background: #FDF4E8 !important;
+    }
+        
+    .is-delete-param {
+        background: #FFF0F0 !important;
+    }
+    .is-new-param,
+    .is-delete-param,
+    .is-change-param {
+        &:focus {
+            background: #FFF !important;
+        }
     }
 </style>

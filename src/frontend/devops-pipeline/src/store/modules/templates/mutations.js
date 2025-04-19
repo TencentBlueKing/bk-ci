@@ -17,6 +17,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 import Vue from 'vue'
+import { deepClone } from '@/utils/util'
 import {
     SET_INSTANCE_LIST,
     SET_TEMPLATE_DETAIL
@@ -24,9 +25,10 @@ import {
 export default {
     [SET_INSTANCE_LIST]: (state, list) => {
         Vue.set(state, 'instanceList', list)
+        state.initialInstanceList = deepClone(list) // 使用深拷贝
     },
     [SET_TEMPLATE_DETAIL]: (state, data) => {
-        Vue.set(state, 'templateDetail', data.detail)
-        Vue.set(state, 'templateVersion', data.version)
+        Vue.set(state, 'templateDetail', data.templateDetail)
+        Vue.set(state, 'templateVersion', data.templateVersion)
     }
 }

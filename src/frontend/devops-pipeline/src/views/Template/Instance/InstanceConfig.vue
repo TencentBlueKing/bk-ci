@@ -7,7 +7,7 @@
             <div class="left">
                 {{ $t('template.instanceConfig') }}
                 <span class="line">|</span>
-                <span class="instance-name">{{ curInstance.pipelineName }}</span>
+                <span class="instance-name">{{ curInstance?.pipelineName }}</span>
             </div>
             <div class="right">
                 todo..
@@ -15,6 +15,7 @@
         </header>
         <div
             class="config-content"
+            :key="activeIndex"
         >
             <template>
                 <section class="params-content-item">
@@ -42,6 +43,7 @@
                             :handle-param-change="handleParamChange"
                             :params="paramsList"
                             sort-category
+                            show-operate-btn
                         >
                             <template
                                 slot="versionParams"
@@ -156,13 +158,14 @@
 </template>
 
 <script setup>
-    import { ref, computed, watch, onMounted } from 'vue'
+    import { ref, computed, watch, onBeforeUnmount } from 'vue'
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import renderSortCategoryParams from '@/components/renderSortCategoryParams'
     import UseInstance from '@/hook/useInstance'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { getParamsValuesMap } from '@/utils/util'
+    import { SET_TEMPLATE_DETAIL, SET_INSTANCE_LIST } from '@/store/modules/templates/constants'
     const activeName = ref(new Set([1]))
     const { proxy } = UseInstance()
     const isLoading = ref(true)
@@ -176,9 +179,34 @@
     const versionParamValues = ref({})
     const buildNo = ref({})
     const instanceList = computed(() => proxy.$store?.state?.templates?.instanceList)
-    const activePipelineId = computed(() => proxy.$route?.query?.pipelineId)
-    const curInstance = computed(() => instanceList.value.find(i => i.pipelineId === activePipelineId.value) || {})
+    const initialInstanceList = computed(() => proxy.$store?.state?.templates?.initialInstanceList)
+    const activeIndex = computed(() => proxy.$route?.query?.index)
+    const curInstance = computed(() => {
+        const instance = instanceList.value.find((i, index) => index === activeIndex.value - 1)
+        // 如果选择了模板版本，将模板版本数据与当前实例进行比对
+        let instanceParams, result
+        if (instance && instance?.param && curTemplateVersion.value && curTemplateDetail.value?.params) {
+            const res = compareParams(instance.param, curTemplateDetail.value.params)
+            instanceParams = res.instanceParams
+            result = res.result
+            console.log(result, 'res')
+        }
+        if (instanceParams) {
+            return {
+                ...instance,
+                param: instanceParams
+            }
+        }
+        return instance
+    })
+   
     const isVisibleVersion = computed(() => buildNo.value?.required ?? false)
+    // curTemplate 当前选中的某一个版本的模板数据
+    // templateVersion 选中的模板版本
+    const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
+    const curTemplateVersion = computed(() => proxy.$store?.state?.templates?.templateVersion)
+    watch(() => curTemplateDetail.value, () => {
+    })
     const hasOtherParams = computed(() => {
         if (isVisibleVersion.value) {
             return [...otherParams.value, ...versionParams.value].length
@@ -194,7 +222,56 @@
     watch(() => curInstance.value, (value) => {
         if (!value) return
         initData()
+    }, {
+        deep: true
     })
+    watch(() => curTemplateVersion.value, () => {
+        // 切换版本，重置实例为初始状态
+        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, initialInstanceList.value)
+    })
+    function compareParams (instanceParams, templateParams) {
+        const result = {
+            deleted: [],
+            added: [],
+            changed: []
+        }
+        const templateParamsMap = templateParams.reduce((acc, item) => {
+            acc[item.id] = item // 按 id 进行映射
+            return acc
+        }, {})
+        for (const item of instanceParams) {
+            const templateParamItem = templateParamsMap[item.id]
+
+            if (!templateParamItem) {
+                // 在 instanceParams 中存在，但在 templateParams 中不存在，标记为isDelete
+                item.isDelete = true
+                result.deleted.push({ ...item, isDelete: true })
+            } else {
+                // 对比 defaultValue, 如果不同则标记为isChange
+                if (item.defaultValue !== templateParamItem.defaultValue) {
+                    item.isChange = true
+                    result.changed.push({ ...item, isChange: true })
+                }
+            }
+        }
+
+        // 对比 templateParams，将新字段添加到 instanceParams，并标记为 isNew
+        for (const item of templateParams) {
+            const instanceParamItem = instanceParams.find(i => i.id === item.id)
+            if (!instanceParamItem) {
+                // 在 templateParams 中存在，但在 instanceParams 中不存在，标记为新增
+                const newItem = { ...item, isNew: true }
+                instanceParams.push(newItem) // 将新字段添加到 instanceParams
+                result.added.push(newItem)
+            }
+        }
+        
+        return {
+            instanceParams,
+            result
+        }
+    }
+
     function toggleCollapse (id) {
         if (activeName.value.has(id)) {
             activeName.value.delete(id)
@@ -203,8 +280,7 @@
         }
         activeName.value = new Set(activeName.value)
     }
-    function getParamsValue () {
-        const key = 'defaultValue'
+    function getParamsValue (key = 'defaultValue') {
         paramsValues.value = getParamsValuesMap(paramsList.value, key)
         versionParamValues.value = getParamsValuesMap(versionParams.value, key)
         constantValues.value = getParamsValuesMap(constantParams.value, key)
@@ -212,19 +288,21 @@
     }
     function initData () {
         isLoading.value = true
-        paramsList.value = curInstance.value?.param?.filter(p => !p.constant && p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(p => ({
+        const params = curInstance.value?.param
+        if (!params) return
+        paramsList.value = params.filter(p => !p.constant && p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(p => ({
             ...p,
             label: `${p.id}${p.name ? `(${p.name})` : ''}`
         }))
-        otherParams.value = curInstance.value?.param?.filter(p => !p.constant && !p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(p => ({
+        otherParams.value = params.filter(p => !p.constant && !p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(p => ({
             ...p,
             label: `${p.id}${p.name ? `(${p.name})` : ''}`
         }))
-        constantParams.value = curInstance.value?.param?.filter(p => p.constant).map(p => ({
+        constantParams.value = params.filter(p => p.constant).map(p => ({
             ...p,
             label: `${p.id}${p.name ? `(${p.name})` : ''}`
         }))
-        versionParams.value = curInstance.value?.param?.filter(p => allVersionKeyList.includes(p.id)).map(p => ({
+        versionParams.value = params.filter(p => allVersionKeyList.includes(p.id)).map(p => ({
             ...p,
             isChanged: p.defaultValue !== p.value
         }))
@@ -234,8 +312,11 @@
             isLoading.value = false
         })
     }
-    onMounted(() => {
-        console.log(1)
+    onBeforeUnmount(() => {
+        proxy.$store.commit(`templates/${SET_TEMPLATE_DETAIL}`, {
+            templateVersion: '',
+            templateDetail: {}
+        })
     })
 </script>
 
