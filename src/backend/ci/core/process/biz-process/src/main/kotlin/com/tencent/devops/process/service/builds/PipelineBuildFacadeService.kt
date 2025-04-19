@@ -149,11 +149,11 @@ import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.UriBuilder
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 /**
  *
@@ -432,27 +432,6 @@ class PipelineBuildFacadeService(
                 }
             }
 
-            // 运行中的task重试走全新的处理逻辑
-            if (!buildInfo.isFinish()) {
-                // 当前流水线整体状态为STAGE_SUCCESS，表示流水线处于stage审核中，不接受重试
-                if (!buildInfo.isStageSuccess() &&
-                    pipelineRetryFacadeService.runningBuildTaskRetry(
-                        userId = userId,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        executeCount = buildInfo.executeCount,
-                        resourceVersion = buildInfo.version,
-                        taskId = taskId,
-                        skipFailedTask = skipFailedTask
-                    )
-                ) {
-                    return BuildId(buildId, buildInfo.executeCount, projectId, pipelineId)
-                }
-
-                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT)
-            }
-
             val (readyToBuildPipelineInfo, resource, _) = pipelineRepositoryService.getBuildTriggerInfo(
                 projectId, pipelineId, buildInfo.version
             )
@@ -600,7 +579,8 @@ class PipelineBuildFacadeService(
                 frequencyLimit = true,
                 handlePostFlag = false,
                 debug = buildInfo.debug,
-                webHookStartParam = webHookStartParam
+                webHookStartParam = webHookStartParam,
+                runningBuildTaskRetry = !buildInfo.isFinish() && !buildInfo.isStageSuccess()
             )
         }
     }

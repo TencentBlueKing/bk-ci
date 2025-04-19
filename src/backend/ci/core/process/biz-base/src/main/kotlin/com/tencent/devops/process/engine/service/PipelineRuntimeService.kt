@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.service
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.BUILD_QUEUE
 import com.tencent.devops.common.api.enums.BuildReviewType
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.DateTimeUtil
@@ -2157,5 +2158,177 @@ class PipelineRuntimeService @Autowired constructor(
             buildId = buildId,
             keys = keys
         )
+    }
+
+    fun runningBuildTaskRetry(fullModel: Model, context: StartBuildContext): BuildId {
+        if (context.retryStartTaskId.isNullOrEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ""
+            )
+        }
+        val retryBuildTask = pipelineTaskService.getBuildTask(
+            projectId = context.projectId,
+            buildId = context.buildId,
+            taskId = context.retryStartTaskId,
+            stepId = null
+        ) ?: pipelineTaskService.getBuildTask(
+            projectId = context.projectId,
+            buildId = context.buildId,
+            taskId = null,
+            stepId = context.retryStartTaskId
+        ) ?:  throw ErrorCodeException(
+            errorCode = ""
+        )
+
+        val lastTimeBuildTasks = pipelineTaskService.listByBuildId(
+            projectId = context.projectId,
+            buildId = context.buildId,
+            stageId = retryBuildTask.stageId
+        )
+        val lastTimeBuildContainers = pipelineContainerService.listByBuildId(
+            projectId = context.projectId,
+            buildId = context.buildId,
+            stageId = retryBuildTask.stageId
+        )
+
+        // # 7983 由于container需要使用名称动态展示状态，Record需要特殊保存
+        val buildTaskList = mutableListOf<PipelineBuildTask>()
+        val buildContainersWithDetail = mutableListOf<Pair<PipelineBuildContainer, Container>>()
+
+        val containerBuildRecords = mutableListOf<BuildRecordContainer>()
+        val taskBuildRecords = mutableListOf<BuildRecordTask>()
+
+        val updateExistsTask: MutableList<PipelineBuildTask> = mutableListOf()
+        val updateExistsContainerWithDetail: MutableList<Pair<PipelineBuildContainer, Container>> = mutableListOf()
+
+        fullModel.stages.filter { it.id == retryBuildTask.stageId }.forEach nextStage@{ stage ->
+            stage.containers.forEach nextContainer@{ container ->
+                val buildContainer =
+                    lastTimeBuildContainers.find { it.containerId == container.id } ?: return@nextContainer
+                val needRetry = needRetryContainer(
+                    buildContainer = buildContainer, retryContainerId = retryBuildTask.containerId
+                )
+                if (!needRetry) {
+                    return@nextContainer
+                }
+                context.containerSeq = buildContainer.seq
+                if (container is NormalContainer) {
+                    if (!ContainerUtils.isNormalContainerEnable(container)) {
+                        containerBuildRecords.addRecords(
+                            stageId = stage.id!!,
+                            stageEnableFlag = stage.stageEnabled(),
+                            container = container,
+                            context = context,
+                            buildStatus = BuildStatus.SKIP,
+                            taskBuildRecords = taskBuildRecords
+                        )
+                        return@nextContainer
+                    }
+                } else if (container is VMBuildContainer) {
+                    if (!ContainerUtils.isVMBuildContainerEnable(container)) {
+                        containerBuildRecords.addRecords(
+                            stageId = stage.id!!,
+                            stageEnableFlag = stage.stageEnabled(),
+                            container = container,
+                            context = context,
+                            buildStatus = BuildStatus.SKIP,
+                            taskBuildRecords = taskBuildRecords
+                        )
+                        return@nextContainer
+                    }
+                }
+                pipelineContainerService.prepareBuildContainerTasks(
+                    container = container,
+                    context = context,
+                    stage = stage,
+                    buildContainers = buildContainersWithDetail,
+                    buildTaskList = buildTaskList,
+                    updateExistsContainer = updateExistsContainerWithDetail,
+                    updateExistsTask = updateExistsTask,
+                    containerBuildRecords = containerBuildRecords,
+                    taskBuildRecords = taskBuildRecords,
+                    lastTimeBuildTasks = lastTimeBuildTasks,
+                    lastTimeBuildContainers = lastTimeBuildContainers
+                )
+            }
+        }
+        saveRunningBuildRetryRecord(
+            context = context,
+            updateExistsContainer = updateExistsContainerWithDetail,
+            updateExistsTask = updateExistsTask,
+            buildContainers = buildContainersWithDetail,
+            buildTaskList = buildTaskList,
+            containerBuildRecords = containerBuildRecords,
+            taskBuildRecords = taskBuildRecords
+        )
+        return BuildId(
+            id = context.buildId,
+            executeCount = context.executeCount,
+            projectId = context.projectId,
+            pipelineId = context.pipelineId,
+            num = context.buildNum
+        )
+    }
+
+    /**
+     * 判断job是否应该重试
+     *
+     * 当job是重试插件的对应的job或job是依赖了重试插件的job,则应该重试
+     */
+    private fun needRetryContainer(
+        buildContainer: PipelineBuildContainer?,
+        retryContainerId: String
+    ): Boolean {
+        if (buildContainer == null) return false
+        return if (buildContainer.containerId == retryContainerId) {
+            true
+        } else {
+            val dependRel = buildContainer.controlOption.jobControlOption.dependOnContainerId2JobIds
+            dependRel?.keys?.contains(retryContainerId) ?: false
+        }
+    }
+
+    /**
+     * 保存运行时重试记录
+     */
+    private fun saveRunningBuildRetryRecord(
+        context: StartBuildContext,
+        updateExistsContainer: MutableList<Pair<PipelineBuildContainer, Container>>,
+        updateExistsTask: MutableList<PipelineBuildTask>,
+        buildContainers: MutableList<Pair<PipelineBuildContainer, Container>>,
+        buildTaskList: MutableList<PipelineBuildTask>,
+        containerBuildRecords: MutableList<BuildRecordContainer>,
+        taskBuildRecords: MutableList<BuildRecordTask>
+    ) {
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            // #8955 针对单独写入的插件记录可以覆盖根据build数据生成的记录
+            val taskBuildRecordResult = mutableListOf<BuildRecordTask>()
+            if (updateExistsTask.isNotEmpty()) {
+                pipelineTaskService.batchUpdate(transactionContext, updateExistsTask)
+                taskBuildRecordResult.addRecords(updateExistsTask, context.resourceVersion)
+            }
+            if (buildTaskList.isNotEmpty()) {
+                pipelineTaskService.batchSave(transactionContext, buildTaskList)
+                taskBuildRecordResult.addRecords(buildTaskList, context.resourceVersion)
+            }
+            taskBuildRecordResult.addAll(taskBuildRecords)
+            if (updateExistsContainer.isNotEmpty()) {
+                pipelineContainerService.batchUpdate(
+                    transactionContext, updateExistsContainer.map { it.first }
+                )
+                saveContainerRecords(updateExistsContainer, containerBuildRecords, context.resourceVersion)
+            }
+            if (buildContainers.isNotEmpty()) {
+                pipelineContainerService.batchSave(
+                    transactionContext, buildContainers.map { it.first }
+                )
+                saveContainerRecords(buildContainers, containerBuildRecords, context.resourceVersion)
+            }
+            pipelineBuildRecordService.batchSave(
+                transactionContext, null, null,
+                containerBuildRecords, taskBuildRecordResult
+            )
+        }
     }
 }
