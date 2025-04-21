@@ -779,13 +779,13 @@ class ProjectDao {
     fun getProjectListByProductId(
         dslContext: DSLContext,
         productId: Int,
-        tenantId: String
+        tenantId: String?
     ): Result<Record4<Long, String, String, Boolean>> {
         return with(TProject.T_PROJECT) {
             dslContext.select(ID, ENGLISH_NAME, PROJECT_NAME, ENABLED)
                 .from(this)
                 .where(PRODUCT_ID.eq(productId))
-                .and(TENANT_ID.eq(tenantId))
+                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
                 .fetch()
         }
     }
@@ -794,14 +794,14 @@ class ProjectDao {
         dslContext: DSLContext,
         projectName: String,
         channelCodes: List<String>,
-        tenantId: String,
+        tenantId: String?,
         limit: Int,
         offset: Int
     ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_NAME.like("%$projectName%"))
-                .and(TENANT_ID.eq(tenantId))
+                .let { if (useTenantCondition(tenantId)) it else it.and(TENANT_ID.eq(tenantId)) }
                 .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
                 .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PUBLIC.value))
                 .and(CHANNEL.`in`(channelCodes))
@@ -813,12 +813,12 @@ class ProjectDao {
         dslContext: DSLContext,
         projectName: String,
         channelCodes: List<String>,
-        tenantId: String
+        tenantId: String?
     ): Int {
         with(TProject.T_PROJECT) {
             return dslContext.selectCount().from(this)
                 .where(PROJECT_NAME.like("%$projectName%"))
-                .and(TENANT_ID.eq(tenantId))
+                .let { if (useTenantCondition(tenantId)) it else it.and(TENANT_ID.eq(tenantId)) }
                 .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
                 .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PUBLIC.value))
                 .and(CHANNEL.`in`(channelCodes))
@@ -869,11 +869,11 @@ class ProjectDao {
         }
     }
 
-    fun getProjectByName(dslContext: DSLContext, projectName: String, tenantId: String): ProjectVO? {
+    fun getProjectByName(dslContext: DSLContext, projectName: String, tenantId: String?): ProjectVO? {
         with(TProject.T_PROJECT) {
             val record = dslContext.selectFrom(this)
                 .where(PROJECT_NAME.eq(projectName))
-                .and(TENANT_ID.eq(tenantId))
+                .let { if (useTenantCondition(tenantId)) it else it.and(TENANT_ID.eq(tenantId)) }
                 .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
                 .fetchAny()
                 ?: return null

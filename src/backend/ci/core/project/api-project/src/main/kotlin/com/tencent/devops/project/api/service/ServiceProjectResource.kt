@@ -378,7 +378,7 @@ interface ServiceProjectResource {
         productId: Int,
         @Parameter(description = "租户ID", required = true)
         @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
-        tenantId: String
+        tenantId: String?
     ): Result<List<ProjectBaseInfo>>
 
     @GET

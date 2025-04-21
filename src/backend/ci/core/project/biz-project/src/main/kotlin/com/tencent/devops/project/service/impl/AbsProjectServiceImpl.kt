@@ -1600,7 +1600,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
     }
 
-    override fun getProjectListByProductId(productId: Int, tenantId: String): List<ProjectBaseInfo> {
+    override fun getProjectListByProductId(productId: Int, tenantId: String?): List<ProjectBaseInfo> {
         return projectDao.getProjectListByProductId(
             dslContext = dslContext,
             productId = productId,

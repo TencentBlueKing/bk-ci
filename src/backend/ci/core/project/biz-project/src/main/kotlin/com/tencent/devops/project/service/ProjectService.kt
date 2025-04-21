@@ -277,7 +277,7 @@ interface ProjectService {
 
     fun getProjectListByProductId(
         productId: Int,
-        tenantId: String
+        tenantId: String?
     ): List<ProjectBaseInfo>
 
     fun getExistedEnglishName(
