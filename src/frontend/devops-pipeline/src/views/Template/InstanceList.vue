@@ -147,7 +147,7 @@
             :show-compared-instance="showComparedInstance"
             :loading="dialogLoading"
             :instance-version="instanceVersion"
-            :cur-version="currentVersion"
+            :cur-version="curComparedVersionName"
             :version-list="versionList"
             :cur-params-list="curParamsList"
             :target-params-list="targetParamsList"
@@ -207,6 +207,7 @@
         ]
     })
     const curComparedPipeline = ref('')
+    const curComparedVersionName = ref('')
 
     const showInstanceList = computed(() => showContent.value && (instanceList.value.length || searchable.value))
     const projectId = computed(() => proxy.$route.params.projectId)
@@ -303,12 +304,11 @@
             const res = await proxy.$store.dispatch('pipelines/requestVersionCompare', {
                 projectId: projectId.value,
                 templateId: templateId.value,
-                version: versionId
-                // templateId: curComparedPipeline.value
+                versionId: versionId,
+                pipelineId: curComparedPipeline.value
             })
-
             versionList.value = res.versions ?? []
-            const curVersion = versionList.find(val => {
+            const curVersion = versionList.value.find(val => {
                 return val.version === parseInt(versionId)
             })
             instanceVersion.value = curVersion?.version
@@ -362,8 +362,9 @@
     function toCompared (row) {
         showComparedInstance.value = true
         isInit.value = true
+        curComparedVersionName.value = row.versionName
         curComparedPipeline.value = row.pipelineId
-        requestVersionCompare(row.version)
+        requestVersionCompare(currentVersion.value)
     }
     function cancelHandler () {
         showComparedInstance.value = false
