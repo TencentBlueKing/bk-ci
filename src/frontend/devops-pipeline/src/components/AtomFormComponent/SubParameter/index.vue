@@ -39,6 +39,7 @@
                     <span class="input-seg">=</span>
                     <bk-input
                         v-model="parameter.value"
+                        :type="parameter.type === 'textarea' ? 'textarea' : 'text'"
                         class="input-com"
                         :disabled="disabled"
                         :title="parameter.value"
@@ -81,9 +82,19 @@
                     ...params,
                     ...atomValue
                 }
+            },
+            typeMap () {
+                const map = new Map()
+                this.subParamsKeyList.forEach(item => {
+                    map.set(item.key, {
+                        type: item.type,
+                        defaultValue: item.value
+                    })
+                })
+                return map
             }
         },
-        
+
         watch: {
             paramValues: {
                 handler (value, oldValue) {
@@ -94,6 +105,13 @@
                     }
                 },
                 deep: true
+            },
+            subParamsKeyList (newVal) {
+                if (newVal) {
+                    this.$nextTick(() => {
+                        this.initData()
+                    })
+                }
             }
         },
         created () {
@@ -104,9 +122,11 @@
             initData () {
                 let values = this.atomValue[this.name] || []
                 if (!Array.isArray(values)) values = JSON.parse(values)
+
                 this.parameters = values.map(i => {
                     return {
                         ...i,
+                        type: this.typeMap.get(i.key).type || 'text',
                         value: isObject(i.value) ? JSON.stringify(i.value) : i.value
                     }
                 })
@@ -124,12 +144,14 @@
 
             handleChangeKey (key, index) {
                 this.parameters[index].key = isObject(key) ? JSON.stringify(key) : key
-                const defaultValue = this.subParamsKeyList.find(i => i.key === key)?.value
+                const info = this.typeMap.get(key)
+                const { type, defaultValue } = info || {}
                 if (defaultValue) {
                     this.parameters[index].value = isObject(defaultValue) ? JSON.stringify(defaultValue) : defaultValue
                 } else {
                     this.parameters[index].value = ''
                 }
+                this.parameters[index].type = type || 'text'
                 this.updateParameters()
             },
 
@@ -137,7 +159,7 @@
                 this.parameters[index].value = val
                 this.updateParameters()
             },
-            
+
             updateParameters () {
                 const res = this.parameters.map((parameter) => {
                     const key = parameter.key
