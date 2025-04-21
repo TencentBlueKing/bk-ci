@@ -1,6 +1,5 @@
 package com.tencent.devops.remotedev.dao
 
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.remotedev.tables.TRemotedevProjectStrategy
 import com.tencent.devops.model.remotedev.tables.records.TRemotedevProjectStrategyRecord
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
@@ -23,7 +22,7 @@ class ProjectStrategyDao {
                 .and(ZONE_TYPE.eq(zoneType.name)).and(STRATEGY_TYPE.eq(strategyType.name))
                 .fetchAny()
             if (record != null) {
-                dslContext.update(this).set(STRATEGY_CONTENT, JSON.json(JsonUtil.toJson(content, false))).execute()
+                dslContext.update(this).set(STRATEGY_CONTENT, JSON.json(content)).where(ID.eq(record.id)).execute()
                 return
             }
             dslContext.insertInto(
@@ -36,7 +35,7 @@ class ProjectStrategyDao {
                 projectId,
                 zoneType.name,
                 strategyType.name,
-                JSON.json(JsonUtil.toJson(content, false))
+                JSON.json(content)
             ).execute()
         }
     }
