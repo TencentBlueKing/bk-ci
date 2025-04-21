@@ -59,6 +59,18 @@
             customDesc: {
                 type: Boolean,
                 default: false
+            },
+            showOperateBtn: {
+                type: Boolean,
+                default: false
+            },
+            isDelete: {
+                type: Boolean,
+                default: false
+            },
+            isNew: {
+                type: Boolean,
+                default: false
             }
         },
         computed: {
@@ -67,10 +79,30 @@
                 return {
                     width: `${this.labelWidth}px`
                 }
+            },
+            statusTagConfig () {
+                let message, theme
+                if (this.isDelete) {
+                    message = this.$t('deleted'),
+                    theme = 'danger'
+                }
+                if (this.isNew) {
+                    message = this.$t('new'),
+                    theme = 'success'
+                }
+                return {
+                    message,
+                    theme,
+                    isShow: this.isDelete || this.isNew
+                }
             }
         },
         render (h) {
-            const { label, inline, required, $slots, isError, errorMsg, hideColon, desc, docsLink, descLink, descLinkText, type, widthStyle, bottomDivider, customDesc } = this
+            const {
+                label, inline, required, $slots, isError, errorMsg, hideColon, desc, docsLink,
+                descLink, descLinkText, type, widthStyle, bottomDivider, customDesc, showOperateBtn,
+                statusTagConfig, isDelete
+            } = this
             const descMap = desc.split('\n')
             return (
                 <div class={{
@@ -81,7 +113,11 @@
                     'is-required': required,
                     'is-danger': isError
                 }} >
-                    { label && <label title={label} class='bk-label atom-form-label' style={widthStyle}>{label}{hideColon ? '' : '：'}
+                    { label && <label title={label} class='bk-label atom-form-label' style={widthStyle}>
+                        {
+                            <span class={{ deleted: isDelete }}>{label}</span>
+                        }
+                        { hideColon ? '' : '：' }
                         { docsLink
                             && <a target="_blank" href={docsLink}><i class="bk-icon icon-question-circle"></i></a>
                         }
@@ -106,6 +142,14 @@
                                 </div>
                             </bk-popover>
                         }
+                        {
+                            statusTagConfig.isShow && <span class={['status-tag', statusTagConfig.theme]}>
+                                {statusTagConfig.message}
+                            </span>
+                        }
+                        {
+                            showOperateBtn && !isDelete && <span class='operate-btn'>123</span>
+                        }
                     </label> }
                     
                     <div class='bk-form-content'>
@@ -127,10 +171,22 @@
 
 <style lang="scss">
     .form-field {
+        &:hover {
+            .operate-btn {
+                visibility: visible;
+            }
+        }
         .icon-info-circle, .icon-question-circle {
             color: #C3CDD7;
             font-size: 14px;
             pointer-events: auto;
+        }
+        .atom-form-label {
+            width: 100% !important;
+            .deleted {
+                color: #a7a9ac !important;
+                text-decoration: line-through;
+            }
         }
     }
     .form-field-group-item {
@@ -173,5 +229,26 @@
         width: 100%;
         margin: 24px 0 8px;
         border-bottom: 1px solid #DCDEE5;
+    }
+    .status-tag {
+        padding: 0 8px;
+        border-radius: 2px;
+        font-size: 12px;
+        height: 16px;
+        line-height: 16px;
+        font-weight: 400;
+        &.success {
+            color: #299E56;
+            background: #DAF6E5;
+        }
+        &.danger {
+            color: #E71818;
+            background: #FFEBEB;
+        }
+    }
+    .operate-btn {
+        visibility: hidden;
+        position: absolute;
+        right: 0;
     }
 </style>

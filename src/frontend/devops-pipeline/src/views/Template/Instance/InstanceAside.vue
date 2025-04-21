@@ -46,7 +46,7 @@
                 <template v-if="instanceIndex === editingIndex">
                     <bk-input
                         ref="nameInputRef"
-                        v-model="instance.pipelineName"
+                        v-model="instanceName"
                         @blur="handleEnterChangeName(instanceIndex)"
                         @enter="handleEnterChangeName(instanceIndex)"
                     >
@@ -105,11 +105,16 @@
     const renderInstanceList = computed(() => {
         return props.isInstanceCreateType ? [] : instanceList.value
     })
+    const instanceName = computed(() => {
+        return renderInstanceList.value[editingIndex.value].pipelineName
+    })
     function handleInstanceClick (index) {
+        if (editingIndex.value) return
         instanceActiveIndex.value = index
         proxy.$router.replace({
             query: {
-                pipelineId: renderInstanceList.value[instanceActiveIndex.value].pipelineId
+                // pipelineId: renderInstanceList.value[instanceActiveIndex.value].pipelineId
+                index: instanceActiveIndex.value + 1
             }
         })
     }

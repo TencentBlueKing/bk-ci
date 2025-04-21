@@ -90,9 +90,10 @@ const actions = {
     fetchTemplateByVersion ({ commit }, { projectId, templateId, version }) {
         return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/${version}/details/`).then(res => {
             commit(SET_TEMPLATE_DETAIL, {
-                detail: res.data,
-                version
+                templateDetail: res.data,
+                templateVersion: version
             })
+            return res.data
         })
     },
     fetchPipelineDetailById ({ commit }, { projectId, templateId, pipelineIds }) {
