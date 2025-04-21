@@ -82,9 +82,19 @@
                     ...params,
                     ...atomValue
                 }
+            },
+            typeMap () {
+                const map = new Map()
+                this.subParamsKeyList.forEach(item => {
+                    map.set(item.key, {
+                        type: item.type,
+                        defaultValue: item.value
+                    })
+                })
+                return map
             }
         },
-        
+
         watch: {
             paramValues: {
                 handler (value, oldValue) {
@@ -98,7 +108,9 @@
             },
             subParamsKeyList (newVal) {
                 if (newVal) {
-                    this.initData()
+                    this.$nextTick(() => {
+                        this.initData()
+                    })
                 }
             }
         },
@@ -111,15 +123,10 @@
                 let values = this.atomValue[this.name] || []
                 if (!Array.isArray(values)) values = JSON.parse(values)
 
-                const typeMap = new Map()
-                this.subParamsKeyList.forEach(item => {
-                    typeMap.set(item.key, item.type)
-                })
- 
                 this.parameters = values.map(i => {
                     return {
                         ...i,
-                        type: typeMap.get(i.key) || 'text',
+                        type: this.typeMap.get(i.key).type || 'text',
                         value: isObject(i.value) ? JSON.stringify(i.value) : i.value
                     }
                 })
@@ -137,10 +144,8 @@
 
             handleChangeKey (key, index) {
                 this.parameters[index].key = isObject(key) ? JSON.stringify(key) : key
-                const subParamsKeyItem = this.subParamsKeyList.find(i => i.key === key)
-                const defaultValue = subParamsKeyItem?.value
-                const type = subParamsKeyItem?.type
-                    
+                const info = this.typeMap.get(key)
+                const { type, defaultValue } = info || {}
                 if (defaultValue) {
                     this.parameters[index].value = isObject(defaultValue) ? JSON.stringify(defaultValue) : defaultValue
                 } else {
@@ -154,7 +159,7 @@
                 this.parameters[index].value = val
                 this.updateParameters()
             },
-            
+
             updateParameters () {
                 const res = this.parameters.map((parameter) => {
                     const key = parameter.key
