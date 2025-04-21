@@ -60,6 +60,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DefaultValue
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
@@ -315,7 +316,11 @@ interface ServiceThirdPartyAgentResource {
         @Parameter(description = "Node Hash ID/Agent Id", required = true)
         @PathParam("agentId")
         @BkField(minLength = 3, maxLength = 32)
-        agentHashId: String
+        agentHashId: String,
+        @Parameter(description = "是否校验权限", required = false)
+        @QueryParam("checkPermission")
+        @DefaultValue("false")
+        checkPermission: Boolean? = false
     ): Result<ThirdPartyAgentDetail?>
 
     @Operation(summary = "获取Gateway列表")

@@ -556,12 +556,7 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
         name: String
     ) {
         if (dbVersion.isNotBlank() && releaseType != ReleaseTypeEnum.NEW) {
-            val storeFinalStatusList = mutableListOf(
-                StoreStatusEnum.AUDIT_REJECT.name,
-                StoreStatusEnum.RELEASED.name,
-                StoreStatusEnum.GROUNDING_SUSPENSION.name,
-                StoreStatusEnum.UNDERCARRIAGED.name
-            )
+            val storeFinalStatusList = StoreStatusEnum.getStoreFinalStatusList()
             if (!storeFinalStatusList.contains(dbStatus)) {
                 throw ErrorCodeException(
                     errorCode = StoreMessageCode.STORE_VERSION_IS_NOT_FINISH,
