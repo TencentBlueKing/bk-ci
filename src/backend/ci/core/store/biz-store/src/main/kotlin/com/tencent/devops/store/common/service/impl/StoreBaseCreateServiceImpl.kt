@@ -30,8 +30,8 @@ package com.tencent.devops.store.common.service.impl
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.store.common.dao.StoreBaseEnvExtManageDao
 import com.tencent.devops.store.common.dao.StoreBaseEnvManageDao
@@ -47,7 +47,9 @@ import com.tencent.devops.store.common.service.StoreBaseCreateService
 import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
 import com.tencent.devops.store.common.utils.StoreReleaseUtils
 import com.tencent.devops.store.common.utils.StoreUtils
+import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.store.pojo.common.KEY_STORE_ID
+import com.tencent.devops.store.pojo.common.STORE_BUS_NUM_LEN
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
@@ -110,7 +112,8 @@ class StoreBaseCreateServiceImpl @Autowired constructor(
         val storeBaseCreateRequest = storeCreateRequest.baseInfo
         val storeType = storeBaseCreateRequest.storeType
         val storeCode = storeBaseCreateRequest.storeCode
-        val storeId = DigestUtils.md5Hex("$storeType-$storeCode-$INIT_VERSION")
+        val version = storeBaseCreateRequest.version
+        val storeId = DigestUtils.md5Hex("$storeType-$storeCode-$version")
         val name = storeBaseCreateRequest.name
         val bkStoreContext = storeCreateRequest.bkStoreContext
         val userId = bkStoreContext[AUTH_HEADER_USER_ID]?.toString() ?: AUTH_HEADER_USER_ID_DEFAULT_VALUE
@@ -120,11 +123,12 @@ class StoreBaseCreateServiceImpl @Autowired constructor(
             storeCode = storeCode,
             storeType = storeType,
             name = name,
-            version = INIT_VERSION,
+            version = version,
             status = StoreStatusEnum.INIT,
             creator = userId,
             modifier = userId,
-            latestFlag = true
+            latestFlag = true,
+            busNum = CommonUtils.generateNumber(VersionUtils.getMajorVersion(version), 1, STORE_BUS_NUM_LEN)
         )
         val storeBaseExtDataPOs = StoreReleaseUtils.generateStoreBaseExtDataPO(
             extBaseInfo = storeBaseCreateRequest.extBaseInfo,

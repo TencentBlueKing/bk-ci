@@ -126,6 +126,7 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -133,7 +134,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicInteger
-import javax.ws.rs.core.Response
 
 @Suppress(
     "LongParameterList",
@@ -1044,6 +1044,21 @@ class PipelineRepositoryService constructor(
                         ) ?: throw ErrorCodeException(
                             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_DRAFT_EXISTS
                         )
+                        val pipelineInfo = getPipelineInfo(projectId = projectId, pipelineId = pipelineId)
+                        // 将草稿版本发布成分支版本,需要把最新状态转换成分支版本
+                        if (pipelineInfo != null &&
+                            pipelineInfo.version == draftVersion.version &&
+                            pipelineInfo.latestVersionStatus == VersionStatus.COMMITTING
+                        ) {
+                            pipelineInfoDao.update(
+                                dslContext = transactionContext,
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                userId = userId,
+                                // 进行过至少一次发布版本后，取消仅有草稿/分支的状态
+                                latestVersionStatus = VersionStatus.BRANCH
+                            )
+                        }
                         version = draftVersion.version
                         versionName = branchName
                         branchAction = BranchVersionAction.ACTIVE
@@ -1626,6 +1641,9 @@ class PipelineRepositoryService constructor(
             ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
+        val pipelineVersionSimple = pipelineResourceVersionDao.getPipelineVersionSimple(
+            dslContext, projectId, pipelineId, record.version
+        )
 
         val pipelineResult = DeletePipelineResult(pipelineId, record.pipelineName, record.version)
         val lock = PipelineModelLock(redisOperation, pipelineId)
@@ -1666,6 +1684,18 @@ class PipelineRepositoryService constructor(
                         name = deleteName,
                         desc = "DELETE BY $userId in $deleteTime"
                     )
+                    // 同时要对对应setting version中的name做设置,不然恢复时流水线详情展示的名称不对
+                    pipelineVersionSimple?.settingVersion?.let {
+                        pipelineSettingVersionDao.updateSetting(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            version = it,
+                            name = deleteName,
+                            desc = "DELETE BY $userId in $deleteTime"
+                        )
+                    }
+
                     // #4201 标志关联模板为删除
                     templatePipelineDao.softDelete(
                         dslContext = transactionContext,
@@ -1967,8 +1997,6 @@ class PipelineRepositoryService constructor(
                 errorCode = ProcessMessageCode.ERROR_RESTORE_PIPELINE_NOT_FOUND
             )
 
-            existModel.name = pipeline.pipelineName
-
             if (pipeline.channel != channelCode.name) {
                 throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -1977,16 +2005,55 @@ class PipelineRepositoryService constructor(
                 )
             }
 
+            // 如果流水线名称已经重复,则使用含有日期的流水线名,否则使用原来的流水线名
+            val existPipelineName = isPipelineExist(
+                projectId = projectId,
+                pipelineName = existModel.name,
+                channelCode = channelCode,
+                excludePipelineId = pipelineId
+            )
+            val pipelineName = if (existPipelineName) {
+                existModel.name = pipeline.pipelineName
+                pipeline.pipelineName
+            } else {
+                existModel.name
+            }
+
             pipelineInfoDao.restore(
                 dslContext = transactionContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
+                pipelineName = pipelineName,
                 userId = userId,
                 channelCode = channelCode
             )
+            val restoreTime = org.joda.time.LocalDateTime.now().toString("yyMMddHHmmSS")
+            // 恢复setting中的名称和描述
+            pipelineSettingDao.updateSetting(
+                dslContext = transactionContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                name = pipelineName,
+                desc = "RESTORE BY $userId in $restoreTime"
+            )
+            // 恢复对应setting version中的流水线名称和描述
+            existResource.settingVersion?.let {
+                pipelineSettingVersionDao.updateSetting(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    version = it,
+                    name = pipelineName,
+                    desc = "RESTORE BY $userId in $restoreTime"
+                )
+            }
 
             // #4012 还原与模板的绑定关系
-            templatePipelineDao.restore(dslContext = transactionContext, projectId = projectId, pipelineId = pipelineId)
+            templatePipelineDao.restore(
+                dslContext = transactionContext,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
 
             // 只初始化相关信息
             val tasks = initModel(
@@ -2277,6 +2344,14 @@ class PipelineRepositoryService constructor(
             list = events.map { (key, value) ->
                 value.copy(secretToken = value.secretToken?.let { AESUtil.encrypt(aesKey, it) })
             }
+        )
+    }
+
+    fun getReleaseVersionRecord(projectId: String, pipelineId: String): PipelineResourceVersion? {
+        return pipelineResourceVersionDao.getReleaseVersionRecord(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
         )
     }
 }

@@ -266,4 +266,10 @@ object CommonMessageCode {
     const val BK_BUILD_ENV_TYPE_BUILD_TRIGGERS = "BUILD_ENV_TYPE_BUILD_TRIGGER" // 构建触发
     const val TRANSFER_ERROR_CHECK_AGENT_ID_FAILED = "transferErrorCheckAgentIdFailed" // 当前私有构建机数据有误或不存在
     const val TRANSFER_ERROR_CHECK_ENV_ID_FAILED = "transferErrorCheckEnvIdFailed" // 当前私有构建机集群数据有误或不存在
+
+    const val ERROR_LOGO_FORMAT_UNSUPPORTED = "logoFormatUnsupported" // logo不支持{0}类型，可以上传{1}类型
+    const val ERROR_LOGO_DIMENSION_REQUIREMENT = "logoDimensionRequirement" // logo的尺寸应为大于{0}x{1}的正方形
+    const val ERROR_LOGO_FILE_SIZE_EXCEEDED = "logoFileSizeExceeded" // 上传的logo文件不能超过{0}
+    const val ERROR_USER_NO_PLATFORM_ADMIN_PERMISSION =
+        "userNoPlatformAdminPermission" // 当前用户没有平台管理权限，请联系管理员添加操作权限
 }

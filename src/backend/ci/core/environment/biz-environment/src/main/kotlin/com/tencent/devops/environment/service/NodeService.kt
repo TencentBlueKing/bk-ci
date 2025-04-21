@@ -81,12 +81,12 @@ import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
 import com.tencent.devops.environment.utils.NodeStringIdUtils
 import com.tencent.devops.environment.utils.NodeUtils
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
+import jakarta.servlet.http.HttpServletResponse
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-import javax.servlet.http.HttpServletResponse
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -406,6 +406,7 @@ class NodeService @Autowired constructor(
             permissionMap[AuthPermission.DELETE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
         }
         val thirdPartyAgentNodeIds = nodeRecordList.filter { it.nodeType == NodeType.THIRDPARTY.name }.map { it.nodeId }
+        if (thirdPartyAgentNodeIds.isEmpty()) return emptyList()
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds, projectId)
                 .associateBy { it.nodeId }
@@ -516,6 +517,7 @@ class NodeService @Autowired constructor(
         )
         if (nodeListResult.isEmpty()) return emptyList()
         val thirdPartyAgentNodeIds = nodeRecordList.filter { it.nodeType == NodeType.THIRDPARTY.name }.map { it.nodeId }
+        if (thirdPartyAgentNodeIds.isEmpty()) return emptyList()
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds, projectId)
                 .associateBy { it.nodeId }
@@ -769,6 +771,19 @@ class NodeService @Autowired constructor(
         }
     }
 
+    fun getByDisplayNameNotWithPermission(
+        userId: String,
+        projectId: String,
+        displayName: String,
+        nodeType: List<String>? = null
+    ): List<NodeBaseInfo> {
+        val nodes = nodeDao.getByDisplayName(dslContext, projectId, displayName, nodeType)
+        if (nodes.isEmpty()) {
+            return emptyList()
+        }
+        return nodes.map { NodeStringIdUtils.getNodeBaseInfo(it) }
+    }
+
     fun getByDisplayName(
         userId: String,
         projectId: String,
@@ -870,6 +885,9 @@ class NodeService @Autowired constructor(
     }
 
     fun refreshGateway(oldToNewMap: Map<String, String>): Boolean {
+        if (oldToNewMap.isEmpty()) {
+            return false
+        }
         return try {
             slaveGatewayDao.refreshGateway(dslContext, oldToNewMap)
             thirdPartyAgentDao.refreshGateway(dslContext, oldToNewMap)

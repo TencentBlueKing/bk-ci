@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_repository
 
-**文档版本：** 1.0.7
+**文档版本：** 1.0.8
 
 **文档描述：** devops_ci_repository 的数据库文档
 | 表名                  | 说明       |
@@ -13,6 +13,7 @@
 | T_REPOSITORY_CODE_P4 |  |
 | T_REPOSITORY_CODE_SVN | svn 代码库明细表 |
 | T_REPOSITORY_COMMIT | 代码库变更记录 |
+| T_REPOSITORY_COPILOT_SUMMARY | 代码库 copilot 摘要表 |
 | T_REPOSITORY_GITHUB | github 代码库明细表 |
 | T_REPOSITORY_GITHUB_TOKEN | githuboauthtoken 表 |
 | T_REPOSITORY_GIT_CHECK | 工蜂 oauthtoken 表 |
@@ -131,6 +132,26 @@
 |  10   | ELEMENT_ID |   varchar   | 34 |   0    |    Y     |  N   |       | 原子 ID  |
 |  11   | REPO_NAME |   varchar   | 128 |   0    |    Y     |  N   |       | 代码库别名  |
 |  12   | URL |   varchar   | 255 |   0    |    Y     |  N   |       | 代码库 URL  |
+
+**表名：** <a>T_REPOSITORY_COPILOT_SUMMARY</a>
+
+**说明：** 代码库 copilot 摘要表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       |   |
+|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 蓝盾项目 ID  |
+|  3   | BUILD_ID |   varchar   | 64 |   0    |    N     |  N   |       | 构建 ID  |
+|  4   | ELEMENT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 插件 ID  |
+|  5   | SCM_TYPE |   varchar   | 32 |   0    |    Y     |  N   |       | 代码库类型  |
+|  6   | PROJECT_NAME |   varchar   | 255 |   0    |    Y     |  N   |       | 仓库唯一标识  |
+|  7   | SOURCE_COMMIT |   varchar   | 64 |   0    |    Y     |  N   |       | 源提交点  |
+|  8   | TARGET_COMMIT |   varchar   | 64 |   0    |    Y     |  N   |       | 目标提交点  |
+|  9   | STATUS |   int   | 10 |   0    |    Y     |  N   |       | 生成状态，1-生成中，3-生成失败,5-生成成功  |
+|  10   | SUMMARY |   text   | 65535 |   0    |    Y     |  N   |       | AI 摘要  |
+|  11   | CREATE_TIME |   timestamp   | 19 |   0    |    N     |  Y   |   CURRENT_TIMESTAMP    | 创建时间  |
 
 **表名：** <a>T_REPOSITORY_GITHUB</a>
 

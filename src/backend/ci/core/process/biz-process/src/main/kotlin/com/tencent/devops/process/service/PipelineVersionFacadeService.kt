@@ -70,6 +70,7 @@ import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReq
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
@@ -87,7 +88,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -132,26 +133,27 @@ class PipelineVersionFacadeService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
                 params = arrayOf(pipelineId)
             )
-        val draftVersion = pipelineRepositoryService.getDraftVersionResource(
+        val draftResource = pipelineRepositoryService.getDraftVersionResource(
             projectId = projectId,
             pipelineId = pipelineId
         )
         // 有草稿且不是空白的编排才可以发布
-        val canRelease = draftVersion != null && draftVersion.model.stages.size > 1
+        val canRelease = draftResource != null && draftResource.model.stages.size > 1
         // 存在草稿版本就可以调试
-        val canDebug = draftVersion != null
-        val releaseVersion = pipelineRepositoryService.getPipelineResourceVersion(
+        val canDebug = draftResource != null
+        val releaseResource = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
-            pipelineId = pipelineId
+            pipelineId = pipelineId,
+            version = detailInfo.pipelineVersion
         ) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
             params = arrayOf(pipelineId)
         )
-        val yamlInfo = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, releaseVersion.version)
+        val yamlInfo = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, releaseResource.version)
         var baseVersion: Int? = null
         var baseVersionName: String? = null
         var baseVersionStatus: VersionStatus? = null
-        draftVersion?.let { draft ->
+        draftResource?.let { draft ->
             val baseResource = draft.baseVersion?.let { base ->
                 pipelineRepositoryService.getPipelineResourceVersion(
                     projectId = projectId,
@@ -169,30 +171,30 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             detailInfo = detailInfo
         )
-        val released = detailInfo.latestVersionStatus?.isNotReleased() != true
-        var versionName = releaseVersion.versionName?.takeIf { released }
-        // 配合前端的展示需要，version有以下几种情况的返回值：
-        // 1 发布过且有草稿：version取草稿的版本号
-        // 2 发布过且有分支版本：version取最新正式的版本号
-        // 3 未发布过仅有草稿版本：version取草稿的版本号
-        // 4 未发布过仅有分支版本：version取最新的分支版本号
-        val version = when (detailInfo.latestVersionStatus) {
-            VersionStatus.COMMITTING -> {
-                draftVersion?.version
-            }
-
+        /**
+         * 获取最新版本和版本名称
+         *
+         * 如果最新版本是分支版本,则需要获取分支最新的激活版本,否则最新版本可能是正式或者草稿版本
+         */
+        val (releaseVersion, releaseVersionName) = when (releaseResource.status) {
+            // 分支版本,需要获取当前分支最新的激活版本
             VersionStatus.BRANCH -> {
                 val branchVersion = pipelineRepositoryService.getBranchVersionResource(
-                    projectId, pipelineId, null
+                    projectId, pipelineId, releaseResource.versionName
                 )
-                versionName = branchVersion?.versionName
-                branchVersion?.version
+                Pair(branchVersion?.version ?: releaseResource.version, branchVersion?.versionName)
             }
 
             else -> {
-                draftVersion?.version
+                Pair(releaseResource.version, releaseResource.versionName)
             }
-        } ?: releaseVersion.version
+        }
+        // 草稿版本和版本名,如果有草稿版本,则使用草稿版本,否则使用最新版本
+        val (version, versionName) = if (draftResource == null) {
+            Pair(releaseVersion, releaseVersionName)
+        } else {
+            Pair(draftResource.version, null)
+        }
         val permissions = pipelineListFacadeService.getPipelinePermissions(userId, projectId, pipelineId)
         val yamlExist = pipelineYamlFacadeService.yamlExistInDefaultBranch(
             projectId = projectId,
@@ -220,9 +222,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             permissions = permissions,
             version = version,
             versionName = versionName,
-            // 前端需要缺省当前能用的版本，用于进入页面的默认展示，但没有发布过就不提供releaseVersionName
-            releaseVersion = releaseVersion.version.takeIf { released } ?: version,
-            releaseVersionName = releaseVersion.versionName?.takeIf { released },
+            releaseVersion = releaseVersion,
+            releaseVersionName = releaseVersionName,
             baseVersion = baseVersion,
             baseVersionStatus = baseVersionStatus,
             baseVersionName = baseVersionName,
@@ -407,17 +408,21 @@ class PipelineVersionFacadeService @Autowired constructor(
                     )
                 }
                 pipelineYamlFacadeService.checkPushParam(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    version = draftVersion.version,
-                    versionName = branchName,
-                    repoHashId = yamlInfo.repoHashId,
-                    scmType = yamlInfo.scmType!!,
-                    filePath = filePath,
-                    content = draftVersion.yaml ?: "",
-                    targetAction = targetAction,
-                    targetBranch = request.targetBranch
+                    PipelineYamlFileReleaseReq(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        pipelineName = targetSettings.pipelineName,
+                        version = draftVersion.version,
+                        versionName = branchName,
+                        repoHashId = yamlInfo.repoHashId,
+                        scmType = yamlInfo.scmType!!,
+                        filePath = filePath,
+                        content = draftVersion.yaml ?: "",
+                        commitMessage = request.description ?: "update",
+                        targetAction = targetAction,
+                        targetBranch = request.targetBranch
+                    )
                 )
             }
 
@@ -512,19 +517,21 @@ class PipelineVersionFacadeService @Autowired constructor(
                 val yamlInfo = request.yamlInfo!!
                 // #8161 如果调用代码库同步失败则有报错或提示
                 val pushResult = pipelineYamlFacadeService.pushYamlFile(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    version = draftVersion.version,
-                    versionName = branchName,
-                    pipelineName = targetSettings.pipelineName,
-                    content = draftVersion.yaml ?: "",
-                    commitMessage = request.description ?: "update",
-                    repoHashId = yamlInfo.repoHashId,
-                    scmType = yamlInfo.scmType!!,
-                    filePath = yamlInfo.filePath,
-                    targetAction = targetAction,
-                    targetBranch = request.targetBranch
+                    PipelineYamlFileReleaseReq(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        version = draftVersion.version,
+                        versionName = branchName,
+                        pipelineName = targetSettings.pipelineName,
+                        content = draftVersion.yaml ?: "",
+                        commitMessage = request.description ?: "update",
+                        repoHashId = yamlInfo.repoHashId,
+                        scmType = yamlInfo.scmType!!,
+                        filePath = yamlInfo.filePath,
+                        targetAction = targetAction,
+                        targetBranch = request.targetBranch
+                    )
                 )
                 targetUrl = pushResult.mrUrl
             }

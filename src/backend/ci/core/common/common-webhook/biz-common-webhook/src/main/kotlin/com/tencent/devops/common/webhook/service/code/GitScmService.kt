@@ -546,4 +546,19 @@ class GitScmService @Autowired constructor(
             null
         }
     }
+
+    fun getCredential(projectId: String, credentialId: String?): Pair<Boolean, String>? {
+        if (credentialId.isNullOrBlank()) {
+            return false to ""
+        }
+        return try {
+            true to getCredential(
+                projectId = projectId,
+                credentialId = credentialId
+            )
+        } catch (ignored: Exception) {
+            logger.warn("Fail to get credential: $credentialId", ignored)
+            null
+        }
+    }
 }
