@@ -83,11 +83,11 @@
             statusTagConfig () {
                 let message, theme
                 if (this.isDelete) {
-                    message = this.$t('deleted'),
+                    message = this.$t('deleted')
                     theme = 'danger'
                 }
                 if (this.isNew) {
-                    message = this.$t('new'),
+                    message = this.$t('new')
                     theme = 'success'
                 }
                 return {
@@ -138,7 +138,7 @@
                                             { descLink && <a class="desc-link" target="_blank" href={descLink}>{descLinkText}</a>}
                                         </div>
                                     }
-                                    
+
                                 </div>
                             </bk-popover>
                         }
@@ -151,7 +151,7 @@
                             showOperateBtn && !isDelete && <span class='operate-btn'>123</span>
                         }
                     </label> }
-                    
+
                     <div class='bk-form-content'>
                         {$slots.default}
                         {isError ? $slots.errorTip || <p class='bk-form-help is-danger'>{errorMsg}</p> : null}
