@@ -83,11 +83,11 @@
             statusTagConfig () {
                 let message, theme
                 if (this.isDelete) {
-                    message = this.$t('deleted'),
+                    message = this.$t('deleted')
                     theme = 'danger'
                 }
                 if (this.isNew) {
-                    message = this.$t('new'),
+                    message = this.$t('new')
                     theme = 'success'
                 }
                 return {
@@ -148,7 +148,9 @@
                             </span>
                         }
                         {
-                            showOperateBtn && !isDelete && <span class='operate-btn'>123</span>
+                            showOperateBtn && !isDelete && <span class='operate-btn'>
+                                
+                            </span>
                         }
                     </label> }
                     

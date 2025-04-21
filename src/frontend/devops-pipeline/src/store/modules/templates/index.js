@@ -26,6 +26,7 @@ export default {
     state: {
         instanceList: [], // 实例列表选中的实例数据
         initialInstanceList: [],
+        useTemplateSettings: false,
         templateVersion: '',
         templateDetail: {}
     },

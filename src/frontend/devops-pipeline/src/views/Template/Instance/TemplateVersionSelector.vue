@@ -71,6 +71,7 @@
     import Logo from '@/components/Logo'
     import UseInstance from '@/hook/useInstance'
     import PipelineTemplatePreview from '@/components/PipelineTemplatePreview'
+    import { UPDATE_USE_TEMPLATE_SETTING } from '@/store/modules/templates/constants'
     defineProps({
         isInstanceCreateType: Boolean
     })
@@ -78,11 +79,11 @@
     const versionValue = ref()
     const isLoading = ref(false)
     const isShowPreview = ref(false)
-    const useTemplateSettings = ref(false)
     const templatePipeline = ref({})
     const { proxy } = UseInstance()
     const projectId = computed(() => proxy.$route.params?.projectId)
     const templateId = computed(() => proxy.$route.params?.templateId)
+    const useTemplateSettings = computed(() => proxy.$store?.state?.templates?.useTemplateSettings)
     async function fetchVersionList () {
         try {
             isLoading.value = true
@@ -120,7 +121,7 @@
         }
     }
     function handleChangeUseTemplateSettings (value) {
-        console.log(value, 123)
+        proxy.$store.commit(`templates/${UPDATE_USE_TEMPLATE_SETTING}`, value)
     }
     function handleJumpToViewDetails () {
 
