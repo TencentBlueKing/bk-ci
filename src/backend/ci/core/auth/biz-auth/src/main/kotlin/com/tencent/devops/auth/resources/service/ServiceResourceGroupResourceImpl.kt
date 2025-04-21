@@ -11,6 +11,7 @@ import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.RestResource
 
 @RestResource
@@ -25,7 +26,8 @@ class ServiceResourceGroupResourceImpl(
     ): Result<Map<String, List<GroupPermissionDetailVo>>> {
         return Result(
             resourceGroupPermissionService.getGroupPermissionDetail(
-                iamGroupId = groupId
+                iamGroupId = groupId,
+                tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
             )
         )
     }

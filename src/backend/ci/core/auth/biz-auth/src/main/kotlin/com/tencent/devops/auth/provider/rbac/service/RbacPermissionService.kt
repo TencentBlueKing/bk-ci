@@ -49,6 +49,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.api.service.ServicePipelineViewResource
@@ -81,7 +82,7 @@ class RbacPermissionService(
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to validate user action permission|" +
-                    "$userId|$action"
+                        "$userId|$action"
             )
         }
     }
@@ -149,7 +150,7 @@ class RbacPermissionService(
     ): Boolean {
         logger.info(
             "[rbac] batch validate user resource permission|" +
-                "$userId|$action|$projectCode|${resource.resourceType}|${resource.resourceCode}"
+                    "$userId|$action|$projectCode|${resource.resourceType}|${resource.resourceCode}"
         )
         val watcher = Watcher("validateUserResourcePermissionByInstance|$userId|$projectCode")
         val startEpoch = System.currentTimeMillis()
@@ -213,7 +214,10 @@ class RbacPermissionService(
                 .resources(listOf(resourceNode))
                 .build()
 
-            val result = policyService.verifyPermissions(queryPolicyDTO)
+            val result = policyService.verifyPermissions(
+                queryPolicyDTO,
+                TenantUtils.getTenantIdByEnglishName(projectCode)
+            )
             if (result) {
                 authProjectUserMetricsService.save(
                     projectId = projectCode,
@@ -227,7 +231,7 @@ class RbacPermissionService(
             LogUtils.printCostTimeWE(watcher)
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to validate user resource permission|" +
-                    "$userId|$action|$projectCode|${resource.resourceType}|${resource.resourceCode}"
+                        "$userId|$action|$projectCode|${resource.resourceType}|${resource.resourceCode}"
             )
         }
     }
@@ -262,7 +266,7 @@ class RbacPermissionService(
     ): Map<String, Boolean> {
         logger.info(
             "[rbac] batch validate user resource permission|" +
-                "$userId|$actions|$projectCode|${resource.resourceType}|${resource.resourceCode}"
+                    "$userId|$actions|$projectCode|${resource.resourceType}|${resource.resourceCode}"
         )
         val startEpoch = System.currentTimeMillis()
         try {
@@ -303,7 +307,8 @@ class RbacPermissionService(
             val result = policyService.batchVerifyPermissions(
                 userId,
                 actionList,
-                listOf(resourceDTO)
+                listOf(resourceDTO),
+                TenantUtils.getTenantIdByEnglishName(projectCode)
             )
             result.filter { it.value }.keys.forEach { action ->
                 authProjectUserMetricsService.save(
@@ -316,7 +321,7 @@ class RbacPermissionService(
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to batch validate user resource permission|" +
-                    "$userId|$actions|$projectCode|${resource.resourceType}|${resource.resourceCode}"
+                        "$userId|$actions|$projectCode|${resource.resourceType}|${resource.resourceCode}"
             )
         }
     }
@@ -399,7 +404,7 @@ class RbacPermissionService(
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to get user resources|" +
-                    "$userId|$action|$projectCode|$resourceType"
+                        "$userId|$action|$projectCode|$resourceType"
             )
         }
     }
@@ -428,7 +433,7 @@ class RbacPermissionService(
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to batch get user resources|" +
-                    "$userId|$actions|$projectCode|$resourceType"
+                        "$userId|$actions|$projectCode|$resourceType"
             )
         }
     }
@@ -465,7 +470,7 @@ class RbacPermissionService(
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to get user resources and parent resource|" +
-                    "$userId|$action|$projectCode|$resourceType"
+                        "$userId|$action|$projectCode|$resourceType"
             )
         }
     }
@@ -537,7 +542,7 @@ class RbacPermissionService(
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to filter user resources |" +
-                    "$userId|$actions|$projectCode|$resourceType"
+                        "$userId|$actions|$projectCode|$resourceType"
             )
         }
     }

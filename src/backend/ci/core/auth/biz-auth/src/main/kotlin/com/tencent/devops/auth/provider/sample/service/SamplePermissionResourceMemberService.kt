@@ -67,13 +67,15 @@ class SamplePermissionResourceMemberService : PermissionResourceMemberService {
     override fun renewalIamGroupMembers(
         groupId: Int,
         members: List<ManagerMember>,
-        expiredAt: Long
+        expiredAt: Long,
+        tenantId: String?
     ): Boolean = true
 
     override fun deleteIamGroupMembers(
         groupId: Int,
         type: String,
-        memberIds: List<String>
+        memberIds: List<String>,
+        tenantId: String?
     ): Boolean = true
 
     override fun addGroupMember(
@@ -87,7 +89,8 @@ class SamplePermissionResourceMemberService : PermissionResourceMemberService {
     override fun addIamGroupMember(
         groupId: Int,
         members: List<ManagerMember>,
-        expiredAt: Long
+        expiredAt: Long,
+        tenantId: String?
     ): Boolean = true
 
     override fun getProjectMemberCount(projectCode: String): ResourceMemberCountVO =

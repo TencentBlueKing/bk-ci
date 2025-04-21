@@ -79,17 +79,18 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 
 @Suppress("ComplexCondition")
 class RbacPermissionManageFacadeServiceImpl(
@@ -168,7 +169,8 @@ class RbacPermissionManageFacadeServiceImpl(
         val groupMemberDetailMap = getGroupMemberDetailMap(
             memberId = memberId,
             resourceGroupMembers = resourceGroupMembers,
-            operateChannel = operateChannel
+            operateChannel = operateChannel,
+            tenantId = TenantUtils.getTenantIdByEnglishName(projectId)
         )
         // 获取用户正在交接的用户组，仅用于个人视角
         val groupsBeingHandover = if (operateChannel == OperateChannel.PERSONAL) {
@@ -201,7 +203,8 @@ class RbacPermissionManageFacadeServiceImpl(
     private fun getGroupMemberDetailMap(
         memberId: String,
         resourceGroupMembers: List<AuthResourceGroupMember>,
-        operateChannel: OperateChannel?
+        operateChannel: OperateChannel?,
+        tenantId: String?
     ): Map<String, MemberGroupDetailsResponse> {
         // 如果用户离职，查询权限中心接口会报错
         if (deptService.isUserDeparted(memberId)) {
@@ -217,7 +220,8 @@ class RbacPermissionManageFacadeServiceImpl(
             iamV2ManagerService.listMemberGroupsDetails(
                 MemberType.USER.type,
                 memberId,
-                userGroupIds.joinToString(",")
+                userGroupIds.joinToString(","),
+                tenantId
             ).forEach {
                 groupMemberDetailMap["${it.id}_$memberId"] = it
             }
@@ -234,7 +238,8 @@ class RbacPermissionManageFacadeServiceImpl(
                         iamV2ManagerService.listMemberGroupsDetails(
                             MemberType.DEPARTMENT.type,
                             deptId,
-                            iamGroupIds.joinToString(",")
+                            iamGroupIds.joinToString(","),
+                            tenantId
                         ).forEach {
                             groupMemberDetailMap["${it.id}_$deptId"] = it
                         }
@@ -247,7 +252,8 @@ class RbacPermissionManageFacadeServiceImpl(
                 iamV2ManagerService.listMemberGroupsDetails(
                     MemberType.DEPARTMENT.type,
                     memberId,
-                    deptGroupIds.joinToString(",")
+                    deptGroupIds.joinToString(","),
+                    tenantId
                 ).forEach {
                     groupMemberDetailMap["${it.id}_$memberId"] = it
                 }
@@ -261,7 +267,8 @@ class RbacPermissionManageFacadeServiceImpl(
                 iamV2ManagerService.listMemberGroupsDetails(
                     MemberType.TEMPLATE.type,
                     iamTemplateId,
-                    iamGroupIds.joinToString(",")
+                    iamGroupIds.joinToString(","),
+                    tenantId
                 ).forEach {
                     groupMemberDetailMap["${it.id}_$iamTemplateId"] = it
                 }
@@ -318,11 +325,11 @@ class RbacPermissionManageFacadeServiceImpl(
                     RemoveMemberButtonControl.TEMPLATE
 
                 operateChannel == OperateChannel.PERSONAL &&
-                    authResourceGroupMember.memberType == MemberType.DEPARTMENT.type ->
+                        authResourceGroupMember.memberType == MemberType.DEPARTMENT.type ->
                     RemoveMemberButtonControl.DEPARTMENT
 
                 resourceGroup.resourceType == AuthResourceType.PROJECT.value &&
-                    uniqueManagerGroups.contains(authResourceGroupMember.iamGroupId) ->
+                        uniqueManagerGroups.contains(authResourceGroupMember.iamGroupId) ->
                     RemoveMemberButtonControl.UNIQUE_MANAGER
 
                 uniqueManagerGroups.contains(authResourceGroupMember.iamGroupId) ->
@@ -334,7 +341,7 @@ class RbacPermissionManageFacadeServiceImpl(
             joinedType = when {
                 authResourceGroupMember.memberType == MemberType.TEMPLATE.type -> JoinedType.TEMPLATE
                 authResourceGroupMember.memberType == MemberType.DEPARTMENT.type &&
-                    operateChannel == OperateChannel.PERSONAL -> JoinedType.DEPARTMENT
+                        operateChannel == OperateChannel.PERSONAL -> JoinedType.DEPARTMENT
 
                 else -> JoinedType.DIRECT
             },
@@ -761,13 +768,13 @@ class RbacPermissionManageFacadeServiceImpl(
             }
             logger.info(
                 "invalid authorizations after operated groups|$projectCode|$iamGroupIdsOfDirectlyJoined|$memberId|" +
-                    "$invalidAuthorizationsDTO"
+                        "$invalidAuthorizationsDTO"
             )
             return invalidAuthorizationsDTO
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to check invalid authorizations " +
-                    "after operated groups |$projectCode|$iamGroupIdsOfDirectlyJoined|$memberId"
+                        "after operated groups |$projectCode|$iamGroupIdsOfDirectlyJoined|$memberId"
             )
         }
     }
@@ -1020,7 +1027,8 @@ class RbacPermissionManageFacadeServiceImpl(
         permissionResourceMemberService.renewalIamGroupMembers(
             groupId = groupId,
             members = listOf(ManagerMember(targetMember.type, targetMember.id)),
-            expiredAt = finalExpiredAt
+            expiredAt = finalExpiredAt,
+            tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
         )
         authResourceGroupMemberDao.update(
             dslContext = dslContext,
@@ -1457,7 +1465,8 @@ class RbacPermissionManageFacadeServiceImpl(
             operateGroupMemberTask = ::deleteTask
         )
         if (toHandoverGroups.isEmpty() && invalidPipelines.isEmpty() && invalidRepertoryIds.isEmpty() &&
-            invalidEnvNodeIds.isEmpty()) {
+            invalidEnvNodeIds.isEmpty()
+        ) {
             return "true"
         }
         val handoverDetails = buildHandoverDetails(
@@ -1503,7 +1512,8 @@ class RbacPermissionManageFacadeServiceImpl(
                     memberId = targetMember.id
                 )
             if (invalidGroups.isNotEmpty() || invalidPipelines.isNotEmpty() ||
-                invalidRepertoryIds.isNotEmpty() || invalidEnvNodeIds.isNotEmpty()) {
+                invalidRepertoryIds.isNotEmpty() || invalidEnvNodeIds.isNotEmpty()
+            ) {
                 throw ErrorCodeException(errorCode = ERROR_SINGLE_GROUP_REMOVE)
             }
         }
@@ -1532,7 +1542,7 @@ class RbacPermissionManageFacadeServiceImpl(
     ) {
         logger.info(
             "handover group member $projectCode|$groupId|" +
-                "${handoverMemberDTO.targetMember}|${handoverMemberDTO.handoverTo}"
+                    "${handoverMemberDTO.targetMember}|${handoverMemberDTO.handoverTo}"
         )
         val currentTimeSeconds = System.currentTimeMillis() / 1000
         var finalExpiredAt = expiredAt
@@ -1585,15 +1595,18 @@ class RbacPermissionManageFacadeServiceImpl(
                 handoverMemberDTO.handoverTo.id
             )
         )
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
         permissionResourceMemberService.addIamGroupMember(
             groupId = groupId,
             members = members,
-            expiredAt = finalExpiredAt
+            expiredAt = finalExpiredAt,
+            tenantId = tenantId
         )
         permissionResourceMemberService.deleteIamGroupMembers(
             groupId = groupId,
             type = handoverMemberDTO.targetMember.type,
-            memberIds = listOf(handoverMemberDTO.targetMember.id)
+            memberIds = listOf(handoverMemberDTO.targetMember.id),
+            tenantId = tenantId
         )
         authResourceGroupMemberDao.handoverGroupMembers(
             dslContext = dslContext,
@@ -1616,7 +1629,8 @@ class RbacPermissionManageFacadeServiceImpl(
         permissionResourceMemberService.deleteIamGroupMembers(
             groupId = groupId,
             type = targetMember.type,
-            memberIds = listOf(targetMember.id)
+            memberIds = listOf(targetMember.id),
+            tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
         )
         authResourceGroupMemberDao.batchDeleteGroupMembers(
             dslContext = dslContext,
@@ -1702,7 +1716,7 @@ class RbacPermissionManageFacadeServiceImpl(
                 // 部门/组织加入以及永久权限的组不允许再续期
                 with(conditionReq) {
                     val isUserDeparted = targetMember.type == MemberType.USER.type &&
-                        deptService.isUserDeparted(targetMember.id)
+                            deptService.isUserDeparted(targetMember.id)
                     // 离职用户不允许续期
                     if (isUserDeparted) {
                         BatchOperateGroupMemberCheckVo(
@@ -1721,7 +1735,7 @@ class RbacPermissionManageFacadeServiceImpl(
                             it.expiredAt == PERMANENT_EXPIRED_TIME / 1000
                         }.size
                         val groupsOfInOperableWhenBatchRenewal = groupCountOfPermanentExpiredTime +
-                            groupsOfTemplateOrDeptJoined.size
+                                groupsOfTemplateOrDeptJoined.size
                         BatchOperateGroupMemberCheckVo(
                             totalCount = totalCount,
                             operableCount = totalCount - groupsOfInOperableWhenBatchRenewal,
@@ -2515,7 +2529,8 @@ class RbacPermissionManageFacadeServiceImpl(
                             iamV2ManagerService.listMemberGroupsDetails(
                                 memberType,
                                 memberId,
-                                it.joinToString(",")
+                                it.joinToString(","),
+                                TenantUtils.getTenantIdByEnglishName(projectCode)
                             )
                         }
                     )

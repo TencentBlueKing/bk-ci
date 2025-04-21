@@ -44,6 +44,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationDTO
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
+import com.tencent.devops.common.service.tenant.TenantUtils
 import org.slf4j.LoggerFactory
 
 @SuppressWarnings("LongParameterList", "TooManyFunctions")
@@ -154,10 +155,11 @@ class RbacPermissionResourceService(
                 relationId = managerId.toString()
             )
         } catch (ignore: Exception) {
+            val tenantId = TenantUtils.getTenantId(projectCode)
             if (resourceType == AuthResourceType.PROJECT.value) {
-                iamV2ManagerService.deleteManagerV2(managerId.toString())
+                iamV2ManagerService.deleteManagerV2(managerId.toString(), tenantId)
             } else {
-                iamV2ManagerService.deleteSubsetManager(managerId.toString())
+                iamV2ManagerService.deleteSubsetManager(managerId.toString(), tenantId)
             }
             logger.warn("create resource failed|$userId|$projectCode|$resourceType|$resourceName", ignore)
             throw ErrorCodeException(
@@ -294,7 +296,10 @@ class RbacPermissionResourceService(
                 resourceCode = resourceCode
             )
             if (resourceInfo != null) {
-                permissionSubsetManagerService.deleteSubsetManager(resourceInfo.relationId)
+                permissionSubsetManagerService.deleteSubsetManager(
+                    resourceInfo.relationId,
+                    TenantUtils.getTenantIdByEnglishName(projectCode)
+                )
             }
         }
         authResourceService.delete(

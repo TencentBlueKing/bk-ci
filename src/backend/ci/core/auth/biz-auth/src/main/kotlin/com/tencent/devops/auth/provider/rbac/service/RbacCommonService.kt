@@ -25,10 +25,11 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.utils.I18nUtil
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import java.util.concurrent.TimeUnit
 
 @Suppress("MagicNumber", "LongParameterList")
 class RbacCommonService(
@@ -202,7 +203,10 @@ class RbacCommonService(
                 .resources(listOf(resourceNode))
                 .build()
 
-            val result = policyService.verifyPermissions(queryPolicyDTO)
+            val result = policyService.verifyPermissions(
+                queryPolicyDTO,
+                TenantUtils.getTenantIdByEnglishName(projectCode)
+            )
             if (result) {
                 authUserDailyService.save(
                     projectId = projectCode,

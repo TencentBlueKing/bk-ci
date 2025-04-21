@@ -87,7 +87,10 @@ interface UserAuthApplyResource {
         userId: String,
         @Parameter(description = "用户组ID")
         @PathParam("groupId")
-        groupId: Int
+        groupId: Int,
+        @Parameter(description = "租户ID", required = false)
+        @QueryParam("tenantId")
+        tenantId: String? = null
     ): Result<Map<String, List<GroupPermissionDetailVo>>>
 
     @GET

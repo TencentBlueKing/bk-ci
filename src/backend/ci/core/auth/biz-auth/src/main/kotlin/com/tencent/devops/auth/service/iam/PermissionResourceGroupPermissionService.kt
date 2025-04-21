@@ -111,12 +111,14 @@ interface PermissionResourceGroupPermissionService {
     ): Map<String/*resourceType*/, List<String>/*resourceCodes*/>
 
     fun getGroupPermissionDetail(
-        iamGroupId: Int
+        iamGroupId: Int,
+        tenantId: String?
     ): Map<String, List<GroupPermissionDetailVo>>
 
     fun getGroupPermissionDetailBySystem(
         iamSystemId: String,
-        iamGroupId: Int
+        iamGroupId: Int,
+        tenantId: String?
     ): List<GroupPermissionDetailVo>
 
     fun syncGroupPermissions(

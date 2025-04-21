@@ -50,8 +50,10 @@ class TenantUtils : ApplicationContextAware, InitializingBean {
         /**
          * 获取租户id
          */
-        fun getTenantId(tenantId: String? = null): String {
-            return if (enableMultiTenantMode && !tenantId.isNullOrBlank()) {
+        fun getTenantId(tenantId: String? = null): String? {
+            return if (!enableMultiTenantMode) {
+                null
+            } else if (!tenantId.isNullOrBlank()) {
                 tenantId
             } else {
                 DEFAULT_TENANT_ID
@@ -61,10 +63,12 @@ class TenantUtils : ApplicationContextAware, InitializingBean {
         /**
          * 生成英文名称
          */
-        fun parseEnglishName(tenantId: String? = null, tenantEnglishName: String): String {
+        fun parseEnglishName(tenantId: String? = null, tenantEnglishName: String): String? {
             return if (tenantEnglishName.contains(".")) {
                 tenantEnglishName
-            } else if (enableMultiTenantMode && !tenantId.isNullOrBlank()) {
+            } else if (!enableMultiTenantMode) {
+                null
+            } else if (!tenantId.isNullOrBlank()) {
                 "$tenantId.$tenantEnglishName"
             } else {
                 tenantEnglishName
@@ -74,11 +78,13 @@ class TenantUtils : ApplicationContextAware, InitializingBean {
         /**
          * 根据英文名称获取租户id
          */
-        fun getTenantIdByEnglishName(tenantEnglishName: String): String {
+        fun getTenantIdByEnglishName(tenantEnglishName: String): String? {
             return if (tenantEnglishName.contains(".")) {
                 tenantEnglishName.split(".")[0]
-            } else {
+            } else if (enableMultiTenantMode) {
                 DEFAULT_TENANT_ID
+            } else {
+                null
             }
         }
 
@@ -136,7 +142,7 @@ class TenantUtils : ApplicationContextAware, InitializingBean {
         private fun getHeaders(tenantId: String?): Headers {
             val headers = Headers.Builder()
             headers.add("X-Bkapi-Authorization", "{\"bk_app_code\": \"$appCode\", \"bk_app_secret\": \"$appSecret\"}")
-            headers.add("X-Bk-Tenant-Id", tenantId ?: getTenantId())
+            headers.add("X-Bk-Tenant-Id", tenantId ?: DEFAULT_TENANT_ID)
             return headers.build()
         }
 
