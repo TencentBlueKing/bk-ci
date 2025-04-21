@@ -493,14 +493,16 @@ class ServiceRemoteDevResourceImpl(
     override fun getWindowsQuota(
         userId: String,
         type: QuotaType?,
-        zoneType: WindowsResourceZoneConfigType
+        zoneType: WindowsResourceZoneConfigType,
+        specifyTaints: String?
     ): Result<Map<String, Map<String, Int>>> {
         return Result(
             windowsResourceConfigService.allWindowsQuota(
                 searchCustom = false,
                 quotaType = type,
                 zoneType = zoneType,
-                withProjectLimit = null
+                withProjectLimit = null,
+                specifyTaints = specifyTaints
             )
         )
     }

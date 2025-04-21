@@ -5,14 +5,11 @@
     "description" : "这是提供给云研发应用所使用的CDI SDK工具",
     "version" : "1.0.0"
   },
-  "tags" : [ {
-    "name" : "CDI_REMOTE_DEV",
-    "description" : "cdi-remoteDev"
-  } ],
+  "tags" : [ ],
   "paths" : {
     "/remotedev/api/external/cdi/login_user_id" : {
       "get" : {
-        "tags" : [ "CDI_REMOTE_DEV" ],
+        "tags" : [ ],
         "summary" : "云桌面应用获取当前实例登陆人",
         "operationId" : "getLoginUserId",
         "parameters" : [ {
@@ -54,7 +51,7 @@
     },
     "/remotedev/api/external/cdi/workspace_detail" : {
       "get" : {
-        "tags" : [ "CDI_REMOTE_DEV" ],
+        "tags" : [ ],
         "summary" : "云桌面应用获取云桌面信息",
         "operationId" : "getWorkspaceDetail",
         "parameters" : [ {
@@ -96,7 +93,7 @@
     },
     "/remotedev/api/external/cdi/notify" : {
       "post" : {
-        "tags" : [ "CDI_REMOTE_DEV" ],
+        "tags" : [ ],
         "summary" : "云桌面应用给云桌面或者客户端发送消息",
         "operationId" : "messageRegister",
         "parameters" : [ {
@@ -283,6 +280,15 @@
           },
           "nodeIp" : {
             "title" : "母机IP",
+            "type" : "string"
+          },
+          "curLaunchId" : {
+            "title" : "start客户端所需唯一索引",
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "resourceId" : {
+            "title" : "resourceId",
             "type" : "string"
           }
         }

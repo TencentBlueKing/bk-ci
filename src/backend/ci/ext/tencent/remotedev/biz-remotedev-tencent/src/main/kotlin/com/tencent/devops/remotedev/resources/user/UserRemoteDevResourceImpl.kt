@@ -113,7 +113,8 @@ class UserRemoteDevResourceImpl @Autowired constructor(
                 searchCustom = searchCustom,
                 quotaType = null,
                 zoneType = WindowsResourceZoneConfigType.DEFAULT,
-                withProjectLimit = projectId
+                withProjectLimit = projectId,
+                specifyTaints = null
             )
         )
     }

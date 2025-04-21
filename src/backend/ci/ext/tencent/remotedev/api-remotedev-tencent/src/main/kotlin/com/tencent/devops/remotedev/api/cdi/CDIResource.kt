@@ -73,7 +73,8 @@ interface CDIResource {
                 responseCode = "401",
                 description = "未授权，提供的token无效或缺失"
             )
-        ]
+        ],
+        tags = ["REMOTE_DEV_SDK", "prefix:/remotedev/api"]
     )
     @GET
     @Path("/workspace_detail")
@@ -107,7 +108,8 @@ interface CDIResource {
                 responseCode = "401",
                 description = "未授权，提供的token无效或缺失"
             )
-        ]
+        ],
+        tags = ["REMOTE_DEV_SDK", "prefix:/remotedev/api"]
     )
     @GET
     @Path("/login_user_id")
@@ -141,7 +143,8 @@ interface CDIResource {
                 responseCode = "401",
                 description = "未授权，提供的token无效或缺失"
             )
-        ]
+        ],
+        tags = ["REMOTE_DEV_SDK", "prefix:/remotedev/api"]
     )
     @POST
     @Path("/notify")

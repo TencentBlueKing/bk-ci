@@ -31,11 +31,13 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceBcsClient
+import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.image.StandardVmImage
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.remotedev.pojo.remotedev.FetchWinPoolData
+import com.tencent.devops.remotedev.pojo.remotedev.ResourceEstimateByVmResponse
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmRespData
 import java.time.Duration
@@ -82,6 +84,20 @@ class StartCloudService @Autowired constructor(
 
     override fun getResourceVm(data: ResourceVmReq): Result<List<ResourceVmRespData>?> {
         return Result(workspaceBcsClient.startGetResourceVm(data))
+    }
+
+    override fun startGetResourceEstimateByVm(
+        specifyTaints: String,
+        zoneId: String,
+        machineType: String,
+        quotaType: QuotaType?
+    ): Result<ResourceEstimateByVmResponse> {
+        return Result(startCloudInterfaceService.startGetResourceEstimateByVm(
+            specifyTaints = specifyTaints,
+            zoneId = zoneId,
+            machineType = machineType,
+            quotaType = quotaType
+        ))
     }
 
     override fun getWorkspaceInfoByEid(eid: String): Result<WorkspaceInfo> {
