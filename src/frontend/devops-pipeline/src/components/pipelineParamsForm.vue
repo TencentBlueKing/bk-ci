@@ -174,6 +174,10 @@
             showOperateBtn: {
                 type: Boolean,
                 default: false
+            },
+            hideDeleted: {
+                type: Boolean,
+                default: false
             }
         },
         computed: {
@@ -261,7 +265,9 @@
             renderParamList () {
                 // 将参数列表按照分组进行分组,未分组的参数放到一个分组里
                 const key = this.$t('notGrouped')
-                const listMap = this.paramList.reduce((acc, item) => {
+                console.log(this.hideDeleted)
+                const list = this.hideDeleted ? this.paramList.filter(i => !i.isDelete) : this.paramList
+                const listMap = list.reduce((acc, item) => {
                     const categoryKey = item.category || key
                     if (!acc[categoryKey]) {
                         acc[categoryKey] = []

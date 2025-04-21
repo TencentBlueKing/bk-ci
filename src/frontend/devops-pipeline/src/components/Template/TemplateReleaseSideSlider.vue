@@ -8,12 +8,12 @@
     >
         <header
             slot="header"
-            :class="['release-pipeline-side-slider-header', {
+            :class="['release-template-side-slider-header', {
                 'has-pac-tag': pacEnabled
             }]"
         >
             <p>
-                {{ $t("template.releasePipelineInstance") }}
+                {{ isInstanceCreateType ? $t('template.releasePipelineInstance') : $t('template.updatePipelineInstance') }}
                 <PacTag
                     v-if="pacEnabled"
                     :info="pipelineInfo?.yamlInfo"
@@ -29,15 +29,15 @@
                 }"
                 ext-cls="instance-version"
             >
-                <span class="release-pipeline-num">共3个实例</span>
+                <span class="release-pipeline-num">{{ $t('template.templateInstanceNum', [instanceList.length]) }}</span>
                 <div slot="content">
                     <div
-                        v-for="item in instancesList"
-                        :key="item.name"
+                        v-for="item in instanceList"
+                        :key="item.pipelineName"
                         class="instance-list"
                     >
                         <p>
-                            <span class="instance-name">{{ item.name }}</span>
+                            <span class="instance-name">{{ item.pipelineName }}</span>
                         </p>
                         <span
                             v-bk-overflow-tips
@@ -185,18 +185,22 @@
                                 <table class="instance-filePath">
                                     <thead>
                                         <tr align="left">
-                                            <th>实例</th>
+                                            <th>{{ $t('template.instance') }}</th>
                                             <th>
-                                                <span class="yaml-path-name">YAML 文件路径</span>
+                                                <span
+                                                    class="yaml-path-name"
+                                                >
+                                                    {{ $t('yamlDir') }}
+                                                </span>
                                             </th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr
-                                            v-for="item in instancesList"
-                                            :key="item.name"
+                                            v-for="item in instanceList"
+                                            :key="item.pipelineName"
                                         >
-                                            <td class="instance-name">{{ item.name }}</td>
+                                            <td class="instance-name">{{ item.pipelineName }}</td>
                                             <td>
                                                 <div class="input-cell">
                                                     <span class="instance-name">{{ filePathDir }}</span>
@@ -261,6 +265,39 @@
                 </bk-form>
             </div>
             <div
+                v-if="releaseParams.enablePac && !hasOauth"
+                class="pac-oauth-enable"
+                v-bkloading="{ isLoading: refreshing }"
+            >
+                <header v-if="hasPacSupportScmTypeList">
+                    <bk-button
+                        :loading="oauthing"
+                        :disabled="oauthing"
+                        theme="primary"
+                        size="large"
+                        @click="requestOauth"
+                    >
+                        {{ $t("oauth") }}
+                    </bk-button>
+                    <span
+                        :class="[
+                            'text-link',
+                            {
+                                disabled: refreshing
+                            }
+                        ]"
+                        @click="refreshOatuStatus"
+                    >
+                        <i class="devops-icon icon-refresh" />
+                        {{ $t("refreshOauthStatus") }}
+                    </span>
+                </header>
+                <p
+                    class="pac-oauth-tips"
+                    v-html="$t(hasPacSupportScmTypeList ? 'oauthPacTips' : 'withoutOauthCodelib')"
+                ></p>
+            </div>
+            <!-- <div
                 slot="content"
                 v-else
                 class="release-status-main"
@@ -273,7 +310,6 @@
                     />
                     <p class="release-status-title"> 10 个实例正在发布中…</p>
                     <p class="sub-message">你可以在当前页等待或关闭弹窗继续其他操作后续可在按钮处查看发布结果</p>
-                    <!-- <div class="release-status-content"></div> -->
                 </template>
                 <template v-else-if="isPublishSuccess">
                     <Logo
@@ -340,7 +376,7 @@
                         </bk-button>
                     </div>
                 </template>
-            </div>
+            </div> -->
         </section>
         <footer
             v-if="isUnpublishedStatus"
@@ -366,14 +402,13 @@
 </template>
 
 <script setup>
-    import Logo from '@/components/Logo'
+    // import Logo from '@/components/Logo'
     import PacTag from '@/components/PacTag.vue'
     import { TARGET_ACTION_ENUM, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     import { ref, computed, watch, defineProps, defineEmits, nextTick } from 'vue'
     import UseInstance from '@/hook/useInstance'
     
-    const { proxy, t, bkMessage, bkInfo, h } = UseInstance()
-
+    const { proxy, t, bkMessage } = UseInstance()
     const props = defineProps({
         value: {
             type: Boolean,
@@ -382,7 +417,8 @@
         version: {
             type: [String, Number],
             required: true
-        }
+        },
+        isInstanceCreateType: Boolean
     })
     const emits = defineEmits(['input'])
 
@@ -410,15 +446,12 @@
     })
     const isInitPacRepo = ref(false)
     const releaseFormRef = ref(null)
-    const instancesList = ref([
-        { name: '流水线实例 1', filePath: '' },
-        { name: '流水线实例 2', filePath: '' },
-        { name: '流水线实例 3', filePath: '' }
-    ])
+
     const isReleasing = ref(false)
     const isPublishSuccess = ref(false)
     const isPublishFailure = ref(false)
     const isProcessingRequired = ref(false)
+    const instanceList = computed(() => proxy.$store?.state?.templates?.instanceList)
 
     const isUnpublishedStatus = computed(() =>
         !isReleasing.value
@@ -433,13 +466,15 @@
     // const isManage = computed(() => proxy.$store?.state?.pipelines?.isManage)
     const pacSupportScmTypeList = computed(() => proxy.$store?.state?.common?.pacSupportScmTypeList)
     
-    const pacEnabled = computed(() => proxy.$store?.getters['atom/pacEnabled'])
+    const pacEnabled = computed(() => {
+        return (instanceList.value.length && instanceList.value[0].enablePac) ?? false
+    })
     const yamlInfo = computed(() => proxy.$store?.getters['atom/yamlInfo'])
-    const isTemplate = computed(() => proxy.$store?.getters['atom/isTemplate'])
 
-    const filePathDir = computed(() => `.ci/${isTemplate.value ? 'templates/' : ''}`)
+    const filePathDir = ref('.ci/templates/')
     const baseVersionBranch = computed(() => pipelineInfo.value?.baseVersionName || '--')
     const isTemplatePipeline = computed(() => pipelineInfo.value?.instanceFromTemplate ?? false)
+    
     // const isCommitToBranch = computed(() => releaseParams.value.targetAction === TARGET_ACTION_ENUM.COMMIT_TO_BRANCH)
     const rules = computed(() => ({
         repoHashId: [
@@ -449,14 +484,6 @@
                 trigger: 'blur'
             }
         ],
-        // filePath: [
-        //     {
-        //         required: true,
-        //         regex: /\.ya?ml$/,
-        //         message: t('yamlFilePathErrorTip'),
-        //         trigger: 'blur'
-        //     }
-        // ],
         description: [
             {
                 required: true,
@@ -519,11 +546,10 @@
     }, { deep: true })
 
     function errorHandler (error) {
-        const resourceType = isTemplate.value ? 'template' : 'pipeline'
         proxy.handleError(error, {
             projectId: proxy.$route.params.projectId,
-            resourceCode: proxy.$route.params[`${resourceType}Id`],
-            resourceType: resourceType,
+            resourceCode: proxy.$route.params.templateId,
+            resourceType: 'template',
             action: proxy.$permissionResourceAction.EDIT
         })
     }
@@ -569,12 +595,8 @@
                 version: props.version,
                 ...params
             }
-            let newReleaseVersion
-            if (isTemplate.value) {
-                newReleaseVersion = await proxy.$store.dispatch('atom/prefetchTemplateVersion', datas)
-            } else {
-                newReleaseVersion = await proxy.$store.dispatch('atom/prefetchPipelineVersion', datas)
-            }
+            const newReleaseVersion = await proxy.$store.dispatch('atom/prefetchTemplateVersion', datas)
+              
             newReleaseVersionName.value = newReleaseVersion?.newVersionName || '--'
         } catch (error) {
             errorHandler(error)
@@ -632,251 +654,7 @@
         showPacCodelibSetting.value = val
     }
     async function releasePipeline () {
-        try {
-            if (releasing.value) return
-            releasing.value = true
-            proxy.$store.dispatch('atom/setSaveStatus', true)
-            await releaseFormRef.value?.validate?.()
-            const {
-                fileUrl,
-                webUrl,
-                pathWithNamespace,
-                repoHashId,
-                scmType,
-                filePath,
-                targetAction,
-                ...rest
-            } = releaseParams.value
-
-            const postDatas = {
-                ...proxy.$route.params,
-                version: props.version,
-                params: {
-                    ...rest,
-                    ...(rest.enablePac
-                        ? {
-                            targetAction
-                        }
-                        : {}
-                    ),
-                    yamlInfo: rest.enablePac
-                        ? {
-                            scmType,
-                            repoHashId,
-                            filePath: `${filePathDir.value}${filePath}`
-                        }
-                        : null
-                }
-            }
-            
-            let res
-            if (isTemplate.value) {
-                res = await proxy.$store.dispatch('atom/releaseDraftTemplate', postDatas)
-            } else {
-                res = await proxy.$store.dispatch('atom/releaseDraftPipeline', postDatas)
-            }
-
-            const { versionName, targetUrl, updateBuildNo } = res
-            if (isTemplate.value) {
-                await proxy.$store.dispatch('atom/requestTemplateSummary', proxy.$route.params)
-            } else {
-                await proxy.$store.dispatch('atom/requestPipelineSummary', proxy.$route.params)
-            }
-
-            const tipsI18nKey = releaseParams.value.enablePac
-                ? 'pacPipelineReleaseTips'
-                : 'releaseTips'
-            const tipsArrayLength = releaseParams.value.enablePac ? 2 : 0
-            const isPacMR
-                = releaseParams.value.enablePac
-                    && [
-                        TARGET_ACTION_ENUM.CHECKOUT_BRANCH_AND_REQUEST_MERGE,
-                        TARGET_ACTION_ENUM.COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE
-                    ].includes(releaseParams.value.targetAction)
-           
-            const instance = bkInfo({
-                width: 600,
-                position: {
-                    top: 100,
-                    left: 100
-                },
-                extCls: 'release-info-dialog',
-                showFooter: false,
-                subHeader: h('div', {
-                    attrs: {
-                        class: 'release-info-content'
-                    }
-                }, [
-                    isPacMR
-                        ? h('span', {
-                            attrs: {
-                                class: 'part-of-mr'
-                            }
-                        })
-                        : h('i', {
-                            attrs: {
-                                class: 'devops-icon icon-check-small release-success-icon'
-                            }
-                        }),
-                    h('p', {
-                        attrs: {
-                            class: 'release-info-title'
-                        }
-                    }, t(isPacMR ? 'pacMRRelaseTips' : 'releaseSuc')),
-                    h('h3', {
-                        class: 'release-info-text',
-                        domProps: {
-                            innerHTML: t(isPacMR ? 'pacMRRelaseSuc' : 'relaseSucTips', [
-                                versionName
-                            ])
-                        }
-                    }),
-                    updateBuildNo && !tipsArrayLength
-                        ? h('div', { class: 'warning-box' }, [
-                            h(Logo, { size: 14, name: 'warning-circle-fill' }),
-                            h('span', t('buildNoBaseline.resetRequiredTips'))
-                        ])
-                        : null,
-                    ...(tipsArrayLength > 0
-                        ? [
-                            h(
-                                'p',
-                                {
-                                    attrs: {
-                                        class: 'pipeline-release-suc-tips'
-                                    }
-                                },
-                                [
-                                    h('h3', {}, t('pacPipelineConfRule')),
-                                    ...Array.from({ length: tipsArrayLength }).map((_, index) => {
-                                        if (index === 1 && releaseParams.value.enablePac) {
-                                            return h('ul', {}, [
-                                                h('span', {}, t(`${tipsI18nKey}${index}`)),
-                                                Array(3)
-                                                    .fill(0)
-                                                    .map((_, i) =>
-                                                        h(
-                                                            'li',
-                                                            {
-                                                                domProps: {
-                                                                    innerHTML: t(
-                                                                        `${tipsI18nKey}${index}-${i}`
-                                                                    )
-                                                                },
-                                                                style: {
-                                                                    marginLeft: '32px',
-                                                                    listStyle: 'disc'
-                                                                }
-                                                            }
-                                                        )
-                                                    )
-                                            ])
-                                        }
-                                        return h('span', {}, t(`${tipsI18nKey}${index}`))
-                                    })
-                                ]
-                            )]
-                        : []),
-                    h(
-                        'footer',
-                        {
-                            style: {
-                                display: 'flex',
-                                gridGap: '10px',
-                                marginTop: '20px',
-                                justifyContent: 'center'
-                            }
-                        },
-                        [
-                            releaseParams.value.enablePac && isPacMR
-                                ? h(
-                                    'bk-button',
-                                    {
-                                        props: {
-                                            theme: 'primary'
-                                        },
-                                        on: {
-                                            click: () => {
-                                                bkInfo.close(instance.id)
-                                                window.open(targetUrl, '_blank')
-                                            }
-                                        }
-                                    },
-                                    t('dealMR')
-                                )
-                                : !isTemplate.value
-                                    ? h(
-                                        'bk-button',
-                                        {
-                                            props: {
-                                                theme: 'primary'
-                                            },
-                                            on: {
-                                                click: () => {
-                                                    bkInfo.close(instance.id)
-                                                    if (!updateBuildNo) {
-                                                        proxy.$router.push({
-                                                            name: 'executePreview',
-                                                            params: {
-                                                                ...proxy.$route.params,
-                                                                version: pipelineInfo.value?.releaseVersion
-                                                            }
-                                                        })
-                                                    } else {
-                                                        proxy.$router.push({
-                                                            name: 'pipelinesHistory',
-                                                            params: {
-                                                                ...proxy.$route.params,
-                                                                type: 'pipeline',
-                                                                isDirectShowVersion: true,
-                                                                version: pipelineInfo.value?.releaseVersion
-                                                            }
-                                                        })
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        t(!updateBuildNo ? 'goExec' : 'buildNoBaseline.goReset')
-                                    )
-                                    : null,
-                            h(
-                                'bk-button',
-                                {
-                                    on: {
-                                        click: () => {
-                                            bkInfo.close(instance.id)
-                                            !updateBuildNo && proxy.$router.push({
-                                                name: isTemplate.value ? 'TemplateOverview' : 'pipelinesHistory',
-                                                params: {
-                                                    ...proxy.$route.params,
-                                                    type: 'pipeline',
-                                                    version: pipelineInfo.value?.releaseVersion
-                                                }
-                                            })
-                                        }
-                                    }
-                                },
-                                t(!updateBuildNo ? 'checkPipeline' : 'return')
-                            )
-
-                        ]
-                    )
-                ])
-            })
-            hideReleaseSlider()
-        } catch (e) {
-            if (e.state === 'error') {
-                e.message = e.content
-            }
-            errorHandler(e)
-            return {
-                code: e.code,
-                message: e.message
-            }
-        } finally {
-            proxy.$store.dispatch('atom/setSaveStatus', false)
-            releasing.value = false
-        }
+        
     }
     function showReleaseSlider () {
         emits('input', true)
@@ -916,7 +694,7 @@
 @import "@/scss/conf";
 @import "@/scss/mixins/ellipsis";
 
-.release-pipeline-side-slider-header {
+.release-template-side-slider-header {
     display: flex;
     justify-content: space-between;
     align-items: center;

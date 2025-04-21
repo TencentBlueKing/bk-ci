@@ -19,7 +19,10 @@
                         input-type="number"
                         :name="v.id"
                         :class="{
-                            'is-diff-param': highlightChangedParam && v.isChanged
+                            'is-diff-param': highlightChangedParam && v.isChanged,
+                            'is-change-param': v.isChange,
+                            'is-new-param': v.isNew,
+                            'is-delete-param': v.isDelete
                         }"
                         :placeholder="v.placeholder"
                         v-validate.initial="'required|numeric'"
@@ -399,5 +402,24 @@
 
 .is-diff-param {
     border-color: #FF9C01 !important;
+}
+
+.is-new-param {
+    background: #EBFAF0 !important;
+}
+    
+.is-change-param {
+    background: #FDF4E8 !important;
+}
+    
+.is-delete-param {
+    background: #FFF0F0 !important;
+}
+.is-new-param,
+.is-delete-param,
+.is-change-param {
+    &:focus {
+        background: #FFF !important;
+    }
 }
 </style>

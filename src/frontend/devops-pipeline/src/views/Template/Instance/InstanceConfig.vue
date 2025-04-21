@@ -9,8 +9,30 @@
                 <span class="line">|</span>
                 <span class="instance-name">{{ curInstance?.pipelineName }}</span>
             </div>
-            <div class="right">
-                todo..
+            <div
+                class="right"
+                v-if="!isInstanceCreateType"
+            >
+                <ul class="params-compare-content">
+                    <bk-checkbox
+                        class="hide-params-btn"
+                        v-if="compareParamsNum.deleted"
+                        v-model="hideDeleted"
+                    >
+                        {{ $t('template.hideDeletedParam') }}
+                    </bk-checkbox>
+                    <li
+                        v-for="item in renderCompareParamsNum"
+                        :key="item.key"
+                        class="num-item"
+                    >
+                        <span :class="['status-icon', item.class]"></span>
+                        <span> {{ item.label }}</span>
+                        <span :class="['status-value', item.class]">
+                            {{ item.value }}
+                        </span>
+                    </li>
+                </ul>
             </div>
         </header>
         <div
@@ -44,6 +66,7 @@
                             :params="paramsList"
                             sort-category
                             show-operate-btn
+                            :hide-deleted="hideDeleted"
                         >
                             <template
                                 slot="versionParams"
@@ -102,6 +125,7 @@
                             :param-values="constantValues"
                             :params="constantParams"
                             sort-category
+                            :hide-deleted="hideDeleted"
                         />
                     </div>
                 </section>
@@ -132,10 +156,11 @@
                             :param-values="otherValues"
                             :params="otherParams"
                             sort-category
+                            :hide-deleted="hideDeleted"
                         >
                             <template
                                 slot="versionParams"
-                                v-if="!isVisibleVersion && versionParamValues.length"
+                                v-if="!isVisibleVersion && versionParams.length"
                             >
                                 <pipeline-versions-form
                                     class="mb20"
@@ -158,14 +183,22 @@
 </template>
 
 <script setup>
-    import { ref, computed, watch, onBeforeUnmount } from 'vue'
+    import { ref, computed, watch, onBeforeUnmount, defineProps } from 'vue'
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import renderSortCategoryParams from '@/components/renderSortCategoryParams'
     import UseInstance from '@/hook/useInstance'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { getParamsValuesMap } from '@/utils/util'
-    import { SET_TEMPLATE_DETAIL, SET_INSTANCE_LIST } from '@/store/modules/templates/constants'
+    import {
+        SET_TEMPLATE_DETAIL,
+        SET_INSTANCE_LIST,
+        UPDATE_INSTANCE_LIST,
+        UPDATE_USE_TEMPLATE_SETTING
+    } from '@/store/modules/templates/constants'
+    const props = defineProps({
+        isInstanceCreateType: Boolean
+    })
     const activeName = ref(new Set([1]))
     const { proxy } = UseInstance()
     const isLoading = ref(true)
@@ -178,18 +211,23 @@
     const versionParams = ref([])
     const versionParamValues = ref({})
     const buildNo = ref({})
+    const hideDeleted = ref(false)
+    const compareParamsNum = ref({})
     const instanceList = computed(() => proxy.$store?.state?.templates?.instanceList)
     const initialInstanceList = computed(() => proxy.$store?.state?.templates?.initialInstanceList)
     const activeIndex = computed(() => proxy.$route?.query?.index)
+    // curTemplate 当前选中的某一个版本的模板数据
+    // templateVersion 选中的模板版本
+    const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
+    const curTemplateVersion = computed(() => proxy.$store?.state?.templates?.templateVersion)
     const curInstance = computed(() => {
         const instance = instanceList.value.find((i, index) => index === activeIndex.value - 1)
         // 如果选择了模板版本，将模板版本数据与当前实例进行比对
-        let instanceParams, result
-        if (instance && instance?.param && curTemplateVersion.value && curTemplateDetail.value?.params) {
+        let instanceParams
+        if (instance && instance?.param && curTemplateVersion.value && curTemplateDetail.value?.params && !props.isInstanceCreateType) {
             const res = compareParams(instance.param, curTemplateDetail.value.params)
             instanceParams = res.instanceParams
-            result = res.result
-            console.log(result, 'res')
+            compareParamsNum.value = res.result
         }
         if (instanceParams) {
             return {
@@ -199,14 +237,31 @@
         }
         return instance
     })
-   
-    const isVisibleVersion = computed(() => buildNo.value?.required ?? false)
-    // curTemplate 当前选中的某一个版本的模板数据
-    // templateVersion 选中的模板版本
-    const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
-    const curTemplateVersion = computed(() => proxy.$store?.state?.templates?.templateVersion)
-    watch(() => curTemplateDetail.value, () => {
+    const renderCompareParamsNum = computed(() => {
+        const itemMap = {
+            changed: {
+                label: proxy.$t('template.paramChanged'),
+                class: 'changed'
+            },
+            added: {
+                label: proxy.$t('template.paramAdded'),
+                class: 'added'
+            },
+            deleted: {
+                label: proxy.$t('template.paramDeleted'),
+                class: 'deleted'
+            }
+        }
+        
+        return Object.keys(compareParamsNum.value).map(key => {
+            return {
+                value: compareParamsNum.value[key],
+                key,
+                ...itemMap[key]
+            }
+        })
     })
+    const isVisibleVersion = computed(() => buildNo.value?.required ?? false)
     const hasOtherParams = computed(() => {
         if (isVisibleVersion.value) {
             return [...otherParams.value, ...versionParams.value].length
@@ -219,6 +274,9 @@
         }
         return paramsList.value.length
     })
+    watch(() => activeIndex.value, () => {
+        isLoading.value = true
+    })
     watch(() => curInstance.value, (value) => {
         if (!value) return
         initData()
@@ -227,13 +285,14 @@
     })
     watch(() => curTemplateVersion.value, () => {
         // 切换版本，重置实例为初始状态
+        isLoading.value = true
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, initialInstanceList.value)
     })
     function compareParams (instanceParams, templateParams) {
         const result = {
-            deleted: [],
-            added: [],
-            changed: []
+            changed: 0,
+            added: 0,
+            deleted: 0
         }
         const templateParamsMap = templateParams.reduce((acc, item) => {
             acc[item.id] = item // 按 id 进行映射
@@ -245,12 +304,12 @@
             if (!templateParamItem) {
                 // 在 instanceParams 中存在，但在 templateParams 中不存在，标记为isDelete
                 item.isDelete = true
-                result.deleted.push({ ...item, isDelete: true })
+                result.deleted += 1
             } else {
                 // 对比 defaultValue, 如果不同则标记为isChange
+                item.isChange = item.defaultValue !== templateParamItem.defaultValue
                 if (item.defaultValue !== templateParamItem.defaultValue) {
-                    item.isChange = true
-                    result.changed.push({ ...item, isChange: true })
+                    result.changed += 1
                 }
             }
         }
@@ -262,7 +321,7 @@
                 // 在 templateParams 中存在，但在 instanceParams 中不存在，标记为新增
                 const newItem = { ...item, isNew: true }
                 instanceParams.push(newItem) // 将新字段添加到 instanceParams
-                result.added.push(newItem)
+                result.added += 1
             }
         }
         
@@ -271,7 +330,15 @@
             result
         }
     }
-
+    function handleParamChange (id, value) {
+        curInstance.value.param.forEach(i => {
+            if (i.id === id) i.defaultValue = value
+        })
+        proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
+            index: activeIndex.value - 1,
+            value: curInstance.value
+        })
+    }
     function toggleCollapse (id) {
         if (activeName.value.has(id)) {
             activeName.value.delete(id)
@@ -287,7 +354,6 @@
         otherValues.value = getParamsValuesMap(otherParams.value, key)
     }
     function initData () {
-        isLoading.value = true
         const params = curInstance.value?.param
         if (!params) return
         paramsList.value = params.filter(p => !p.constant && p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(p => ({
@@ -317,6 +383,8 @@
             templateVersion: '',
             templateDetail: {}
         })
+        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, [])
+        proxy.$store.commit(`templates/${UPDATE_USE_TEMPLATE_SETTING}`, false)
     })
 </script>
 
@@ -344,6 +412,48 @@
             .instance-name {
                 color: #979BA5;
                 font-weight: 400;
+            }
+        }
+        .params-compare-content {
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            .hide-params-btn {
+                margin-right: 20px;
+            }
+            .num-item {
+                display: flex;
+                align-items: center;
+                margin-right: 12px;
+            }
+            .status-icon {
+                display: inline-block;
+                width: 12px;
+                height: 12px;
+                background: #FDF4E8;
+                margin-right: 4px;
+                &.changed {
+                    border: 1px solid #F8B64F;
+                }
+                &.added {
+                    border: 1px solid #2CAF5E;
+                }
+                &.deleted {
+                    border: 1px solid #FF5656;
+                }
+            }
+            .status-value {
+                font-weight: 700;
+                margin-left: 2px;
+                &.changed {
+                    color:#F8B64F;
+                }
+                &.added {
+                    color:#2CAF5E;
+                }
+                &.deleted {
+                    color:#FF5656;
+                }
             }
         }
         .config-content {

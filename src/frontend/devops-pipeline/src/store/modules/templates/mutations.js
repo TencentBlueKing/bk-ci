@@ -20,12 +20,22 @@ import Vue from 'vue'
 import { deepClone } from '@/utils/util'
 import {
     SET_INSTANCE_LIST,
-    SET_TEMPLATE_DETAIL
+    SET_TEMPLATE_DETAIL,
+    UPDATE_INSTANCE_LIST,
+    UPDATE_USE_TEMPLATE_SETTING
 } from './constants'
 export default {
     [SET_INSTANCE_LIST]: (state, list) => {
         Vue.set(state, 'instanceList', list)
         state.initialInstanceList = deepClone(list) // 使用深拷贝
+    },
+    [UPDATE_INSTANCE_LIST]: (state, { index, value }) => {
+        const list = state.instanceList
+        list[index] = value
+        Vue.set(state, 'instanceList', list)
+    },
+    [UPDATE_USE_TEMPLATE_SETTING]: (state, value) => {
+        Vue.set(state, 'useTemplateSettings', value)
     },
     [SET_TEMPLATE_DETAIL]: (state, data) => {
         Vue.set(state, 'templateDetail', data.templateDetail)

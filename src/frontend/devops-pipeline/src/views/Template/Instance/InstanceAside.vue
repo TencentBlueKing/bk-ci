@@ -4,6 +4,8 @@
             <bk-button
                 v-if="isInstanceCreateType"
                 icon="plus"
+                :disabled="disabledNewInstanceBtn"
+                @click="handleAddInstance"
             >
                 {{ $t('new') }}
             </bk-button>
@@ -47,8 +49,8 @@
                     <bk-input
                         ref="nameInputRef"
                         v-model="instanceName"
-                        @blur="handleEnterChangeName(instanceIndex)"
-                        @enter="handleEnterChangeName(instanceIndex)"
+                        @blur="(value) => handleEnterChangeName(value, instanceIndex)"
+                        @enter="(value) => handleEnterChangeName(value, instanceIndex)"
                     >
                     </bk-input>
                 </template>
@@ -65,17 +67,27 @@
                         <bk-icon
                             type="edit2"
                             class="operate-icon edit-icon"
-                            @click.stop="handleEditName(instance, instanceIndex)"
+                            v-bk-tooltips="$t('template.editInstanceName')"
+                            @click.stop="handleEditName(instanceIndex)"
                         />
                         <template v-if="isInstanceCreateType">
+                            <bk-popconfirm
+                                :title="$t('template.deleteInstanceTitleTips')"
+                                :content="$t('template.deleteInstanceContentTips')"
+                                width="288"
+                                trigger="click"
+                                @confirm="handelDeleteInstance(instanceIndex)"
+                            >
+                                <bk-icon
+                                    type="delete"
+                                    class="operate-icon delete-icon"
+                                    v-bk-tooltips="$t('delete')"
+                                />
+                            </bk-popconfirm>
                             <bk-icon
                                 type="copy"
                                 class="operate-icon copy-icon"
-                                @click.stop="handleCopyInstance(instance, instanceIndex)"
-                            />
-                            <bk-icon
-                                type="delete"
-                                class="operate-icon delete-icon"
+                                v-bk-tooltips="$t('template.copyInstance')"
                                 @click.stop="handleCopyInstance(instance, instanceIndex)"
                             />
                         </template>
@@ -89,6 +101,7 @@
 <script setup>
     import { ref, defineProps, computed, onMounted } from 'vue'
     import { SET_INSTANCE_LIST } from '@/store/modules/templates/constants'
+    import { deepClone } from '@/utils/util'
     import Logo from '@/components/Logo'
     import UseInstance from '@/hook/useInstance'
     const props = defineProps({
@@ -98,16 +111,19 @@
     const instanceActiveIndex = ref(0)
     const editingIndex = ref(null)
     const nameInputRef = ref(null)
+    const newIndex = ref(1)
     const projectId = computed(() => proxy.$route.params?.projectId)
     const templateId = computed(() => proxy.$route.params?.templateId)
     const instanceList = computed(() => proxy.$store?.state?.templates?.instanceList)
     const currentVersionId = computed(() => proxy?.$route.params?.version)
     const renderInstanceList = computed(() => {
-        return props.isInstanceCreateType ? [] : instanceList.value
+        return instanceList.value
     })
     const instanceName = computed(() => {
         return renderInstanceList.value[editingIndex.value].pipelineName
     })
+    const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
+    const disabledNewInstanceBtn = computed(() => !Object.keys(curTemplateDetail.value).length)
     function handleInstanceClick (index) {
         if (editingIndex.value) return
         instanceActiveIndex.value = index
@@ -118,17 +134,29 @@
             }
         })
     }
-    function handleEnterChangeName (index) {
+    function handleEnterChangeName (value, index) {
+        if (!value) return
+        proxy.$set(instanceList.value[index], 'pipelineName', value)
+        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, instanceList.value)
         editingIndex.value = null
     }
-    function handleEditName (instance, index) {
+    function handleEditName (index) {
         editingIndex.value = index
         proxy?.$nextTick(() => {
-            nameInputRef.value[0].focus()
+            nameInputRef.value && nameInputRef.value[0]?.focus()
         })
     }
+    function handelDeleteInstance (index) {
+        instanceList.value.splice(index, 1)
+        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, instanceList.value)
+        handleInstanceClick(instanceList.value.length - 1)
+    }
     function handleCopyInstance (instance, index) {
-
+        const newInstance = deepClone(instance)
+        newInstance.pipelineName += `_copy${newIndex.value}`
+        newIndex.value += 1
+        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, [...instanceList.value, newInstance])
+        handleInstanceClick(instanceList.value.length - 1)
     }
     async function fetchPipelinesDetails () {
         try {
@@ -148,6 +176,22 @@
         } catch (e) {
             console.error(e)
         }
+    }
+    function handleAddInstance () {
+        if (!curTemplateDetail.value?.params) return
+        const { params, buildNo } = deepClone(curTemplateDetail.value)
+        const newInstance = {
+            enablePac: false,
+            param: params,
+            buildNo
+        }
+        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, [...instanceList.value, newInstance])
+        proxy?.$nextTick(() => {
+            const index = instanceList.value.length - 1
+            handleInstanceClick(index)
+            handleEditName(index)
+            nameInputRef.value && nameInputRef.value[0]?.focus()
+        }, 3000)
     }
     function init () {
         if (!props.isInstanceCreateType && !instanceList.value.length) {

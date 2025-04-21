@@ -148,7 +148,9 @@
                             </span>
                         }
                         {
-                            showOperateBtn && !isDelete && <span class='operate-btn'>123</span>
+                            showOperateBtn && !isDelete && <span class='operate-btn'>
+                                
+                            </span>
                         }
                     </label> }
 

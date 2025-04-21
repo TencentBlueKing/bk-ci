@@ -523,8 +523,19 @@
     "pipelineBuildParams": "Build Params",
     "templateCoverWarningDesc": "The draft edited by {0} (created from {2}) has not been published yet. Editing the branch version will overwrite the unpublished draft. Please confirm if you want to continue.",
     "templateOutDateCoverWarningDesc": "A new dev branch version has been submitted to the code repository. The draft edited by {0} (created from {2} on {1}) has expired. This operation will overwrite the expired draft. Please confirm whether to continue",
-    "releasePipelineInstance": "Release Pipeline Instance"
-  },
+    "releasePipelineInstance": "Release Pipeline Instance",
+    "paramDeleted": "Delete",
+    "paramChanged": "Change",
+    "paramAdded": "Add",
+    "hideDeletedParam": "Hide deleted params",
+    "editInstanceName": "Edit Name",
+    "copyInstance": "Copy",
+    "deleteInstanceTitleTips": "Confirm Delete Script?",
+    "deleteInstanceContentTips": "This action cannot be undone. Please proceed with caution!",
+    "templateInstanceNum": "{0} instances",
+    "instance": "Instances",
+    "updatePipelineInstance": "Update Pipeline Instance"
+},
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
     "exportPipelineYamlTip": "Export the YAML file to the code repository to enable PAC mode, allowing maintenance of the pipeline through the code repository or UI. ",

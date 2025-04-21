@@ -52,7 +52,7 @@
                         :is-instance-create-type="isInstanceCreateViewType"
                     />
                     <bk-exception
-                        v-if="isInstanceCreateViewType"
+                        v-if="isInstanceCreateViewType && !instanceList.length"
                         ext-cls="instance-contents-empty"
                         slot="main"
                         type="empty"
@@ -62,10 +62,15 @@
                     <InstanceConfig
                         v-else
                         slot="main"
+                        :is-instance-create-type="isInstanceCreateViewType"
                     />
                 </bk-resize-layout>
             </main>
         </template>
+        <TemplateReleaseSideSlider
+            v-model="showRelease"
+            :is-instance-create-type="isInstanceCreateViewType"
+        />
     </section>
 </template>
 
@@ -76,13 +81,16 @@
     import InstanceAside from './InstanceAside'
     import InstanceConfig from './InstanceConfig'
     import TemplateVersionSelector from './TemplateVersionSelector'
+    import TemplateReleaseSideSlider from '@/components/Template/TemplateReleaseSideSlider'
     const { proxy } = UseInstance()
 
     const isLoading = ref(false)
+    const showRelease = ref(false)
     const projectId = computed(() => proxy.$route.params?.projectId)
     const templateId = computed(() => proxy.$route.params?.templateId)
     const pipeline = computed(() => proxy.$store?.state?.atom?.pipeline)
     const pipelineInfo = computed(() => proxy.$store?.state?.atom?.pipelineInfo)
+    const instanceList = computed(() => proxy.$store?.state?.templates?.instanceList)
     const currentVersionId = computed(() => proxy?.$route.params?.version ?? pipelineInfo.value?.version)
     const isInstanceCreateViewType = computed(() => proxy.$route.params?.type === 'create')
     watch(() => pipeline.value, () => {
@@ -106,7 +114,8 @@
     }
 
     function handleBatchUpgrade () {
-
+        showRelease.value = true
+        console.log(instanceList.value, 11111)
     }
     function handleGoBack () {
         proxy.$router.push({
