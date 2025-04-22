@@ -6,6 +6,7 @@ import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.InstalledPkgFileShaContentRequest
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
+import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
@@ -79,4 +80,13 @@ interface StoreComponentManageService {
         storeType: StoreTypeEnum,
         storeCode: String
     ): Result<Boolean>
+
+    /**
+     * 更新组件版本信息
+     */
+    fun updateComponentVersionInfo(
+        storeId: String,
+        storePackageInfoReqs: List<StorePackageInfoReq>,
+        storeType: StoreTypeEnum
+    ): Boolean
 }

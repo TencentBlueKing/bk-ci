@@ -49,7 +49,7 @@ import com.tencent.devops.store.common.service.StoreI18nMessageService
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.pojo.atom.AtomConfigInfo
-import com.tencent.devops.store.pojo.atom.AtomPackageInfo
+import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.atom.ReleaseInfo
@@ -337,7 +337,7 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
                     val nodeSize = client.get(ServiceArchiveComponentPkgResource::class)
                         .getFileSize(StoreTypeEnum.ATOM, pkgPath).data
                     if (nodeSize != null) {
-                        AtomPackageInfo(
+                        StorePackageInfoReq(
                             osName = record.osName ?: "",
                             arch = record.osArch ?: "",
                             size = nodeSize

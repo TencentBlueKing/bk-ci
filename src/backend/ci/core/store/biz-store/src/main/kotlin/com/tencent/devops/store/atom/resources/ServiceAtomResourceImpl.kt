@@ -74,4 +74,8 @@ class ServiceAtomResourceImpl @Autowired constructor(
     override fun getAtomClassifyInfo(atomCode: String): Result<AtomClassifyInfo?> {
         return atomClassifyService.getAtomClassifyInfo(atomCode)
     }
+
+    override fun getAtomId(atomCode: String, version: String): Result<String?> {
+        return Result(atomService.getAtomId(atomCode = atomCode, version = version))
+    }
 }

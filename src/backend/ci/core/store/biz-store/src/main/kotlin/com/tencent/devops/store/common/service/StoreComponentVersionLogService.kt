@@ -9,7 +9,7 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.store.common.dao.AbstractStoreCommonDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreVersionLogDao
-import com.tencent.devops.store.pojo.atom.AtomPackageInfo
+import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreVersionLogInfo
 import org.jooq.DSLContext
@@ -151,7 +151,7 @@ abstract class StoreComponentVersionLogService {
     private fun handleAtomPackageSize(record: Record): String {
         val size = record.get("PACKAGE_SIZE") as? String ?: return ""
         if (size.isNotEmpty()) {
-            val atomPackageInfo = JsonUtil.to(size, object : TypeReference<List<AtomPackageInfo>>() {})
+            val atomPackageInfo = JsonUtil.to(size, object : TypeReference<List<StorePackageInfoReq>>() {})
             return calculateTotalSize(atomPackageInfo)
         }
         return ""
@@ -165,7 +165,7 @@ abstract class StoreComponentVersionLogService {
         return ""
     }
 
-    private fun calculateTotalSize(atomPackageInfos: List<AtomPackageInfo>): String {
+    private fun calculateTotalSize(atomPackageInfos: List<StorePackageInfoReq>): String {
         if (atomPackageInfos.isNotEmpty()) {
             val totalSize = atomPackageInfos.map { info -> BigDecimal(info.size) }.reduce(BigDecimal::add)
             return formatSizeInMB(totalSize.divide(BigDecimal(atomPackageInfos.size), 2, RoundingMode.HALF_UP))

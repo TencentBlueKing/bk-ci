@@ -1516,4 +1516,17 @@ class AtomDao : AtomBaseDao() {
                 .fetch()
         }
     }
+
+    fun getAtomIdByVersionWithCode(dslContext: DSLContext, atomCode: String, version: String): String? {
+        return with(TAtom.T_ATOM) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ATOM_CODE.eq(atomCode))
+            conditions.add(VERSION.eq(version))
+            dslContext.select(ID).from(this)
+                .where(conditions)
+                .orderBy(CREATE_TIME.desc())
+                .limit(1)
+                .fetchOne(0, String::class.java)
+        }
+    }
 }

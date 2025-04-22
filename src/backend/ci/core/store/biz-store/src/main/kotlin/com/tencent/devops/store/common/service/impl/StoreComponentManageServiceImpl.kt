@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.common.service.impl
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_FILE_SHA_CONTENT
@@ -34,12 +35,15 @@ import com.tencent.devops.common.api.constant.MESSAGE
 import com.tencent.devops.common.api.constant.STATUS
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
+import com.tencent.devops.store.common.dao.AbstractStoreCommonDao
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.ReasonRelDao
 import com.tencent.devops.store.common.dao.StoreBaseEnvExtManageDao
@@ -70,6 +74,7 @@ import com.tencent.devops.store.pojo.common.InstalledPkgFileShaContentRequest
 import com.tencent.devops.store.pojo.common.KEY_REPOSITORY_AUTHORIZER
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
+import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
@@ -539,5 +544,67 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
             StoreBaseInstallService::class.java,
             beanName
         )
+    }
+
+    override fun updateComponentVersionInfo(
+        storeId: String,
+        storePackageInfoReqs: List<StorePackageInfoReq>,
+        storeType: StoreTypeEnum
+    ): Boolean {
+        val redisLock = RedisLock(
+            redisOperation = redisOperation,
+            lockKey = "store:$storeId:${storeType.name}",
+            expiredTimeInSeconds = 10
+        )
+        try {
+            redisLock.lock()
+            val size = getStoreCommonDao(storeType.name).getComponentVersionSizeInfo(dslContext, storeId)
+            if (size.isNullOrBlank()) {
+                val pakSize = handleStorePkgSize(storePackageInfoReqs, storeType)
+                getStoreCommonDao(storeType.name).updateComponentVersionInfo(dslContext, storeId, pakSize)
+                return true
+            }
+            if (storeType == StoreTypeEnum.ATOM) {
+                val atomPackageInfoList = JsonUtil.to(size, object : TypeReference<List<StorePackageInfoReq>>() {})
+                val mutableList = atomPackageInfoList.toMutableList()
+                mutableList.addAll(storePackageInfoReqs)
+                getStoreCommonDao(storeType.name).updateComponentVersionInfo(
+                    dslContext,
+                    storeId,
+                    JsonUtil.toJson(mutableList)
+                )
+            }
+
+        } finally {
+            redisLock.unlock()
+        }
+
+        return true
+    }
+
+    private fun getStoreCommonDao(storeType: String): AbstractStoreCommonDao {
+        return SpringContextUtil.getBean(AbstractStoreCommonDao::class.java, "${storeType}_COMMON_DAO")
+    }
+
+    private fun handleStorePkgSize(storePackageInfoReqs: List<StorePackageInfoReq>, storeType: StoreTypeEnum): String {
+        when (storeType) {
+
+            StoreTypeEnum.ATOM -> {
+                return JsonUtil.toJson(storePackageInfoReqs)
+            }
+
+            StoreTypeEnum.IMAGE -> {
+                return storePackageInfoReqs[0].size.toString()
+            }
+
+            StoreTypeEnum.SERVICE -> {
+                return storePackageInfoReqs[0].size.toString()
+
+            }
+
+            else -> {
+                throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+            }
+        }
     }
 }

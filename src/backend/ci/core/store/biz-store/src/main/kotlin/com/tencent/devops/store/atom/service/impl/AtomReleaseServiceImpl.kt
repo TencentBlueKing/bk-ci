@@ -95,7 +95,7 @@ import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_PACKAGE_IN
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureRequest
 import com.tencent.devops.store.pojo.atom.AtomOfflineReq
-import com.tencent.devops.store.pojo.atom.AtomPackageInfo
+import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.atom.AtomReleaseRequest
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.atom.GetAtomQualityConfigResult
@@ -1501,7 +1501,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                         val nodeSize = client.get(ServiceArchiveComponentPkgResource::class)
                             .getFileSize(StoreTypeEnum.ATOM, pkgPath).data
                         if (nodeSize != null) {
-                            AtomPackageInfo(
+                            StorePackageInfoReq(
                                 osName = record.osName ?: "",
                                 arch = record.osArch ?: "",
                                 size = nodeSize

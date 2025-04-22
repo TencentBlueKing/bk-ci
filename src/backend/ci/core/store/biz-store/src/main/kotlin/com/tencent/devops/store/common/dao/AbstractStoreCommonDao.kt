@@ -90,9 +90,19 @@ abstract class AbstractStoreCommonDao {
         pageSize: Int
     ): Result<out Record>?
 
-
     abstract fun countStoreComponentVersionLogs(
         dslContext: DSLContext,
         storeCode: String,
     ): Long
+
+    abstract fun updateComponentVersionInfo(
+        dslContext: DSLContext,
+        storeId: String,
+        pkgSize: String
+    )
+
+    abstract fun getComponentVersionSizeInfo(
+        dslContext: DSLContext,
+        storeId: String
+    ): String?
 }

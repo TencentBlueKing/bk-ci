@@ -174,4 +174,12 @@ class TemplateCommonDao : AbstractStoreCommonDao() {
             baseStep.fetchOne(0, Long::class.java) ?: 0L
         }
     }
+
+    override fun updateComponentVersionInfo(dslContext: DSLContext, storeId: String, pkgSize: String) {
+        TODO("Not yet implemented")
+    }
+
+    override fun getComponentVersionSizeInfo(dslContext: DSLContext, storeId: String): String? {
+        TODO("Not yet implemented")
+    }
 }
