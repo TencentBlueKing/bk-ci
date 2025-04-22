@@ -243,7 +243,7 @@ class AtomCommonDao : AbstractStoreCommonDao() {
     override fun updateComponentVersionInfo(dslContext: DSLContext, storeId: String, pkgSize: String) {
         val atomVersionLog = TAtomVersionLog.T_ATOM_VERSION_LOG
         dslContext.update(atomVersionLog).set(atomVersionLog.PACKAGE_SIZE, pkgSize)
-            .where(atomVersionLog.ATOM_ID.eq(storeId))
+            .where(atomVersionLog.ATOM_ID.eq(storeId)).execute()
     }
 
     override fun getComponentVersionSizeInfo(dslContext: DSLContext, storeId: String): String? {
