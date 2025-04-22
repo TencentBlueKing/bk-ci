@@ -151,7 +151,7 @@ class SampleImageInitService @Autowired constructor(
                 imageSourceType = ImageType.THIRD,
                 imageRepoUrl = imageInitRequest?.imageRepoUrl ?: "",
                 imageRepoName = imageInitRequest?.imageRepoName ?: "bkci/ci",
-                imageTag = imageInitRequest?.imageTag ?: "latest",
+                imageTag = imageInitRequest?.imageTag ?: "jdk17",
                 dockerFileType = imageInitRequest?.dockerFileType ?: "INPUT",
                 dockerFileContent = imageInitRequest?.dockerFileContent
                     ?: "FROM bkci/ci:latest\nRUN apt install -y git python-pip python3-pip\n",
