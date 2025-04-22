@@ -345,7 +345,7 @@ class PipelineYamlFileManager @Autowired constructor(
                 // 创建mr
                 val needCreatePullRequest = targetAction == CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE ||
                         targetAction == CodeTargetAction.COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE
-                val pullRequest = needCreatePullRequest.takeIf { it }.let {
+                val pullRequest = if (needCreatePullRequest) {
                     createPullRequest(
                         ref = ref,
                         targetBranch = defaultBranch,
@@ -354,6 +354,8 @@ class PipelineYamlFileManager @Autowired constructor(
                         newFile = filePushResult.newFile,
                         authRepository = authRepository
                     )
+                } else {
+                    null
                 }
 
                 createOrUpdateYamlPipeline(
