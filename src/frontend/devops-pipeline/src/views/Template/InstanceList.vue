@@ -124,13 +124,12 @@
                             >
                                 {{ $t('copy') }}
                             </bk-button>
-                            <bk-button
-                                theme="primary"
-                                text
-                                @click="toCompared(props.row)"
-                            >
-                                {{ $t('template.diff') }}
-                            </bk-button>
+                            <version-diff-entry
+                                v-if="props.row.version !== currentVersion"
+                                :version="props.row.version"
+                                :latest-version="currentVersion"
+                                type="templateInstance"
+                            />
                         </template>
                     </bk-table-column>
                 </bk-table>
@@ -143,46 +142,24 @@
             :btns="emptyTipsConfig.btns"
         >
         </empty-tips>
-        <instance-compared
-            :show-compared-instance="showComparedInstance"
-            :loading="dialogLoading"
-            :instance-version="instanceVersion"
-            :cur-version="curComparedVersionName"
-            :version-list="versionList"
-            :cur-params-list="curParamsList"
-            :target-params-list="targetParamsList"
-            :cur-stages="curStages"
-            :target-stages="targetStages"
-            @cancel="cancelHandler"
-            :selected-version="selectedVersion"
-        />
     </div>
 </template>
 
 <script setup>
     import emptyTips from '@/components/pipelineList/imgEmptyTips'
-    import instanceCompared from '@/components/Template/instance-compared.vue'
     import UseInstance from '@/hook/useInstance'
     import { SET_INSTANCE_LIST } from '@/store/modules/templates/constants'
     import { convertTime } from '@/utils/util'
-    import { computed, onMounted, ref, watch } from 'vue'
+    import { computed, onMounted, ref } from 'vue'
+    import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
 
     const { proxy, showTips, t } = UseInstance()
-    const isInit = ref(false)
     const isLoading = ref(false)
     const searchable = ref(false)
     const showContent = ref(false)
-    const dialogLoading = ref(false)
-    const showComparedInstance = ref(false)
-    const instanceVersion = ref('')
     const searchValue = ref([])
     const instanceList = ref([])
     const selectItemList = ref([])
-    const versionList = ref([])
-    const curStages = ref([])
-    const targetStages = ref([])
-    const targetParamsList = ref([])
-    const curParamsList = ref([])
     const pagination = ref({
         current: 1,
         count: 0,
@@ -206,8 +183,6 @@
             }
         ]
     })
-    const curComparedPipeline = ref('')
-    const curComparedVersionName = ref('')
 
     const showInstanceList = computed(() => showContent.value && (instanceList.value.length || searchable.value))
     const projectId = computed(() => proxy.$route.params.projectId)
@@ -221,12 +196,6 @@
         acc[filter.id] = filter.values.map(val => val.id).join(',')
         return acc
     }, {}))
-
-    watch(() => instanceVersion.value, (newVal) => {
-        if (newVal && !isInit.value) {
-            requestVersionCompare(newVal)
-        }
-    })
 
     onMounted(() => {
         requestInstanceList()
@@ -297,55 +266,6 @@
             createInstance(row.templateId, 'upgrade')
         }
     }
-    async function requestVersionCompare (versionId) {
-        dialogLoading.value = true
-
-        try {
-            const res = await proxy.$store.dispatch('pipelines/requestVersionCompare', {
-                projectId: projectId.value,
-                templateId: templateId.value,
-                versionId: versionId,
-                pipelineId: curComparedPipeline.value
-            })
-            versionList.value = res.versions ?? []
-            const curVersion = versionList.value.find(val => {
-                return val.version === parseInt(versionId)
-            })
-            instanceVersion.value = curVersion?.version
-
-            const curData = res.origin
-            const targetData = res.target
-
-            curStages.value = curData.model.stages
-            targetStages.value = targetData.model.stages
-
-            curParamsList.value.splice(0, curParamsList.value.length)
-            targetParamsList.value.splice(0, targetParamsList.value.length)
-
-            curData.params && curData.params.forEach((item) => {
-                const temp = {
-                    key: item.id,
-                    value: item.defaultValue
-                }
-                curParamsList.value.push(temp)
-            })
-
-            targetData.params && targetData.params.forEach((item) => {
-                const temp = {
-                    key: item.id,
-                    value: item.defaultValue
-                }
-                targetParamsList.value.push(temp)
-            })
-        } catch (err) {
-            showTips({
-                message: err.message || err,
-                theme: 'error'
-            })
-        } finally {
-            dialogLoading.value = false
-        }
-    }
     function HandleMR (row) {
         // TO DO
     }
@@ -358,20 +278,6 @@
             }
         }
         proxy.$router.push(route)
-    }
-    function toCompared (row) {
-        showComparedInstance.value = true
-        isInit.value = true
-        curComparedVersionName.value = row.versionName
-        curComparedPipeline.value = row.pipelineId
-        requestVersionCompare(currentVersion.value)
-    }
-    function cancelHandler () {
-        showComparedInstance.value = false
-    }
-    function selectedVersion (data) {
-        isInit.value = false
-        instanceVersion.value = data
     }
     function toPipelineHistory () {
         // to do..
