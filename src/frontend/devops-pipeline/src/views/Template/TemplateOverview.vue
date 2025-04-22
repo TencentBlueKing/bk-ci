@@ -1,9 +1,5 @@
 <template>
-    <div
-        :class="['template-detail-entry', {
-            'show-template-var': activeChild.showVar
-        }]"
-    >
+    <div class="template-detail-entry">
         <header>
             <HistoryHeader />
             <ext-menu
@@ -380,6 +376,7 @@
             margin: 24px 24px 0 24px;
             box-shadow: 0 2px 2px 0 #00000026;
             flex: 1;
+            overflow: hidden;
         }
         .template-detail-entry-center {
             background: #fff;

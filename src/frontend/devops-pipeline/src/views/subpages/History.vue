@@ -1,9 +1,5 @@
 <template>
-    <div
-        :class="['pipeline-detail-entry', {
-            'show-pipeline-var': activeChild.showVar
-        }]"
-    >
+    <div class="pipeline-detail-entry">
         <aside class="pipeline-detail-entry-aside">
             <ul
                 v-for="item in asideNav"
@@ -77,9 +73,9 @@
     import {
         BuildHistoryTab,
         ChangeLog,
+        DelegationPermission,
         PipelineConfig,
-        TriggerEvent,
-        DelegationPermission
+        TriggerEvent
     } from '@/components/PipelineDetailTabs'
     import { AuthorityTab, ShowVariable } from '@/components/PipelineEditTabs/'
     import { mapActions, mapGetters, mapState } from 'vuex'
