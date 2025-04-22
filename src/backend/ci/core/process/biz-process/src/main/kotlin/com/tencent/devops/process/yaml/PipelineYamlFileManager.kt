@@ -342,8 +342,13 @@ class PipelineYamlFileManager @Autowired constructor(
                         authRepository = authRepository
                     )
                 ).data!!
+                val needCreatePullRequest = when {
+                    targetAction == CodeTargetAction.COMMIT_TO_MASTER -> true
+                    targetAction == CodeTargetAction.COMMIT_TO_BRANCH && targetBranch == defaultBranch -> true
+                    else -> false
+                }
                 // 创建mr
-                val pullRequest = if (targetAction != CodeTargetAction.COMMIT_TO_MASTER) {
+                val pullRequest = needCreatePullRequest.takeIf { it }.let {
                     createPullRequest(
                         ref = ref,
                         defaultBranch = defaultBranch,
@@ -352,8 +357,6 @@ class PipelineYamlFileManager @Autowired constructor(
                         newFile = filePushResult.newFile,
                         authRepository = authRepository
                     )
-                } else {
-                    null
                 }
 
                 createOrUpdateYamlPipeline(
