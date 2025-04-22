@@ -813,10 +813,10 @@ process:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2Gi
     limits:
-      cpu: 500m
-      memory: 1500Mi
+      cpu: 1000m
+      memory: 2Gi
   jvm:
     heapPct: "70.0"
     initSecs: 50
