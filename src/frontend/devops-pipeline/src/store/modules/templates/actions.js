@@ -100,6 +100,9 @@ const actions = {
         return ajax.post(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}/pipelines`, pipelineIds).then(res => {
             return res.data
         })
+    },
+    requestVersionCompare (_, { projectId, templateId, baseVersion, comparedVersion }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/compare?baseVersion=${baseVersion}&comparedVersion=${comparedVersion}`)
     }
 }
 

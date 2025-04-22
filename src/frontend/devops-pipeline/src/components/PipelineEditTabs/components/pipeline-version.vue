@@ -65,7 +65,7 @@
                                 {{ `${$t('buildNoBaseline.baselineValue')}${renderBuildNo.buildNo}（${getLabelByBuildType(renderBuildNo.buildNoType)}）` }}
                                 <span
                                     class="dafault-value-current"
-                                    v-if="pipelineModel"
+                                    v-if="pipelineModel && !isTemplate"
                                 >
                                     {{ `${$t('buildNoBaseline.currentValue')}${buildNo.currentBuildNo}` }}
                                     <span
@@ -333,7 +333,8 @@
         computed: {
             ...mapGetters('atom', [
                 'buildNoRules',
-                'defaultBuildNo'
+                'defaultBuildNo',
+                'isTemplate'
             ]),
             globalParams: {
                 get () {
