@@ -385,7 +385,8 @@
     "concurrentMaxConcurrency": "最大可并发数",
     "concurrentTimeout": "超限时排队，排队超时时间",
     "maxConRunningQueueSizeTips": "最大可并发数范围在1-200之间",
-    "maxConcurrencyPlaceholder": "缺省时以系统设置为准"
+    "maxConcurrencyPlaceholder": "缺省时以系统设置为准",
+    "failIfVariableInvalid": "当流水线变量超过长度限制（4K）时报错，终止执行"
   },
   "template": {
     "addTemplate": "新建模板",

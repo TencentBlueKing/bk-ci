@@ -41,6 +41,13 @@
                 >
                     {{ $t('settings.validatebuildNum') }}
                 </p>
+                <bk-checkbox
+                    v-model="pipelineSetting.failIfVariableInvalid"
+                    @change="val => handleBaseInfoChange('failIfVariableInvalid', val)"
+                    ext-cls="variable-invalid"
+                >
+                    {{ $t('settings.failIfVariableInvalid') }}
+                </bk-checkbox>
             </bk-form-item>
             <bk-form-item :label="$t('template.parallelSetting')">
                 <bk-radio-group
@@ -135,7 +142,7 @@
                     <bk-checkbox
                         :disabled="!editable"
                         :checked="pipelineSetting.concurrencyCancelInProgress"
-                        @change="handleConCurrencyCancel"
+                        @change="val => handleBaseInfoChange('concurrencyCancelInProgress', val)"
                     >
                         {{ $t('settings.stopWhenNewCome') }}
                     </bk-checkbox>
@@ -287,11 +294,6 @@
                     concurrencyGroup: this.pipelineSetting?.concurrencyGroup || '${{ci.pipeline_id}}'
                 })
             },
-            handleConCurrencyCancel (val) {
-                this.handleRunningLockChange({
-                    concurrencyCancelInProgress: val
-                })
-            },
             handleBaseInfoChange (name, val) {
                 this.handleRunningLockChange({
                     [name]: val
@@ -317,6 +319,9 @@
                 font-size: 14px;
                 cursor: pointer;
             }
+        }
+        .variable-invalid {
+            margin-top: 20px;
         }
         .single-lock-sub-form {
             margin-bottom: 20px;
