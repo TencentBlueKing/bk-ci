@@ -262,6 +262,11 @@ class TaskBuildDetailService(
                         // 判断取消的task任务对应的container是否包含post任务
                         val cancelTaskPostFlag = buildStatus == BuildStatus.CANCELED && c.containPostTaskFlag == true
                         e.status = buildStatus.name
+
+                        // 自动重试时，retryCountAuto + 1
+                        if (buildStatus == BuildStatus.RETRY) {
+                            e.retryCountAuto = (e.retryCountAuto ?: 0) + 1
+                        }
                         if (e.startEpoch == null) {
                             e.elapsed = 0
                         } else {

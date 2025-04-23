@@ -106,6 +106,8 @@ abstract class Element(
     open var executeCount: Int = 1,
     @get:Schema(title = "是否重试(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var canRetry: Boolean? = null,
+    @get:Schema(title = "自动重试次数(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    open var retryCountAuto: Int? = null,
     @get:Schema(title = "是否跳过(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var canSkip: Boolean? = null,
     @get:Schema(title = "执行时间(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
@@ -214,7 +216,9 @@ abstract class Element(
         }
     }
 
-    open fun initTaskVar(): MutableMap<String, Any> = mutableMapOf()
+    open fun initTaskVar(): MutableMap<String, Any> = mutableMapOf<String, Any>().apply {
+        retryCountAuto?.let { put(::retryCountAuto.name, it) }
+    }
 
     open fun transferSensitiveParam(params: List<String>) {}
 }
