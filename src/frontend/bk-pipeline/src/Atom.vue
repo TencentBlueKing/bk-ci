@@ -491,7 +491,10 @@
             },
             retryIndicateList () {
                 return ['retryCountAuto', 'retryCountManual'].reduce((acc, cur) => {
-                    const count = this.atom?.[cur] ?? 0
+                    let count = this.atom?.[cur] ?? 0
+                    if (cur === 'retryCountManual' && this.atom?.executeCount > 1) {
+                        count = this.atom?.executeCount - 1
+                    }
                     if (count > 0) {
                         acc.push({
                             retryType: cur,
