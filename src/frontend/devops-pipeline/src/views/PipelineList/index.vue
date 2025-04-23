@@ -1,9 +1,10 @@
 <template>
     <bk-tab
-        :active.sync="activePanel"
+        :active="activePanel"
         :label-height="48"
         type="unborder-card"
         class="pipeline-content"
+        @tab-change="handleTabChange"
         :validate-active="false"
     >
         <bk-tab-panel
@@ -12,9 +13,7 @@
             :name="panel.name"
             :key="panel.name"
         >
-            <component
-                :is="activeComponent"
-            />
+            <router-view></router-view>
         </bk-tab-panel>
 
         <more-route slot="setting" />
@@ -28,31 +27,29 @@
         components: {
             MoreRoute
         },
-        data () {
-            return {
-                activePanel: 'PipelineManageList'
-            }
-        },
         computed: {
-            projectId () {
-                return this.$route.params.projectId
-            },
-            routeName () {
+            activePanel () {
                 return this.$route.name
             },
             panels () {
                 return [
                     {
                         label: this.$t('pipeline'),
-                        name: 'PipelineManageList',
-                        component: 'router-view'
+                        name: 'PipelineManageList'
+                    },
+                    {
+                        label: this.$t('pipelineDataBoard'),
+                        name: 'PipelineDataBoard'
                     }
                 ]
-            },
-            activeComponent () {
-                return this.panels.find(panel => panel.name === this.activePanel)?.component
             }
-
+        },
+        methods: {
+            handleTabChange (name) {
+                this.$router.push({
+                    name
+                })
+            }
         }
     }
 </script>

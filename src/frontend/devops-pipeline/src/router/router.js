@@ -70,6 +70,7 @@ const pipelinesDocker = () => import(/* webpackChunkName: "pipelinesDocker" */'.
 
 // 流水线导入
 const ImportPipelineEdit = () => import(/* webpackChunkName: "importPipeline" */'../views/ImportEdit.vue')
+const PipelineDataBoard = () => import(/* webpackChunkName: "pipelineDataBoard" */'../views/PipelineList/EplusBoard.vue')
 
 const routes = [
     {
@@ -102,6 +103,11 @@ const routes = [
                         path: 'listAuth/:id/:groupName',
                         name: 'PipelineListAuth',
                         component: PipelineListAuth
+                    },
+                    {
+                        path: 'metrics',
+                        name: 'PipelineDataBoard',
+                        component: PipelineDataBoard
                     },
                     {
                         path: ':viewId?/:type?',

@@ -3136,6 +3136,11 @@
         if (!onComplete && !onAbort && typeof Promise !== 'undefined') {
             return new Promise(function (resolve, reject) {
                 this$1$1.history.replace(location, resolve, reject)
+            }).catch((e) => {
+                // 忽略重定向错误
+                if (!isNavigationFailure(e, NavigationFailureType.redirected)) {
+                    throw e
+                }
             })
         } else {
             this.history.replace(location, onComplete, onAbort)
