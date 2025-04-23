@@ -344,5 +344,22 @@
     "单个步骤(Step)日志达到阈值时，将压缩并归档到日志仓库。可下载日志文件到本地查看。": "When an individual step's log reaches the threshold, it will be compressed and archived to the log repository. The log file can be downloaded for local viewing.",
     "万行": "10k lines",
     "缺省时默认为10": "Defaults to 10",
-    "构建日志归档阈值": "Build log archival threshold"
+    "构建日志归档阈值": "Build log archival threshold",
+    "制品库": "Artifact Library",
+    "制品质量元数据": "Artifact Quality Metadata",
+    "当制品标记了此配置中的元数据时，在构建历史，构建详情总结界面，将展示对应的质量标签，便于用户快速了解构建产出的制品质量。": "When the artifact is tagged with the metadata from this configuration, the corresponding quality label will be displayed in the build history and build details summary interface, allowing users to quickly understand the quality of the artifacts produced.",
+    "添加": "Add",
+    "元数据键": "Metadata Key",
+    "枚举值": "Enumeration Values",
+    "分组": "Group",
+    "描述": "Description",
+    "启用": "Enable",
+    "由字母、数字和下划线组成，且以英文字母开头": "Composed of letters, numbers, and underscores, and must start with a letter",
+    "元数据分组": "Metadata Group",
+    "添加枚举值": "Add Enumeration Values",
+    "元数据类型": "Metadata Type",
+    "枚举值（单选）": "Enumeration Values (Single Choice)",
+    "元数据别名": "Metadata Alias",
+    "添加元数据": "Add Metadata",
+    "内置": "Built-in"
 }
