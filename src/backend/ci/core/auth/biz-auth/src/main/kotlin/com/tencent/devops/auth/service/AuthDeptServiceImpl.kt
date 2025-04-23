@@ -202,6 +202,8 @@ class AuthDeptServiceImpl @Autowired constructor(
                     )
                 }
             }
+
+            else -> {}
         }
         return userAndDeptInfos
     }
@@ -444,7 +446,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                 // 请求错误
                 logger.warn(
                     "call user center fail: url = $url | searchEntity = $searchEntity" +
-                        " | response = ($it)"
+                            " | response = ($it)"
                 )
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(
@@ -459,7 +461,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                 // 请求错误
                 logger.warn(
                     "call user center fail: url = $url | searchEntity = $searchEntity" +
-                        " | response = ($it)"
+                            " | response = ($it)"
                 )
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(

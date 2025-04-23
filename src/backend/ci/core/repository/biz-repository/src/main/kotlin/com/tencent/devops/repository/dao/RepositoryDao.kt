@@ -30,6 +30,7 @@ package com.tencent.devops.repository.dao
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.db.utils.fetchCountFix
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.TRepository
@@ -40,6 +41,8 @@ import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.RepositorySortEnum
 import com.tencent.devops.repository.pojo.enums.RepositorySortTypeEnum
+import java.time.LocalDateTime
+import jakarta.ws.rs.NotFoundException
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -48,8 +51,6 @@ import org.jooq.Result
 import org.jooq.SelectForStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
 
 @Repository
 @Suppress("ALL")
@@ -63,7 +64,8 @@ class RepositoryDao {
         url: String,
         type: ScmType,
         atom: Boolean? = false,
-        enablePac: Boolean?
+        enablePac: Boolean?,
+        scmCode: String
     ): Long {
         val now = LocalDateTime.now()
         var repoId = 0L
@@ -82,7 +84,8 @@ class RepositoryDao {
                     IS_DELETED,
                     UPDATED_USER,
                     ATOM,
-                    ENABLE_PAC
+                    ENABLE_PAC,
+                    SCM_CODE
                 ).values(
                     projectId,
                     userId,
@@ -94,7 +97,8 @@ class RepositoryDao {
                     false,
                     userId,
                     atom,
-                    enablePac
+                    enablePac,
+                    scmCode
                 )
                     .returning(REPOSITORY_ID)
                     .fetchOne()!!.repositoryId
@@ -268,7 +272,7 @@ class RepositoryDao {
             dslContext = dslContext,
             projectId = projectId
         )
-        return dslContext.fetchCount(repositoryAuthorizationQuery)
+        return dslContext.fetchCountFix(repositoryAuthorizationQuery)
     }
 
     private fun buildRepositoryAuthorizationQuery(
@@ -591,14 +595,17 @@ class RepositoryDao {
         dslContext: DSLContext,
         userId: String,
         projectId: String,
-        repositoryId: Long
+        repositoryId: Long,
+        syncStatus: String? = null
     ) {
         return with(TRepository.T_REPOSITORY) {
-            dslContext.update(this)
+            val update = dslContext.update(this)
                 .set(UPDATED_TIME, LocalDateTime.now())
                 .set(UPDATED_USER, userId)
                 .set(ENABLE_PAC, true)
-                .where(PROJECT_ID.eq(projectId))
+            syncStatus?.let { update.set(YAML_SYNC_STATUS, syncStatus) }
+
+            update.where(PROJECT_ID.eq(projectId))
                 .and(REPOSITORY_ID.eq(repositoryId))
                 .execute()
         }
@@ -624,6 +631,7 @@ class RepositoryDao {
 
     fun updateYamlSyncStatus(
         dslContext: DSLContext,
+        projectId: String,
         repositoryId: Long,
         syncStatus: String
     ) {
@@ -631,6 +639,7 @@ class RepositoryDao {
             dslContext.update(this)
                 .set(YAML_SYNC_STATUS, syncStatus)
                 .where(REPOSITORY_ID.eq(repositoryId))
+                .and(PROJECT_ID.eq(projectId))
                 .execute()
         }
     }
@@ -647,6 +656,58 @@ class RepositoryDao {
                 .set(USER_ID, userId)
                 .where(REPOSITORY_ID.eq(repositoryId))
                 .execute()
+        }
+    }
+
+    fun countByScmCode(
+        dslContext: DSLContext,
+        scmCode: String
+    ): Long {
+        with(TRepository.T_REPOSITORY) {
+            return dslContext.selectCount().from(this)
+                .where(SCM_CODE.eq(scmCode))
+                .fetchOne(0, Long::class.java) ?: 0L
+        }
+    }
+
+    fun countByScmCodes(
+        dslContext: DSLContext,
+        scmCodes: List<String>
+    ): Map<String, Long> {
+        return with(TRepository.T_REPOSITORY) {
+            dslContext.select(SCM_CODE, DSL.count())
+                .from(this)
+                .where(SCM_CODE.`in`(scmCodes))
+                .fetch().map {
+                    Pair(it.value1(), it.value2().toLong())
+                }.toMap()
+        }
+    }
+
+    fun list(
+        dslContext: DSLContext,
+        projectId: String?,
+        repositoryTypes: List<String>,
+        repoHashId: String?,
+        limit: Int,
+        offset: Int
+    ): List<TRepositoryRecord> {
+        return with(TRepository.T_REPOSITORY) {
+            val conditions = mutableListOf(
+                IS_DELETED.eq(false),
+                TYPE.`in`(repositoryTypes)
+            )
+            if (!projectId.isNullOrBlank()) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
+            if (!repoHashId.isNullOrBlank()) {
+                conditions.add(REPOSITORY_HASH_ID.eq(repoHashId))
+            }
+            dslContext.selectFrom(this)
+                    .where(conditions)
+                    .orderBy(PROJECT_ID, REPOSITORY_ID)
+                    .limit(limit).offset(offset)
+                    .fetch()
         }
     }
 }

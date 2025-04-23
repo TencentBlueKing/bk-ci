@@ -41,7 +41,7 @@ import com.tencent.devops.store.service.configuration.ExtServiceBcsConfig
 import com.tencent.devops.store.service.configuration.ExtServiceBcsNameSpaceConfig
 import com.tencent.devops.store.service.dao.ExtServiceDao
 import com.tencent.devops.store.service.dao.ExtServiceFeatureDao
-import io.fabric8.kubernetes.client.internal.readiness.Readiness
+import io.fabric8.kubernetes.client.readiness.Readiness
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL

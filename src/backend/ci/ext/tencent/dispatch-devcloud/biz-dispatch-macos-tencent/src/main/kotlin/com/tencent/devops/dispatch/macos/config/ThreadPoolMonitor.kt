@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.concurrent.TimeUnit
-import javax.annotation.PreDestroy
+import jakarta.annotation.PreDestroy
 
 /**
  * 线程池监控类

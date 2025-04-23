@@ -71,6 +71,7 @@ class WorkspaceUseSnapshotsDao {
             return dslContext.select(WORKSPACE_NAME)
                 .from(this)
                 .where(DATE.eq(date))
+                .and(NEED_REDUCED.isFalse)
                 .fetch(WORKSPACE_NAME)
         }
     }

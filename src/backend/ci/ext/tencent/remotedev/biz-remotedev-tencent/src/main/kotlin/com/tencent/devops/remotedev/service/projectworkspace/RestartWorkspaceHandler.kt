@@ -231,7 +231,7 @@ class RestartWorkspaceHandler @Autowired constructor(
                 )
                 notifyControl.notify4User(
                     userIds = permissionService.getWorkspaceOwner(workspace.workspaceName).toMutableSet(),
-                    notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.CLIENT_PUSH),
+                    notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
                     bodyParams = mutableMapOf(
                         "workspaceName" to workspace.workspaceName,
                         "projectId" to workspace.projectId,

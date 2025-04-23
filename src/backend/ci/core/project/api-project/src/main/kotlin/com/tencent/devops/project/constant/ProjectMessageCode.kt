@@ -105,7 +105,8 @@ object ProjectMessageCode {
     const val BK_CONTAINER_SERVICE = "bkContainerService" // 容器服务
     const val BK_FAILED_BSC_CREATE_PROJECT = "bkFailedBscCreateProject" // 调用BSC接口创建项目失败
     const val BK_FAILED_GET_PAASCC_INFORMATION = "bkFailedGetPaasccInformation" // 获取PAASCC项目信息失败
-
+    const val BK_SIGNATURE_PROJECTS_INFORMATION = "bkSignatureProjectsInformation"
+    const val BK_SIGNATURE_PROJECT_INFORMATION = "bkSignatureProjectInformation"
     const val BK_AUTH_CENTER_CREATE_PROJECT_INFO = "bkAuthCenterCreateProjectInfo" // 权限中心创建项目信息：
 
     const val T_SERVICE_PREFIX = "service."

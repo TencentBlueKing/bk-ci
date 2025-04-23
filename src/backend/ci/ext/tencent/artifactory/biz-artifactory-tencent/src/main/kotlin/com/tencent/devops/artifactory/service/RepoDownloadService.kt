@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.service
 
+import com.tencent.devops.artifactory.pojo.AllowDownload
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -156,4 +157,15 @@ interface RepoDownloadService {
         argPath: String,
         ttl: Int
     ): Url
+
+    /**
+     * 允许下载
+     */
+    fun allowDownload(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String,
+        ip: String
+    ): AllowDownload
 }

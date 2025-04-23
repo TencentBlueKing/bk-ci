@@ -45,6 +45,7 @@ class ServiceArchiveComponentPkgResourceImpl @Autowired constructor(
         storeType: StoreTypeEnum,
         storeCode: String,
         version: String,
+        instanceId: String?,
         osName: String?,
         osArch: String?
     ): Result<String> {
@@ -55,6 +56,7 @@ class ServiceArchiveComponentPkgResourceImpl @Autowired constructor(
                 storeType = storeType,
                 storeCode = storeCode,
                 version = version,
+                instanceId = instanceId,
                 osName = osName,
                 osArch = osArch
             )

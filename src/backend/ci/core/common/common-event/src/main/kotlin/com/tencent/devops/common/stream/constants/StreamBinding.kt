@@ -145,6 +145,9 @@ object StreamBinding {
     // P4代码仓库webhook请求回调
     const val REPLAY_BUILD_REQUEST_EVENT = "engine.pipeline.hook.replay.event"
 
+    // scm webhook请求回调
+    const val SCM_HOOK_BUILD_REQUEST_EVENT = "engine.pipeline.hook.scm.event"
+
     // webSocket消息
     const val WEBSOCKET_TMP_FANOUT = "websocket.fanout"
     const val WEBSOCKET_SESSION_CLEAR = "websocket.session.clear.fanout"
@@ -209,4 +212,5 @@ object StreamBinding {
     const val PIPELINE_YAML_LISTENER_ENABLE = "pipeline.yaml.listener.enable"
     const val PIPELINE_YAML_LISTENER_DISABLE = "pipeline.yaml.listener.disable"
     const val PIPELINE_YAML_LISTENER_TRIGGER = "pipeline.yaml.listener.trigger"
+    const val PIPELINE_YAML_LISTENER_FILE = "pipeline.yaml.listener.file"
 }

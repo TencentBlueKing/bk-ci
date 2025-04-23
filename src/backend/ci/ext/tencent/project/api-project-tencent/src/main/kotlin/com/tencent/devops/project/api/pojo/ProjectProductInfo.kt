@@ -13,5 +13,7 @@ data class ProjectProductInfo(
     @get:Schema(title = "运营产品名称")
     val productName: String,
     @get:Schema(title = "管理员")
-    val managers: List<String>
+    val managers: List<String>,
+    @get:Schema(title = "bg名称")
+    val bg: String
 )

@@ -59,18 +59,26 @@ import com.tencent.devops.ticket.dao.CredentialDao
 import com.tencent.devops.ticket.pojo.Credential
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialInfo
+import com.tencent.devops.ticket.pojo.CredentialItemVo
 import com.tencent.devops.ticket.pojo.CredentialPermissions
 import com.tencent.devops.ticket.pojo.CredentialSettingUpdate
 import com.tencent.devops.ticket.pojo.CredentialUpdate
 import com.tencent.devops.ticket.pojo.CredentialWithPermission
 import com.tencent.devops.ticket.pojo.enums.CredentialType
+import com.tencent.devops.ticket.pojo.item.AccessTokenCredentialItem
+import com.tencent.devops.ticket.pojo.item.OauthTokenCredentialItem
+import com.tencent.devops.ticket.pojo.item.PasswordCredentialItem
+import com.tencent.devops.ticket.pojo.item.SshPrivateKeyCredentialItem
+import com.tencent.devops.ticket.pojo.item.TokenSshPrivateKeyCredentialItem
+import com.tencent.devops.ticket.pojo.item.TokenUserPassCredentialItem
+import com.tencent.devops.ticket.pojo.item.UserPassCredentialItem
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.Base64
-import javax.ws.rs.NotFoundException
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.NotFoundException
+import jakarta.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -886,6 +894,10 @@ class CredentialServiceImpl @Autowired constructor(
         return SQLPage(count, result)
     }
 
+    override fun getCredentialItem(projectId: String, credentialId: String, publicKey: String): CredentialItemVo? {
+        return serviceGet(projectId, credentialId, publicKey)?.convertCredentialItem()
+    }
+
     private fun getAcrossInfo(
         projectId: String,
         buildId: String,
@@ -913,6 +925,35 @@ class CredentialServiceImpl @Autowired constructor(
             it.templateType == TemplateAcrossInfoType.STEP &&
                 it.templateInstancesIds.contains(taskId)
         }
+    }
+
+    private fun CredentialInfo.convertCredentialItem(): CredentialItemVo {
+        val credentialItem = when (credentialType) {
+            CredentialType.PASSWORD ->
+                PasswordCredentialItem(password = v1)
+
+            CredentialType.ACCESSTOKEN ->
+                AccessTokenCredentialItem(accessToken = v1)
+
+            CredentialType.OAUTHTOKEN ->
+                OauthTokenCredentialItem(oauthToken = v1)
+
+            CredentialType.USERNAME_PASSWORD ->
+                UserPassCredentialItem(username = v1, password = v2!!)
+
+            CredentialType.SSH_PRIVATEKEY ->
+                SshPrivateKeyCredentialItem(privateKey = v1, passphrase = v2)
+
+            CredentialType.TOKEN_SSH_PRIVATEKEY ->
+                TokenSshPrivateKeyCredentialItem(token = v1, privateKey = v2!!, passphrase = v3)
+
+            CredentialType.TOKEN_USERNAME_PASSWORD ->
+                TokenUserPassCredentialItem(token = v1, username = v2!!, password = v3!!)
+
+            else ->
+                throw IllegalArgumentException("unsupported credentialType $credentialType")
+        }
+        return CredentialItemVo(publicKey = publicKey, credentialItem = credentialItem)
     }
 
     companion object {

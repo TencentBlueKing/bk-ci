@@ -558,6 +558,7 @@ CREATE TABLE IF NOT EXISTS T_WORKSPACE_USE_SNAPSHOTS
     STATUS         varchar(32)                         not null comment '工作空间状态',
     DATE           date                         not null comment '快照时间',
     CREATED_TIME   timestamp default CURRENT_TIMESTAMP not null comment '创建时间',
+    NEED_REDUCED  boolean NULL DEFAULT 0 COMMENT '是否需要减免，1 是 0 否',
     constraint uindex
         unique (WORKSPACE_NAME, DATE)
 )
@@ -578,5 +579,15 @@ CREATE TABLE IF NOT EXISTS `T_REMOTEDEV_CONFIG` (
     `UPDATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '修改时间',
     PRIMARY KEY (`KEY`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '系统配置表';
+
+CREATE TABLE IF NOT EXISTS `T_TRUST_DEVICE` (
+	`USER_ID` varchar(64) NOT NULL COMMENT '用户',
+	`DEVICE_ID` varchar(256) NOT NULL COMMENT '设备唯一标识',
+    `TOKEN` varchar(256) NOT NULL COMMENT '针对设备生成的唯一TOKEN',
+	`CREATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '创建时间',
+	`UPDATE_TIME` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '修改时间',
+    `DEVICE_INFO` json NOT NULL COMMENT '设备信息',
+    PRIMARY KEY (`USER_ID`, `DEVICE_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT = '用户信任设备表';
 
 SET FOREIGN_KEY_CHECKS = 1;

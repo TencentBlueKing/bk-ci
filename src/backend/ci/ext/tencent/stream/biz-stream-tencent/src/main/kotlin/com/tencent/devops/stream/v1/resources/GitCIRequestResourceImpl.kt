@@ -40,7 +40,7 @@ import com.tencent.devops.stream.v1.pojo.V1GitRequestHistory
 import com.tencent.devops.stream.v1.service.V1GitCIRequestService
 import com.tencent.devops.stream.v1.service.V1GitRepositoryConfService
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @RestResource
 class GitCIRequestResourceImpl @Autowired constructor(

@@ -28,9 +28,9 @@
     import cookie from 'js-cookie'
     import Vue from 'vue'
     import { Component, Watch } from 'vue-property-decorator'
-    import { Getter, State } from 'vuex-class'
+    import { Action, Getter, State } from 'vuex-class'
     import eventBus from '../utils/eventBus'
-    import { getServiceAliasByPath, queryStringify, urlJoin } from '../utils/util'
+    import { getServiceAliasByPath, isAbsoluteUrl, queryStringify, urlJoin } from '../utils/util'
 
     Component.registerHooks(['beforeRouteEnter', 'beforeRouteLeave', 'beforeRouteUpdate'])
 
@@ -49,9 +49,11 @@
         @State currentPage;
         @State isAnyPopupShow;
         @State user;
+        @State services;
         @State headerConfig;
         @Getter showAnnounce;
         @Getter getServiceHooks;
+        @Action updateCurrentPage;
 
         created () {
             this.init()
@@ -98,6 +100,10 @@
             return this.$route.name === 'job'
         }
 
+        get isEplus (): boolean {
+            return this.currentPage.iframe_url.indexOf('eplus.') > -1
+        }
+
         get underlineProjectList () {
             return this.projectList.map((item) => ({
                 ...item,
@@ -142,13 +148,17 @@
             const initPath = matchResult ? matchResult[3] : ''
 
             if (projectIdType === 'path') {
-                this.src
-                = urlJoin(this.currentPage.iframe_url, projectId, initPath)
-                + `${query ? '?' + query : ''}`
-                + hash
+                if (this.isEplus) {
+                    this.src = this.currentPage.iframe_url
+                } else {
+                    this.src
+                    = urlJoin(this.currentPage.iframe_url, projectId, initPath)
+                    + `${query ? '?' + query : ''}`
+                    + hash
+                }
             } else {
                 const query = Object.assign(this.$route.query, {
-                projectId
+                    projectId
                 })
                 this.src
                 = urlJoin(this.currentPage.iframe_url, initPath)
@@ -192,6 +202,34 @@
         return getServiceAliasByPath(newPath) === getServiceAliasByPath(oldPath)
     }
 
+    async updateToken () {
+       try {
+            let data = await this.$ajax.get(`/project/api/user/services/${this.currentPage.id}/url/get`)
+            if (!isAbsoluteUrl(data)) {
+                data = `${location.origin}${data}`
+            }
+            if (data !== this.currentPage.iframe_url) {
+                this.isLoading = true
+                this.updateCurrentPage({
+                    ...this.currentPage,
+                    iframe_url: data,
+                    grayIframeUrl: data
+                })
+                this.services.forEach((service) => {
+                    service.children.forEach((child) => {
+                        if (child.id === this.currentPage.id) {
+                            child.iframe_url = data
+                            child.grayIframeUrl = data
+                        }
+                    })
+                })
+                this.$nextTick(this.init)
+            }
+       } catch (error) {
+            console.log(error)
+       }
+    }
+
     @Watch('$route')
     routeChange (newRoute: ObjectMap, oldRoute: ObjectMap): void {
         const { path, params } = newRoute
@@ -202,6 +240,7 @@
         } else if (params.projectId !== oldParams.projectId) {
             if (this.$refs.iframeEle && params.projectId) {
                 // 将当前projectId同步到子窗口
+                this.updateToken()
                 this.iframeUtil.syncProjectId(
                     this.$refs.iframeEle.contentWindow,
                     params.projectId

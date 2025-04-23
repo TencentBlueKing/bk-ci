@@ -1,6 +1,7 @@
 <template>
     <div class="devops-header">
         <div class="header-left-bar">
+            <Wedev />
             <router-link
                 class="header-logo"
                 to="/console/"
@@ -235,14 +236,16 @@
     import Logo from '../Logo/index.vue'
     import ProjectDialog from '../ProjectDialog/index.vue'
     import RemindAssociateOperationalDialog from '../RemindAssociateOperationalDialog/index.vue'
-    import SystemLog from '../SystemLog/index.vue'
     import DevopsSelect from '../Select/index.vue'
+    import SystemLog from '../SystemLog/index.vue'
     import User from '../User/index.vue'
     import NavMenu from './NavMenu.vue'
     import Qrcode from './Qrcode.vue'
+    import Wedev from './WeDev.vue'
 
     @Component({
         components: {
+            Wedev,
             User,
             NavMenu,
             Qrcode,
@@ -399,10 +402,10 @@
         }
 
         goHomeById (projectId: string, reload: boolean = false): void {
-            const hasProjectId = this.currentPage.show_project_list
-            let path = urlJoin('/console', this.currentPage.link_new)
+            const hasProjectId = this.currentPage?.show_project_list
+            let path = urlJoin('/console', this.currentPage?.link_new)
             if (hasProjectId) {
-                if (this.currentPage.project_id_type === 'path') {
+                if (this.currentPage?.project_id_type === 'path') {
                     path = urlJoin(path, projectId)
                 } else {
                     path += `?projectId=${projectId}`
@@ -431,7 +434,7 @@
                 })
             }
             
-            if (!oldProject.routerTag || project.routerTag !== oldProject.routerTag) {
+            if (!oldProject?.routerTag || project?.routerTag !== oldProject?.routerTag) {
                 this.goHomeById(id, true)
             }
         }

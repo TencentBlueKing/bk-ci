@@ -47,7 +47,7 @@
     var BK_SHARED_RES_URL = '<%= BK_SHARED_RES_URL %>'
     var BK_IAM_URL_PREFIX = '__BK_CI_IAM_URL_PREFIX__'
   </script>
-  <script> 
+  <script>
 
     // 动态加载js
     function importScript(src, oHead, fOnload) {
@@ -142,8 +142,8 @@
     function setProjectIdCookie(projectId) {
       try {
         if (projectId.startsWith('git_')) {
-            console.log('current project is from stream')
-            return
+          console.log('current project is from stream')
+          return
         }
         if (projectId) {
           var subDomains = getSubDomain()
@@ -169,7 +169,8 @@
           || query.has(X_DEVOPS_PROJECT_ID.toLocaleLowerCase())
         ) {
           return query.get('projectCode') || query.get('project_code') || query.get(X_DEVOPS_PROJECT_ID.toLocaleLowerCase()) || ''
-        } else if (location.pathname.match(/^\/console\/(store|permission|manage)\/(\w+)?/)) {
+        } else if (location.pathname.match(/^\/console\/(store|permission|manage|platform)\/(\w+)?/)) {
+
           // TODO store没有projectId
           return ''
         } else {
@@ -196,7 +197,7 @@
 
   <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue_2.7.16.min.js" />
   <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vuex.min.js" />
-  <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router.min.js" />
+  <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router_3.6.5.js" />
   <link rel="preload" as="script" href="//pingjs.qq.com/h5/stats.js?v2.0.4" />
 
   <!-- devops:preload -->
@@ -216,26 +217,27 @@
           <style>
             /* 模态背景 */
             #devops-login-modal-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background-color: rgba(0, 0, 0, 0.5);
-                display: none;
-                justify-content: center;
-                align-items: center;
+              position: fixed;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              background-color: rgba(0, 0, 0, 0.5);
+              display: none;
+              justify-content: center;
+              align-items: center;
             }
+
             /* 模态窗口 */
             #devops-login-modal {
-                background-color: #fff;
-                padding: 20px;
-                border-radius: 10px;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-                width: 680px;
-                height: 500px;
+              background-color: #fff;
+              padding: 20px;
+              border-radius: 10px;
+              box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+              width: 680px;
+              height: 500px;
             }
-        </style>
+          </style>
 </head>
 
 <body>
@@ -255,16 +257,16 @@
       </div>
     </div>
   </div>
-    <div id="devops-login-modal-overlay">
-        <div id="devops-login-modal">
-        </div>
+  <div id="devops-login-modal-overlay">
+    <div id="devops-login-modal">
     </div>
+  </div>
   <!-- devops:assets -->
   <!-- end devops:assets -->
 
   <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue_2.7.16.min.js"></script>
   <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vuex.min.js"></script>
-  <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router.min.js"></script>
+  <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router_3.6.5.js"></script>
   <script>
     loadJsAssets(true)
   </script>
@@ -337,6 +339,15 @@
       )
     }
 
+    function fetchDiclosurePrjoectList() {
+      return asyncGet(
+        API_URL_PREFIX + '/project/api/user/signature/listSignatureProjects'
+      ).catch((e) => {
+        return false;
+        return []
+      })
+    }
+
     function fetchProjectById(projectId) {
       return projectId
         ? asyncGet(
@@ -366,6 +377,7 @@
     function getServiceObject(serviceList, assetsJSON) {
       var serviceMap = {}
       var iframeRoutes = []
+
       for (var i = 0; i < serviceList.length; i++) {
         var children = serviceList[i].children
         for (var j = 0; j < children.length; j++) {
@@ -474,6 +486,7 @@
         fetchAllProjects(),
         fetchAllServices(),
         requestUser(),
+        fetchDiclosurePrjoectList(),
         getLocaleBackend(),
         fetchProjectById(pathPid),
       ]).then((response) => {
@@ -482,6 +495,7 @@
         var actionArray = ['setProjectList', 'setServices', 'setUserInfo']
         var projectList = response[0]
         window.INIT_LOCALE = response.pop().language
+        window.diclosurePrjoectList = response.pop() || []
 
         if (project && project.projectCode) {
           for (var j = 0; j < projectList.length; j++) {

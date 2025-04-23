@@ -81,12 +81,12 @@ import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
 import com.tencent.devops.environment.utils.NodeStringIdUtils
 import com.tencent.devops.environment.utils.NodeUtils
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
+import jakarta.servlet.http.HttpServletResponse
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-import javax.servlet.http.HttpServletResponse
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -251,28 +251,32 @@ class NodeService @Autowired constructor(
             collation = collation
         ).toLong()
         val nodes = formatNodeWithPermissions(userId, projectId, nodeRecordList)
-
-        val agentBuilds = client.get(ServiceAgentResource::class).listLatestBuildPipelines(
-            agentIds = nodes.mapNotNull { it.agentHashId }
-        ).associateBy { it.agentId }
-        nodes.forEach {
-            it.latestBuildDetail = agentBuilds[it.agentHashId]?.let { build ->
-                AgentBuildDetail(
-                    nodeId = it.nodeId,
-                    agentId = build.agentId,
-                    projectId = build.projectId,
-                    pipelineId = build.pipelineId,
-                    pipelineName = build.pipelineName,
-                    buildId = build.buildId,
-                    buildNumber = build.buildNum,
-                    vmSetId = build.vmSeqId,
-                    taskName = build.taskName,
-                    status = build.status,
-                    createdTime = build.createdTime,
-                    updatedTime = build.updatedTime,
-                    workspace = build.workspace,
-                    agentTask = null
+        if (-1 != page) {
+            val nodesMap = nodes.associateBy { it.agentHashId }
+            val agentIds = nodesMap.keys.mapNotNull { it }
+            agentIds.chunked(100).forEach { agentHashIds ->
+                val agentBuilds = client.get(ServiceAgentResource::class).listLatestBuildPipelines(
+                    agentIds = agentHashIds
                 )
+                agentBuilds.forEach build@{ build ->
+                    val node = nodesMap[build.agentId] ?: return@build
+                    node.latestBuildDetail = AgentBuildDetail(
+                        nodeId = node.nodeId,
+                        agentId = build.agentId,
+                        projectId = build.projectId,
+                        pipelineId = build.pipelineId,
+                        pipelineName = build.pipelineName,
+                        buildId = build.buildId,
+                        buildNumber = build.buildNum,
+                        vmSetId = build.vmSeqId,
+                        taskName = build.taskName,
+                        status = build.status,
+                        createdTime = build.createdTime,
+                        updatedTime = build.updatedTime,
+                        workspace = build.workspace,
+                        agentTask = null
+                    )
+                }
             }
         }
         val records = if (sortType == null) NodeUtils.sortByUser(nodes = nodes, userId = userId) else nodes
@@ -387,7 +391,7 @@ class NodeService @Autowired constructor(
         val canViewNodeIds = environmentPermissionService.listNodeByRbacPermission(
             userId = userId,
             projectId = projectId,
-            nodeRecordList = nodeRecordList,
+            nodeRecordList = nodeListResult,
             authPermission = AuthPermission.VIEW
         ).map { it.nodeId }
 
@@ -401,10 +405,13 @@ class NodeService @Autowired constructor(
         val canDeleteNodeIds = permissionMap.takeIf { it.containsKey(AuthPermission.DELETE) }.run {
             permissionMap[AuthPermission.DELETE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
         }
-        val thirdPartyAgentNodeIds = nodeRecordList.filter { it.nodeType == NodeType.THIRDPARTY.name }.map { it.nodeId }
-        val thirdPartyAgentMap =
+        val thirdPartyAgentNodeIds = nodeListResult.filter { it.nodeType == NodeType.THIRDPARTY.name }.map { it.nodeId }
+        val thirdPartyAgentMap = if (thirdPartyAgentNodeIds.isNotEmpty()) {
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds, projectId)
                 .associateBy { it.nodeId }
+        } else {
+            emptyMap()
+        }
 
         val nodeEnvs = envNodeDao.listNodeIds(dslContext, projectId, nodeListResult.map { it.nodeId })
         val envInfos = envDao.listServerEnvByIdsAllType(
@@ -512,6 +519,7 @@ class NodeService @Autowired constructor(
         )
         if (nodeListResult.isEmpty()) return emptyList()
         val thirdPartyAgentNodeIds = nodeRecordList.filter { it.nodeType == NodeType.THIRDPARTY.name }.map { it.nodeId }
+        if (thirdPartyAgentNodeIds.isEmpty()) return emptyList()
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds, projectId)
                 .associateBy { it.nodeId }
@@ -765,6 +773,19 @@ class NodeService @Autowired constructor(
         }
     }
 
+    fun getByDisplayNameNotWithPermission(
+        userId: String,
+        projectId: String,
+        displayName: String,
+        nodeType: List<String>? = null
+    ): List<NodeBaseInfo> {
+        val nodes = nodeDao.getByDisplayName(dslContext, projectId, displayName, nodeType)
+        if (nodes.isEmpty()) {
+            return emptyList()
+        }
+        return nodes.map { NodeStringIdUtils.getNodeBaseInfo(it) }
+    }
+
     fun getByDisplayName(
         userId: String,
         projectId: String,
@@ -866,6 +887,9 @@ class NodeService @Autowired constructor(
     }
 
     fun refreshGateway(oldToNewMap: Map<String, String>): Boolean {
+        if (oldToNewMap.isEmpty()) {
+            return false
+        }
         return try {
             slaveGatewayDao.refreshGateway(dslContext, oldToNewMap)
             thirdPartyAgentDao.refreshGateway(dslContext, oldToNewMap)

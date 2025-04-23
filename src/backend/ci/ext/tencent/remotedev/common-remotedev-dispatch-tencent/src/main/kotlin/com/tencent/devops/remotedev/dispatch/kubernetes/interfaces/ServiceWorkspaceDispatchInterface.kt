@@ -65,6 +65,7 @@ interface ServiceWorkspaceDispatchInterface {
         workspaceName: String,
         userId: String,
         size: String,
-        mountType: WorkspaceMountType
+        mountType: WorkspaceMountType,
+        forceRestart: Boolean?
     ): Result<CreateDiskResp>
 }

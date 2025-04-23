@@ -48,7 +48,7 @@ class P4WebHookStartParam : ScmWebhookStartParams<CodeP4WebHookTriggerElement> {
         projectId: String,
         element: CodeP4WebHookTriggerElement,
         repo: Repository,
-        matcher: ScmWebhookMatcher,
+        matcher: ScmWebhookMatcher?,
         variables: Map<String, String>,
         params: WebHookParams,
         matchResult: WebhookMatchResult
@@ -58,12 +58,14 @@ class P4WebHookStartParam : ScmWebhookStartParams<CodeP4WebHookTriggerElement> {
             startParams[BK_REPO_P4_WEBHOOK_P4PORT] = repo.url
             startParams[BK_REPO_P4_WEBHOOK_EVENT_TYPE] = params.eventType ?: ""
             startParams[BK_REPO_P4_WEBHOOK_INCLUDE_PATHS] = includePaths ?: ""
-            startParams.putAll(
-                matcher.retrieveParams(
-                    projectId = projectId,
-                    repository = repo
+            matcher?.let {
+                startParams.putAll(
+                    matcher.retrieveParams(
+                        projectId = projectId,
+                        repository = repo
+                    )
                 )
-            )
+            }
         }
 
         return startParams

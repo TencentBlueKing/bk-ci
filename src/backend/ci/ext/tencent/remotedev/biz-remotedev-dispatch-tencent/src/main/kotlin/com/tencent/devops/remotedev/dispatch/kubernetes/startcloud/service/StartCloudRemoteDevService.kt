@@ -39,11 +39,13 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.Environm
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentCreateBasicBody
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperate
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateCreateDisk
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateDeleteDisk
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateExpandDisk
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskDataClass
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
+import com.tencent.devops.remotedev.pojo.expert.DeleteDiskData
 import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
 import com.tencent.devops.remotedev.pojo.image.ListImagesData
 import com.tencent.devops.remotedev.pojo.image.ListImagesResp
@@ -300,14 +302,24 @@ class StartCloudRemoteDevService @Autowired constructor(
         return ExpandDiskValidateResp(true, null, resp.taskID)
     }
 
-    override fun createDisk(workspaceName: String, userId: String, size: String): CreateDiskResp {
+    override fun createDisk(
+        workspaceName: String,
+        userId: String,
+        size: String,
+        forceRestart: Boolean?
+    ): CreateDiskResp {
         val envId = getEnvironmentUid(workspaceName)
         // 存在hdd就不能挂盘了
         val hdd = workspaceBcsClient.fetchDiskList(envId)?.firstOrNull { it.pvcClass == CreateDiskDataClass.HDD.data }
         if (hdd != null) {
             return CreateDiskResp(false, "$envId exist hdd ${hdd.pvcName}", null)
         }
-        val data = EnvironmentOperateCreateDisk(uid = envId, pvcSize = size, pvcClass = CreateDiskDataClass.HDD.data)
+        val data = EnvironmentOperateCreateDisk(
+            uid = envId,
+            pvcSize = size,
+            pvcClass = CreateDiskDataClass.HDD.data,
+            forceRestart = forceRestart
+        )
         val resp = workspaceBcsClient.startOperateWorkspace(
             userId = userId,
             action = EnvironmentAction.CREATE_DISK,
@@ -320,6 +332,23 @@ class StartCloudRemoteDevService @Autowired constructor(
     override fun fetchDiskList(workspaceName: String, userId: String): List<VmDiskInfo> {
         val envId = getEnvironmentUid(workspaceName)
         return workspaceBcsClient.fetchDiskList(envId) ?: emptyList()
+    }
+
+    override fun deleteDisk(userId: String, data: DeleteDiskData): CreateDiskResp {
+        val envId = getEnvironmentUid(data.workspaceName)
+        val info = EnvironmentOperateDeleteDisk(
+            uid = envId,
+            pvcName = data.pvcName,
+            forceRestart = data.forceRestart,
+            delaySeconds = data.delaySeconds
+        )
+        val resp = workspaceBcsClient.startOperateWorkspace(
+            userId = userId,
+            action = EnvironmentAction.DELETE_DISK,
+            workspaceName = data.workspaceName,
+            environmentOperate = info
+        )
+        return CreateDiskResp(true, null, resp.taskID)
     }
 
     override fun taskStatus(taskId: String): WorkspaceTaskStatus? {

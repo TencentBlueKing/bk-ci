@@ -46,6 +46,7 @@ import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
 import com.tencent.devops.remotedev.pojo.expert.CreateExpertSupportConfigData
 import com.tencent.devops.remotedev.pojo.expert.CreateSupportData
+import com.tencent.devops.remotedev.pojo.expert.DeleteDiskData
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskTaskDetail
 import com.tencent.devops.remotedev.pojo.expert.ExpertSupportConfigType
 import com.tencent.devops.remotedev.pojo.expert.ExpertSupportStatus
@@ -53,6 +54,10 @@ import com.tencent.devops.remotedev.pojo.expert.FetchExpertSupResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.UpdateSupportData
 import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
+import com.tencent.devops.remotedev.pojo.op.OpDiskOperator
+import com.tencent.devops.remotedev.pojo.op.OpDiskOperatorData
+import com.tencent.devops.remotedev.pojo.op.OpDiskOperatorDataResp
+import com.tencent.devops.remotedev.pojo.op.OpDiskOperatorDiskType
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
@@ -283,9 +288,9 @@ class ExpertSupportService @Autowired constructor(
                 params = arrayOf("You do not have permission to apply for assistance in ${record.workspaceName}")
             )
         }
-        if (record.status.checkDeleted() || record.status.checkInProcess()) {
+        if (record.status.checkDeleted()) {
             throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(data.workspaceName)
             )
         }
@@ -574,6 +579,72 @@ class ExpertSupportService @Autowired constructor(
         expertSupportDao.deleteExpertSupportConfigWithData(dslContext, data.type, data.content)
     }
 
+    fun createOrUpdateDisk(userId: String, data: OpDiskOperatorData): OpDiskOperatorDataResp {
+        // 检验 ip 带区域
+        val ipSub = data.ip.split(".")
+        if (ipSub.size != 5) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
+                params = arrayOf("ip ${data.ip} no region")
+            )
+        }
+        // 不能有多个工作空间名称
+        val workspaceNames = workspaceJoinDao.fetchRunningUser(dslContext, userId, data.ip)
+        if (workspaceNames.isEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
+                params = arrayOf("no workspace")
+            )
+        }
+        if (workspaceNames.size > 1) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
+                params = arrayOf("multiple workspace $workspaceNames")
+            )
+        }
+        val workspaceName = workspaceNames.first()
+
+        // 容量的单位是 Gi
+        val size = "${data.size}Gi"
+        // 创建磁盘不区分盘符直接
+        if (data.op == OpDiskOperator.CREATE) {
+            val result = createDisk(workspaceName, userId, size, null)
+            return OpDiskOperatorDataResp(
+                result = result.result,
+                message = result.message,
+                taskId = result.taskId
+            )
+        }
+
+        val diskList = remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.BCS).fetchDiskList(
+            workspaceName = workspaceName,
+            userId = userId
+        )
+        val pvcId = when (data.disk) {
+            OpDiskOperatorDiskType.D -> {
+                val disk = diskList.getOrNull(1)
+                if (disk?.systemVolume == false) {
+                    disk.pvcName
+                } else {
+                    null
+                }
+            }
+
+            OpDiskOperatorDiskType.E -> diskList.getOrNull(2)?.pvcName
+        } ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
+            params = arrayOf("no find disk ${data.disk} from list $diskList")
+        )
+
+        val result = expandDisk(workspaceName, userId, size, pvcId)
+
+        return OpDiskOperatorDataResp(
+            result?.valid ?: false,
+            result?.message,
+            result?.taskId
+        )
+    }
+
     @ActionAuditRecord(
         actionId = TencentActionId.CGS_EXPAND_DISK,
         instance = AuditInstanceRecord(
@@ -730,7 +801,8 @@ class ExpertSupportService @Autowired constructor(
     fun createDisk(
         workspaceName: String,
         userId: String,
-        size: String
+        size: String,
+        forceRestart: Boolean?
     ): CreateDiskResp {
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
@@ -758,7 +830,8 @@ class ExpertSupportService @Autowired constructor(
         val data = remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.BCS).createDisk(
             workspaceName = workspaceName,
             userId = userId,
-            size = size
+            size = size,
+            forceRestart = forceRestart
         )
 
         workspaceOpHistoryDao.createWorkspaceHistory(
@@ -839,6 +912,79 @@ class ExpertSupportService @Autowired constructor(
         return remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.BCS).fetchDiskList(
             workspaceName = workspaceName,
             userId = userId
+        )
+    }
+
+    @ActionAuditRecord(
+        actionId = TencentActionId.CGS_DELETE_DISK,
+        instance = AuditInstanceRecord(
+            resourceType = TencentResourceTypeId.CGS,
+            instanceNames = "#workspaceName",
+            instanceIds = "#workspaceName"
+        ),
+        content = TencentActionAuditContent.CGS_DELETE_DISK_CONTENT
+    )
+    fun deleteDisk(
+        userId: String,
+        data: DeleteDiskData
+    ): CreateDiskResp {
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = data.workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(data.workspaceName)
+            )
+
+        if (!permissionService.hasManagerOrOwnerPermission(
+                userId = userId,
+                projectId = workspace.projectId,
+                workspaceName = workspace.workspaceName,
+                ownerType = workspace.ownerType
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You do not have permission to delete disk in ${data.workspaceName}")
+            )
+        }
+
+        return remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.BCS).deleteDisk(
+            userId = userId,
+            data = data
+        )
+    }
+
+    fun deleteDiskCallback(
+        taskId: String,
+        workspaceName: String,
+        operator: String
+    ) {
+        val taskInfo = kotlin.runCatching {
+            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java).getTaskInfoByUid(taskId).data!!
+        }.onFailure {
+            logger.warn("deleteDiskCallback not find uid $taskId")
+            return
+        }.getOrThrow()
+
+        val cc = permissionService.getWorkspaceOwner(workspaceName).toMutableSet()
+        val workspace = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName) ?: run {
+            logger.warn("deleteDiskCallback workspace is null $workspaceName")
+            return
+        }
+        cc.addAll(permissionService.managers(workspace.projectId))
+
+        notifyControl.notify4UserAndCCRemoteDevManager(
+            userIds = mutableSetOf(operator),
+            cc = cc,
+            projectId = null,
+            notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
+            bodyParams = mutableMapOf(
+                "projectId" to workspace.projectId,
+                "operator" to operator,
+                "taskStatus" to (taskInfo.status?.name ?: ""),
+                "taskLogs" to taskInfo.logs.joinToString(";"),
+                "host" to (workspace.hostIp ?: ""),
+                "notifyTemplateCode" to "REMOTEDEV_DELETE_DISK_DONE"
+            )
         )
     }
 

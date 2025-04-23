@@ -28,6 +28,7 @@
 package com.tencent.devops.environment.service.job
 
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_IP
 import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.pojo.job.jobresp.NodeAttr
@@ -179,9 +180,10 @@ class TencentStockDataUpdateService @Autowired constructor(
         cmdbNodesCount.takeIf { it > 0 }.run {
             val totalPage = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, cmdbNodesCount.toLong())
             val time1 = LocalDateTime.now()
+            var nodeId = 0L
             for (page in 1..totalPage) {
                 try {
-                    writeServerIdByPage(page)
+                    nodeId = writeServerIdByPage(nodeId, DEFAULT_PAGE_SIZE)
                 } catch (e: Exception) {
                     logger.error("[writeServerId]Error in page[$page], Error:", e)
                 }
@@ -193,11 +195,17 @@ class TencentStockDataUpdateService @Autowired constructor(
         }
     }
 
-    private fun writeServerIdByPage(page: Int) {
+    private fun writeServerIdByPage(nodeId: Long, pageSize: Int): Long {
+        var nextNodeId = nodeId
         // 1. 节点record："部署"类型
-        val nodeRecords = cmdbNodeDao.getDeployNodesServerIdNullLimit(dslContext, page, DEFAULT_PAGE_SIZE)
+        val nodeRecords = cmdbNodeDao.getDeployNodesServerIdNullLimit(dslContext, nodeId, pageSize)
         // 2. 要写入server id的所有节点ip
-        val nodeIpSet = nodeRecords.map { it[T_NODE_NODE_IP] as String }.toSet()
+        val nodeIpSet = nodeRecords.map {
+            if (it[T_NODE_NODE_ID] is Long && it[T_NODE_NODE_ID] as Long > nextNodeId) {
+                nextNodeId = it[T_NODE_NODE_ID] as Long
+            }
+            it[T_NODE_NODE_IP] as String
+        }.toSet()
         // 3. 请求cmdb，查询serverId，得到：ip - cmdbInfo
         val nodeIpToCmdbServerMap = tencentCmdbService.queryServerByIp(nodeIpSet)
         val nodeIpToServerIdMap = mutableMapOf<String, Long?>()
@@ -208,5 +216,6 @@ class TencentStockDataUpdateService @Autowired constructor(
         if (nodeIpToServerIdMap.isNotEmpty()) {
             cmdbNodeDao.batchUpdateNodeSeverIdByIp(dslContext, nodeIpToServerIdMap)
         }
+        return nextNodeId
     }
 }

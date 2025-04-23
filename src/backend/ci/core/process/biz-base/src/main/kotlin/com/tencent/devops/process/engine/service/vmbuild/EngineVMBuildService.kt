@@ -113,7 +113,7 @@ import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -1102,6 +1102,25 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             vmSeqId = vmSeqId,
             cancelTaskIds = cancelTaskIds
         )
+    }
+
+    fun getBuildContainer(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String
+    ): VMBuildContainer? {
+        val startTask = pipelineTaskService.getBuildTask(
+            projectId = projectId,
+            buildId = buildId,
+            taskId = VMUtils.genStartVMTaskId(vmSeqId)
+        ) ?: return null
+        return try {
+            JsonUtil.mapTo(startTask.taskParams, VMBuildContainer::class.java)
+        } catch (ignore: Throwable) {
+            LOG.warn("ENGINE|$buildId|GET_CONTAINER|${startTask.taskId} is not VMBuildContainer", ignore)
+            null
+        }
     }
 
     @Suppress("UNCHECKED_CAST")

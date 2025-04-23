@@ -162,11 +162,13 @@ import { timeFormatter } from '@/common/util.ts'
 import useManageAside from "@/store/manageAside";
 import { storeToRefs } from 'pinia';
 
-const LINKABLE_RESOURCE_TYPES = ['codecc_task', 'pipeline', 'pipeline_group'];
+const LINKABLE_RESOURCE_TYPES = ['codecc_task', 'pipeline', 'pipeline_group', 'repertory', 'env_node'];
 const URL_TEMPLATES = {
   pipeline: (projectId, row) => `${location.origin}/console/pipeline/${projectId}/${row.resourceCode}/history/permission/?groupId=${row.groupId}`,
   pipeline_group: (projectId, row) => `${location.origin}/console/pipeline/${projectId}/list/listAuth/${row.resourceCode}/${row.resourceName}?groupId=${row.groupId}`,
-  codecc_task: (projectId, row) => `${location.origin}/console/codecc/${projectId}/task/${row.resourceCode}/settings/authority?groupId=${row.groupId}`
+  codecc_task: (projectId, row) => `${location.origin}/console/codecc/${projectId}/task/${row.resourceCode}/settings/authority?groupId=${row.groupId}`,
+  repertory: (projectId, row) => `${location.origin}/console/codelib/${projectId}/?searchName=${row.resourceName}&id=${row.resourceCode}`,
+  env_node: (projectId, row) => `${location.origin}/console/environment/${projectId}/nodeList`,
 };
 const props = defineProps({
   isShowOperation: {

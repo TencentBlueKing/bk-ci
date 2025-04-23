@@ -56,6 +56,7 @@ import com.tencent.devops.store.common.handler.StoreUpdateParamCheckHandler
 import com.tencent.devops.store.common.handler.StoreUpdateParamI18nConvertHandler
 import com.tencent.devops.store.common.handler.StoreUpdatePreBusHandler
 import com.tencent.devops.store.common.handler.StoreUpdateRunPipelineHandler
+import com.tencent.devops.store.common.lock.StoreCodeLock
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreMediaService
 import com.tencent.devops.store.common.service.StoreNotifyService
@@ -84,13 +85,13 @@ import com.tencent.devops.store.pojo.common.publication.StoreRunPipelineParam
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateResponse
 import com.tencent.devops.store.pojo.common.publication.UpdateStoreBaseDataPO
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 @Suppress("LongParameterList", "TooManyFunctions")
@@ -136,7 +137,16 @@ class StoreReleaseServiceImpl @Autowired constructor(
         )
         val bkStoreContext = storeCreateRequest.bkStoreContext
         bkStoreContext[AUTH_HEADER_USER_ID] = userId
-        StoreCreateHandlerChain(handlerList).handleRequest(storeCreateRequest)
+        val storeBaseCreateRequest = storeCreateRequest.baseInfo
+        val storeType = storeBaseCreateRequest.storeType
+        val storeCode = storeBaseCreateRequest.storeCode
+        StoreCodeLock(redisOperation, storeType.name, storeCode).use { lock ->
+            if (lock.tryLock()) {
+                StoreCreateHandlerChain(handlerList).handleRequest(storeCreateRequest)
+            } else {
+                throw ErrorCodeException(errorCode = CommonMessageCode.LOCK_FAIL)
+            }
+        }
         val storeId = bkStoreContext[KEY_STORE_ID]?.toString()
         return if (!storeId.isNullOrBlank()) {
             StoreCreateResponse(storeId = storeId)
@@ -156,7 +166,16 @@ class StoreReleaseServiceImpl @Autowired constructor(
         )
         val bkStoreContext = storeUpdateRequest.bkStoreContext
         bkStoreContext[AUTH_HEADER_USER_ID] = userId
-        StoreUpdateHandlerChain(handlerList).handleRequest(storeUpdateRequest)
+        val storeBaseUpdateRequest = storeUpdateRequest.baseInfo
+        val storeType = storeBaseUpdateRequest.storeType
+        val storeCode = storeBaseUpdateRequest.storeCode
+        StoreCodeLock(redisOperation, storeType.name, storeCode).use { lock ->
+            if (lock.tryLock()) {
+                StoreUpdateHandlerChain(handlerList).handleRequest(storeUpdateRequest)
+            } else {
+                throw ErrorCodeException(errorCode = CommonMessageCode.LOCK_FAIL)
+            }
+        }
         val storeId = bkStoreContext[KEY_STORE_ID]?.toString()
         return if (!storeId.isNullOrBlank()) {
             StoreUpdateResponse(storeId = storeId)
@@ -363,7 +382,7 @@ class StoreReleaseServiceImpl @Autowired constructor(
                     storeReleaseCreateRequest = StoreReleaseCreateRequest(
                         storeCode = storeCode,
                         storeType = storeType,
-                        latestUpgrader = userId,
+                        latestUpgrader = storeReleaseRequest.publisher ?: userId,
                         latestUpgradeTime = pubTime
                     )
                 )
@@ -595,7 +614,7 @@ class StoreReleaseServiceImpl @Autowired constructor(
             )
             val tmpStoreId = if (releaseCount > 0) {
                 // 获取已发布最大版本的插件记录
-                val maxReleaseVersionRecord = storeBaseQueryDao.getMaxVersionComponentByCode(
+                val maxReleaseVersionRecord = storeBaseQueryDao.getNewestComponentByCode(
                     dslContext = context,
                     storeType = storeType,
                     storeCode = storeCode,
@@ -604,7 +623,7 @@ class StoreReleaseServiceImpl @Autowired constructor(
                 maxReleaseVersionRecord?.id
             } else {
                 // 获取已下架最大版本的插件记录
-                val maxUndercarriagedVersionRecord = storeBaseQueryDao.getMaxVersionComponentByCode(
+                val maxUndercarriagedVersionRecord = storeBaseQueryDao.getNewestComponentByCode(
                     dslContext = context,
                     storeType = storeType,
                     storeCode = storeCode,

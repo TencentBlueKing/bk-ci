@@ -124,6 +124,12 @@ object ExperienceMessageCode {
     const val BK_NAME = "bkName" // 名称
     const val BK_VIEW = "bkView" // 查看
     const val BK_LATEST_EXPERIENCE_VERSION_SHARING = "bkLatestExperienceVersionSharing" // 【{0}】最新体验版本分享
+    const val BK_EXPERIENCE_ADD_GROUP_TITLE = "bkExperienceAddGroupTitle" // 【蓝盾版本体验通知】
+    const val BK_EXPERIENCE_ADD_GROUP_HEADER =
+        "bkExperienceAddGroupHeader" // {0}，你好，恭喜你成功加入体验组【{1}】，添加人 {2}\n\n当前共有 {3} 个版本体验进行中，可参与体验：
+    const val BK_EXPERIENCE_ADD_GROUP_CONTENT = "bkExperienceAddGroupContent" // {0}. 【{1}-{2}】诚邀参与体验。移动端体验地址: {3}
+    const val BK_EXPERIENCE_ADD_GROUP_FOOTER = "bkExperienceAddGroupFooter" // ……\n更多体验，请登录蓝盾APP查看
+
 
     // 【{0}】发布了最新体验版本，【{1}-{2}】诚邀您参与体验。
     const val BK_LATEST_INVITES_YOU_EXPERIENCE = "bkLatestInvitesYouExperience"

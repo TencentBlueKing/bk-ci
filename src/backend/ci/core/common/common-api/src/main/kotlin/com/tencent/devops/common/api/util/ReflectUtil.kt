@@ -69,4 +69,8 @@ object ReflectUtil {
             targetProp.setter.call(target, value)
         }
     }
+
+    fun isPrimitiveOrStringType(clazz: Class<*>): Boolean {
+        return clazz.isPrimitive || clazz == String::class.java
+    }
 }

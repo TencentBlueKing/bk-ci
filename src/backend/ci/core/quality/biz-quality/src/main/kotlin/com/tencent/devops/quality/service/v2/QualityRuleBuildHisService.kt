@@ -60,7 +60,7 @@ import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisOperationDao
 import com.tencent.devops.quality.exception.QualityOpConfigException
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import com.tencent.devops.quality.pojo.enum.RunElementType
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -104,7 +104,7 @@ class QualityRuleBuildHisService constructor(
                         threshold = it.threshold,
                         elementType = it.atomCode
                     )
-            }
+                }
             qualityIndicatorService.upsertIndicators(
                 userId = userId,
                 projectId = projectId,
@@ -119,23 +119,26 @@ class QualityRuleBuildHisService constructor(
                 indicatorService.serviceList(atomCode, indicators.map { it.enName }, projectId)
                     .filterNot { it.elementType == RunElementType.RUN.elementType && it.range != projectId }
                     .filter { it.enable ?: false }.forEach {
-                    val requestIndicator = indicatorsCopy.find { indicator -> indicator.enName == it.enName }
-                        ?: throw OperationException("${ruleRequest.name} indicator ${it.enName} is not exist")
-                    logger.info("QUALITY|requestIndicator is: ${requestIndicator.enName}")
+                        val requestIndicator = indicatorsCopy.find { indicator -> indicator.enName == it.enName }
+                            ?: throw OperationException("${ruleRequest.name} indicator ${it.enName} is not exist")
+                        logger.info("QUALITY|requestIndicator is: ${requestIndicator.enName}")
 
                         // 使用上下文变量表示阈值时不检查类型
-                    if (!Regex("\\$\\{\\{.*\\}\\}").matches(requestIndicator.threshold) &&
-                            requestIndicator.atomCode != RunElementType.RUN.elementType) {
-                        checkThresholdType(requestIndicator, it)
-                    }
+                        if (!Regex("\\$\\{\\{.*\\}\\}").matches(requestIndicator.threshold) &&
+                            requestIndicator.atomCode != RunElementType.RUN.elementType
+                        ) {
+                            checkThresholdType(requestIndicator, it)
+                        }
 
-                    indicatorIds.add(RuleCreateRequest.CreateRequestIndicator(
-                        it.hashId,
-                        requestIndicator.operation,
-                        requestIndicator.threshold
-                    ))
-                    indicatorsCopy.remove(requestIndicator)
-                }
+                        indicatorIds.add(
+                            RuleCreateRequest.CreateRequestIndicator(
+                                it.hashId,
+                                requestIndicator.operation,
+                                requestIndicator.threshold
+                            )
+                        )
+                        indicatorsCopy.remove(requestIndicator)
+                    }
             }
 
             if (indicatorIds.isEmpty()) {
@@ -161,16 +164,19 @@ class QualityRuleBuildHisService constructor(
                     return
                 }
             }
+
             QualityDataType.FLOAT -> {
                 if (NumberUtils.isCreatable(requestIndicator.threshold)) {
                     return
                 }
             }
+
             QualityDataType.BOOLEAN -> {
                 if (requestIndicator.threshold == "true" || requestIndicator.threshold == "false") {
                     return
                 }
             }
+
             else -> {
                 if (NumberUtils.isDigits(requestIndicator.threshold)) {
                     return
@@ -322,15 +328,19 @@ class QualityRuleBuildHisService constructor(
                 }
                 indicator.threshold = realThreshold
             }
-            val indicatorCount = qualityRuleBuildHisDao.updateIndicatorThreshold(HashUtil.decodeIdToLong(it.hashId),
-                it.indicators.map { indicator -> indicator.threshold }.joinToString(","))
+            val indicatorCount = qualityRuleBuildHisDao.updateIndicatorThreshold(
+                HashUtil.decodeIdToLong(it.hashId),
+                it.indicators.map { indicator -> indicator.threshold }.joinToString(",")
+            )
             logger.info("QUALITY|convert_indicatorThreshold|${it.indicators}|COUNT|$indicatorCount")
 
             val gateKeepers = (it.gateKeepers ?: listOf()).map { user ->
                 EnvUtils.parseEnv(user, buildCheckParamsV3.runtimeVariable ?: mapOf())
             }
-            val gateKeeperCount = qualityRuleBuildHisDao.updateGateKeepers(HashUtil.decodeIdToLong(it.hashId),
-                gateKeepers?.joinToString(","))
+            val gateKeeperCount = qualityRuleBuildHisDao.updateGateKeepers(
+                HashUtil.decodeIdToLong(it.hashId),
+                gateKeepers.joinToString(",")
+            )
 
             logger.info("QUALITY|convert_gateKeepers|$gateKeepers|COUNT|$gateKeeperCount")
         }
@@ -350,7 +360,7 @@ class QualityRuleBuildHisService constructor(
                     )
                 }
                 val ruleResult = if (pass) RuleInterceptResult.INTERCEPT_PASS.name
-                            else RuleInterceptResult.INTERCEPT.name
+                else RuleInterceptResult.INTERCEPT.name
                 logger.info("rule $ruleBuildId update status: $ruleResult, $pass")
 
                 if (checkReview(userId, it, pass)) {
@@ -384,7 +394,8 @@ class QualityRuleBuildHisService constructor(
         if (stageFinish) {
             stageRules.filter { it.id != record.id }.map {
                 if (it?.status == RuleInterceptResult.INTERCEPT_PASS.name ||
-                    it?.status == RuleInterceptResult.PASS.name) {
+                    it?.status == RuleInterceptResult.PASS.name
+                ) {
                     passFlag = true
                 } else {
                     passFlag = false
@@ -392,8 +403,10 @@ class QualityRuleBuildHisService constructor(
                 }
             }
             logger.info("QUALITY|checkReview|${record.buildId}|passFlag is $passFlag. start to send stageRequest.")
-            val ruleHistory = historyDao.list(dslContext, record.projectId, record.pipelineId, null, null,
-                null, null, null, null)
+            val ruleHistory = historyDao.list(
+                dslContext, record.projectId, record.pipelineId, null, null,
+                null, null, null, null
+            )
             return client.get(ServiceBuildResource::class).qualityTriggerStage(
                 userId = userId,
                 projectId = record.projectId,

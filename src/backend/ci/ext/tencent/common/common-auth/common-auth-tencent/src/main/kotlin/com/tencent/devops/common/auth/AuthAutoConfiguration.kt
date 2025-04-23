@@ -29,12 +29,14 @@ package com.tencent.devops.common.auth
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.auth.service.ManagerService
+import com.tencent.devops.common.auth.api.AuthPlatformApi
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.api.BSCCProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.BkCCProperties
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.auth.jmx.JmxAuthApi
+import com.tencent.devops.common.auth.mock.api.MockAuthPlatformApi
 import com.tencent.devops.common.auth.service.BkAccessTokenApi
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
@@ -86,4 +88,8 @@ class AuthAutoConfiguration {
         objectMapper = objectMapper,
         redisOperation = redisOperation
     )
+
+    @Bean
+    @ConditionalOnMissingBean(AuthPlatformApi::class)
+    fun authPlatformApi() = MockAuthPlatformApi()
 }

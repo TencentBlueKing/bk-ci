@@ -32,7 +32,7 @@ import com.tencent.devops.artifactory.pojo.ArchiveAtomResponse
 import com.tencent.devops.artifactory.pojo.ReArchiveAtomRequest
 import com.tencent.devops.common.api.pojo.Result
 import java.io.InputStream
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletResponse
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 
 interface ArchiveAtomService {

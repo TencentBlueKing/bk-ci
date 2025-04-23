@@ -8,7 +8,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.repository.service.CredentialService
+import com.tencent.devops.repository.service.RepoCredentialService
 import com.tencent.devops.repository.service.RepositoryService
 import com.tencent.devops.scm.api.ServiceP4Resource
 import com.tencent.devops.scm.code.p4.api.P4ChangeList
@@ -23,7 +23,7 @@ import java.net.URLEncoder
 @Primary
 class TencentP4Service(
     private val repositoryService: RepositoryService,
-    private val credentialService: CredentialService,
+    private val credentialService: RepoCredentialService,
     private val client: Client
 ) : Ip4Service {
     override fun getChangelistFiles(

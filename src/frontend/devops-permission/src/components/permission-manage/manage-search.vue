@@ -114,7 +114,24 @@ const searchValue = ref([]);
 const searchResourceName = ref('');
 const filterTips = computed(() => searchData.value.map(item => item.name).join(' / '));
 const searchData = computed(() => [
-  { name: t('用户组名'), id: 'groupName' }
+  {
+    name: t('用户组名'),
+    id: 'groupName'
+  },
+  {
+    name: t('唯一拥有者'),
+    id: 'uniqueManagerGroupsQueryFlag',
+    children: [
+      {
+        name: '是',
+        id: true
+      },
+      {
+        name: '否',
+        id: false
+      },
+    ]
+  }
 ].filter(data => !searchValue.value.find(val => val.id === data.id)));
 
 const commonUseList = ref([
@@ -188,6 +205,24 @@ defineExpose({
   clearSearch,
 });
 
+function getSearch() {
+  const { projectCode, uniqueManagerGroupsQueryFlag } = route.query;
+  if (projectCode && uniqueManagerGroupsQueryFlag) {
+    searchValue.value = [{
+      name: t('唯一拥有者'),
+      id: "uniqueManagerGroupsQueryFlag",
+      values: [
+        {
+          id: true,
+          name: "是"
+        }
+      ]
+    }]
+    projectValue.value = projectCode
+    cacheProjectCode.set(projectCode)
+  }
+}
+
 async function fetchResourceTypes() {
   try {
     const [projects, resourceTypes] = await Promise.all([
@@ -198,6 +233,7 @@ async function fetchResourceTypes() {
     projectList.value = projects;
     const hasLocationCode = projectList.value.find(item => item.englishName === cacheProjectCode.get() )
     projectValue.value = route?.params.projectCode || route?.query.projectCode || route?.query.project_code || (hasLocationCode && cacheProjectCode.get()) || projects[0].englishName
+    getSearch()
   } catch (error) {
     console.log(error);
   }

@@ -22,6 +22,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
+import com.tencent.devops.remotedev.pojo.expert.DeleteDiskData
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
@@ -323,10 +324,16 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun getWindowsQuota(
         userId: String,
         type: QuotaType?,
-        zoneType: WindowsResourceZoneConfigType
+        zoneType: WindowsResourceZoneConfigType,
+        specifyTaints: String?
     ): Result<Map<String, Map<String, Int>>> {
         logger.info("getWindowsQuota $userId|$type|$zoneType")
-        return client.get(ServiceRemoteDevResource::class).getWindowsQuota(userId, type, zoneType)
+        return client.get(ServiceRemoteDevResource::class).getWindowsQuota(
+            userId = userId,
+            type = type,
+            zoneType = zoneType,
+            specifyTaints = specifyTaints
+        )
     }
 
     override fun updateUsageLimit(
@@ -511,15 +518,26 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun createWorkspaceDisk(
         userId: String,
         workspaceName: String,
-        size: String
+        size: String,
+        forceRestart: Boolean?
     ): Result<CreateDiskResp> {
-        logger.info("createWorkspaceDisk |$userId|$workspaceName|$size")
-        return client.get(ServiceRemoteDevResource::class).createDisk(userId, workspaceName, size)
+        logger.info("createWorkspaceDisk |$userId|$workspaceName|$size|$forceRestart")
+        return client.get(ServiceRemoteDevResource::class).createDisk(
+            userId = userId,
+            workspaceName = workspaceName,
+            size = size,
+            forceRestart = forceRestart
+        )
     }
 
     override fun fetchWorkspaceDiskList(userId: String, workspaceName: String): Result<List<VmDiskInfo>?> {
         logger.info("fetchWorkspaceDiskList |$userId|$workspaceName")
         return client.get(ServiceRemoteDevResource::class).fetchDiskList(userId, workspaceName)
+    }
+
+    override fun deleteDisk(userId: String, data: DeleteDiskData): Result<CreateDiskResp> {
+        logger.info("deleteDisk |$userId|$data")
+        return client.get(ServiceRemoteDevResource::class).deleteDisk(userId, data)
     }
 
     override fun upgradeWorkspace(

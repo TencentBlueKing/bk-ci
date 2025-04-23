@@ -57,6 +57,7 @@ import com.tencent.devops.store.common.handler.StoreDeleteCodeRepositoryHandler
 import com.tencent.devops.store.common.handler.StoreDeleteDataPersistHandler
 import com.tencent.devops.store.common.handler.StoreDeleteHandlerChain
 import com.tencent.devops.store.common.handler.StoreDeleteRepoFileHandler
+import com.tencent.devops.store.common.lock.StoreCodeLock
 import com.tencent.devops.store.common.service.StoreBaseInstallService
 import com.tencent.devops.store.common.service.StoreComponentManageService
 import com.tencent.devops.store.common.service.StoreManagementExtraService
@@ -67,6 +68,7 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.InstalledPkgFileShaContentRequest
 import com.tencent.devops.store.pojo.common.KEY_REPOSITORY_AUTHORIZER
+import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
@@ -371,7 +373,13 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         )
         val bkStoreContext = handlerRequest.bkStoreContext
         bkStoreContext[AUTH_HEADER_USER_ID] = userId
-        StoreDeleteHandlerChain(handlerList).handleRequest(handlerRequest)
+        StoreCodeLock(redisOperation, handlerRequest.storeType, handlerRequest.storeCode).use { lock ->
+            if (lock.tryLock()) {
+                StoreDeleteHandlerChain(handlerList).handleRequest(handlerRequest)
+            } else {
+                throw ErrorCodeException(errorCode = CommonMessageCode.LOCK_FAIL)
+            }
+        }
         return Result(
             status = bkStoreContext[STATUS]?.toString()?.toInt() ?: 0,
             data = true,
@@ -384,8 +392,9 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         storeType: StoreTypeEnum,
         version: String,
         projectCode: String,
-        userId: String
-    ): Result<Boolean> {
+        userId: String,
+        instanceId: String?
+    ): Result<StoreBaseInfo?> {
         // 检查组件的状态是否符合下载条件
         val baseRecord = storeBaseQueryDao.getComponent(
             dslContext = dslContext,
@@ -407,17 +416,32 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         if (baseRecord.status in inValidStatusList) {
             throw ErrorCodeException(errorCode = StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID)
         }
+        val storeBaseInfo = StoreBaseInfo(
+            storeId = baseRecord.id,
+            storeCode = baseRecord.storeCode,
+            storeName = baseRecord.name,
+            storeType = StoreTypeEnum.getStoreTypeObj(baseRecord.storeType.toInt()),
+            version = baseRecord.version,
+            status = baseRecord.status,
+            logoUrl = baseRecord.logoUrl,
+            publisher = baseRecord.publisher,
+            classifyId = baseRecord.classifyId
+        )
         val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(storeType.name)
         if (redisOperation.isMember(storePublicFlagKey, storeCode)) {
             // 如果从缓存中查出该组件是公共组件则无需权限校验
-            return Result(true)
+            storeBaseInfo.publicFlag = true
+            return Result(storeBaseInfo)
         }
         val publicFlag = storeBaseFeatureQueryDao.getBaseFeatureByCode(dslContext, storeCode, storeType)?.publicFlag
-        val checkFlag = publicFlag == true || storeMemberDao.isStoreMember(
+        val checkFlag = publicFlag == true || (storeMemberDao.isStoreMember(
             dslContext = dslContext, userId = userId, storeCode = storeCode, storeType = storeType.type.toByte()
         ) || storeProjectService.isInstalledByProject(
-            projectCode = projectCode, storeCode = storeCode, storeType = storeType.type.toByte()
-        )
+            projectCode = projectCode,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte(),
+            instanceId = instanceId
+        ))
         if (!checkFlag) {
             if (projectCode.isNotBlank()) {
                 throw ErrorCodeException(
@@ -431,7 +455,8 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
                 )
             }
         }
-        return Result(true)
+        storeBaseInfo.publicFlag = publicFlag ?: false
+        return Result(storeBaseInfo)
     }
 
     override fun updateComponentInstalledPkgShaContent(

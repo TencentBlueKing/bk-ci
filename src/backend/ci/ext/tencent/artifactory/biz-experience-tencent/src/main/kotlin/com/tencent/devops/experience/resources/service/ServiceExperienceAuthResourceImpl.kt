@@ -54,10 +54,12 @@ class ServiceExperienceAuthResourceImpl @Autowired constructor(
                     token = token
                 )
             }
+
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
                 val ids = callBackInfo.filter.idList.map { it.toString() }
                 return authExperienceService.getExperienceTaskInfo(ids, token)
             }
+
             CallbackMethodEnum.SEARCH_INSTANCE -> {
                 return authExperienceService.searchExperienceTask(
                     projectId = projectId,
@@ -67,6 +69,8 @@ class ServiceExperienceAuthResourceImpl @Autowired constructor(
                     token = token
                 )
             }
+
+            else -> {}
         }
         return null
     }
@@ -84,10 +88,12 @@ class ServiceExperienceAuthResourceImpl @Autowired constructor(
                     token = token
                 )
             }
+
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
                 val ids = callBackInfo.filter.idList.map { it.toString() }
                 return authExperienceService.getExperienceGroupInfo(ids, token)
             }
+
             CallbackMethodEnum.SEARCH_INSTANCE -> {
                 return authExperienceService.searchExperienceGroup(
                     projectId = projectId,
@@ -97,6 +103,8 @@ class ServiceExperienceAuthResourceImpl @Autowired constructor(
                     token = token
                 )
             }
+
+            else -> {}
         }
         return null
     }

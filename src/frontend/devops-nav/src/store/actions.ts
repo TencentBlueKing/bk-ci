@@ -1,33 +1,36 @@
-import { ActionTree, ActionContext } from 'vuex'
 import { AxiosRequestConfig } from 'axios'
+import { ActionContext, ActionTree } from 'vuex'
 import Request from '../utils/request'
 import { transformObj } from '../utils/util'
 import {
-    SET_USER_INFO,
-    SET_PROJECT_LIST,
-    FETCH_ERROR,
-    SET_LINKS,
-    SET_DEMO_PROJECT,
-    SET_DEMO_PIPELINE_ID,
-    UPDATE_NEW_PROJECT,
-    TOGGLE_PROJECT_DIALOG,
+    AUTH_API_URL_PREFIX,
     BACKEND_API_URL_PREFIX,
+    CLOSE_PREVIEW_TIPS,
+    EMPTY_PROJECT,
+    FETCH_ERROR,
     PROCESS_API_URL_PREFIX,
     PROJECT_API_URL_PREFIX,
-    EMPTY_PROJECT,
     RESET_NEW_PROJECT,
-    SET_POPUP_SHOW,
-    UPDATE_HEADER_CONFIG,
-    CLOSE_PREVIEW_TIPS,
-    TOGGLE_MODULE_LOADING,
-    UPDATE_CURRENT_PAGE,
-    SET_SERVICES,
-    TOGGLE_PERMISSION_DIALOG,
-    TOGGLE_NOTICE_DIALOG,
     SET_CURRENT_NOTICE,
+    SET_DEMO_PIPELINE_ID,
+    SET_DEMO_PROJECT,
+    SET_DISCLOSURE_AGREEMENT_CANCEL_HANDLER,
+    SET_DISCLOSURE_AGREEMENT_CONFIG,
+    SET_LINKS,
+    SET_POPUP_SHOW,
+    SET_PROJECT_LIST,
     SET_SERVICE_HOOKS,
-    AUTH_API_URL_PREFIX,
-    STORE_API_URL_PREFIX
+    SET_SERVICES,
+    SET_USER_INFO,
+    STORE_API_URL_PREFIX,
+    TOGGLE_MODULE_LOADING,
+    TOGGLE_NOTICE_DIALOG,
+    TOGGLE_PERMISSION_DIALOG,
+    TOGGLE_PROJECT_DIALOG,
+    TOGGLE_SIGNATURE_DIALOG,
+    UPDATE_CURRENT_PAGE,
+    UPDATE_HEADER_CONFIG,
+    UPDATE_NEW_PROJECT
 } from './constants'
 
 const actions: ActionTree<RootState, any> = {
@@ -204,6 +207,40 @@ const actions: ActionTree<RootState, any> = {
         return Request.get(`${window.location.origin}/bundledVersionLog_en.json?t=${Date.now()}`, {
             originalResponse: true
         } as AxiosRequestConfig & { originalResponse: boolean })
+    },
+    /**
+     * 人员列表 (项目管理退出项目弹窗移交人员列表)
+     */
+    getProjectMembers (_, { projectId, params }) {
+        const query = new URLSearchParams({
+            ...params
+        }).toString()
+        return Request.get(`${AUTH_API_URL_PREFIX}/user/auth/resource/member/${projectId}/listProjectMembers?${query}`)
+    },
+    /**
+     * 用户主动退出项目检查
+     */
+    checkMemberExitsProject (_, { projectId }) {
+        return Request.get(`${AUTH_API_URL_PREFIX}/user/auth/resource/member/${projectId}/checkMemberExitsProject`)
+    },
+    /**
+     * 用户主动退出项目
+     */
+    memberExitsProject (_, { projectId, handoverParams }) {
+        return Request.post(`${AUTH_API_URL_PREFIX}/user/auth/resource/member/${projectId}/memberExitsProject`, handoverParams)
+    },
+
+    async fetchSignatureStatus (_, { projectId }) {
+        const data = await Request.get<any, NonDisclosureAgreementConfig>(`${PROJECT_API_URL_PREFIX}/user/signature/${projectId}/getSignatureStatus`)
+        this.commit(SET_DISCLOSURE_AGREEMENT_CONFIG, data)
+        return data.signed
+    },
+
+    toggleSignatureDialog ({ commit }, payload) {
+        commit(TOGGLE_SIGNATURE_DIALOG, payload)
+    },
+    setCancelHandler ({ commit }, payload) {
+        commit(SET_DISCLOSURE_AGREEMENT_CANCEL_HANDLER, payload)
     }
 }
 

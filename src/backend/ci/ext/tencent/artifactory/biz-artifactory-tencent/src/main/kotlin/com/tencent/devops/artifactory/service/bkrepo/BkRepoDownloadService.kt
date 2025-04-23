@@ -38,6 +38,7 @@ import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.BUILD_NOT_
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.METADATA_NOT_EXIST
 import com.tencent.devops.artifactory.constant.REPO_NAME_CUSTOM
 import com.tencent.devops.artifactory.constant.REPO_NAME_PIPELINE
+import com.tencent.devops.artifactory.pojo.AllowDownload
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.HapJson5Info
 import com.tencent.devops.artifactory.pojo.TokenForJsonRequest
@@ -92,9 +93,9 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import java.net.URLEncoder
 import java.util.regex.Pattern
-import javax.ws.rs.BadRequestException
-import javax.ws.rs.NotFoundException
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.BadRequestException
+import jakarta.ws.rs.NotFoundException
+import jakarta.ws.rs.core.Response
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.slf4j.LoggerFactory
 import org.springframework.util.DigestUtils
@@ -992,6 +993,26 @@ open class BkRepoDownloadService(
     }
 
     private fun tokenRedisKey(token: String) = "artifactory:token:$token"
+
+    override fun allowDownload(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String,
+        ip: String
+    ): AllowDownload {
+        val (allow, _) = bkRepoClient.allowDownload(
+            userId = userId,
+            projectId = projectId,
+            repoName = RepoUtils.getRepoByType(artifactoryType),
+            path = path,
+            ip = ip
+        )
+        return AllowDownload(
+            allow,
+            if (allow) "" else "命中仓库配置的禁用策略（如元数据不满足要求、开启了 IP限制等），或因安全漏洞、Crash等原因被禁用"
+        )
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(BkRepoDownloadService::class.java)

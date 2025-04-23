@@ -53,6 +53,7 @@ import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WindowsResourceTypeDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
+import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
@@ -115,7 +116,8 @@ class CreateControl @Autowired constructor(
     private val gitProxyTGitService: GitProxyTGitService,
     private val workspaceSharedDao: WorkspaceSharedDao,
     private val softwareManageService: SoftwareManageService,
-    private val imageManageService: ImageManageService
+    private val imageManageService: ImageManageService,
+    private val workspaceJoinDao: WorkspaceJoinDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(CreateControl::class.java)
@@ -316,7 +318,8 @@ class CreateControl @Autowired constructor(
                 windowsZone = availableZone,
                 windowsConfig = windowsConfig,
                 newNum = newNum,
-                quotaType = QuotaType.parse(zoneType)
+                quotaType = QuotaType.parse(zoneType),
+                specifyTaints = workspaceCreate.specifyTaints
             )
         )
         repeat(generateWorkspaceName.size) { i ->
@@ -628,7 +631,9 @@ class CreateControl @Autowired constructor(
                 return false
             }
 
-        val copy = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = oldWorkspaceName)
+        val copy = oldWorkspaceName?.let {
+            workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = oldWorkspaceName)
+        }
         val projectId = when {
             copy != null -> copy.projectId
             else -> checkNotNull(projectCode)
@@ -657,7 +662,8 @@ class CreateControl @Autowired constructor(
             workspaceSystemType = systemType,
             ownerType = checkOwnerType,
             winConfigId = windowsConfig.id?.toInt(),
-            zoneId = vm.zoneId
+            zoneId = vm.zoneId,
+            imageId = copy?.imageId ?: ""
         )
         if (copy != null) {
             // 当存在引用副本的情况，将细分多种情况

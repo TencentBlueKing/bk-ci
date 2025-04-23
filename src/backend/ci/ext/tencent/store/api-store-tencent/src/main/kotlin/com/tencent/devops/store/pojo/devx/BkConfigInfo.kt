@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.pojo.devx
 
+import com.tencent.devops.store.pojo.common.StoreReleaseInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "配置信息")
@@ -34,5 +35,7 @@ data class BkConfigInfo(
     @get:Schema(title = "标识", required = true)
     val storeCode: String,
     @get:Schema(title = "操作系统配置列表", required = true)
-    val os: List<OsConfigInfo>
+    val os: List<OsConfigInfo>,
+    @get:Schema(title = "组件发布信息", required = false)
+    val releaseInfo: StoreReleaseInfo? = null
 )

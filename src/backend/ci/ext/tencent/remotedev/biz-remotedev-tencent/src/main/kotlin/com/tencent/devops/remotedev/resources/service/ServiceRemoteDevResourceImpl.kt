@@ -35,6 +35,7 @@ import com.tencent.devops.remotedev.pojo.async.AsyncNotify
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
+import com.tencent.devops.remotedev.pojo.expert.DeleteDiskData
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
@@ -483,7 +484,8 @@ class ServiceRemoteDevResourceImpl(
             workspaceService.getWorkspaceList4WeSec(
                 workspaceName = workspace.workspaceName,
                 notStatus = null,
-                hasCurrentUser = true
+                hasCurrentUser = true,
+                userId = userId
             ).firstOrNull()
         )
     }
@@ -491,14 +493,16 @@ class ServiceRemoteDevResourceImpl(
     override fun getWindowsQuota(
         userId: String,
         type: QuotaType?,
-        zoneType: WindowsResourceZoneConfigType
+        zoneType: WindowsResourceZoneConfigType,
+        specifyTaints: String?
     ): Result<Map<String, Map<String, Int>>> {
         return Result(
             windowsResourceConfigService.allWindowsQuota(
                 searchCustom = false,
                 quotaType = type,
                 zoneType = zoneType,
-                withProjectLimit = null
+                withProjectLimit = null,
+                specifyTaints = specifyTaints
             )
         )
     }
@@ -755,19 +759,30 @@ class ServiceRemoteDevResourceImpl(
     override fun createDisk(
         userId: String,
         workspaceName: String,
-        size: String
+        size: String,
+        forceRestart: Boolean?
     ): Result<CreateDiskResp> {
         return Result(
             expertSupportService.createDisk(
                 workspaceName = workspaceName,
                 userId = userId,
-                size = size
+                size = size,
+                forceRestart = forceRestart
             )
         )
     }
 
     override fun fetchDiskList(userId: String, workspaceName: String): Result<List<VmDiskInfo>> {
         return Result(expertSupportService.fetchDiskList(userId, workspaceName))
+    }
+
+    override fun deleteDisk(userId: String, data: DeleteDiskData): Result<CreateDiskResp> {
+        return Result(
+            expertSupportService.deleteDisk(
+                userId = userId,
+                data = data
+            )
+        )
     }
 
     override fun upgradeWorkspace(
@@ -896,7 +911,10 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
-    override fun createItsmTicket(userId: String, createReq: BKItsmCreateTicketReq): Result<BKItsmCreateTicketRespData> {
+    override fun createItsmTicket(
+        userId: String,
+        createReq: BKItsmCreateTicketReq
+    ): Result<BKItsmCreateTicketRespData> {
         return Result(
             bkItsmService.createDirectTicket(
                 createReq = createReq,
