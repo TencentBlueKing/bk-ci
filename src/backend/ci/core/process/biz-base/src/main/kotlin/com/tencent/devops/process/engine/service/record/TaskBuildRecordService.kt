@@ -431,7 +431,7 @@ class TaskBuildRecordService(
                 // 自动重试时，retryCountAuto + 1
                 if (taskBuildEndParam.buildStatus == BuildStatus.RETRY) {
                     taskVar[Element::retryCountAuto.name] =
-                        (taskVar[Element::retryCountAuto.name] as Int?)?.plus(1) ?: 1
+                        (recordTask.taskVar[Element::retryCountAuto.name] as Int?)?.plus(1) ?: 1
                 }
                 recordTaskDao.updateRecord(
                     dslContext = context,
