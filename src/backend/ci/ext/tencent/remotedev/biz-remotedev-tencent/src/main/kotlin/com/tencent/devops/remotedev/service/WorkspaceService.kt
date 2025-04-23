@@ -1041,6 +1041,12 @@ class WorkspaceService @Autowired constructor(
                     params = arrayOf(workspace.hostIp ?: workspaceName)
                 )
             }
+            if (!cgsStatus.userInfos.isNullOrEmpty()) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_LOGGED_IN.errorCode,
+                    params = arrayOf(workspace.hostIp ?: workspaceName)
+                )
+            }
             return startCloudWorkspaceDetail(userId, workspace)
         }
         if (envId != null) {
