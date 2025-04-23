@@ -128,11 +128,12 @@ enum class WorkspaceStatus {
     /**
      * 当正在做某事时，不能新建任务去执行
      */
-    fun notOk2doNextAction() =
-        this == STARTING || this == SLEEPING || this == DELETING || this == STOPPING ||
-            this == RESTARTING || this == MAKING_IMAGE || this == REBUILDING || this == UPGRADING ||
-            this == CLONING || this == EXPANDING
-
+    fun notOk2doNextAction() = when(this) {
+        STARTING, SLEEPING, DELETING, STOPPING,
+        RESTARTING, MAKING_IMAGE, REBUILDING, UPGRADING,
+        CLONING, EXPANDING -> true
+        else -> false
+    }
     companion object {
         fun load(index: Int): WorkspaceStatus {
             if (index < 0 || index >= values().size) {
