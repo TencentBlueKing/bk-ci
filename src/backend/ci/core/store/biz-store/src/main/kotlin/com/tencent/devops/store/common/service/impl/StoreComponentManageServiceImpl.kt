@@ -56,6 +56,7 @@ import com.tencent.devops.store.common.dao.StoreBaseManageDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreLabelRelDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
+import com.tencent.devops.store.common.dao.StoreVersionLogDao
 import com.tencent.devops.store.common.handler.StoreDeleteCheckHandler
 import com.tencent.devops.store.common.handler.StoreDeleteCodeRepositoryHandler
 import com.tencent.devops.store.common.handler.StoreDeleteDataPersistHandler
@@ -150,6 +151,10 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
 
     @Autowired
     lateinit var redisOperation: RedisOperation
+
+    @Autowired
+    lateinit var storeVersionLogDao: StoreVersionLogDao
+
 
     companion object {
         private val logger = LoggerFactory.getLogger(StoreComponentManageServiceImpl::class.java)
@@ -551,35 +556,61 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         storePackageInfoReqs: List<StorePackageInfoReq>,
         storeType: StoreTypeEnum
     ): Boolean {
+        // todo目前因为需求紧急 先这样写 后期再通过策略＋工厂来优化
         val redisLock = RedisLock(
             redisOperation = redisOperation,
             lockKey = "store:$storeId:${storeType.name}",
             expiredTimeInSeconds = 10
         )
-        try {
-            redisLock.lock()
-            val size = getStoreCommonDao(storeType.name).getComponentVersionSizeInfo(dslContext, storeId)
-            if (size.isNullOrBlank()) {
+        when (storeType) {
+            StoreTypeEnum.ATOM -> {
+                try {
+                    redisLock.lock()
+                    val dao = getStoreCommonDao(storeType.name)
+                    val size = dao.getComponentVersionSizeInfo(dslContext, storeId)
+                    updateVersionInfo(size, storePackageInfoReqs, storeType) { updatedSize ->
+                        dao.updateComponentVersionInfo(dslContext, storeId, updatedSize)
+                    }
+                } finally {
+                    redisLock.unlock()
+                }
+            }
+
+            StoreTypeEnum.DEVX -> {
+                try {
+                    redisLock.lock()
+                    val size = storeVersionLogDao.getComponentVersionSizeInfo(dslContext, storeId)
+                    updateVersionInfo(size, storePackageInfoReqs, storeType) { updatedSize ->
+                        storeVersionLogDao.updateComponentVersionInfo(dslContext, storeId, updatedSize)
+                    }
+                } finally {
+                    redisLock.unlock()
+                }
+            }
+
+            else -> {
                 val pakSize = handleStorePkgSize(storePackageInfoReqs, storeType)
                 getStoreCommonDao(storeType.name).updateComponentVersionInfo(dslContext, storeId, pakSize)
-                return true
             }
-            if (storeType == StoreTypeEnum.ATOM) {
-                val atomPackageInfoList = JsonUtil.to(size, object : TypeReference<List<StorePackageInfoReq>>() {})
-                val mutableList = atomPackageInfoList.toMutableList()
-                mutableList.addAll(storePackageInfoReqs)
-                getStoreCommonDao(storeType.name).updateComponentVersionInfo(
-                    dslContext,
-                    storeId,
-                    JsonUtil.toJson(mutableList)
-                )
-            }
-
-        } finally {
-            redisLock.unlock()
         }
-
         return true
+    }
+
+    fun updateVersionInfo(
+        size: String?,
+        storePackageInfoReqs: List<StorePackageInfoReq>,
+        storeType: StoreTypeEnum,
+        updateFunction: (String) -> Unit
+    ) {
+        if (size.isNullOrBlank()) {
+            val pakSize = handleStorePkgSize(storePackageInfoReqs, storeType)
+            updateFunction(pakSize)
+        } else {
+            val atomPackageInfoList = JsonUtil.to(size, object : TypeReference<List<StorePackageInfoReq>>() {})
+            val mutableList = atomPackageInfoList.toMutableList()
+            mutableList.addAll(storePackageInfoReqs)
+            updateFunction(JsonUtil.toJson(mutableList))
+        }
     }
 
     private fun getStoreCommonDao(storeType: String): AbstractStoreCommonDao {
@@ -600,6 +631,10 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
             StoreTypeEnum.SERVICE -> {
                 return storePackageInfoReqs[0].size.toString()
 
+            }
+
+            StoreTypeEnum.DEVX -> {
+                return JsonUtil.toJson(storePackageInfoReqs)
             }
 
             else -> {

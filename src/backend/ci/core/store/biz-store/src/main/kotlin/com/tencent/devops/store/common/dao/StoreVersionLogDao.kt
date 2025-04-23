@@ -153,4 +153,17 @@ class StoreVersionLogDao {
             )
         return baseStep.fetchOne(0, Long::class.java) ?: 0L
     }
+
+    fun updateComponentVersionInfo(dslContext: DSLContext, storeId: String, pkgSize: String) {
+        val tsvl = TStoreVersionLog.T_STORE_VERSION_LOG
+        dslContext.update(tsvl).set(tsvl.PACKAGE_SIZE, pkgSize)
+            .where(tsvl.STORE_ID.eq(storeId)).execute()
+    }
+
+    fun getComponentVersionSizeInfo(dslContext: DSLContext, storeId: String): String? {
+        val tsvl = TStoreVersionLog.T_STORE_VERSION_LOG
+        return dslContext.select(tsvl.PACKAGE_SIZE).from(tsvl)
+            .where(tsvl.STORE_ID.eq(storeId)).orderBy(tsvl.CREATE_TIME.desc()).limit(1)
+            .fetchOne(0, String::class.java)
+    }
 }
