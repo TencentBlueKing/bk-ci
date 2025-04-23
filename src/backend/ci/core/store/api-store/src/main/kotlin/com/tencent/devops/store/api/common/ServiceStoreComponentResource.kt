@@ -269,7 +269,6 @@ interface ServiceStoreComponentResource {
         @PathParam("storeId")
         storeId: String,
         @Parameter(description = "组件版本包大小", required = true)
-        @QueryParam("storePackageInfoReqs")
         storePackageInfoReqs: List<StorePackageInfoReq>,
         @Parameter(description = "组件类型", required = true)
         @QueryParam("storeType")
