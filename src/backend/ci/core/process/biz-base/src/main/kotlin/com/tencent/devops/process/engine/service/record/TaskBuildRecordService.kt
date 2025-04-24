@@ -209,8 +209,9 @@ class TaskBuildRecordService(
                     buildId = buildId, taskId = taskId, executeCount = executeCount
                 )
                 // 由于此处task启动的情况同时包含的手动重试和自动重试，并且是互补的。所以可得计算公式[总执行次数-自动重试次数=手动重试次数]
-                taskVar[Element::retryCountManual.name] = (recordTask.taskVar[Element::retryCountManual.name] as Int?)
-                    ?.plus(1)
+                taskVar[Element::retryCount.name] = (recordTask.taskVar[Element::retryCount.name] as Int?)
+                    ?.plus(1) ?: 0
+                taskVar[Element::retryCountManual.name] = (taskVar[Element::retryCount.name] as Int?)
                     ?.minus(recordTask.taskVar[Element::retryCountAuto.name] as Int? ?: 0)
                     ?: 0
                 recordTaskDao.updateRecord(

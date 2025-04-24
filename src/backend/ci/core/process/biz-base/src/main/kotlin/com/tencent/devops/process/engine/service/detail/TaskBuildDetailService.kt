@@ -190,8 +190,8 @@ class TaskBuildDetailService(
                         }
                         // 由于此处task启动的情况同时包含的手动重试和自动重试，并且是互补的。
                         // 所以可得计算公式[总执行次数-自动重试次数=手动重试次数]
-                        e.retryCountManual = e.retryCountManual
-                            ?.plus(1)
+                        e.retryCount = e.retryCount?.plus(1) ?: 0
+                        e.retryCountManual = e.retryCount
                             ?.minus(e.retryCountAuto ?: 0)
                             ?: 0
                         if (e.startEpoch == null) { // 自动重试，startEpoch 不会为null，所以不需要查redis来确认
