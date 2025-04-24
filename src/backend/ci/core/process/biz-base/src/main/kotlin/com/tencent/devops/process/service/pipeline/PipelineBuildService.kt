@@ -246,7 +246,8 @@ class PipelineBuildService(
                     .params.map { it.id },
                 debug = debug ?: false,
                 versionName = resource.versionName,
-                yamlVersion = resource.yamlVersion
+                yamlVersion = resource.yamlVersion,
+                runningBuildTaskRetry = runningBuildTaskRetry
             )
 
             // 运行中的task重试走全新的处理逻辑
