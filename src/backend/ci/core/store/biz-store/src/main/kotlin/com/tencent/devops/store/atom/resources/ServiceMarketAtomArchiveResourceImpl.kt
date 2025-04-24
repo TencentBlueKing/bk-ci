@@ -98,11 +98,4 @@ class ServiceMarketAtomArchiveResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         return marketAtomArchiveService.updateAtomPkgInfo(userId, atomId, projectCode, atomPkgInfoUpdateRequest)
     }
-
-    override fun updateAtomsSizes(): Result<Boolean> {
-        ThreadPoolUtil.submitAction(actionTitle = "updateAtomsSizes", action = {
-            marketAtomArchiveService.updateAtomsSizes()
-        })
-        return Result(true)
-    }
 }

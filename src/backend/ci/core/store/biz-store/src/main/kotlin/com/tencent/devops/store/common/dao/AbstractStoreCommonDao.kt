@@ -105,4 +105,19 @@ abstract class AbstractStoreCommonDao {
         dslContext: DSLContext,
         storeId: String
     ): String?
+
+    abstract fun countComponent(dslContext: DSLContext,storeStatus: Byte): Long
+
+    abstract fun selectComponentIds(
+        dslContext: DSLContext,
+        offset: Long,
+        batchSize: Long
+    ): List<String>?
+
+    abstract fun selectComponentEnvInfoByStoreIds(
+        dslContext: DSLContext,
+        storeIds: List<String>
+    ): Result<out Record>?
+
+
 }

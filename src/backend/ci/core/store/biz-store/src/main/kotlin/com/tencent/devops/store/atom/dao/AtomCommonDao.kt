@@ -51,6 +51,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.jooq.Record4
 import org.jooq.Record5
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -227,6 +228,7 @@ class AtomCommonDao : AbstractStoreCommonDao() {
 
         return baseStep.fetch()
     }
+
     override fun countStoreComponentVersionLogs(dslContext: DSLContext, storeCode: String): Long {
 
         val atom = TAtom.T_ATOM
@@ -251,5 +253,30 @@ class AtomCommonDao : AbstractStoreCommonDao() {
         return dslContext.select(atomVersionLog.PACKAGE_SIZE).from(atomVersionLog)
             .where(atomVersionLog.ATOM_ID.eq(storeId)).orderBy(atomVersionLog.CREATE_TIME.desc()).limit(1)
             .fetchOne(0, String::class.java)
+    }
+
+    override fun countComponent(dslContext: DSLContext, storeStatus: Byte): Long {
+        with(TAtom.T_ATOM) {
+            return dslContext.selectCount().from(this).where(ATOM_STATUS.eq(storeStatus))
+                .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    override fun selectComponentIds(dslContext: DSLContext, offset: Long, batchSize: Long): List<String>? {
+        with(TAtom.T_ATOM) {
+            return dslContext.select(ID).from(this).where(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
+                .limit(offset, batchSize)
+                .fetch().into(String::class.java)
+        }
+    }
+
+    override fun selectComponentEnvInfoByStoreIds(
+        dslContext: DSLContext,
+        storeIds: List<String>
+    ): Result<Record4<String, String, String, String>>? {
+        with(TAtomEnvInfo.T_ATOM_ENV_INFO) {
+            return dslContext.select(ATOM_ID, PKG_PATH, OS_NAME, OS_ARCH).from(this)
+                .where(ATOM_ID.`in`(storeIds)).fetch()
+        }
     }
 }

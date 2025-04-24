@@ -89,4 +89,9 @@ interface StoreComponentManageService {
         storePackageInfoReqs: List<StorePackageInfoReq>,
         storeType: StoreTypeEnum
     ): Boolean
+
+    /**
+     * 批量更新组件版本包大小
+     */
+    fun batchUpdateComponentsVersionSize(storeType: StoreTypeEnum)
 }

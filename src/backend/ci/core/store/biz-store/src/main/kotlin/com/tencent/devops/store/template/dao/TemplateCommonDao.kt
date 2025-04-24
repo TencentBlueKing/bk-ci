@@ -182,4 +182,16 @@ class TemplateCommonDao : AbstractStoreCommonDao() {
     override fun getComponentVersionSizeInfo(dslContext: DSLContext, storeId: String): String? {
         TODO("Not yet implemented")
     }
+
+    override fun countComponent(dslContext: DSLContext, storeStatus: Byte): Long {
+        TODO("Not yet implemented")
+    }
+
+    override fun selectComponentIds(dslContext: DSLContext, offset: Long, batchSize: Long): List<String>? {
+        TODO("Not yet implemented")
+    }
+
+    override fun selectComponentEnvInfoByStoreIds(dslContext: DSLContext, storeIds: List<String>): Result<out Record>? {
+        TODO("Not yet implemented")
+    }
 }

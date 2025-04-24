@@ -27,7 +27,6 @@
 package com.tencent.devops.store.image.dao
 
 import com.tencent.devops.common.api.constant.KEY_VERSION
-import com.tencent.devops.model.store.tables.TAtomVersionLog
 import com.tencent.devops.model.store.tables.TImage
 import com.tencent.devops.model.store.tables.TImageFeature
 import com.tencent.devops.model.store.tables.TImageVersionLog
@@ -204,16 +203,27 @@ class ImageCommonDao : AbstractStoreCommonDao() {
     }
 
     override fun updateComponentVersionInfo(dslContext: DSLContext, storeId: String, pkgSize: String) {
-        TODO("Not yet implemented")
-//        val imageLog = TImageVersionLog.T_IMAGE_VERSION_LOG
-//        dslContext.update(imageLog).set(imageLog.PACKAGE_SIZE, pkgSize)
-//            .where(imageLog.IMAGE_ID.eq(storeId))
+        val imageLog = TImageVersionLog.T_IMAGE_VERSION_LOG
+        dslContext.update(imageLog).set(imageLog.PACKAGE_SIZE, pkgSize)
+            .where(imageLog.IMAGE_ID.eq(storeId))
     }
 
     override fun getComponentVersionSizeInfo(dslContext: DSLContext, storeId: String): String? {
         TODO("Not yet implemented")
-//        val imageLog = TImageVersionLog.T_ATOM_VERSION_LOG
-//        return dslContext.select(imageLog.PACKAGE_SIZE).from(imageLog)
-//            .where(imageLog.IMAGE_ID.eq(storeId)).orderBy(imageLog.CREATE_TIME.desc()).limit(1).fetchOne(0, String::class.java)
+    }
+
+    override fun countComponent(dslContext: DSLContext, storeStatus: Byte): Long {
+        with(TImage.T_IMAGE) {
+            return dslContext.selectCount().from(this).where(IMAGE_STATUS.eq(storeStatus))
+                .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    override fun selectComponentIds(dslContext: DSLContext, offset: Long, batchSize: Long): List<String>? {
+        TODO("Not yet implemented")
+    }
+
+    override fun selectComponentEnvInfoByStoreIds(dslContext: DSLContext, storeIds: List<String>): Result<out Record>? {
+        TODO("Not yet implemented")
     }
 }

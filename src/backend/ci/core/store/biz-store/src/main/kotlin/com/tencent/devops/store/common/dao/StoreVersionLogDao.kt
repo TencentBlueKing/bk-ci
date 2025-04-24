@@ -29,12 +29,15 @@ package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreBase
+import com.tencent.devops.model.store.tables.TStoreBaseEnv
 import com.tencent.devops.model.store.tables.TStoreVersionLog
 import com.tencent.devops.model.store.tables.records.TStoreVersionLogRecord
+import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import org.jooq.DSLContext
 import org.jooq.Record3
+import org.jooq.Record4
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -165,5 +168,31 @@ class StoreVersionLogDao {
         return dslContext.select(tsvl.PACKAGE_SIZE).from(tsvl)
             .where(tsvl.STORE_ID.eq(storeId)).orderBy(tsvl.CREATE_TIME.desc()).limit(1)
             .fetchOne(0, String::class.java)
+    }
+
+    fun countComponent(dslContext: DSLContext, storeStatus: Byte): Long {
+        with(TStoreBase.T_STORE_BASE) {
+            return dslContext.selectCount().from(this)
+                .where(STORE_TYPE.eq(storeStatus).and(STATUS.eq(AtomStatusEnum.RELEASED.name)))
+                .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun selectComponentEnvInfoByStoreIds(
+        dslContext: DSLContext,
+        storeIds: List<String>
+    ): Result<Record4<String, String, String, String>>? {
+        with(TStoreBaseEnv.T_STORE_BASE_ENV) {
+            return dslContext.select(STORE_ID, OS_NAME, OS_ARCH, PKG_PATH).from(this)
+                .where(STORE_ID.`in`(storeIds)).fetch()
+        }
+    }
+
+    fun selectComponentIds(dslContext: DSLContext, offset: Long, batchSize: Long): List<String>? {
+        with(TStoreBase.T_STORE_BASE) {
+            return dslContext.select(ID).from(this).where(STATUS.eq(AtomStatusEnum.RELEASED.name))
+                .limit(offset, batchSize)
+                .fetch().into(String::class.java)
+        }
     }
 }

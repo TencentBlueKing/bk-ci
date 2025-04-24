@@ -129,9 +129,4 @@ interface ServiceMarketAtomArchiveResource {
         @Parameter(description = "插件执行包相关信息修改请求报文体", required = true)
         atomPkgInfoUpdateRequest: AtomPkgInfoUpdateRequest
     ): Result<Boolean>
-
-    @Operation(summary = "批量更新存量插件包大小")
-    @PUT
-    @Path("/atoms/sizes/update")
-    fun updateAtomsSizes(): Result<Boolean>
 }

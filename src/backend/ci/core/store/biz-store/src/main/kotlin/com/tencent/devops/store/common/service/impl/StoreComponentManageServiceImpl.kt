@@ -27,7 +27,6 @@
 
 package com.tencent.devops.store.common.service.impl
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_FILE_SHA_CONTENT
@@ -35,15 +34,12 @@ import com.tencent.devops.common.api.constant.MESSAGE
 import com.tencent.devops.common.api.constant.STATUS
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
-import com.tencent.devops.store.common.dao.AbstractStoreCommonDao
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.ReasonRelDao
 import com.tencent.devops.store.common.dao.StoreBaseEnvExtManageDao
@@ -63,6 +59,7 @@ import com.tencent.devops.store.common.handler.StoreDeleteDataPersistHandler
 import com.tencent.devops.store.common.handler.StoreDeleteHandlerChain
 import com.tencent.devops.store.common.handler.StoreDeleteRepoFileHandler
 import com.tencent.devops.store.common.lock.StoreCodeLock
+import com.tencent.devops.store.common.service.AbstractStoreComponentPkgSizeHandleService
 import com.tencent.devops.store.common.service.StoreBaseInstallService
 import com.tencent.devops.store.common.service.StoreComponentManageService
 import com.tencent.devops.store.common.service.StoreManagementExtraService
@@ -556,90 +553,21 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         storePackageInfoReqs: List<StorePackageInfoReq>,
         storeType: StoreTypeEnum
     ): Boolean {
-        // todo目前因为需求紧急 先这样写 后期再通过策略＋工厂来优化
-        val redisLock = RedisLock(
-            redisOperation = redisOperation,
-            lockKey = "store:$storeId:${storeType.name}",
-            expiredTimeInSeconds = 10
+        return getStoreComponentPkgSizeHandleService(storeType.name).updateComponentVersionInfo(
+            storeId = storeId,
+            storePackageInfoReqs = storePackageInfoReqs,
+            storeType = storeType
         )
-        when (storeType) {
-            StoreTypeEnum.ATOM -> {
-                try {
-                    redisLock.lock()
-                    val dao = getStoreCommonDao(storeType.name)
-                    val size = dao.getComponentVersionSizeInfo(dslContext, storeId)
-                    updateVersionInfo(size, storePackageInfoReqs, storeType) { updatedSize ->
-                        dao.updateComponentVersionInfo(dslContext, storeId, updatedSize)
-                    }
-                } finally {
-                    redisLock.unlock()
-                }
-            }
-
-            StoreTypeEnum.DEVX -> {
-                try {
-                    redisLock.lock()
-                    val size = storeVersionLogDao.getComponentVersionSizeInfo(dslContext, storeId)
-                    updateVersionInfo(size, storePackageInfoReqs, storeType) { updatedSize ->
-                        storeVersionLogDao.updateComponentVersionInfo(dslContext, storeId, updatedSize)
-                    }
-                } finally {
-                    redisLock.unlock()
-                }
-            }
-
-            else -> {
-                val pakSize = handleStorePkgSize(storePackageInfoReqs, storeType)
-                getStoreCommonDao(storeType.name).updateComponentVersionInfo(dslContext, storeId, pakSize)
-            }
-        }
-        return true
     }
 
-    fun updateVersionInfo(
-        size: String?,
-        storePackageInfoReqs: List<StorePackageInfoReq>,
-        storeType: StoreTypeEnum,
-        updateFunction: (String) -> Unit
-    ) {
-        if (size.isNullOrBlank()) {
-            val pakSize = handleStorePkgSize(storePackageInfoReqs, storeType)
-            updateFunction(pakSize)
-        } else {
-            val atomPackageInfoList = JsonUtil.to(size, object : TypeReference<List<StorePackageInfoReq>>() {})
-            val mutableList = atomPackageInfoList.toMutableList()
-            mutableList.addAll(storePackageInfoReqs)
-            updateFunction(JsonUtil.toJson(mutableList))
-        }
+    override fun batchUpdateComponentsVersionSize(storeType: StoreTypeEnum) {
+        getStoreComponentPkgSizeHandleService(storeType.name).batchUpdateComponentsVersionSize()
     }
 
-    private fun getStoreCommonDao(storeType: String): AbstractStoreCommonDao {
-        return SpringContextUtil.getBean(AbstractStoreCommonDao::class.java, "${storeType}_COMMON_DAO")
-    }
-
-    private fun handleStorePkgSize(storePackageInfoReqs: List<StorePackageInfoReq>, storeType: StoreTypeEnum): String {
-        when (storeType) {
-
-            StoreTypeEnum.ATOM -> {
-                return JsonUtil.toJson(storePackageInfoReqs)
-            }
-
-            StoreTypeEnum.IMAGE -> {
-                return storePackageInfoReqs[0].size.toString()
-            }
-
-            StoreTypeEnum.SERVICE -> {
-                return storePackageInfoReqs[0].size.toString()
-
-            }
-
-            StoreTypeEnum.DEVX -> {
-                return JsonUtil.toJson(storePackageInfoReqs)
-            }
-
-            else -> {
-                throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
-            }
-        }
+    private fun getStoreComponentPkgSizeHandleService(storeType: String): AbstractStoreComponentPkgSizeHandleService {
+        return SpringContextUtil.getBean(
+            AbstractStoreComponentPkgSizeHandleService::class.java,
+            "${storeType}_PKG_SIZE_HANDLE_SERVICE"
+        )
     }
 }
