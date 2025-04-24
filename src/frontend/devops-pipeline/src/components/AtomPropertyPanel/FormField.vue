@@ -1,5 +1,6 @@
 <script>
     import NamingConventionTip from '@/components/namingConventionTip.vue'
+    import Logo from '@/components/Logo'
     export default {
         name: 'form-field',
         components: {
@@ -64,6 +65,10 @@
                 type: Boolean,
                 default: false
             },
+            isChange: {
+                type: Boolean,
+                default: false
+            },
             isDelete: {
                 type: Boolean,
                 default: false
@@ -71,6 +76,19 @@
             isNew: {
                 type: Boolean,
                 default: false
+            },
+            isRequiredParam: {
+                // 是否为入参
+                type: Boolean,
+                default: false
+            },
+            handleUseDefaultValue: {
+                type: Function,
+                default: () => () => {}
+            },
+            handleSetParmaRequired: {
+                type: Function,
+                default: () => () => {}
             }
         },
         computed: {
@@ -101,7 +119,7 @@
             const {
                 label, inline, required, $slots, isError, errorMsg, hideColon, desc, docsLink,
                 descLink, descLinkText, type, widthStyle, bottomDivider, customDesc, showOperateBtn,
-                statusTagConfig, isDelete
+                statusTagConfig, isDelete, isChange, isRequiredParam, $t, handleSetParmaRequired, handleUseDefaultValue
             } = this
             const descMap = desc.split('\n')
             return (
@@ -147,12 +165,41 @@
                                 {statusTagConfig.message}
                             </span>
                         }
-                        {
-                            showOperateBtn && !isDelete && <span class='operate-btn'>
-                                
-                            </span>
-                        }
                     </label> }
+                    {
+                        showOperateBtn && !isDelete && <span
+                            class='operate-btn'
+                        >
+                            {
+                                isChange && (
+                                    <span class={['icon-item', {
+                                            'show-dot': isChange
+                                        }]}
+                                        onClick={handleUseDefaultValue}
+                                        v-bk-tooltips={$t('template.useDefaultValue')}
+                                    >
+                                        <Logo
+                                            name="use-default"
+                                            size="14"
+                                        />
+                                    </span>
+                                )
+                            }
+                            <span class={['icon-item', {
+                                    active: isRequiredParam
+                                }]}
+                                v-bk-tooltips={
+                                    isRequiredParam ? $t('template.cancelParticipant') : $t('template.setParticipant')
+                                }
+                                onClick={handleSetParmaRequired}
+                            >
+                                <Logo
+                                    name="set-param"
+                                    size="14"
+                                />
+                            </span>
+                        </span>
+                    }
                     
                     <div class='bk-form-content'>
                         {$slots.default}
@@ -184,7 +231,6 @@
             pointer-events: auto;
         }
         .atom-form-label {
-            width: 100% !important;
             .deleted {
                 color: #a7a9ac !important;
                 text-decoration: line-through;
@@ -249,8 +295,37 @@
         }
     }
     .operate-btn {
+        display: flex;
+        justify-content: end;
+        align-items: center;
         visibility: hidden;
-        position: absolute;
-        right: 0;
+        height: 32px;
+        .icon-item {
+            position: relative;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            width: 24px;
+            height: 24px;
+            background: #EAEBF0;
+            border-radius: 2px;
+            margin-left: 6px;
+            cursor: pointer;
+            &.active {
+                background: #CDDFFE;
+            }
+        }
+        .show-dot {
+            &::after {
+                content: '';
+                position: absolute;
+                top: -2px;
+                right: -2px;
+                width: 5px;
+                height: 5px;
+                background: red;
+                border-radius: 50%;
+            }
+        }
     }
 </style>

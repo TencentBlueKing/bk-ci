@@ -27,12 +27,12 @@ import {
 export default {
     [SET_INSTANCE_LIST]: (state, list) => {
         Vue.set(state, 'instanceList', list)
-        state.initialInstanceList = deepClone(list) // 使用深拷贝
+        Vue.set(state, 'initialInstanceList', deepClone(list))
     },
     [UPDATE_INSTANCE_LIST]: (state, { index, value }) => {
-        const list = state.instanceList
-        list[index] = value
-        Vue.set(state, 'instanceList', list)
+        const newList = state.instanceList.map(i => JSON.parse(JSON.stringify(i)))
+        newList[index] = JSON.parse(JSON.stringify(value))
+        Vue.set(state, 'instanceList', newList)
     },
     [UPDATE_USE_TEMPLATE_SETTING]: (state, value) => {
         Vue.set(state, 'useTemplateSettings', value)

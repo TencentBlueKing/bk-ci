@@ -1,184 +1,206 @@
 <template>
     <section
-        class="instance-config-constant"
+        class="instance-config-wrapper"
         v-bkloading="{ isLoading }"
     >
-        <header class="config-header">
-            <div class="left">
-                {{ $t('template.instanceConfig') }}
-                <span class="line">|</span>
-                <span class="instance-name">{{ curInstance?.pipelineName }}</span>
-            </div>
+        <section class="instance-config-constant">
+            <header class="config-header">
+                <div class="left">
+                    {{ $t('template.instanceConfig') }}
+                    <span class="line">|</span>
+                    <span class="instance-name">{{ curInstance?.pipelineName }}</span>
+                </div>
+                <div
+                    class="right"
+                    v-if="!isInstanceCreateType && !!curTemplateVersion"
+                >
+                    <ul class="params-compare-content">
+                        <bk-checkbox
+                            class="hide-params-btn"
+                            v-if="compareParamsNum.deleted"
+                            v-model="hideDeleted"
+                        >
+                            {{ $t('template.hideDeletedParam') }}
+                        </bk-checkbox>
+                        <li
+                            v-for="item in renderCompareParamsNum"
+                            :key="item.key"
+                            class="num-item"
+                        >
+                            <span :class="['status-icon', item.class]"></span>
+                            <span> {{ item.label }}</span>
+                            <span :class="['status-value', item.class]">
+                                {{ item.value }}
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </header>
             <div
-                class="right"
-                v-if="!isInstanceCreateType"
+                class="config-content"
+                :key="activeIndex"
             >
-                <ul class="params-compare-content">
-                    <bk-checkbox
-                        class="hide-params-btn"
-                        v-if="compareParamsNum.deleted"
-                        v-model="hideDeleted"
-                    >
-                        {{ $t('template.hideDeletedParam') }}
-                    </bk-checkbox>
-                    <li
-                        v-for="item in renderCompareParamsNum"
-                        :key="item.key"
-                        class="num-item"
-                    >
-                        <span :class="['status-icon', item.class]"></span>
-                        <span> {{ item.label }}</span>
-                        <span :class="['status-value', item.class]">
-                            {{ item.value }}
-                        </span>
-                    </li>
-                </ul>
-            </div>
-        </header>
-        <div
-            class="config-content"
-            :key="activeIndex"
-        >
-            <template>
-                <section class="params-content-item">
-                    <header
-                        :class="['params-collapse-trigger', {
-                            'params-collapse-expand': activeName.has(1)
-                        }]"
-                        @click="toggleCollapse(1)"
-                    >
-                        <bk-icon
-                            type="right-shape"
-                            class="icon-angle-right"
-                        />
-
-                        {{ $t('template.pipelineBuildParams') }}
-                    </header>
-                    <div
-                        v-if="activeName.has(1)"
-                        class="params-collapse-content"
-                    >
-                        <pipeline-params-form
-                            v-if="hasPipelineParams"
-                            ref="paramsForm"
-                            :param-values="paramsValues"
-                            :handle-param-change="handleParamChange"
-                            :params="paramsList"
-                            sort-category
-                            show-operate-btn
-                            :hide-deleted="hideDeleted"
+                <template>
+                    <section class="params-content-item">
+                        <header
+                            :class="['params-collapse-trigger', {
+                                'params-collapse-expand': activeName.has(1)
+                            }]"
+                            @click="toggleCollapse(1)"
                         >
-                            <template
-                                slot="versionParams"
-                                v-if="isVisibleVersion"
+                            <bk-icon
+                                type="right-shape"
+                                class="icon-angle-right"
+                            />
+    
+                            {{ $t('template.pipelineBuildParams') }}
+                        </header>
+                        <div
+                            v-if="activeName.has(1)"
+                            class="params-collapse-content"
+                        >
+                            <pipeline-params-form
+                                v-if="hasPipelineParams"
+                                ref="paramsForm"
+                                :param-values="paramsValues"
+                                :handle-param-change="handleParamChange"
+                                :params="paramsList"
+                                sort-category
+                                show-operate-btn
+                                :hide-deleted="hideDeleted"
+                                :handle-use-default-value="handleUseDefaultValue"
+                                :handle-set-parma-required="handleSetParmaRequired"
                             >
-                                <renderSortCategoryParams
-                                    :name="$t('preview.introVersion')"
+                                <template
+                                    slot="versionParams"
+                                    v-if="isVisibleVersion && !hideDeletedVersionParams"
                                 >
-                                    <template slot="content">
-                                        <pipeline-versions-form
-                                            class="mb20"
-                                            ref="versionParamForm"
-                                            :build-no="buildNo"
-                                            is-preview
-                                            :version-param-values="versionParamValues"
-                                            :handle-version-change="handleVersionChange"
-                                            :handle-build-no-change="handleBuildNoChange"
-                                            :version-param-list="versionParams"
-                                        />
-                                    </template>
-                                </renderSortCategoryParams>
-                            </template>
-                        </pipeline-params-form>
-                        <bk-exception
-                            v-else
-                            type="empty"
-                            scene="part"
-                        >
-                            {{ $t('noParams') }}
-                        </bk-exception>
-                    </div>
-                </section>
-            </template>
-
-            <template v-if="constantParams.length > 0">
-                <section class="params-content-item">
-                    <header
-                        :class="['params-collapse-trigger', {
-                            'params-collapse-expand': activeName.has(2)
-                        }]"
-                        @click="toggleCollapse(2)"
-                    >
-                        <bk-icon
-                            type="right-shape"
-                            class="icon-angle-right"
-                        />
-                        {{ $t('newui.const') }}
-                    </header>
-                    <div
-                        v-if="activeName.has(2)"
-                        class="params-collapse-content"
-                    >
-                        <pipeline-params-form
-                            ref="constParamsForm"
-                            disabled
-                            :param-values="constantValues"
-                            :params="constantParams"
-                            sort-category
-                            :hide-deleted="hideDeleted"
-                        />
-                    </div>
-                </section>
-            </template>
-
-            <template v-if="hasOtherParams">
-                <section class="params-content-item">
-                    <header
-                        :class="['params-collapse-trigger', {
-                            'params-collapse-expand': activeName.has(3)
-                        }]"
-                        @click="toggleCollapse(3)"
-                    >
-                        <bk-icon
-                            type="right-shape"
-                            class="icon-angle-right"
-                        />
-
-                        {{ $t('newui.pipelineParam.otherVar') }}
-                    </header>
-                    <div
-                        v-if="activeName.has(3)"
-                        class="params-collapse-content"
-                    >
-                        <pipeline-params-form
-                            ref="otherParamsForm"
-                            disabled
-                            :param-values="otherValues"
-                            :params="otherParams"
-                            sort-category
-                            :hide-deleted="hideDeleted"
-                        >
-                            <template
-                                slot="versionParams"
-                                v-if="!isVisibleVersion && versionParams.length"
+                                    <renderSortCategoryParams
+                                        :name="$t('preview.introVersion')"
+                                    >
+                                        <template slot="content">
+                                            <pipeline-versions-form
+                                                class="mb20"
+                                                ref="versionParamForm"
+                                                :build-no="buildNo"
+                                                is-preview
+                                                :version-param-values="versionParamValues"
+                                                :handle-version-change="handleVersionChange"
+                                                :handle-build-no-change="handleBuildNoChange"
+                                                :version-param-list="versionParams"
+                                            />
+                                        </template>
+                                    </renderSortCategoryParams>
+                                </template>
+                            </pipeline-params-form>
+                            <bk-exception
+                                v-else
+                                type="empty"
+                                scene="part"
                             >
-                                <pipeline-versions-form
-                                    class="mb20"
-                                    ref="versionParamForm"
-                                    :build-no="buildNo"
-                                    is-preview
-                                    disabled
-                                    :version-param-values="versionParamValues"
-                                    :handle-version-change="handleVersionChange"
-                                    :handle-build-no-change="handleBuildNoChange"
-                                    :version-param-list="versionParams"
-                                />
-                            </template>
-                        </pipeline-params-form>
-                    </div>
-                </section>
-            </template>
-        </div>
+                                {{ $t('noParams') }}
+                            </bk-exception>
+                        </div>
+                    </section>
+                </template>
+    
+                <template v-if="constantParams.length > 0">
+                    <section class="params-content-item">
+                        <header
+                            :class="['params-collapse-trigger', {
+                                'params-collapse-expand': activeName.has(2)
+                            }]"
+                            @click="toggleCollapse(2)"
+                        >
+                            <bk-icon
+                                type="right-shape"
+                                class="icon-angle-right"
+                            />
+                            {{ $t('newui.const') }}
+                        </header>
+                        <div
+                            v-if="activeName.has(2)"
+                            class="params-collapse-content"
+                        >
+                            <pipeline-params-form
+                                ref="constParamsForm"
+                                disabled
+                                :param-values="constantValues"
+                                :params="constantParams"
+                                sort-category
+                                :hide-deleted="hideDeleted"
+                            />
+                        </div>
+                    </section>
+                </template>
+    
+                <template v-if="hasOtherParams">
+                    <section class="params-content-item">
+                        <header
+                            :class="['params-collapse-trigger', {
+                                'params-collapse-expand': activeName.has(3)
+                            }]"
+                            @click="toggleCollapse(3)"
+                        >
+                            <bk-icon
+                                type="right-shape"
+                                class="icon-angle-right"
+                            />
+    
+                            {{ $t('newui.pipelineParam.otherVar') }}
+                        </header>
+                        <div
+                            v-if="activeName.has(3)"
+                            class="params-collapse-content"
+                        >
+                            <pipeline-params-form
+                                ref="otherParamsForm"
+                                disabled
+                                :param-values="otherValues"
+                                :params="otherParams"
+                                sort-category
+                                :hide-deleted="hideDeleted"
+                            >
+                                <template
+                                    slot="versionParams"
+                                    v-if="!isVisibleVersion && versionParams.length"
+                                >
+                                    <renderSortCategoryParams
+                                        :name="$t('preview.introVersion')"
+                                        default-layout
+                                    >
+                                        <template slot="content">
+                                            <pipeline-versions-form
+                                                class="mb20"
+                                                ref="versionParamForm"
+                                                :build-no="buildNo"
+                                                is-preview
+                                                disabled
+                                                :version-param-values="versionParamValues"
+                                                :handle-version-change="handleVersionChange"
+                                                instance
+                                                :handle-build-no-change="handleBuildNoChange"
+                                                :version-param-list="versionParams"
+                                            />
+                                        </template>
+                                    </renderSortCategoryParams>
+                                </template>
+                            </pipeline-params-form>
+                        </div>
+                    </section>
+                </template>
+            </div>
+        </section>
+        <footer
+            v-if="!isLoading"
+            class="config-footer"
+        >
+            <bk-button
+                @click="handleResetInstance"
+            >
+                {{ $t('template.reset') }}
+            </bk-button>
+        </footer>
     </section>
 </template>
 
@@ -212,30 +234,61 @@
     const versionParamValues = ref({})
     const buildNo = ref({})
     const hideDeleted = ref(false)
-    const compareParamsNum = ref({})
     const instanceList = computed(() => proxy.$store?.state?.templates?.instanceList)
     const initialInstanceList = computed(() => proxy.$store?.state?.templates?.initialInstanceList)
     const activeIndex = computed(() => proxy.$route?.query?.index)
     // curTemplate 当前选中的某一个版本的模板数据
-    // templateVersion 选中的模板版本
+    // templateVersion 选中的模板版本号
     const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
     const curTemplateVersion = computed(() => proxy.$store?.state?.templates?.templateVersion)
     const curInstance = computed(() => {
         const instance = instanceList.value.find((i, index) => index === activeIndex.value - 1)
-        // 如果选择了模板版本，将模板版本数据与当前实例进行比对
-        let instanceParams
-        if (instance && instance?.param && curTemplateVersion.value && curTemplateDetail.value?.params && !props.isInstanceCreateType) {
-            const res = compareParams(instance.param, curTemplateDetail.value.params)
-            instanceParams = res.instanceParams
-            compareParamsNum.value = res.result
+        if (instance?.param) {
+            instance.param = instance.param.map(p => {
+                return {
+                    ...p,
+                    readOnlyCheck: false // 取消只读参数的禁用逻辑
+                }
+            })
         }
-        if (instanceParams) {
+        // 更新实例：如果选择了模板版本，将模板版本数据与当前实例进行比对
+        let instanceParams, instanceBuildNo
+        if (!props.isInstanceCreateType && instance) {
+            if (instance?.param && curTemplateVersion.value && curTemplateDetail.value?.params) {
+                instanceParams = compareParams(instance, curTemplateDetail.value)
+            }
+            if (instance?.buildNo && curTemplateVersion.value && curTemplateDetail.value?.buildNo) {
+                instanceBuildNo = compareBuild(instance.buildNo, curTemplateDetail.value.buildNo)
+            }
+        }
+        if (instanceParams || instanceBuildNo) {
             return {
                 ...instance,
-                param: instanceParams
+                param: instanceParams ?? instance.param,
+                buildNo: instanceBuildNo ?? instance.buildNo
             }
         }
         return instance
+    })
+    const compareParamsNum = computed(() => {
+        const counts = {
+            changed: 0,
+            added: 0,
+            deleted: 0
+        }
+        curInstance?.value.param?.forEach(item => {
+            if (item.isChange) {
+                counts.changed++
+            }
+            if (item.isNew) {
+                counts.added++
+            }
+            if (item.isDelete) {
+                counts.deleted++
+            }
+        })
+
+        return counts
     })
     const renderCompareParamsNum = computed(() => {
         const itemMap = {
@@ -261,7 +314,12 @@
             }
         })
     })
-    const isVisibleVersion = computed(() => buildNo.value?.required ?? false)
+    const hideDeletedVersionParams = computed(() => {
+        return !hideDeleted.value && versionParams.value.every(i => i.isDelete)
+    })
+    const isVisibleVersion = computed(() => {
+        return buildNo.value?.required
+    })
     const hasOtherParams = computed(() => {
         if (isVisibleVersion.value) {
             return [...otherParams.value, ...versionParams.value].length
@@ -288,14 +346,31 @@
         isLoading.value = true
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, initialInstanceList.value)
     })
-    function compareParams (instanceParams, templateParams) {
-        const result = {
-            changed: 0,
-            added: 0,
-            deleted: 0
+    function compareParams (instance, template) {
+        const instanceParams = instance.param
+        const templateParams = template.params
+        const instanceBuildNo = instance.buildNo
+        const templateBuildNo = template.buildNo
+
+        // 非入参的参数直接赋值模板配置的入参默认值
+        if (instanceBuildNo.required && !templateBuildNo.required) {
+            instanceParams.forEach(i => {
+                if (allVersionKeyList.includes(i.id)) {
+                    const newValue = templateParams.find(t => t.id === i.id)?.defaultValue
+                    i.defaultValue = newValue ?? i.defaultValue
+                }
+            })
         }
+
+        instanceParams.forEach(i => {
+            if (i.constant || !i.required) {
+                const newValue = templateParams.find(t => t.id === i.id)?.defaultValue
+                i.defaultValue = newValue ?? i.defaultValue
+            }
+        })
+
         const templateParamsMap = templateParams.reduce((acc, item) => {
-            acc[item.id] = item // 按 id 进行映射
+            acc[item.id] = item
             return acc
         }, {})
         for (const item of instanceParams) {
@@ -304,13 +379,9 @@
             if (!templateParamItem) {
                 // 在 instanceParams 中存在，但在 templateParams 中不存在，标记为isDelete
                 item.isDelete = true
-                result.deleted += 1
             } else {
                 // 对比 defaultValue, 如果不同则标记为isChange
                 item.isChange = item.defaultValue !== templateParamItem.defaultValue
-                if (item.defaultValue !== templateParamItem.defaultValue) {
-                    result.changed += 1
-                }
             }
         }
 
@@ -321,23 +392,49 @@
                 // 在 templateParams 中存在，但在 instanceParams 中不存在，标记为新增
                 const newItem = { ...item, isNew: true }
                 instanceParams.push(newItem) // 将新字段添加到 instanceParams
-                result.added += 1
             }
         }
         
-        return {
-            instanceParams,
-            result
-        }
+        return instanceParams
     }
-    function handleParamChange (id, value) {
-        curInstance.value.param.forEach(i => {
-            if (i.id === id) i.defaultValue = value
-        })
+    function compareBuild (instanceBuildNo, templateBuildNo) {
+        // 如果模板推荐版本号required为false(非入参)
+        // 实例推荐版本号required为true(入参)
+        // 将模板的推荐版本号配置覆盖实例推荐版本号
+        if (instanceBuildNo.required && !templateBuildNo.required) {
+            return {
+                ...instanceBuildNo,
+                ...templateBuildNo
+            }
+        }
+        
+        return instanceBuildNo
+    }
+    function updateInstanceList () {
         proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
             index: activeIndex.value - 1,
             value: curInstance.value
         })
+    }
+    function handleSetParmaRequired (id) {
+        curInstance.value?.param?.forEach(i => {
+            if (i.id === id) i.isRequiredParam = !i.isRequiredParam
+        })
+        updateInstanceList()
+    }
+    
+    function handleUseDefaultValue (id) {
+        const defaultValue = curTemplateDetail.value?.params?.find(i => i.id === id)?.defaultValue
+        curInstance.value.param.forEach(i => {
+            if (i.id === id) i.defaultValue = defaultValue
+        })
+        updateInstanceList()
+    }
+    function handleParamChange (id, value) {
+        curInstance.value?.param?.forEach(i => {
+            if (i.id === id) i.defaultValue = value
+        })
+        updateInstanceList()
     }
     function toggleCollapse (id) {
         if (activeName.value.has(id)) {
@@ -352,6 +449,15 @@
         versionParamValues.value = getParamsValuesMap(versionParams.value, key)
         constantValues.value = getParamsValuesMap(constantParams.value, key)
         otherValues.value = getParamsValuesMap(otherParams.value, key)
+    }
+
+    function handleResetInstance () {
+        const instanceIndex = activeIndex.value - 1
+        curInstance.value = initialInstanceList.value[instanceIndex]
+        proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
+            index: instanceIndex,
+            value: initialInstanceList.value[instanceIndex]
+        })
     }
     function initData () {
         const params = curInstance.value?.param
@@ -390,11 +496,14 @@
 
 <style lang="scss">
     $header-height: 36px;
-
+    .instance-config-wrapper {
+        height: calc(100% - 148px);
+    }
     .instance-config-constant {
-        height: calc(100% - 100px);
+        height: 100%;
         overflow: auto;
         padding: 20px;
+        margin-bottom: 48px;
         .config-header {
             display: flex;
             align-items: center;
@@ -505,5 +614,15 @@
                 }
             }
         }
+    }
+    .config-footer {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        height: 48px;
+        line-height: 48px;
+        padding: 0 20px;
+        background: #FFFFFF;
+        border: 1px solid #DCDEE5;
     }
 </style>

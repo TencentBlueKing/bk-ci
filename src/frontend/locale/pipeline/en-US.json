@@ -494,7 +494,7 @@
     "uploadTemplateYamlTips": "Please upload the template YAML file",
     "templateCoverWarning": "Draft Overwrite Warning",
     "batchUpgrade": "Batch Upgrade",
-    "jumpToViewDetails": "Jump to view details",
+    "viewDetails": "Details",
     "upgradedVersion": "Upgraded version",
     "selectPipelineNum": "{0} pipeline selected",
     "batchEdit": "Batch Edit",
@@ -534,7 +534,11 @@
     "instance": "Instances",
     "updatePipelineInstance": "Update Pipeline Instance",
     "templateCoverWarningDesc": "The draft edited by {0} (created from {2}) has not been published yet. Editing the branch version will overwrite the unpublished draft. Please confirm if you want to continue.",
-    "templateOutDateCoverWarningDesc": "A new dev branch version has been submitted to the code repository. The draft edited by {0} (created from {2} on {1}) has expired. This operation will overwrite the expired draft. Please confirm whether to continue"
+    "templateOutDateCoverWarningDesc": "A new dev branch version has been submitted to the code repository. The draft edited by {0} (created from {2} on {1}) has expired. This operation will overwrite the expired draft. Please confirm whether to continue",
+    "reset": "Reset",
+    "cancelParticipant": "Cancel Participant",
+    "setParticipant": "Set Participant",
+    "useDefaultValue": "Use Default Value"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",

@@ -5,8 +5,12 @@
     >
         <bk-form-item>
             <label class="pipeline-execute-version-label">
-                <span>{{ $t('versionNum') }}</span>
+                <span :class="{ 'deleted': isDelete }">{{ $t('versionNum') }}</span>
                 <span class="desc-text">{{ $t('mainMinorPatch') }}</span>
+             
+                <span :class="['status-tag', statusTagConfig.theme]">
+                    {{ statusTagConfig.message }}
+                </span>
             </label>
             <div class="execute-build-version">
                 <span
@@ -274,6 +278,28 @@
             },
             isPreviewAndLockedNo () {
                 return (this.isLockedNo && this.isPreview) || this.disabled
+            },
+            isDelete () {
+                return this.versionParamList.every(i => i?.isDelete)
+            },
+            isNew () {
+                return this.versionParamList.every(i => i?.isNew)
+            },
+            statusTagConfig () {
+                let message, theme
+                if (this.isDelete) {
+                    message = this.$t('deleted')
+                    theme = 'danger'
+                }
+                if (this.isNew) {
+                    message = this.$t('new')
+                    theme = 'success'
+                }
+                return {
+                    message,
+                    theme,
+                    isShow: this.isDelete || this.isNew
+                }
             }
         }
     }
@@ -290,7 +316,10 @@
         align-items: center;
         font-size: 12px;
         font-weight: 700;
-
+        .deleted {
+            color: #a7a9ac !important;
+            text-decoration: line-through;
+        }
         .desc-text {
             font-weight: normal;
             color: #979ba5;
@@ -299,6 +328,23 @@
         .instance_reset {
             font-weight: normal;
             margin-left: 18px;
+        }
+        .status-tag {
+            padding: 0 8px;
+            border-radius: 2px;
+            margin-right: 40px;
+            font-size: 12px;
+            height: 16px;
+            line-height: 16px;
+            font-weight: 400;
+            &.success {
+                color: #299E56;
+                background: #DAF6E5;
+            }
+            &.danger {
+                color: #E71818;
+                background: #FFEBEB;
+            }
         }
     }
 

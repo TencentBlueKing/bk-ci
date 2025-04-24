@@ -56,6 +56,7 @@
                         ext-cls="instance-contents-empty"
                         slot="main"
                         type="empty"
+                        scene="part"
                     >
                         {{ $t('template.pleaseSelectTemplateVersion') }}
                     </bk-exception>
@@ -115,7 +116,6 @@
 
     function handleBatchUpgrade () {
         showRelease.value = true
-        console.log(instanceList.value, 11111)
     }
     function handleGoBack () {
         proxy.$router.push({
@@ -156,7 +156,7 @@
         height: 100%;
     }
     .instance-contents-empty {
-        margin-top: 10%;
+        margin-top: 15%;
     }
     .instance-entry-aside {
         margin-right: 24px;

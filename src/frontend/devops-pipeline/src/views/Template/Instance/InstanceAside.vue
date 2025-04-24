@@ -19,15 +19,16 @@
                     {{ renderInstanceList.length }}
                 </span>
             </i18n>
-            <div class="batch-edit-btn">
+            <div
+                v-if="renderInstanceList.length"
+                class="batch-edit-btn"
+            >
                 <Logo
-                    name="edit"
+                    name="batch-edit"
                     size="14"
                     style="fill:#3c96ff;position:relative;top:2px;"
                 />
-                <span
-                    v-if="renderInstanceList.length"
-                >
+                <span>
                     {{ $t('template.batchEdit') }}
                 </span>
             </div>
@@ -171,6 +172,11 @@
                     ...i,
                     ...res[i.pipelineId]
                 }
+            })
+            list.forEach(item => {
+                item.param.forEach(p => {
+                    proxy.$set(p, 'isRequiredParam', p.required)
+                })
             })
             proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, list)
         } catch (e) {

@@ -496,7 +496,7 @@
     "stepTemplate": "Step模板",
     "templateCoverWarning": "草稿即将覆盖警告",
     "batchUpgrade": "批量升级",
-    "jumpToViewDetails": "跳转查看详情",
+    "viewDetails": "查看详情",
     "upgradedVersion": "升级版本",
     "selectPipelineNum": "已选择{0}条流水线",
     "batchEdit": "批量编辑",
@@ -536,7 +536,11 @@
     "instance": "实例",
     "updatePipelineInstance": "更新流水线实例",
     "templateCoverWarningDesc": "{0} 编辑的草稿（从{2}创建）尚未发布。编辑分支版本将覆盖尚未发布的草稿，请确认是否继续",
-    "templateOutDateCoverWarningDesc": "已从代码库提交了新的 {2} 分支版本， {0} 编辑的草稿（于 {1} 从 {2} 创建）已过期，此操作将覆盖过期的草稿，请确认是否继续"
+    "templateOutDateCoverWarningDesc": "已从代码库提交了新的 {2} 分支版本， {0} 编辑的草稿（于 {1} 从 {2} 创建）已过期，此操作将覆盖过期的草稿，请确认是否继续",
+    "reset": "重置",
+    "cancelParticipant": "取消入参",
+    "setParticipant": "设为入参",
+    "useDefaultValue": "使用默认值"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",
