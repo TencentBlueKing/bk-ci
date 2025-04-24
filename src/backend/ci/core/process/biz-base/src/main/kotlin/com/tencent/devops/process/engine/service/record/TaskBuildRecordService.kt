@@ -208,6 +208,8 @@ class TaskBuildRecordService(
                     dslContext = context, projectId = projectId, pipelineId = pipelineId,
                     buildId = buildId, taskId = taskId, executeCount = executeCount
                 )
+                taskVar[Element::retryCountManual.name] =
+                    (recordTask.taskVar[Element::retryCountManual.name] as Int?)?.plus(1) ?: 0
                 recordTaskDao.updateRecord(
                     dslContext = context,
                     projectId = projectId,

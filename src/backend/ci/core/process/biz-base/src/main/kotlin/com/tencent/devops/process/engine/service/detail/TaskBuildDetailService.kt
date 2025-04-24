@@ -52,9 +52,9 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList", "MagicNumber", "ReturnCount", "TooManyFunctions", "ComplexCondition")
 @Service
@@ -188,7 +188,7 @@ class TaskBuildDetailService(
                             c.status = BuildStatus.RUNNING.name
                             e.status = BuildStatus.RUNNING.name
                         }
-
+                        e.retryCountManual = e.retryCountManual?.plus(1) ?: 0
                         if (e.startEpoch == null) { // 自动重试，startEpoch 不会为null，所以不需要查redis来确认
                             val currentTimeMillis = System.currentTimeMillis()
                             e.startEpoch = currentTimeMillis
@@ -282,9 +282,11 @@ class TaskBuildDetailService(
                                 is MarketBuildAtomElement -> {
                                     e.version = atomVersion
                                 }
+
                                 is MarketBuildLessAtomElement -> {
                                     e.version = atomVersion
                                 }
+
                                 else -> {
                                     e.version = INIT_VERSION
                                 }
@@ -370,6 +372,7 @@ class TaskBuildDetailService(
                     updateTaskStatusInfos = updateTaskStatusInfos
                 )
             }
+
             buildStatus.isCancel() -> {
                 return handleCancelTaskNormal(
                     tmpElement = tmpElement,
@@ -381,6 +384,7 @@ class TaskBuildDetailService(
                     updateTaskStatusInfos = updateTaskStatusInfos
                 )
             }
+
             buildStatus.isSkip() -> {
                 updateTaskStatusInfos?.add(
                     PipelineTaskStatusInfo(

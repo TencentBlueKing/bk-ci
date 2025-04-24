@@ -344,7 +344,7 @@ class PipelineContextService @Autowired constructor(
                 contextMap["step.status"] = statusStr
                 e.status?.let { contextMap["step.outcome"] = it }
                 contextMap["step.atom_version"] = e.version
-                e.executeCount.takeIf { it > 1 }?.let { contextMap["step.retry-count-manual"] = (it - 1).toString() }
+                e.retryCountManual?.takeIf { it > 0 }?.let { contextMap["step.retry-count-manual"] = it.toString() }
                 e.retryCountAuto?.let { contextMap["step.retry-count-auto"] = it.toString() }
                 contextMap["step.atom_code"] = e.getAtomCode()
             }
@@ -355,8 +355,8 @@ class PipelineContextService @Autowired constructor(
                 e.id?.let { contextMap["steps.$stepId.id"] = it }
                 contextMap["steps.$stepId.status"] = statusStr
                 e.status?.let { contextMap["steps.$stepId.outcome"] = it }
-                e.executeCount.takeIf { it > 1 }?.let {
-                    contextMap["steps.$stepId.retry-count-manual"] = (it - 1).toString()
+                e.retryCountManual?.takeIf { it > 0 }?.let {
+                    contextMap["steps.$stepId.retry-count-manual"] = it.toString()
                 }
                 e.retryCountAuto?.let { contextMap["steps.$stepId.retry-count-auto"] = it.toString() }
             }
@@ -365,8 +365,8 @@ class PipelineContextService @Autowired constructor(
             e.id?.let { contextMap["jobs.$jobId.steps.$stepId.id"] = it }
             contextMap["jobs.$jobId.steps.$stepId.status"] = statusStr
             e.status?.let { contextMap["jobs.$jobId.steps.$stepId.outcome"] = it }
-            e.executeCount.takeIf { it > 1 }?.let {
-                contextMap["jobs.$jobId.steps.$stepId.retry-count-manual"] = (it - 1).toString()
+            e.retryCountManual?.takeIf { it > 0 }?.let {
+                contextMap["jobs.$jobId.steps.$stepId.retry-count-manual"] = it.toString()
             }
             e.retryCountAuto?.let { contextMap["jobs.$jobId.steps.$stepId.retry-count-auto"] = it.toString() }
             outputArrayMap?.let { self ->
