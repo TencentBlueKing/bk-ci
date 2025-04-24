@@ -40,10 +40,15 @@ interface TemplateReleaseService {
     fun addMarketTemplate(
         userId: String,
         templateCode: String,
-        marketTemplateRelRequest: MarketTemplateRelRequest
+        marketTemplateRelRequest: MarketTemplateRelRequest,
+        tenantId: String?
     ): Result<Boolean>
 
-    fun updateMarketTemplate(userId: String, marketTemplateUpdateRequest: MarketTemplateUpdateRequest): Result<String?>
+    fun updateMarketTemplate(
+        userId: String,
+        marketTemplateUpdateRequest: MarketTemplateUpdateRequest,
+        tenantId: String?
+    ): Result<String?>
 
     fun handleTemplateRelease(
         context: DSLContext,
@@ -57,15 +62,15 @@ interface TemplateReleaseService {
     /**
      * 获取发布进度
      */
-    fun getProcessInfo(userId: String, templateId: String): Result<StoreProcessInfo>
+    fun getProcessInfo(userId: String, templateId: String, tenantId: String?): Result<StoreProcessInfo>
 
     /**
      * 取消发布
      */
-    fun cancelRelease(userId: String, templateId: String): Result<Boolean>
+    fun cancelRelease(userId: String, templateId: String, tenantId: String?): Result<Boolean>
 
     /**
      * 下架模板
      */
-    fun offlineTemplate(userId: String, templateCode: String, version: String?, reason: String?): Result<Boolean>
+    fun offlineTemplate(userId: String, templateCode: String, version: String?, reason: String?, tenantId: String?): Result<Boolean>
 }

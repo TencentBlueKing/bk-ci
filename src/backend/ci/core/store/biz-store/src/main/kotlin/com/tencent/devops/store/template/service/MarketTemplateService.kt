@@ -49,7 +49,8 @@ interface MarketTemplateService {
     fun mainPageList(
         userId: String,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        tenantId: String?
     ): Result<List<MarketTemplateMain>>
 
     /**
@@ -66,7 +67,8 @@ interface MarketTemplateService {
         sortType: MarketTemplateSortTypeEnum?,
         projectCode: String?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        tenantId: String?
     ): MarketTemplateResp
 
     /**
@@ -74,7 +76,8 @@ interface MarketTemplateService {
      */
     fun getTemplateDetailByCode(
         userId: String,
-        templateCode: String
+        templateCode: String,
+        tenantId: String?
     ): Result<TemplateDetail?>
 
     /**
@@ -82,7 +85,8 @@ interface MarketTemplateService {
      */
     fun getTemplateDetailById(
         userId: String,
-        templateId: String
+        templateId: String,
+        tenantId: String?
     ): Result<TemplateDetail?>
 
     /**
@@ -90,7 +94,8 @@ interface MarketTemplateService {
      */
     fun delete(
         userId: String,
-        templateCode: String
+        templateCode: String,
+        tenantId: String?
     ): Result<Boolean>
 
     /**
@@ -129,7 +134,8 @@ interface MarketTemplateService {
         userId: String,
         templateName: String?,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        tenantId: String?
     ): Result<Page<MyTemplateItem>?>
 
     /**

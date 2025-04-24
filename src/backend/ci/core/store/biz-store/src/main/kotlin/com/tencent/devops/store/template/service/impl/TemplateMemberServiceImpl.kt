@@ -40,6 +40,6 @@ class TemplateMemberServiceImpl : StoreMemberServiceImpl() {
     private lateinit var marketTemplateDao: MarketTemplateDao
 
     override fun getStoreName(storeCode: String, storeType: StoreTypeEnum, tenantId: String?): String {
-        return marketTemplateDao.getLatestTemplateByCode(dslContext, storeCode)?.templateName ?: ""
+        return marketTemplateDao.getLatestTemplateByCode(dslContext, storeCode, tenantId)?.templateName ?: ""
     }
 }
