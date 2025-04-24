@@ -81,6 +81,4 @@ interface MarketAtomArchiveService {
         projectCode: String,
         atomPkgInfoUpdateRequest: AtomPkgInfoUpdateRequest
     ): Result<Boolean>
-
-    fun updateAtomsSizes()
 }
