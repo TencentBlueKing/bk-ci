@@ -246,7 +246,8 @@ data class StartBuildContext(
             pipelineParamMap: MutableMap<String, BuildParameters>,
             webHookStartParam: MutableMap<String, BuildParameters> = mutableMapOf(),
             triggerReviewers: List<String>? = null,
-            currentBuildNo: Int? = null
+            currentBuildNo: Int? = null,
+            runningBuildTaskRetry: Boolean = false
         ): StartBuildContext {
             val buildParam = genOriginStartParamsList(realStartParamKeys, pipelineParamMap)
             val params: Map<String, String> = pipelineParamMap.values.associate { it.key to it.value.toString() }
@@ -259,7 +260,13 @@ data class StartBuildContext(
                 } catch (ignored: NumberFormatException) {
                     0
                 }
-                Triple(ActionType.RETRY, count + 1, retryStartTaskId?.startsWith("stage-") == true)
+                // 运行中的重试,重试次数不增加
+                val retryCount = if (runningBuildTaskRetry) {
+                    count
+                } else {
+                    count + 1
+                }
+                Triple(ActionType.RETRY, retryCount, retryStartTaskId?.startsWith("stage-") == true)
             } else {
                 Triple(ActionType.START, 1, false)
             }

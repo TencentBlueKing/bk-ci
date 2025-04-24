@@ -2261,6 +2261,25 @@ class PipelineRuntimeService @Autowired constructor(
             containerBuildRecords = containerBuildRecords,
             taskBuildRecords = taskBuildRecords
         )
+
+        updateExistsContainerWithDetail.forEach { (container, _) ->
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildContainerEvent(
+                    source = "runningBuildRetry${container.buildId}|${context.retryStartTaskId}",
+                    containerId = container.containerId,
+                    containerHashId = container.containerHashId,
+                    stageId = container.stageId,
+                    pipelineId = container.pipelineId,
+                    buildId = container.buildId,
+                    userId = context.userId,
+                    projectId = container.projectId,
+                    actionType = ActionType.REFRESH,
+                    executeCount = container.executeCount,
+                    containerType = ""
+                )
+            )
+        }
+
         return BuildId(
             id = context.buildId,
             executeCount = context.executeCount,
