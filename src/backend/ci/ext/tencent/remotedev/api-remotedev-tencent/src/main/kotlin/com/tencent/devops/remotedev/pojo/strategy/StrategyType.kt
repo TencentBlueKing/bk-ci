@@ -9,13 +9,8 @@ enum class StrategyType {
     PUBLIC_DESKTOP_LOCK_SCREEN;
 
     companion object {
-        fun fromName(name: String): StrategyType? {
-            return when (name) {
-                PERSONAL_DESKTOP_LOCK_SCREEN.name -> PERSONAL_DESKTOP_LOCK_SCREEN
-                PUBLIC_DESKTOP_LOCK_SCREEN.name -> PUBLIC_DESKTOP_LOCK_SCREEN
-                else -> null
-            }
-        }
+        fun fromName(name: String): StrategyType? =
+            values().find { it.name == name }
     }
 }
 
