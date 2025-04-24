@@ -6,6 +6,7 @@ import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
 import com.tencent.devops.process.yaml.pojo.YamlFileActionType
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.AuthRepository
+import com.tencent.devops.scm.api.enums.EventAction
 import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import com.tencent.devops.scm.api.pojo.webhook.git.GitTagHook
@@ -26,6 +27,10 @@ class GitTagHookConverter @Autowired constructor(
         webhook: Webhook
     ): List<PipelineYamlFileEvent> {
         webhook as GitTagHook
+        // 删除TAG暂不处理
+        if (webhook.action == EventAction.DELETE) {
+            return listOf()
+        }
         val projectId = repository.projectId!!
         val tag = webhook.ref.name
         val fileTrees = pipelineYamlFileService.listFileTree(
