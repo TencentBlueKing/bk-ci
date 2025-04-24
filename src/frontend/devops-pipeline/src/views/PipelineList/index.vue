@@ -9,6 +9,7 @@
     >
         <bk-tab-panel
             v-for="panel in panels"
+            render-directive="if"
             :label="panel.label"
             :name="panel.name"
             :key="panel.name"
@@ -46,6 +47,8 @@
         },
         methods: {
             handleTabChange (name) {
+                if (this.activePanel === name) return
+                // 跳转到对应的路由
                 this.$router.push({
                     name
                 })

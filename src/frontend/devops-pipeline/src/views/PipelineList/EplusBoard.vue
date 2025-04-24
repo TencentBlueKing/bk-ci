@@ -13,7 +13,7 @@
 </template>
 <script>
     import request from '@/utils/request'
-    import { computed, defineComponent, getCurrentInstance, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+    import { computed, defineComponent, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
     export default defineComponent({
         setup () {
             const isLoading = ref(false)
@@ -25,9 +25,8 @@
             let eventAdded = false
 
             watch(projectId, () => {
-                console.log('Project ID changed, fetching new Eplus URL...')
                 nextTick(fetchEplusUrl)
-            }, { immediate: true })
+            })
 
             watch(eplusUrl, () => {
                 nextTick(() => {
@@ -40,6 +39,10 @@
                         eventAdded = true
                     }
                 })
+            })
+
+            onMounted(() => {
+                fetchEplusUrl()
             })
 
             onBeforeUnmount(() => {
