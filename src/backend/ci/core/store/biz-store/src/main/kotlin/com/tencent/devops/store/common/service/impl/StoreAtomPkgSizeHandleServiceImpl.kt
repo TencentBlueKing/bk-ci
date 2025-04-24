@@ -6,22 +6,20 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.store.common.dao.AbstractStoreCommonDao
+import com.tencent.devops.store.atom.dao.AtomCommonDao
 import com.tencent.devops.store.common.service.AbstractStoreComponentPkgSizeHandleService
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 
 @Service("ATOM_PKG_SIZE_HANDLE_SERVICE")
- class StoreAtomPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleService() {
+class StoreAtomPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleService() {
 
     @Autowired
-    @Qualifier("ATOM_COMMON_DAO")
-    lateinit var atomDao: AbstractStoreCommonDao
+    lateinit var atomDao: AtomCommonDao
 
     @Autowired
     lateinit var dslContext: DSLContext
@@ -41,49 +39,49 @@ import org.springframework.stereotype.Service
 
         while (offset < count) {
 
-                val storeIds = atomDao.selectComponentIds(
-                    dslContext = dslContext,
-                    offset = offset,
-                    batchSize = bathSize
-                )
-                if (storeIds.isNullOrEmpty()) {
-                    break
-                }
-                offset += bathSize
-                val atomEnvInfos =
-                    atomDao.selectComponentEnvInfoByStoreIds(dslContext, storeIds)
-                if (!atomEnvInfos.isNullOrEmpty()) {
-                    val storePackageInfoReqs = mutableListOf<StorePackageInfoReq>()
-                    val atomEnvInfosMap = atomEnvInfos.groupBy { it.get("ATOM_ID").toString() }
-                    atomEnvInfosMap.forEach { (atomId, records) ->
-                        records.forEach {
-                            val nodeSize = client.get(ServiceArchiveComponentPkgResource::class)
-                                .getFileSize(StoreTypeEnum.ATOM, it.get("PKG_PATH").toString()).data
-                            if (nodeSize != null) {
-                                storePackageInfoReqs.add(
-                                    StorePackageInfoReq(
-                                        osName = it.get("OS_NAME").toString(),
-                                        arch = it.get("OS_ARCH").toString(),
-                                        size = nodeSize
-                                    )
+            val storeIds = atomDao.selectComponentIds(
+                dslContext = dslContext,
+                offset = offset,
+                batchSize = bathSize
+            )
+            if (storeIds.isNullOrEmpty()) {
+                break
+            }
+            offset += bathSize
+            val atomEnvInfos =
+                atomDao.selectComponentEnvInfoByStoreIds(dslContext, storeIds)
+            if (!atomEnvInfos.isNullOrEmpty()) {
+                val storePackageInfoReqs = mutableListOf<StorePackageInfoReq>()
+                val atomEnvInfosMap = atomEnvInfos.groupBy { it.get("ATOM_ID").toString() }
+                atomEnvInfosMap.forEach { (atomId, records) ->
+                    records.forEach {
+                        val nodeSize = client.get(ServiceArchiveComponentPkgResource::class)
+                            .getFileSize(StoreTypeEnum.ATOM, it.get("PKG_PATH").toString()).data
+                        if (nodeSize != null) {
+                            storePackageInfoReqs.add(
+                                StorePackageInfoReq(
+                                    osName = it.get("OS_NAME").toString(),
+                                    arch = it.get("OS_ARCH").toString(),
+                                    size = nodeSize
                                 )
-                            }
+                            )
                         }
-                        atomDao.updateComponentVersionInfo(
-                            dslContext = dslContext,
-                            atomId,
-                            JsonUtil.toJson(storePackageInfoReqs)
-                        )
                     }
+                    atomDao.updateComponentVersionInfo(
+                        dslContext = dslContext,
+                        atomId,
+                        JsonUtil.toJson(storePackageInfoReqs)
+                    )
                 }
             }
         }
+    }
 
     override fun updateComponentVersionInfo(
         storeId: String,
         storePackageInfoReqs: List<StorePackageInfoReq>,
         storeType: StoreTypeEnum
-    ):Boolean {
+    ): Boolean {
         val redisLock = RedisLock(
             redisOperation = redisOperation,
             lockKey = "store:$storeId:${storeType.name}",
@@ -112,7 +110,6 @@ import org.springframework.stereotype.Service
         } finally {
             redisLock.unlock()
         }
-
         return true
     }
 }

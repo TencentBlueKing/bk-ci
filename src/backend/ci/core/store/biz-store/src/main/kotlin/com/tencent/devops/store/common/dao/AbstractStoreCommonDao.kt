@@ -94,30 +94,4 @@ abstract class AbstractStoreCommonDao {
         dslContext: DSLContext,
         storeCode: String,
     ): Long
-
-    abstract fun updateComponentVersionInfo(
-        dslContext: DSLContext,
-        storeId: String,
-        pkgSize: String
-    )
-
-    abstract fun getComponentVersionSizeInfo(
-        dslContext: DSLContext,
-        storeId: String
-    ): String?
-
-    abstract fun countComponent(dslContext: DSLContext,storeStatus: Byte): Long
-
-    abstract fun selectComponentIds(
-        dslContext: DSLContext,
-        offset: Long,
-        batchSize: Long
-    ): List<String>?
-
-    abstract fun selectComponentEnvInfoByStoreIds(
-        dslContext: DSLContext,
-        storeIds: List<String>
-    ): Result<out Record>?
-
-
 }
