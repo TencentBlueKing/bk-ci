@@ -226,6 +226,11 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.SYSTEM,
         errorCode = "2132053",
         formatErrorMessage = "workspace cds error: {0}"
+    ),
+    WORKSPACE_LOGGED_IN(
+        errorType = ErrorType.SYSTEM,
+        errorCode = "2132054",
+        formatErrorMessage = "workspace logged in: {0}"
     );
 
     fun getErrorMessage(): String {
