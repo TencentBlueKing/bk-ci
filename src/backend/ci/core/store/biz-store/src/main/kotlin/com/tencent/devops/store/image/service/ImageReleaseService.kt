@@ -182,11 +182,12 @@ abstract class ImageReleaseService {
         userId: String,
         imageCode: String,
         marketImageRelRequest: MarketImageRelRequest,
-        needAuth: Boolean = true
+        needAuth: Boolean = true,
+        tenantId: String?
     ): Result<String> {
-        logger.info("addMarketImage params:[$userId|$imageCode|$marketImageRelRequest|$needAuth]")
+        logger.info("addMarketImage params:[$userId|$imageCode|$marketImageRelRequest|$needAuth|$tenantId]")
         // 判断镜像代码是否存在
-        val codeCount = imageDao.countByCode(dslContext, imageCode)
+        val codeCount = imageDao.countByCode(dslContext, imageCode, tenantId)
         if (codeCount > 0) {
             // 抛出错误提示
             return I18nUtil.generateResponseDataObject(
@@ -232,7 +233,7 @@ abstract class ImageReleaseService {
                 )
             }
         }
-        val imageId = addMarketImageToDB(userId, imageCode, marketImageRelRequest)
+        val imageId = addMarketImageToDB(userId, imageCode, marketImageRelRequest, tenantId)
         return if (null != imageId) {
             Result(imageId)
         } else {
@@ -243,12 +244,20 @@ abstract class ImageReleaseService {
     fun addMarketImageToDB(
         userId: String,
         imageCode: String,
-        marketImageRelRequest: MarketImageRelRequest
+        marketImageRelRequest: MarketImageRelRequest,
+        tenantId: String?
     ): String? {
         val imageId = UUIDUtil.generate()
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            marketImageDao.addMarketImage(context, userId, imageId, imageCode, marketImageRelRequest)
+            marketImageDao.addMarketImage(
+                dslContext = context,
+                userId = userId,
+                imageId = imageId,
+                imageCode = imageCode,
+                marketImageRelRequest = marketImageRelRequest,
+                tenantId = tenantId
+            )
             // 添加镜像与项目关联关系
             storeProjectRelDao.addStoreProjectRel(
                 dslContext = context,
@@ -298,11 +307,13 @@ abstract class ImageReleaseService {
         marketImageUpdateRequest: MarketImageUpdateRequest,
         checkLatest: Boolean = false,
         sendCheckResultNotify: Boolean = true,
-        runCheckPipeline: Boolean = true
+        runCheckPipeline: Boolean = true,
+        tenantId: String?
     ): Result<String?> {
         logger.info("updateMarketImage params:[$userId|$marketImageUpdateRequest|$checkLatest|$sendCheckResultNotify]")
         if (marketImageUpdateRequest.category.equals(CATEGORY_PIPELINE_JOB) &&
-            marketImageUpdateRequest.agentTypeScope.isEmpty()) {
+            marketImageUpdateRequest.agentTypeScope.isEmpty()
+        ) {
             throw InvalidParamException(
                 message = "agentTypeScope cannot be empty",
                 params = arrayOf("agentTypeScope=[]")
@@ -318,7 +329,7 @@ abstract class ImageReleaseService {
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        val imageCount = imageDao.countByCode(dslContext, imageCode)
+        val imageCount = imageDao.countByCode(dslContext, imageCode, tenantId)
         if (imageCount < 1) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
@@ -355,7 +366,8 @@ abstract class ImageReleaseService {
             }
             val projectImageListResp = listProjectImagesResult.data
             if ((null == projectImageListResp ||
-                    projectImageListResp.imageList.map { it.repo }.contains(imageRepoName))) {
+                        projectImageListResp.imageList.map { it.repo }.contains(imageRepoName))
+            ) {
                 // 查询是否上架的是公共镜像
                 val listPublicImagesResult = client.get(ServiceImageResource::class).listAllPublicImages(
                     userId = userId,
@@ -367,7 +379,8 @@ abstract class ImageReleaseService {
                 }
                 val publicImageListResp = listPublicImagesResult.data
                 if ((null == publicImageListResp ||
-                        publicImageListResp.imageList.map { it.repo }.contains(imageRepoName))) {
+                            publicImageListResp.imageList.map { it.repo }.contains(imageRepoName))
+                ) {
                     return I18nUtil.generateResponseDataObject(
                         messageCode = IMAGE_PUBLISH_REPO_NO_PERMISSION,
                         language = I18nUtil.getLanguage(userId)
@@ -397,7 +410,8 @@ abstract class ImageReleaseService {
         val imageStatus = imageRecord.imageStatus
         // 判断镜像首个版本对应的请求是否合法
         if (releaseType == ReleaseTypeEnum.NEW && dbVersion == INIT_VERSION &&
-            imageStatus != ImageStatusEnum.INIT.status.toByte()) {
+            imageStatus != ImageStatusEnum.INIT.status.toByte()
+        ) {
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_REST_EXCEPTION_COMMON_TIP)
         }
         // 最近的版本处于上架中止状态，重新升级版本号不变
@@ -411,7 +425,8 @@ abstract class ImageReleaseService {
                     imageDao.getImage(
                         dslContext = dslContext,
                         imageCode = imageCode,
-                        version = VersionUtils.convertLatestVersion(version)
+                        version = VersionUtils.convertLatestVersion(version),
+                        tenantId = tenantId
                     )?.version
                 } else {
                     null
@@ -451,7 +466,8 @@ abstract class ImageReleaseService {
         dslContext.transaction { t ->
             val context = DSL.using(t)
             if (imageRecord.version.isNullOrBlank() ||
-                (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE)) {
+                (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE)
+            ) {
                 // 首次创建版本或者取消发布后不变更版本号重新上架，则在该版本的记录上做更新操作
                 imageId = imageRecord.id
                 val finalReleaseType = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
@@ -490,7 +506,8 @@ abstract class ImageReleaseService {
                 runCheckImagePipeline(
                     context = context,
                     userId = userId,
-                    imageId = imageId
+                    imageId = imageId,
+                    tenantId = tenantId
                 )
             } else {
                 // 直接置为测试中状态
@@ -509,12 +526,19 @@ abstract class ImageReleaseService {
     fun recheck(
         userId: String,
         imageId: String,
-        validateUserFlag: Boolean = true
+        validateUserFlag: Boolean = true,
+        tenantId: String?
     ): Result<Boolean> {
         logger.info("recheck params:[$userId|$imageId|$validateUserFlag]")
         // 判断是否可以重新验证镜像
         val status = ImageStatusEnum.CHECKING.status.toByte()
-        val (checkResult, code, params) = checkImageVersionOptRight(userId, imageId, status, validateUserFlag)
+        val (checkResult, code, params) = checkImageVersionOptRight(
+            userId = userId,
+            imageId = imageId,
+            status = status,
+            validateUserFlag = validateUserFlag,
+            tenantId = tenantId
+        )
         if (!checkResult) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = code!!,
@@ -523,7 +547,7 @@ abstract class ImageReleaseService {
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        runCheckImagePipeline(dslContext, userId, imageId)
+        runCheckImagePipeline(dslContext, userId, imageId, tenantId)
         return Result(true)
     }
 
@@ -532,10 +556,11 @@ abstract class ImageReleaseService {
     fun passTest(
         userId: String,
         imageId: String,
-        validateUserFlag: Boolean = true
+        validateUserFlag: Boolean = true,
+        tenantId: String?
     ): Result<Boolean> {
         logger.info("passTest params:[$userId|$imageId|$validateUserFlag]")
-        val imageRecord = imageDao.getImage(dslContext, imageId)
+        val imageRecord = imageDao.getImage(dslContext, imageId, tenantId)
             ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(imageId),
@@ -544,7 +569,7 @@ abstract class ImageReleaseService {
             )
         // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
         val imageCode = imageRecord.imageCode
-        val isNormalUpgrade = getNormalUpgradeFlag(imageCode, imageRecord.imageStatus.toInt())
+        val isNormalUpgrade = getNormalUpgradeFlag(imageCode, imageRecord.imageStatus.toInt(), tenantId)
         logger.info("passTest isNormalUpgrade is:$isNormalUpgrade")
         val imageStatus = getPassTestStatus(isNormalUpgrade)
         val (checkResult, code, params) = checkImageVersionOptRight(
@@ -552,7 +577,8 @@ abstract class ImageReleaseService {
             imageId = imageId,
             status = imageStatus,
             validateUserFlag = validateUserFlag,
-            isNormalUpgrade = isNormalUpgrade
+            isNormalUpgrade = isNormalUpgrade,
+            tenantId = tenantId
         )
         if (!checkResult) {
             return I18nUtil.generateResponseDataObject(
@@ -577,7 +603,8 @@ abstract class ImageReleaseService {
                     weight = imageFeature.weight ?: 0,
                     result = PASS,
                     message = "ok"
-                )
+                ),
+                tenantId = tenantId
             )
         } else {
             if (imageApproveSwitch == OPEN) {
@@ -596,7 +623,8 @@ abstract class ImageReleaseService {
                         weight = 1,
                         result = PASS,
                         message = "ok"
-                    )
+                    ),
+                    tenantId = tenantId
                 )
             }
         }
@@ -607,22 +635,25 @@ abstract class ImageReleaseService {
         context: DSLContext,
         userId: String,
         imageId: String,
-        sendCheckResultNotify: Boolean = true
+        sendCheckResultNotify: Boolean = true,
+        tenantId: String?
     ) {
         runCheckImagePipeline(
             context = context,
             userId = userId,
-            imageId = imageId
+            imageId = imageId,
+            tenantId = tenantId
         )
     }
 
     private fun runCheckImagePipeline(
         context: DSLContext,
         userId: String,
-        imageId: String
+        imageId: String,
+        tenantId: String?
     ) {
         logger.info("runCheckImagePipeline params:[$userId|$imageId]")
-        val imageRecord = imageDao.getImage(context, imageId)!!
+        val imageRecord = imageDao.getImage(context, imageId, tenantId)!!
         val imageCode = imageRecord.imageCode
         val version = imageRecord.version
         val imagePipelineRelRecord = storePipelineRelDao.getStorePipelineRel(context, imageCode, StoreTypeEnum.IMAGE)
@@ -791,9 +822,9 @@ abstract class ImageReleaseService {
     /**
      * 获取发布进度
      */
-    fun getProcessInfo(userId: String, imageId: String): Result<StoreProcessInfo> {
+    fun getProcessInfo(userId: String, imageId: String, tenantId: String?): Result<StoreProcessInfo> {
         logger.info("getProcessInfo params: [$userId|$imageId]")
-        val record = imageDao.getImage(dslContext, imageId)
+        val record = imageDao.getImage(dslContext, imageId, tenantId)
         if (null == record) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
@@ -807,7 +838,7 @@ abstract class ImageReleaseService {
                 true
             } else {
                 // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
-                getNormalUpgradeFlag(imageCode, status)
+                getNormalUpgradeFlag(imageCode, status, tenantId)
             }
             logger.info("getProcessInfo isNormalUpgrade: $isNormalUpgrade")
             val processInfo = handleProcessInfo(isNormalUpgrade, status)
@@ -830,11 +861,16 @@ abstract class ImageReleaseService {
     /**
      * 取消发布
      */
-    fun cancelRelease(userId: String, imageId: String): Result<Boolean> {
+    fun cancelRelease(userId: String, imageId: String, tenantId: String?): Result<Boolean> {
         logger.info("cancelRelease params:[$userId|$imageId]")
         val status = ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte()
         // 判断用户是否有权限
-        val (checkResult, code, params) = checkImageVersionOptRight(userId, imageId, status)
+        val (checkResult, code, params) = checkImageVersionOptRight(
+            userId = userId,
+            imageId = imageId,
+            status = status,
+            tenantId = tenantId
+        )
         if (!checkResult) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = code!!,
@@ -855,10 +891,11 @@ abstract class ImageReleaseService {
         imageId: String,
         status: Byte,
         validateUserFlag: Boolean = true,
-        isNormalUpgrade: Boolean? = null
+        isNormalUpgrade: Boolean? = null,
+        tenantId: String?
     ): Triple<Boolean, String?, Array<String>?> {
         val imageRecord =
-            imageDao.getImage(dslContext, imageId) ?: return Triple(
+            imageDao.getImage(dslContext, imageId, tenantId) ?: return Triple(
                 false,
                 CommonMessageCode.PARAMETER_IS_INVALID,
                 arrayOf(imageId)
@@ -884,21 +921,21 @@ abstract class ImageReleaseService {
             validateFlag = false
         } else if (status == ImageStatusEnum.CHECKING.status.toByte() &&
             imageStatus !in (
-                listOf(
-                    ImageStatusEnum.COMMITTING.status.toByte(),
-                    ImageStatusEnum.CHECK_FAIL.status.toByte(),
-                    ImageStatusEnum.TESTING.status.toByte()
-                ))
+                    listOf(
+                        ImageStatusEnum.COMMITTING.status.toByte(),
+                        ImageStatusEnum.CHECK_FAIL.status.toByte(),
+                        ImageStatusEnum.TESTING.status.toByte()
+                    ))
         ) {
             validateFlag = false
         } else if (status == ImageStatusEnum.CHECK_FAIL.status.toByte() &&
             imageStatus !in (
-                listOf(
-                    ImageStatusEnum.COMMITTING.status.toByte(),
-                    ImageStatusEnum.CHECKING.status.toByte(),
-                    ImageStatusEnum.CHECK_FAIL.status.toByte(),
-                    ImageStatusEnum.TESTING.status.toByte()
-                ))
+                    listOf(
+                        ImageStatusEnum.COMMITTING.status.toByte(),
+                        ImageStatusEnum.CHECKING.status.toByte(),
+                        ImageStatusEnum.CHECK_FAIL.status.toByte(),
+                        ImageStatusEnum.TESTING.status.toByte()
+                    ))
         ) {
             validateFlag = false
         } else if (status == ImageStatusEnum.TESTING.status.toByte() &&
@@ -927,10 +964,10 @@ abstract class ImageReleaseService {
             validateFlag = false
         } else if (status == ImageStatusEnum.UNDERCARRIAGED.status.toByte() &&
             imageStatus !in (
-                listOf(
-                    ImageStatusEnum.UNDERCARRIAGING.status.toByte(),
-                    ImageStatusEnum.RELEASED.status.toByte()
-                ))
+                    listOf(
+                        ImageStatusEnum.UNDERCARRIAGING.status.toByte(),
+                        ImageStatusEnum.RELEASED.status.toByte()
+                    ))
         ) {
             validateFlag = false
         }
@@ -957,9 +994,9 @@ abstract class ImageReleaseService {
         return flag
     }
 
-    private fun getNormalUpgradeFlag(imageCode: String, status: Int): Boolean {
+    private fun getNormalUpgradeFlag(imageCode: String, status: Int, tenantId: String?): Boolean {
         // 判断镜像是首次上架还是普通升级
-        val releaseTotalNum = marketImageDao.countReleaseImageByCode(dslContext, imageCode)
+        val releaseTotalNum = marketImageDao.countReleaseImageByCode(dslContext, imageCode, tenantId)
         val currentNum = if (status == ImageStatusEnum.RELEASED.status) 1 else 0
         return releaseTotalNum > currentNum
     }
@@ -973,7 +1010,8 @@ abstract class ImageReleaseService {
         version: String?,
         reason: String?,
         validateUserFlag: Boolean = true,
-        interfaceName: String? = "Anon interface"
+        interfaceName: String? = "Anon interface",
+        tenantId: String?
     ): Result<Boolean> {
         logger.info("$interfaceName:offlineMarketImage:Input:($userId,$imageCode,$version,$reason)")
         // 参数校验
@@ -995,7 +1033,7 @@ abstract class ImageReleaseService {
             )
         }
         if (!version.isNullOrEmpty()) {
-            val imageRecord = imageDao.getImage(dslContext, validImageCode, validVersion!!)
+            val imageRecord = imageDao.getImage(dslContext, validImageCode, validVersion!!, tenantId)
                 ?: return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = arrayOf(validImageCode, validVersion),
@@ -1012,7 +1050,11 @@ abstract class ImageReleaseService {
             }
             dslContext.transaction { t ->
                 val context = DSL.using(t)
-                val releaseImageRecords = marketImageDao.getReleaseImagesByCode(context, validImageCode)
+                val releaseImageRecords = marketImageDao.getReleaseImagesByCode(
+                    dslContext = context,
+                    imageCode = validImageCode,
+                    tenantId = tenantId
+                )
                 if (null != releaseImageRecords && releaseImageRecords.size > 0) {
                     marketImageDao.updateImageStatusInfoById(
                         dslContext = context,
@@ -1027,8 +1069,11 @@ abstract class ImageReleaseService {
                     val newestReleaseImageRecord = releaseImageRecords[0]
                     if (newestReleaseImageRecord.id == imageRecord.id) {
                         if (releaseImageRecords.size == 1) {
-                            val newestUndercarriagedImage =
-                                marketImageDao.getNewestUndercarriagedImageByCode(context, validImageCode)
+                            val newestUndercarriagedImage = marketImageDao.getNewestUndercarriagedImageByCode(
+                                dslContext = context,
+                                imageCode = validImageCode,
+                                tenantId = tenantId
+                            )
                             if (null != newestUndercarriagedImage) {
                                 marketImageDao.updateImageStatusInfoById(
                                     dslContext = context,
@@ -1064,7 +1109,7 @@ abstract class ImageReleaseService {
                     ImageStatusEnum.UNDERCARRIAGED.status.toByte(), validUserId, "undercarriage"
                 )
                 val newestUndercarriagedImage =
-                    marketImageDao.getNewestUndercarriagedImageByCode(context, validImageCode)
+                    marketImageDao.getNewestUndercarriagedImageByCode(context, validImageCode, tenantId)
                 if (null != newestUndercarriagedImage) {
                     // 把发布时间最晚的下架版本latestFlag置为true
                     marketImageDao.updateImageLatestFlagById(
@@ -1087,11 +1132,12 @@ abstract class ImageReleaseService {
         userId: String,
         imageId: String,
         approveImageReq: ApproveImageReq,
-        checkCurrentStatus: Boolean = true
+        checkCurrentStatus: Boolean = true,
+        tenantId: String?
     ): AuditTypeEnum {
         // 参数校验
         // 判断镜像是否存在
-        val image = imageDao.getImage(dslContext, imageId)
+        val image = imageDao.getImage(dslContext, imageId, tenantId)
             ?: throw InvalidParamException(
                 message = "imageId=$imageId is not valid",
                 params = arrayOf(imageId)
@@ -1141,11 +1187,17 @@ abstract class ImageReleaseService {
         return type
     }
 
-    fun approveImage(userId: String, imageId: String, approveImageReq: ApproveImageReq): Result<Boolean> {
+    fun approveImage(
+        userId: String,
+        imageId: String,
+        approveImageReq: ApproveImageReq,
+        tenantId: String?
+    ): Result<Boolean> {
         val type = approveImageWithoutNotify(
             userId = userId,
             imageId = imageId,
-            approveImageReq = approveImageReq
+            approveImageReq = approveImageReq,
+            tenantId = tenantId
         )
         // 通知发布者
         imageNotifyService.sendImageReleaseAuditNotifyMessage(imageId, type)

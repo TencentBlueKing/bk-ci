@@ -38,7 +38,7 @@ class ImageMemberService : StoreMemberServiceImpl() {
     @Autowired
     lateinit var marketImageDao: MarketImageDao
 
-    override fun getStoreName(storeCode: String, storeType: StoreTypeEnum): String {
-        return marketImageDao.getLatestImageByCode(dslContext, storeCode)?.imageName ?: ""
+    override fun getStoreName(storeCode: String, storeType: StoreTypeEnum, tenantId: String?): String {
+        return marketImageDao.getLatestImageByCode(dslContext, storeCode, tenantId)?.imageName ?: ""
     }
 }

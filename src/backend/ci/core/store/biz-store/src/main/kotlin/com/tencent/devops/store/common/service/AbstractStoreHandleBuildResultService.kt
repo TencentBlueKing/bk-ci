@@ -39,6 +39,7 @@ abstract class AbstractStoreHandleBuildResultService {
     abstract fun handleStoreBuildResult(
         pipelineId: String,
         buildId: String,
-        storeBuildResultRequest: StoreBuildResultRequest
+        storeBuildResultRequest: StoreBuildResultRequest,
+        tenantId: String?
     ): Result<Boolean>
 }

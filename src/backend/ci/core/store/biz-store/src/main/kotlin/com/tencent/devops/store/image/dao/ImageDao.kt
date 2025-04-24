@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.constant.KEY_WEIGHT
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TImage
 import com.tencent.devops.model.store.tables.TImageFeature
@@ -41,6 +42,7 @@ import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.records.TImageRecord
+import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_AGENT_TYPE_SCOPE
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_CODE
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_FEATURE_CERTIFICATION_FLAG
@@ -74,7 +76,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
-import com.tencent.devops.store.common.utils.VersionUtils
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
@@ -87,13 +89,12 @@ import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
 class ImageDao {
 
-    data class ImageUpdateBean constructor(
+    data class ImageUpdateBean(
         val imageName: String?,
         val classifyId: String?,
         val version: String?,
@@ -154,7 +155,8 @@ class ImageDao {
     fun countByUserIdAndName(
         dslContext: DSLContext,
         userId: String,
-        imageName: String?
+        imageName: String?,
+        tenantId: String?
     ): Int {
         with(TImage.T_IMAGE) {
             val tStoreMember = TStoreMember.T_STORE_MEMBER
@@ -167,6 +169,9 @@ class ImageDao {
             }
             conditions.add(tStoreMember.USERNAME.eq(userId))
             conditions.add(DELETE_FLAG.eq(false))
+            if (useTenantCondition(tenantId)) {
+                conditions.add(TENANT_ID.eq(tenantId))
+            }
             conditions.add(tStoreMember.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
             baseStep.where(conditions)
             return baseStep.fetch()[0].value1()
@@ -179,9 +184,13 @@ class ImageDao {
         }
     }
 
-    fun countByCode(dslContext: DSLContext, imageCode: String): Int {
+    fun countByCode(dslContext: DSLContext, imageCode: String, tenantId: String?): Int {
         with(TImage.T_IMAGE) {
-            return dslContext.selectCount().from(this).where(IMAGE_CODE.eq(imageCode)).fetchOne(0, Int::class.java)!!
+            return dslContext.selectCount()
+                .from(this)
+                .where(IMAGE_CODE.eq(imageCode))
+                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -206,10 +215,11 @@ class ImageDao {
         }
     }
 
-    fun getImage(dslContext: DSLContext, imageId: String): TImageRecord? {
+    fun getImage(dslContext: DSLContext, imageId: String, tenantId: String?): TImageRecord? {
         return with(TImage.T_IMAGE) {
             dslContext.selectFrom(this)
                 .where(ID.eq(imageId))
+                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
                 .fetchOne()
         }
     }
@@ -231,10 +241,11 @@ class ImageDao {
         }
     }
 
-    fun getLatestImageByCode(dslContext: DSLContext, imageCode: String): TImageRecord? {
+    fun getLatestImageByCode(dslContext: DSLContext, imageCode: String, tenantId: String?): TImageRecord? {
         return with(TImage.T_IMAGE) {
             val query = dslContext.selectFrom(this)
                 .where(IMAGE_CODE.eq(imageCode))
+                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
                 .and(LATEST_FLAG.eq(true))
             query.fetchOne()
         }
@@ -272,10 +283,12 @@ class ImageDao {
             .fetch()
     }
 
-    fun getImage(dslContext: DSLContext, imageCode: String, version: String): TImageRecord? {
+    fun getImage(dslContext: DSLContext, imageCode: String, version: String, tenantId: String?): TImageRecord? {
         return with(TImage.T_IMAGE) {
             dslContext.selectFrom(this)
-                .where(IMAGE_CODE.eq(imageCode).and(VERSION.like(VersionUtils.generateQueryVersion(version))))
+                .where(IMAGE_CODE.eq(imageCode))
+                .and(VERSION.like(VersionUtils.generateQueryVersion(version)))
+                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
@@ -332,8 +345,8 @@ class ImageDao {
             tImage.IMAGE_CODE.notIn(
                 dslContext.select(tImage.IMAGE_CODE).from(tImage).join(tStoreProjectRel)
                     .on(tImage.IMAGE_CODE.eq(tStoreProjectRel.STORE_CODE)).where(
-                    initTestImageCondition
-                )
+                        initTestImageCondition
+                    )
             )
         )
         normalImageConditions.add(
@@ -418,8 +431,8 @@ class ImageDao {
             tImage.IMAGE_CODE.notIn(
                 dslContext.select(tImage.IMAGE_CODE).from(tImage).join(tStoreProjectRel)
                     .on(tImage.IMAGE_CODE.eq(tStoreProjectRel.STORE_CODE)).where(
-                    initTestImageCondition
-                )
+                        initTestImageCondition
+                    )
             )
         )
         normalImageConditions.add(
@@ -615,12 +628,16 @@ class ImageDao {
         userId: String,
         imageName: String?,
         page: Int? = 1,
-        pageSize: Int? = -1
+        pageSize: Int? = -1,
+        tenantId: String?
     ): Result<Record15<String, String, String, String, String, String, String, String, String, Byte, String, String, LocalDateTime, LocalDateTime, Boolean>>? {
         val tImage = TImage.T_IMAGE
         val tImageFeature = TImageFeature.T_IMAGE_FEATURE
         val tStoreMember = TStoreMember.T_STORE_MEMBER
         val conditions = generateGetMyImageConditions(tImage, userId, tStoreMember, imageName)
+        if (useTenantCondition(tenantId)) {
+            conditions.add(tImage.TENANT_ID.eq(tenantId))
+        }
         val t =
             dslContext.select(tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE), DSL.max(tImage.CREATE_TIME).`as`(KEY_CREATE_TIME))
                 .from(tImage).groupBy(tImage.IMAGE_CODE) // 查找每组atomCode最新的记录
@@ -978,4 +995,6 @@ class ImageDao {
         return baseStep.where(conditions)
             .fetch()
     }
+
+    private fun useTenantCondition(tenantId: String?) = TenantUtils.isMultiTenantMode() && null != tenantId
 }

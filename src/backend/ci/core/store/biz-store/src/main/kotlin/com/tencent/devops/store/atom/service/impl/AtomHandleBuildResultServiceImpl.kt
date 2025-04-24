@@ -62,7 +62,8 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
     override fun handleStoreBuildResult(
         pipelineId: String,
         buildId: String,
-        storeBuildResultRequest: StoreBuildResultRequest
+        storeBuildResultRequest: StoreBuildResultRequest,
+        tenantId: String?
     ): Result<Boolean> {
         logger.info("handleStoreBuildResult storeBuildResultRequest is:$storeBuildResultRequest")
         val atomId = storeBuildResultRequest.storeId

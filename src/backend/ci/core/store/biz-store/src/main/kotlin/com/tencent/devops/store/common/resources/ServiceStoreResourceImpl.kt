@@ -67,11 +67,12 @@ class ServiceStoreResourceImpl @Autowired constructor(
     }
 
     override fun handleStoreBuildResult(
+        tenantId: String?,
         pipelineId: String,
         buildId: String,
         storeBuildResultRequest: StoreBuildResultRequest
     ): Result<Boolean> {
-        return storeBuildService.handleStoreBuildResult(pipelineId, buildId, storeBuildResultRequest)
+        return storeBuildService.handleStoreBuildResult(pipelineId, buildId, storeBuildResultRequest, tenantId)
     }
 
     override fun isStoreMember(storeCode: String, storeType: StoreTypeEnum, userId: String): Result<Boolean> {

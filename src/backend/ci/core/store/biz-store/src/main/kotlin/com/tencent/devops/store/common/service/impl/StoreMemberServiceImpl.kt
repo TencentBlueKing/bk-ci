@@ -37,20 +37,20 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TStoreMemberRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
+import com.tencent.devops.store.common.dao.StoreMemberDao
+import com.tencent.devops.store.common.dao.StoreProjectRelDao
+import com.tencent.devops.store.common.service.StoreMemberService
+import com.tencent.devops.store.common.service.StoreNotifyService
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
-import com.tencent.devops.store.common.dao.StoreMemberDao
-import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.pojo.common.STORE_MEMBER_ADD_NOTIFY_TEMPLATE
 import com.tencent.devops.store.pojo.common.STORE_MEMBER_DELETE_NOTIFY_TEMPLATE
-import com.tencent.devops.store.pojo.common.member.StoreMemberItem
-import com.tencent.devops.store.pojo.common.member.StoreMemberReq
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.common.service.StoreMemberService
-import com.tencent.devops.store.common.service.StoreNotifyService
+import com.tencent.devops.store.pojo.common.member.StoreMemberItem
+import com.tencent.devops.store.pojo.common.member.StoreMemberReq
 import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -62,14 +62,19 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
 
     @Autowired
     lateinit var client: Client
+
     @Autowired
     lateinit var dslContext: DSLContext
+
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
+
     @Autowired
     lateinit var storeProjectRelDao: StoreProjectRelDao
+
     @Autowired
     lateinit var storeNotifyService: StoreNotifyService
+
     @Autowired
     lateinit var storeInnerPipelineConfig: StoreInnerPipelineConfig
 
@@ -156,11 +161,13 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
             if (null != projectCode) projectCodeList.add(projectCode)
             val projectMap = client.get(ServiceProjectResource::class)
                 .getNameByCode(projectCodeList.joinToString(",")).data
-            Result(generateStoreMemberItem(
-                memberRecord = memberRecord,
-                projectCode = projectCode ?: "",
-                projectName = projectMap?.get(projectCode) ?: ""
-            ))
+            Result(
+                generateStoreMemberItem(
+                    memberRecord = memberRecord,
+                    projectCode = projectCode ?: "",
+                    projectName = projectMap?.get(projectCode) ?: ""
+                )
+            )
         } else {
             Result(data = null)
         }
@@ -195,7 +202,8 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
         collaborationFlag: Boolean?,
         sendNotify: Boolean,
         checkPermissionFlag: Boolean,
-        testProjectCode: String?
+        testProjectCode: String?,
+        tenantId: String?
     ): Result<Boolean> {
         val storeCode = storeMemberReq.storeCode
         val type = storeMemberReq.type.type.toByte()
@@ -243,7 +251,8 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
         }
         if (sendNotify) {
             executorService.submit<Result<Boolean>> {
-                val bodyParams = mapOf("storeAdmin" to userId, "storeName" to getStoreName(storeCode, storeType))
+                val bodyParams =
+                    mapOf("storeAdmin" to userId, "storeName" to getStoreName(storeCode, storeType, tenantId))
                 storeNotifyService.sendNotifyMessage(
                     templateCode = STORE_MEMBER_ADD_NOTIFY_TEMPLATE + "_$storeType",
                     sender = DEVOPS,
@@ -280,7 +289,8 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
         id: String,
         storeCode: String,
         storeType: StoreTypeEnum,
-        checkPermissionFlag: Boolean
+        checkPermissionFlag: Boolean,
+        tenantId: String?
     ): Result<Boolean> {
         logger.info("deleteMember params:[$userId|$id|$storeCode|$storeType|$checkPermissionFlag")
         checkUserPermission(
@@ -311,7 +321,8 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
             }
             executorService.submit<Result<Boolean>> {
                 val receivers = mutableSetOf(record.username)
-                val bodyParams = mapOf("storeAdmin" to userId, "storeName" to getStoreName(storeCode, storeType))
+                val bodyParams =
+                    mapOf("storeAdmin" to userId, "storeName" to getStoreName(storeCode, storeType, tenantId))
                 storeNotifyService.sendNotifyMessage(
                     templateCode = STORE_MEMBER_DELETE_NOTIFY_TEMPLATE + "_$storeType",
                     sender = DEVOPS,
@@ -326,7 +337,7 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
     /**
      * 获取组件名称
      */
-    abstract fun getStoreName(storeCode: String, storeType: StoreTypeEnum): String
+    abstract fun getStoreName(storeCode: String, storeType: StoreTypeEnum, tenantId: String?): String
 
     /**
      * 更改store组件成员的调试项目

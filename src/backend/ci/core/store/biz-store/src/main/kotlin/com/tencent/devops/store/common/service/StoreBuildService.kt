@@ -39,7 +39,8 @@ interface StoreBuildService {
     fun handleStoreBuildResult(
         pipelineId: String,
         buildId: String,
-        storeBuildResultRequest: StoreBuildResultRequest
+        storeBuildResultRequest: StoreBuildResultRequest,
+        tenantId: String?
     ): Result<Boolean>
 
     /**
@@ -49,6 +50,7 @@ interface StoreBuildService {
         userId: String,
         buildId: String,
         pipelineId: String,
-        status: BuildStatus
+        status: BuildStatus,
+        tenantId: String?
     ): Result<Boolean>
 }

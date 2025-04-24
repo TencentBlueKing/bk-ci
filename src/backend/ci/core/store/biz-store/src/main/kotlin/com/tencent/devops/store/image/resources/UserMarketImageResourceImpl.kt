@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.image.UserMarketImageResource
+import com.tencent.devops.store.image.service.ImageService
 import com.tencent.devops.store.pojo.common.version.VersionInfo
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.store.pojo.image.enums.MarketImageSortTypeEnum
@@ -40,7 +41,6 @@ import com.tencent.devops.store.pojo.image.response.ImageDetail
 import com.tencent.devops.store.pojo.image.response.MarketImageMain
 import com.tencent.devops.store.pojo.image.response.MarketImageResp
 import com.tencent.devops.store.pojo.image.response.MyImage
-import com.tencent.devops.store.image.service.ImageService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -51,16 +51,18 @@ class UserMarketImageResourceImpl @Autowired constructor(
         return Result(imageService.getPipelineImageVersions(projectCode, imageCode))
     }
 
-    override fun delete(userId: String, imageCode: String): Result<Boolean> {
+    override fun delete(userId: String, tenantId: String?, imageCode: String): Result<Boolean> {
         return imageService.delete(
             userId = userId,
             imageCode = imageCode,
-            interfaceName = "/user/market/image/imageCodes/{imageCode},delete"
+            interfaceName = "/user/market/image/imageCodes/{imageCode},delete",
+            tenantId = tenantId
         )
     }
 
     override fun updateImageBaseInfo(
         userId: String,
+        tenantId: String?,
         imageCode: String,
         imageBaseInfoUpdateRequest: ImageBaseInfoUpdateRequest
     ): Result<Boolean> {
@@ -70,12 +72,14 @@ class UserMarketImageResourceImpl @Autowired constructor(
             userId = userId,
             imageCode = imageCode,
             imageBaseInfoUpdateRequest = imageBaseInfoUpdateRequest,
-            interfaceName = "/user/market/baseInfo/images/{imageCode},put"
+            interfaceName = "/user/market/baseInfo/images/{imageCode},put",
+            tenantId = tenantId
         )
     }
 
     override fun getImageVersionListByCode(
         userId: String,
+        tenantId: String?,
         imageCode: String,
         page: Int?,
         pageSize: Int?
@@ -85,12 +89,14 @@ class UserMarketImageResourceImpl @Autowired constructor(
             imageCode = imageCode,
             page = page,
             pageSize = pageSize,
-            interfaceName = "/user/market/image/imageCodes/{imageCode}/version/list"
+            interfaceName = "/user/market/image/imageCodes/{imageCode}/version/list",
+            tenantId = tenantId
         )
     }
 
     override fun searchImage(
         userId: String,
+        tenantId: String?,
         keyword: String?,
         imageSourceType: ImageType?,
         classifyCode: String?,
@@ -114,21 +120,29 @@ class UserMarketImageResourceImpl @Autowired constructor(
             sortType = sortType,
             page = page,
             pageSize = pageSize,
-            interfaceName = "/user/market/image/list"
+            interfaceName = "/user/market/image/list",
+            tenantId = tenantId
         )
     }
 
-    override fun mainPageList(userId: String, page: Int?, pageSize: Int?): Result<List<MarketImageMain>> {
+    override fun mainPageList(
+        userId: String,
+        tenantId: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<MarketImageMain>> {
         return imageService.mainPageList(
             userId = userId,
             page = page,
             pageSize = pageSize,
-            interfaceName = "/user/market/image/list/main"
+            interfaceName = "/user/market/image/list/main",
+            tenantId = tenantId
         )
     }
 
     override fun getMyImageList(
         userId: String,
+        tenantId: String?,
         imageName: String?,
         page: Int?,
         pageSize: Int?
@@ -138,26 +152,29 @@ class UserMarketImageResourceImpl @Autowired constructor(
             imageName = imageName,
             page = page,
             pageSize = pageSize,
-            interfaceName = "/user/market/desk/image/list"
+            interfaceName = "/user/market/desk/image/list",
+            tenantId = tenantId
         )
     }
 
-    override fun getImageDetailById(userId: String, imageId: String): Result<ImageDetail> {
+    override fun getImageDetailById(userId: String, tenantId: String?, imageId: String): Result<ImageDetail> {
         return Result(
             imageService.getImageDetailById(
                 userId = userId,
                 imageId = imageId,
-                interfaceName = "/user/market/image/imageIds/{imageId}"
+                interfaceName = "/user/market/image/imageIds/{imageId}",
+                tenantId = tenantId
             )
         )
     }
 
-    override fun getImageDetailByCode(userId: String, imageCode: String): Result<ImageDetail> {
+    override fun getImageDetailByCode(userId: String, tenantId: String?, imageCode: String): Result<ImageDetail> {
         return Result(
             imageService.getLatestImageDetailByCode(
                 userId = userId,
                 imageCode = imageCode,
-                interfaceName = "/user/market/image/imageCodes/{imageCode}"
+                interfaceName = "/user/market/image/imageCodes/{imageCode}",
+                tenantId = tenantId
             )
         )
     }

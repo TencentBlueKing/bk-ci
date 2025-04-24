@@ -31,10 +31,10 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.UserStoreMemberResource
+import com.tencent.devops.store.common.service.StoreMemberService
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.member.StoreMemberItem
 import com.tencent.devops.store.pojo.common.member.StoreMemberReq
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.common.service.StoreMemberService
 
 @RestResource
 class UserStoreMemberResourceImpl : UserStoreMemberResource {
@@ -43,13 +43,30 @@ class UserStoreMemberResourceImpl : UserStoreMemberResource {
         return getStoreMemberService(storeType).list(userId, storeCode, storeType)
     }
 
-    override fun add(userId: String, storeMemberReq: StoreMemberReq): Result<Boolean> {
+    override fun add(userId: String, tenantId: String?, storeMemberReq: StoreMemberReq): Result<Boolean> {
         val storeType = storeMemberReq.storeType
-        return getStoreMemberService(storeType).add(userId, storeMemberReq, storeType)
+        return getStoreMemberService(storeType).add(
+            userId = userId,
+            storeMemberReq = storeMemberReq,
+            storeType = storeType,
+            tenantId = tenantId
+        )
     }
 
-    override fun delete(userId: String, id: String, storeCode: String, storeType: StoreTypeEnum): Result<Boolean> {
-        return getStoreMemberService(storeType).delete(userId, id, storeCode, storeType)
+    override fun delete(
+        userId: String,
+        tenantId: String?,
+        id: String,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): Result<Boolean> {
+        return getStoreMemberService(storeType).delete(
+            userId = userId,
+            id = id,
+            storeCode = storeCode,
+            storeType = storeType,
+            tenantId = tenantId
+        )
     }
 
     override fun view(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<StoreMemberItem?> {

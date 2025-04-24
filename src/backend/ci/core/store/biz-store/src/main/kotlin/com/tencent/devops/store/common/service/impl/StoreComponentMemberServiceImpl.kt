@@ -39,10 +39,10 @@ import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.service.StoreManagementExtraService
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.member.StoreMemberReq
+import jakarta.ws.rs.NotFoundException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
-import jakarta.ws.rs.NotFoundException
 
 @Primary
 @Service
@@ -51,7 +51,7 @@ class StoreComponentMemberServiceImpl @Autowired constructor(
     private val storeBaseFeatureExtQueryDao: StoreBaseFeatureExtQueryDao
 ) : StoreMemberServiceImpl() {
 
-    override fun getStoreName(storeCode: String, storeType: StoreTypeEnum): String {
+    override fun getStoreName(storeCode: String, storeType: StoreTypeEnum, tenantId: String?): String {
         return storeBaseQueryDao.getLatestComponentByCode(
             dslContext = dslContext,
             storeCode = storeCode,
@@ -66,7 +66,8 @@ class StoreComponentMemberServiceImpl @Autowired constructor(
         collaborationFlag: Boolean?,
         sendNotify: Boolean,
         checkPermissionFlag: Boolean,
-        testProjectCode: String?
+        testProjectCode: String?,
+        tenantId: String?
     ): Result<Boolean> {
         val storeCode = storeMemberReq.storeCode
         // 检查用户是否有权限操作
@@ -97,7 +98,8 @@ class StoreComponentMemberServiceImpl @Autowired constructor(
             collaborationFlag = collaborationFlag,
             sendNotify = sendNotify,
             checkPermissionFlag = false,
-            testProjectCode = testProjectCode
+            testProjectCode = testProjectCode,
+            tenantId = tenantId
         )
     }
 
@@ -106,7 +108,8 @@ class StoreComponentMemberServiceImpl @Autowired constructor(
         id: String,
         storeCode: String,
         storeType: StoreTypeEnum,
-        checkPermissionFlag: Boolean
+        checkPermissionFlag: Boolean,
+        tenantId: String?
     ): Result<Boolean> {
         // 检查用户是否有权限操作
         super.checkUserPermission(
@@ -143,7 +146,8 @@ class StoreComponentMemberServiceImpl @Autowired constructor(
             id = id,
             storeCode = storeCode,
             storeType = storeType,
-            checkPermissionFlag = false
+            checkPermissionFlag = false,
+            tenantId = tenantId
         )
     }
 

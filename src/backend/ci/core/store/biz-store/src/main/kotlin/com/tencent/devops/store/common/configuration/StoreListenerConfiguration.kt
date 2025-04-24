@@ -30,6 +30,7 @@ package com.tencent.devops.store.common.configuration
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.stream.ScsConsumerBuilder
 import com.tencent.devops.store.common.service.StoreBuildService
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,7 +49,8 @@ class StoreListenerConfiguration {
             userId = it.userId,
             buildId = it.buildId,
             pipelineId = it.pipelineId,
-            status = BuildStatus.valueOf(it.status)
+            status = BuildStatus.valueOf(it.status),
+            tenantId = TenantUtils.getTenantIdByEnglishName(it.projectId)
         )
     }
 }

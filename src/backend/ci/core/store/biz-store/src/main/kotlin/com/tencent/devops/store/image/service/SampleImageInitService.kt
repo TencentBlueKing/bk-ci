@@ -38,8 +38,8 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.store.common.dao.BusinessConfigDao
 import com.tencent.devops.store.image.dao.ImageDao
-import com.tencent.devops.store.pojo.common.config.BusinessConfigRequest
 import com.tencent.devops.store.pojo.common.PASS
+import com.tencent.devops.store.pojo.common.config.BusinessConfigRequest
 import com.tencent.devops.store.pojo.common.enums.BusinessEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
@@ -74,9 +74,10 @@ class SampleImageInitService @Autowired constructor(
         val userId = imageInitRequest?.userId ?: "admin"
         val imageCode = imageInitRequest?.imageCode ?: DEFAULT_IMAGE_CODE
         val ticketId = imageInitRequest?.ticketId
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
         logger.info("begin init image: $imageInitRequest")
         // 判断镜像是否存在
-        val imageCount = imageDao.countByCode(dslContext, imageCode)
+        val imageCount = imageDao.countByCode(dslContext, imageCode, tenantId)
         if (imageCount != 0) {
             return Result(true)
         }
@@ -125,7 +126,8 @@ class SampleImageInitService @Autowired constructor(
                 imageSourceType = ImageType.THIRD,
                 ticketId = ticketId
             ),
-            needAuth = false
+            needAuth = false,
+            tenantId = tenantId
         )
         if (addImageResult.isNotOk() || addImageResult.data.isNullOrBlank()) {
             throw ErrorCodeException(
@@ -162,9 +164,9 @@ class SampleImageInitService @Autowired constructor(
                 versionContent = imageInitRequest?.versionContent ?: DEFAULT_IMAGE_CODE,
                 publisher = userId
             ),
-            checkLatest = false,
             sendCheckResultNotify = false,
-            runCheckPipeline = false
+            runCheckPipeline = false,
+            tenantId = tenantId
         )
         if (updateImageResult.isNotOk() || updateImageResult.data.isNullOrBlank()) {
             throw ErrorCodeException(
@@ -187,7 +189,8 @@ class SampleImageInitService @Autowired constructor(
                 weight = 1,
                 result = PASS,
                 message = "ok"
-            )
+            ),
+            tenantId = tenantId
         )
         // 将改镜像设置成job选择时默认镜像
         val defaultJobImage = mapOf(

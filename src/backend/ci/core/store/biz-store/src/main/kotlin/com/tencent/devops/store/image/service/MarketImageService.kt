@@ -29,6 +29,7 @@ package com.tencent.devops.store.image.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.image.dao.ImageDao
 import com.tencent.devops.store.image.dao.MarketImageDao
@@ -72,10 +73,11 @@ class MarketImageService @Autowired constructor(
         imageId: String,
         userId: String,
         imageStatus: ImageStatusEnum,
-        msg: String?
+        msg: String?,
+        tenantId: String?
     ): Result<Boolean> {
         logger.info("setImageBuildStatusByImageId params :[$userId|$imageId|$imageStatus|$msg]")
-        val imageRecord = imageDao.getImage(dslContext, imageId)
+        val imageRecord = imageDao.getImage(dslContext, imageId, tenantId)
         if (null == imageRecord) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
@@ -117,7 +119,12 @@ class MarketImageService @Autowired constructor(
         version: String,
         imageBaseInfoUpdateRequest: ImageBaseInfoUpdateRequest
     ): Result<Boolean> {
-        val imageRecord = imageDao.getImage(dslContext, imageCode, version)
+        val imageRecord = imageDao.getImage(
+            dslContext = dslContext,
+            imageCode = imageCode,
+            version = version,
+            tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
+        )
         return if (null != imageRecord) {
             marketImageDao.updateImageBaseInfo(
                 dslContext = dslContext,

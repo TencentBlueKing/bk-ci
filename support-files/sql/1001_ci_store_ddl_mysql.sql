@@ -86,6 +86,7 @@ CREATE TABLE IF NOT EXISTS `T_ATOM` (
   `BRANCH` VARCHAR(128) DEFAULT 'master' COMMENT '代码库分支',
   `BRANCH_TEST_FLAG` bit(1) DEFAULT b'0' COMMENT '是否是分支测试版本',
   `LATEST_TEST_FLAG` bit(1) DEFAULT b'0' COMMENT '是否为最新测试版本原子， TRUE：最新 FALSE：非最新',
+  `TENANT_ID` varchar(32) DEFAULT 'default' COMMENT '租户ID',
   PRIMARY KEY (`ID`),
   UNIQUE KEY `uni_inx_tpca_code_version` (`ATOM_CODE`,`VERSION`),
   KEY `inx_tpca_service_code` (`SERVICE_SCOPE`(255)),
@@ -96,7 +97,8 @@ CREATE TABLE IF NOT EXISTS `T_ATOM` (
   KEY `inx_tpca_latest_flag` (`LATEST_FLAG`),
   KEY `inx_tpca_default_flag` (`DEFAULT_FLAG`),
   KEY `inx_tpca_atom_classify_id` (`CLASSIFY_ID`),
-  KEY `inx_ta_delete_flag` (`DELETE_FLAG`)
+  KEY `inx_ta_delete_flag` (`DELETE_FLAG`),
+  KEY `inx_ta_tenant_id` (`TENANT_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线原子表';
 
 -- ----------------------------
@@ -624,13 +626,15 @@ CREATE TABLE IF NOT EXISTS `T_TEMPLATE` (
   `CREATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `UPDATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
   `PUB_TIME` datetime DEFAULT NULL COMMENT '发布时间',
+  `TENANT_ID` varchar(32) DEFAULT 'default' COMMENT '租户ID',
   PRIMARY KEY (`ID`),
   UNIQUE KEY `uni_inx_tt_code_version` (`TEMPLATE_CODE`,`VERSION`),
   KEY `inx_tt_template_name` (`TEMPLATE_NAME`),
   KEY `inx_tt_template_code` (`TEMPLATE_CODE`),
   KEY `inx_tt_template_type` (`TEMPLATE_TYPE`),
   KEY `inx_tt_template_rd_type` (`TEMPLATE_RD_TYPE`),
-  KEY `inx_tt_status` (`TEMPLATE_STATUS`)
+  KEY `inx_tt_status` (`TEMPLATE_STATUS`),
+  KEY `inx_tt_tenant_id` (`TENANT_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='模板信息表';
 
 -- ----------------------------
@@ -880,12 +884,14 @@ CREATE TABLE IF NOT EXISTS `T_IMAGE`
     `DELETE_FLAG`       BIT(1)       DEFAULT FALSE  COMMENT '删除标识 true：是，false：否',
     `DOCKER_FILE_TYPE` varchar(32) NOT NULL DEFAULT 'INPUT' COMMENT 'dockerFile类型（INPUT：手动输入，*_LINK：链接）',
     `DOCKER_FILE_CONTENT` text COMMENT 'dockerFile内容',
+    `TENANT_ID` varchar(32) DEFAULT 'default' COMMENT '租户ID',
     PRIMARY KEY (`ID`) USING BTREE,
     UNIQUE KEY `uni_inx_ti_code_version` (`IMAGE_CODE`, `VERSION`) USING BTREE,
     KEY `inx_ti_image_name` (`IMAGE_NAME`) USING BTREE,
     KEY `inx_ti_image_code` (`IMAGE_CODE`) USING BTREE,
     KEY `inx_ti_source_type` (`IMAGE_SOURCE_TYPE`) USING BTREE,
-    KEY `inx_ti_image_status` (`IMAGE_STATUS`) USING BTREE
+    KEY `inx_ti_image_status` (`IMAGE_STATUS`) USING BTREE,
+    KEY `inx_ti_tenant_id` (`TENANT_ID`) USING BTREE
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COMMENT ='镜像信息表';

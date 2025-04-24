@@ -410,7 +410,8 @@ class ImageProjectService @Autowired constructor(
         rdType: ImageRDTypeEnum?,
         page: Int?,
         pageSize: Int?,
-        interfaceName: String? = "Anon interface"
+        interfaceName: String? = "Anon interface",
+        tenantId: String?
     ): Page<ImageDetail?>? {
         // 1.参数校验
         val validPage = PageUtil.getValidPage(page)
@@ -436,7 +437,8 @@ class ImageProjectService @Autowired constructor(
             desc = true,
             page = page,
             pageSize = pageSize,
-            interfaceName = interfaceName
+            interfaceName = interfaceName,
+            tenantId = tenantId
         )
         val resultList = mutableListOf<ImageDetail>()
         imagesResult.forEach {
@@ -446,7 +448,12 @@ class ImageProjectService @Autowired constructor(
                 storeCode = it.code,
                 storeType = StoreTypeEnum.IMAGE.type.toByte()
             )
-            val imageDetail = imageService.getLatestImageDetailByCode(userId, it.code, interfaceName)
+            val imageDetail = imageService.getLatestImageDetailByCode(
+                userId = userId,
+                tenantId = tenantId,
+                imageCode = it.code,
+                interfaceName = interfaceName
+            )
             imageDetail.installedFlag = isInstalled
             resultList.add(imageDetail)
         }
@@ -457,7 +464,8 @@ class ImageProjectService @Autowired constructor(
             labelCodeList = null,
             rdType = rdType,
             score = null,
-            imageSourceType = null
+            imageSourceType = null,
+            tenantId = tenantId
         )
         return Page(
             count = count.toLong(),
@@ -1031,7 +1039,7 @@ class ImageProjectService @Autowired constructor(
     ): Result<Boolean> {
         logger.info("$interfaceName:installImage:Input:($userId,$projectCodeList,$imageCode)")
         // 判断镜像标识是否合法
-        val image = marketImageDao.getLatestImageByCode(dslContext, imageCode)
+        val image = marketImageDao.getLatestImageByCode(dslContext, imageCode, tenantId)
             ?: throw ImageNotExistException("imageCode=$imageCode")
         val imageFeature = marketImageFeatureDao.getExistedImageFeature(dslContext, imageCode)
         val validateInstallResult = storeProjectService.validateInstallPermission(
