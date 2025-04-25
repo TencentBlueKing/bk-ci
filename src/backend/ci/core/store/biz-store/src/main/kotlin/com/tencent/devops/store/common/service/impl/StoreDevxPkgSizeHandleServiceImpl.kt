@@ -113,13 +113,24 @@ class StoreDevxPkgSizeHandleServiceImpl: AbstractStoreComponentPkgSizeHandleServ
         return true
     }
 
-    override fun getComponentVersionSize(version: String, storeCode: String): BigDecimal? {
+    override fun getComponentVersionSize(
+        version: String,
+        storeCode: String,
+        osName: String?,
+        osArch: String?
+    ): BigDecimal? {
         return storeVersionLogDao.getComponentSizeByVersionAndCode(
             dslContext = dslContext,
             storeCode = storeCode,
             version = version,
             storeType = StoreTypeEnum.DEVX.type.toByte()
         ).takeIf { !it.isNullOrBlank() }
-            ?.let { parseComponentPackageSize(it) }
+            ?.let {
+                parseComponentPackageSize(
+                    size = it,
+                    osName = osName,
+                    osArch = osArch
+                )
+            }
     }
 }

@@ -30,7 +30,7 @@ class StoreImagePkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSe
         TODO("Not yet implemented")
     }
 
-    override fun getComponentVersionSize(version: String, storeCode: String): BigDecimal? {
+    override fun getComponentVersionSize(version: String, storeCode: String, osName: String?, osArch: String?): BigDecimal? {
         return imageDao.getComponentSizeByVersionAndCode(
             dslContext = dslContext,
             storeCode = storeCode,
