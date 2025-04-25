@@ -48,6 +48,9 @@ import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.remotedev.TaskResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyInfo
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
@@ -679,5 +682,15 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<BKItsmCreateTicketRespData> {
         logger.info("createItsmTicket |$userId|$createReqStr")
         return client.get(ServiceRemoteDevResource::class).createItsmTicket(userId, createReqStr)
+    }
+
+    override fun getProjectStrategy(userId: String, data: ProjectStrategyFetchInfo): Result<ProjectStrategyResp> {
+        logger.info("getProjectStrategy |$userId|$data")
+        return client.get(ServiceRemoteDevResource::class).getProjectStrategy(userId, data)
+    }
+
+    override fun updateProjectStrategy(userId: String, data: ProjectStrategyInfo): Result<Boolean> {
+        logger.info("updateProjectStrategy |$userId|$data")
+        return client.get(ServiceRemoteDevResource::class).updateProjectStrategy(userId, data)
     }
 }

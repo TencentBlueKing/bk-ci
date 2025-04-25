@@ -45,11 +45,14 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
 import com.tencent.devops.remotedev.pojo.tai.Moa2faReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faRespData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyRespData
 import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.ProjectStrategyService
 import com.tencent.devops.remotedev.service.RepositoryService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
@@ -69,6 +72,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     private val workspaceService: WorkspaceService,
     private val permissionService: PermissionService,
     private val repositoryService: RepositoryService,
+    private val projectStrategyService: ProjectStrategyService,
     private val createControl: CreateControl,
     private val startControl: StartControl,
     private val sleepControl: SleepControl,
@@ -244,5 +248,9 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     override fun messageResend(userId: String, type: RemoteDevNotifyType): Result<Boolean> {
         notifyControl.resendByUserId(userId, type)
         return Result(true)
+    }
+
+    override fun getProjectStrategy(userId: String, data: ProjectStrategyFetchInfo): Result<ProjectStrategyResp> {
+        return Result(projectStrategyService.getStrategy(data))
     }
 }

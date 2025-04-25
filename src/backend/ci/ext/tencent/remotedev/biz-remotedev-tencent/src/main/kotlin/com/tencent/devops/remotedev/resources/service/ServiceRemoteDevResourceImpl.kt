@@ -60,12 +60,16 @@ import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.remotedev.TaskResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyInfo
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.resources.op.OpProjectWorkspaceResourceImpl
 import com.tencent.devops.remotedev.service.BKItsmService
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.ProjectStrategyService
 import com.tencent.devops.remotedev.service.RemotedevProjectService
 import com.tencent.devops.remotedev.service.StartWorkspaceService
 import com.tencent.devops.remotedev.service.WhiteListService
@@ -128,7 +132,8 @@ class ServiceRemoteDevResourceImpl(
     private val workspaceHookService: WorkspaceHookService,
     private val configCacheService: ConfigCacheService,
     private val remotedevProjectService: RemotedevProjectService,
-    private val bkItsmService: BKItsmService
+    private val bkItsmService: BKItsmService,
+    private val projectStrategyService: ProjectStrategyService
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -921,5 +926,14 @@ class ServiceRemoteDevResourceImpl(
                 errorParam = userId
             )
         )
+    }
+
+    override fun getProjectStrategy(userId: String, data: ProjectStrategyFetchInfo): Result<ProjectStrategyResp> {
+        return Result(projectStrategyService.getStrategy(data))
+    }
+
+    override fun updateProjectStrategy(userId: String, data: ProjectStrategyInfo): Result<Boolean> {
+        projectStrategyService.createOrUpdateStrategy(data)
+        return Result(true)
     }
 }
