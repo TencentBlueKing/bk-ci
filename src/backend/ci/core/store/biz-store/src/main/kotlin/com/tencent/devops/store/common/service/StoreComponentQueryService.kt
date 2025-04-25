@@ -40,6 +40,7 @@ import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.version.VersionInfo
 import com.tencent.devops.store.pojo.common.version.StoreVersionLogInfo
+import java.math.BigDecimal
 
 interface StoreComponentQueryService {
 
@@ -142,4 +143,13 @@ interface StoreComponentQueryService {
         page: Int,
         pageSize: Int
     ): Result<Page<StoreVersionLogInfo>>
+
+    /**
+     * 根据组件Code和版本号获取组件的大小
+     */
+    fun getStoreVersionSize(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        version: String
+    ): BigDecimal?
 }

@@ -203,4 +203,12 @@ class ImageCommonDao : AbstractStoreCommonDao() {
 
         return baseStep.fetchOne(0, Long::class.java) ?: 0L
     }
+
+    fun getComponentSizeByVersionAndCode( dslContext: DSLContext, storeCode: String, version: String): String?{
+        val image = TImage.T_IMAGE
+        val baseStep = dslContext.select(image.IMAGE_SIZE)
+            .from(image)
+            .where(image.IMAGE_CODE.eq(storeCode).and(image.VERSION.eq(version)))
+        return baseStep.fetchOne(0, String::class.java)
+    }
 }

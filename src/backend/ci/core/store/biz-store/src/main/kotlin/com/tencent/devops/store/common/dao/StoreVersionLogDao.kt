@@ -195,4 +195,23 @@ class StoreVersionLogDao {
                 .fetch().into(String::class.java)
         }
     }
+
+    fun getComponentSizeByVersionAndCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        version: String,
+        storeType: Byte
+    ): String? {
+        val tsb = TStoreBase.T_STORE_BASE
+        val tsvl = TStoreVersionLog.T_STORE_VERSION_LOG
+        val baseStep = dslContext.select(tsvl.PACKAGE_SIZE).from(tsb)
+            .join(tsvl)
+            .on(tsb.ID.eq(tsvl.STORE_ID))
+            .where(
+                tsb.STORE_CODE.eq(storeCode)
+                    .and(tsb.STORE_TYPE.eq(storeType))
+                    .and(tsb.VERSION.eq(version))
+            )
+        return baseStep.fetchOne(0, String::class.java)
+    }
 }

@@ -279,4 +279,13 @@ class AtomCommonDao : AbstractStoreCommonDao() {
                 .where(ATOM_ID.`in`(storeIds)).fetch()
         }
     }
+
+    fun getComponentSizeByVersionAndCode(dslContext: DSLContext, storeCode: String, version: String): String? {
+        val atomVersionLog = TAtomVersionLog.T_ATOM_VERSION_LOG
+        val atom = TAtom.T_ATOM
+        return dslContext.select(atomVersionLog.PACKAGE_SIZE).from(atom)
+            .join(atomVersionLog).on(atom.ID.eq(atomVersionLog.ATOM_ID))
+            .where(atom.ATOM_CODE.eq(storeCode).and(atom.VERSION.eq(version)))
+            .fetchOne(0, String::class.java)
+    }
 }

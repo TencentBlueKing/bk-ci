@@ -42,6 +42,7 @@ import com.tencent.devops.common.api.util.ThreadLocalUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.util.RegexUtils
 import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -59,6 +60,7 @@ import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.dao.StoreVersionLogDao
+import com.tencent.devops.store.common.service.AbstractStoreComponentPkgSizeHandleService
 import com.tencent.devops.store.common.service.CategoryService
 import com.tencent.devops.store.common.service.ClassifyService
 import com.tencent.devops.store.common.service.StoreCommentService
@@ -103,6 +105,7 @@ import org.jooq.DSLContext
 import org.jooq.Record
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
@@ -1182,5 +1185,12 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             page = page,
             pageSize = pageSize
         )
+    }
+
+    override fun getStoreVersionSize(storeCode: String, storeType: StoreTypeEnum, version: String): BigDecimal? {
+        return SpringContextUtil.getBean(
+            AbstractStoreComponentPkgSizeHandleService::class.java,
+            "${storeType}_PKG_SIZE_HANDLE_SERVICE"
+        ).getComponentVersionSize(version, storeCode)
     }
 }

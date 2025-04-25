@@ -14,6 +14,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.math.BigDecimal
 
 @Service("ATOM_PKG_SIZE_HANDLE_SERVICE")
 class StoreAtomPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleService() {
@@ -111,6 +112,15 @@ class StoreAtomPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
             redisLock.unlock()
         }
             return true
+    }
+
+    override fun getComponentVersionSize(version: String, storeCode: String): BigDecimal? {
+        return atomDao.getComponentSizeByVersionAndCode(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            version = version
+        ).takeIf { !it.isNullOrBlank() }
+            ?.let { parseComponentPackageSize(it) }
     }
 }
 

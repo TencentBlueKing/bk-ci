@@ -57,6 +57,7 @@ import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
+import java.math.BigDecimal
 
 @Tag(name = "USER_STORE_COMPONENT", description = "研发商店-组件查询")
 @Path("/user/store/components")
@@ -372,4 +373,19 @@ interface UserStoreComponentQueryResource {
         @DefaultValue("10")
         pageSize: Int
     ): Result<Page<StoreVersionLogInfo>>
+
+    @Operation(summary = "根据组件版本号获取组件大小")
+    @GET
+    @Path("/types/{storeType}/codes/{storeCode}/version/size/get")
+    fun getStoreVersionSize(
+        @Parameter(description = "组件代码", required = true)
+        @PathParam("storeCode")
+        storeCode: String,
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        storeType: StoreTypeEnum,
+        @Parameter(description = "版本号", required = true)
+        @QueryParam("version")
+        version: String,
+    ): Result<BigDecimal?>
 }
