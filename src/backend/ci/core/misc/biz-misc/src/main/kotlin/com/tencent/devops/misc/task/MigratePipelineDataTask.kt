@@ -108,6 +108,7 @@ class MigratePipelineDataTask constructor(
                         migratingShardingDslContext = migratingShardingDslContext,
                         archiveFlag = archiveFlag
                     )
+                    offset += MEDIUM_PAGE_SIZE
                 } while (buildHistoryDebugRecords.size == MEDIUM_PAGE_SIZE)
                 // 3.3、迁移T_PIPELINE_BUILD_SUMMARY表数据
                 migratePipelineBuildSummaryData(
