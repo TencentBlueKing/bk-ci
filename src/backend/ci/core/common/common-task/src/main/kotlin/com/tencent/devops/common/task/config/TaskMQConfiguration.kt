@@ -45,7 +45,7 @@ class TaskMQConfiguration {
     ) = ScsConsumerBuilder.build<BatchTaskPublishEvent> { batchTaskPublishListener.execute(it) }
 
     @EventConsumer
-    fun batchTaskPublishMQArchiveConsumer(
+    fun batchTaskFinishMQArchiveConsumer(
         @Autowired batchTaskFinishListener: BatchTaskFinishListener
     ) = ScsConsumerBuilder.build<BatchTaskFinishEvent> { batchTaskFinishListener.execute(it) }
 }
