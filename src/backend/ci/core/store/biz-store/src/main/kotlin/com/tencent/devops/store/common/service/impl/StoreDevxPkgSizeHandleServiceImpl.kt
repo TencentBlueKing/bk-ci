@@ -52,8 +52,8 @@ class StoreDevxPkgSizeHandleServiceImpl: AbstractStoreComponentPkgSizeHandleServ
             if (!atomEnvInfos.isNullOrEmpty()) {
                 val atomEnvInfosMap = atomEnvInfos.groupBy { it.get("STORE_ID").toString() }
                 atomEnvInfosMap.forEach { (storeId, records) ->
+                    val storePackageInfoReqs = mutableListOf<StorePackageInfoReq>()
                     records.forEach {
-                        val storePackageInfoReqs = mutableListOf<StorePackageInfoReq>()
                         val nodeSize = client.get(ServiceArchiveComponentPkgResource::class)
                             .getFileSize(StoreTypeEnum.DEVX, it.get("PKG_PATH").toString()).data
                         if (nodeSize != null) {
