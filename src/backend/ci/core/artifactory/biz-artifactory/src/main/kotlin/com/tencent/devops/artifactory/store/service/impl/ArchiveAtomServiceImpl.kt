@@ -390,7 +390,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
                         errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
                         params = arrayOf("$atomCode:$version")
                     )
-                val updateAtomInfoResult = client.get(ServiceStoreComponentResource::class).updateComponentVersionInfo(
+                val updateAtomInfoResult = client.get(ServiceStoreComponentResource::class).updateComponentVersionSize(
                     storeType = StoreTypeEnum.ATOM,
                     storeId = atomId,
                     storePackageInfoReqs = storePackageInfoReqs

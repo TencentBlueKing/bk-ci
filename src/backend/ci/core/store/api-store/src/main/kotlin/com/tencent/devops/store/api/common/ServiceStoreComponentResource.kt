@@ -261,10 +261,10 @@ interface ServiceStoreComponentResource {
         osArch: String? = null
     ): Result<VersionInfo?>
 
-    @Operation(summary = "更新组件版本信息")
+    @Operation(summary = "更新组件版本大小")
     @PUT
     @Path("/storeId/{storeId}/version/info/update")
-    fun updateComponentVersionInfo(
+    fun updateComponentVersionSize(
         @Parameter(description = "组件ID", required = true)
         @PathParam("storeId")
         storeId: String,

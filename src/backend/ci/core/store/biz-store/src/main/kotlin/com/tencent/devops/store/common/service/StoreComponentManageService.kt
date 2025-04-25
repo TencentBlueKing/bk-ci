@@ -84,7 +84,7 @@ interface StoreComponentManageService {
     /**
      * 更新组件版本信息
      */
-    fun updateComponentVersionInfo(
+    fun updateComponentVersionSize(
         storeId: String,
         storePackageInfoReqs: List<StorePackageInfoReq>,
         storeType: StoreTypeEnum

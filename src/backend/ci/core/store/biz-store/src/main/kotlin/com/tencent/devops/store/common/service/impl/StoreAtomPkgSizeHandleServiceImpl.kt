@@ -77,7 +77,7 @@ class StoreAtomPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
         }
     }
 
-    override fun updateComponentVersionInfo(
+    override fun updateComponentVersionSize(
         storeId: String,
         storePackageInfoReqs: List<StorePackageInfoReq>,
         storeType: StoreTypeEnum

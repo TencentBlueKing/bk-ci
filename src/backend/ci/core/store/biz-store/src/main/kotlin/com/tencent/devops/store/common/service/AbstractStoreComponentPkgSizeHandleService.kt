@@ -10,7 +10,7 @@ abstract class AbstractStoreComponentPkgSizeHandleService {
      */
     abstract fun batchUpdateComponentsVersionSize()
 
-    abstract fun updateComponentVersionInfo(
+    abstract fun updateComponentVersionSize(
         storeId: String,
         storePackageInfoReqs: List<StorePackageInfoReq>,
         storeType: StoreTypeEnum
