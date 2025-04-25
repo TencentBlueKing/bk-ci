@@ -248,7 +248,7 @@ class ProcessDataMigrateDao {
         migratingShardingDslContext: DSLContext,
         pipelineBuildHistoryDebugRecords: List<TPipelineBuildHistoryDebugRecord>
     ) {
-        with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
+        with(TPipelineBuildHistoryDebug.T_PIPELINE_BUILD_HISTORY_DEBUG) {
             val insertRecords = pipelineBuildHistoryDebugRecords.map { migratingShardingDslContext.newRecord(this, it) }
             migratingShardingDslContext.batchInsert(insertRecords).execute()
         }

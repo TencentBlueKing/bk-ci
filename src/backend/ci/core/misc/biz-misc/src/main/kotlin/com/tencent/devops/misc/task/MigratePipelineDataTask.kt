@@ -77,19 +77,8 @@ class MigratePipelineDataTask constructor(
                         migratingShardingDslContext = migratingShardingDslContext,
                         pipelineBuildHistoryRecords = buildHistoryRecords
                     )
-                    val buildHistoryDebugRecords = processDbMigrateDao.getPipelineBuildHistoryDebugRecords(
-                        dslContext = dslContext,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        limit = MEDIUM_PAGE_SIZE,
-                        offset = offset
-                    )
-                    processDbMigrateDao.migratePipelineBuildHistoryDebugData(
-                        migratingShardingDslContext = migratingShardingDslContext,
-                        pipelineBuildHistoryDebugRecords = buildHistoryDebugRecords
-                    )
                     migrateBuildLinkedData(
-                        buildHistoryRecords = buildHistoryRecords,
+                        buildIds = buildHistoryRecords.map { it.buildId },
                         processDataMigrateDao = processDbMigrateDao,
                         dslContext = dslContext,
                         projectId = projectId,
@@ -110,6 +99,14 @@ class MigratePipelineDataTask constructor(
                     processDbMigrateDao.migratePipelineBuildHistoryDebugData(
                         migratingShardingDslContext = migratingShardingDslContext,
                         pipelineBuildHistoryDebugRecords = buildHistoryDebugRecords
+                    )
+                    migrateBuildLinkedData(
+                        buildIds = buildHistoryDebugRecords.map { it.buildId },
+                        processDataMigrateDao = processDbMigrateDao,
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        migratingShardingDslContext = migratingShardingDslContext,
+                        archiveFlag = archiveFlag
                     )
                 } while (buildHistoryDebugRecords.size == MEDIUM_PAGE_SIZE)
                 // 3.3、迁移T_PIPELINE_BUILD_SUMMARY表数据
@@ -368,14 +365,13 @@ class MigratePipelineDataTask constructor(
         }
 
     private fun migrateBuildLinkedData(
-        buildHistoryRecords: List<TPipelineBuildHistoryRecord>,
+        buildIds: List<String>,
         processDataMigrateDao: ProcessDataMigrateDao,
         dslContext: DSLContext,
         projectId: String,
         migratingShardingDslContext: DSLContext,
         archiveFlag: Boolean? = null
     ) {
-        val buildIds = buildHistoryRecords.map { it.buildId }
         // 由于detail表的流水线模型字段可能比较大，故一次迁移3条记录
         ListUtils.partition(buildIds, SHORT_PAGE_SIZE).forEach { rids ->
             if (archiveFlag != true) {
