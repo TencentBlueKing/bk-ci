@@ -51,9 +51,9 @@ class StoreAtomPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
             val atomEnvInfos =
                 atomDao.selectComponentEnvInfoByStoreIds(dslContext, storeIds)
             if (!atomEnvInfos.isNullOrEmpty()) {
-                val storePackageInfoReqs = mutableListOf<StorePackageInfoReq>()
                 val atomEnvInfosMap = atomEnvInfos.groupBy { it.get("ATOM_ID").toString() }
                 atomEnvInfosMap.forEach { (atomId, records) ->
+                    val storePackageInfoReqs = mutableListOf<StorePackageInfoReq>()
                     records.forEach {
                         val nodeSize = client.get(ServiceArchiveComponentPkgResource::class)
                             .getFileSize(StoreTypeEnum.ATOM, it.get("PKG_PATH").toString()).data
@@ -110,7 +110,7 @@ class StoreAtomPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
         } finally {
             redisLock.unlock()
         }
-        return true
+            return true
     }
 }
 
