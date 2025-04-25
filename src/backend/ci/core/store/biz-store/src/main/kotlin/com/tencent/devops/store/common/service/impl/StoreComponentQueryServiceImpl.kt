@@ -1187,10 +1187,20 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         )
     }
 
-    override fun getStoreVersionSize(storeCode: String, storeType: StoreTypeEnum, version: String): BigDecimal? {
+    override fun getStoreVersionSize(
+        storeCode: String, storeType: StoreTypeEnum,
+        version: String,
+        osName: String?,
+        osArch: String?
+    ): BigDecimal? {
         return SpringContextUtil.getBean(
             AbstractStoreComponentPkgSizeHandleService::class.java,
             "${storeType}_PKG_SIZE_HANDLE_SERVICE"
-        ).getComponentVersionSize(version, storeCode)
+        ).getComponentVersionSize(
+            version = version,
+            storeCode = storeCode,
+            osName = osName,
+            osArch = osArch
+        )
     }
 }

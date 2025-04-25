@@ -150,6 +150,8 @@ interface StoreComponentQueryService {
     fun getStoreVersionSize(
         storeCode: String,
         storeType: StoreTypeEnum,
-        version: String
+        version: String,
+        osName: String?,
+        osArch: String?
     ): BigDecimal?
 }

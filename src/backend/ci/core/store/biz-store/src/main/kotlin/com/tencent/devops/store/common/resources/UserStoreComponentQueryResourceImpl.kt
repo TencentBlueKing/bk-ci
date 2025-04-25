@@ -262,13 +262,17 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
     override fun getStoreVersionSize(
         storeCode: String,
         storeType: StoreTypeEnum,
-        version: String
+        version: String,
+        osName: String?,
+        osArch: String?
     ): Result<BigDecimal?> {
         return Result(
             storeComponentQueryService.getStoreVersionSize(
                 storeCode = storeCode,
                 storeType = storeType,
-                version = version
+                version = version,
+                osName = osName,
+                osArch = osArch
             )
         )
     }

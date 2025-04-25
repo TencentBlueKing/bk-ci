@@ -387,5 +387,11 @@ interface UserStoreComponentQueryResource {
         @Parameter(description = "版本号", required = true)
         @QueryParam("version")
         version: String,
+        @Parameter(description = "操作系统名称", required = false)
+        @QueryParam("osName")
+        osName: String? = null,
+        @Parameter(description = "操作系统架构", required = false)
+        @QueryParam("osArch")
+        osArch: String? = null
     ): Result<BigDecimal?>
 }

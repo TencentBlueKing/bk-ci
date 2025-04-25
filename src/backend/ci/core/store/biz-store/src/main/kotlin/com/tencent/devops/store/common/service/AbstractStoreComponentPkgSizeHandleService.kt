@@ -22,18 +22,28 @@ abstract class AbstractStoreComponentPkgSizeHandleService {
 
     abstract fun getComponentVersionSize(
         version: String,
-        storeCode: String
+        storeCode: String,
+        osName: String?,
+        osArch: String?
     ): BigDecimal?
 
-    fun parseComponentPackageSize(size: String): BigDecimal? {
-        val atomPackageInfo = JsonUtil.to(size, object : TypeReference<List<StorePackageInfoReq>>() {})
-        if (atomPackageInfo.isEmpty()) return null
+    fun parseComponentPackageSize(size: String, osName: String?, osArch: String?): BigDecimal? {
+        val atomPackageInfos = JsonUtil.to(size, object : TypeReference<List<StorePackageInfoReq>>() {})
+        if (atomPackageInfos.isEmpty()) return null
 
-        val totalBytes = atomPackageInfo.fold(BigDecimal.ZERO) { acc, info ->
+        if (!osName.isNullOrBlank() && !osArch.isNullOrBlank()) {
+            return atomPackageInfos.firstOrNull {
+                it.osName == osName && it.arch == osArch
+            }?.let {
+                BigDecimal(it.size)
+            }
+        }
+
+        val totalBytes = atomPackageInfos.fold(BigDecimal.ZERO) { acc, info ->
             acc + BigDecimal(info.size)
         }
         val totalMB = formatSizeInMB(totalBytes)
-        val packageCount = BigDecimal(atomPackageInfo.size)
+        val packageCount = BigDecimal(atomPackageInfos.size)
         return totalMB.divide(packageCount, DIV_SCALE, ROUNDING_MODE)
     }
 

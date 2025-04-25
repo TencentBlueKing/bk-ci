@@ -114,13 +114,24 @@ class StoreAtomPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
             return true
     }
 
-    override fun getComponentVersionSize(version: String, storeCode: String): BigDecimal? {
+    override fun getComponentVersionSize(
+        version: String,
+        storeCode: String,
+        osName: String?,
+        osArch: String?
+    ): BigDecimal? {
         return atomDao.getComponentSizeByVersionAndCode(
             dslContext = dslContext,
             storeCode = storeCode,
             version = version
         ).takeIf { !it.isNullOrBlank() }
-            ?.let { parseComponentPackageSize(it) }
+            ?.let {
+                parseComponentPackageSize(
+                    size = it,
+                    osName = osName,
+                    osArch = osArch
+                )
+            }
     }
 }
 
