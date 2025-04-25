@@ -6,7 +6,6 @@ import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.strategy.StrategyType
 import org.jooq.DSLContext
 import org.jooq.JSON
-import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
