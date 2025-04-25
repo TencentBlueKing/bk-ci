@@ -31,7 +31,11 @@ class StoreImagePkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSe
     }
 
     override fun getComponentVersionSize(version: String, storeCode: String): BigDecimal? {
-       return imageDao.getComponentSizeByVersionAndCode(dslContext, storeCode, version).takeIf { !it.isNullOrBlank() }
+        return imageDao.getComponentSizeByVersionAndCode(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            version = version
+        ).takeIf { !it.isNullOrBlank() }
             ?.let { formatSizeInMB(BigDecimal(it)) }
     }
 }
