@@ -476,6 +476,9 @@ class ProcessDataMigrateService @Autowired constructor(
         migrateTemplateData(migratingShardingDslContext, projectId)
         migratePipelineViewTopData(migratingShardingDslContext, projectId)
         migrateProjectPipelineTriggerEventData(migratingShardingDslContext, projectId)
+        migrateProjectPipelineYamlSyncData(migratingShardingDslContext, projectId)
+        migrateProjectPipelineYamlBranchFileData(migratingShardingDslContext, projectId)
+        migrateProjectPipelineYamlViewData(migratingShardingDslContext, projectId)
     }
 
     private fun doAfterMigrationBus(
@@ -885,5 +888,62 @@ class ProcessDataMigrateService @Autowired constructor(
             }
             offset += MEDIUM_PAGE_SIZE
         } while (pipelineTriggerEventRecords.size == MEDIUM_PAGE_SIZE)
+    }
+
+    private fun migrateProjectPipelineYamlSyncData(migratingShardingDslContext: DSLContext, projectId: String) {
+        var offset = 0
+        do {
+            val pipelineYamlSyncRecords = processDataMigrateDao.getProjectPipelineYamlSyncRecords(
+                dslContext = dslContext,
+                projectId = projectId,
+                limit = MEDIUM_PAGE_SIZE,
+                offset = offset
+            )
+            if (pipelineYamlSyncRecords.isNotEmpty()) {
+                processDataMigrateDao.migrateProjectPipelineYamlSyncData(
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    pipelineYamlSyncRecords = pipelineYamlSyncRecords
+                )
+            }
+            offset += MEDIUM_PAGE_SIZE
+        } while (pipelineYamlSyncRecords.size == MEDIUM_PAGE_SIZE)
+    }
+
+    private fun migrateProjectPipelineYamlBranchFileData(migratingShardingDslContext: DSLContext, projectId: String) {
+        var offset = 0
+        do {
+            val pipelineYamlBranchFileRecords= processDataMigrateDao.getProjectPipelineYamlBranchFileRecords(
+                dslContext = dslContext,
+                projectId = projectId,
+                limit = MEDIUM_PAGE_SIZE,
+                offset = offset
+            )
+            if (pipelineYamlBranchFileRecords.isNotEmpty()) {
+                processDataMigrateDao.migrateProjectPipelineYamlBranchFileData(
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    pipelineYamlBranchFileRecords = pipelineYamlBranchFileRecords
+                )
+            }
+            offset += MEDIUM_PAGE_SIZE
+        } while (pipelineYamlBranchFileRecords.size == MEDIUM_PAGE_SIZE)
+    }
+
+    private fun migrateProjectPipelineYamlViewData(migratingShardingDslContext: DSLContext, projectId: String) {
+        var offset = 0
+        do {
+            val pipelineYamlViewRecords = processDataMigrateDao.getProjectPipelineYamlViewRecords(
+                dslContext = dslContext,
+                projectId = projectId,
+                limit = MEDIUM_PAGE_SIZE,
+                offset = offset
+            )
+            if (pipelineYamlViewRecords.isNotEmpty()) {
+                processDataMigrateDao.migrateProjectPipelineYamlViewData(
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    pipelineYamlViewRecords = pipelineYamlViewRecords
+                )
+            }
+            offset += MEDIUM_PAGE_SIZE
+        } while (pipelineYamlViewRecords.size == MEDIUM_PAGE_SIZE)
     }
 }

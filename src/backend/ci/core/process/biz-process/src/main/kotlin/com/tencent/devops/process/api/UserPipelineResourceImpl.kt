@@ -487,7 +487,11 @@ class UserPipelineResourceImpl @Autowired constructor(
     }
 
     @AuditEntry(actionId = ActionId.PIPELINE_DELETE)
-    override fun batchDelete(userId: String, batchDeletePipeline: BatchDeletePipeline): Result<Map<String, Boolean>> {
+    override fun batchDelete(
+        userId: String,
+        batchDeletePipeline: BatchDeletePipeline,
+        archiveFlag: Boolean?
+    ): Result<Map<String, Boolean>> {
         val pipelineIds = batchDeletePipeline.pipelineIds
         if (pipelineIds.isEmpty()) {
             return Result(emptyMap())
@@ -499,7 +503,12 @@ class UserPipelineResourceImpl @Autowired constructor(
         }
         val result = pipelineIds.associateWith {
             try {
-                softDelete(userId, batchDeletePipeline.projectId, it).data ?: false
+                softDelete(
+                    userId = userId,
+                    projectId = batchDeletePipeline.projectId,
+                    pipelineId = it,
+                    archiveFlag = archiveFlag
+                ).data ?: false
             } catch (ignore: Exception) {
                 false
             }

@@ -74,6 +74,7 @@ const val PATTERN_STYLE = "patternStyle" // 正则表达式规则
 const val MESSAGE = "message" // 提示信息
 const val STATIC = "static" // 静态资源
 const val NAME = "name" // 名称
+const val SUCCESS_NUM = "successNum" // 成功数量
 const val FAIL_NUM = "failNum" // 失败数量
 const val VERSION = "version" // 版本号
 const val TYPE = "type" // 类型
@@ -127,6 +128,7 @@ const val REQUEST_IP = "X-Forwarded-For" // 请求IP
 const val BK_CREATE = "bkCreate" // 创建
 const val BK_REVISE = "bkRevise" // 修改
 const val FAIL_MSG = "failMsg" // 失败信息
+const val BATCH_ID = "batchId" // 批次ID
 
 const val KEY_START_TIME = "startTime"
 const val KEY_END_TIME = "endTime"
@@ -168,6 +170,9 @@ const val KEY_TASK_ATOM = "taskAtom"
 const val KEY_ELEMENT_ENABLE = "elementEnable"
 const val KEY_SHA_CONTENT = "shaContent"
 const val KEY_FILE_SHA_CONTENT = "fileShaContent"
+const val KEY_USER_ID = "userId"
+const val KEY_CANCEL_FLAG = "cancelFlag"
+const val KEY_SEND_MSG_FLAG = "sendMsgFlag"
 
 const val BK_BUILD_ENV_START_FAILED = "bkBuildEnvStartFailed" // 构建环境启动失败
 const val BK_START_PULL_IMAGE = "bkStartPullImage" // 开始拉取镜像，镜像名称：

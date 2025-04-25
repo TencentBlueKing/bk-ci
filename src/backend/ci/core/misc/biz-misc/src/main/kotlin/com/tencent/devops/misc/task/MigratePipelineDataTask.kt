@@ -289,6 +289,54 @@ class MigratePipelineDataTask constructor(
                         migratingShardingDslContext = migratingShardingDslContext,
                         processDataMigrateDao = processDbMigrateDao
                     )
+                    // 3.25、迁移T_PIPELINE_YAML_INFO表数据
+                    migratePipelineYamlInfoData(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        dslContext = dslContext,
+                        migratingShardingDslContext = migratingShardingDslContext,
+                        processDataMigrateDao = processDbMigrateDao
+                    )
+                    // 3.26、迁移T_PIPELINE_YAML_VERSION表数据
+                    migratePipelineYamlVersionData(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        dslContext = dslContext,
+                        migratingShardingDslContext = migratingShardingDslContext,
+                        processDataMigrateDao = processDbMigrateDao
+                    )
+                    // 3.27、迁移T_PIPELINE_OPERATION_LOG表数据
+                    migratePipelineOperationLogData(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        dslContext = dslContext,
+                        migratingShardingDslContext = migratingShardingDslContext,
+                        processDataMigrateDao = processDbMigrateDao
+                    )
+                    // 3.28、迁移T_PIPELINE_WEBHOOK_VERSION表数据
+                    migratePipelineWebhookVersionData(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        dslContext = dslContext,
+                        migratingShardingDslContext = migratingShardingDslContext,
+                        processDataMigrateDao = processDbMigrateDao
+                    )
+                    // 3.29、迁移T_PIPELINE_CALLBACK表数据
+                    migratePipelineCallbackData(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        dslContext = dslContext,
+                        migratingShardingDslContext = migratingShardingDslContext,
+                        processDataMigrateDao = processDbMigrateDao
+                    )
+                    // 3.30、迁移T_PIPELINE_SUB_REF表数据
+                    migratePipelineSubRefData(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        dslContext = dslContext,
+                        migratingShardingDslContext = migratingShardingDslContext,
+                        processDataMigrateDao = processDbMigrateDao
+                    )
                     if (doneSignal == null) {
                         // 单独迁移一条流水线的数据时需要执行以下数据迁移逻辑
                         migratePipelineAuditResourceData(
@@ -1014,6 +1062,156 @@ class MigratePipelineDataTask constructor(
             }
             offset += MEDIUM_PAGE_SIZE
         } while (pipelineTriggerDetailRecords.size == MEDIUM_PAGE_SIZE)
+    }
+
+    private fun migratePipelineYamlInfoData(
+        projectId: String,
+        pipelineId: String,
+        dslContext: DSLContext,
+        migratingShardingDslContext: DSLContext,
+        processDataMigrateDao: ProcessDataMigrateDao
+    ) {
+        val pipelineYamlInfoRecord = processDataMigrateDao.getPipelineYamlInfoRecord(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+        if (pipelineYamlInfoRecord != null) {
+            processDataMigrateDao.migratePipelineYamlInfoData(
+                migratingShardingDslContext = migratingShardingDslContext,
+                pipelineYamlInfoRecord = pipelineYamlInfoRecord
+            )
+        }
+    }
+
+    private fun migratePipelineYamlVersionData(
+        projectId: String,
+        pipelineId: String,
+        dslContext: DSLContext,
+        migratingShardingDslContext: DSLContext,
+        processDataMigrateDao: ProcessDataMigrateDao
+    ) {
+        var offset = 0
+        do {
+            val pipelineYamlVersionRecords = processDataMigrateDao.getPipelineYamlVersionRecords(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                limit = MEDIUM_PAGE_SIZE,
+                offset = offset
+            )
+            if (pipelineYamlVersionRecords.isNotEmpty()) {
+                processDataMigrateDao.migratePipelineYamlVersionData(
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    pipelineYamlVersionRecords = pipelineYamlVersionRecords
+                )
+            }
+            offset += MEDIUM_PAGE_SIZE
+        } while (pipelineYamlVersionRecords.size == MEDIUM_PAGE_SIZE)
+    }
+
+    private fun migratePipelineOperationLogData(
+        projectId: String,
+        pipelineId: String,
+        dslContext: DSLContext,
+        migratingShardingDslContext: DSLContext,
+        processDataMigrateDao: ProcessDataMigrateDao
+    ) {
+        var offset = 0
+        do {
+            val pipelineOperationLogRecords = processDataMigrateDao.getPipelineOperationLogRecords(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                limit = MEDIUM_PAGE_SIZE,
+                offset = offset
+            )
+            if (pipelineOperationLogRecords.isNotEmpty()) {
+                processDataMigrateDao.migratePipelineOperationLogData(
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    pipelineOperationLogRecords = pipelineOperationLogRecords
+                )
+            }
+            offset += MEDIUM_PAGE_SIZE
+        } while (pipelineOperationLogRecords.size == MEDIUM_PAGE_SIZE)
+    }
+
+    private fun migratePipelineWebhookVersionData(
+        projectId: String,
+        pipelineId: String,
+        dslContext: DSLContext,
+        migratingShardingDslContext: DSLContext,
+        processDataMigrateDao: ProcessDataMigrateDao
+    ) {
+        var offset = 0
+        do {
+            val pipelineWebhookVersionRecords = processDataMigrateDao.getPipelineWebhookVersionRecords(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                limit = MEDIUM_PAGE_SIZE,
+                offset = offset
+            )
+            if (pipelineWebhookVersionRecords.isNotEmpty()) {
+                processDataMigrateDao.migratePipelineWebhookVersionData(
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    pipelineWebhookVersionRecords = pipelineWebhookVersionRecords
+                )
+            }
+            offset += MEDIUM_PAGE_SIZE
+        } while (pipelineWebhookVersionRecords.size == MEDIUM_PAGE_SIZE)
+    }
+
+    private fun migratePipelineCallbackData(
+        projectId: String,
+        pipelineId: String,
+        dslContext: DSLContext,
+        migratingShardingDslContext: DSLContext,
+        processDataMigrateDao: ProcessDataMigrateDao
+    ) {
+        var offset = 0
+        do {
+            val pipelineCallbackRecords = processDataMigrateDao.getPipelineCallbackRecords(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                limit = MEDIUM_PAGE_SIZE,
+                offset = offset
+            )
+            if (pipelineCallbackRecords.isNotEmpty()) {
+                processDataMigrateDao.migratePipelineCallbackData(
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    pipelineCallbackRecords = pipelineCallbackRecords
+                )
+            }
+            offset += MEDIUM_PAGE_SIZE
+        } while (pipelineCallbackRecords.size == MEDIUM_PAGE_SIZE)
+    }
+
+    private fun migratePipelineSubRefData(
+        projectId: String,
+        pipelineId: String,
+        dslContext: DSLContext,
+        migratingShardingDslContext: DSLContext,
+        processDataMigrateDao: ProcessDataMigrateDao
+    ) {
+        var offset = 0
+        do {
+            val pipelineSubRefRecords = processDataMigrateDao.getPipelineSubRefRecords(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                limit = MEDIUM_PAGE_SIZE,
+                offset = offset
+            )
+            if (pipelineSubRefRecords.isNotEmpty()) {
+                processDataMigrateDao.migratePipelineSubRefData(
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    pipelineSubRefRecords = pipelineSubRefRecords
+                )
+            }
+            offset += MEDIUM_PAGE_SIZE
+        } while (pipelineSubRefRecords.size == MEDIUM_PAGE_SIZE)
     }
 
     private fun handleUnFinishPipelines(retryNum: Int) {

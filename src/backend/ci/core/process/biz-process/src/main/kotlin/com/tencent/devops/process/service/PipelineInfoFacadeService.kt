@@ -142,8 +142,7 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val transferService: PipelineTransferYamlService,
     private val yamlFacadeService: PipelineYamlFacadeService,
     private val operationLogService: PipelineOperationLogService,
-    private val pipelineAuthorizationService: PipelineAuthorizationService,
-    private val pipelineAsCodeService: PipelineAsCodeService
+    private val pipelineAuthorizationService: PipelineAuthorizationService
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -1469,24 +1468,26 @@ class PipelineInfoFacadeService @Autowired constructor(
                 channelCode = channelCode ?: ChannelCode.BS
             )
             modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, null, param)
-            watcher.start("s_c_yaml_del")
-            val setting = pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId)
-            if (setting.pipelineAsCodeSettings?.enable == true) {
-                // 检查yaml是否已经在默认分支删除
-                val yamlExist = yamlFacadeService.yamlExistInDefaultBranch(
-                    projectId = projectId, pipelineId = pipelineId
-                )
-                if (yamlExist) {
-                    throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_DELETE_YAML_PIPELINE_IN_DEFAULT_BRANCH
+            if (archiveFlag == true) {
+                watcher.start("s_c_yaml_del")
+                val setting = pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId)
+                if (setting.pipelineAsCodeSettings?.enable == true) {
+                    // 检查yaml是否已经在默认分支删除
+                    val yamlExist = yamlFacadeService.yamlExistInDefaultBranch(
+                        projectId = projectId, pipelineId = pipelineId
+                    )
+                    if (yamlExist) {
+                        throw ErrorCodeException(
+                            errorCode = ProcessMessageCode.ERROR_DELETE_YAML_PIPELINE_IN_DEFAULT_BRANCH
+                        )
+                    }
+                    pipelineSettingFacadeService.saveSetting(
+                        userId = userId, projectId = projectId, pipelineId = pipelineId,
+                        setting = setting.copy(
+                            pipelineAsCodeSettings = PipelineAsCodeSettings(false)
+                        )
                     )
                 }
-                pipelineSettingFacadeService.saveSetting(
-                    userId = userId, projectId = projectId, pipelineId = pipelineId,
-                    setting = setting.copy(
-                        pipelineAsCodeSettings = PipelineAsCodeSettings(false)
-                    )
-                )
             }
             watcher.start("s_r_pipeline_del")
             val deletePipelineResult = pipelineRepositoryService.deletePipeline(
@@ -1494,7 +1495,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 pipelineId = pipelineId,
                 userId = userId,
                 channelCode = channelCode,
-                delete = delete
+                delete = delete,
+                opDslContext = opDslContext
             )
             watcher.stop()
 

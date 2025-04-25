@@ -341,7 +341,10 @@ interface UserPipelineResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        batchDeletePipeline: BatchDeletePipeline
+        batchDeletePipeline: BatchDeletePipeline,
+        @Parameter(description = "归档库标识", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<Map<String, Boolean>>
 
     @Operation(summary = "删除流水线版本")

@@ -28,17 +28,20 @@
 package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.service.pipeline.ArchivePipelineManageService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -48,6 +51,10 @@ class ArchivePipelineFacadeService @Autowired constructor(
     private val pipelineListFacadeService: PipelineListFacadeService,
     private val archivePipelineManageService: ArchivePipelineManageService
 ) {
+
+    @Value("\${pipeline.archive.maxNum:500}")
+    private val pipelineArchiveMaxNum: Int = 500
+
     fun getDownloadAllPipelines(userId: String, projectId: String): List<Map<String, String>> {
         return pipelineListFacadeService.listPermissionPipelineName(projectId, userId)
     }
@@ -92,6 +99,28 @@ class ArchivePipelineFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             cancelFlag = cancelFlag
+        )
+    }
+
+    fun batchMigrateArchivePipelineData(
+        userId: String,
+        projectId: String,
+        cancelFlag: Boolean = false,
+        pipelineIds: List<String>
+    ): String {
+        // 检查一次迁移的流水线数量是否超过限制
+        val size = pipelineIds.size
+        if (size > pipelineArchiveMaxNum) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_OP_PIPELINE_NUM_INVALID,
+                params = arrayOf(size.toString(), pipelineArchiveMaxNum.toString())
+            )
+        }
+        return archivePipelineManageService.batchMigrateData(
+            userId = userId,
+            projectId = projectId,
+            cancelFlag = cancelFlag,
+            pipelineIds = pipelineIds
         )
     }
 
