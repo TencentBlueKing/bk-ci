@@ -78,6 +78,7 @@ class PipelineTimerBuildListener @Autowired constructor(
 ) : PipelineEventListener<PipelineTimerBuildEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineTimerBuildEvent) {
+        logger.info("Receive PipelineTimerBuildEvent from MQ|[$event]")
         val pipelineTimer =
             pipelineTimerService.get(
                 projectId = event.projectId,
@@ -146,11 +147,12 @@ class PipelineTimerBuildListener @Autowired constructor(
                         repositoryName = null,
                         repositoryType = RepositoryType.ID
                     )
-                    val defaultBranch = scmProxyService.getDefaultBranch(
+                    scmProxyService.getDefaultBranch(
                         projectId = projectId,
                         repositoryConfig = repositoryConfig
-                    ) ?: return
-                    listOf(defaultBranch)
+                    )?.let {
+                        listOf(it)
+                    }
                 } else {
                     branchs
                 }
