@@ -100,6 +100,9 @@ const actions = {
         return ajax.post(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}/pipelines`, pipelineIds).then(res => {
             return res.data
         })
+    },
+    updateInstance ({ commit }, { projectId, templateId, version, useTemplateSettings, params }) {
+        return ajax.put(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}/async/update?useTemplateSettings=${useTemplateSettings}&version=${version}`, params)
     }
 }
 

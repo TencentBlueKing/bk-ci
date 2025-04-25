@@ -64,10 +64,9 @@
                             {{ $t("pacMode") }}
                         </label>
                         <bk-switcher
-                            :disabled="pacEnabled || isTemplatePipeline"
+                            :disabled="pacEnabled"
                             theme="primary"
                             name="enablePac"
-                            :title="isTemplatePipeline ? $t('templateYamlNotSupport') : ''"
                             v-model="releaseParams.enablePac"
                             @change="handlePacEnableChange"
                         />
@@ -473,7 +472,6 @@
 
     const filePathDir = ref('.ci/templates/')
     const baseVersionBranch = computed(() => pipelineInfo.value?.baseVersionName || '--')
-    const isTemplatePipeline = computed(() => pipelineInfo.value?.instanceFromTemplate ?? false)
     
     // const isCommitToBranch = computed(() => releaseParams.value.targetAction === TARGET_ACTION_ENUM.COMMIT_TO_BRANCH)
     const rules = computed(() => ({

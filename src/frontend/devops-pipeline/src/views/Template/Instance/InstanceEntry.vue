@@ -68,9 +68,13 @@
                 </bk-resize-layout>
             </main>
         </template>
-        <TemplateReleaseSideSlider
+        <ReleasePipelineSideSlider
             v-model="showRelease"
+            is-template-mode
+            :instance-list="instanceList"
             :is-instance-create-type="isInstanceCreateViewType"
+            :handle-change-file-path="handleChangeFilePath"
+            @release="handleReleaseInstance"
         />
     </section>
 </template>
@@ -79,12 +83,15 @@
     import TemplateBreadCrumb from '@/components/Template/TemplateBreadCrumb'
     import UseInstance from '@/hook/useInstance'
     import { computed, onMounted, ref, watch } from 'vue'
+    import {
+        SET_INSTANCE_LIST
+    } from '@/store/modules/templates/constants'
     import InstanceAside from './InstanceAside'
     import InstanceConfig from './InstanceConfig'
     import TemplateVersionSelector from './TemplateVersionSelector'
-    import TemplateReleaseSideSlider from '@/components/Template/TemplateReleaseSideSlider'
-    const { proxy } = UseInstance()
+    import ReleasePipelineSideSlider from '@/components/PipelineHeader/ReleasePipelineSideSlider'
 
+    const { proxy } = UseInstance()
     const isLoading = ref(false)
     const showRelease = ref(false)
     const projectId = computed(() => proxy.$route.params?.projectId)
@@ -94,6 +101,7 @@
     const instanceList = computed(() => proxy.$store?.state?.templates?.instanceList)
     const currentVersionId = computed(() => proxy?.$route.params?.version ?? pipelineInfo.value?.version)
     const isInstanceCreateViewType = computed(() => proxy.$route.params?.type === 'create')
+    const useTemplateSettings = computed(() => proxy.$store?.state?.templates?.useTemplateSettings)
     watch(() => pipeline.value, () => {
         isLoading.value = false
     }, {
@@ -125,6 +133,28 @@
                 version: currentVersionId.value
             }
         })
+    }
+    function handleChangeFilePath (value, index) {
+        const list = instanceList.value.map(i => i)
+        proxy.$set(list[index], 'filePath', value)
+        
+        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, list)
+    }
+    async function handleReleaseInstance (value) {
+        try {
+            await proxy.$store.dispatch('templates/updateInstance', {
+                useTemplateSettings: useTemplateSettings.value,
+                projectId: projectId.value,
+                templateId: templateId.value,
+                version: currentVersionId.value,
+                params: {
+                    ...value,
+                    instanceReleaseInfos: instanceList.value
+                }
+            })
+        } catch (e) {
+            console.err(e)
+        }
     }
     onMounted(() => {
         requestTemplateByVersion()

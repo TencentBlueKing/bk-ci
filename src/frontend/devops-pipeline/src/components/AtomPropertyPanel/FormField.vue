@@ -304,7 +304,8 @@
             position: relative;
             position: relative;
             display: flex;
-            justify-content: space-between;
+            align-items: center;
+            justify-content: space-around;
             width: 24px;
             height: 24px;
             background: #EAEBF0;
