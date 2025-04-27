@@ -84,32 +84,54 @@ class BatchTaskFinishListener @Autowired constructor(
         }
     }
 
+    /**
+     * 发送批量任务完成通知消息
+     * @param userId 触发任务的用户ID
+     * @param taskType 任务类型枚举
+     * @param batchId 批量任务批次ID
+     * @param taskResults 任务执行结果列表（可能为null）
+     */
     private fun sendBatchTaskFinishMsg(
         userId: String,
         taskType: TaskTypeEnum,
         batchId: String,
         taskResults: List<TaskResult>?
     ) {
+        // 计算任务总数、成功数和失败数
         val totalNum = taskResults?.size ?: 0
         val successNum = taskResults?.count { it.success } ?: 0
         val failNum = totalNum - successNum
+
+        // 从Redis获取任务开始时间
         val startTime = redisOperation.get(BatchTaskUtil.generateBatchTaskStartTimeKey(taskType, batchId)) ?: ""
+
+        // 构建消息标题参数（包含开始时间和批次ID）
         val titleParams = mapOf(KEY_START_TIME to startTime, BATCH_ID to batchId)
-        val maxErrorLength = 500
-        val errorMsg = taskResults?.filter { !it.success }?.take(10) // 最多显示前10个错误
-            ?.joinToString(prefix = "[", postfix = if ((taskResults.size - 10) > 0) "...]" else "]") {
-                JsonUtil.toJson(it).take(1000) // 每个错误最多显示1000字符
-            }?.take(maxErrorLength) // 总长度限制
+
+        // 过滤失败任务并构建错误信息
+        val failTaskResults = taskResults?.filter { !it.success }
+        val errorMsg = if (!failTaskResults.isNullOrEmpty()) {
+            buildErrorMessage(failTaskResults)
+        } else {
+            ""
+        }
+
+        // 构建消息内容参数（包含成功数、失败数和错误信息）
         val bodyParams = mapOf(
-            SUCCESS_NUM to successNum.toString(), FAIL_NUM to failNum.toString(), FAIL_MSG to (errorMsg ?: "")
+            SUCCESS_NUM to successNum.toString(),
+            FAIL_NUM to failNum.toString(),
+            FAIL_MSG to errorMsg
         )
+
+        // 创建通知请求对象
         val request = SendNotifyMessageTemplateRequest(
             templateCode = "BATCH_TASK_FINISH_COMMON_NOTIFY_TEMPLATE",
             receivers = mutableSetOf(userId),
             titleParams = titleParams,
             bodyParams = bodyParams,
-            notifyType = mutableSetOf(NotifyType.WEWORK.name)
+            notifyType = mutableSetOf(NotifyType.WEWORK.name)  // 使用企业微信通知
         )
+
         try {
             // 发送消息通知
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
@@ -119,6 +141,33 @@ class BatchTaskFinishListener @Autowired constructor(
                 ignored
             )
         }
+    }
+
+    /**
+     * 构建错误信息字符串
+     * @param failedTasks 失败任务列表
+     * @return 格式化后的错误信息字符串（最多显示前10个错误，每个错误最多100字符，总长度不超过1000字符）
+     */
+    private fun buildErrorMessage(failedTasks: List<TaskResult>): String {
+        if (failedTasks.isEmpty()) return ""
+
+        // 定义错误信息格式限制参数
+        val maxErrorLength = 1000 // 总长度限制1000字符
+        val maxErrorsToShow = 10  // 最多显示前10个错误
+        val maxCharsPerError = 100 // 每个错误最多显示100字符
+
+        // 处理错误信息：
+        // 1. 取前N个失败任务
+        // 2. 将每个任务序列化为JSON并截取前100个字符
+        // 3. 用[...]包裹，如果超过最大显示数量则添加省略号
+        // 4. 最终截取总长度不超过1000字符
+        return failedTasks.take(maxErrorsToShow)
+            .joinToString(
+                prefix = "[",
+                postfix = if (failedTasks.size > maxErrorsToShow) "...]" else "]"
+            ) {
+                JsonUtil.toJson(it).take(maxCharsPerError)
+            }.take(maxErrorLength)
     }
 
     companion object {
