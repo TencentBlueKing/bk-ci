@@ -22,7 +22,8 @@ import {
     SET_INSTANCE_LIST,
     SET_TEMPLATE_DETAIL,
     UPDATE_INSTANCE_LIST,
-    UPDATE_USE_TEMPLATE_SETTING
+    UPDATE_USE_TEMPLATE_SETTING,
+    SET_RELEASE_ING
 } from './constants'
 export default {
     [SET_INSTANCE_LIST]: (state, list) => {
@@ -40,5 +41,8 @@ export default {
     [SET_TEMPLATE_DETAIL]: (state, data) => {
         Vue.set(state, 'templateDetail', data.templateDetail)
         Vue.set(state, 'templateVersion', data.templateVersion)
+    },
+    [SET_RELEASE_ING]: (state, value) => {
+        Vue.set(state, 'isInstanceReleasing', value)
     }
 }

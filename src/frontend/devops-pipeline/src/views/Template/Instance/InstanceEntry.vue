@@ -19,21 +19,36 @@
                     >
                         {{ $t('cancel') }}
                     </bk-button>
-                    <bk-button
+                    <span
                         v-if="isInstanceCreateViewType"
-
-                        theme="primary"
-                        @click="handleBatchUpgrade"
+                        v-bk-tooltips="{
+                            disabled: !!templateVersion,
+                            content: $t('template.disabledReleaseTips')
+                        }"
                     >
-                        {{ $t('release') }}
-                    </bk-button>
-                    <bk-button
+                        <bk-button
+                            :disabled="!templateVersion"
+                            theme="primary"
+                            @click="handleBatchUpgrade"
+                        >
+                            {{ $t('release') }}
+                        </bk-button>
+                    </span>
+                    <span
                         v-else
-                        theme="primary"
-                        @click="handleBatchUpgrade"
+                        v-bk-tooltips="{
+                            disabled: !!templateVersion,
+                            content: $t('template.disabledReleaseTips')
+                        }"
                     >
-                        {{ $t('template.batchUpgrade') }}
-                    </bk-button>
+                        <bk-button
+                            theme="primary"
+                            :disabled="!templateVersion"
+                            @click="handleBatchUpgrade"
+                        >
+                            {{ $t('template.batchUpgrade') }}
+                        </bk-button>
+                    </span>
                 </aside>
             </header>
             <main class="instance-contents">
@@ -70,7 +85,8 @@
         </template>
         <ReleasePipelineSideSlider
             v-model="showRelease"
-            is-template-mode
+            is-template-instance-mode
+            :version="currentVersionId"
             :instance-list="instanceList"
             :is-instance-create-type="isInstanceCreateViewType"
             :handle-change-file-path="handleChangeFilePath"
@@ -99,7 +115,8 @@
     const pipeline = computed(() => proxy.$store?.state?.atom?.pipeline)
     const pipelineInfo = computed(() => proxy.$store?.state?.atom?.pipelineInfo)
     const instanceList = computed(() => proxy.$store?.state?.templates?.instanceList)
-    const currentVersionId = computed(() => proxy?.$route.params?.version ?? pipelineInfo.value?.version)
+    const currentVersionId = computed(() => proxy?.$route.params?.version ?? pipelineInfo.value?.version) // 路径上的模板版本号
+    const templateVersion = computed(() => proxy?.$store?.state?.templates?.templateVersion) // 实例化选中的模板版本号
     const isInstanceCreateViewType = computed(() => proxy.$route.params?.type === 'create')
     const useTemplateSettings = computed(() => proxy.$store?.state?.templates?.useTemplateSettings)
     watch(() => pipeline.value, () => {
@@ -141,12 +158,13 @@
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, list)
     }
     async function handleReleaseInstance (value) {
+        const fn = isInstanceCreateViewType.value ? 'templates/updateInstance' : 'templates/releaseInstance'
         try {
-            await proxy.$store.dispatch('templates/updateInstance', {
+            await proxy.$store.dispatch(fn, {
                 useTemplateSettings: useTemplateSettings.value,
                 projectId: projectId.value,
                 templateId: templateId.value,
-                version: currentVersionId.value,
+                version: templateVersion.value,
                 params: {
                     ...value,
                     instanceReleaseInfos: instanceList.value

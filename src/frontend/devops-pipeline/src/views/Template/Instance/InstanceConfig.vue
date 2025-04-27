@@ -1,7 +1,7 @@
 <template>
     <section
         class="instance-config-wrapper"
-        v-bkloading="{ isLoading }"
+        v-bkloading="{ isLoading: isLoading || !curInstance.pipelineName }"
     >
         <section class="instance-config-constant">
             <header class="config-header">
@@ -344,7 +344,17 @@
     watch(() => curTemplateVersion.value, () => {
         // 切换版本，重置实例为初始状态
         isLoading.value = true
-        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, initialInstanceList.value)
+        if (props.isInstanceCreateType) {
+            proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, instanceList.value.map((instance) => {
+                return {
+                    ...instance,
+                    param: curTemplateDetail.value.params,
+                    buildNo: curTemplateDetail.value.buildNo
+                }
+            }))
+        } else {
+            proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, initialInstanceList.value)
+        }
     })
     function compareParams (instance, template) {
         const instanceParams = instance.param

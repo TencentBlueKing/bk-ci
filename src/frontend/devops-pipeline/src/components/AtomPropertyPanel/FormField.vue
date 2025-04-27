@@ -180,7 +180,7 @@
                                     >
                                         <Logo
                                             name="use-default"
-                                            size="14"
+                                            size="20"
                                         />
                                     </span>
                                 )

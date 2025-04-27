@@ -103,6 +103,29 @@ const actions = {
     },
     updateInstance ({ commit }, { projectId, templateId, version, useTemplateSettings, params }) {
         return ajax.put(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}/async/update?useTemplateSettings=${useTemplateSettings}&version=${version}`, params)
+    },
+    releaseInstance ({ commit }, { projectId, templateId, version, useTemplateSettings, params }) {
+        return ajax.put(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/async/${templateId}?useTemplateSettings=${useTemplateSettings}&version=${version}`, params)
+    },
+    // 获取实例化发布状态（轮询）
+    fetchReleaseTaskStatus ({ commit }, { projectId, templateId, taskId }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId})/task&taskId=${taskId}`)
+    },
+    // 获取模板实例化发布时的版本信息
+    fetchTemplateReleasePreFetch ({ commit }, { projectId, templateId, version, useTemplateSettings, params }) {
+        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}/${version}/preFetch?useTemplateSettings=${useTemplateSettings}&version=${version}`, params)
+    },
+    // 重试发布实例化
+    retryReleaseInstance ({ commit }, { projectId, templateId, baseId }) {
+        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}/task/${baseId}/retry`)
+    },
+    // 发布失败修改配置，获取发布实例化任务的参数
+    fetchTaskDetailParams ({ commit }, { projectId, templateId, baseId }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}/task/${baseId}/detail`)
+    },
+    // 获取正在发布的实例化任务列表
+    fetchReleaseTaskList ({ commit }, { projectId, templateId, baseId }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}/task/${baseId}`)
     }
 }
 

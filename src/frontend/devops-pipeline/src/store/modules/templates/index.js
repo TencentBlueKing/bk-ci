@@ -28,7 +28,9 @@ export default {
         initialInstanceList: [],
         useTemplateSettings: false,
         templateVersion: '',
-        templateDetail: {}
+        templateDetail: {},
+        isInstanceReleasing: false,
+        releaseTaskId: ''
     },
     mutations,
     actions,

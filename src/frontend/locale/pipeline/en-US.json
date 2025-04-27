@@ -538,7 +538,8 @@
     "reset": "Reset",
     "cancelParticipant": "Cancel Participant",
     "setParticipant": "Set Participant",
-    "useDefaultValue": "Use Default Value"
+    "useDefaultValue": "Use Default Value",
+    "disabledReleaseTips": "Please Select the Template Version"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
