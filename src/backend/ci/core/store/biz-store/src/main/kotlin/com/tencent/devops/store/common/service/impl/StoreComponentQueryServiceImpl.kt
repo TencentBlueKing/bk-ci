@@ -768,7 +768,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
     ): VersionInfo? {
         val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
 
-        // 判断测试环境标志
+        // 判断是否需要处理测试中的版本
         val isTestEnv = storeProjectRelDao.getProjectRelInfo(
             dslContext = dslContext,
             storeCode = storeCode,
@@ -776,18 +776,23 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             storeProjectType = StoreProjectTypeEnum.TEST,
             projectCode = projectCode,
             instanceId = instanceId
-        )?.firstOrNull() != null
+        )?.any() ?: false
 
-        // 获取最新可用版本
-        val statusList = if (isTestEnv) StoreStatusEnum.getTestStatusList() else listOf(StoreStatusEnum.RELEASED.name)
-        val latestVersion = storeBaseQueryDao.getMaxVersionComponentByCode(
+        // 获取最新可用版本：根据环境状态构建版本状态过滤条件
+        val statusList = mutableListOf(StoreStatusEnum.RELEASED.name).apply {
+            if (isTestEnv) {
+                addAll(StoreStatusEnum.getTestStatusList())  // 增加测试中的状态
+            }
+        }
+        // 查询符合条件的最新版本组件
+        val validLatestVersionRecord = storeBaseQueryDao.getMaxVersionComponentByCode(
             dslContext = dslContext,
             storeType = storeTypeEnum,
             storeCode = storeCode,
             statusList = statusList
-        )?.takeIf { it.version.isNotBlank() } ?: return null
+        ) ?: return null  // 无可用版本直接返回null
 
-        // 获取已安装组件关系信息
+        // 获取已安装组件关系信息：查询项目关联记录
         val installedRel = storeProjectRelDao.getProjectRelInfo(
             dslContext = dslContext,
             storeCode = storeCode,
@@ -796,16 +801,36 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             projectCode = projectCode,
             instanceId = instanceId
         )?.firstOrNull()
+        val installedVersion = installedRel?.version
+        val validLatestBusNum = validLatestVersionRecord.busNum
+        val validLatestVersion = validLatestVersionRecord.version
+        // 未安装时直接返回最新版本信息
+        if (installedVersion.isNullOrBlank()) {
+            return createVersionInfo(validLatestVersion)
+        }
 
-        // 处理版本比对逻辑
+        // 获取当前安装版本对应的业务号（用于版本比较）
+        val currentBusNum = storeBaseQueryDao.getMaxBusNumByCode(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeTypeEnum,
+            version = installedVersion
+        )
+
+        // 业务号比较逻辑（决定是否需要升级）
         return when {
-            installedRel == null -> createVersionInfo(latestVersion.version)
-            isUpdateRequired(
-                storeId = latestVersion.id,
+            // 无法获取当前业务号时返回null
+            currentBusNum == null -> null
+            // 最新业务号更大时需要升级
+            validLatestBusNum > currentBusNum -> createVersionInfo(validLatestVersion)
+            // 业务号相同，但是安装时间晚于最新版本发布时间，需要更新
+            validLatestBusNum == currentBusNum && isUpdateRequired(
+                storeId = validLatestVersionRecord.id,
                 installedTime = installedRel.createTime,
                 osName = osName,
                 osArch = osArch
-            ) -> createVersionInfo(latestVersion.version, latestVersion.version)
+            ) -> createVersionInfo(validLatestVersion)
+            // 其他情况不需要升级
             else -> null
         }
     }
@@ -827,10 +852,10 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         }
     }
 
-    private fun createVersionInfo(latestVersion: String, currentVersion: String = latestVersion) =
+    private fun createVersionInfo(versionValue: String, versionName: String = versionValue) =
         VersionInfo(
-            versionName = latestVersion,
-            versionValue = currentVersion.takeIf { it.isNotBlank() } ?: latestVersion
+            versionName = versionName.takeIf { it.isNotBlank() } ?: versionValue,
+            versionValue = versionValue
         )
 
     private fun getStoreInfos(storeInfoQuery: StoreInfoQuery): Pair<Long, List<Record>> {
