@@ -35,7 +35,7 @@ abstract class AbstractStoreComponentPkgSizeHandleService {
             return atomPackageInfos.firstOrNull {
                 it.osName == osName && it.arch == osArch
             }?.let {
-                BigDecimal(it.size)
+                formatSizeInMB(BigDecimal(it.size))
             }
         }
 
