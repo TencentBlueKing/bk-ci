@@ -58,6 +58,7 @@
 <script>
     import mixins from '../mixins'
     import { isObject } from '@/utils/util'
+    import { mapState } from 'vuex'
     export default {
         name: 'sub-parameter',
         mixins: [mixins],
@@ -74,6 +75,9 @@
             }
         },
         computed: {
+            ...mapState('atom', [
+                'pipelineInfo'
+            ]),
             paramValues () {
                 const { atomValue = {}, $route: { params = {} } } = this
                 return {
@@ -157,7 +161,11 @@
                     const value = typeof this.paramValues[key] === 'undefined' ? urlQuery[key] : this.paramValues[key]
                     url += `${index <= 0 ? '?' : '&'}${key}=${value}`
                 })
-
+                const pipelineInfoQuery = this.param.pipelineInfoQuery || {}
+                Object.keys(pipelineInfoQuery).forEach(key => {
+                    const value = typeof this.pipelineInfo[key] === 'undefined' ? pipelineInfoQuery[key] : this.pipelineInfo[key]
+                    Object.keys(urlQuery).length ? url += `&${key}=${value}` : url += `?${key}=${value}`
+                })
                 this.isLoading = true
                 this.$ajax.get(url).then((res) => {
                     this.subParamsKeyList = res.data?.properties || res.data || []
