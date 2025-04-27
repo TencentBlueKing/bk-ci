@@ -104,7 +104,7 @@ class PipelineBuildService(
     private val simpleRateLimiter: SimpleRateLimiter,
     private val buildIdGenerator: BuildIdGenerator,
     private val pipelineAsCodeService: PipelineAsCodeService
-    ) {
+) {
     companion object {
         private val NO_LIMIT_CHANNEL = listOf(ChannelCode.CODECC)
         private const val CONTEXT_PREFIX = "variables."

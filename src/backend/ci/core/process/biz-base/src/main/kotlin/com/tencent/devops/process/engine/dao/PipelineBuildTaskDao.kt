@@ -270,16 +270,10 @@ class PipelineBuildTaskDao {
         }
     }
 
-    fun getByBuildId(
-        dslContext: DSLContext,
-        projectId: String,
-        buildId: String,
-        stageId: String? = null
-    ): Collection<PipelineBuildTask> {
+    fun getByBuildId(dslContext: DSLContext, projectId: String, buildId: String): Collection<PipelineBuildTask> {
         return with(T_PIPELINE_BUILD_TASK) {
             dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
-                .let { if (stageId.isNullOrEmpty()) it else it.and(STAGE_ID.eq(stageId)) }
                 .orderBy(TASK_SEQ.asc()).fetch(mapper)
         }
     }

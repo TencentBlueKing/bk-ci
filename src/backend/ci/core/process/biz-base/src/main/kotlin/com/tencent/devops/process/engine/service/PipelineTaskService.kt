@@ -187,8 +187,8 @@ class PipelineTaskService @Autowired constructor(
         return list
     }
 
-    fun listByBuildId(projectId: String, buildId: String, stageId: String? = null): Collection<PipelineBuildTask> {
-        return pipelineBuildTaskDao.getByBuildId(dslContext, projectId, buildId, stageId)
+    fun listByBuildId(projectId: String, buildId: String): Collection<PipelineBuildTask> {
+        return pipelineBuildTaskDao.getByBuildId(dslContext, projectId, buildId)
     }
 
     fun batchSave(transactionContext: DSLContext?, taskList: Collection<PipelineBuildTask>) {
