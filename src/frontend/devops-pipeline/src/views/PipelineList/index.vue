@@ -32,7 +32,6 @@
         setup () {
             const vm = getCurrentInstance()
             const activePanel = computed(() => vm.proxy.$route.name)
-
             const panels = [
                 {
                     label: vm.proxy.$t('pipeline'),
@@ -78,26 +77,6 @@
                 display: flex;
                 flex: 1;
                 overflow: hidden;
-            }
-        }
-        .default-link-list {
-            display: flex;
-            margin-right: 24px;
-            .pipeline-dropdown-trigger {
-                font-size: 14px;
-                cursor: pointer;
-                .devops-icon {
-                    display: inline-block;
-                    transition: all ease 0.2s;
-                    margin-left: 4px;
-                    font-size: 12px;
-                    &.icon-flip {
-                        transform: rotate(180deg);
-                    }
-                }
-                &.active {
-                    color: $primaryColor;
-                }
             }
         }
     }
