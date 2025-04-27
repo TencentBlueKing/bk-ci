@@ -13,6 +13,7 @@
 </template>
 <script>
     import request from '@/utils/request'
+    import { isAbsoluteURL } from '@/utils/util'
     import { computed, defineComponent, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
     export default defineComponent({
         setup () {
@@ -54,7 +55,11 @@
                     if (isLoading.value || !vm.proxy.$route?.params?.projectId) return
                     isLoading.value = true
                     const res = await request.get('/project/api/user/services/61/url/get')
-                    eplusUrl.value = res.data
+                    if (isAbsoluteURL(res.data)) {
+                        eplusUrl.value = res.data
+                    } else {
+                        eplusUrl.value = `${window.location.origin}${res.data}${vm.proxy.$route.params.projectId}`
+                    }
                 } catch (error) {
                     console.log(error)
                 }
