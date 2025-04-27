@@ -11,6 +11,7 @@
             :label="panel.label"
             :name="panel.name"
             :key="panel.name"
+            render-directive="if"
         >
             <component
                 :is="activeComponent"
@@ -23,38 +24,32 @@
 
 <script>
     import MoreRoute from '@/components/MoreRoute'
+    import { computed, defineComponent, getCurrentInstance, ref } from 'vue'
 
-    export default {
+    export default defineComponent({
         components: {
             MoreRoute
         },
-        data () {
+        setup () {
+            const activePanel = ref('PipelineManageList')
+            const vm = getCurrentInstance()
+            const activeComponent = computed(() => {
+                return panels.find(panel => panel.name === activePanel.value)?.component
+            })
+            const panels = [
+                {
+                    label: vm.proxy.$t('pipeline'),
+                    name: 'PipelineManageList',
+                    component: 'router-view'
+                }
+            ]
             return {
-                activePanel: 'PipelineManageList'
+                activePanel,
+                panels,
+                activeComponent
             }
-        },
-        computed: {
-            projectId () {
-                return this.$route.params.projectId
-            },
-            routeName () {
-                return this.$route.name
-            },
-            panels () {
-                return [
-                    {
-                        label: this.$t('pipeline'),
-                        name: 'PipelineManageList',
-                        component: 'router-view'
-                    }
-                ]
-            },
-            activeComponent () {
-                return this.panels.find(panel => panel.name === this.activePanel)?.component
-            }
-
         }
-    }
+    })
 </script>
 <style lang="scss">
     @import './../../scss/conf';
