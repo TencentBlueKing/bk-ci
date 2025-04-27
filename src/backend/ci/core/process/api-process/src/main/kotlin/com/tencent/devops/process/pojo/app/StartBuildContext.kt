@@ -262,7 +262,7 @@ data class StartBuildContext(
 
                 else -> null
             } ?: emptyMap()
-            !dependOnContainerId2JobIds.keys.contains(container.id)
+            !dependOnContainerId2JobIds.keys.contains(retryTaskInContainerId)
         } else {
             false
         }
@@ -294,13 +294,20 @@ data class StartBuildContext(
             // 解析出定义的流水线变量
             val retryStartTaskId = params[PIPELINE_RETRY_START_TASK_ID]
 
+            val retryOnRunningBuild = params[PIPELINE_RETRY_RUNNING_BUILD]?.toBoolean() ?: false
+
             val (actionType, executeCount, isStageRetry) = if (params[PIPELINE_RETRY_COUNT] != null) {
                 val count = try {
                     params[PIPELINE_RETRY_COUNT].toString().trim().toInt().coerceAtLeast(0) // 不允许负数
                 } catch (ignored: NumberFormatException) {
                     0
                 }
-                Triple(ActionType.RETRY, count + 1, retryStartTaskId?.startsWith("stage-") == true)
+                val retryCount = if (retryOnRunningBuild) {
+                    count
+                } else {
+                    count + 1
+                }
+                Triple(ActionType.RETRY, retryCount, retryStartTaskId?.startsWith("stage-") == true)
             } else {
                 Triple(ActionType.START, 1, false)
             }
@@ -351,7 +358,7 @@ data class StartBuildContext(
                 debug = debug,
                 debugModelStr = modelStr,
                 yamlVersion = yamlVersion,
-                retryOnRunningBuild = params[PIPELINE_RETRY_RUNNING_BUILD]?.toBoolean() ?: false,
+                retryOnRunningBuild = retryOnRunningBuild,
                 retryTaskInStageId = params[PIPELINE_RETRY_TASK_IN_STAGE_ID],
                 retryTaskInContainerId = params[PIPELINE_RETRY_TASK_IN_CONTAINER_ID],
             )

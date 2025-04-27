@@ -819,6 +819,9 @@ class PipelineRuntimeService @Autowired constructor(
             // --- 第2层循环：Container遍历处理 ---
             stage.containers.forEach nextContainer@{ container ->
                 if (context.shouldSkipRefreshWhenRetryRunning(container)) {
+                    logger.info(
+                        "${context.buildId}|EXECUTE|#${container.id!!}|${container.status}|NOT_RUNNING_CONTAINER"
+                    )
                     context.containerSeq++
                     return@nextContainer
                 }
