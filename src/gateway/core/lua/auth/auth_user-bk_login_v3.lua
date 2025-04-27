@@ -21,10 +21,17 @@ if config.esb.enabled then
     oauthUtil:is_login(bk_token)
 end
 
+-- 获取租户ID
+local tenant_id = nil
+if config.tenant.enabled then
+    tenant_id = oauthUtil:verify_bk_token(bk_token).tenant_id
+end
+
 local ticket = oauthUtil:get_ticket(bk_token)
 
 --- 设置用户信息
 ngx.header["x-devops-uid"] = ticket.identity.username
 ngx.header["x-devops-bk-token"] = bk_token
 ngx.header["x-devops-access-token"] = ticket.access_token
+ngx.header["x-bk-tenant-id"] = tenant_id
 ngx.exit(200)

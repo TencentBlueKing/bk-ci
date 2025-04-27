@@ -56,3 +56,4 @@ bkCiBuildDataClearSwitch: false
 bkCiOpenapiApiAuth: false
 bkCiMqDefaultBinder: core-rabbit
 bkEnableMultiTenantMode: false
+bkTenantEnable: false
