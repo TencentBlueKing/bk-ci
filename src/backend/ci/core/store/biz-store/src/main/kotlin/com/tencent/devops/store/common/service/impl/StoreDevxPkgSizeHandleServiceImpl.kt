@@ -10,10 +10,10 @@ import com.tencent.devops.store.common.dao.StoreVersionLogDao
 import com.tencent.devops.store.common.service.AbstractStoreComponentPkgSizeHandleService
 import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.version.StoreVersionSizeInfo
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.math.BigDecimal
 
 
 @Service("DEVX_PKG_SIZE_HANDLE_SERVICE")
@@ -118,8 +118,8 @@ class StoreDevxPkgSizeHandleServiceImpl: AbstractStoreComponentPkgSizeHandleServ
         storeCode: String,
         osName: String?,
         osArch: String?
-    ): BigDecimal? {
-        return storeVersionLogDao.getComponentSizeByVersionAndCode(
+    ): StoreVersionSizeInfo {
+        val size = storeVersionLogDao.getComponentSizeByVersionAndCode(
             dslContext = dslContext,
             storeCode = storeCode,
             version = version,
@@ -132,5 +132,12 @@ class StoreDevxPkgSizeHandleServiceImpl: AbstractStoreComponentPkgSizeHandleServ
                     osArch = osArch
                 )
             }
+        return StoreVersionSizeInfo(
+            storeCode = storeCode,
+            storeType = StoreTypeEnum.DEVX.name,
+            version = version,
+            packageSize = size,
+            unit = "MB"
+        )
     }
 }

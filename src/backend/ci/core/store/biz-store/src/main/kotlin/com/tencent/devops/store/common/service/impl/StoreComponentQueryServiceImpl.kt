@@ -98,14 +98,14 @@ import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
-import com.tencent.devops.store.pojo.common.version.VersionInfo
 import com.tencent.devops.store.pojo.common.version.StoreVersionLogInfo
+import com.tencent.devops.store.pojo.common.version.StoreVersionSizeInfo
+import com.tencent.devops.store.pojo.common.version.VersionInfo
 import com.tencent.devops.store.pojo.common.version.VersionModel
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
@@ -1192,7 +1192,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         version: String,
         osName: String?,
         osArch: String?
-    ): BigDecimal? {
+    ): StoreVersionSizeInfo {
         return SpringContextUtil.getBean(
             AbstractStoreComponentPkgSizeHandleService::class.java,
             "${storeType}_PKG_SIZE_HANDLE_SERVICE"

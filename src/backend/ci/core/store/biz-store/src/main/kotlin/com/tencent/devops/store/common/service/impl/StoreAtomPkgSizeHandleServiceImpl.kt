@@ -11,6 +11,7 @@ import com.tencent.devops.store.common.service.AbstractStoreComponentPkgSizeHand
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.version.StoreVersionSizeInfo
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -119,8 +120,8 @@ class StoreAtomPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
         storeCode: String,
         osName: String?,
         osArch: String?
-    ): BigDecimal? {
-        return atomDao.getComponentSizeByVersionAndCode(
+    ): StoreVersionSizeInfo {
+        val size = atomDao.getComponentSizeByVersionAndCode(
             dslContext = dslContext,
             storeCode = storeCode,
             version = version
@@ -132,6 +133,13 @@ class StoreAtomPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
                     osArch = osArch
                 )
             }
+        return StoreVersionSizeInfo(
+            storeCode = storeCode,
+            storeType = StoreTypeEnum.ATOM.name,
+            version = version,
+            packageSize = size,
+            unit = "MB"
+        )
     }
 }
 

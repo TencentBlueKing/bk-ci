@@ -38,9 +38,9 @@ import com.tencent.devops.store.pojo.common.StoreInfoQuery
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
-import com.tencent.devops.store.pojo.common.version.VersionInfo
 import com.tencent.devops.store.pojo.common.version.StoreVersionLogInfo
-import java.math.BigDecimal
+import com.tencent.devops.store.pojo.common.version.StoreVersionSizeInfo
+import com.tencent.devops.store.pojo.common.version.VersionInfo
 
 interface StoreComponentQueryService {
 
@@ -153,5 +153,5 @@ interface StoreComponentQueryService {
         version: String,
         osName: String?,
         osArch: String?
-    ): BigDecimal?
+    ): StoreVersionSizeInfo
 }

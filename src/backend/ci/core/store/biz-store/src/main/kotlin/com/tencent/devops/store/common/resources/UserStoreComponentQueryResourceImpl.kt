@@ -47,9 +47,9 @@ import com.tencent.devops.store.pojo.common.test.StoreTestItem
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.version.StoreVersionLogInfo
+import com.tencent.devops.store.pojo.common.version.StoreVersionSizeInfo
 import com.tencent.devops.store.pojo.common.version.VersionInfo
 import org.springframework.beans.factory.annotation.Autowired
-import java.math.BigDecimal
 
 @RestResource
 class UserStoreComponentQueryResourceImpl @Autowired constructor(
@@ -265,7 +265,7 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
         version: String,
         osName: String?,
         osArch: String?
-    ): Result<BigDecimal?> {
+    ): Result<StoreVersionSizeInfo> {
         return Result(
             storeComponentQueryService.getStoreVersionSize(
                 storeCode = storeCode,

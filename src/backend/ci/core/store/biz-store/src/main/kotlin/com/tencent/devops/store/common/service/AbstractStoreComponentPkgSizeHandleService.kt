@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.version.StoreVersionSizeInfo
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -25,7 +26,7 @@ abstract class AbstractStoreComponentPkgSizeHandleService {
         storeCode: String,
         osName: String?,
         osArch: String?
-    ): BigDecimal?
+    ): StoreVersionSizeInfo
 
     fun parseComponentPackageSize(size: String, osName: String?, osArch: String?): BigDecimal? {
         val atomPackageInfos = JsonUtil.to(size, object : TypeReference<List<StorePackageInfoReq>>() {})

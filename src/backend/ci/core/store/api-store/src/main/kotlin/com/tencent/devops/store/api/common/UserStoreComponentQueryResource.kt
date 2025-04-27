@@ -44,6 +44,7 @@ import com.tencent.devops.store.pojo.common.test.StoreTestItem
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.version.StoreVersionLogInfo
+import com.tencent.devops.store.pojo.common.version.StoreVersionSizeInfo
 import com.tencent.devops.store.pojo.common.version.VersionInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -57,7 +58,6 @@ import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
-import java.math.BigDecimal
 
 @Tag(name = "USER_STORE_COMPONENT", description = "研发商店-组件查询")
 @Path("/user/store/components")
@@ -393,5 +393,5 @@ interface UserStoreComponentQueryResource {
         @Parameter(description = "操作系统架构", required = false)
         @QueryParam("osArch")
         osArch: String? = null
-    ): Result<BigDecimal?>
+    ): Result<StoreVersionSizeInfo>
 }

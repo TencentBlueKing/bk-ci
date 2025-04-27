@@ -4,6 +4,7 @@ import com.tencent.devops.store.common.service.AbstractStoreComponentPkgSizeHand
 import com.tencent.devops.store.image.dao.ImageCommonDao
 import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.version.StoreVersionSizeInfo
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -30,12 +31,25 @@ class StoreImagePkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSe
         TODO("Not yet implemented")
     }
 
-    override fun getComponentVersionSize(version: String, storeCode: String, osName: String?, osArch: String?): BigDecimal? {
-        return imageDao.getComponentSizeByVersionAndCode(
+    override fun getComponentVersionSize(
+        version: String,
+        storeCode: String,
+        osName: String?,
+        osArch: String?
+    ): StoreVersionSizeInfo {
+        val size = imageDao.getComponentSizeByVersionAndCode(
             dslContext = dslContext,
             storeCode = storeCode,
             version = version
         ).takeIf { !it.isNullOrBlank() }
             ?.let { formatSizeInMB(BigDecimal(it)) }
+
+        return StoreVersionSizeInfo(
+            storeCode = storeCode,
+            storeType = StoreTypeEnum.IMAGE.name,
+            version = version,
+            packageSize = size,
+            unit = "MB"
+        )
     }
 }
