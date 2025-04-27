@@ -1,6 +1,6 @@
 <template>
     <bk-tab
-        :active.sync="activePanel"
+        :active="activePanel"
         :label-height="48"
         type="unborder-card"
         class="pipeline-content"
@@ -13,10 +13,7 @@
             :key="panel.name"
             render-directive="if"
         >
-            <component
-                v-if="activeComponent"
-                :is="activeComponent"
-            />
+            <router-view></router-view>
         </bk-tab-panel>
 
         <more-route slot="setting" />
@@ -25,18 +22,15 @@
 
 <script>
     import MoreRoute from '@/components/MoreRoute'
-    import { computed, defineComponent, getCurrentInstance, ref } from 'vue'
+    import { computed, defineComponent, getCurrentInstance } from 'vue'
 
     export default defineComponent({
         components: {
             MoreRoute
         },
         setup () {
-            const activePanel = ref('PipelineManageList')
             const vm = getCurrentInstance()
-            const activeComponent = computed(() => {
-                return panels.find(panel => panel.name === activePanel.value)?.component
-            })
+            const activePanel = computed(() => vm.proxy.$route.name)
             const panels = [
                 {
                     label: vm.proxy.$t('pipeline'),
@@ -46,8 +40,7 @@
             ]
             return {
                 activePanel,
-                panels,
-                activeComponent
+                panels
             }
         }
     })
@@ -71,26 +64,6 @@
                 display: flex;
                 flex: 1;
                 overflow: hidden;
-            }
-        }
-        .default-link-list {
-            display: flex;
-            margin-right: 24px;
-            .pipeline-dropdown-trigger {
-                font-size: 14px;
-                cursor: pointer;
-                .devops-icon {
-                    display: inline-block;
-                    transition: all ease 0.2s;
-                    margin-left: 4px;
-                    font-size: 12px;
-                    &.icon-flip {
-                        transform: rotate(180deg);
-                    }
-                }
-                &.active {
-                    color: $primaryColor;
-                }
             }
         }
     }
