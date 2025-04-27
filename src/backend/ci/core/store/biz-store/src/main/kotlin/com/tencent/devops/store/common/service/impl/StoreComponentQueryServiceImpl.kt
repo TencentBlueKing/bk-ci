@@ -781,7 +781,8 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         // 获取最新可用版本：根据环境状态构建版本状态过滤条件
         val statusList = mutableListOf(StoreStatusEnum.RELEASED.name).apply {
             if (isTestEnv) {
-                addAll(StoreStatusEnum.getTestStatusList())  // 增加测试中的状态
+                // 增加测试中的状态
+                addAll(StoreStatusEnum.getTestStatusList())
             }
         }
         // 查询符合条件的最新版本组件
@@ -790,7 +791,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             storeType = storeTypeEnum,
             storeCode = storeCode,
             statusList = statusList
-        ) ?: return null  // 无可用版本直接返回null
+        ) ?: return null
 
         // 获取已安装组件关系信息：查询项目关联记录
         val installedRel = storeProjectRelDao.getProjectRelInfo(
