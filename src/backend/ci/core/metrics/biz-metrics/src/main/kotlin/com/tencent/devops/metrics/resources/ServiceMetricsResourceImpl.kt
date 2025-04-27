@@ -57,7 +57,6 @@ class ServiceMetricsResourceImpl constructor(
     private val dispatchJobMetricsService: DispatchJobMetricsService
 ) : ServiceMetricsResource {
 
-
     @BkApiPermission([BkApiHandleType.PROJECT_MEMBER_CHECK])
     override fun queryPipelineSumInfo(
         projectId: String,
@@ -84,7 +83,6 @@ class ServiceMetricsResourceImpl constructor(
             )
         )
     }
-
 
     @BkApiPermission([BkApiHandleType.PROJECT_MEMBER_CHECK])
     override fun queryPipelineSummaryInfo(

@@ -61,7 +61,6 @@ class UserAtomDisplayConfigResourceImpl @Autowired constructor(
         )
     }
 
-
     @BkApiPermission([BkApiHandleType.PROJECT_MEMBER_CHECK])
     override fun deleteAtomDisplayConfig(
         projectId: String,
