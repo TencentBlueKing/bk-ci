@@ -28,6 +28,7 @@
 package com.tencent.devops.store.common.service
 
 import com.tencent.devops.store.pojo.common.QueryComponentPkgEnvInfoParam
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
@@ -147,11 +148,13 @@ interface StoreReleaseSpecBusService {
      * @param storeType 组件类型
      * @param storeCode 组件标识
      * @param version 组件版本
+     * @param releaseType 发布类型
      */
     fun doStoreEnvBus(
         storeCode: String,
         storeType: StoreTypeEnum,
         version: String,
-        userId: String
+        userId: String,
+        releaseType: ReleaseTypeEnum? = null
     )
 }
