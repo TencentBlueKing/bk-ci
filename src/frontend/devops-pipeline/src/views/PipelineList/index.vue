@@ -23,38 +23,41 @@
 
 <script>
     import MoreRoute from '@/components/MoreRoute'
+    import { defineComponent, getCurrentInstance, ref } from 'vue'
 
-    export default {
+    export default defineComponent({
         components: {
             MoreRoute
         },
-        computed: {
-            activePanel () {
-                return this.$route.name
-            },
-            panels () {
-                return [
-                    {
-                        label: this.$t('pipeline'),
-                        name: 'PipelineManageList'
-                    },
-                    {
-                        label: this.$t('pipelineDataBoard'),
-                        name: 'PipelineDataBoard'
-                    }
-                ]
-            }
-        },
-        methods: {
-            handleTabChange (name) {
-                if (this.activePanel === name) return
+        setup () {
+            const vm = getCurrentInstance()
+            const activePanel = ref(vm.proxy.$route.name)
+
+            const panels = [
+                {
+                    label: vm.proxy.$t('pipeline'),
+                    name: 'PipelineManageList'
+                },
+                {
+                    label: vm.proxy.$t('pipelineDataBoard'),
+                    name: 'PipelineDataBoard'
+                }
+            ]
+
+            function handleTabChange (name) {
+                if (activePanel.value === name) return
                 // 跳转到对应的路由
                 this.$router.push({
                     name
                 })
             }
+            return {
+                activePanel,
+                panels,
+                handleTabChange
+            }
         }
-    }
+    })
 </script>
 <style lang="scss">
     @import './../../scss/conf';
