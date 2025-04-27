@@ -14,6 +14,7 @@
             render-directive="if"
         >
             <component
+                v-if="activeComponent"
                 :is="activeComponent"
             />
         </bk-tab-panel>
