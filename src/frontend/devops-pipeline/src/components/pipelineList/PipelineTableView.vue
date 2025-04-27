@@ -558,26 +558,26 @@
 
 <script>
     import Logo from '@/components/Logo'
-import PipelineStatusIcon from '@/components/PipelineStatusIcon'
-import PipelineListEmpty from '@/components/pipelineList/PipelineListEmpty'
-import ExtMenu from '@/components/pipelineList/extMenu'
-import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
-import {
-ALL_PIPELINE_VIEW_ID,
-CACHE_PIPELINE_TABLE_WIDTH_MAP,
-DELETED_VIEW_ID,
-PIPELINE_TABLE_COLUMN_CACHE,
-PIPELINE_TABLE_LIMIT_CACHE,
-RECENT_USED_VIEW_ID
-} from '@/store/constants'
-import {
-PROJECT_RESOURCE_ACTION,
-RESOURCE_ACTION,
-handlePipelineNoPermission
-} from '@/utils/permission'
-import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
-import { convertTime, isShallowEqual, prettyDateTimeFormat } from '@/utils/util'
-import { mapGetters, mapState } from 'vuex'
+    import PipelineStatusIcon from '@/components/PipelineStatusIcon'
+    import PipelineListEmpty from '@/components/pipelineList/PipelineListEmpty'
+    import ExtMenu from '@/components/pipelineList/extMenu'
+    import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
+    import {
+        ALL_PIPELINE_VIEW_ID,
+        CACHE_PIPELINE_TABLE_WIDTH_MAP,
+        DELETED_VIEW_ID,
+        PIPELINE_TABLE_COLUMN_CACHE,
+        PIPELINE_TABLE_LIMIT_CACHE,
+        RECENT_USED_VIEW_ID
+    } from '@/store/constants'
+    import {
+        PROJECT_RESOURCE_ACTION,
+        RESOURCE_ACTION,
+        handlePipelineNoPermission
+    } from '@/utils/permission'
+    import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
+    import { convertTime, isShallowEqual, prettyDateTimeFormat } from '@/utils/util'
+    import { mapGetters, mapState } from 'vuex'
 
     export default {
         components: {
