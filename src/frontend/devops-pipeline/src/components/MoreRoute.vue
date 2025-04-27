@@ -113,5 +113,8 @@
         li.active > a {
             color: $primaryColor;
         }
+        .bk-dropdown-list > li {
+            display: block;
+        }
     }
 </style>
