@@ -23,7 +23,7 @@
 
 <script>
     import MoreRoute from '@/components/MoreRoute'
-    import { defineComponent, getCurrentInstance, ref } from 'vue'
+    import { computed, defineComponent, getCurrentInstance } from 'vue'
 
     export default defineComponent({
         components: {
@@ -31,7 +31,7 @@
         },
         setup () {
             const vm = getCurrentInstance()
-            const activePanel = ref(vm.proxy.$route.name)
+            const activePanel = computed(() => vm.proxy.$route.name)
 
             const panels = [
                 {
@@ -47,7 +47,7 @@
             function handleTabChange (name) {
                 if (activePanel.value === name) return
                 // 跳转到对应的路由
-                this.$router.push({
+                vm.proxy.$router.push({
                     name
                 })
             }
