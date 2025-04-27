@@ -118,6 +118,8 @@ class BatchTaskFinishListener @Autowired constructor(
 
         // 构建消息内容参数（包含成功数、失败数和错误信息）
         val bodyParams = mapOf(
+            KEY_START_TIME to startTime,
+            BATCH_ID to batchId,
             SUCCESS_NUM to successNum.toString(),
             FAIL_NUM to failNum.toString(),
             FAIL_MSG to errorMsg
@@ -129,7 +131,7 @@ class BatchTaskFinishListener @Autowired constructor(
             receivers = mutableSetOf(userId),
             titleParams = titleParams,
             bodyParams = bodyParams,
-            notifyType = mutableSetOf(NotifyType.WEWORK.name)  // 使用企业微信通知
+            notifyType = mutableSetOf(NotifyType.WEWORK.name, NotifyType.EMAIL.name)
         )
 
         try {
