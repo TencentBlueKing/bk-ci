@@ -136,8 +136,7 @@ class PipelineBuildService(
         handlePostFlag: Boolean = true,
         webHookStartParam: MutableMap<String, BuildParameters> = mutableMapOf(),
         triggerReviewers: List<String>? = null,
-        debug: Boolean? = false,
-        runningBuildTaskRetry: Boolean = false
+        debug: Boolean? = false
     ): BuildId {
 
         var acquire = false
@@ -246,16 +245,8 @@ class PipelineBuildService(
                     .params.map { it.id },
                 debug = debug ?: false,
                 versionName = resource.versionName,
-                yamlVersion = resource.yamlVersion,
-                runningBuildTaskRetry = runningBuildTaskRetry
+                yamlVersion = resource.yamlVersion
             )
-
-            // 运行中的task重试走全新的处理逻辑
-            if (runningBuildTaskRetry) {
-                return pipelineRuntimeService.runningBuildTaskRetry(
-                    fullModel = resource.model, context = context
-                )
-            }
 
             val interceptResult = pipelineInterceptorChain.filter(
                 InterceptData(

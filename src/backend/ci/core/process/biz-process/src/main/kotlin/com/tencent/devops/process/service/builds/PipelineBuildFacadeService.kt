@@ -46,6 +46,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -141,7 +142,10 @@ import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
+import com.tencent.devops.process.utils.PIPELINE_RETRY_RUNNING_BUILD
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
+import com.tencent.devops.process.utils.PIPELINE_RETRY_TASK_IN_CONTAINER_ID
+import com.tencent.devops.process.utils.PIPELINE_RETRY_TASK_IN_STAGE_ID
 import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil.recommendVersionKey
@@ -183,7 +187,6 @@ class PipelineBuildFacadeService(
     private val buildLogPrinter: BuildLogPrinter,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
     private val pipelineRedisService: PipelineRedisService,
-    private val pipelineRetryFacadeService: PipelineRetryFacadeService,
     private val webhookBuildParameterService: WebhookBuildParameterService,
     private val pipelineYamlFacadeService: PipelineYamlFacadeService
 ) {
@@ -510,7 +513,7 @@ class PipelineBuildFacadeService(
                                 if (element.id == taskId || element.stepId == taskId) {
                                     // 校验task是否允许跳过
                                     if (skipFailedTask == true) {
-                                        val isSkipTask = pipelineRetryFacadeService.isSkipTask(
+                                        val isSkipTask = isSkipTask(
                                             userId = userId,
                                             projectId = projectId,
                                             manualSkip = element.additionalOptions?.manualSkip
@@ -535,6 +538,24 @@ class PipelineBuildFacadeService(
                                         value = skipFailedTask ?: false,
                                         valueType = BuildFormPropertyType.TEMPORARY
                                     )
+                                    // 重试运行中的构建
+                                    if (!buildInfo.isFinish() && !buildInfo.isStageSuccess()) {
+                                        paramMap[PIPELINE_RETRY_RUNNING_BUILD] = BuildParameters(
+                                            key = PIPELINE_RETRY_RUNNING_BUILD,
+                                            value = true,
+                                            valueType = BuildFormPropertyType.TEMPORARY
+                                        )
+                                        paramMap[PIPELINE_RETRY_TASK_IN_STAGE_ID] = BuildParameters(
+                                            key = PIPELINE_RETRY_TASK_IN_STAGE_ID,
+                                            value = s.id!!,
+                                            valueType = BuildFormPropertyType.TEMPORARY
+                                        )
+                                        paramMap[PIPELINE_RETRY_TASK_IN_CONTAINER_ID] = BuildParameters(
+                                            key = PIPELINE_RETRY_TASK_IN_CONTAINER_ID,
+                                            value = c.id!!,
+                                            valueType = BuildFormPropertyType.TEMPORARY
+                                        )
+                                    }
                                     return@run
                                 }
                             }
@@ -579,8 +600,7 @@ class PipelineBuildFacadeService(
                 frequencyLimit = true,
                 handlePostFlag = false,
                 debug = buildInfo.debug,
-                webHookStartParam = webHookStartParam,
-                runningBuildTaskRetry = !buildInfo.isFinish() && !buildInfo.isStageSuccess()
+                webHookStartParam = webHookStartParam
             )
         }
     }
@@ -2981,6 +3001,25 @@ class PipelineBuildFacadeService(
                 return@forEach
             }
             checkManualReviewParamOut(item.valueType, item, value)
+        }
+    }
+
+    private  fun isSkipTask(
+        userId: String,
+        projectId: String,
+        manualSkip: Boolean?
+    ): Boolean {
+        // 若该task具有手动跳过配置或者用户拥有API特殊操作权限，才允许跳过.
+        return manualSkip == true || try {
+            pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                authResourceType = AuthResourceType.PROJECT,
+                permission = AuthPermission.API_OPERATE
+            )
+        } catch (ignore: Exception) {
+            logger.info("the project has not registered api operation permission:$userId|$projectId|$ignore")
+            false
         }
     }
 }
