@@ -2,6 +2,8 @@
     <bk-dropdown-menu
         class="more-router-link-list"
         trigger="click"
+        @show="toggle"
+        @hide="toggle"
     >
         <div slot="dropdown-trigger">
             <span
@@ -37,48 +39,53 @@
 </template>
 
 <script>
+    import { computed, defineComponent, getCurrentInstance, ref } from 'vue'
 
-    export default {
-        data () {
+    export default defineComponent({
+        setup () {
+            const toggleIsMore = ref(false)
+            const vm = getCurrentInstance()
+            const routeName = computed(() => vm.proxy.$route.name)
+            const dropdownMenus = [
+                {
+                    label: 'labelManage',
+                    routeName: 'pipelinesGroup'
+                },
+                {
+                    label: 'templateManage',
+                    routeName: 'pipelinesTemplate'
+                },
+                {
+                    label: 'pluginManage',
+                    routeName: 'atomManage'
+                },
+                {
+                    label: 'operatorAudit',
+                    routeName: 'pipelinesAudit'
+                }
+            ]
+            const dropTitle = computed(() => {
+                return dropdownMenus.find(menu => menu.routeName === routeName.value)?.label ?? 'more'
+            })
+
+            function go (name) {
+                vm.proxy.$router.push({ name })
+            }
+
+            function toggle () {
+                toggleIsMore.value = !toggleIsMore.value
+            }
+
             return {
-                toggleIsMore: false
-            }
-        },
-        computed: {
-            routeName () {
-                return this.$route.name
-            },
-            dropTitle () {
-                return this.dropdownMenus.find(menu => menu.routeName === this.routeName)?.label ?? 'more'
-            },
-            dropdownMenus () {
-                return [
-                    {
-                        label: 'labelManage',
-                        routeName: 'pipelinesGroup'
-                    },
-                    {
-                        label: 'templateManage',
-                        routeName: 'pipelinesTemplate'
-                    },
-                    {
-                        label: 'pluginManage',
-                        routeName: 'atomManage'
-                    },
-                    {
-                        label: 'operatorAudit',
-                        routeName: 'pipelinesAudit'
-                    }
-                ]
-            }
-
-        },
-        methods: {
-            go (name) {
-                this.$router.push({ name })
+                toggleIsMore,
+                routeName,
+                dropdownMenus,
+                dropTitle,
+                toggle,
+                go
             }
         }
-    }
+    })
 </script>
 <style lang="scss">
     @import './../scss/conf';
@@ -93,9 +100,10 @@
             align-items: center;
             .devops-icon {
                 display: inline-block;
-                transition: all ease 0.2s;
+                transition: all ease-in-out 0.3s;
                 margin-left: 4px;
-                font-size: 12px;
+                font-size: 10px;
+                font-weight: 700;
                 &.icon-flip {
                     transform: rotate(180deg);
                 }
