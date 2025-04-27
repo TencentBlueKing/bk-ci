@@ -221,7 +221,7 @@
                         <header class="release-pac-pipeline-form-header">
                             {{ $t("submitSetting") }}
                         </header>
-    
+
                         <bk-form-item
                             required
                             :label="$t('versionDesc')"
@@ -404,10 +404,10 @@
 <script setup>
     // import Logo from '@/components/Logo'
     import PacTag from '@/components/PacTag.vue'
-    import { TARGET_ACTION_ENUM, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
-    import { ref, computed, watch, defineProps, defineEmits, nextTick } from 'vue'
     import UseInstance from '@/hook/useInstance'
-    
+    import { TARGET_ACTION_ENUM, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
+    import { computed, defineEmits, defineProps, nextTick, ref, watch } from 'vue'
+
     const { proxy, t, bkMessage } = UseInstance()
     const props = defineProps({
         value: {
@@ -465,7 +465,7 @@
     // const pipelineSetting = computed(() => proxy.$store?.state?.atom?.pipelineSetting)
     // const isManage = computed(() => proxy.$store?.state?.pipelines?.isManage)
     const pacSupportScmTypeList = computed(() => proxy.$store?.state?.common?.pacSupportScmTypeList)
-    
+
     const pacEnabled = computed(() => {
         return (instanceList.value.length && instanceList.value[0].enablePac) ?? false
     })
@@ -474,7 +474,7 @@
     const filePathDir = ref('.ci/templates/')
     const baseVersionBranch = computed(() => pipelineInfo.value?.baseVersionName || '--')
     const isTemplatePipeline = computed(() => pipelineInfo.value?.instanceFromTemplate ?? false)
-    
+
     // const isCommitToBranch = computed(() => releaseParams.value.targetAction === TARGET_ACTION_ENUM.COMMIT_TO_BRANCH)
     const rules = computed(() => ({
         repoHashId: [
@@ -596,7 +596,7 @@
                 ...params
             }
             const newReleaseVersion = await proxy.$store.dispatch('atom/prefetchTemplateVersion', datas)
-              
+
             newReleaseVersionName.value = newReleaseVersion?.newVersionName || '--'
         } catch (error) {
             errorHandler(error)
@@ -654,7 +654,7 @@
         showPacCodelibSetting.value = val
     }
     async function releasePipeline () {
-        
+
     }
     function showReleaseSlider () {
         emits('input', true)
@@ -778,7 +778,7 @@
             }
         }
     }
-    
+
     .instance-filePath {
         width: 590px;
         margin-top: 12px;

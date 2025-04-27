@@ -72,6 +72,7 @@
             @confirm="copyConfirmHandler"
             @cancel="copyCancelHandler"
         />
+        <TemplateUpgradeStrategyDialog />
     </div>
 </template>
 
@@ -84,6 +85,7 @@
     import { AuthorityTab, ShowVariable } from '@/components/PipelineEditTabs/'
     import HistoryHeader from '@/components/PipelineHeader/HistoryHeader.vue'
     import CopyTemplateDialog from '@/components/Template/CopyTemplateDialog.vue'
+    import StoreTemplateRelated from '@/components/Template/StoreTemplateRelated'
     import UseInstance from '@/hook/useInstance'
     import useTemplateActions from '@/hook/useTemplateActions'
     import {
@@ -118,6 +120,7 @@
     const canDelete = computed(() => pipelineInfo.value?.canDelete)
     const templateId = computed(() => pipelineInfo.value?.id)
     const isDirectShowVersion = computed(() => proxy.$route.params.isDirectShowVersion || false)
+    const isFromStoreTemplate = computed(() => !!pipelineInfo.value?.pipelineTemplateMarketRelatedInfo)
     const asideNav = computed(() => [
         {
             title: t('executeInfo'),
@@ -156,6 +159,20 @@
                 active: activeMenuItem.value === child.name
             }))
         },
+        ...(isFromStoreTemplate.value
+            ? [{
+                title: t('store'),
+                children: [
+                    {
+                        title: t('template.relatedSetting'),
+                        name: 'related'
+                    }
+                ].map((child) => ({
+                    ...child,
+                    active: activeMenuItem.value === child.name
+                }))
+            }]
+            : []),
         {
             title: t('more'),
             children: [
@@ -235,6 +252,10 @@
                 return {
                     component: ChangeLog
                 }
+            case 'related':
+                return {
+                    component: StoreTemplateRelated
+                }
             default:
                 return {
                     component: Instance
@@ -255,6 +276,7 @@
             name: 'TemplateManageList'
         })
     }
+
 </script>
 
 <style lang="scss">
