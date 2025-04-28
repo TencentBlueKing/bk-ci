@@ -62,8 +62,11 @@
 </template>
 <script>
     import useInstance from '@/hook/useInstance'
+    import { STRATEGY_ENUM } from '@/utils/pipelineConst'
+    import dayjs from 'dayjs'
     import { computed, defineComponent, ref } from 'vue'
     import TemplateUpgradeStrategyDialog from './TemplateUpgradeStrategyDialog.vue'
+
     export default defineComponent({
         components: {
             TemplateUpgradeStrategyDialog
@@ -74,51 +77,69 @@
             const relatedInfo = computed(() => {
                 return proxy.$store.state.atom.pipelineInfo?.pipelineTemplateMarketRelatedInfo ?? {}
             })
+            const isAutoUpgrade = computed(() => {
+                return relatedInfo.value.upgradeStrategy === STRATEGY_ENUM.AUTO
+            })
             const storeTemplateUrl = computed(() => {
                 const { srcMarketTemplateId } = relatedInfo.value
                 return `${WEB_URL_PREFIX}/store/atomStore/detail/template/${srcMarketTemplateId}`
             })
-            const panels = [
-                {
-                    name: 'sourceInfo',
-                    rows: [
-                        {
-                            key: 'srcMarketTemplateName',
-                            value: relatedInfo.value.srcMarketTemplateName
-                        },
-                        {
-                            key: 'latestInstalledVersionName',
-                            value: t('template.latestInstallVersionTitle', [relatedInfo.value.latestInstalledVersionName, relatedInfo.value.installer, relatedInfo.value.installTime])
-                        },
-                        {
-                            key: 'srcMarketTemplateLatestVersionName',
-                            value: t('template.latestVersionTitle', [relatedInfo.value.srcMarketTemplateLatestVersionName]),
-                            grayDesc: t(`template.${relatedInfo.value.upgradeStrategy}-UPGRADE`),
-                            link: {
-                                text: t('template.goStore'),
-                                url: storeTemplateUrl.value
+            const panels = computed(() => {
+                const {
+                    srcMarketTemplateName,
+                    latestInstalledVersionName,
+                    latestInstaller,
+                    latestInstalledTime,
+                    srcMarketTemplateLatestVersionName,
+                    settingSyncStrategy,
+                    upgradeStrategy
+                } = relatedInfo.value
+                return [
+                    {
+                        name: 'sourceInfo',
+                        rows: [
+                            {
+                                key: 'srcMarketTemplateName',
+                                value: srcMarketTemplateName
+                            },
+                            {
+                                key: 'latestInstalledVersionName',
+                                value: t('template.latestInstallVersionTitle', [
+                                    latestInstalledVersionName,
+                                    isAutoUpgrade.value ? '' : `${t('editPage.by')} ${latestInstaller} `,
+                                    dayjs(latestInstalledTime).format('YYYY-MM-DD HH:mm:ss')
+                                ])
+                            },
+                            {
+                                key: 'srcMarketTemplateLatestVersionName',
+                                value: t('template.latestVersionTitle', [srcMarketTemplateLatestVersionName]),
+                                grayDesc: t(`template.${upgradeStrategy}-UPGRADE`),
+                                link: {
+                                    text: t('template.goStore'),
+                                    url: storeTemplateUrl.value
+                                }
                             }
-                        }
-                    ]
-                },
-                {
-                    name: 'upgradeSetting',
-                    rows: [
-                        {
-                            key: 'upgradeStrategy',
-                            value: t(`template.${relatedInfo.value.upgradeStrategy}-UPGRADE`),
-                            grayDesc: t(`template.${relatedInfo.value.upgradeStrategy}-upgradeStrategyDesc`),
-                            handler: showUpgradeStrategyDialog
-                        },
-                        {
-                            key: 'settingSyncStrategy',
-                            value: t(`template.${relatedInfo.value.settingSyncStrategy}-SYNC`),
-                            grayDesc: t('template.syncSettingStrategyDesc')
-                        }
-                    ]
-                }
-            ]
-            const activeName = ref(panels.map(panel => panel.name))
+                        ]
+                    },
+                    {
+                        name: 'upgradeSetting',
+                        rows: [
+                            {
+                                key: 'upgradeStrategy',
+                                value: t(`template.${upgradeStrategy}-UPGRADE`),
+                                grayDesc: t(`template.${upgradeStrategy}-upgradeStrategyDesc`),
+                                handler: showUpgradeStrategyDialog
+                            },
+                            {
+                                key: 'settingSyncStrategy',
+                                value: t(`template.${settingSyncStrategy}-SYNC`),
+                                grayDesc: t('template.syncSettingStrategyDesc')
+                            }
+                        ]
+                    }
+                ]
+            })
+            const activeName = ref(panels.value.map(panel => panel.name))
 
             function showUpgradeStrategyDialog () {
                 upgradeStrategyDialog.value?.show?.()

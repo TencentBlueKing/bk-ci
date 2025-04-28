@@ -54,13 +54,10 @@
 
 <script>
     import useInstance from '@/hook/useInstance'
+    import { STRATEGY_ENUM } from '@/utils/pipelineConst'
     import { computed, defineComponent, nextTick, ref } from 'vue'
     export default defineComponent({
         setup (props, ctx) {
-            const STRATEGY_ENUM = {
-                AUTO: 'AUTO',
-                MANUAL: 'MANUAL'
-            }
             const isLoading = ref(false)
             const isShow = ref(false)
             const { proxy } = useInstance()
