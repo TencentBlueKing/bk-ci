@@ -114,7 +114,7 @@
             color: $primaryColor;
         }
         .bk-dropdown-list > li {
-            display: block;
+            display: list-item !important;
         }
     }
 </style>
