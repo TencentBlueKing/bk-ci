@@ -128,8 +128,8 @@ export const actions = {
     /**
      * 获取流水线项目模板
      */
-    requestPipelineTemplate ({ commit }, { projectCode }) {
-        return vue.$ajax.get(`${processPrefix}/user/templates/projects/${projectCode}/templates?templateType=CUSTOMIZE&storeFlag=false`)
+    requestPipelineTemplate ({ commit }, { projectCode, page, pageSize }) {
+        return vue.$ajax.get(`${processPrefix}/user/templates/projects/${projectCode}/templates?templateType=CUSTOMIZE&storeFlag=false&page=${page}&pageSize=${pageSize}`)
     },
 
     /**
@@ -162,6 +162,24 @@ export const actions = {
      */
     editTemplate ({ commit }, { params }) {
         return vue.$ajax.put(`${prefix}/user/market/desk/template/release`, params)
+    },
+
+    /**
+     * 新版上架模板
+     */
+    releaseTemplate ({ commit }, { params }) {
+        return vue.$ajax.put(`${prefix}/user/market/desk/template/v2/release`, params)
+    },
+
+    requestTemplateVersionList (_, { projectId, templateId }) {
+        const params = {
+            projectId,
+            templateId,
+            storeFlag: false,
+            page: 1,
+            pageSize: 100
+        }
+        return vue.$ajax.post(`${processPrefix}/user/pipeline/template/v2/${projectId}/${templateId}/versions`, params)
     },
 
     /**

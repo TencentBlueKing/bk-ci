@@ -283,10 +283,10 @@
                     },
                     {
                         text: i18n.t('template.convertToCustom'), // 转为自定义
-                        handler: () => convertToCustom(x),
+                        handler: () => convertToCustom(x, fetchTableData),
                         hasPermission: x.canEdit,
                         disablePermissionApi: true,
-                        isShow: x.source === 'MARKET',
+                        isShow: x.mode === 'CONSTRAINT',
                         permissionData: {
                             projectId: projectId.value,
                             resourceType: 'pipeline_template',

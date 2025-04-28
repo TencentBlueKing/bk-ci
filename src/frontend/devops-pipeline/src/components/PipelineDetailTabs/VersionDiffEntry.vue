@@ -19,7 +19,7 @@
             :draggable="false"
             ext-cls="diff-version-dialog"
             width="90%"
-            :title="$t('diff')"
+            :title="!isTemplateInstance ? $t('diff') : $t('template.diff')"
         >
             <div
                 class="diff-version-dialog-content"
@@ -111,7 +111,8 @@
                 type: Boolean,
                 default: false
             },
-            type: String
+            type: String,
+            pipelineId: String
         },
         data () {
             return {
@@ -180,12 +181,12 @@
 
                 this.isLoadYaml = true
                 if (this.isTemplateInstance) {
-                    const { baseVersionResource, comparedVersionResource } = await this.fetchTemplateInstanceYaml({
-                        baseVersion: this.currentVersion,
-                        comparedVersion: this.activeVersion
+                    const { baseVersionYaml, comparedVersionYaml } = await this.fetchTemplateInstanceYaml({
+                        pipelineId: this.pipelineId,
+                        comparedVersion: this.currentVersion
                     })
-                    this.activeYaml = comparedVersionResource.yaml
-                    this.currentYaml = baseVersionResource.yaml
+                    this.activeYaml = comparedVersionYaml
+                    this.currentYaml = baseVersionYaml
                 } else {
                     const [activeYaml, currentYaml] = await Promise.all([
                         this.fetchPipelineYaml(this.activeVersion),
