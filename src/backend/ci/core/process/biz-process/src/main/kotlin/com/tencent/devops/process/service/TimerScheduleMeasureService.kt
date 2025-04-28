@@ -74,7 +74,7 @@ class TimerScheduleMeasureService @Autowired constructor(
         return mutableListOf(
             Tag.of(TAG_KEY_PROJECT_ID, projectId),
             Tag.of(TAG_KEY_PIPELINE_ID, pipelineId),
-            Tag.of(TAG_KEY_TASK_ID, taskId),
+            Tag.of(TAG_KEY_TASK_ID, taskId)
         )
     }
 }
