@@ -212,7 +212,7 @@
                                 model: pipeline,
                                 templateSetting: this.pipelineSetting
                             }),
-                        baseVersion: this.currentVersionId,
+                        baseVersion: this.pipelineInfo?.baseVersion,
                         type: this.pipelineInfo?.type
                     })
                     if (data) {
