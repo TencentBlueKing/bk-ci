@@ -158,11 +158,11 @@ function _M:verify_bk_token(bk_token)
     end
 
     local res, err = httpc:request_uri(
-        config.tenant.host .. config.tenant.path .. "?bk_token=" .. bk_token,
+        config.bk_login.host .. config.bk_login.path .. "?bk_token=" .. bk_token,
         {
             method = "GET",
             ssl_verify = false,
-            headers = { ["X-Bkapi-Authorization"] = 'X-Bkapi-Authorization: {"bk_app_code": "' .. config.tenant.app_code .. '", "bk_app_secret": "' .. config.tenant.app_secret .. '"}' }
+            headers = { ["X-Bkapi-Authorization"] = 'X-Bkapi-Authorization: {"bk_app_code": "' .. config.apigw.app_code .. '", "bk_app_secret": "' .. config.apigw.app_secret .. '"}' }
         }
     )
     --- 设置HTTP保持连接
