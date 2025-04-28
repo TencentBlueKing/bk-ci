@@ -699,7 +699,12 @@
             editHandle (templateId) {
                 this.$router.push({
                     name: 'editTemplate',
-                    params: { templateId }
+                    params: {
+                        templateId
+                    },
+                    query: {
+                        type: 'edit'
+                    }
                 })
             }
         }

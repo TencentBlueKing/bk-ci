@@ -128,6 +128,7 @@
                                 v-if="props.row.version !== currentVersion"
                                 :version="props.row.version"
                                 :latest-version="currentVersion"
+                                :pipeline-id="props.row.pipelineId"
                                 type="templateInstance"
                             />
                         </template>

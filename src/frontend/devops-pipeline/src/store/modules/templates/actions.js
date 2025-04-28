@@ -101,9 +101,19 @@ const actions = {
             return res.data
         })
     },
-    requestVersionCompare (_, { projectId, templateId, baseVersion, comparedVersion }) {
-        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/compare?baseVersion=${baseVersion}&comparedVersion=${comparedVersion}`)
+    requestVersionCompare (_, { projectId, templateId, pipelineId, comparedVersion }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/${templateId}/compare?pipelineId=${pipelineId}&comparedVersion=${comparedVersion}`)
+    },
+    templatePreviewDetail (_, { projectId, templateId }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/latest/details`).then(response => response.data)
+    },
+    transformTemplateToCustom (_, { projectId, templateId }) {
+        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/transformTemplateToCustom`).then(response => response.data)
+    },
+    templateUpdateUpgradeStrategy (_, { projectId, templateId }) {
+        return ajax.put(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/updateUpgradeStrategy`).then(response => response.data)
     }
+    
 }
 
 export default actions

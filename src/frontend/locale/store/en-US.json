@@ -624,5 +624,20 @@
     "确认离开当前页？": "Are you sure to leave now?",
     "离开将会导致未保存信息丢失": "Your changes will be lost if you close without saving.",
     "离开": "Leave",
-    "无该项目的模板安装权限": "No permission to install the project template"
+    "无该项目的模板安装权限": "No permission to install the project template",
+    "研发商店模板名称": "Development Store Template Name",
+    "模板信息": "Template Information",
+    "源模板名称": "Source Template Name",
+    "请选择源模板": "Please select a source template",
+    "源模板名称不能为空": "Source template name cannot be empty",
+    "模板类型": "Template Type",
+    "模板版本": "Template Version",
+    "请选择模板版本": "Please select a template version",
+    "模板版本不能为空": "Template version cannot be empty",
+    "发布策略": "Release Strategy",
+    "按需手动发布": "Manual Release on Demand",
+    "自动发布": "Automatic Release",
+    "模板图标": "Template Icon",
+    "当源模板有新版本时，按需手动发布新版本到商店": "When the source template has a new version, manually release the new version to the store on demand",
+    "当源模板有新版本时，新版本自动发布到研发商店": "When the source template has a new version, it is automatically released to the development store"
 }

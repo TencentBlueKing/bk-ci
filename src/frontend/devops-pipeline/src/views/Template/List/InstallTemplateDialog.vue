@@ -64,10 +64,10 @@
                 name: INSTALL_TYPE_STORE,
                 label: i18n.t('template.store')
             },
-            {
-                name: INSTALL_TYPE_REPOSITORY,
-                label: i18n.t('template.repository')
-            },
+            // {
+            //     name: INSTALL_TYPE_REPOSITORY,
+            //     label: i18n.t('template.repository')
+            // },
             {
                 name: INSTALL_TYPE_LOCAL,
                 label: i18n.t('template.localFile')

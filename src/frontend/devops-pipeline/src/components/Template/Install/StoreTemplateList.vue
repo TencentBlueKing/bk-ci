@@ -67,6 +67,7 @@
         
         <pipeline-template-preview
             v-model="isShowPreview"
+            :is-template="true"
             :template-pipeline="activeTemp"
         />
     </div>
