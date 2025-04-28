@@ -56,6 +56,9 @@ class BatchTaskFinishListener @Autowired constructor(
 ) : EventListener<BatchTaskFinishEvent> {
 
     override fun execute(event: BatchTaskFinishEvent) {
+        if (!BatchTaskUtil.isServiceMatched(event.targetService)) {
+            return
+        }
         val userId = event.userId
         val taskType = event.taskType
         val batchId = event.batchId

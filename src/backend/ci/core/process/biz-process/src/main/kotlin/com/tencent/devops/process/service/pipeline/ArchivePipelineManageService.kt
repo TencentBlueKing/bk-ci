@@ -106,7 +106,8 @@ class ArchivePipelineManageService @Autowired constructor(
             userId = userId,
             taskType = TaskTypeEnum.PIPELINE_ARCHIVE,
             dataList = dataList,
-            expiredInHour = 36
+            expiredInHour = 36,
+            targetService = "misc"
         )
         return batchId
     }

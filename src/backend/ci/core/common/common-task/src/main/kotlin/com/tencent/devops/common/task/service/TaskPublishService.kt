@@ -24,13 +24,15 @@ class TaskPublishService @Autowired constructor(
      * @param taskType 任务类型枚举
      * @param dataList 任务数据列表
      * @param expiredInHour Redis键过期时间（单位：小时，默认12小时）
+     * @param targetService 目标微服务
      * @return 批次ID
      */
     fun publishTasks(
         userId: String,
         taskType: TaskTypeEnum,
         dataList: List<Map<String, Any>>,
-        expiredInHour: Long = 12
+        expiredInHour: Long = 12,
+        targetService: String? = null
     ): String {
         val expiredInSecond = expiredInHour * 3600
         val batchId = UUIDUtil.generate()
@@ -65,7 +67,8 @@ class TaskPublishService @Autowired constructor(
                     batchId = batchId,
                     taskId = "${batchId}_$index",
                     data = dataMap,
-                    expiredInHour = expiredInHour
+                    expiredInHour = expiredInHour,
+                    targetService = targetService
                 )
             )
         }

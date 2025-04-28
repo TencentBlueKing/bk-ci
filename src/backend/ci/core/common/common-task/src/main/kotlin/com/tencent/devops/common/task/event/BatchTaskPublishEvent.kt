@@ -19,5 +19,7 @@ data class BatchTaskPublishEvent(
     @get:Schema(title = "业务数据")
     val data: Map<String, Any>,
     @get:Schema(title = "过期时间（单位：小时，默认12小时）")
-    var expiredInHour: Long = 12
+    var expiredInHour: Long = 12,
+    @get:Schema(title = "目标微服务名称")
+    val targetService: String? = null
 ) : IEvent()

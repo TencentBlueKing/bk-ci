@@ -13,5 +13,7 @@ data class BatchTaskFinishEvent(
     @get:Schema(title = "任务类型")
     val taskType: TaskTypeEnum,
     @get:Schema(title = "批次ID")
-    val batchId: String
+    val batchId: String,
+    @get:Schema(title = "目标微服务名称")
+    val targetService: String? = null
 ) : IEvent()

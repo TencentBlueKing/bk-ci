@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.task.listener
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.listener.EventListener
@@ -34,6 +36,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.task.event.BatchTaskFinishEvent
 import com.tencent.devops.common.task.event.BatchTaskPublishEvent
+import com.tencent.devops.common.task.lock.BatchTaskLock
 import com.tencent.devops.common.task.pojo.TaskResult
 import com.tencent.devops.common.task.pojo.TaskTypeEnum
 import com.tencent.devops.common.task.service.TaskExecutionService
@@ -54,6 +57,9 @@ class BatchTaskPublishListener @Autowired constructor(
      * @param event 批量任务发布事件对象，包含任务类型、批次ID、任务ID等信息
      */
     override fun execute(event: BatchTaskPublishEvent) {
+        if (!BatchTaskUtil.isServiceMatched(event.targetService)) {
+            return
+        }
         val taskType = event.taskType
         val batchId = event.batchId
         val taskId = event.taskId
@@ -68,16 +74,28 @@ class BatchTaskPublishListener @Autowired constructor(
             // 设置Redis key过期时间（单位：小时转秒）
             val expiredInHour = event.expiredInHour
             redisOperation.expire(key = batchTaskResultKey, expiredInSecond = expiredInHour * 3600L)
-            // 原子更新完成任务计数
-            val completedNum = redisOperation.increment(
-                key = BatchTaskUtil.generateBatchTaskCompletedKey(taskType, batchId), incr = 1
-            ) ?: 0
-            // 获取总任务数
-            val totalNum =
-                redisOperation.get(BatchTaskUtil.generateBatchTaskTotalKey(taskType, batchId))?.toLongOrNull() ?: 0
-            // 检查是否完成所有任务，若完成则触发完成事件
-            if (completedNum >= totalNum) {
-                sampleEventDispatcher.dispatch(BatchTaskFinishEvent(event.userId, taskType, batchId))
+            BatchTaskLock(redisOperation, batchId).use { lock ->
+                if (lock.tryLock()) {
+                    // 更新完成任务计数
+                    val completedNum = redisOperation.increment(
+                        key = BatchTaskUtil.generateBatchTaskCompletedKey(taskType, batchId), incr = 1
+                    ) ?: 0
+                    // 获取总任务数
+                    val totalNum =
+                        redisOperation.get(BatchTaskUtil.generateBatchTaskTotalKey(taskType, batchId))?.toLongOrNull()
+                            ?: 0
+                    // 检查是否完成所有任务，若完成则触发完成事件
+                    if (completedNum >= totalNum) {
+                        sampleEventDispatcher.dispatch(BatchTaskFinishEvent(
+                            userId = event.userId,
+                            taskType = taskType,
+                            batchId = batchId,
+                            targetService = event.targetService
+                        ))
+                    }
+                } else {
+                    throw ErrorCodeException(errorCode = CommonMessageCode.LOCK_FAIL)
+                }
             }
         } catch (ignored: Throwable) {
             logger.warn("Fail to execute Task[$taskId]|batchId:$batchId|taskType:$taskType", ignored)
@@ -107,7 +125,7 @@ class BatchTaskPublishListener @Autowired constructor(
         } catch (ignored: Throwable) {
             // 异常处理：记录日志并返回错误结果
             logger.warn("Execution of Task[$taskId] failed. batchId: $batchId, taskType: $taskType", ignored)
-            TaskResult(taskId, false, "Error: ${ignored.message}")
+            TaskResult(taskId, false, "Param: ${JsonUtil.toJson(event.data)}; Error: ${ignored.message}")
         }
     }
 

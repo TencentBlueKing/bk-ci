@@ -70,7 +70,10 @@ class ProcessArchivePipelineTaskExecutionService @Autowired constructor(
             return TaskResult(
                 taskId = taskId,
                 success = false,
-                result = I18nUtil.getCodeLanMessage(CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE)
+                result = I18nUtil.getCodeLanMessage(
+                    messageCode = CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    params = arrayOf(userId, projectId, pipelineId)
+                )
             )
         }
         // 执行流水线数据迁移归档操作
