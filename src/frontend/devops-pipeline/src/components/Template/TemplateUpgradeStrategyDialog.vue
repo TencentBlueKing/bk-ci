@@ -122,7 +122,7 @@ import { computed, defineComponent, nextTick, ref } from 'vue'
             function handleUpgradeStrategyChange (value) {
                 if (value === STRATEGY_ENUM.AUTO) {
                     showAutoUpgradeStrategyTips.value = true
-                    strategyConf.value.syncSettingStrategy = STRATEGY_ENUM.MANUAL
+                    strategyConf.value.syncSettingStrategy = false
                 }
             }
 
