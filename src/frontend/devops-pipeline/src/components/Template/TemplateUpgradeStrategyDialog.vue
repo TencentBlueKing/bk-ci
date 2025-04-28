@@ -37,7 +37,10 @@
                 type="info"
                 :title="$t('template.autoUpgradeStrategyTips', [relatedInfo.srcMarketTemplateLatestVersionName ?? 'V1.8.0'])"
             ></bk-alert>
-            <bk-form-item v-if="isAutoUpgrade" :label="$t('template.settingSyncStrategy')">
+            <bk-form-item
+                v-if="isAutoUpgrade"
+                :label="$t('template.settingSyncStrategy')"
+            >
                 <bk-checkbox
                     v-model="strategyConf.syncSettingStrategy"
                     :disabled="isLoading"
@@ -54,8 +57,8 @@
 
 <script>
     import useInstance from '@/hook/useInstance'
-import { STRATEGY_ENUM } from '@/utils/pipelineConst'
-import { computed, defineComponent, nextTick, ref } from 'vue'
+    import { STRATEGY_ENUM } from '@/utils/pipelineConst'
+    import { computed, defineComponent, nextTick, ref } from 'vue'
     export default defineComponent({
         setup (props, ctx) {
             const isLoading = ref(false)
@@ -120,10 +123,8 @@ import { computed, defineComponent, nextTick, ref } from 'vue'
             }
 
             function handleUpgradeStrategyChange (value) {
-                if (value === STRATEGY_ENUM.AUTO) {
-                    showAutoUpgradeStrategyTips.value = true
-                    strategyConf.value.syncSettingStrategy = false
-                }
+                showAutoUpgradeStrategyTips.value = value === STRATEGY_ENUM.AUTO
+                strategyConf.value.syncSettingStrategy = false
             }
 
             return {

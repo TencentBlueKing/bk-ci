@@ -63,10 +63,10 @@
 </template>
 <script>
     import useInstance from '@/hook/useInstance'
-import { STRATEGY_ENUM } from '@/utils/pipelineConst'
-import dayjs from 'dayjs'
-import { computed, defineComponent, ref } from 'vue'
-import TemplateUpgradeStrategyDialog from './TemplateUpgradeStrategyDialog.vue'
+    import { STRATEGY_ENUM } from '@/utils/pipelineConst'
+    import dayjs from 'dayjs'
+    import { computed, defineComponent, ref } from 'vue'
+    import TemplateUpgradeStrategyDialog from './TemplateUpgradeStrategyDialog.vue'
 
     export default defineComponent({
         components: {
