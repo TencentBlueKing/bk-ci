@@ -7,6 +7,7 @@
             <bk-collapse-item
                 hide-arrow
                 v-for="panel in panels"
+                ext-cls="no-animation-collapse"
                 :key="panel.name"
                 :name="panel.name"
             >
@@ -62,10 +63,10 @@
 </template>
 <script>
     import useInstance from '@/hook/useInstance'
-    import { STRATEGY_ENUM } from '@/utils/pipelineConst'
-    import dayjs from 'dayjs'
-    import { computed, defineComponent, ref } from 'vue'
-    import TemplateUpgradeStrategyDialog from './TemplateUpgradeStrategyDialog.vue'
+import { STRATEGY_ENUM } from '@/utils/pipelineConst'
+import dayjs from 'dayjs'
+import { computed, defineComponent, ref } from 'vue'
+import TemplateUpgradeStrategyDialog from './TemplateUpgradeStrategyDialog.vue'
 
     export default defineComponent({
         components: {
