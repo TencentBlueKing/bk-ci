@@ -54,7 +54,7 @@
                 try {
                     if (isLoading.value || !vm.proxy.$route?.params?.projectId) return
                     isLoading.value = true
-                    const res = await request.get('/project/api/user/services/61/url/get')
+                    const res = await request.get('/project/api/user/services/36/url/get')
                     if (isAbsoluteURL(res.data)) {
                         eplusUrl.value = res.data
                     } else {
