@@ -436,6 +436,7 @@
                         this.buildNo = startupInfo.buildNo
                         this.isVisibleVersion = startupInfo.buildNo.required
                     }
+
                     this.paramList = startupInfo.properties.filter(p => !p.constant && p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(p => ({
                         ...p,
                         isChanged: isObject(p.defaultValue)
