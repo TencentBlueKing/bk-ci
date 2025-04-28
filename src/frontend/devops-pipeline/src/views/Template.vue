@@ -3,68 +3,69 @@
         class="pipeline-template-list"
         v-bkloading="{ isLoading }"
     >
+        <pipeline-header :title="$t('templateManage')"></pipeline-header>
         <div class="template-list-content">
-            <div class="view-table-wrapper">
-                <template v-if="isEnabledPermission">
-                    <bk-button
-                        v-if="!showSelfEmpty"
-                        theme="primary"
-                        icon="devops-icon icon-plus"
-                        class="add-template"
-                        @click="showSetting"
-                        v-perm="{
-                            hasPermission: hasCreatePermission,
-                            disablePermissionApi: true,
-                            permissionData: {
-                                projectId: projectId,
-                                resourceType: 'pipeline_template',
-                                resourceCode: projectId,
-                                action: TEMPLATE_RESOURCE_ACTION.CREATE
-                            }
-                        }"
-                    >
-                        {{ $t('template.addTemplate') }}
-                    </bk-button>
-                </template>
-                <template v-else>
-                    <bk-button
-                        v-if="!showSelfEmpty"
-                        theme="primary"
-                        icon="devops-icon icon-plus"
-                        class="add-template"
-                        @click="showSetting"
-                        v-perm="{
-                            hasPermission: isManagerUser,
-                            disablePermissionApi: true,
-                            permissionData: {
-                                projectId: projectId,
-                                resourceType: 'project',
-                                resourceCode: projectId,
-                                action: PROJECT_RESOURCE_ACTION.MANAGE
-                            }
-                        }"
-                    >
-                        {{ $t('template.addTemplate') }}
-                    </bk-button>
-                </template>
+            <template v-if="isEnabledPermission">
+                <bk-button
+                    v-if="!showSelfEmpty"
+                    theme="primary"
+                    icon="devops-icon icon-plus"
+                    class="add-template"
+                    @click="showSetting"
+                    v-perm="{
+                        hasPermission: hasCreatePermission,
+                        disablePermissionApi: true,
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: 'pipeline_template',
+                            resourceCode: projectId,
+                            action: TEMPLATE_RESOURCE_ACTION.CREATE
+                        }
+                    }"
+                >
+                    {{ $t('template.addTemplate') }}
+                </bk-button>
+            </template>
+            <template v-else>
+                <bk-button
+                    v-if="!showSelfEmpty"
+                    theme="primary"
+                    icon="devops-icon icon-plus"
+                    class="add-template"
+                    @click="showSetting"
+                    v-perm="{
+                        hasPermission: isManagerUser,
+                        disablePermissionApi: true,
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: 'project',
+                            resourceCode: projectId,
+                            action: PROJECT_RESOURCE_ACTION.MANAGE
+                        }
+                    }"
+                >
+                    {{ $t('template.addTemplate') }}
+                </bk-button>
+            </template>
+            <div class="devops-template-table">
                 <template-table
                     ref="selfTemp"
                     :has-create-permission="hasCreatePermission"
                     @getApiData="getTempFromSelf"
                 >
                 </template-table>
-                <empty-tips
-                    v-if="showSelfEmpty"
-                    :title="$t('template.noTemplate')"
-                    :desc="emptyTipsConfig.desc"
-                    :btn-disabled="emptyTipsConfig.btnDisabled"
-                    :btns="emptyTipsConfig.btns"
-                    :has-permission="emptyTipsConfig.hasPermission"
-                    :disable-permission-api="emptyTipsConfig.disablePermissionApi"
-                    :permission-data="emptyTipsConfig.permissionData"
-                >
-                </empty-tips>
             </div>
+            <empty-tips
+                v-if="showSelfEmpty"
+                :title="$t('template.noTemplate')"
+                :desc="emptyTipsConfig.desc"
+                :btn-disabled="emptyTipsConfig.btnDisabled"
+                :btns="emptyTipsConfig.btns"
+                :has-permission="emptyTipsConfig.hasPermission"
+                :disable-permission-api="emptyTipsConfig.disablePermissionApi"
+                :permission-data="emptyTipsConfig.permissionData"
+            >
+            </empty-tips>
         </div>
 
         <bk-dialog
@@ -80,8 +81,8 @@
                 <form-field
                     :required="false"
                     :label="$t('template.name')"
-                    :is-error="errors.has(&quot;templateName&quot;)"
-                    :error-msg="errors.first(&quot;templateName&quot;)"
+                    :is-error="errors.has('templateName')"
+                    :error-msg="errors.first('templateName')"
                 >
                     <input
                         class="bk-form-input"
@@ -100,17 +101,19 @@
 </template>
 
 <script>
-    import emptyTips from '@/components/pipelineList/imgEmptyTips'
     import FormField from '@/components/AtomPropertyPanel/FormField'
+    import pipelineHeader from '@/components/devops/pipeline-header.vue'
+    import emptyTips from '@/components/pipelineList/imgEmptyTips'
     import templateTable from '@/components/template/templateTable'
 
     import {
-        TEMPLATE_RESOURCE_ACTION,
-        PROJECT_RESOURCE_ACTION
+        PROJECT_RESOURCE_ACTION,
+        TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
 
     export default {
         components: {
+            pipelineHeader,
             emptyTips,
             FormField,
             templateTable
@@ -294,27 +297,31 @@
 <style lang='scss'>
 
     .pipeline-template-list {
-        padding: 20px 100px;
         height: 100%;
-
+        flex: 1;
         display: flex;
         flex-direction: column;
-        align-items: stretch;
-        overflow: auto;
+        overflow: hidden;
+        .template-list-content {
+            display: flex;
+            padding: 20px 100px;
+            flex: 1;
+            overflow: hidden;
+            flex-direction: column;
+            align-items: flex-start;
+            .devops-template-table {
+                flex: 1;
+                align-self: stretch;
+                margin-top: 20px;
+                overflow: hidden;
+            }
+        }
 
         .template-empty-placeholder {
             height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-
-        > header {
-            width: 100%;
-            text-align: right;
-            .add-template {
-                flex-shrink: 0;
-            }
         }
 
         #templateName {
