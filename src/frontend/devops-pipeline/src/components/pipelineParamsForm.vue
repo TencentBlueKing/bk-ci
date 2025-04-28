@@ -33,7 +33,7 @@
                                     flex
                                     v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })"
                                     :class="{
-                                        'is-diff-param': highlightChangedParam && param.isChanged
+                                        'is-diff-param': (highlightChangedParam && param.isChanged) || param.affectedChanged
                                     }"
                                     :disabled="disabled"
                                     :placeholder="param.placeholder"
@@ -43,11 +43,17 @@
                                 />
                             </section>
                             <span
-                                v-if="!errors.has('devops' + param.name)"
+                                v-if="!errors.has('devops' + param.name) && param.desc"
                                 :class="['preview-params-desc', param.type === 'TEXTAREA' ? 'params-desc-styles' : '']"
                                 :title="param.desc"
                             >
                                 {{ param.desc }}
+                            </span>
+                            <span
+                                v-if="param.affectTips"
+                                class="preview-params-desc affect-warning"
+                            >
+                                {{ param.affectTips }}
                             </span>
                         </form-field>
                     </template>
@@ -72,7 +78,7 @@
                             flex
                             v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })"
                             :class="{
-                                'is-diff-param': highlightChangedParam && param.isChanged
+                                'is-diff-param': (highlightChangedParam && param.isChanged) || param.affectedChanged
                             }"
                             :disabled="disabled"
                             :placeholder="param.placeholder"
@@ -82,11 +88,17 @@
                         />
                     </section>
                     <span
-                        v-if="!errors.has('devops' + param.name)"
+                        v-if="!errors.has('devops' + param.name) && param.desc"
                         :class="['preview-params-desc', param.type === 'TEXTAREA' ? 'params-desc-styles' : '']"
                         :title="param.desc"
                     >
                         {{ param.desc }}
+                    </span>
+                    <span
+                        v-if="param.affectTips"
+                        class="preview-params-desc affect-warning"
+                    >
+                        {{ param.affectTips }}
                     </span>
                 </form-field>
             </template>
@@ -132,7 +144,7 @@
         SVN_TAG,
         TEXTAREA
     } from '@/store/modules/atom/paramsConfig'
-    import { isObject } from '@/utils/util'
+    import { isObject, isShallowEqual } from '@/utils/util'
 
     export default {
 
@@ -171,6 +183,11 @@
                 default: false
             }
         },
+        data () {
+            return {
+                prevAffectedValues: {}
+            }
+        },
         computed: {
             paramList () {
                 return this.params.map(param => {
@@ -178,13 +195,20 @@
                     if (param.type !== STRING || param.type !== TEXTAREA) {
                         if (isRemoteType(param)) {
                             const val = (param.type === 'MULTIPLE' && typeof this.paramValues?.[param.id] === 'string') ? this.paramValues[param.id].split(',').filter(i => i !== '') : this.paramValues?.[param.id]
+                            const affected = this.getAffectedBy(param.payload.url)
+                            const affectedChanged = this.detectChanged(this.prevAffectedValues?.[param.id], affected)
+                            this.prevAffectedValues[param.id] = affected
+
                             restParam = {
                                 ...restParam,
                                 ...param.payload,
                                 multiSelect: param.type === 'MULTIPLE',
                                 value: param.type === 'MULTIPLE' && !Array.isArray(val) ? [] : val,
                                 allIdString: true,
-                                paramValues: this.paramValues
+                                paramValues: this.paramValues,
+                                affected,
+                                affectedChanged,
+                                affectTips: affectedChanged && Object.keys(affected).length > 0 ? this.$t('relyChanged', [Object.keys(affected).join('/')]) : ''
                             }
                         } else {
                             restParam = {
@@ -274,7 +298,7 @@
                     acc[categoryKey].push(item)
                     return acc
                 }, {})
-                
+
                 if (!(key in listMap)) {
                     return listMap
                 }
@@ -355,6 +379,25 @@
                 } catch (error) {
                     console.log(error)
                 }
+            },
+            getAffectedBy (originUrl) {
+                try {
+                    const PLUGIN_URL_PARAM_REG = /\{(.*?)(\?){0,1}\}/g
+                    return originUrl.match(PLUGIN_URL_PARAM_REG).map(item => item.replace(/\{(\S+)\}/, '$1')).reduce((acc, key) => {
+                        if (Object.hasOwnProperty.call(this.paramValues, key)) {
+                            acc[key] = this.paramValues[key]
+                        }
+                        return acc
+                    }, {})
+                } catch (error) {
+                    return {}
+                }
+            },
+            detectChanged (prev, current) {
+                if (prev && current) {
+                    return !isShallowEqual(prev, current)
+                }
+                return false
             }
         }
     }
@@ -408,6 +451,9 @@
         width: 100%;
         font-size: 12px;
         @include ellipsis();
+        &.affect-warning {
+            color: #FF9C01;
+        }
     }
     .params-desc-styles {
         margin-top: 32px;
