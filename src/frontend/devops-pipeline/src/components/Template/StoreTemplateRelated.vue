@@ -87,12 +87,12 @@
                             value: relatedInfo.value.srcMarketTemplateName
                         },
                         {
-                            key: 'srcMarketTemplateLatestVersionName',
-                            value: t('template.latestInstallVersionTitle', [relatedInfo.value.srcMarketTemplateLatestVersionName, relatedInfo.value.installer, relatedInfo.value.installTime])
+                            key: 'latestInstalledVersionName',
+                            value: t('template.latestInstallVersionTitle', [relatedInfo.value.latestInstalledVersionName, relatedInfo.value.installer, relatedInfo.value.installTime])
                         },
                         {
-                            key: 'latestInstalledVersionName',
-                            value: t('template.latestVersionTitle', [relatedInfo.value.latestInstalledVersionName]),
+                            key: 'srcMarketTemplateLatestVersionName',
+                            value: t('template.latestVersionTitle', [relatedInfo.value.srcMarketTemplateLatestVersionName]),
                             grayDesc: t(`template.${relatedInfo.value.upgradeStrategy}-UPGRADE`),
                             link: {
                                 text: t('template.goStore'),
@@ -121,7 +121,7 @@
             const activeName = ref(panels.map(panel => panel.name))
 
             function showUpgradeStrategyDialog () {
-                upgradeStrategyDialog.value.show()
+                upgradeStrategyDialog.value?.show?.()
             }
             return {
                 upgradeStrategyDialog,

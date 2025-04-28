@@ -16,10 +16,11 @@
             >
                 <bk-radio-group
                     v-model="strategyConf.upgradeStrategy"
+                    @change="handleUpgradeStrategyChange"
                     :disabled="isLoading"
                 >
                     <bk-radio
-                        v-for="item in UPGRADE_STRATEGY_ENUM"
+                        v-for="item in STRATEGY_ENUM"
                         class="strategy-block-radio"
                         :key="item"
                         :value="item"
@@ -31,6 +32,11 @@
                     </bk-radio>
                 </bk-radio-group>
             </bk-form-item>
+            <bk-alert
+                v-if="showAutoUpgradeStrategyTips"
+                type="info"
+                :title="$t('template.autoUpgradeStrategyTips', [relatedInfo.srcMarketTemplateLatestVersionName ?? 'V1.8.0'])"
+            ></bk-alert>
             <bk-form-item :label="$t('template.settingSyncStrategy')">
                 <bk-checkbox
                     v-model="strategyConf.syncSettingStrategy"
@@ -48,37 +54,52 @@
 
 <script>
     import useInstance from '@/hook/useInstance'
-    import { defineComponent, nextTick, ref } from 'vue'
+    import { computed, defineComponent, nextTick, ref } from 'vue'
     export default defineComponent({
         setup (props, ctx) {
-            const isLoading = ref(false)
-            const isShow = ref(false)
-            const { proxy } = useInstance()
-            const UPGRADE_STRATEGY_ENUM = {
+            const STRATEGY_ENUM = {
                 AUTO: 'AUTO',
                 MANUAL: 'MANUAL'
             }
+            const isLoading = ref(false)
+            const isShow = ref(false)
+            const { proxy } = useInstance()
+            const relatedInfo = computed(() => proxy.$store.state.atom.pipelineInfo?.pipelineTemplateMarketRelatedInfo ?? {})
+            const showAutoUpgradeStrategyTips = ref(relatedInfo.value.upgradeStrategy === STRATEGY_ENUM.AUTO)
             const strategyConf = ref({
-                upgradeStrategy: UPGRADE_STRATEGY_ENUM.AUTO,
-                settingSyncStrategy: UPGRADE_STRATEGY_ENUM.AUTO
+                upgradeStrategy: relatedInfo.value.upgradeStrategy,
+                syncSettingStrategy: relatedInfo.value.settingSyncStrategy === STRATEGY_ENUM.AUTO
+            })
+
+            ctx.expose({
+                show () {
+                    toogleShow(true)
+                },
+                hide () {
+                    toogleShow(false)
+                }
             })
 
             async function setStrategy () {
                 try {
                     isLoading.value = true
-                    const res = await proxy.$store.dispatch('atom/setTemplateStrategy', {
+                    const tempParams = {
                         projectId: proxy.$route.params.projectId,
-                        templateId: proxy.$route.params.templateId,
+                        templateId: proxy.$route.params.templateId
+                    }
+                    const res = await proxy.$store.dispatch('atom/setTemplateStrategy', {
+                        ...tempParams,
                         upgradeStrategy: strategyConf.value.upgradeStrategy,
-                        syncSettingStrategy: strategyConf.value.settingSyncStrategy
-                            ? UPGRADE_STRATEGY_ENUM.MANUAL
-                            : UPGRADE_STRATEGY_ENUM.AUTO
+                        settingSyncStrategy: strategyConf.value.syncSettingStrategy
+                            ? STRATEGY_ENUM.AUTO
+                            : STRATEGY_ENUM.MANUAL
                     })
                     if (res) {
                         proxy.$bkMessage({
                             theme: 'success',
                             message: proxy.$t('template.upgradeSettingSuccess')
                         })
+                        proxy.$store.dispatch('atom/requestTemplateSummary', tempParams)
                         nextTick(() => {
                             toogleShow(false)
                         })
@@ -94,22 +115,20 @@
                 isShow.value = show
             }
 
-            ctx.expose({
-                show () {
-                    toogleShow(true)
-                },
-                hide () {
-                    toogleShow(false)
-                }
-            })
+            function handleUpgradeStrategyChange (value) {
+                showAutoUpgradeStrategyTips.value = value === STRATEGY_ENUM.AUTO
+            }
 
             return {
                 isShow,
                 strategyConf,
                 isLoading,
-                UPGRADE_STRATEGY_ENUM,
+                STRATEGY_ENUM,
                 setStrategy,
-                toogleShow
+                toogleShow,
+                relatedInfo,
+                showAutoUpgradeStrategyTips,
+                handleUpgradeStrategyChange
             }
         }
     })
