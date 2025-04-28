@@ -26,7 +26,7 @@ export function loadI18nMessages (i18n) {
 }
 
 export function t (key, ...args) {
-    const translate = Object.getPrototypeOf(this || Vue).$te
+    const translate = Object.getPrototypeOf(this || Vue).$t
     if (typeof translate === 'function') {
         const result = translate.call(this, `${I18N_SCOPE}.${key}`, ...args)
         if (result && typeof result === 'string') return result

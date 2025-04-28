@@ -44,6 +44,9 @@ import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.remotedev.TaskResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyInfo
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -875,4 +878,24 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "请求参数", required = true)
         createReq: BKItsmCreateTicketReq
     ): Result<BKItsmCreateTicketRespData>
+
+    @Operation(summary = "获取项目策略")
+    @POST
+    @Path("/get_project_strategy")
+    fun getProjectStrategy(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: ProjectStrategyFetchInfo
+    ): Result<ProjectStrategyResp>
+
+    @Operation(summary = "修改项目策略")
+    @POST
+    @Path("/update_project_strategy")
+    fun updateProjectStrategy(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: ProjectStrategyInfo
+    ): Result<Boolean>
 }

@@ -519,11 +519,6 @@
             color: #313238;
         }
     }
-    .pipeline-list-main-header {
-        .bk-dropdown-menu {
-            top: -1px;
-        }
-    }
     .pipeline-sort-dropdown-menu {
         margin: 0 8px;
         .bk-dropdown-list {

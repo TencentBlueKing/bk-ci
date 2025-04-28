@@ -1623,7 +1623,7 @@
   "versionRuleA": "Additional bits: Modified version of other information of the pipeline, such as name, description, running settings, etc.",
   "willRelease": "To be released",
   "clickToAddStage": "Click to add the first pipeline stage",
-  "buildMsg": "Build Message",
+  "buildMsg": "Build",
   "executeStepPreview": "Preview of steps to be executed",
   "yamlFilePathErrorTip": "File path must end with .yml or .yaml",
   "yamlFilePathPlaceholder": "build.yml or build.yaml",
@@ -1723,5 +1723,9 @@
   "isTaskTermination": "Are you sure you want to terminate the task execution?",
   "pipelineNameConventions": "Pipeline Naming Conventions:",
   "addLabels": "Add Label",
-  "relyChanged": "Dependent field ({0}) values have changed, please check if the configuration is correct"
+  "relyChanged": "Dependent field ({0}) values have changed, please check if the configuration is correct",
+  "pipelineDataBoard": "EPlus",
+  "groupLabel": "Group labels",
+  "groupLabelTips": "Variables with the same label will be displayed in the same group in the view and execution preview interface",
+  "notGrouped": "Not grouped"
 }
