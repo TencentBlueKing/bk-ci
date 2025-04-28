@@ -106,6 +106,10 @@
                     }
                 } catch (error) {
                     console.error('Error setting strategy:', error)
+                    proxy.$bkMessage({
+                        theme: 'error',
+                        message: error.message ?? error
+                    })
                 } finally {
                     isLoading.value = false
                 }
