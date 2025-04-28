@@ -40,6 +40,7 @@ import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TIMING_START
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_HASH_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.process.api.service.ServiceTimerBuildResource
+import com.tencent.devops.process.constant.MeasureConstant.NAME_PIPELINE_TIMER_SCHEDULE_EXECUTION_TIME
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_IS_EMPTY
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_NOT_FOUND
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_NO_CHANGE
@@ -55,6 +56,7 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
+import com.tencent.devops.process.service.TimerScheduleMeasureService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import org.slf4j.MDC
@@ -74,32 +76,42 @@ class PipelineTimerBuildListener @Autowired constructor(
     private val pipelineTimerService: PipelineTimerService,
     private val scmProxyService: ScmProxyService,
     private val triggerEventService: PipelineTriggerEventService,
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val timerScheduleMeasureService: TimerScheduleMeasureService
 ) : PipelineEventListener<PipelineTimerBuildEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineTimerBuildEvent) {
         logger.info("Receive PipelineTimerBuildEvent from MQ|[$event]")
-        val pipelineTimer =
-            pipelineTimerService.get(
-                projectId = event.projectId,
-                pipelineId = event.pipelineId,
-                taskId = event.taskId
-            ) ?: return
-        with(pipelineTimer) {
-            when {
-                repoHashId.isNullOrBlank() ->
-                    timerTrigger(
-                        event = event,
-                        params = event.startParam ?: mapOf(),
-                        taskId = pipelineTimer.taskId
-                    )
+        try {
+            val pipelineTimer =
+                pipelineTimerService.get(
+                    projectId = event.projectId,
+                    pipelineId = event.pipelineId,
+                    taskId = event.taskId
+                ) ?: return
+            with(pipelineTimer) {
+                when {
+                    repoHashId.isNullOrBlank() ->
+                        timerTrigger(
+                            event = event,
+                            params = event.startParam ?: mapOf(),
+                            taskId = pipelineTimer.taskId
+                        )
 
-                else ->
-                    repoTimerTrigger(
-                        event = event,
-                        pipelineTimer = pipelineTimer
-                    )
+                    else ->
+                        repoTimerTrigger(
+                            event = event,
+                            pipelineTimer = pipelineTimer
+                        )
+                }
             }
+        } catch (ignored: Exception) {
+            logger.warn("fail to trigger pipeline|event=$event", ignored)
+        } finally {
+            timerScheduleMeasureService.recordActualExecutionTime(
+                name = NAME_PIPELINE_TIMER_SCHEDULE_EXECUTION_TIME,
+                event = event
+            )
         }
     }
 

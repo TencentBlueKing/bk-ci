@@ -212,7 +212,6 @@ class PipelineJobBean(
                 try {
                     logger.info("[$projectId]|$pipelineId|PIPELINE_TIMER|scheduledFireTime=$scheduledFireTime")
                     watcher.start("dispatch")
-                    // TODO: 补充启动参数
                     pipelineEventDispatcher.dispatch(
                         PipelineTimerBuildEvent(
                             source = "timer_trigger",
@@ -224,7 +223,8 @@ class PipelineJobBean(
                             ) ?: pipelineTimer.startUser,
                             channelCode = pipelineTimer.channelCode,
                             taskId = taskId,
-                            startParam = pipelineTimer.startParam
+                            startParam = pipelineTimer.startParam,
+                            expectedStartTime = context.scheduledFireTime.time
                         )
                     )
                 } catch (ignored: Exception) {
