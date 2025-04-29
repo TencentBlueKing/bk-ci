@@ -31,7 +31,7 @@ class TimerScheduleMeasureService @Autowired constructor(
                 .tags(tags)
                 .publishPercentileHistogram(true)
                 .minimumExpectedValue(Duration.ofMillis(10))
-                .maximumExpectedValue(Duration.ofSeconds(30))
+                .maximumExpectedValue(Duration.ofSeconds(60))
                 .register(meterRegistry)
                 .record(timeConsumingMills, TimeUnit.MILLISECONDS)
     }
