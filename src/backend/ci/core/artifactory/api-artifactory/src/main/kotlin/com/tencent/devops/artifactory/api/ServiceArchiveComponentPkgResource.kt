@@ -74,6 +74,9 @@ interface ServiceArchiveComponentPkgResource {
         @Parameter(description = "组件版本号", required = true)
         @PathParam("version")
         version: String,
+        @Parameter(description = "实例ID", required = false)
+        @QueryParam("instanceId")
+        instanceId: String? = null,
         @Parameter(description = "操作系统名称", required = false)
         @QueryParam("osName")
         osName: String? = null,

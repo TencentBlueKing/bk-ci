@@ -31,4 +31,6 @@ dependencies {
     api(project(":ext:tencent:common:common-remotedev-tencent"))
     api(project(":ext:tencent:process:api-process-tencent"))
     api(project(":ext:tencent:project:api-project-tencent"))
+    api(project(":ext:tencent:store:api-store-tencent"))
+    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
 }

@@ -318,7 +318,8 @@ class CreateControl @Autowired constructor(
                 windowsZone = availableZone,
                 windowsConfig = windowsConfig,
                 newNum = newNum,
-                quotaType = QuotaType.parse(zoneType)
+                quotaType = QuotaType.parse(zoneType),
+                specifyTaints = workspaceCreate.specifyTaints
             )
         )
         repeat(generateWorkspaceName.size) { i ->

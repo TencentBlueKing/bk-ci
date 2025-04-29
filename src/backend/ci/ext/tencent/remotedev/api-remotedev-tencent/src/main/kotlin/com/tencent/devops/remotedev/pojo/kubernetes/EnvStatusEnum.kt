@@ -53,5 +53,7 @@ enum class EnvStatusEnum {
     upgrading,
     copying,
     readyDelete,
-    cloning
+    cloning,
+    expanding,
+    created
 }

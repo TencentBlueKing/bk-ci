@@ -29,6 +29,7 @@ package com.tencent.devops.remotedev.dispatch.kubernetes.interfaces
 
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.CreateWorkspaceRes
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
+import com.tencent.devops.remotedev.pojo.expert.DeleteDiskData
 import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
 import com.tencent.devops.remotedev.pojo.image.ListImagesData
 import com.tencent.devops.remotedev.pojo.image.ListImagesResp
@@ -141,13 +142,19 @@ interface RemoteDevInterface {
     fun createDisk(
         workspaceName: String,
         userId: String,
-        size: String
+        size: String,
+        forceRestart: Boolean?
     ): CreateDiskResp
 
     fun fetchDiskList(
         workspaceName: String,
         userId: String
     ): List<VmDiskInfo>
+
+    fun deleteDisk(
+        userId: String,
+        data: DeleteDiskData
+    ): CreateDiskResp
 
     fun taskStatus(
         taskId: String

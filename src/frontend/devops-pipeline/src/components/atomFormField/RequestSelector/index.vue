@@ -34,6 +34,7 @@
 </template>
 
 <script>
+    import { findItemById } from '@/utils/util'
     import atomFieldMixin from '../atomFieldMixin'
     import Selector from '../Selector'
     export default {
@@ -102,6 +103,16 @@
             options: {
                 type: Array,
                 default: () => []
+            },
+            paramValues: {
+                type: Object,
+                default: () => ({})
+            },
+            // TODO: 历史遗留问题，将ID转为String, 否则对于数字ID,无法选中
+            allIdString: Boolean,
+            affected: {
+                type: Array,
+                default: []
             }
         },
         data () {
@@ -114,7 +125,30 @@
         computed: {
             projectId () {
                 return this.$route.params.projectId
+            },
+            parsedUrl () {
+                try {
+                    const { url, element } = this
+                    const query = this.$route.params
+                    return this.urlParse(url, {
+                        bkPoolType: this?.container?.dispatchType?.buildType,
+                        ...query,
+                        ...(this.paramValues || {}),
+                        ...element
+                    })
+                } catch (error) {
+                    console.log(error)
+                    return this.url
+                }
             }
+        },
+        watch: {
+            parsedUrl () {
+                this.$nextTick(() => {
+                    this.freshList()
+                })
+            }
+
         },
         created () {
             if (this.initRequest) {
@@ -173,41 +207,37 @@
             },
             async freshList () {
                 try {
-                    const { url, element } = this
-                    const query = this.$route.params
-                    const changeUrl = this.urlParse(url, {
-                        bkPoolType: this?.container?.dispatchType?.buildType,
-                        ...query,
-                        ...element
-                    })
                     this.isLoading = true
-                    const res = await this.$ajax.get(changeUrl)
+                    const res = await this.$ajax.get(this.parsedUrl)
 
                     const resData = this.getResponseData(res, this.dataPath)
-
                     // 正常情况
-                    this.list = (resData || []).map(item => ({
-                        ...item,
-                        id: item[this.paramId],
-                        name: item[this.paramName]
-                    }))
-
+                    this.list = (resData || []).map(item => {
+                        const idKey = this.paramId || 'id'
+                        const nameKey = this.paramName || 'name'
+                        const id = item[idKey] ?? item
+                        return {
+                            ...item,
+                            id: this.allIdString ? String(id) : id,
+                            name: item[nameKey] ?? item
+                        }
+                    })
                     // 单选selector时处理******
                     if (!this.multiSelect) {
-                        if (this.value !== '' && this.list.filter(item => item.id === this.value).length === 0) {
+                        if (this.value !== '' && !findItemById(this.list, this.value)) {
                             this.list.splice(0, 0, {
                                 id: this.value,
-                                name: `******（${this.$t('editPage.noPermToView')}）`
+                                name: this.$t('editPage.withoutOption')
                             })
                         }
                     } else {
                         // 多选selector时处理******,现在的处理方式是，把多选的数组遍历，看里面的每一项是否在list，若不在则加一项***
                         this.value = this.value.length ? this.value : []
                         this.value.forEach(value => {
-                            if (value !== '' && this.list.filter(item => item.id === value).length === 0) {
+                            if (value !== '' && !findItemById(this.list, value)) {
                                 this.list.splice(0, 0, {
                                     id: value,
-                                    name: `******（${this.$t('editPage.noPermToView')}）`
+                                    name: this.$t('editPage.withoutOption')
                                 })
                             }
                         })

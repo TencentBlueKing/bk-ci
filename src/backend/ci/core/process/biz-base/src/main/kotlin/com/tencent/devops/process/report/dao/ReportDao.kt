@@ -158,6 +158,7 @@ class ReportDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(BUILD_ID.eq(buildId))
+                .orderBy(CREATE_TIME.desc())
                 .fetch()
         }
     }

@@ -89,4 +89,8 @@ class DispatchRemoteDevService(
     override fun workspaceCreateDiskCallback(taskId: String, workspaceName: String, operator: String) {
         return expertSupportService.createDiskCallback(taskId, workspaceName, operator)
     }
+
+    override fun workspaceDeleteDiskCallback(taskId: String, workspaceName: String, operator: String) {
+        return expertSupportService.deleteDiskCallback(taskId, workspaceName, operator)
+    }
 }

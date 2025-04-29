@@ -1,68 +1,122 @@
 <template>
-    <bk-form
-        form-type="vertical"
-        class="pipeline-execute-params-form"
-    >
-        <form-field
-            v-for="param in paramList"
-            :key="param.id"
-            :required="param.required"
-            :is-error="errors.has('devops' + param.name)"
-            :error-msg="errors.first('devops' + param.name)"
-            :label="param.label || param.id"
+    <section>
+        <slot name="versionParams"></slot>
+        <bk-form
+            form-type="vertical"
+            :class="{
+                'pipeline-execute-params-form': true,
+                'is-category': sortCategory
+            }"
         >
-            <section class="component-row">
-                <component
-                    :is="param.component"
-                    v-validate="{ required: param.required, objectRequired: isObject(param.value) }"
-                    :click-unfold="true"
-                    :show-select-all="true"
-                    :handle-change="handleParamUpdate"
-                    flex
-                    v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })"
-                    :class="{
-                        'is-diff-param': highlightChangedParam && param.isChanged
-                    }"
-                    :disabled="disabled"
-                    :placeholder="param.placeholder"
-                    :is-diff-param="highlightChangedParam && param.isChanged"
-                    :enable-version-control="param.enableVersionControl"
-                    :random-sub-path="param.latestRandomStringInPath"
-                />
-                <span
-                    class="meta-data"
-                    v-show="showMetadata(param.type, param.value)"
-                >{{ $t('metaData') }}
-                    <aside class="metadata-box">
-                        <metadata-list
-                            :is-left-render="(index % 2) === 1"
-                            :path="isArtifactoryParam(param.type) ? param.value : ''"
-                        ></metadata-list>
-                    </aside>
-                </span>
-            </section>
-            <span
-                v-if="!errors.has('devops' + param.name)"
-                :class="['preview-params-desc', param.type === 'TEXTAREA' ? 'params-desc-styles' : '']"
-                :title="param.desc"
-            >
-                {{ param.desc }}
-            </span>
-        </form-field>
-    </bk-form>
+            <template v-if="sortCategory">
+                <renderSortCategoryParams
+                    v-for="(list, key) in renderParamList"
+                    :key="key"
+                    :name="key"
+                >
+                    <template slot="content">
+                        <form-field
+                            v-for="param in list"
+                            :key="param.id"
+                            :required="param.required"
+                            :is-error="errors.has('devops' + param.name)"
+                            :error-msg="errors.first('devops' + param.name)"
+                            :label="param.label || param.id"
+                        >
+                            <section class="component-row">
+                                <component
+                                    :is="param.component"
+                                    v-validate="{ required: param.required, objectRequired: isObject(param.value) }"
+                                    :click-unfold="true"
+                                    :show-select-all="true"
+                                    :handle-change="handleParamUpdate"
+                                    flex
+                                    v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })"
+                                    :class="{
+                                        'is-diff-param': (highlightChangedParam && param.isChanged) || param.affectedChanged
+                                    }"
+                                    :disabled="disabled"
+                                    :placeholder="param.placeholder"
+                                    :is-diff-param="highlightChangedParam && param.isChanged"
+                                    :enable-version-control="param.enableVersionControl"
+                                    :random-sub-path="param.latestRandomStringInPath"
+                                />
+                            </section>
+                            <span
+                                v-if="!errors.has('devops' + param.name) && param.desc"
+                                :class="['preview-params-desc', param.type === 'TEXTAREA' ? 'params-desc-styles' : '']"
+                                :title="param.desc"
+                            >
+                                {{ param.desc }}
+                            </span>
+                            <span
+                                v-if="param.affectTips"
+                                class="preview-params-desc affect-warning"
+                            >
+                                {{ param.affectTips }}
+                            </span>
+                        </form-field>
+                    </template>
+                </renderSortCategoryParams>
+            </template>
+            <template v-else>
+                <form-field
+                    v-for="param in paramList"
+                    :key="param.id"
+                    :required="param.required"
+                    :is-error="errors.has('devops' + param.name)"
+                    :error-msg="errors.first('devops' + param.name)"
+                    :label="param.label || param.id"
+                >
+                    <section class="component-row">
+                        <component
+                            :is="param.component"
+                            v-validate="{ required: param.required, objectRequired: isObject(param.value) }"
+                            :click-unfold="true"
+                            :show-select-all="true"
+                            :handle-change="handleParamUpdate"
+                            flex
+                            v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })"
+                            :class="{
+                                'is-diff-param': (highlightChangedParam && param.isChanged) || param.affectedChanged
+                            }"
+                            :disabled="disabled"
+                            :placeholder="param.placeholder"
+                            :is-diff-param="highlightChangedParam && param.isChanged"
+                            :enable-version-control="param.enableVersionControl"
+                            :random-sub-path="param.latestRandomStringInPath"
+                        />
+                    </section>
+                    <span
+                        v-if="!errors.has('devops' + param.name) && param.desc"
+                        :class="['preview-params-desc', param.type === 'TEXTAREA' ? 'params-desc-styles' : '']"
+                        :title="param.desc"
+                    >
+                        {{ param.desc }}
+                    </span>
+                    <span
+                        v-if="param.affectTips"
+                        class="preview-params-desc affect-warning"
+                    >
+                        {{ param.affectTips }}
+                    </span>
+                </form-field>
+            </template>
+        </bk-form>
+    </section>
 </template>
 
 <script>
+    import CascadeRequestSelector from '@/components/atomFormField/CascadeRequestSelector'
     import EnumInput from '@/components/atomFormField/EnumInput'
+    import FileParamInput from '@/components/atomFormField/FileParamInput'
     import RequestSelector from '@/components/atomFormField/RequestSelector'
     import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import metadataList from '@/components/common/metadata-list'
-    import FileParamInput from '@/components/atomFormField/FileParamInput'
-    import CascadeRequestSelector from '@/components/atomFormField/CascadeRequestSelector'
-    import { isObject } from '@/utils/util'
+    import renderSortCategoryParams from '@/components/renderSortCategoryParams'
     import {
         ARTIFACTORY,
         BOOLEAN,
@@ -70,26 +124,27 @@
         CODE_LIB,
         CONTAINER_TYPE,
         ENUM,
+        getBranchOption,
         GIT_REF,
         isArtifactoryParam,
+        isBuildResourceParam,
         isCodelibParam,
         isEnumParam,
         isFileParam,
         isGitParam,
         isMultipleParam,
         isRemoteType,
+        isRepoParam,
         isSvnParam,
         MULTIPLE,
         ParamComponentMap,
+        REPO_REF,
         STRING,
         SUB_PIPELINE,
         SVN_TAG,
-        TEXTAREA,
-        REPO_REF,
-        getBranchOption,
-        isBuildResourceParam,
-        isRepoParam
+        TEXTAREA
     } from '@/store/modules/atom/paramsConfig'
+    import { isObject, isShallowEqual } from '@/utils/util'
 
     export default {
 
@@ -102,7 +157,8 @@
             FormField,
             metadataList,
             FileParamInput,
-            CascadeRequestSelector
+            CascadeRequestSelector,
+            renderSortCategoryParams
         },
         props: {
             disabled: {
@@ -121,7 +177,16 @@
                 type: Function,
                 default: () => () => {}
             },
-            highlightChangedParam: Boolean
+            highlightChangedParam: Boolean,
+            sortCategory: {
+                type: Boolean,
+                default: false
+            }
+        },
+        data () {
+            return {
+                prevAffectedValues: {}
+            }
         },
         computed: {
             paramList () {
@@ -130,11 +195,20 @@
                     if (param.type !== STRING || param.type !== TEXTAREA) {
                         if (isRemoteType(param)) {
                             const val = (param.type === 'MULTIPLE' && typeof this.paramValues?.[param.id] === 'string') ? this.paramValues[param.id].split(',').filter(i => i !== '') : this.paramValues?.[param.id]
+                            const affected = this.getAffectedBy(param.payload.url)
+                            const affectedChanged = this.detectChanged(this.prevAffectedValues?.[param.id], affected)
+                            this.prevAffectedValues[param.id] = affected
+
                             restParam = {
                                 ...restParam,
                                 ...param.payload,
                                 multiSelect: param.type === 'MULTIPLE',
-                                value: param.type === 'MULTIPLE' && !Array.isArray(val) ? [] : val
+                                value: param.type === 'MULTIPLE' && !Array.isArray(val) ? [] : val,
+                                allIdString: true,
+                                paramValues: this.paramValues,
+                                affected,
+                                affectedChanged,
+                                affectTips: affectedChanged && Object.keys(affected).length > 0 ? this.$t('relyChanged', [Object.keys(affected).join('/')]) : ''
                             }
                         } else {
                             restParam = {
@@ -212,6 +286,24 @@
                         )
                     }
                 })
+            },
+            renderParamList () {
+                // 将参数列表按照分组进行分组,未分组的参数放到一个分组里
+                const key = this.$t('notGrouped')
+                const listMap = this.paramList.reduce((acc, item) => {
+                    const categoryKey = item.category || key
+                    if (!acc[categoryKey]) {
+                        acc[categoryKey] = []
+                    }
+                    acc[categoryKey].push(item)
+                    return acc
+                }, {})
+
+                if (!(key in listMap)) {
+                    return listMap
+                }
+                const { [key]: value, ...rest } = listMap
+                return { [key]: value, ...rest }
             }
         },
         methods: {
@@ -287,6 +379,25 @@
                 } catch (error) {
                     console.log(error)
                 }
+            },
+            getAffectedBy (originUrl) {
+                try {
+                    const PLUGIN_URL_PARAM_REG = /\{(.*?)(\?){0,1}\}/g
+                    return originUrl.match(PLUGIN_URL_PARAM_REG).map(item => item.replace(/\{(\S+)\}/, '$1')).reduce((acc, key) => {
+                        if (Object.hasOwnProperty.call(this.paramValues, key)) {
+                            acc[key] = this.paramValues[key]
+                        }
+                        return acc
+                    }, {})
+                } catch (error) {
+                    return {}
+                }
+            },
+            detectChanged (prev, current) {
+                if (prev && current) {
+                    return !isShallowEqual(prev, current)
+                }
+                return false
             }
         }
     }
@@ -299,6 +410,9 @@
         display: grid;
         grid-template-columns: repeat(2, minmax(200px, 1fr));
         grid-gap: 0 24px;
+        &.is-category {
+            grid-template-columns: repeat(1, minmax(200px, 1fr));
+        }
         &.bk-form.bk-form-vertical .bk-form-item+.bk-form-item {
             margin-top: 0 !important;
         }
@@ -337,6 +451,9 @@
         width: 100%;
         font-size: 12px;
         @include ellipsis();
+        &.affect-warning {
+            color: #FF9C01;
+        }
     }
     .params-desc-styles {
         margin-top: 32px;

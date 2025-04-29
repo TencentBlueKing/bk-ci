@@ -30,7 +30,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.api.service.ServiceBkRepoStaticResource
 import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
-import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
+import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
 import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
 import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
@@ -155,7 +155,7 @@ class TxStoreFileServiceImpl : StoreFileService() {
         serviceUrlPrefix: String,
         file: File
     ): Result<String> {
-        val index = file.path.indexOf(BK_CI_ATOM_DIR)
+        val index = file.path.indexOf(BKREPO_STORE_PROJECT_ID)
         val serviceUrl = "$serviceUrlPrefix/service/bkrepo/statics/file/upload" +
                 "?userId=$userId&destPath=${file.path.substring(index)}"
         OkhttpUtils.uploadFile(serviceUrl, file).use { response ->

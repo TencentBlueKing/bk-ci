@@ -617,7 +617,9 @@
                 requestGlobalEnvs()
             }
             this.toggleAtomSelectorPopup(!atomCode)
-            this.requestInterceptAtom()
+            if (!this.isTemplatePanel) {
+                this.requestInterceptAtom()
+            }
         },
 
         methods: {

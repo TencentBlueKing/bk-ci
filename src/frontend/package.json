@@ -24,7 +24,7 @@
     "@nx/eslint": "19.5.1",
     "@nx/vite": "19.5.1",
     "@nx/webpack": "19.5.1",
-    "@typescript-eslint/parser": "^1.9.0",
+    "@typescript-eslint/parser": "^2.7.0",
     "@vue/babel-preset-jsx": "^1.2.4",
     "@webpack-cli/serve": "^1.7.0",
     "chalk": "^4.0.0",
@@ -50,11 +50,11 @@
     "nx": "19.5.1",
     "ora": "^3.4.0",
     "svg-sprite-loader": "^6.0.9",
-    "typescript": "3.4.5",
+    "typescript": "3.7.5",
     "vue-eslint-parser": "^9.0.2",
     "webpack": "~5.76.1",
     "webpack-bundle-analyzer": "^4.4.2",
-    "webpack-dev-server": "^5.2.1"
+    "webpack-dev-server": "~5.2.1"
   },
   "resolutions": {
     "glob-parent": "5.1.2"

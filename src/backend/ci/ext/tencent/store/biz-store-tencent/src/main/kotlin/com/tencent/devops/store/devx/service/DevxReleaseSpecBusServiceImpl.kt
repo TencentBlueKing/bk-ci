@@ -209,7 +209,13 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
             val userId = bkStoreContext[AUTH_HEADER_USER_ID]?.toString() ?: AUTH_HEADER_USER_ID_DEFAULT_VALUE
             val versionInfo = storeBaseCreateRequest.versionInfo
             val version = versionInfo.version
-            doStoreEnvBus(storeCode = storeCode, storeType = storeType, version = version, userId = userId)
+            doStoreEnvBus(
+                storeCode = storeCode,
+                storeType = storeType,
+                version = version,
+                userId = userId,
+                releaseType = versionInfo.releaseType
+            )
         }
     }
 
@@ -217,7 +223,8 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         storeCode: String,
         storeType: StoreTypeEnum,
         version: String,
-        userId: String
+        userId: String,
+        releaseType: ReleaseTypeEnum?
     ) {
         // 获取组件配置文件
         val remoteRepoId = storeBaseFeatureExtQueryDao.getStoreBaseFeatureExt(
@@ -240,7 +247,8 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
             storeType = storeType,
             storeCode = storeCode,
             version = version,
-            storePkgEnvInfos = storePkgEnvInfos
+            storePkgEnvInfos = storePkgEnvInfos,
+            releaseType = releaseType
         )
         storeArchiveService.updateComponentPkgInfo(userId, storePkgInfoUpdateRequest)
     }
@@ -338,110 +346,157 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
             dslContext = dslContext,
             storeId = storeId
         )
+
         var queryDefaultScriptFlag = false
-        var windowsRunInfos: MutableSet<String>? = null
-        var linuxRunInfos: MutableSet<String>? = null
-        var darwinRunInfos: MutableSet<String>? = null
+        val windowsRunInfos = mutableSetOf<String>()
+        val linuxRunInfos = mutableSetOf<String>()
+        val darwinRunInfos = mutableSetOf<String>()
+
+        val storeCode = baseRecord.storeCode
+        val storeType = StoreTypeEnum.getStoreTypeObj(baseRecord.storeType.toInt())
+
         baseEnvRecords?.forEach { baseEnvRecord ->
-            val osName = baseEnvRecord.osName
-            val osArch = if (!baseEnvRecord.osArch.isNullOrBlank()) baseEnvRecord.osArch else " "
-            val pkgRepoPath = baseEnvRecord.pkgPath
-            val signatureFileKey = getSignatureFileKey()
+            val osName = baseEnvRecord.osName.orEmpty()
+            val osArch = baseEnvRecord.osArch ?: " "
+            val pkgRepoPath = baseEnvRecord.pkgPath.orEmpty()
+            val signatureCertFileKey = getSignatureCertFileKey()
+            val signatureOriginFileKey = getSignatureOriginFileKey()
+
             val extEnvs = storeBaseEnvExtQueryDao.getBaseExtEnvsByEnvId(
                 dslContext = dslContext,
                 envId = baseEnvRecord.id,
                 fieldNames = arrayOf(
-                    signatureFileKey,
+                    signatureCertFileKey,
+                    signatureOriginFileKey,
+                    OsConfigInfo::packAppPackageScriptPath.name,
+                    OsConfigInfo::appPackagePath.name,
                     OsConfigInfo::packScriptPath.name,
                     OsConfigInfo::packagePath.name
                 )
             )
-            val signFilePaths = extEnvs?.filter { it.fieldName == signatureFileKey }?.getOrNull(0)?.fieldValue ?: "[]"
-            val packScriptPath =
-                extEnvs?.filter { it.fieldName == OsConfigInfo::packScriptPath.name }?.getOrNull(0)?.fieldValue ?: " "
-            if (packScriptPath.isBlank()) {
-                // 用户没有配置脚本，则需查出平台默认的打包脚本
-                queryDefaultScriptFlag = true
+
+            var certSignFilePaths = extEnvs?.find { it.fieldName == signatureCertFileKey }?.fieldValue ?: "[]"
+            val originFilePaths = extEnvs?.find { it.fieldName == signatureOriginFileKey }?.fieldValue ?: "[]"
+            val packScriptPath = extEnvs?.find { it.fieldName == OsConfigInfo::packScriptPath.name }?.fieldValue ?: " "
+            var packAppPackageScriptPath =
+                extEnvs?.find { it.fieldName == OsConfigInfo::packAppPackageScriptPath.name }?.fieldValue ?: " "
+
+            if (packScriptPath.isBlank()) queryDefaultScriptFlag = true
+
+            val packagePath = extEnvs?.find { it.fieldName == OsConfigInfo::packagePath.name }?.fieldValue ?: " "
+            var appPackagePath = extEnvs?.find { it.fieldName == OsConfigInfo::appPackagePath.name }?.fieldValue ?: " "
+
+            if (appPackagePath.isBlank() && storeBaseFeatureExtQueryDao.getStoreBaseFeatureExt(
+                    dslContext = dslContext,
+                    storeCode = storeCode,
+                    storeType = storeType,
+                    fieldName = KEY_FRAMEWORK_CODE
+                )?.fieldValue == FrameworkCodeEnum.NODEJS_FRAMEWORK.name
+            ) {
+                // 兼容nodejs框架没有配置应用程序路径的情况
+                val fileExtension = packagePath.substringAfterLast('.', "")
+                val fileName = packagePath.substringAfterLast(File.separator, "")
+                appPackagePath = packagePath.replace(fileName, "$storeCode.$fileExtension")
+                if (packAppPackageScriptPath.isBlank()) {
+                    packAppPackageScriptPath = packScriptPath
+                }
             }
-            val pkgLocalPath =
-                extEnvs?.filter { it.fieldName == OsConfigInfo::packagePath.name }?.getOrNull(0)?.fieldValue ?: " "
-            val fileType = pkgRepoPath.substringAfterLast(".")
-            // 暂时只支持windows操作系统的exe软件包签名
-            if (osName.contains("win")) {
-                val signFlag = windowsSupportFileTypes.split(",").contains(fileType)
-                if (windowsRunInfos == null) {
-                    windowsRunInfos = mutableSetOf()
-                }
-                windowsRunInfos?.add("$osName:$osArch:$pkgRepoPath:$signFilePaths:$signFlag:$packScriptPath:$pkgLocalPath")
-            } else if (osName.contains("darwin")) {
-                if (darwinRunInfos == null) {
-                    darwinRunInfos = mutableSetOf()
-                }
-                darwinRunInfos?.add("$osName:$osArch:$pkgRepoPath:$signFilePaths:false:$packScriptPath:$pkgLocalPath")
-            } else {
-                if (linuxRunInfos == null) {
-                    linuxRunInfos = mutableSetOf()
-                }
-                linuxRunInfos?.add("$osName:$osArch:$pkgRepoPath:$signFilePaths:false:$packScriptPath:$pkgLocalPath")
+
+            if (appPackagePath.isNotBlank()) {
+                val certSignFilePathSet =
+                    JsonUtil.to(certSignFilePaths, object : TypeReference<MutableSet<String>>() {})
+                certSignFilePathSet.add(appPackagePath)
+                certSignFilePaths = JsonUtil.toJson(certSignFilePathSet)
+            }
+
+            val runInfo = listOf(
+                osName, osArch, pkgRepoPath, certSignFilePaths, originFilePaths,
+                when {
+                    osName.contains("win") -> windowsSupportFileTypes.split(",")
+                        .contains(pkgRepoPath.substringAfterLast("."))
+
+                    osName.contains("darwin") -> true
+                    else -> false
+                }.toString(),
+                packScriptPath, packagePath, packAppPackageScriptPath, appPackagePath
+            ).joinToString(":")
+
+            when {
+                osName.contains("win") -> windowsRunInfos.add(runInfo)
+                osName.contains("darwin") -> darwinRunInfos.add(runInfo)
+                else -> linuxRunInfos.add(runInfo)
             }
         }
-        val storeCode = baseRecord.storeCode
-        val storeType = StoreTypeEnum.getStoreTypeObj(baseRecord.storeType.toInt())
+
         val extFeatures = storeBaseFeatureExtQueryDao.queryStoreBaseFeatureExt(
             dslContext = dslContext,
             storeCode = storeCode,
             storeType = storeType,
             fieldNames = setOf(KEY_BUILD_DIR, KEY_REPOSITORY_HTTP_URL)
         )
-        val buildDir = extFeatures.filter { it.fieldName == KEY_BUILD_DIR }.getOrNull(0)?.fieldValue ?: ""
-        val repositoryHttpUrl =
-            extFeatures.filter { it.fieldName == KEY_REPOSITORY_HTTP_URL }.getOrNull(0)?.fieldValue ?: ""
-        val storeRunCustomVarSuffix = if (repositoryHttpUrl.isBlank()) {
-            "-pkg"
-        } else {
-            "-repo"
-        }
+
+        val buildDir = extFeatures.find { it.fieldName == KEY_BUILD_DIR }?.fieldValue ?: ""
+        val repositoryHttpUrl = extFeatures.find { it.fieldName == KEY_REPOSITORY_HTTP_URL }?.fieldValue ?: ""
+        val storeRunCustomVarSuffix = if (repositoryHttpUrl.isBlank()) "-pkg" else "-repo"
+
         val startParamMap = mutableMapOf(
             KEY_STORE_CODE to storeCode,
             KEY_STORE_TYPE to storeType.name,
             KEY_VERSION to baseRecord.version,
             KEY_PROJECT_ID to storeInnerPipelineConfig.innerPipelineProject,
-            KEY_WINDOWS_RUN_INFO to if (!windowsRunInfos.isNullOrEmpty()) JsonUtil.toJson(windowsRunInfos!!) else "[]",
-            KEY_LINUX_RUN_INFO to if (!linuxRunInfos.isNullOrEmpty()) JsonUtil.toJson(linuxRunInfos!!) else "[]",
-            KEY_DARWIN_RUN_INFO to if (!darwinRunInfos.isNullOrEmpty()) JsonUtil.toJson(darwinRunInfos!!) else "[]",
+            KEY_WINDOWS_RUN_INFO to JsonUtil.toJson(windowsRunInfos),
+            KEY_LINUX_RUN_INFO to JsonUtil.toJson(linuxRunInfos),
+            KEY_DARWIN_RUN_INFO to JsonUtil.toJson(darwinRunInfos),
             KEY_BUILD_DIR to buildDir,
-            KEY_REPOSITORY_HTTP_URL to repositoryHttpUrl,
-            KEY_STORE_WINDOWS_RUN_CUSTOM_VAR to "windows$storeRunCustomVarSuffix",
-            KEY_STORE_LINUX_RUN_CUSTOM_VAR to "linux$storeRunCustomVarSuffix",
-            KEY_STORE_DARWIN_RUN_CUSTOM_VAR to "darwin$storeRunCustomVarSuffix"
+            KEY_REPOSITORY_HTTP_URL to repositoryHttpUrl
         )
-        if (queryDefaultScriptFlag) {
-            val frameworkCode = storeBaseFeatureExtQueryDao.getStoreBaseFeatureExt(
-                dslContext = dslContext, storeCode = storeCode, storeType = storeType, fieldName = KEY_FRAMEWORK_CODE
-            )?.fieldValue ?: ""
-            val buildInfoRecord = storeBuildInfoDao.getStoreBuildInfoByLanguage(dslContext, frameworkCode, storeType)
-            val script = buildInfoRecord?.script
-            if (script.isNullOrBlank()) {
-                return startParamMap
-            }
-            if (JsonSchemaUtil.validateJson(script)) {
-                val scriptMap = JsonUtil.toMap(script)
-                scriptMap[OS.WINDOWS.name.lowercase()]?.let {
-                    startParamMap[KEY_WINDOWS_DEFAULT_SCRIPT] = it.toString()
-                }
-                scriptMap[OS.LINUX.name.lowercase()]?.let {
-                    startParamMap[KEY_LINUX_DEFAULT_SCRIPT] = it.toString()
-                }
-                scriptMap[OS.MACOS.name.lowercase()]?.let {
-                    startParamMap[KEY_DARWIN_DEFAULT_SCRIPT] = it.toString()
-                }
-            } else {
-                startParamMap[KEY_WINDOWS_DEFAULT_SCRIPT] = script
-                startParamMap[KEY_LINUX_DEFAULT_SCRIPT] = script
-                startParamMap[KEY_DARWIN_DEFAULT_SCRIPT] = script
+        listOf(
+            Triple(windowsRunInfos, KEY_STORE_WINDOWS_RUN_CUSTOM_VAR, "windows"),
+            Triple(linuxRunInfos, KEY_STORE_LINUX_RUN_CUSTOM_VAR, "linux"),
+            Triple(darwinRunInfos, KEY_STORE_DARWIN_RUN_CUSTOM_VAR, "darwin")
+        ).forEach { (infos, key, os) ->
+            if (infos.isNotEmpty()) {
+                startParamMap[key] = "$os$storeRunCustomVarSuffix"
             }
         }
+
+        if (queryDefaultScriptFlag) {
+            storeBaseFeatureExtQueryDao.getStoreBaseFeatureExt(
+                dslContext = dslContext,
+                storeCode = storeCode,
+                storeType = storeType,
+                fieldName = KEY_FRAMEWORK_CODE
+            )?.fieldValue
+                ?.let { frameworkCode ->
+                    storeBuildInfoDao.getStoreBuildInfoByLanguage(
+                        dslContext = dslContext,
+                        language = frameworkCode,
+                        storeType = storeType
+                    )?.script
+                        ?.takeIf { it.isNotBlank() }
+                }
+                ?.apply {
+                    processScriptContent(this, startParamMap)
+                }
+        }
         return startParamMap
+    }
+
+    private fun processScriptContent(script: String, startParamMap: MutableMap<String, String>) {
+        if (JsonSchemaUtil.validateJson(script)) {
+            JsonUtil.toMap(script).forEach { (os, value) ->
+                val osKey = when (os.lowercase()) {
+                    OS.WINDOWS.name.lowercase() -> KEY_WINDOWS_DEFAULT_SCRIPT
+                    OS.LINUX.name.lowercase() -> KEY_LINUX_DEFAULT_SCRIPT
+                    OS.MACOS.name.lowercase() -> KEY_DARWIN_DEFAULT_SCRIPT
+                    else -> null
+                }
+                osKey?.let { startParamMap[it] = value.toString() }
+            }
+        } else {
+            listOf(KEY_WINDOWS_DEFAULT_SCRIPT, KEY_LINUX_DEFAULT_SCRIPT, KEY_DARWIN_DEFAULT_SCRIPT)
+                .forEach { startParamMap[it] = script }
+        }
     }
 
     override fun getStoreRunPipelineStatus(buildId: String?, startFlag: Boolean): StoreStatusEnum? {
@@ -475,8 +530,6 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
             baseEnvRecords.forEach { baseEnvRecord ->
                 storePkgEnvInfos.add(createStorePkgEnvInfo(baseEnvRecord))
             }
-        } else {
-            storePkgEnvInfos.add(StorePkgEnvInfo(osName = OSType.WINDOWS.name.lowercase(), defaultFlag = true))
         }
         return storePkgEnvInfos
     }
@@ -562,37 +615,46 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
     ): StorePkgEnvInfo {
         val configOsName = osConfigInfo.osName
         val configOsArch = osConfigInfo.osArch
-        var extEnvInfo: MutableMap<String, Any>? = null
-        osConfigInfo.signature?.originFilePaths?.let {
-            val signatureFileKey = getSignatureFileKey()
-            extEnvInfo = mutableMapOf(signatureFileKey to JsonUtil.toJson(it))
-        }
-        osConfigInfo.packScriptPath?.let {
-            if (extEnvInfo != null) {
-                extEnvInfo!![OsConfigInfo::packScriptPath.name] = it
-            } else {
-                extEnvInfo = mutableMapOf(OsConfigInfo::packScriptPath.name to it)
-            }
-        }
+
+        val extEnvInfo = mutableMapOf<String, Any>().apply {
+            // 统一处理需要添加到extEnvInfo的字段
+            listOfNotNull(
+                osConfigInfo.signature?.certSignFilePaths?.let {
+                    getSignatureCertFileKey() to JsonUtil.toJson(it)
+                },
+                osConfigInfo.signature?.originFilePaths?.let {
+                    getSignatureOriginFileKey() to JsonUtil.toJson(it)
+                },
+                osConfigInfo.packAppPackageScriptPath?.let {
+                    OsConfigInfo::packAppPackageScriptPath.name to it
+                },
+                osConfigInfo.appPackagePath?.let {
+                    OsConfigInfo::appPackagePath.name to it
+                },
+                osConfigInfo.packScriptPath?.let {
+                    OsConfigInfo::packScriptPath.name to it
+                }
+            ).forEach { (key, value) -> put(key, value) }
+
+            // 处理必填字段packagePath
+            put(OsConfigInfo::packagePath.name, osConfigInfo.packagePath)
+        }.takeIf { it.isNotEmpty() }
+
         val pkgLocalPath = osConfigInfo.packagePath
-        if (extEnvInfo != null) {
-            extEnvInfo!![OsConfigInfo::packagePath.name] = pkgLocalPath
-        } else {
-            extEnvInfo = mutableMapOf(OsConfigInfo::packagePath.name to pkgLocalPath)
-        }
         val pkgName = File(pkgLocalPath).name
-        val pkgRepoPathSb = StringBuilder("$storeCode/$version/")
-        if (configOsName.isNotBlank()) {
-            pkgRepoPathSb.append(configOsName).append("/")
-        }
-        if (!configOsArch.isNullOrBlank()) {
-            pkgRepoPathSb.append(configOsArch).append("/")
-        }
-        pkgRepoPathSb.append(pkgName)
+
+        // 生成包在仓库中的路径
+        val pkgRepoPath = listOfNotNull(
+            "$storeCode/$version",
+            configOsName.takeUnless { it.isBlank() },
+            configOsArch.takeUnless { it.isNullOrBlank() },
+            pkgName
+        ).filterNot { it.isBlank() }.joinToString("/")
+
         return StorePkgEnvInfo(
             pkgName = pkgName,
             pkgLocalPath = pkgLocalPath,
-            pkgRepoPath = pkgRepoPathSb.toString(),
+            pkgRepoPath = pkgRepoPath,
             osName = configOsName,
             osArch = configOsArch,
             defaultFlag = osConfigInfo.defaultFlag,
@@ -600,7 +662,11 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         )
     }
 
-    private fun getSignatureFileKey(): String {
+    private fun getSignatureCertFileKey(): String {
+        return "${OsConfigInfo::signature.name}_${SignatureConfigInfo::certSignFilePaths.name}"
+    }
+
+    private fun getSignatureOriginFileKey(): String {
         return "${OsConfigInfo::signature.name}_${SignatureConfigInfo::originFilePaths.name}"
     }
 

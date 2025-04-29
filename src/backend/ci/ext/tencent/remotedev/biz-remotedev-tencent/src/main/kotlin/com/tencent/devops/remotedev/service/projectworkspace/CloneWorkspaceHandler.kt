@@ -387,7 +387,8 @@ class CloneWorkspaceHandler @Autowired constructor(
             windowsZone = windowsZone,
             windowsConfig = windowsConfig,
             newNum = 1,
-            quotaType = QuotaType.parse(windowsZone.type)
+            quotaType = QuotaType.parse(windowsZone.type),
+            specifyTaints = req.specifyTaints
         ).first()
     }
 

@@ -292,37 +292,38 @@
 
 <script>
     import FormField from '@/components/AtomPropertyPanel/FormField'
-    import FileParamInput from '@/components/atomFormField/FileParamInput'
     import EnumInput from '@/components/atomFormField/EnumInput'
+    import FileParamInput from '@/components/atomFormField/FileParamInput'
     import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
     import RequestSelector from '@/components/atomFormField/RequestSelector'
     import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import validMixins from '@/components/validMixins'
-    import { PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX, ENVIRONMENT_API_URL_PREFIX } from '@/store/constants'
+    import { ENVIRONMENT_API_URL_PREFIX, PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX } from '@/store/constants'
     import {
         CODE_LIB_OPTION,
         CODE_LIB_TYPE,
+        getBranchOption,
         getParamsDefaultValueLabel,
         getParamsDefaultValueLabelTips,
         getRepoOption,
-        getBranchOption,
         isArtifactoryParam,
         isBooleanParam,
+        isBuildResourceParam,
         isCodelibParam,
         isEnumParam,
         isFileParam,
         isGitParam,
         isMultipleParam,
+        isRepoParam,
         isStringParam,
         isSubPipelineParam,
         isSvnParam,
         isTextareaParam,
-        isBuildResourceParam,
-        SUB_PIPELINE_OPTION,
-        isRepoParam
+        SUB_PIPELINE_OPTION
     } from '@/store/modules/atom/paramsConfig'
+    import { getParamsValuesMap } from '@/utils/util'
     import { mapGetters } from 'vuex'
     import SelectTypeParam from './select-type-param'
 
@@ -379,6 +380,7 @@
         computed: {
             ...mapGetters('atom', [
                 'osList',
+                'allPipelineParams',
                 'getBuildResourceTypeList'
             ]),
             baseOSList () {
@@ -436,14 +438,14 @@
                 return isMultipleParam(type) || isEnumParam(type)
             },
             setRemoteParamOption (payload) {
-                payload = payload || {}
-                const remoteOpion = {
-                    url: payload.url || '',
-                    dataPath: payload.dataPath || 'data',
-                    paramId: payload.paramId || 'id',
-                    paramName: payload.paramName || 'name'
+                this.remoteParamOption = {
+                    url: payload?.url || '',
+                    dataPath: payload?.dataPath || 'data',
+                    paramId: payload?.paramId || 'id',
+                    paramName: payload?.paramName || 'name',
+                    allIdString: true,
+                    paramValues: getParamsValuesMap(this.allPipelineParams, 'defaultValue')
                 }
-                this.remoteParamOption = remoteOpion
             },
             getRepoOption (type, paramId) {
                 return getRepoOption(type, paramId)

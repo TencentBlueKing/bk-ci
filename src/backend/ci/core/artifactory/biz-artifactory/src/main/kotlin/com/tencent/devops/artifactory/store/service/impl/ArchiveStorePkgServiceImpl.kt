@@ -45,6 +45,7 @@ import com.tencent.devops.store.api.common.ServiceStoreArchiveResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.common.CONFIG_YML_NAME
 import com.tencent.devops.store.pojo.common.QueryComponentPkgEnvInfoParam
+import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
 import com.tencent.devops.store.pojo.common.publication.StorePkgInfoUpdateRequest
@@ -342,6 +343,7 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
         storeType: StoreTypeEnum,
         storeCode: String,
         version: String,
+        instanceId: String?,
         osName: String?,
         osArch: String?
     ): String {
@@ -350,9 +352,11 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
             storeType = storeType,
             version = version,
             projectCode = projectId,
-            userId = userId
+            userId = userId,
+            instanceId = instanceId
         )
-        if (validateResult.isNotOk() || validateResult.data == false) {
+        val storeBaseInfo = validateResult.data
+        if (validateResult.isNotOk() || storeBaseInfo == null) {
             throw ErrorCodeException(
                 errorCode = validateResult.status.toString(),
                 defaultMessage = validateResult.message
@@ -365,18 +369,24 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
             version = version,
             osName = osName,
             osArch = osArch
-        ).data ?: throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+        ).data
+        if (storePkgEnvInfos.isNullOrEmpty()) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+        }
         val storePkgEnvInfo = storePkgEnvInfos[0]
+        val queryCacheFlag = storeBaseInfo.status !in StoreStatusEnum.getTestStatusList()
         return createPkgShareUri(
             userId = userId,
             storeType = storeType,
-            pkgPath = storePkgEnvInfo.pkgRepoPath
+            pkgPath = storePkgEnvInfo.pkgRepoPath,
+            queryCacheFlag = queryCacheFlag
         )
     }
 
     abstract fun createPkgShareUri(
         userId: String,
         storeType: StoreTypeEnum,
-        pkgPath: String
+        pkgPath: String,
+        queryCacheFlag: Boolean = true
     ): String
 }

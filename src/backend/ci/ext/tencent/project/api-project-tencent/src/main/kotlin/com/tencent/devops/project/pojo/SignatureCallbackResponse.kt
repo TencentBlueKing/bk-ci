@@ -25,42 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.project.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "构建模型-ID")
-data class SubPipelineStartUpInfo(
-    @get:Schema(title = "参数key值", required = true)
-    val key: String,
-    @get:Schema(title = "key值是否可以更改", required = true)
-    val keyDisable: Boolean,
-    @get:Schema(title = "key值前端组件类型", required = true)
-    val keyType: String,
-    @get:Schema(title = "key值获取方式", required = true)
-    val keyListType: String,
-    @get:Schema(title = "key值获取路径", required = true)
-    val keyUrl: String,
-    @get:Schema
-    val keyUrlQuery: List<String>,
-    @get:Schema(title = "key值获取集合", required = true)
-    val keyList: List<StartUpInfo>,
-    @get:Schema(title = "key值是否多选", required = true)
-    val keyMultiple: Boolean,
-    @get:Schema(title = "参数value值", required = true)
-    val value: Any,
-    @get:Schema(title = "value值是否可以更改", required = true)
-    val valueDisable: Boolean,
-    @get:Schema(title = "value值前端组件类型", required = true)
-    val valueType: String,
-    @get:Schema(title = "value值获取方式", required = true)
-    val valueListType: String,
-    @get:Schema(title = "value值获取路径", required = true)
-    val valueUrl: String,
-    @get:Schema
-    val valueUrlQuery: List<String>,
-    @get:Schema(title = "value值获取集合", required = true)
-    val valueList: List<StartUpInfo>,
-    @get:Schema(title = "value值是否多选", required = true)
-    val valueMultiple: Boolean
-)
+@Schema(title = "合同签订回调")
+data class SignatureCallbackResponse(
+    val meta: Meta
+) {
+    data class Meta(
+        val code: String,
+        val message: String = "Success"
+    )
+
+    companion object {
+        fun success(): SignatureCallbackResponse {
+            return SignatureCallbackResponse(
+                meta = Meta(
+                    code = "0",
+                    message = "Success"
+                )
+            )
+        }
+    }
+}

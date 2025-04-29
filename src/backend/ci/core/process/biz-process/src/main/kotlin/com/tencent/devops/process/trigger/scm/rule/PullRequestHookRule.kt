@@ -48,7 +48,7 @@ class PullRequestHookRule @Autowired constructor(
                 sourceBranch = pullRequest.sourceRef.name,
                 changes = WebhookRuleUtils.getChangeFiles(changes ?: listOf()),
                 title = pullRequest.title,
-                lastCommitMsg = commit.message
+                lastCommitMsg = commit.message ?: ""
             )
         }
         val context = WebhookConditionContext(
