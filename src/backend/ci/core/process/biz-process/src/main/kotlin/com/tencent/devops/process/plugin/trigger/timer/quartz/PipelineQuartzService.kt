@@ -207,7 +207,13 @@ class PipelineJobBean(
             val scheduledFireTime = DateFormatUtils.format(context.scheduledFireTime, "yyyyMMddHHmmss")
             // 相同触发的要锁定，防止误差导致重复执行
             watcher.start("redisLock")
-            val redisLock = PipelineTimerTriggerLock(redisOperation, pipelineId, scheduledFireTime)
+            // 多个触发器的定时规则存在交集，都需要触发
+            val pipelineLockKey = if (taskId.isBlank()) {
+                pipelineId
+            } else {
+                "${pipelineId}:${taskId}"
+            }
+            val redisLock = PipelineTimerTriggerLock(redisOperation, pipelineLockKey, scheduledFireTime)
             if (redisLock.tryLock()) {
                 try {
                     logger.info("[$projectId]|$pipelineId|PIPELINE_TIMER|scheduledFireTime=$scheduledFireTime")
