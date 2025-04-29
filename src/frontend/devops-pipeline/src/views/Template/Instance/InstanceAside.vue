@@ -130,14 +130,21 @@
         instanceActiveIndex.value = index
         proxy.$router.replace({
             query: {
-                // pipelineId: renderInstanceList.value[instanceActiveIndex.value].pipelineId
                 index: instanceActiveIndex.value + 1
             }
         })
     }
     function handleEnterChangeName (value, index) {
-        if (!value) return
-        proxy.$set(instanceList.value[index], 'pipelineName', value)
+        if (props.isInstanceCreateType && !value) {
+            instanceList.value.splice(index, 1)
+            const newIndex = instanceList.value.length - 1
+            handleInstanceClick(newIndex)
+            instanceActiveIndex.value = newIndex
+            editingIndex.value = null
+            proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, index === 0 ? [] : instanceList.value)
+            return
+        }
+        proxy.$set(instanceList.value[index], 'pipelineName', value.trim())
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, instanceList.value)
         editingIndex.value = null
     }

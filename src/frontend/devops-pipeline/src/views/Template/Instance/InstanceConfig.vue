@@ -77,6 +77,7 @@
                                 >
                                     <renderSortCategoryParams
                                         :name="$t('preview.introVersion')"
+                                        default-layout
                                     >
                                         <template slot="content">
                                             <pipeline-versions-form
