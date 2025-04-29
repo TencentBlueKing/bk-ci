@@ -1,5 +1,7 @@
 package com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo
 
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentCreateBasicBody.Toleration
+
 abstract class EnvironmentOperateInf(
     open val uid: String
 )
@@ -17,7 +19,9 @@ data class EnvironmentOperate(
     val formatDataDisk: Boolean? = null,
     val size: String? = null,
     val live: Boolean? = null,
-    val imageName: String? = null
+    val imageName: String? = null,
+    val tolerations: List<Toleration>? = null,
+    val nodeSelector: Map<String, String>? = null
 ) : EnvironmentOperateInf(uid)
 
 /**

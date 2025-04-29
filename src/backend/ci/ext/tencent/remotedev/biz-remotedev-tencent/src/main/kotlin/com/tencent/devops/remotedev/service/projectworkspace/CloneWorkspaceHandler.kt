@@ -275,7 +275,8 @@ class CloneWorkspaceHandler @Autowired constructor(
                 pipelineId = orderId,
                 machineType = rebuildReq.machineType,
                 zoneId = zoneId,
-                live = rebuildReq.live
+                 live = rebuildReq.live,
+                specifyTaints = rebuildReq.specifyTaints
             )
 
             notifyControl.dispatchWebsocketPushEvent(

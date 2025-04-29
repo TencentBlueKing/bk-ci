@@ -111,10 +111,14 @@ class StartCloudRemoteDevService @Autowired constructor(
                     pvcs = event.devFile.pvcs,
                     tolerations = if (event.devFile.specifyTaints != null) {
                         listOf(EnvironmentCreateBasicBody.Toleration(value = checkNotNull(event.devFile.specifyTaints)))
-                    } else null,
+                    } else {
+                        null
+                    },
                     nodeSelector = if (event.devFile.specifyTaints != null) {
                         mapOf("bkbcs.tencent.com/node-group" to checkNotNull(event.devFile.specifyTaints))
-                    } else null
+                    } else {
+                        null
+                    }
                 )
             )
         )
@@ -258,7 +262,8 @@ class StartCloudRemoteDevService @Autowired constructor(
         pipelineId: String,
         machineType: String?,
         zoneId: String?,
-        live: Boolean?
+        live: Boolean?,
+        specifyTaints: String?
     ): TaskCommonResp {
         val resp = workspaceBcsClient.startOperateWorkspace(
             userId = userId,
@@ -270,7 +275,17 @@ class StartCloudRemoteDevService @Autowired constructor(
                 pipelineId = pipelineId,
                 zoneId = zoneId,
                 machineType = machineType,
-                live = live
+                live = live,
+                tolerations = if (specifyTaints != null) {
+                    listOf(EnvironmentCreateBasicBody.Toleration(value = checkNotNull(specifyTaints)))
+                } else {
+                    null
+                },
+                nodeSelector = if (specifyTaints != null) {
+                    mapOf("bkbcs.tencent.com/node-group" to checkNotNull(specifyTaints))
+                } else {
+                    null
+                }
             )
         )
         return TaskCommonResp(taskId = resp.taskID, taskUid = resp.taskUid)
