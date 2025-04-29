@@ -12,7 +12,7 @@
             @change="handleVersionChange"
         >
             <bk-option
-                v-for="(option, index) in versionLst"
+                v-for="(option, index) in versionList"
                 :key="index"
                 :id="option.version"
                 :name="option.versionName"
@@ -75,7 +75,7 @@
     defineProps({
         isInstanceCreateType: Boolean
     })
-    const versionLst = ref([])
+    const versionList = ref([])
     const versionValue = ref()
     const isLoading = ref(false)
     const isShowPreview = ref(false)
@@ -96,7 +96,12 @@
                     templateId: templateId.value
                 }
             })
-            versionLst.value = res.records
+            versionList.value = res.records
+            if (versionList.value.length) {
+                const version = versionList.value[0].version
+                versionValue.value = version
+                handleVersionChange(version)
+            }
             isLoading.value = false
         } catch (e) {
             console.error(e)
@@ -124,7 +129,7 @@
         proxy.$store.commit(`templates/${UPDATE_USE_TEMPLATE_SETTING}`, value)
     }
     function handleToViewDetails () {
-        const version = versionValue.value ?? versionLst.value[0].version
+        const version = versionValue.value ?? versionList.value[0].version
         window.open(`${location.origin}/console/pipeline/${projectId.value}/template/${templateId.value}/${version}/setting`)
     }
     function handlePreview () {

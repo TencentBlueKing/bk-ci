@@ -41,14 +41,16 @@
                             placement: 'bottom-end'
                         }"
                         ext-cls="instance-version"
-                        :on-hide="hideReleaseVersionPopover"
                     >
                         <span class="release-pipeline-num">{{ $t('template.templateInstanceNum', [instanceList.length]) }}</span>
-                        <div slot="content">
+                        <div
+                            slot="content"
+                            class="release-version-warpper"
+                        >
                             <div
                                 v-for="item in newReleaseVersionNameList"
                                 :key="item.pipelineName"
-                                class="instance-list"
+                                class="release-version-list"
                             >
                                 <p>
                                     <span class="instance-name">{{ item.pipelineName }}</span>
@@ -404,7 +406,11 @@
                     slot="content"
                     class="release-pipeline-pac-form"
                 >
-                    <release-status />
+                    <release-status
+                        :target-action="releaseParams.targetAction"
+                        :instance-num="instanceList.length"
+                        @cancel="cancelRelease"
+                    />
                 </section>
             </template>
         </template>
@@ -568,8 +574,6 @@
             targetActionOptions () {
                 if (this.isTemplateInstanceMode) {
                     return [
-                        TARGET_ACTION_ENUM.COMMIT_TO_SOURCE_BRANCH,
-                        TARGET_ACTION_ENUM.COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE,
                         TARGET_ACTION_ENUM.CHECKOUT_BRANCH_AND_REQUEST_MERGE,
                         TARGET_ACTION_ENUM.COMMIT_TO_MASTER,
                         TARGET_ACTION_ENUM.COMMIT_TO_BRANCH
@@ -775,12 +779,12 @@
                     if (this.isTemplateInstanceMode) {
                         const { projectId, templateId } = this.$route.params
                         const res = await this.fetchTemplateReleasePreFetch({
-                            useTemplateSettings: this.useTemplateSettings,
                             projectId,
                             templateId,
                             version: this.templateVersion,
                             params: {
                                 ...this.releaseParams,
+                                useTemplateSettings: this.useTemplateSettings,
                                 instanceReleaseInfos: this.instanceList
                             }
                         })
@@ -867,6 +871,7 @@
             async releasePipeline () {
                 if (this.isTemplateInstanceMode) {
                     this.$store.commit(`templates/${SET_RELEASE_ING}`, true)
+                    this.$emit('release')
                 } else {
                     const releaseFn = this.isTemplate ? this.releaseDraftTemplate : this.releaseDraftPipeline
                     try {
@@ -1184,10 +1189,6 @@
                 return filePath.startsWith(this.filePathDir)
                     ? filePath.replace(this.filePathDir, '')
                     : filePath
-            },
-
-            hideReleaseVersionPopover () {
-                console.log(123)
             }
         }
     }
@@ -1523,12 +1524,18 @@
     }
 }
 .instance-version {
-    .instance-list {
+    .release-version-warpper {
+        max-height: 360px;
+        overflow: auto;
+    }
+    .release-version-list {
         display: flex;
         justify-content: space-between;
         align-items: center;
         width: 318px;
         height: 32px;
+        max-height: 200px;
+        overflow: auto;
 
         .instance-name {
             flex: 1;

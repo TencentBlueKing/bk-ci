@@ -100,7 +100,8 @@
     import UseInstance from '@/hook/useInstance'
     import { computed, onMounted, ref, watch } from 'vue'
     import {
-        SET_INSTANCE_LIST
+        SET_INSTANCE_LIST,
+        SET_RELEASE_BASE_ID
     } from '@/store/modules/templates/constants'
     import InstanceAside from './InstanceAside'
     import InstanceConfig from './InstanceConfig'
@@ -158,18 +159,28 @@
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, list)
     }
     async function handleReleaseInstance (value) {
-        const fn = isInstanceCreateViewType.value ? 'templates/updateInstance' : 'templates/releaseInstance'
+        const fn = !isInstanceCreateViewType.value ? 'templates/updateInstance' : 'templates/releaseInstance'
         try {
-            await proxy.$store.dispatch(fn, {
-                useTemplateSettings: useTemplateSettings.value,
+            const instanceReleaseInfos = instanceList.value.map(item => {
+                return {
+                    ...item,
+                    param: item.param.map(paramItem => ({
+                        ...paramItem,
+                        required: paramItem.isRequiredParam
+                    }))
+                }
+            })
+            const res = await proxy.$store.dispatch(fn, {
                 projectId: projectId.value,
                 templateId: templateId.value,
                 version: templateVersion.value,
                 params: {
                     ...value,
-                    instanceReleaseInfos: instanceList.value
+                    useTemplateSettings: useTemplateSettings.value,
+                    instanceReleaseInfos
                 }
             })
+            proxy.$store.commit(`templates/${SET_RELEASE_BASE_ID}`, res.data)
         } catch (e) {
             console.err(e)
         }

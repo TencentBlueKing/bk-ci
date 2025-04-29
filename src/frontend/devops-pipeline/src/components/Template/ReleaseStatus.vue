@@ -1,6 +1,9 @@
 <template>
     <div class="release-status-main">
-        <section v-if="isInstanceReleasing">
+        <section
+            class="content-wrapper"
+            v-if="showReleasePage"
+        >
             <bk-loading
                 class="loading-icon"
                 is-loading
@@ -9,81 +12,194 @@
                 :size="16"
             />
            
-            <p class="release-status-title"> 10 个实例正在发布中…</p>
-            <p class="sub-message">你可以在当前页等待或关闭弹窗继续其他操作后续可在按钮处查看发布结果</p>
+            <p class="release-status-title">{{ $t('template.releasing.title', [instanceNum]) }}</p>
+            <p class="sub-message">{{ $t('template.releasing.tips') }}</p>
         </section>
-        <section v-else-if="isPublishSuccess">
+        <section
+            class="content-wrapper"
+            v-if="showPartOfMrPage"
+        >
+            <span class="part-of-mr" />
+            <p class="release-status-title">
+                {{ $t('template.partOfMr.title') }}
+            </p>
+            <p
+                class="sub-message pending"
+            >
+                {{ $t('template.partOfMr.tips1') }}
+                <span>
+                    {{ $t('template.partOfMr.tips2') }}
+                </span>
+            </p>
+            <p class="pac-mode-message">
+                {{ $t('template.partOfMr.tips3') }}
+            </p>
+            <div class="release-status-btn">
+                <bk-button
+                    theme="primary"
+                    @click="handleClick"
+                >
+                    {{ $t('template.partOfMr.dealMR') }}
+                </bk-button>
+                <bk-button
+                    @click="handleToInstanceList"
+                >
+                    {{ $t('template.returnInstanceList') }}
+                </bk-button>
+            </div>
+        </section>
+        <section
+            class="content-wrapper"
+            v-else-if="showSuccessPage"
+        >
             <Logo
                 size="64"
                 name="success"
                 class="release-status-icon"
             />
-            <p class="release-status-title"> 100 个流水线实例发布成功</p>
-            <p class="sub-message">接下来你可以在实例列表中查看已发布的实例</p>
+            <p
+                class="release-status-title"
+            >
+                {{ $t('template.releaseSuc.title', [releaseRes.successItemNum]) }}
+            </p>
+            <p class="sub-message">
+                {{ $t('template.releaseSuc.tips') }}
+            </p>
             <bk-button
-                @click="handleClick"
+                @click="handleToInstanceList"
                 class="release-status-btn"
             >
-                返回列表
+                {{ $t('template.returnInstanceList') }}
             </bk-button>
         </section>
-        <section v-else-if="isPublishFailure">
+        <section
+            class="content-wrapper"
+            v-else-if="showFailedPage"
+        >
             <Logo
                 size="64"
                 name="failure"
                 class="release-status-icon"
             />
-            <p class="release-status-title"> 100 个流水线实例发布失败</p>
-            <p class="sub-message">接下来你可以重试或关闭弹窗</p>
+            <p class="release-status-title">
+                {{ $t('template.releaseFail.title', [releaseRes.failItemNum]) }}
+            </p>
+            <p class="sub-message">
+                {{ $t('template.releaseFail.tips') }}
+            </p>
             <div class="release-status-btn">
                 <bk-button
                     theme="primary"
-                    @click="handleClick"
+                    @click="handleRetryRelease"
                 >
-                    重试
+                    {{ $t('retry') }}
                 </bk-button>
                 <bk-button
-                    @click="handleClick"
+                    @click="handleModifyConfig"
                 >
-                    修改配置
+                    {{ $t('template.modifyConfig') }}
                 </bk-button>
                 <bk-button
-                    @click="handleClick"
+                    @click="handleCancelRelease"
                 >
-                    关闭
-                </bk-button>
-            </div>
-        </section>
-        <section v-else>
-            <Logo
-                size="64"
-                name="required"
-                class="release-status-icon"
-            />
-            <p class="release-status-title">合并请求创建完成，请到代码库处理...</p>
-            <p class="sub-message pending">版本尚未发布成功，下一步 <span>请到代码库处理合并请求</span> </p>
-            <p class="pac-mode-message">PAC模式下，YAML 文件合入默认分支，才视为发布正式版本</p>
-            <div class="release-status-btn">
-                <bk-button
-                    theme="primary"
-                    @click="handleClick"
-                >
-                    处理合并请求
-                </bk-button>
-                <bk-button
-                    @click="handleClick"
-                >
-                    返回列表
+                    {{ $t('close') }}
                 </bk-button>
             </div>
         </section>
     </div>
 </template>
 <script setup>
-    import { computed } from 'vue'
+    import { ref, computed, watch } from 'vue'
     import UseInstance from '@/hook/useInstance'
+    import {
+        RELEASE_STATUS,
+        SET_RELEASE_BASE_ID,
+        SET_RELEASE_ING
+    } from '@/store/modules/templates/constants'
+    import { TARGET_ACTION_ENUM } from '@/utils/pipelineConst'
+    const props = defineProps({
+        instanceNum: Boolean,
+        targetAction: String
+    })
     const { proxy } = UseInstance()
-    const isInstanceReleasing = computed(() => proxy?.$store?.state?.templates?.isInstanceReleasing)
+    const releaseRes = ref({})
+    const releaseStatus = ref(RELEASE_STATUS.INIT)
+    const releaseBaseId = computed(() => proxy?.$store?.state?.templates?.releaseBaseId)
+    const projectId = computed(() => proxy.$route.params?.projectId)
+    const templateId = computed(() => proxy.$route.params?.templateId)
+    const showReleasePage = computed(() => [RELEASE_STATUS.INIT, RELEASE_STATUS.INSTANCING].includes(releaseStatus.value))
+    const showSuccessPage = computed(() => [RELEASE_STATUS.SUCCESS].includes(releaseStatus.value))
+    const showFailedPage = computed(() => [RELEASE_STATUS.FAILED].includes(releaseStatus.value))
+    const showPartOfMrPage = computed(() => showSuccessPage.value && props.targetAction === TARGET_ACTION_ENUM.CHECKOUT_BRANCH_AND_REQUEST_MERGE)
+    const currentVersionId = computed(() => proxy?.$route.params?.version)
+    const timer = ref(null)
+    watch(() => releaseBaseId.value, (val) => {
+        if (val && showReleasePage.value) {
+            fetchReleaseTaskStatus()
+        }
+    }, {
+        immediate: true
+    })
+    function handleToInstanceList () {
+        proxy.$router.push({
+            name: 'TemplateOverview',
+            params: {
+                type: 'instanceList',
+                version: currentVersionId.value
+            }
+        })
+        
+        proxy.$store.commit(`templates/${SET_RELEASE_ING}`, false)
+    }
+    async function fetchReleaseTaskStatus () {
+        try {
+            const res = await proxy.$store.dispatch('templates/fetchReleaseTaskStatus', {
+                projectId: projectId.value,
+                templateId: templateId.value,
+                taskId: releaseBaseId.value
+            })
+            releaseRes.value = res.data
+            releaseStatus.value = res.data.status
+            if ([RELEASE_STATUS.INIT, RELEASE_STATUS.INSTANCING].includes(releaseStatus.value)) {
+                timer.value = setTimeout(() => {
+                    fetchReleaseTaskStatus()
+                }, 3000)
+            } else {
+                proxy.$store.commit(`templates/${SET_RELEASE_BASE_ID}`, '')
+                clearTimeout(timer.value)
+            }
+        } catch (e) {
+            console.error(e)
+        }
+    }
+    async function handleRetryRelease () {
+        try {
+            releaseStatus.value = RELEASE_STATUS.INIT
+            await proxy.$store.dispatch('templates/retryReleaseInstance', {
+                projectId: projectId.value,
+                templateId: templateId.value,
+                taskId: releaseBaseId.value
+            })
+        } catch (e) {
+            console.error(e)
+        }
+    }
+    function handleCancelRelease () {
+        proxy.$emit('cancel')
+    }
+    async function handleModifyConfig () {
+        try {
+            const res = await proxy.$store.dispatch('templates/fetchTaskDetailParams', {
+                projectId: projectId.value,
+                templateId: templateId.value,
+                taskId: releaseBaseId.value
+            })
+            proxy.$emit('cancel')
+            console.log(res, 123)
+        } catch (e) {
+            console.error(e)
+        }
+    }
 </script>
 <style lang="scss">
 .release-status-main {
@@ -93,6 +209,11 @@
     width: 100%;
     height: 100%;
     text-align: center;
+    .content-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
     .loading-icon {
         display: flex;
         height: 150px;
@@ -153,7 +274,37 @@
     .release-status-btn {
         margin-top: 28px;
     }
+    .part-of-mr {
+        position: relative;
+        width: 42px;
+        height: 42px;
+        background-color: #E1ECFF;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+        &:before {
+            position: absolute;
+            content: '';
+            width: 0;
+            height: 0;
+            border: 14px solid #3A84FF;
+            border-top-color: transparent;
+            position: absolute;
+            transform: rotate(-45deg);
+            border-radius: 50%;
+        }
+        &:after {
+            content: '';
+            position: absolute;
+            border: 2px solid #3A84FF;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
 
+        }
+    }
 }
 
 </style>

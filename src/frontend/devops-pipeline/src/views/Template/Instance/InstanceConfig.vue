@@ -1,7 +1,7 @@
 <template>
     <section
         class="instance-config-wrapper"
-        v-bkloading="{ isLoading: isLoading || !curInstance.pipelineName }"
+        v-bkloading="{ isLoading: isLoading }"
     >
         <section class="instance-config-constant">
             <header class="config-header">
@@ -276,7 +276,7 @@
             added: 0,
             deleted: 0
         }
-        curInstance?.value.param?.forEach(item => {
+        curInstance?.value?.param?.forEach(item => {
             if (item.isChange) {
                 counts.changed++
             }

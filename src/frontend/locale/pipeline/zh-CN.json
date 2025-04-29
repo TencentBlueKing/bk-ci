@@ -541,7 +541,28 @@
     "cancelParticipant": "取消入参",
     "setParticipant": "设为入参",
     "useDefaultValue": "使用默认值",
-    "disabledReleaseTips": "请选择模板版本"
+    "disabledReleaseTips": "请选择模板版本",
+    "returnInstanceList": "返回列表",
+    "releasing": {
+      "title": "{0}个流水线实例正在发布中…",
+      "tips": "你可以在当前页等待或关闭弹窗继续其他操作后续可在按钮处查看发布结果"
+    },
+    "partOfMr": {
+      "title": "合并请求创建完成，请到代码库处理...",
+      "tips1": "版本尚未发布成功，下一步",
+      "tips2": "请到代码库处理合并请求",
+      "tips3": "PAC模式下，YAML 文件合入默认分支，才视为发布正式版本",
+      "dealMR": "处理合并请求"
+    },
+    "releaseSuc": {
+      "title": "{0}个流水线实例发布成功",
+      "tips": "接下来你可以在实例列表中查看已发布的实例"
+    },
+    "releaseFail": {
+      "title": "{0}个流水线实例发布失败",
+      "tips": "接下来你可以重试或关闭弹窗"
+    },
+    "modifyConfig": "修改配置"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",
