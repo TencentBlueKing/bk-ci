@@ -160,7 +160,8 @@ class CloneWorkspaceHandler @Autowired constructor(
                     machineType = rebuildReq.machineType,
                     appName = appName,
                     projectId = projectId,
-                    live = rebuildReq.live
+                    live = rebuildReq.live,
+                    specifyTaints = rebuildReq.specifyTaints
                 )
             )
 

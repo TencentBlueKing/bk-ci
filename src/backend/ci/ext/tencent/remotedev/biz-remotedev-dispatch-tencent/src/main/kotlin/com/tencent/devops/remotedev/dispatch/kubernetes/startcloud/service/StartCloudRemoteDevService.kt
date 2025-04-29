@@ -271,6 +271,7 @@ class StartCloudRemoteDevService @Autowired constructor(
             userId = userId,
             action = EnvironmentAction.CLONE_VM,
             workspaceName = workspaceName,
+            // 优化：提取specifyTaints的处理逻辑，避免重复判断和checkNotNull调用
             environmentOperate = EnvironmentOperate(
                 uid = getEnvironmentUid(workspaceName),
                 userId = userId,
@@ -278,16 +279,8 @@ class StartCloudRemoteDevService @Autowired constructor(
                 zoneId = zoneId,
                 machineType = machineType,
                 live = live,
-                tolerations = if (specifyTaints != null) {
-                    listOf(EnvironmentCreateBasicBody.Toleration(value = checkNotNull(specifyTaints)))
-                } else {
-                    null
-                },
-                nodeSelector = if (specifyTaints != null) {
-                    mapOf("bkbcs.tencent.com/node-group" to checkNotNull(specifyTaints))
-                } else {
-                    null
-                }
+                tolerations = specifyTaints?.let { listOf(EnvironmentCreateBasicBody.Toleration(value = it)) },
+                nodeSelector = specifyTaints?.let { mapOf("bkbcs.tencent.com/node-group" to it) }
             )
         )
         return TaskCommonResp(taskId = resp.taskID, taskUid = resp.taskUid)
