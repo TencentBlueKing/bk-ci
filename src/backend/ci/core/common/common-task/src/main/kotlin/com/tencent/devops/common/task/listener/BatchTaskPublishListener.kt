@@ -30,7 +30,6 @@ package com.tencent.devops.common.task.listener
 import com.tencent.devops.common.api.constant.ERROR
 import com.tencent.devops.common.api.constant.PARAM
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.listener.EventListener
 import com.tencent.devops.common.redis.RedisOperation
@@ -39,7 +38,6 @@ import com.tencent.devops.common.task.event.BatchTaskFinishEvent
 import com.tencent.devops.common.task.event.BatchTaskPublishEvent
 import com.tencent.devops.common.task.lock.BatchTaskLock
 import com.tencent.devops.common.task.pojo.TaskResult
-import com.tencent.devops.common.task.pojo.TaskTypeEnum
 import com.tencent.devops.common.task.service.TaskExecutionService
 import com.tencent.devops.common.task.service.TaskParamService
 import com.tencent.devops.common.task.util.BatchTaskUtil

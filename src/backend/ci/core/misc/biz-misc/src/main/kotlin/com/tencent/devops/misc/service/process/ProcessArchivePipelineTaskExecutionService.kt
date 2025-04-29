@@ -63,7 +63,14 @@ class ProcessArchivePipelineTaskExecutionService @Autowired constructor(
         val pipelineId = data[KEY_PIPELINE_ID].toString()
         val pipelineExists = processDao.getPipelineInfoByPipelineId(dslContext, projectId, pipelineId) != null
         if (!pipelineExists) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf(pipelineId))
+            val params = arrayOf(pipelineId)
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+                params = params,
+                defaultMessage = I18nUtil.getCodeLanMessage(
+                    CommonMessageCode.ERROR_INVALID_PARAM_, params = params
+                )
+            )
         }
         // 验证用户对流水线的归档权限
         if (!authPermissionApi.validateUserResourcePermission(
