@@ -28,7 +28,7 @@
 package com.tencent.devops.process.plugin.trigger.timer.quartz
 
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.process.constant.MeasureConstant.NAME_PIPELINE_TIMER_SCHEDULE_EXECUTION_TIME
+import com.tencent.devops.process.constant.MeasureConstant.NAME_PIPELINE_CRON_SCHEDULE_DELAY
 import com.tencent.devops.process.service.TimerScheduleMeasureService
 import org.quartz.JobExecutionContext
 import org.quartz.JobExecutionException
@@ -59,8 +59,7 @@ class QuartzTraceJobListener @Autowired constructor(
         context?.let {
             // 记录执行时间
             timerScheduleMeasureService.recordTaskExecutionTime(
-                name = NAME_PIPELINE_TIMER_SCHEDULE_EXECUTION_TIME,
-                context = it,
+                name = NAME_PIPELINE_CRON_SCHEDULE_DELAY,
                 timeConsumingMills = it.fireTime.time - it.scheduledFireTime.time
             )
         }

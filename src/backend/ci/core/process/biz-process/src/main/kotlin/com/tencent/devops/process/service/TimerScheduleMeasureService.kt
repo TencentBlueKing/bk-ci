@@ -1,13 +1,9 @@
 package com.tencent.devops.process.service
 
-import com.tencent.devops.process.constant.MeasureConstant.TAG_KEY_PIPELINE_ID
-import com.tencent.devops.process.constant.MeasureConstant.TAG_KEY_PROJECT_ID
-import com.tencent.devops.process.constant.MeasureConstant.TAG_KEY_TASK_ID
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import io.micrometer.core.instrument.Timer
-import org.quartz.JobExecutionContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -27,13 +23,12 @@ class TimerScheduleMeasureService @Autowired constructor(
      */
     fun recordTaskExecutionTime(
         name: String,
-        context: JobExecutionContext,
         timeConsumingMills: Long,
         tags: List<Tag> = listOf()
     ) {
         Timer.builder(name)
                 .description("pipeline timer trigger task execution time")
-                .tags(parseContextTags(context).plus(tags))
+                .tags(tags)
                 .publishPercentileHistogram(true)
                 .minimumExpectedValue(Duration.ofMillis(10))
                 .maximumExpectedValue(Duration.ofSeconds(30))
@@ -61,20 +56,5 @@ class TimerScheduleMeasureService @Autowired constructor(
                     .register(meterRegistry)
                     .record(timeConsumingMills, TimeUnit.MILLISECONDS)
         }
-    }
-
-    fun parseContextTags(context: JobExecutionContext): MutableList<Tag> {
-        val jobKey = context.jobDetail?.key ?: return mutableListOf()
-        val comboKey = jobKey.name
-        // 格式：pipelineId_{md5}_{projectId}_{taskId}
-        val comboKeys = comboKey.split(Regex("_"), 4)
-        val pipelineId = comboKeys[0]
-        val projectId = comboKeys[2]
-        val taskId = comboKeys.getOrElse(3) { "" }
-        return mutableListOf(
-            Tag.of(TAG_KEY_PROJECT_ID, projectId),
-            Tag.of(TAG_KEY_PIPELINE_ID, pipelineId),
-            Tag.of(TAG_KEY_TASK_ID, taskId)
-        )
     }
 }

@@ -40,7 +40,7 @@ import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TIMING_START
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_HASH_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.process.api.service.ServiceTimerBuildResource
-import com.tencent.devops.process.constant.MeasureConstant.NAME_PIPELINE_TIMER_SCHEDULE_EXECUTION_TIME
+import com.tencent.devops.process.constant.MeasureConstant.NAME_PIPELINE_CRON_EXECUTE_DELAY
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_IS_EMPTY
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_NOT_FOUND
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_NO_CHANGE
@@ -109,7 +109,7 @@ class PipelineTimerBuildListener @Autowired constructor(
             logger.warn("fail to trigger pipeline|event=$event", ignored)
         } finally {
             timerScheduleMeasureService.recordActualExecutionTime(
-                name = NAME_PIPELINE_TIMER_SCHEDULE_EXECUTION_TIME,
+                name = NAME_PIPELINE_CRON_EXECUTE_DELAY,
                 event = event
             )
         }
