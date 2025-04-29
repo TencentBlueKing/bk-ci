@@ -104,7 +104,7 @@ class WorkspaceXlsxExportService @Autowired constructor(
             row.createCell(3).setCellValue(ip)
             row.createCell(4).setCellValue(record.workspaceSystemType.name)
             row.createCell(5).setCellValue(record.winConfig?.size)
-            row.createCell(6).setCellValue(ip)
+            row.createCell(6).setCellValue(region)
             row.createCell(7).setCellValue(record.zoneConfig?.type.let { type ->
                 when (type) {
                     WindowsResourceZoneConfigType.DEVCLOUD -> "DevCloud"
