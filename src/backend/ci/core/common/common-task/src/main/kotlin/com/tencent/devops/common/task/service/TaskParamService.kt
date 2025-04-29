@@ -25,32 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.config
+package com.tencent.devops.common.task.service
 
-import com.tencent.devops.common.event.annotation.EventConsumer
-import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
-import com.tencent.devops.common.event.pojo.pipeline.PipelineArchiveEvent
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBatchArchiveEvent
-import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.misc.listener.PipelineArchiveListener
-import com.tencent.devops.misc.listener.PipelineBatchArchiveListener
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.cloud.stream.function.StreamBridge
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+interface TaskParamService {
 
-@Configuration
-class MiscMQConfiguration {
-    @Bean
-    fun pipelineEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
-
-    @EventConsumer
-    fun pipelineMQArchiveConsumer(
-        @Autowired buildListener: PipelineArchiveListener
-    ) = ScsConsumerBuilder.build<PipelineArchiveEvent> { buildListener.execute(it) }
-
-    @EventConsumer
-    fun pipelineMQBatchArchiveConsumer(
-        @Autowired pipelineBatchArchiveListener: PipelineBatchArchiveListener
-    ) = ScsConsumerBuilder.build<PipelineBatchArchiveEvent> { pipelineBatchArchiveListener.execute(it) }
+    /**
+     * 获取任务关键参数map
+     * @param data 任务参数数据
+     * @return 任务关键参数map
+     */
+    fun getKeyParamMap(data: Map<String, Any>): Map<String, Any>
 }

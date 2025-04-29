@@ -25,32 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.config
+package com.tencent.devops.misc.service.process
 
-import com.tencent.devops.common.event.annotation.EventConsumer
-import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
-import com.tencent.devops.common.event.pojo.pipeline.PipelineArchiveEvent
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBatchArchiveEvent
-import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.misc.listener.PipelineArchiveListener
-import com.tencent.devops.misc.listener.PipelineBatchArchiveListener
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.cloud.stream.function.StreamBridge
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+import com.tencent.devops.common.task.service.TaskParamService
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.utils.KEY_PIPELINE_ID
+import org.springframework.stereotype.Service
 
-@Configuration
-class MiscMQConfiguration {
-    @Bean
-    fun pipelineEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
+@Service("PIPELINE_ARCHIVE_TASK_PARAM")
+class ProcessArchivePipelineTaskParamService : TaskParamService {
 
-    @EventConsumer
-    fun pipelineMQArchiveConsumer(
-        @Autowired buildListener: PipelineArchiveListener
-    ) = ScsConsumerBuilder.build<PipelineArchiveEvent> { buildListener.execute(it) }
-
-    @EventConsumer
-    fun pipelineMQBatchArchiveConsumer(
-        @Autowired pipelineBatchArchiveListener: PipelineBatchArchiveListener
-    ) = ScsConsumerBuilder.build<PipelineBatchArchiveEvent> { pipelineBatchArchiveListener.execute(it) }
+    override fun getKeyParamMap(data: Map<String, Any>): Map<String, Any> {
+        return mutableMapOf<String, Any>().apply {
+            put(I18nUtil.getCodeLanMessage(KEY_PIPELINE_ID), data[KEY_PIPELINE_ID].toString())
+        }
+    }
 }

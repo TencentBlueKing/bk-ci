@@ -134,7 +134,7 @@ interface UserArchivePipelineResource {
         cancelFlag: Boolean = false,
         @Parameter(description = "流水线ID集合", required = true)
         pipelineIds: List<String>
-    ): Result<String>
+    ): Result<Boolean>
 
     @Operation(summary = "获取已归档流水线列表")
     @GET

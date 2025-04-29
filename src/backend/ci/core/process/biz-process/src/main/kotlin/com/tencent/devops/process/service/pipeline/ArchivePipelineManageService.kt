@@ -27,16 +27,13 @@
 
 package com.tencent.devops.process.service.pipeline
 
-import com.tencent.devops.common.api.constant.KEY_CANCEL_FLAG
-import com.tencent.devops.common.api.constant.KEY_SEND_MSG_FLAG
-import com.tencent.devops.common.api.constant.KEY_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineArchiveEvent
-import com.tencent.devops.common.task.pojo.TaskTypeEnum
-import com.tencent.devops.common.task.service.TaskPublishService
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBatchArchiveEvent
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
@@ -47,8 +44,6 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.service.PipelineListQueryParamService
-import com.tencent.devops.process.utils.KEY_PIPELINE_ID
-import com.tencent.devops.process.utils.KEY_PROJECT_ID
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
@@ -64,8 +59,8 @@ class ArchivePipelineManageService @Autowired constructor(
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineListQueryParamService: PipelineListQueryParamService,
     private val pipelineStatusService: PipelineStatusService,
-    private val taskPublishService: TaskPublishService,
-    private val pipelineEventDispatcher: PipelineEventDispatcher
+    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val sampleEventDispatcher: SampleEventDispatcher
 ) {
 
     fun migrateData(
@@ -92,24 +87,18 @@ class ArchivePipelineManageService @Autowired constructor(
         projectId: String,
         cancelFlag: Boolean = false,
         pipelineIds: List<String>
-    ): String {
-        val dataList = pipelineIds.map { pipelineId ->
-            mapOf(
-                KEY_USER_ID to userId,
-                KEY_PROJECT_ID to projectId,
-                KEY_CANCEL_FLAG to cancelFlag,
-                KEY_PIPELINE_ID to pipelineId,
-                KEY_SEND_MSG_FLAG to false
+    ): Boolean {
+        sampleEventDispatcher.dispatch(
+            PipelineBatchArchiveEvent(
+                source = "batch_archive_pipeline",
+                projectId = projectId,
+                pipelineIds = pipelineIds,
+                userId = userId,
+                cancelFlag = cancelFlag,
+                expiredInHour = 36
             )
-        }
-        val batchId = taskPublishService.publishTasks(
-            userId = userId,
-            taskType = TaskTypeEnum.PIPELINE_ARCHIVE,
-            dataList = dataList,
-            expiredInHour = 36,
-            targetService = "misc"
         )
-        return batchId
+        return true
     }
 
     fun getArchivedPipelineList(

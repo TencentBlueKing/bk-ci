@@ -27,9 +27,10 @@
 
 package com.tencent.devops.common.task.listener
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.constant.ERROR
+import com.tencent.devops.common.api.constant.PARAM
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.listener.EventListener
 import com.tencent.devops.common.redis.RedisOperation
@@ -40,7 +41,9 @@ import com.tencent.devops.common.task.lock.BatchTaskLock
 import com.tencent.devops.common.task.pojo.TaskResult
 import com.tencent.devops.common.task.pojo.TaskTypeEnum
 import com.tencent.devops.common.task.service.TaskExecutionService
+import com.tencent.devops.common.task.service.TaskParamService
 import com.tencent.devops.common.task.util.BatchTaskUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -60,63 +63,58 @@ class BatchTaskPublishListener @Autowired constructor(
         if (!BatchTaskUtil.isServiceMatched(event.targetService)) {
             return
         }
+        // 执行具体任务逻辑
+        val taskResult = executeTask(event)
         val taskType = event.taskType
         val batchId = event.batchId
         val taskId = event.taskId
-        try {
-            // 执行具体任务逻辑
-            val taskResult = executeTask(taskType, event)
-            // 生成Redis存储key并保存任务结果
-            val batchTaskResultKey = BatchTaskUtil.generateBatchTaskResultKey(taskType, batchId)
-            redisOperation.hset(
-                key = batchTaskResultKey, hashKey = taskId, values = JsonUtil.toJson(taskResult)
-            )
-            // 设置Redis key过期时间（单位：小时转秒）
-            val expiredInHour = event.expiredInHour
-            redisOperation.expire(key = batchTaskResultKey, expiredInSecond = expiredInHour * 3600L)
-            BatchTaskLock(redisOperation, batchId).use { lock ->
-                if (lock.tryLock()) {
-                    // 更新完成任务计数
-                    val completedNum = redisOperation.increment(
-                        key = BatchTaskUtil.generateBatchTaskCompletedKey(taskType, batchId), incr = 1
-                    ) ?: 0
-                    // 获取总任务数
-                    val totalNum =
-                        redisOperation.get(BatchTaskUtil.generateBatchTaskTotalKey(taskType, batchId))?.toLongOrNull()
-                            ?: 0
-                    // 检查是否完成所有任务，若完成则触发完成事件
-                    if (completedNum >= totalNum) {
-                        sampleEventDispatcher.dispatch(BatchTaskFinishEvent(
-                            userId = event.userId,
-                            taskType = taskType,
-                            batchId = batchId,
-                            targetService = event.targetService
-                        ))
-                    }
-                } else {
-                    throw ErrorCodeException(errorCode = CommonMessageCode.LOCK_FAIL)
-                }
+        // 生成Redis存储key并保存任务结果
+        val batchTaskResultKey = BatchTaskUtil.generateBatchTaskResultKey(taskType, batchId)
+        redisOperation.hset(
+            key = batchTaskResultKey, hashKey = taskId, values = JsonUtil.toJson(taskResult)
+        )
+        // 设置Redis key过期时间（单位：小时转秒）
+        val expiredInHour = event.expiredInHour
+        redisOperation.expire(key = batchTaskResultKey, expiredInSecond = expiredInHour * 3600L)
+        BatchTaskLock(redisOperation, batchId).use { lock ->
+            lock.lock()
+            // 更新完成任务计数
+            val completedNum = redisOperation.increment(
+                key = BatchTaskUtil.generateBatchTaskCompletedKey(taskType, batchId), incr = 1
+            ) ?: 0
+            // 获取总任务数
+            val totalNum =
+                redisOperation.get(BatchTaskUtil.generateBatchTaskTotalKey(taskType, batchId))?.toLongOrNull()
+                    ?: 0
+            // 检查是否完成所有任务，若完成则触发完成事件
+            if (completedNum >= totalNum) {
+                sampleEventDispatcher.dispatch(BatchTaskFinishEvent(
+                    userId = event.userId,
+                    taskType = taskType,
+                    batchId = batchId,
+                    targetService = event.targetService
+                ))
             }
-        } catch (ignored: Throwable) {
-            logger.warn("Fail to execute Task[$taskId]|batchId:$batchId|taskType:$taskType", ignored)
         }
     }
 
     /**
      * 执行具体任务逻辑
      *
-     * @param taskType 任务类型枚举
      * @param event 批量任务发布事件对象
      * @return TaskResult 任务执行结果对象
      */
     private fun executeTask(
-        taskType: TaskTypeEnum, event: BatchTaskPublishEvent
+        event: BatchTaskPublishEvent
     ): TaskResult {
+        val taskType = event.taskType
         val batchId = event.batchId
         val taskId = event.taskId
         return try {
             // 根据任务类型获取对应的执行服务Bean
-            val taskExecutionService = SpringContextUtil.getBean(TaskExecutionService::class.java, taskType.name)
+            val taskExecutionBeanName = "${taskType.name}_TASK_EXECUTION"
+            val taskExecutionService =
+                SpringContextUtil.getBean(TaskExecutionService::class.java, taskExecutionBeanName)
             logger.info("Starting to execute Task[$taskId] (batchId: $batchId | taskType: $taskType)")
             // 执行核心业务逻辑
             val taskResult = taskExecutionService.doBus(event)
@@ -125,7 +123,15 @@ class BatchTaskPublishListener @Autowired constructor(
         } catch (ignored: Throwable) {
             // 异常处理：记录日志并返回错误结果
             logger.warn("Execution of Task[$taskId] failed. batchId: $batchId, taskType: $taskType", ignored)
-            TaskResult(taskId, false, "Param: ${JsonUtil.toJson(event.data)}; Error: ${ignored.message}")
+            val (paramText, errorText) = I18nUtil.getCodeLanMessage(PARAM) to I18nUtil.getCodeLanMessage(ERROR)
+            val taskParamBeanName = "${taskType.name}_TASK_PARAM"
+            val paramValue = if (SpringContextUtil.isBeanExist(taskParamBeanName)) {
+                val taskParamService = SpringContextUtil.getBean(TaskParamService::class.java, taskParamBeanName)
+                JsonUtil.toJson(taskParamService.getKeyParamMap(event.data))
+            } else {
+                JsonUtil.toJson(event.data)
+            }
+            TaskResult(taskId, false, "$paramText: $paramValue; $errorText: ${ignored.message}")
         }
     }
 

@@ -45,7 +45,6 @@ dependencies {
     api(project(":core:common:common-webhook:biz-common-webhook"))
     api(project(":core:auth:api-auth"))
     api(project(":core:common:common-pipeline-yaml"))
-    api(project(":core:common:common-task"))
     implementation("org.quartz-scheduler:quartz")
     api("org.springframework.boot:spring-boot-starter-websocket")
     api("jakarta.websocket:jakarta.websocket-api")

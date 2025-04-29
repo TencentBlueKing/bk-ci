@@ -30,6 +30,7 @@ package com.tencent.devops.misc.service.process
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_CANCEL_FLAG
 import com.tencent.devops.common.api.constant.KEY_SEND_MSG_FLAG
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -38,13 +39,17 @@ import com.tencent.devops.common.task.event.BatchTaskPublishEvent
 import com.tencent.devops.common.task.pojo.TaskResult
 import com.tencent.devops.common.task.service.TaskExecutionService
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_PROJECT_ID
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service("PIPELINE_ARCHIVE")
+@Service("PIPELINE_ARCHIVE_TASK_EXECUTION")
 class ProcessArchivePipelineTaskExecutionService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val processDao: ProcessDao,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val authPermissionApi: AuthPermissionApi,
     private val processArchivePipelineDataMigrateService: ProcessArchivePipelineDataMigrateService
@@ -56,6 +61,10 @@ class ProcessArchivePipelineTaskExecutionService @Autowired constructor(
         val data = batchTaskPublishEvent.data
         val projectId = data[KEY_PROJECT_ID].toString()
         val pipelineId = data[KEY_PIPELINE_ID].toString()
+        val pipelineExists = processDao.getPipelineInfoByPipelineId(dslContext, projectId, pipelineId) != null
+        if (!pipelineExists) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf(pipelineId))
+        }
         // 验证用户对流水线的归档权限
         if (!authPermissionApi.validateUserResourcePermission(
                 user = userId,

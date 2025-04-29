@@ -25,32 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.config
+package com.tencent.devops.common.event.pojo.pipeline
 
-import com.tencent.devops.common.event.annotation.EventConsumer
-import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
-import com.tencent.devops.common.event.pojo.pipeline.PipelineArchiveEvent
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBatchArchiveEvent
-import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.misc.listener.PipelineArchiveListener
-import com.tencent.devops.misc.listener.PipelineBatchArchiveListener
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.cloud.stream.function.StreamBridge
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.pojo.IEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
+import io.swagger.v3.oas.annotations.media.Schema
 
-@Configuration
-class MiscMQConfiguration {
-    @Bean
-    fun pipelineEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
-
-    @EventConsumer
-    fun pipelineMQArchiveConsumer(
-        @Autowired buildListener: PipelineArchiveListener
-    ) = ScsConsumerBuilder.build<PipelineArchiveEvent> { buildListener.execute(it) }
-
-    @EventConsumer
-    fun pipelineMQBatchArchiveConsumer(
-        @Autowired pipelineBatchArchiveListener: PipelineBatchArchiveListener
-    ) = ScsConsumerBuilder.build<PipelineBatchArchiveEvent> { pipelineBatchArchiveListener.execute(it) }
-}
+/**
+ * 批量归档流水线事件
+ *
+ * @version 1.0
+ */
+@Event(StreamBinding.PIPELINE_BATCH_ARCHIVE)
+data class PipelineBatchArchiveEvent(
+    @get:Schema(title = "来源")
+    val source: String,
+    @get:Schema(title = "项目ID")
+    val projectId: String,
+    @get:Schema(title = "流水线ID数组")
+    val pipelineIds: List<String>,
+    @get:Schema(title = "用户ID")
+    val userId: String,
+    @get:Schema(title = "是否取消正在运行的流水线")
+    val cancelFlag: Boolean = false,
+    @get:Schema(title = "过期时间（单位：小时，默认12小时）")
+    var expiredInHour: Long = 12
+) : IEvent()

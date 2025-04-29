@@ -5,8 +5,10 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.task.event.BatchTaskPublishEvent
+import com.tencent.devops.common.task.listener.BatchTaskFinishListener
 import com.tencent.devops.common.task.pojo.TaskTypeEnum
 import com.tencent.devops.common.task.util.BatchTaskUtil
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -34,6 +36,10 @@ class TaskPublishService @Autowired constructor(
         expiredInHour: Long = 12,
         targetService: String? = null
     ): String {
+        logger.info(
+            "publishTasks|userId=$userId|taskType=$taskType|dataList=$dataList|" +
+                    "expiredInHour=$expiredInHour|targetService=$targetService"
+        )
         val expiredInSecond = expiredInHour * 3600
         val batchId = UUIDUtil.generate()
         // 批量设置Redis相关批次信息
@@ -72,6 +78,11 @@ class TaskPublishService @Autowired constructor(
                 )
             )
         }
+        logger.info("publishTasks|userId=$userId|taskType=$taskType|batchId=$batchId")
         return batchId
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BatchTaskFinishListener::class.java)
     }
 }

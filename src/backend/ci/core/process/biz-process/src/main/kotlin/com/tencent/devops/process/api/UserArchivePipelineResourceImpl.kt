@@ -86,7 +86,7 @@ class UserArchivePipelineResourceImpl @Autowired constructor(
         projectId: String,
         cancelFlag: Boolean,
         pipelineIds: List<String>
-    ): Result<String> {
+    ): Result<Boolean> {
         return Result(
             archivePipelineFacadeService.batchMigrateArchivePipelineData(
                 userId = userId,

@@ -67,6 +67,8 @@ object StreamBinding {
 
     const val PIPELINE_ARCHIVE = "engine.pipeline.archive"
 
+    const val PIPELINE_BATCH_ARCHIVE = "engine.pipeline.batch.archive"
+
     const val PIPELINE_BATCH_ARCHIVE_PUBLISH = "engine.pipeline.batch.archive.publish"
 
     const val PIPELINE_BATCH_ARCHIVE_FINISH = "engine.pipeline.batch.archive.finish"

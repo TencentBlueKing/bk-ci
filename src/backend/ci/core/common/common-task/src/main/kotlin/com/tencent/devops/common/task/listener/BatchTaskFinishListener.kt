@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.FAIL_MSG
 import com.tencent.devops.common.api.constant.FAIL_NUM
 import com.tencent.devops.common.api.constant.KEY_START_TIME
+import com.tencent.devops.common.api.constant.NAME
 import com.tencent.devops.common.api.constant.SUCCESS_NUM
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
@@ -43,6 +44,7 @@ import com.tencent.devops.common.task.event.BatchTaskFinishEvent
 import com.tencent.devops.common.task.pojo.TaskResult
 import com.tencent.devops.common.task.pojo.TaskTypeEnum
 import com.tencent.devops.common.task.util.BatchTaskUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import org.slf4j.LoggerFactory
@@ -109,7 +111,8 @@ class BatchTaskFinishListener @Autowired constructor(
         val startTime = redisOperation.get(BatchTaskUtil.generateBatchTaskStartTimeKey(taskType, batchId)) ?: ""
 
         // 构建消息标题参数（包含开始时间和批次ID）
-        val titleParams = mapOf(KEY_START_TIME to startTime, BATCH_ID to batchId)
+        val batchTaskName = I18nUtil.getCodeLanMessage(taskType.name)
+        val titleParams = mapOf(KEY_START_TIME to startTime, BATCH_ID to batchId, NAME to batchTaskName)
 
         // 过滤失败任务并构建错误信息
         val failTaskResults = taskResults?.filter { !it.success }
@@ -123,6 +126,7 @@ class BatchTaskFinishListener @Autowired constructor(
         val bodyParams = mapOf(
             KEY_START_TIME to startTime,
             BATCH_ID to batchId,
+            NAME to batchTaskName,
             SUCCESS_NUM to successNum.toString(),
             FAIL_NUM to failNum.toString(),
             FAIL_MSG to errorMsg
