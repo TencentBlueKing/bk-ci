@@ -912,7 +912,7 @@ class ProcessDataMigrateService @Autowired constructor(
     private fun migrateProjectPipelineYamlBranchFileData(migratingShardingDslContext: DSLContext, projectId: String) {
         var offset = 0
         do {
-            val pipelineYamlBranchFileRecords= processDataMigrateDao.getProjectPipelineYamlBranchFileRecords(
+            val pipelineYamlBranchFileRecords = processDataMigrateDao.getProjectPipelineYamlBranchFileRecords(
                 dslContext = dslContext,
                 projectId = projectId,
                 limit = MEDIUM_PAGE_SIZE,
