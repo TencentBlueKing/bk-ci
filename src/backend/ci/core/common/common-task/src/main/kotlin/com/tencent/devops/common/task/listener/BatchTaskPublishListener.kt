@@ -125,9 +125,9 @@ class BatchTaskPublishListener @Autowired constructor(
             val taskParamBeanName = "${taskType.name}_TASK_PARAM"
             val paramValue = if (SpringContextUtil.isBeanExist(taskParamBeanName)) {
                 val taskParamService = SpringContextUtil.getBean(TaskParamService::class.java, taskParamBeanName)
-                JsonUtil.toJson(taskParamService.getKeyParamMap(event.data))
+                JsonUtil.toJson(taskParamService.getKeyParamMap(event.data), false)
             } else {
-                JsonUtil.toJson(event.data)
+                JsonUtil.toJson(event.data, false)
             }
             TaskResult(taskId, false, "$paramText: $paramValue; $errorText: ${ignored.message}")
         }
