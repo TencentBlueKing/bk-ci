@@ -13,7 +13,6 @@ import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
 import com.tencent.devops.misc.pojo.constant.MiscMessageCode
 import com.tencent.devops.misc.pojo.process.MigratePipelineDataParam
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
-import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import org.apache.commons.collections4.ListUtils
 import org.jooq.DSLContext
