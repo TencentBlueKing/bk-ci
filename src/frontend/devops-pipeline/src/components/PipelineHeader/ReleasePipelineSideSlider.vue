@@ -871,7 +871,12 @@
             async releasePipeline () {
                 if (this.isTemplateInstanceMode) {
                     this.$store.commit(`templates/${SET_RELEASE_ING}`, true)
-                    this.$emit('release')
+                    try {
+                        await this.$refs?.releaseForm?.validate?.()
+                        this.$emit('release')
+                    } catch (e) {
+                        console.error(e)
+                    }
                 } else {
                     const releaseFn = this.isTemplate ? this.releaseDraftTemplate : this.releaseDraftPipeline
                     try {

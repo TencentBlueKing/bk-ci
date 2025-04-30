@@ -562,7 +562,8 @@
       "title": "{0}个流水线实例发布失败",
       "tips": "接下来你可以重试或关闭弹窗"
     },
-    "modifyConfig": "修改配置"
+    "modifyConfig": "修改配置",
+    "batchEditInstance": "批量编辑实例"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",

@@ -15,7 +15,7 @@
                 type="primary"
                 size="small"
             >
-                {{$t('template.addField')}}
+                {{ $t('template.addField') }}
             </bk-button>
             <div
                 slot="content"
@@ -50,7 +50,7 @@
                                 ext-cls="item-check"
                                 @change="value => handleGroupSelect(value, group)"
                             >
-                                {{$t('template.selectAll')}}
+                                {{ $t('template.selectAll') }}
                             </bk-checkbox>
                         </div>
                         <div class="group-content">

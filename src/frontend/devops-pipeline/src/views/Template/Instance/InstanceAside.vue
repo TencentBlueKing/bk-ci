@@ -4,7 +4,6 @@
             <bk-button
                 v-if="isInstanceCreateType"
                 icon="plus"
-                :disabled="disabledNewInstanceBtn"
                 @click="handleAddInstance"
             >
                 {{ $t('new') }}
@@ -22,6 +21,7 @@
             <div
                 v-if="renderInstanceList.length"
                 class="batch-edit-btn"
+                @click="handleBatchEdit"
             >
                 <Logo
                     name="batch-edit"
@@ -100,8 +100,12 @@
 </template>
 
 <script setup>
-    import { ref, defineProps, computed, onMounted } from 'vue'
-    import { SET_INSTANCE_LIST } from '@/store/modules/templates/constants'
+    import { ref, defineProps, computed, onMounted, onBeforeUnmount } from 'vue'
+    import {
+        SET_TEMPLATE_DETAIL,
+        SET_INSTANCE_LIST,
+        UPDATE_USE_TEMPLATE_SETTING
+    } from '@/store/modules/templates/constants'
     import { deepClone } from '@/utils/util'
     import Logo from '@/components/Logo'
     import UseInstance from '@/hook/useInstance'
@@ -124,7 +128,6 @@
         return renderInstanceList.value[editingIndex.value].pipelineName
     })
     const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
-    const disabledNewInstanceBtn = computed(() => !Object.keys(curTemplateDetail.value).length)
     function handleInstanceClick (index) {
         if (editingIndex.value) return
         instanceActiveIndex.value = index
@@ -137,13 +140,14 @@
     function handleEnterChangeName (value, index) {
         if (props.isInstanceCreateType && !value) {
             instanceList.value.splice(index, 1)
+            editingIndex.value = null
             const newIndex = instanceList.value.length - 1
             handleInstanceClick(newIndex)
             instanceActiveIndex.value = newIndex
-            editingIndex.value = null
             proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, index === 0 ? [] : instanceList.value)
             return
         }
+        if (!props.isInstanceCreateType && !value) return
         proxy.$set(instanceList.value[index], 'pipelineName', value.trim())
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, instanceList.value)
         editingIndex.value = null
@@ -222,8 +226,20 @@
             handleInstanceClick(instanceActiveIndex.value)
         }
     }
+    function handleBatchEdit () {
+        proxy.$emit('batchEdit')
+    }
     onMounted(() => {
         init()
+    })
+    
+    onBeforeUnmount(() => {
+        proxy.$store.commit(`templates/${SET_TEMPLATE_DETAIL}`, {
+            templateVersion: '',
+            templateDetail: {}
+        })
+        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, [])
+        proxy.$store.commit(`templates/${UPDATE_USE_TEMPLATE_SETTING}`, false)
     })
 </script>
 

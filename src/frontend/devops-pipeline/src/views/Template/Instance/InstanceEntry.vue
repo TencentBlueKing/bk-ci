@@ -65,6 +65,7 @@
                     <InstanceAside
                         slot="aside"
                         :is-instance-create-type="isInstanceCreateViewType"
+                        @batchEdit="handleBatchEdit"
                     />
                     <bk-exception
                         v-if="isInstanceCreateViewType && !instanceList.length"
@@ -92,11 +93,15 @@
             :handle-change-file-path="handleChangeFilePath"
             @release="handleReleaseInstance"
         />
+        <BatchEditConfig
+            v-model="showBatchEdit"
+        />
     </section>
 </template>
 
 <script setup name="InstanceEntry">
     import TemplateBreadCrumb from '@/components/Template/TemplateBreadCrumb'
+    import BatchEditConfig from './BatchEditConfig'
     import UseInstance from '@/hook/useInstance'
     import { computed, onMounted, ref, watch } from 'vue'
     import {
@@ -111,6 +116,7 @@
     const { proxy } = UseInstance()
     const isLoading = ref(false)
     const showRelease = ref(false)
+    const showBatchEdit = ref(false)
     const projectId = computed(() => proxy.$route.params?.projectId)
     const templateId = computed(() => proxy.$route.params?.templateId)
     const pipeline = computed(() => proxy.$store?.state?.atom?.pipeline)
@@ -184,6 +190,10 @@
         } catch (e) {
             console.err(e)
         }
+    }
+    function handleBatchEdit () {
+        console.log(123)
+        showBatchEdit.value = true
     }
     onMounted(() => {
         requestTemplateByVersion()

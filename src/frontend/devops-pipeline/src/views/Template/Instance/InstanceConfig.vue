@@ -86,7 +86,7 @@
                                                 :build-no="buildNo"
                                                 is-preview
                                                 :version-param-values="versionParamValues"
-                                                :handle-version-change="handleVersionChange"
+                                                :handle-version-change="handleParamChange"
                                                 :handle-build-no-change="handleBuildNoChange"
                                                 :version-param-list="versionParams"
                                             />
@@ -178,7 +178,7 @@
                                                 is-preview
                                                 disabled
                                                 :version-param-values="versionParamValues"
-                                                :handle-version-change="handleVersionChange"
+                                                :handle-version-change="handleParamChange"
                                                 instance
                                                 :handle-build-no-change="handleBuildNoChange"
                                                 :version-param-list="versionParams"
@@ -206,7 +206,7 @@
 </template>
 
 <script setup>
-    import { ref, computed, watch, onBeforeUnmount, defineProps } from 'vue'
+    import { ref, computed, watch, defineProps } from 'vue'
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import renderSortCategoryParams from '@/components/renderSortCategoryParams'
@@ -214,10 +214,8 @@
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { getParamsValuesMap } from '@/utils/util'
     import {
-        SET_TEMPLATE_DETAIL,
         SET_INSTANCE_LIST,
-        UPDATE_INSTANCE_LIST,
-        UPDATE_USE_TEMPLATE_SETTING
+        UPDATE_INSTANCE_LIST
     } from '@/store/modules/templates/constants'
     const props = defineProps({
         isInstanceCreateType: Boolean
@@ -374,7 +372,8 @@
         }
 
         instanceParams.forEach(i => {
-            if (i.constant || !i.required) {
+            // 常量 其他变量直接赋值为模板对应参数的值（版本号除外）
+            if (i.constant || (!i.required && !allVersionKeyList.includes(i.id))) {
                 const newValue = templateParams.find(t => t.id === i.id)?.defaultValue
                 i.defaultValue = newValue ?? i.defaultValue
             }
@@ -409,10 +408,8 @@
         return instanceParams
     }
     function compareBuild (instanceBuildNo, templateBuildNo) {
-        // 如果模板推荐版本号required为false(非入参)
-        // 实例推荐版本号required为true(入参)
         // 将模板的推荐版本号配置覆盖实例推荐版本号
-        if (instanceBuildNo.required && !templateBuildNo.required) {
+        if (instanceBuildNo.required !== templateBuildNo.required) {
             return {
                 ...instanceBuildNo,
                 ...templateBuildNo
@@ -495,14 +492,6 @@
             isLoading.value = false
         })
     }
-    onBeforeUnmount(() => {
-        proxy.$store.commit(`templates/${SET_TEMPLATE_DETAIL}`, {
-            templateVersion: '',
-            templateDetail: {}
-        })
-        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, [])
-        proxy.$store.commit(`templates/${UPDATE_USE_TEMPLATE_SETTING}`, false)
-    })
 </script>
 
 <style lang="scss">
