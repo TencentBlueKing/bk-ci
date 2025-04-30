@@ -781,7 +781,7 @@ class PipelineRuntimeService @Autowired constructor(
         // #10082 针对构建容器的第三方构建机组装复用互斥信息
         val agentReuseMutexTree = AgentReuseMutexTree(context.executeCount, mutableListOf())
         fullModel.stages.forEachIndexed nextStage@{ index, stage ->
-            // 重试运行中的stage,如果不是失败插件的stage，则不处理
+            // 运行中重试,如果不是重试插件的stage，则不处理
             if (context.shouldSkipRefreshWhenRetryRunning(stage)) {
                 logger.info("${context.buildId}|EXECUTE|#${stage.id!!}|${stage.status}|NOT_RUNNING_STAGE")
                 context.containerSeq += stage.containers.size // Job跳过计数也需要增加
@@ -819,6 +819,7 @@ class PipelineRuntimeService @Autowired constructor(
             DependOnUtils.initDependOn(stage = stage, params = context.variables)
             // --- 第2层循环：Container遍历处理 ---
             stage.containers.forEach nextContainer@{ container ->
+                // 运行中重试,如果不是重试插件的container或者依赖重试插件的container,则不处理
                 if (context.shouldSkipRefreshWhenRetryRunning(container)) {
                     logger.info(
                         "${context.buildId}|EXECUTE|#${container.id!!}|${container.status}|NOT_RUNNING_CONTAINER"
@@ -1038,7 +1039,7 @@ class PipelineRuntimeService @Autowired constructor(
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             if (buildInfo != null) {
-                // 运行时的重试不需要刷新重新信息
+                // 运行时的重试不需要刷新重试信息
                 if (!context.retryOnRunningBuild) {
                     pipelineBuildDao.updateBuildRetryInfo(
                         dslContext = transactionContext,
