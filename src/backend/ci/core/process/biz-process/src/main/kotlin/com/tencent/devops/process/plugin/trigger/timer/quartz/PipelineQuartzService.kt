@@ -216,7 +216,7 @@ class PipelineJobBean(
             val redisLock = PipelineTimerTriggerLock(redisOperation, pipelineLockKey, scheduledFireTime)
             if (redisLock.tryLock()) {
                 try {
-                    logger.info("[$projectId]|$pipelineId|PIPELINE_TIMER|scheduledFireTime=$scheduledFireTime")
+                    logger.info("[$projectId]|$pipelineLockKey|PIPELINE_TIMER|scheduledFireTime=$scheduledFireTime")
                     watcher.start("dispatch")
                     pipelineEventDispatcher.dispatch(
                         PipelineTimerBuildEvent(
@@ -235,13 +235,14 @@ class PipelineJobBean(
                     )
                 } catch (ignored: Exception) {
                     logger.error(
-                        "[$pipelineId]||PIPELINE_TIMER|scheduledFireTime=$scheduledFireTime|Dispatch event fail, " +
-                            "e=$ignored"
+                        "[$pipelineLockKey]|PIPELINE_TIMER|scheduledFireTime=$scheduledFireTime|Dispatch event fail",
+                        ignored
                     )
                 }
             } else {
                 logger.info(
-                    "[$pipelineId]|PIPELINE_TIMER_CONCURRENT|scheduledFireTime=$scheduledFireTime| lock fail, skip!"
+                    "[$pipelineLockKey]|PIPELINE_TIMER_CONCURRENT|scheduledFireTime=$scheduledFireTime" +
+                            "|lock fail, skip!"
                 )
             }
         } finally {
