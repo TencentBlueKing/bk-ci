@@ -131,7 +131,7 @@ class WebhookGrayCompareService @Autowired constructor(
             val add = newPipelineAndParams.keys.minus(oldPipelineAndParams.keys)
             logger.warn(
                 "compare webhook exception|old not contains all new|" +
-                        "scmType: $scmType|repoName: ${matcher.getRepoName()}|miss:$miss|add:$add",
+                        "scmType: $scmType|repoName: ${matcher.getRepoName()}|miss:$miss|add:$add"
             )
             return false
         }

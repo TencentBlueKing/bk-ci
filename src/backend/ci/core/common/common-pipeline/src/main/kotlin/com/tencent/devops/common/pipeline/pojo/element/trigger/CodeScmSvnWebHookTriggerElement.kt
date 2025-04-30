@@ -62,7 +62,7 @@ data class CodeScmSvnWebHookTriggerElement(
 
     // 增加条件这里也要补充上,不然代码库触发器列表展示会不对
     override fun triggerCondition(): List<ElementProp> {
-        with(data.input){
+        with(data.input) {
             return listOfNotNull(
                 vuexInput(name = "relativePath", value = relativePath),
                 vuexInput(name = "excludePaths", value = excludePaths),

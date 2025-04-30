@@ -30,14 +30,11 @@ package com.tencent.devops.repository.dao
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.model.repository.tables.TRepository
-import com.tencent.devops.model.repository.tables.TRepositoryCodeGit
 import com.tencent.devops.model.repository.tables.TRepositoryCodeSvn
 import com.tencent.devops.model.repository.tables.records.TRepositoryCodeSvnRecord
-import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.RepoCondition
 import com.tencent.devops.repository.pojo.UpdateRepositoryInfoRequest
-import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import org.jooq.DSLContext
 import org.jooq.Result

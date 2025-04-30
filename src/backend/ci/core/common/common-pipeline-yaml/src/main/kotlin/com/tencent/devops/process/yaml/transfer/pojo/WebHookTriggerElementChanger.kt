@@ -39,7 +39,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTr
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
 import com.tencent.devops.common.webhook.util.WebhookUtils
-import com.tencent.devops.scm.api.enums.EventAction
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class WebHookTriggerElementChanger(
