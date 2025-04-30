@@ -967,8 +967,8 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                 (credentialType == CredentialType.USERNAME_PASSWORD)
 
     private fun CodeEventType.convertScmEventType() = when (this) {
-        CodeEventType.PUSH ->  ScmEventType.PUSH
-        CodeEventType.PULL_REQUEST,CodeEventType.MERGE_REQUEST ->  ScmEventType.PULL_REQUEST
+        CodeEventType.PUSH -> ScmEventType.PUSH
+        CodeEventType.PULL_REQUEST, CodeEventType.MERGE_REQUEST -> ScmEventType.PULL_REQUEST
         CodeEventType.TAG_PUSH -> ScmEventType.TAG
         CodeEventType.ISSUES -> ScmEventType.ISSUE
         CodeEventType.POST_COMMIT -> ScmEventType.POST_COMMIT

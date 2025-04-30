@@ -688,7 +688,7 @@ class RepositoryScmConfigService @Autowired constructor(
     /**
      * 根据平台编码和事件类型获取事件描述
      */
-    private fun eventDesc(providerCode:String, eventType: String) = I18nUtil.getCodeLanMessage(
+    private fun eventDesc(providerCode: String, eventType: String) = I18nUtil.getCodeLanMessage(
         messageCode = "BK_${providerCode.uppercase()}_${eventType}_DESC",
         defaultMessage = eventType
     )

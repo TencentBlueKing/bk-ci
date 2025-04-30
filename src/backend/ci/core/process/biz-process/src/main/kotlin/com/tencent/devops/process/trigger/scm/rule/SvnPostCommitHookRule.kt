@@ -44,7 +44,7 @@ import org.springframework.stereotype.Service
  * git push事件触发规则
  */
 @Service
-class SvnPostCommitHookRule: WebhookRule {
+class SvnPostCommitHookRule : WebhookRule {
     override fun support(webhook: Webhook): Boolean {
         return webhook is PostCommitHook
     }

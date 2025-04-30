@@ -885,7 +885,6 @@ class TriggerTransfer @Autowired(required = false) constructor(
             )
         }
 
-
         triggerOn.mr?.let { mr ->
             elementQueue.add(
                 CodeScmGitWebHookTriggerElement(
