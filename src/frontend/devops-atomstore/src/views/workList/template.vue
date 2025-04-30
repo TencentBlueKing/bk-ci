@@ -136,7 +136,7 @@
                             <a
                                 target="_blank"
                                 style="color:#3c96ff;"
-                                :href="`/console/pipeline/${props.row.projectCode}/template/${props.row.templateCode}/edit`"
+                                :href="`/console/pipeline/${props.row.projectCode}/template/${props.row.templateCode}/instanceList`"
                             > {{ $t('store.源模板') }} </a>
                         </span>
                     </template>

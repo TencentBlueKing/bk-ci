@@ -177,7 +177,8 @@ export const actions = {
             templateId,
             storeFlag: false,
             page: 1,
-            pageSize: 100
+            pageSize: 100,
+            includeDraft: false
         }
         return vue.$ajax.post(`${processPrefix}/user/pipeline/template/v2/${projectId}/${templateId}/versions`, params)
     },
