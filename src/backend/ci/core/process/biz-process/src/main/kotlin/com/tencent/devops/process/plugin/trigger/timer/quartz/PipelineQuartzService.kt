@@ -211,7 +211,7 @@ class PipelineJobBean(
             val pipelineLockKey = if (taskId.isBlank()) {
                 pipelineId
             } else {
-                "${pipelineId}:${taskId}"
+                "$pipelineId:$taskId"
             }
             val redisLock = PipelineTimerTriggerLock(redisOperation, pipelineLockKey, scheduledFireTime)
             if (redisLock.tryLock()) {
