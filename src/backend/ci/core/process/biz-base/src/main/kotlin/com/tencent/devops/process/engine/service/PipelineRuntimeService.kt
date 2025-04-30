@@ -98,6 +98,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
@@ -1134,26 +1135,32 @@ class PipelineRuntimeService @Autowired constructor(
             context.watcher.stop()
         }
 
-        // 如果不需要触发审核则直接开始发送开始事件
-        if (context.startBuildStatus.isReadyToRun()) {
-            context.sendBuildStartEvent()
-        } else if (context.triggerReviewers?.isNotEmpty() == true) {
-            prepareTriggerReview(
-                userId = context.userId,
-                triggerUser = context.triggerUser,
-                buildId = context.buildId,
-                pipelineId = context.pipelineId,
-                projectId = context.projectId,
-                triggerReviewers = context.triggerReviewers!!,
-                pipelineName = context.pipelineParamMap[PIPELINE_NAME]?.value?.toString() ?: context.pipelineId,
-                buildNum = context.buildNum.toString()
-            )
-            buildLogPrinter.addYellowLine(
-                buildId = context.buildId, message = "Waiting for the review of ${context.triggerReviewers}",
-                tag = TAG, containerHashId = JOB_ID, executeCount = 1,
-                jobId = null, stepId = TAG
-            )
+        when {
+            context.retryOnRunningBuild -> {
+                context.sendBuildStageEvent()
+            }
+            context.startBuildStatus.isReadyToRun() -> {
+                context.sendBuildStartEvent()
+            }
+            context.triggerReviewers?.isNotEmpty() == true -> {
+                prepareTriggerReview(
+                    userId = context.userId,
+                    triggerUser = context.triggerUser,
+                    buildId = context.buildId,
+                    pipelineId = context.pipelineId,
+                    projectId = context.projectId,
+                    triggerReviewers = context.triggerReviewers!!,
+                    pipelineName = context.pipelineParamMap[PIPELINE_NAME]?.value?.toString() ?: context.pipelineId,
+                    buildNum = context.buildNum.toString()
+                )
+                buildLogPrinter.addYellowLine(
+                    buildId = context.buildId, message = "Waiting for the review of ${context.triggerReviewers}",
+                    tag = TAG, containerHashId = JOB_ID, executeCount = 1,
+                    jobId = null, stepId = TAG
+                )
+            }
         }
+
         LogUtils.printCostTimeWE(context.watcher, warnThreshold = 4000, errorThreshold = 8000)
         return BuildId(
             id = context.buildId,
@@ -1474,6 +1481,28 @@ class PipelineRuntimeService @Autowired constructor(
                 actionType = actionType,
                 triggerType = startType.name
             )
+        )
+    }
+
+    private fun StartBuildContext.sendBuildStageEvent() {
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildStageEvent(
+                source = "runningBuildRetry|$buildId|$retryStartTaskId",
+                projectId = projectId, pipelineId = pipelineId, userId = userId,
+                buildId = buildId, stageId = retryTaskInStageId!!, actionType = actionType
+            )
+        )
+        buildLogPrinter.addYellowLine(
+            buildId = buildId,
+            message = if (skipFailedTask) {
+                "$userId skip the fail task"
+            } else {
+                "$userId retry fail task"
+            },
+            tag = retryStartTaskId!!,
+            jobId = retryTaskInContainerId,
+            executeCount = executeCount,
+            stepId = null
         )
     }
 
