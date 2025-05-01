@@ -23,6 +23,8 @@
                             :error-msg="errors.first('devops' + param.name)"
                             :label="param.label || param.id"
                             :show-operate-btn="showOperateBtn"
+                            :handle-use-default-value="() => handleUseDefaultValue(param.id)"
+                            :handle-set-parma-required="() => handleSetParmaRequired(param.id)"
                         >
                             <section class="component-row">
                                 <component
@@ -190,6 +192,14 @@
             hideDeleted: {
                 type: Boolean,
                 default: false
+            },
+            handleUseDefaultValue: {
+                type: Function,
+                default: () => () => {}
+            },
+            handleSetParmaRequired: {
+                type: Function,
+                default: () => () => {}
             }
         },
         data () {
@@ -293,7 +303,6 @@
             renderParamList () {
                 // 将参数列表按照分组进行分组,未分组的参数放到一个分组里
                 const key = this.$t('notGrouped')
-                console.log(this.hideDeleted)
                 const list = this.hideDeleted ? this.paramList.filter(i => !i.isDelete) : this.paramList
                 const listMap = list.reduce((acc, item) => {
                     const categoryKey = item.category || key

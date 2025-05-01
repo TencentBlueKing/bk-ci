@@ -19,15 +19,16 @@
                     {{ renderInstanceList.length }}
                 </span>
             </i18n>
-            <div class="batch-edit-btn">
+            <div
+                v-if="renderInstanceList.length"
+                class="batch-edit-btn"
+            >
                 <Logo
-                    name="edit"
+                    name="batch-edit"
                     size="14"
                     style="fill:#3c96ff;position:relative;top:2px;"
                 />
-                <span
-                    v-if="renderInstanceList.length"
-                >
+                <span>
                     {{ $t('template.batchEdit') }}
                 </span>
             </div>
@@ -129,14 +130,21 @@
         instanceActiveIndex.value = index
         proxy.$router.replace({
             query: {
-                // pipelineId: renderInstanceList.value[instanceActiveIndex.value].pipelineId
                 index: instanceActiveIndex.value + 1
             }
         })
     }
     function handleEnterChangeName (value, index) {
-        if (!value) return
-        proxy.$set(instanceList.value[index], 'pipelineName', value)
+        if (props.isInstanceCreateType && !value) {
+            instanceList.value.splice(index, 1)
+            const newIndex = instanceList.value.length - 1
+            handleInstanceClick(newIndex)
+            instanceActiveIndex.value = newIndex
+            editingIndex.value = null
+            proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, index === 0 ? [] : instanceList.value)
+            return
+        }
+        proxy.$set(instanceList.value[index], 'pipelineName', value.trim())
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, instanceList.value)
         editingIndex.value = null
     }
@@ -171,6 +179,11 @@
                     ...i,
                     ...res[i.pipelineId]
                 }
+            })
+            list.forEach(item => {
+                item.param.forEach(p => {
+                    proxy.$set(p, 'isRequiredParam', p.required)
+                })
             })
             proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, list)
         } catch (e) {

@@ -17,11 +17,11 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import ajax from '@/utils/request'
 import {
     PROCESS_API_URL_PREFIX
     // STORE_API_URL_PREFIX
 } from '@/store/constants'
+import ajax from '@/utils/request'
 import {
     SET_TEMPLATE_DETAIL
 } from './constants'
@@ -112,8 +112,34 @@ const actions = {
     },
     templateUpdateUpgradeStrategy (_, { projectId, templateId }) {
         return ajax.put(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/updateUpgradeStrategy`).then(response => response.data)
+    },
+    updateInstance ({ commit }, { projectId, templateId, version, params }) {
+        return ajax.put(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}/async/update?version=${version}`, params)
+    },
+    releaseInstance ({ commit }, { projectId, templateId, version, params }) {
+        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/async/${templateId}?version=${version}`, params)
+    },
+    // 获取模板实例化发布时的版本信息
+    fetchTemplateReleasePreFetch ({ commit }, { projectId, templateId, version, params }) {
+        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}/${version}/preFetch?version=${version}`, params)
+    },
+    // 重试发布实例化
+    retryReleaseInstance ({ commit }, { projectId, baseId }) {
+        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/task/${baseId}/retry`)
+    },
+    // 发布失败修改配置，获取发布实例化任务的参数
+    fetchTaskDetailParams ({ commit }, { projectId, baseId }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/task/${baseId}/config`)
+    },
+    // 获取正在发布的实例化任务列表
+    fetchReleaseTaskList ({ commit }, { projectId, templateId }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}/task`)
+    },
+    // 获取实例化发布状态（轮询）
+    fetchReleaseTaskStatus ({ commit }, { projectId, taskId }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/task/${taskId}`)
     }
-    
+
 }
 
 export default actions

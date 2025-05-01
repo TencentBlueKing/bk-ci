@@ -12,7 +12,7 @@
             @change="handleVersionChange"
         >
             <bk-option
-                v-for="(option, index) in versionLst"
+                v-for="(option, index) in versionList"
                 :key="index"
                 :id="option.version"
                 :name="option.versionName"
@@ -47,9 +47,9 @@
                     </span>
                     <span
                         class="jump-btn"
-                        @click="handleJumpToViewDetails"
+                        @click="handleToViewDetails"
                     >
-                        {{ $t('template.jumpToViewDetails') }}
+                        {{ $t('template.viewDetails') }}
                         <logo
                             name="tiaozhuan"
                             size="14"
@@ -75,7 +75,7 @@
     defineProps({
         isInstanceCreateType: Boolean
     })
-    const versionLst = ref([])
+    const versionList = ref([])
     const versionValue = ref()
     const isLoading = ref(false)
     const isShowPreview = ref(false)
@@ -96,7 +96,12 @@
                     templateId: templateId.value
                 }
             })
-            versionLst.value = res.records
+            versionList.value = res.records
+            if (versionList.value.length) {
+                const version = versionList.value[0].version
+                versionValue.value = version
+                handleVersionChange(version)
+            }
             isLoading.value = false
         } catch (e) {
             console.error(e)
@@ -123,8 +128,9 @@
     function handleChangeUseTemplateSettings (value) {
         proxy.$store.commit(`templates/${UPDATE_USE_TEMPLATE_SETTING}`, value)
     }
-    function handleJumpToViewDetails () {
-
+    function handleToViewDetails () {
+        const version = versionValue.value ?? versionList.value[0].version
+        window.open(`${location.origin}/console/pipeline/${projectId.value}/template/${templateId.value}/${version}/setting`)
     }
     function handlePreview () {
         if (!versionValue.value) return

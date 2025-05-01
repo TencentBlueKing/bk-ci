@@ -494,7 +494,7 @@
     "uploadTemplateYamlTips": "Please upload the template YAML file",
     "templateCoverWarning": "Draft Overwrite Warning",
     "batchUpgrade": "Batch Upgrade",
-    "jumpToViewDetails": "Jump to view details",
+    "viewDetails": "Details",
     "upgradedVersion": "Upgraded version",
     "selectPipelineNum": "{0} pipeline selected",
     "batchEdit": "Batch Edit",
@@ -518,11 +518,9 @@
     "addField": "Add Field",
     "keyword": "Please enter name keyword",
     "selectAll": "Select All",
-    "pleaseSelectTemplateVersion": "Please select the template version",
+    "pleaseSelectTemplateVersion": "Please select a template version and add a new instance.",
     "instanceConfig": "Instance Config",
     "pipelineBuildParams": "Build Params",
-    "templateCoverWarningDesc": "The draft edited by {0} (created from {2}) has not been published yet. Editing the branch version will overwrite the unpublished draft. Please confirm if you want to continue.",
-    "templateOutDateCoverWarningDesc": "A new dev branch version has been submitted to the code repository. The draft edited by {0} (created from {2} on {1}) has expired. This operation will overwrite the expired draft. Please confirm whether to continue",
     "releasePipelineInstance": "Release Pipeline Instance",
     "paramDeleted": "Delete",
     "paramChanged": "Change",
@@ -530,7 +528,7 @@
     "hideDeletedParam": "Hide deleted params",
     "editInstanceName": "Edit Name",
     "copyInstance": "Copy",
-    "deleteInstanceTitleTips": "Confirm Delete Script?",
+    "deleteInstanceTitleTips": "Confirm Delete Instance?",
     "deleteInstanceContentTips": "This action cannot be undone. Please proceed with caution!",
     "templateInstanceNum": "{0} instances",
     "instance": "Instances",
@@ -555,7 +553,35 @@
     "goStore": "View Store",
     "upgradeSettingSuccess": "Upgrade settings successfully",
     "autoUpgradeStrategyTips": "After confirmation, version {0} will be automatically installed.",
-    "templateVar": "Template Variables"
+    "templateVar": "Template Variables",
+    "templateCoverWarningDesc": "The draft edited by {0} (created from {2}) has not been published yet. Editing the branch version will overwrite the unpublished draft. Please confirm if you want to continue.",
+    "templateOutDateCoverWarningDesc": "A new dev branch version has been submitted to the code repository. The draft edited by {0} (created from {2} on {1}) has expired. This operation will overwrite the expired draft. Please confirm whether to continue",
+    "reset": "Reset",
+    "cancelParticipant": "Cancel Participant",
+    "setParticipant": "Set Participant",
+    "useDefaultValue": "Use Default Value",
+    "disabledReleaseTips": "Please Select the Template Version",
+    "returnInstanceList": "Return to List",
+    "releasing": {
+      "title": "{0} pipeline instances are being released...",
+      "tips": "You may wait on the current page or close the popup to continue with other operations. You can later check the release results on the button."
+    },
+    "partOfMr": {
+      "title": "Merge request successfully created. Please handle it in the repository...",
+      "tips1": "The version has not been successfully released. Next step,",
+      "tips2": "please handle the merge request in the repository.",
+      "tips3": "In PAC mode, merging the YAML file into the default branch is considered the official release.",
+      "dealMR": "Handle Merge Request"
+    },
+    "releaseSuc": {
+      "title": "{0} pipeline instances successfully released",
+      "tips": "You can now view the released instances in the instance list."
+    },
+    "releaseFail": {
+      "title": "{0} pipeline instances failed to release",
+      "tips": "You can retry or close the popup."
+    },
+    "modifyConfig": "Modify Configuration"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
