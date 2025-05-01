@@ -4,6 +4,7 @@
             :text="text"
             :outline="outline"
             :theme="theme"
+            :loading="loading"
             :disabled="disabled"
             :size="size"
             @click="initDiff"
@@ -108,6 +109,10 @@
                 default: true
             },
             disabled: {
+                type: Boolean,
+                default: false
+            },
+            loading: {
                 type: Boolean,
                 default: false
             },

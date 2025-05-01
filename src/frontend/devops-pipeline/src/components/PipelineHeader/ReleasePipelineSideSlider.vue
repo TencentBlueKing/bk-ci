@@ -12,7 +12,7 @@
                 'has-pac-tag': pacEnabled
             }]"
         >
-            {{ $t("releasePipeline") }}
+            {{ $t(isTemplate ? "releaseTemplate" : "releasePipeline") }}
             <PacTag
                 v-if="pacEnabled"
                 :info="pipelineInfo?.yamlInfo"
@@ -305,6 +305,7 @@
                 v-if="releaseParams.enablePac"
                 :text="false"
                 theme=""
+                :loading="releasing"
                 :disabled="releasing"
                 :can-switch-version="false"
                 :version="pipelineInfo?.releaseVersion"
@@ -521,10 +522,8 @@
             },
             'releaseParams.scmType': {
                 handler: function (val) {
-                    if (val && this.pacEnabled) {
-                        this.$nextTick(() => {
-                            this.refreshOatuStatus()
-                        })
+                    if (val) {
+                        this.$nextTick(this.refreshOatuStatus)
                     }
                 },
                 immediate: true
@@ -915,7 +914,7 @@
                                                 }
                                             }
                                         },
-                                        this.$t(!updateBuildNo ? 'checkPipeline' : 'return')
+                                        this.$t(!updateBuildNo ? (this.isTemplate ? 'checkTemplate' : 'checkPipeline') : 'return')
                                     )
 
                                 ]

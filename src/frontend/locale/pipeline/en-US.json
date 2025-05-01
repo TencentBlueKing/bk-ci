@@ -554,7 +554,8 @@
     "syncSettingStrategyDesc": "When auto-installing new versions, notifications/basic settings will be updated along with the template",
     "goStore": "View Store",
     "upgradeSettingSuccess": "Upgrade settings successfully",
-    "autoUpgradeStrategyTips": "After confirmation, version {0} will be automatically installed."
+    "autoUpgradeStrategyTips": "After confirmation, version {0} will be automatically installed.",
+    "templateVar": "Template Variables"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
@@ -1281,7 +1282,7 @@
     "allNodeConcurrency": "Concurrency limit across all nodes",
     "allNodeConcurrencyPlaceholder": "The theoretical concurrency = concurrency per node * number of nodes",
     "minutes": "Minutes",
-    "customConditionExpPlaceholder": "e.g., variables.a == 1 || jobs.job1.steps.step1.outputs.b == 'api'"
+    "customConditionExpPlaceholder": "e.g., variables.a == 1 {'||'} jobs.job1.steps.step1.outputs.b == 'api'"
   },
   "主版本": "Major version",
   "特性版本": "Minor version",
@@ -1802,5 +1803,7 @@
   "marketSource": "Store",
   "groupLabel": "Group labels",
   "notGrouped": "Not grouped",
-  "relyChanged": "Dependent field ({0}) values have changed, please check if the configuration is correct"
+  "relyChanged": "Dependent field ({0}) values have changed, please check if the configuration is correct",
+  "releaseTemplate": "Release Template",
+  "checkTemplate": "Check Template"
 }

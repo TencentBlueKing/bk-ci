@@ -556,7 +556,8 @@
     "syncSettingStrategyDesc": "自动安装新版本时，通知/基础设置跟随模板一起更新",
     "goStore": "去研发商店查看",
     "upgradeSettingSuccess": "升级设置成功",
-    "autoUpgradeStrategyTips": "确定后， 将会自动安装 {0} 版本。"
+    "autoUpgradeStrategyTips": "确定后， 将会自动安装 {0} 版本。",
+    "templateVar": "模板变量"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",
@@ -1279,7 +1280,7 @@
     "allNodeConcurrency": "所有节点上的总并发",
     "allNodeConcurrencyPlaceholder": "不填则 总并发理论值=单节点最大并发*构建节点数",
     "minutes": "分钟",
-    "customConditionExpPlaceholder": "如：variables.a == 1 || jobs.job1.steps.step1.outputs.b == 'api'"
+    "customConditionExpPlaceholder": "如：variables.a == 1 {'||'} jobs.job1.steps.step1.outputs.b == 'api'"
   },
   "主版本": "主版本",
   "特性版本": "特性版本",
@@ -1803,5 +1804,7 @@
   "marketSource": "研发商店",
   "groupLabel": "分组标签",
   "notGrouped": "未分组",
-  "relyChanged": "依赖字段（{0}）值已变更，请检查配置是否正确"
+  "relyChanged": "依赖字段（{0}）值已变更，请检查配置是否正确",
+  "releaseTemplate": "发布模板",
+  "checkTemplate": "查看模板"
 }
