@@ -983,7 +983,7 @@
     "addAtom": "新增插件",
     "copyAtom": "复制插件",
     "copyAtomFail": "复制插件失败",
-    "showAliasName": "执行时显示具体资源别名",
+    "showAlias": "执行时显示具体资源",
     "resourceType": "构建资源类型",
     "addThirdSlave": "新增第三方构建机",
     "thirdSlaveTips": "若环境下包含多个节点，则优先分配上次使用过的节点；若第一次使用，则随机分配",
@@ -1828,9 +1828,10 @@
   "allSource": "全部",
   "customSource": "自定义",
   "marketSource": "研发商店",
-  "groupLabel": "分组标签",
-  "notGrouped": "未分组",
   "relyChanged": "依赖字段（{0}）值已变更，请检查配置是否正确",
   "releaseTemplate": "发布模板",
-  "checkTemplate": "查看模板"
+  "checkTemplate": "查看模板",
+  "groupLabel": "分组标签",
+  "groupLabelTips": "拥有相同标签的变量，在查看和执行预览界面将在同一个分组下展示",
+  "notGrouped": "未分组"
 }

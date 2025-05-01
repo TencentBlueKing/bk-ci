@@ -200,7 +200,7 @@
                         >
                             <template
                                 slot="versionParams"
-                                v-if="!isVisibleVersion && versionParamList.length"
+                                v-if="!isVisibleVersion && versionParamValues.length"
                             >
                                 <pipeline-versions-form
                                     class="mb20"
@@ -280,12 +280,12 @@
     import Pipeline from '@/components/Pipeline'
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
+    import renderSortCategoryParams from '@/components/renderSortCategoryParams'
     import { UPDATE_PREVIEW_PIPELINE_NAME, bus } from '@/utils/bus'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { getParamsValuesMap, isObject, isShallowEqual } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import VersionSelector from '../../components/PipelineDetailTabs/VersionSelector.vue'
-    import renderSortCategoryParams from '@/components/renderSortCategoryParams'
 
     export default {
         components: {

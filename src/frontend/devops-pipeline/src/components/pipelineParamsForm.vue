@@ -312,7 +312,6 @@
                     acc[categoryKey].push(item)
                     return acc
                 }, {})
-
                 if (!(key in listMap)) {
                     return listMap
                 }
@@ -459,11 +458,11 @@
     .is-new-param {
         background: #EBFAF0 !important;
     }
-        
+
     .is-change-param {
         background: #FDF4E8 !important;
     }
-        
+
     .is-delete-param {
         background: #FFF0F0 !important;
     }

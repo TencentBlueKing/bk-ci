@@ -72,4 +72,9 @@ interface MarketAtomEnvService {
         version: String,
         atomEnvRequest: AtomEnvRequest
     ): Result<Boolean>
+
+    fun batchGetAtomSensitiveParamInfos(
+        projectCode: String,
+        atomVersions: Set<StoreVersion>
+    ): Map<String, String>
 }

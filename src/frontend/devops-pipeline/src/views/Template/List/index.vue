@@ -91,13 +91,14 @@
         RESOURCE_ACTION,
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
+    import { isShallowEqual } from '@/utils/util'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
     import dayjs from 'dayjs'
     import { computed, onMounted, ref, watch } from 'vue'
     import CreateTemplateDialog from './CreateTemplateDialog'
     import InstallTemplateDialog from './InstallTemplateDialog'
-    import TemplateTable from './templateTable'
+    import TemplateTable from './TemplateTable'
 
     const {
         copyTemp,
@@ -244,12 +245,18 @@
                 ...(templateViewId.value !== ALL_TEMPLATE_VIEW_ID && { type: TEMPLATE_VIEW_ID_MAP[templateViewId.value] }),
                 ...searchParams.value
             }
-            proxy.$router.replace({
-                query: {
-                    mode: currentMode.value,
-                    ...searchParams.value
-                }
-            })
+            const query = {
+                mode: currentMode.value,
+                ...searchParams.value
+            }
+            if (!isShallowEqual(query, proxy.$route.query)) {
+                proxy.$router.replace({
+                    query: {
+                        mode: currentMode.value,
+                        ...searchParams.value
+                    }
+                })
+            }
             fetchTypeCount()
             const res = await proxy.$store.dispatch('templates/getTemplateList', param)
             tableData.value = (res.records || []).map(x => {

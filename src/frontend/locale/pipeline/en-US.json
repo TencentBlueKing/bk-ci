@@ -985,7 +985,7 @@
     "addAtom": "Add Plugins",
     "copyAtom": "Duplicate",
     "copyAtomFail": "Duplicate failed",
-    "showAliasName": " Display specific resource name when running",
+    "showAlias": " Display specific resource when running",
     "resourceType": " Build Resources Type",
     "addThirdSlave": " Add Self-Hosted Agent",
     "thirdSlaveTips": " If there are several Agents under the pools, assign the ones used last time; if the agents have not been used before, then assign randomly",
@@ -1827,9 +1827,10 @@
   "allSource": "All",
   "customSource": "Custom",
   "marketSource": "Store",
-  "groupLabel": "Group labels",
-  "notGrouped": "Not grouped",
   "relyChanged": "Dependent field ({0}) values have changed, please check if the configuration is correct",
   "releaseTemplate": "Release Template",
-  "checkTemplate": "Check Template"
+  "checkTemplate": "Check Template",
+  "groupLabel": "Group labels",
+  "groupLabelTips": "Variables with the same label will be displayed in the same group in the view and execution preview interface",
+  "notGrouped": "Not grouped"
 }
