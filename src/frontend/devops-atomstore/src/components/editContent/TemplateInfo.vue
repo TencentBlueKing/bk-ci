@@ -4,7 +4,7 @@
         <div class="form-template form-item-container">
             <div
                 class="bk-form-item is-required"
-                ref="projectCode"
+                ref="projectCodeErrors"
             >
                 <label class="bk-label"> {{ $t('store.所属项目') }} </label>
                 <div
@@ -27,12 +27,12 @@
                             :key="option.projectCode"
                             :id="option.projectCode"
                             :name="option.projectName"
-                            @click.native="changeSourceTemplateName"
+                            @click.native="optionChange('projectCodeErrors')"
                         >
                         </bk-option>
                     </bk-select>
                     <div
-                        v-if="formErrors.projectCode"
+                        v-if="formErrors.projectCodeErrors"
                         class="error-tips"
                     >
                         {{ $t('store.项目不能为空') }}
@@ -47,7 +47,7 @@
             </div>
             <div
                 class="bk-form-item is-required"
-                ref="templateCode"
+                ref="templateCodeErrors"
             >
                 <label class="bk-label"> {{ $t('store.源模板名称') }} </label>
                 <div
@@ -70,12 +70,12 @@
                             :key="option.templateId"
                             :id="option.templateId"
                             :name="option.name"
-                            @click.native="changeSourceTemplateName"
+                            @click.native="optionChange('templateCodeErrors')"
                         >
                         </bk-option>
                     </bk-select>
                     <div
-                        v-if="formErrors.templateCode"
+                        v-if="formErrors.templateCodeErrors"
                         class="error-tips"
                     >
                         {{ $t('store.源模板名称不能为空') }}
@@ -85,7 +85,7 @@
                     class="bk-form-content template-item-content"
                     v-else
                 >
-                    {{ templateOptionName }}
+                    {{ templateOptionName || templateForm.projectName }}
                 </div>
             </div>
             <div class="bk-form-item">
@@ -98,7 +98,7 @@
             </div>
             <div
                 class="bk-form-item is-required"
-                ref="templateVersion"
+                ref="versionErrors"
             >
                 <label class="bk-label"> {{ $t('store.模板版本') }} </label>
                 <div class="bk-form-content template-item-content template-category-content">
@@ -110,6 +110,7 @@
                         :placeholder="$t('store.请选择模板版本')"
                         enable-scroll-load
                         :scroll-loading="selectLoading"
+                        @toggle="getVersionList"
                         @scroll-end="handlerScrollEnd('templateVersion')"
                     >
                         <bk-option
@@ -117,12 +118,12 @@
                             :key="option.version"
                             :id="option.version"
                             :name="option.versionName"
-                            @click.native="changeVersion"
+                            @click.native="optionChange('versionErrors')"
                         >
                         </bk-option>
                     </bk-select>
                     <div
-                        v-if="formErrors.templateVersion"
+                        v-if="formErrors.versionErrors"
                         class="error-tips"
                     >
                         {{ $t('store.模板版本不能为空') }}
@@ -203,7 +204,7 @@
                             :key="index"
                             :id="option.classifyCode"
                             :name="option.classifyName"
-                            @click.native="changeClassify"
+                            @click.native="optionChange('sortError')"
                             :placeholder="$t('store.请选择分类')"
                         >
                         </bk-option>
@@ -374,11 +375,12 @@
                     categoryError: false,
                     descError: false,
                     logoUrlError: false,
-                    templateVersion: false,
-                    projectCode: false
+                    versionErrors: false,
+                    templateCodeErrors: false,
+                    projectCodeErrors: false
                 },
                 page: 1,
-                pageSize: 10,
+                pageSize: 20,
                 flag: '',
                 total: null,
                 selectLoading: false
@@ -405,14 +407,6 @@
                     }
                 },
                 immediate: true
-            },
-            'templateForm.templateCode': {
-                handler (newVal) {
-                    if (newVal) {
-                        this.getVersionList()
-                    }
-                },
-                immediate: true
             }
         },
         async created () {
@@ -423,7 +417,7 @@
                 this.requestTplClassify()
                 this.requestTplCategorys()
                 this.requestTplLabel()
-                this.toggleProjectList(true)
+                this.toggleProjectList()
                 setTimeout(() => {
                     this.autoFocus()
                 }, 500)
@@ -529,8 +523,7 @@
                         templateId: this.templateForm.templateCode
                     })
                     this.total = res.count
-                    const data = res.records.filter(item => item.status !== 'COMMITTING')
-                    this.versionList = [...this.versionList, ...data]
+                    this.versionList = [...this.versionList, ...res.records]
                 } catch (err) {
                     this.handleError(err)
                 } finally {
@@ -542,59 +535,51 @@
                     this.$refs.templateName.focus()
                 })
             },
-            changeClassify () {
-                this.formErrors.sortError = false
-            },
-            changeVersion () {
-                this.formErrors.templateVersion = false
-            },
-            changeSourceTemplateName () {
-                this.formErrors.projectCode = false
+            optionChange (key) {
+                this.formErrors[key] = false
             },
             checkValid () {
                 let errorCount = 0
                 let ref = ''
-                if (!this.templateForm.logoUrl && !this.templateForm.iconData) {
-                    this.formErrors.logoUrlError = true
-                    ref = ref || 'logoUrlError'
-                    errorCount++
-                }
+                const validationRules = [
+                    {
+                        condition: () => !this.templateForm.logoUrl && !this.templateForm.iconData,
+                        errorKey: 'logoUrlError'
+                    },
+                    {
+                        condition: () => !this.templateForm.classifyCode,
+                        errorKey: 'sortError'
+                    },
+                    {
+                        condition: () => !this.templateForm.projectCode,
+                        errorKey: 'projectCodeErrors'
+                    },
+                    {
+                        condition: () => !this.templateForm.templateVersion,
+                        errorKey: 'versionErrors'
+                    },
+                    {
+                        condition: () => !this.templateForm.templateCode,
+                        errorKey: 'templateCodeErrors'
+                    },
+                    {
+                        condition: () => !this.templateForm.categoryIdList.length,
+                        errorKey: 'categoryError'
+                    },
+                    {
+                        condition: () => !this.templateForm.description,
+                        errorKey: 'descError'
+                    }
+                ]
 
-                if (!this.templateForm.classifyCode) {
-                    this.formErrors.sortError = true
-                    ref = ref || 'sortError'
-                    errorCount++
-                }
-
-                if (!this.templateForm.projectCode) {
-                    this.formErrors.projectCode = true
-                    ref = ref || 'projectCode'
-                    errorCount++
-                }
-
-                if (!this.templateForm.templateVersion) {
-                    this.formErrors.templateVersion = true
-                    ref = ref || 'templateVersion'
-                    errorCount++
-                }
-
-                if (!this.templateForm.templateCode) {
-                    this.formErrors.templateCode = true
-                    ref = ref || 'templateCode'
-                    errorCount++
-                }
-
-                if (!this.templateForm.categoryIdList.length) {
-                    this.formErrors.categoryError = true
-                    ref = ref || 'categoryError'
-                    errorCount++
-                }
-
-                if (!this.templateForm.description) {
-                    this.formErrors.descError = true
-                    ref = ref || 'descError'
-                    errorCount++
-                }
+                // 遍历校验规则对象
+                validationRules.forEach((rule) => {
+                    if (rule.condition()) {
+                        this.formErrors[rule.errorKey] = true
+                        ref = ref || rule.errorKey
+                        errorCount++
+                    }
+                })
 
                 if (errorCount > 0) {
                     const errorEle = this.$refs[ref]
