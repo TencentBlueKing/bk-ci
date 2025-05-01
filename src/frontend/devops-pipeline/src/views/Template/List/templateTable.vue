@@ -1,12 +1,11 @@
 <template>
     <bk-table
-        ext-cls="list-table"
         v-bkloading="{ isLoading }"
-        ref="tableRef"
         :data="data"
         :size="tableSize"
-        :max-height="718"
+        height="100%"
         :pagination="pagination"
+        show-overflow-tooltip
         @page-change="handlePageChange"
         @page-limit-change="handlePageLimitChange"
         @header-dragend="handelHeaderDragend"
@@ -29,17 +28,12 @@
                     @click="goTemplateOverview(row, 'instanceList')"
                 >
                     <span
-                        class="img-icon"
+                        class="template-name-area"
                     >
-                        <img
-                            v-if="row.logoUrl"
-                            :src="row.logoUrl"
-                        />
+                        {{ row.name }}
                     </span>
-                    <span :title="row.name">{{ row.name }}</span>
-                    <img
+                    <PacTag
                         v-if="row.enablePac"
-                        src="../../../images/pacIcon.png"
                         class="pac-code-icon"
                     />
                 </div>
@@ -195,6 +189,7 @@
     } from '@/store/modules/templates/constants'
     import { convertTime } from '@/utils/util'
     import { computed, defineProps, onMounted, ref } from 'vue'
+    import PacTag from '../../../components/PacTag.vue'
     import ExtMenu from './extMenu'
 
     const { proxy, i18n } = UseInstance()
@@ -382,23 +377,15 @@
 .template-name {
     display: flex;
     align-items: center;
-    .img-icon {
-        display: inline-block;
-        width: 32px;
-        height: 32px;
-        margin-right: 12px;
-
-        img {
-            width: 100%;
-        }
+    grid-gap: 6px;
+    .template-name-area {
+        flex: 1;
+        @include ellipsis(1);
     }
     .pac-code-icon {
-        margin: 0 0 0 12px;
-        vertical-align: middle;
+        flex-shrink: 0;
     }
-    span {
-        @include ellipsis();
-    }
+
 }
 .source-name {
     display: flex;

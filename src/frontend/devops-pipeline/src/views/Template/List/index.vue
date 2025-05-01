@@ -47,7 +47,7 @@
                 >
                 </search-select>
             </div>
-            <templateTable
+            <template-table
                 ref="selfTemp"
                 :type="templateViewId"
                 :data="tableData"
@@ -75,29 +75,29 @@
 </template>
 
 <script setup>
-    import { onMounted, ref, computed, watch } from 'vue'
-    import dayjs from 'dayjs'
-    import SearchSelect from '@blueking/search-select'
-    import '@blueking/search-select/dist/styles/index.css'
-    import templateTable from './templateTable'
-    import CreateTemplateDialog from './CreateTemplateDialog'
-    import InstallTemplateDialog from './InstallTemplateDialog'
-    import UseInstance from '@/hook/useInstance'
     import Logo from '@/components/Logo'
+    import CopyTemplateDialog from '@/components/Template/CopyTemplateDialog.vue'
+    import UseInstance from '@/hook/useInstance'
+    import useTemplateActions from '@/hook/useTemplateActions'
+    import {
+        ALL_SOURCE,
+        ALL_TEMPLATE_VIEW_ID,
+        CUSTOM_SOURCE,
+        MARKET_SOURCE,
+        TEMPLATE_ACTION_MAP,
+        TEMPLATE_VIEW_ID_MAP
+    } from '@/store/modules/templates/constants'
     import {
         RESOURCE_ACTION,
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
-    import {
-        TEMPLATE_VIEW_ID_MAP,
-        ALL_TEMPLATE_VIEW_ID,
-        TEMPLATE_ACTION_MAP,
-        ALL_SOURCE,
-        CUSTOM_SOURCE,
-        MARKET_SOURCE
-    } from '@/store/modules/templates/constants'
-    import CopyTemplateDialog from '@/components/Template/CopyTemplateDialog.vue'
-    import useTemplateActions from '@/hook/useTemplateActions'
+    import SearchSelect from '@blueking/search-select'
+    import '@blueking/search-select/dist/styles/index.css'
+    import dayjs from 'dayjs'
+    import { computed, onMounted, ref, watch } from 'vue'
+    import CreateTemplateDialog from './CreateTemplateDialog'
+    import InstallTemplateDialog from './InstallTemplateDialog'
+    import TemplateTable from './templateTable'
 
     const {
         copyTemp,
@@ -232,7 +232,7 @@
             bkMessage({ message: err.message || err, theme: 'error' })
         }
     }
-            
+
     async function fetchTableData () {
         isTableLoading.value = true
         try {
@@ -376,6 +376,8 @@
 
    .template-main {
         width: 100%;
+        display: flex;
+        flex-direction: column;
         padding: 24px 36px 12px 24px;
         &-header {
             display: flex;
@@ -397,7 +399,7 @@
                     background: #EAEBF0;
                     height: 32px;
                     border-radius: 2px;
-    
+
                     li{
                         height: 24px;
                         line-height: 24px;
@@ -414,26 +416,26 @@
                             text-overflow: ellipsis;
                             white-space: nowrap;
                         }
-    
+
                         svg {
                             vertical-align: middle;
                             color: #979BA5;
                             margin-right: 4px;
                         }
                     }
-    
+
                     .active {
                         padding: 0 12px;
                         background-color: #fff;
                         color: $primaryColor;
                         border-radius: 2px;
-      
+
                         svg {
                             color: $primaryColor;
                         }
                     }
                 }
-    
+
             }
             .search-input {
                 background: white;
