@@ -3,3 +3,8 @@ export const TYPE_ENUM = {
     template: 'template',
     image: 'image'
 }
+
+export const PUBLISH_STRATEGY = {
+    AUTO: 'AUTO',
+    MANUAL: 'MANUAL'
+}
