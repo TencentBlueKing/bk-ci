@@ -26,7 +26,6 @@ const PipelineManageList = () => import(/* webpackChunkName: "pipelinesNewList" 
 const PipelineListAuth = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/Auth')
 
 const PipelinesGroup = () => import(/* webpackChunkName: "pipelinesGroup" */'../views/Group')
-const PipelinesTemplate = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template')
 const PipelinesAudit = () => import(/* webpackChunkName: "pipelinesAudit" */'../views/Audit')
 const AtomDebug = () => import(/* webpackChunkName: "atomDebug" */'../views/AtomDebug.vue')
 const AtomManage = () => import(/* webpackChunkName: "atomManage" */'../views/AtomManage.vue')
@@ -100,7 +99,6 @@ const routes = [
                 children: [
                     {
                         path: 'template',
-                        name: 'template',
                         component: templateGroup,
                         children: [
                             {
@@ -141,11 +139,6 @@ const routes = [
                 component: PipelinesAudit
             },
             {
-                path: 'template',
-                name: 'pipelinesTemplate',
-                component: PipelinesTemplate
-            },
-            {
                 path: 'template/:templateId/:version?',
                 component: templateEntry,
                 children: [
@@ -154,21 +147,6 @@ const routes = [
                         name: 'templateEdit',
                         component: templateEdit
                     },
-                    // {
-                    //     path: 'createInstance/:curVersionId/:pipelineName?',
-                    //     name: 'createInstance',
-                    //     component: templateInstanceCreate
-                    // },
-                    // {
-                    //     path: 'setting',
-                    //     name: 'templateSetting',
-                    //     component: templateSetting
-                    // },
-                    // {
-                    //     path: 'permission',
-                    //     name: 'templatePermission',
-                    //     component: templatePermission
-                    // },
                     {
                         path: ':type?',
                         name: 'TemplateOverview',

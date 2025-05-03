@@ -177,9 +177,9 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
-    import labelList from '@/components/labelList.vue'
     import api from '@/api'
+    import labelList from '@/components/labelList.vue'
+    import { mapGetters } from 'vuex'
 
     export default {
         components: {
@@ -235,22 +235,11 @@
             }),
 
             storeType () {
-                const typeMap = {
-                    atom: 'ATOM',
-                    image: 'IMAGE'
-                }
-                const type = this.$route.params.type
-                return typeMap[type]
+                return this.$route.params.type.toUpperCase()
             },
 
             storeCode () {
-                const keyMap = {
-                    atom: 'atomCode',
-                    image: 'imageCode'
-                }
-                const type = this.$route.params.type
-                const key = keyMap[type]
-                return this.detail[key]
+                return this.detail[`${this.$route.params.type}Code`] ?? ''
             }
         },
 

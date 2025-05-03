@@ -5,25 +5,29 @@
         :size="tableSize"
         height="100%"
         :pagination="pagination"
-        show-overflow-tooltip
         @page-change="handlePageChange"
         @page-limit-change="handlePageLimitChange"
         @header-dragend="handelHeaderDragend"
     >
         <TemplateEmpty
-            v-if="!data.length"
             slot="empty"
             type="search-empty"
             @clear="clearFilter"
         />
+
         <bk-table-column
-            :label="$t('template.name')"
-            prop="name"
-            :width="tableWidthMap.name"
-            sortable
+            v-for="col in selectedTableColumn"
+            :label="col.label"
+            :key="col.id"
+            :prop="col.id"
+            :width="col.width"
+            :show-overflow-tooltip="col.showOverflowTooltip"
+            :sortable="col.sortable"
+            :formatter="col.formatter"
         >
             <template slot-scope="{ row }">
                 <div
+                    v-if="col.id === 'name'"
                     class="template-name select-text"
                     @click="goTemplateOverview(row, 'instanceList')"
                 >
@@ -37,140 +41,65 @@
                         class="pac-code-icon"
                     />
                 </div>
-            </template>
-        </bk-table-column>
-        <bk-table-column
-            v-if="allRenderColumnMap.desc"
-            :width="tableWidthMap.desc"
-            :label="$t('template.desc')"
-            prop="desc"
-        >
-            <template slot-scope="{ row }">
-                <span>{{ row.desc || '--' }}</span>
-            </template>
-        </bk-table-column>
-        <bk-table-column
-            v-if="allRenderColumnMap.type"
-            :width="tableWidthMap.type"
-            :label="$t('template.type')"
-            prop="type"
-        >
-            <!-- :filters="sourceFilters"
-            :filter-method="sourceFilterMethod"
-            :filter-multiple="false" -->
-            <template slot-scope="{ row }">
-                <span>{{ TEMPLATE_TYPE[row.type] || '--' }}</span>
-            </template>
-        </bk-table-column>
-        <bk-table-column
-            v-if="allRenderColumnMap.lastedVersion"
-            :width="tableWidthMap.lastedVersion"
-            :label="$t('template.lastedVersion')"
-            prop="lastedVersion"
-        >
-            <template slot-scope="{ row }">
-                <span>{{ row.lastedVersion || '--' }}</span>
-            </template>
-        </bk-table-column>
-        <bk-table-column
-            v-if="allRenderColumnMap.source"
-            :width="tableWidthMap.source"
-            :label="$t('template.source')"
-            prop="sourceName"
-        >
-            <template slot-scope="{ row }">
-                <div class="source-name">
+                <div
+                    class="source-name"
+                    v-else-if="col.id === 'source'"
+                >
                     <span>{{ row.sourceName }}</span>
                     <bk-badge
-                        class="mr40"
-                        dot
-                        :theme="'danger'"
                         v-if="row.storeFlag"
+                        class="store-source-flag"
+                        dot
+                        theme="danger"
+                        :visible="row.hasNewVersion"
                     >
                         <Logo
                             size="14"
-                            class="ml5"
                             name="is-store"
                         />
                     </bk-badge>
                 </div>
-            </template>
-        </bk-table-column>
-        <!-- <bk-table-column
-            v-if="allRenderColumnMap.debugPipelineCount"
-            :width="tableWidthMap.debugPipelineCount"
-            :label="$t('template.debugPipelineCount')"
-            prop="debugPipelineCount"
-        >
-            <template slot-scope="{ row }">
-                <span class="select-text">
-                    {{ row.debugPipelineCount }}
-                </span>
-            </template>
-        </bk-table-column> -->
-        <bk-table-column
-            v-if="allRenderColumnMap.instancePipelineCount"
-            :width="tableWidthMap.instancePipelineCount"
-            :label="$t('template.instancePipelineCount')"
-            prop="instancePipelineCount"
-        >
-            <template slot-scope="{ row }">
-                <span
-                    class="select-text"
-                    @click="() => row.instancePipelineCount && goTemplateOverview(row, 'instanceList')"
+
+                <bk-button
+                    v-else-if="col.id === 'instancePipelineCount'"
+                    text
+                    :disabled="row.instancePipelineCount <= 0"
+                    @click="goTemplateOverview(row, 'instanceList')"
                 >
                     {{ row.instancePipelineCount }}
-                </span>
-            </template>
-        </bk-table-column>
-        <bk-table-column
-            v-if="allRenderColumnMap.updater"
-            :width="tableWidthMap.updater"
-            :label="$t('template.lastModifiedBy')"
-            prop="updater"
-        >
-            <template slot-scope="{ row }">
-                <span>{{ row.updater || '--' }}</span>
-            </template>
-        </bk-table-column>
-        <bk-table-column
-            v-if="allRenderColumnMap.updateTime"
-            :width="tableWidthMap.updateTime"
-            key="updateTime"
-            :label="$t('template.lastModifiedDate')"
-            sortable
-            prop="updateTime"
-            :formatter="formatTime"
-        />
-        <bk-table-column
-            :width="tableWidthMap.operate"
-            :label="$t('operate')"
-            :min-width="100"
-        >
-            <div
-                slot-scope="{ row }"
-                class="template-operate"
-            >
-                <span
-                    @click="goInstanceEntry(row)"
-                    :class="['action', row.canEdit ? 'create-permission' : 'not-create-permission']"
+                </bk-button>
+
+                <div
+                    v-else-if="col.id === 'operate'"
+                    class="template-operate"
                 >
-                    <span v-if="row.type === 'PIPELINE'">
-                        {{ $t('template.instantiate') }}
+                    <span
+                        @click="goInstanceEntry(row)"
+                        :class="['action', row.canEdit ? 'create-permission' : 'not-create-permission']"
+                    >
+                        <span v-if="row.type === 'PIPELINE'">
+                            {{ $t('template.instantiate') }}
+                        </span>
                     </span>
-                </span>
-                <ext-menu
-                    type="template"
-                    :data="row"
-                    :config="row.templateActions"
-                />
-            </div>
+                    <ext-menu
+                        type="template"
+                        :data="row"
+                        :config="row.templateActions"
+                    />
+                </div>
+                <template
+                    v-else
+                >
+                    <span>{{ row[col.id] || '--' }}</span>
+                </template>
+            </template>
         </bk-table-column>
+
         <bk-table-column
             type="setting"
         >
             <bk-table-setting-content
-                :fields="tableColumn"
+                :fields="tableColumns"
                 :selected="selectedTableColumn"
                 :size="tableSize"
                 @setting-change="handleSettingChange"
@@ -181,18 +110,16 @@
 
 <script setup>
     import Logo from '@/components/Logo'
+    import PacTag from '@/components/PacTag.vue'
     import TemplateEmpty from '@/components/common/exception'
     import UseInstance from '@/hook/useInstance'
     import {
-        CACHE_TEMPLATE_TABLE_WIDTH_MAP,
         TEMPLATE_TABLE_COLUMN_CACHE
     } from '@/store/modules/templates/constants'
-    import { convertTime } from '@/utils/util'
-    import { computed, defineProps, onMounted, ref } from 'vue'
-    import PacTag from '../../../components/PacTag.vue'
+    import { defineProps, onBeforeMount, ref } from 'vue'
     import ExtMenu from './extMenu'
 
-    const { proxy, i18n } = UseInstance()
+    const { proxy, t } = UseInstance()
     defineProps({
         data: {
             type: Array,
@@ -212,111 +139,81 @@
         }
     })
     const emit = defineEmits(['limit-change', 'page-change', 'clear'])
-
-    const TEMPLATE_TRANSLATIONS = {
-        PIPELINE: 'pipelineTemplate',
-        STAGE: 'stageTemplate',
-        JOB: 'jobTemplate',
-        STEP: 'stepTemplate',
-        ALL: 'allTemplate'
-    }
-    const tableSize = ref('medium')
-    const tableColumn = ref([])
-    const selectedTableColumn = ref([])
-    const tableWidthMap = ref({})
-
-    // const sourceFilters = computed(() => ['PIPELINE', 'STAGE', 'JOB', 'STEP'].map(type => ({
-    //     text: i18n.t(TEMPLATE_TRANSLATIONS[type]),
-    //     value: type
-    // })))
-    const TEMPLATE_TYPE = computed(() => {
-        const types = {}
-        Object.keys(TEMPLATE_TRANSLATIONS).forEach(type => {
-            types[type] = i18n.t(TEMPLATE_TRANSLATIONS[type])
-        })
-        return types
-    })
-    const allRenderColumnMap = computed(() => {
-        return selectedTableColumn.value.reduce((result, item) => {
-            result[item.id] = true
-            return result
-        }, {})
-    })
-
-    onMounted(() => {
-        tableColumn.value = [
-            {
-                id: 'name',
-                label: i18n.t('template.name'),
-                disabled: true
-            },
-            {
-                id: 'desc',
-                label: i18n.t('template.desc')
-            },
-            {
-                id: 'type',
-                label: i18n.t('template.type')
-            },
-            {
-                id: 'lastedVersion',
-                label: i18n.t('template.lastedVersion')
-            },
-            {
-                id: 'source',
-                label: i18n.t('template.source')
-            },
-            {
-                id: 'debugPipelineCount',
-                label: i18n.t('template.debugPipelineCount')
-            },
-            {
-                id: 'instancePipelineCount',
-                label: i18n.t('template.instancePipelineCount')
-            },
-            {
-                id: 'updater',
-                label: i18n.t('template.lastModifiedBy')
-            },
-            {
-                id: 'updateTime',
-                label: i18n.t('template.lastModifiedDate')
-            },
-            {
-                id: 'operate',
-                label: i18n.t('operate'),
-                disabled: true
-            }
-        ]
-        const columnsCache = JSON.parse(localStorage.getItem(TEMPLATE_TABLE_COLUMN_CACHE))
-        if (columnsCache) {
-            selectedTableColumn.value = columnsCache.columns
-            tableSize.value = columnsCache.size
-        } else {
-            selectedTableColumn.value = [
-                { id: 'name' },
-                { id: 'desc' },
-                { id: 'type' },
-                { id: 'lastedVersion' },
-                { id: 'source' },
-                { id: 'debugPipelineCount' },
-                { id: 'instancePipelineCount' },
-                { id: 'updater' },
-                { id: 'updateTime' },
-                { id: 'operate' }
-            ]
+    const tableSize = ref('small')
+    const tableColumns = [
+        {
+            id: 'name',
+            label: t('template.name'),
+            width: 220,
+            disabled: true,
+            sortable: true,
+            showOverflowTooltip: true
+        },
+        {
+            id: 'desc',
+            label: t('template.desc'),
+            width: 300,
+            showOverflowTooltip: true
+        },
+        {
+            id: 'typeName',
+            label: t('template.type'),
+            width: 100
+        },
+        {
+            id: 'releasedVersionName',
+            label: t('template.lastedVersion'),
+            width: 200
+        },
+        {
+            id: 'source',
+            label: t('template.source'),
+            width: 120
+        },
+        {
+            id: 'debugPipelineCount',
+            label: t('template.debugPipelineCount'),
+            width: 100
+        },
+        {
+            id: 'instancePipelineCount',
+            label: t('template.instancePipelineCount'),
+            width: 60
+        },
+        {
+            id: 'updater',
+            label: t('template.lastModifiedBy'),
+            width: 120
+        },
+        {
+            id: 'updateTime',
+            label: t('template.lastModifiedDate'),
+            width: 200
+        },
+        {
+            id: 'operate',
+            disabled: true,
+            label: t('operate')
         }
-        tableWidthMap.value = JSON.parse(localStorage.getItem(CACHE_TEMPLATE_TABLE_WIDTH_MAP)) || {
-            name: 220,
-            desc: 200,
-            type: 100,
-            lastedVersion: 80,
-            source: 100,
-            debugPipelineCount: 80,
-            instancePipelineCount: '',
-            updater: '',
-            updateTime: 100,
-            operate: 96
+    ]
+    const tableColumnMap = tableColumns.reduce((acc, cur) => {
+        acc[cur.id] = cur
+        return acc
+    }, {})
+
+    const selectedTableColumn = ref([])
+    onBeforeMount(() => {
+        try {
+            const columnsCache = JSON.parse(localStorage.getItem(TEMPLATE_TABLE_COLUMN_CACHE))
+            if (!columnsCache) {
+                throw new Error('not cache')
+            }
+            selectedTableColumn.value = columnsCache.columns.map(col => Object.assign(tableColumnMap[col.id], {
+                width: col.width ?? tableColumnMap[col.id].width
+            }))
+            tableSize.value = columnsCache.size
+        } catch (error) {
+            selectedTableColumn.value = tableColumns
         }
     })
 
@@ -328,9 +225,6 @@
     }
     function clearFilter () {
         emit('clear')
-    }
-    function formatTime (row, cell, value) {
-        return convertTime(value)
     }
     function goTemplateOverview (row, type) {
         proxy.$router.push({
@@ -355,15 +249,29 @@
     function handleSettingChange ({ fields, size }) {
         selectedTableColumn.value = fields
         tableSize.value = size
+        cacheTableConf({ fields, size })
+    }
+    function handelHeaderDragend (newWidth, _, column) {
+        if (tableColumnMap[column.property]) {
+            tableColumnMap[column.property].width = newWidth
+
+            cacheTableConf({
+                fields: selectedTableColumn.value,
+                size: tableSize.value
+            })
+        }
+    }
+
+    function cacheTableConf ({ fields, size }) {
         localStorage.setItem(TEMPLATE_TABLE_COLUMN_CACHE, JSON.stringify({
-            columns: fields,
+            columns: fields.map(field => ({
+                id: field.id,
+                width: field.width
+            })),
             size
         }))
     }
-    function handelHeaderDragend (newWidth, oldWidth, column) {
-        tableWidthMap.value[column.property] = newWidth
-        localStorage.setItem(CACHE_TEMPLATE_TABLE_WIDTH_MAP, JSON.stringify(tableWidthMap.value))
-    }
+
     // function sourceFilterMethod (value, row, column) {
     //     const property = column.property
     //     return row[property] === value
@@ -390,9 +298,10 @@
 .source-name {
     display: flex;
     align-items: center;
-    height: 30px;
-    span {
-        flex-shrink: 0;
+    grid-gap: 6px;
+    height: 36px;
+    .store-source-flag {
+        font-size: 0;
     }
 }
 .template-operate {

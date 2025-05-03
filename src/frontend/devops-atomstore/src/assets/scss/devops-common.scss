@@ -52,16 +52,14 @@
     height: 100vh;
     color: #222;
     display: flex;
-    max-height: 100vh;
-    padding-bottom: 4vh;
     flex-direction: column;
     overflow: hidden;
+    padding: 0 60px;
     .g-store-body {
-        width: 14.6rem;
-        margin: 16px auto 0;
+        margin: 0 0 16px 0;
         position: relative;
         flex: 1;
-        height: 0;
+        overflow: hidden;
     }
     .g-store-route {
         height: 100%;

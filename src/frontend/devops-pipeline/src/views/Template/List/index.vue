@@ -91,6 +91,7 @@
         RESOURCE_ACTION,
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
+    import { TEMPLATE_TYPE } from '@/utils/pipelineConst'
     import { isShallowEqual } from '@/utils/util'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
@@ -113,7 +114,7 @@
         convertToCustom
     } = useTemplateActions()
 
-    const { proxy, i18n, bkMessage } = UseInstance()
+    const { proxy, t, bkMessage } = UseInstance()
     const hasCreatePermission = ref(false)
     const searchValue = ref([])
     const tableData = ref([])
@@ -126,19 +127,19 @@
     })
     const filterData = computed(() => [
         {
-            name: i18n.t('template.name'),
+            name: t('template.name'),
             id: 'fuzzySearchName'
         },
         {
-            name: i18n.t('template.desc'),
+            name: t('template.desc'),
             id: 'desc'
         },
         {
-            name: i18n.t('template.source'),
+            name: t('template.source'),
             id: 'source'
         },
         {
-            name: i18n.t('template.lastModifiedBy'),
+            name: t('template.lastModifiedBy'),
             id: 'updater'
         }
     ])
@@ -259,13 +260,15 @@
             }
             fetchTypeCount()
             const res = await proxy.$store.dispatch('templates/getTemplateList', param)
-            tableData.value = (res.records || []).map(x => {
-                x.updateTime = dayjs(x.updateTime).format('YYYY-MM-DD HH:mm:ss')
-                x.templateActions = [
+            tableData.value = (res.records || []).map(item => ({
+                ...item,
+                updateTime: dayjs(item.updateTime).format('YYYY-MM-DD HH:mm:ss'),
+                typeName: TEMPLATE_TYPE[item.type] ? t(`template.${TEMPLATE_TYPE[item.type]}`) : '--',
+                templateActions: [
                     {
-                        text: i18n.t('copy'), // 复制
-                        handler: () => copyTemplate(x),
-                        hasPermission: x.canEdit,
+                        text: t('copy'), // 复制
+                        handler: () => copyTemplate(item),
+                        hasPermission: item.canEdit,
                         disablePermissionApi: true,
                         isShow: true,
                         permissionData: {
@@ -276,60 +279,59 @@
                         }
                     },
                     {
-                        text: i18n.t('template.shelfStore'), // 上架研发商店
-                        handler: () => toRelativeStore(x),
-                        hasPermission: x.canEdit,
+                        text: t('template.shelfStore'), // 上架研发商店
+                        handler: () => toRelativeStore(item),
+                        hasPermission: item.canEdit,
                         disablePermissionApi: true,
-                        isShow: x.mode === 'CUSTOMIZE',
+                        isShow: item.mode === 'CUSTOMIZE',
                         permissionData: {
                             projectId: projectId.value,
                             resourceType: 'pipeline_template',
-                            resourceCode: x.id,
+                            resourceCode: item.id,
                             action: TEMPLATE_RESOURCE_ACTION.EDIT
                         }
                     },
                     {
-                        text: i18n.t('template.convertToCustom'), // 转为自定义
-                        handler: () => convertToCustom(x, fetchTableData),
-                        hasPermission: x.canEdit,
+                        text: t('template.convertToCustom'), // 转为自定义
+                        handler: () => convertToCustom(item, fetchTableData),
+                        hasPermission: item.canEdit,
                         disablePermissionApi: true,
-                        isShow: x.mode === 'CONSTRAINT',
+                        isShow: item.mode === 'CONSTRAINT',
                         permissionData: {
                             projectId: projectId.value,
                             resourceType: 'pipeline_template',
-                            resourceCode: x.id,
+                            resourceCode: item.id,
                             action: TEMPLATE_RESOURCE_ACTION.EDIT
                         }
                     },
                     {
-                        text: i18n.t('template.export'), // 导出
-                        handler: () => exportTemplate(x),
-                        hasPermission: x.canEdit,
+                        text: t('template.export'), // 导出
+                        handler: () => exportTemplate(item),
+                        hasPermission: item.canEdit,
                         disablePermissionApi: true,
                         isShow: true,
                         permissionData: {
                             projectId: projectId.value,
                             resourceType: 'pipeline_template',
-                            resourceCode: x.id,
+                            resourceCode: item.id,
                             action: TEMPLATE_RESOURCE_ACTION.EDIT
                         }
                     },
                     {
-                        text: i18n.t('delete'),
-                        handler: () => deleteTemplate(x, fetchTableData),
-                        hasPermission: x.canDelete,
+                        text: t('delete'),
+                        handler: () => deleteTemplate(item, fetchTableData),
+                        hasPermission: item.canDelete,
                         disablePermissionApi: true,
                         isShow: true,
                         permissionData: {
                             projectId: projectId.value,
                             resourceType: 'pipeline_template',
-                            resourceCode: x.id,
+                            resourceCode: item.id,
                             action: TEMPLATE_RESOURCE_ACTION.EDIT
                         }
                     }
                 ]
-                return x
-            })
+            }))
             pagination.value.count = res.count
         } catch (err) {
             bkMessage({
