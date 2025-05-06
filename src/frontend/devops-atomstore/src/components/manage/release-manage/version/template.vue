@@ -12,8 +12,8 @@
             :header-border="false"
             :header-cell-style="{ background: '#fff' }"
             :pagination="pagination"
-            @page-change="(page) => $emit('pageChanged', page)"
-            @page-limit-change="(currentLimit, prevLimit) => $emit('pageLimitChanged', currentLimit, prevLimit)"
+            @page-change="handlePageChange"
+            @page-limit-change="handleLimitChange"
         >
             <bk-table-column
                 v-for="col in columns"
@@ -168,6 +168,12 @@
         },
 
         methods: {
+            handlePageChange (page) {
+                this.$emit('pageChanged', page)
+            },
+            handleLimitChange (currentLimit, prevLimit) {
+                this.$emit('pageLimitChanged', currentLimit, prevLimit)
+            },
             showDetail (imageId) {
                 this.hasShowDetail = true
                 this.detailLoading = true

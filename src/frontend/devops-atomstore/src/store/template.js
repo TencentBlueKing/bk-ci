@@ -21,10 +21,6 @@ import {
     UPDATE_CURRENT_TEMPLATE
 } from '@/store/constants'
 
-import {
-
-} from './constants'
-
 const prefix = 'store/api'
 const processPrefix = 'process/api'
 const Vue = window.Vue
@@ -262,6 +258,15 @@ export const actions = {
 
     updateCurrentaTemplate ({ commit }, { res }) {
         commit(UPDATE_CURRENT_TEMPLATE, res)
+    },
+    updatePublishStrategy: (state, { templateCode, strategy }) => {
+        return vue.$ajax.put(`${prefix}/user/market/${templateCode}/store/publishStrategy`, JSON.stringify(strategy))
+    },
+    /**
+     * 获取模板版本列表
+     */
+    requestTemplateReleasedList ({ commit }, { templateCode, page, pageSize }) {
+        return vue.$ajax.get(`${prefix}/user/market/${templateCode}/template/published/history?page=${page}&pageSize=${pageSize}`)
     }
 }
 

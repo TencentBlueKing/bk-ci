@@ -22,7 +22,7 @@
                 class="publish-strategy-detail"
             >
                 <span>{{ strategyLabel }}</span>
-                <span class="publish-strategy-desc">{{ strategyDesc }}</span>
+                <span class="publish-strategy-desc">( {{ strategyDesc }} )</span>
                 <i
                     class="devops-icon icon-edit2"
                     @click="editStrategy"
@@ -54,14 +54,26 @@
                 editing.value = true
             }
 
-            function handleStrategyChange (newVal) {
+            async function handleStrategyChange (newVal) {
                 // TODO:
                 if (!newVal || newVal === strategy) {
                     editing.value = false
                     return
                 }
-                
-                editing.value = false
+
+                try {
+                    console.log(newVal)
+                    const res = await vm.proxy.$store.dispatch('store/updatePublishStrategy', {
+                        projectId: vm.proxy.$route.params.projectId,
+                        templateCode: vm.proxy.$route.params.code,
+                        strategy: newVal
+                    })
+                    console.log(res)
+                } catch (error) {
+                    console.error(error.message)
+                } finally {
+                    editing.value = false
+                }
             }
             return {
                 editing,
@@ -80,13 +92,17 @@
     .publish-strategy {
         display: flex;
         background-color: white;
-        padding: 24px;
+        padding: 32px 24px;
         .publish-strategy-row {
             width: 100%;
             display: flex;
             grid-gap: 8px;
             font-size: 12px;
             align-items: center;
+            > label {
+                margin-left: 56px;
+                color: #979BA5;
+            }
             .publish-strategy-select {
                 width: 360px;
             }

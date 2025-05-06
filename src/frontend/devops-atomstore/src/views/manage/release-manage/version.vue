@@ -56,7 +56,8 @@
         methods: {
             ...mapActions('store', [
                 'requestVersionList',
-                'requestImageVersionList'
+                'requestImageVersionList',
+                'requestTemplateReleasedList'
             ]),
             pageLimitChanged (currentLimit, prevLimit) {
                 if (currentLimit === this.pagination.limit) return
@@ -78,15 +79,7 @@
                     const apiMethodMap = {
                         atom: this.requestVersionList,
                         image: this.requestImageVersionList,
-                        template: () => Promise.resolve({
-                            records: [{
-                                version: 'v1.0.0',
-                                templateStatus: 'RELEASED',
-                                creator: 'admin',
-                                createTime: '2022-09-15 16:48:27'
-                            }],
-                            count: 0
-                        })
+                        template: this.requestTemplateReleasedList
                     }
                     const res = await apiMethodMap[type]({
                         [`${type}Code`]: this.detail[`${type}Code`],
