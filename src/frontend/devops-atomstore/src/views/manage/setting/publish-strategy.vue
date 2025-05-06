@@ -37,17 +37,14 @@
     import { computed, defineComponent, getCurrentInstance, ref } from 'vue'
 
     export default defineComponent({
-        props: {
-            strategy: {
-                type: String,
-                required: true
-            }
-        },
-        setup (props) {
+
+        setup () {
             const vm = getCurrentInstance()
+            const strategy = computed(() => vm.proxy.$store.getters['store/getDetail']?.publishStrategy ?? 'AUTO')
             const editing = ref(false)
-            const strategyLabel = computed(() => vm.proxy.$t(`store.${props.strategy}`))
-            const strategyDesc = computed(() => vm.proxy.$t(`store.${props.strategy}-upgradeStrategyDesc`))
+
+            const strategyLabel = computed(() => vm.proxy.$t(`store.${strategy.value}`))
+            const strategyDesc = computed(() => vm.proxy.$t(`store.${strategy.value}-upgradeStrategyDesc`))
             const strategyOptions = Object.keys(PUBLISH_STRATEGY).map(key => ({
                 id: key,
                 name: `${vm.proxy.$t(`store.${key}`)} (${vm.proxy.$t(`store.${key}-upgradeStrategyDesc`)})`
@@ -59,11 +56,11 @@
 
             function handleStrategyChange (newVal) {
                 // TODO:
-                if (!newVal || newVal === props.strategy) {
+                if (!newVal || newVal === strategy) {
                     editing.value = false
                     return
                 }
-                vm.emit('update:strategy', newVal)
+                
                 editing.value = false
             }
             return {
@@ -73,7 +70,7 @@
                 strategyDesc,
                 editStrategy,
                 handleStrategyChange,
-                strategy: props.strategy
+                strategy
             }
         }
     })
