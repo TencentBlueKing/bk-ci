@@ -210,6 +210,7 @@ class RestartWorkspaceHandler @Autowired constructor(
             errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
             params = arrayOf(event.workspaceName)
         )
+        val owners = permissionService.getWorkspaceOwner(workspace.workspaceName).toMutableSet()
         if (event.status) {
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
@@ -229,8 +230,9 @@ class RestartWorkspaceHandler @Autowired constructor(
                         WorkspaceStatus.RUNNING.name
                     )
                 )
+
                 notifyControl.notify4User(
-                    userIds = permissionService.getWorkspaceOwner(workspace.workspaceName).toMutableSet(),
+                    userIds = owners,
                     notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
                     bodyParams = mutableMapOf(
                         "workspaceName" to workspace.workspaceName,
@@ -245,7 +247,11 @@ class RestartWorkspaceHandler @Autowired constructor(
             // 重装成功后做异步设置(L盘挂载)
             val ip = event.environmentIp
             ip?.let {
-                workspaceCommon.makeDiskMount(it, event.userId)
+                workspaceCommon.makeDiskMount(
+                    ip = it,
+                    user = event.userId,
+                    owner = owners.firstOrNull()
+                )
             }
         } else {
             // 启动失败,记录为EXCEPTION

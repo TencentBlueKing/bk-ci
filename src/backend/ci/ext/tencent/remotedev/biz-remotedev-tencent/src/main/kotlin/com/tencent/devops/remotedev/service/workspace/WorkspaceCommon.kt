@@ -735,7 +735,11 @@ class WorkspaceCommon @Autowired constructor(
     }
 
     // 创建实例成功后做异步设置，包含L盘挂载
-    fun makeDiskMount(ip: String, user: String) {
+    fun makeDiskMount(
+        ip: String,
+        user: String,
+        owner: String? = null
+    ) {
         try {
             val infoS = redisCache.get(PIPELINE_CONFIG_INFO) ?: return
             val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
@@ -747,6 +751,7 @@ class WorkspaceCommon @Autowired constructor(
                     "job_ip_list" -> newParam[k] = resIps.joinToString(separator = " ")
                     "repoId" -> newParam[k] = REPOID
                     "localDriver" -> newParam[k] = LOCALDRIVER
+                    "owner" -> newParam[k] = owner ?: ""
                     else -> newParam[k] = v
                 }
             }

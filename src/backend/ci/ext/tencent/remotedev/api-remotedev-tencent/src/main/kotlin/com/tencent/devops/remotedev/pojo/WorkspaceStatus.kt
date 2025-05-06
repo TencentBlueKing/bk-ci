@@ -62,7 +62,7 @@ enum class WorkspaceStatus {
     EXCEPTION_ABNORMAL_AFTER_READY, // 21 异常 准备后异常
     EXCEPTION_CREATE_FAILED, // 22 异常 创建异常
     CLONING, // 23 正在克隆
-    EXPANDING;   // 24 磁盘扩容中
+    EXPANDING; // 24 磁盘扩容中
 
     enum class Types {
         USING {
@@ -128,7 +128,7 @@ enum class WorkspaceStatus {
     /**
      * 当正在做某事时，不能新建任务去执行
      */
-    fun notOk2doNextAction() = when(this) {
+    fun notOk2doNextAction() = when (this) {
         STARTING, SLEEPING, DELETING, STOPPING,
         RESTARTING, MAKING_IMAGE, REBUILDING, UPGRADING,
         CLONING, EXPANDING -> true
