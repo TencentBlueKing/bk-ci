@@ -76,6 +76,7 @@
             }
 
             function cancelEditing () {
+                formData.value = strategy.value
                 editing.value = false
             }
 
