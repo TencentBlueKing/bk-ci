@@ -643,5 +643,8 @@
     "提交上架": "提交上架",
     "publishStrategy": "发布策略：",
     "AUTO": "自动发布",
-    "MANUAL": "手动发布"
+    "MANUAL": "手动发布",
+    "MANUAL-upgradeStrategyDesc": "研发商店有更新时，手动按需安装新版本",
+    "AUTO-upgradeStrategyDesc": "研发商店有新版本发布时，自动安装新版本",
+    "templateSetting": "模板设置"
 }
