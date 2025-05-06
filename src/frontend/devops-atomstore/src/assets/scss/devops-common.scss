@@ -537,3 +537,19 @@ input[disabled="disabled"] {
         }
     }
 }
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    display: inline-block;
+    border-radius: 4px;
+
+    &.published {
+        background: rgb(203, 240, 218);
+        border: 1px solid rgb(44, 175, 94);
+    }
+    &.offline {
+        background: rgb(255, 230, 230);
+        border: 1px solid rgb(255, 102, 102);
+    }
+}

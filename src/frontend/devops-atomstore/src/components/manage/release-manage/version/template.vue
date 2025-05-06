@@ -7,7 +7,7 @@
             {{ $t('store.新增版本') }}
         </bk-button>
         <bk-table
-            :data="versionList"
+            :data="tableData"
             :outer-border="false"
             :header-border="false"
             :header-cell-style="{ background: '#fff' }"
@@ -19,7 +19,15 @@
                 v-for="col in columns"
                 :key="col.prop"
                 v-bind="col"
-            />
+            >
+                <template slot-scope="{ row }">
+                    <span
+                        v-if="col.prop === 'statusLabel'"
+                        :class="['status-indicator', row.published ? 'published' : 'offline']"
+                    ></span>
+                    <span :title="row[col.prop]">{{ row[col.prop] ?? '--' }}</span>
+                </template>
+            </bk-table-column>
             <bk-table-column
                 :label="$t('store.操作')"
                 class-name="handler-btn"
@@ -38,7 +46,7 @@
                             text
                             theme="primary"
                             size="small"
-                            v-if="props.row.templateStatus === 'RELEASED' || (props.row.templateStatus === 'GROUNDING_SUSPENSION' && props.row.releaseFlag)"
+                            v-if="props.row.published"
                             @click="offline(props.row)"
                         >
                             {{ $t('store.下架') }}
@@ -108,7 +116,6 @@
 </template>
 
 <script>
-    import { templateStatusList } from '@/store/constants'
     import { convertTime } from '@/utils/index'
 
     export default {
@@ -147,12 +154,11 @@
                 return [
                     {
                         label: this.$t('store.版本'),
-                        prop: 'version'
+                        prop: 'versionName'
                     },
                     {
                         label: this.$t('store.状态'),
-                        prop: 'templateStatus',
-                        formatter: this.statusFormatter
+                        prop: 'statusLabel'
                     },
                     {
                         label: this.$t('store.创建人'),
@@ -160,10 +166,17 @@
                     },
                     {
                         label: this.$t('store.创建时间'),
-                        prop: 'createTime',
-                        formatter: this.convertTime
+                        prop: 'createTime'
                     }
                 ]
+            },
+            tableData () {
+                return this.versionList.map(item => ({
+                    ...item,
+                    statusLabel: this.$t(`store.${item.published ? '已发布' : '已下架'}`),
+                    createTime: convertTime(item.createTime)
+                    
+                }))
             }
         },
 
@@ -227,13 +240,6 @@
                 this.offlineImageData.form.version = row.version
             },
 
-            statusFormatter (row, column, cellValue, index) {
-                return this.$t(templateStatusList[cellValue] ?? '--')
-            },
-
-            convertTime (row, column, cellValue, index) {
-                return convertTime(cellValue)
-            },
             toDetail () {
                 this.$router.push({
                     name: 'details',
