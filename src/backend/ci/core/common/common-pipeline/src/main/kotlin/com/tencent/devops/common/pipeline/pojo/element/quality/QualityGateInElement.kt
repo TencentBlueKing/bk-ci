@@ -71,6 +71,7 @@ data class QualityGateInElement(
         reviewUsers?.let {
             taskVar[QualityGateInElement::reviewUsers.name] = it
         }
+        retryCountAuto?.let { taskVar[::retryCountAuto.name] = it }
         return taskVar
     }
 }

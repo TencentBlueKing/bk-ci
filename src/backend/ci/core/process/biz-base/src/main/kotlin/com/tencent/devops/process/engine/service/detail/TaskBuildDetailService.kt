@@ -52,9 +52,9 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList", "MagicNumber", "ReturnCount", "TooManyFunctions", "ComplexCondition")
 @Service
@@ -188,7 +188,12 @@ class TaskBuildDetailService(
                             c.status = BuildStatus.RUNNING.name
                             e.status = BuildStatus.RUNNING.name
                         }
-
+                        // 由于此处task启动的情况同时包含的手动重试和自动重试，并且是互补的。
+                        // 所以可得计算公式[总执行次数-自动重试次数=手动重试次数]
+                        e.retryCount = e.retryCount?.plus(1) ?: 0
+                        e.retryCountManual = e.retryCount
+                            ?.minus(e.retryCountAuto ?: 0)
+                            ?: 0
                         if (e.startEpoch == null) { // 自动重试，startEpoch 不会为null，所以不需要查redis来确认
                             val currentTimeMillis = System.currentTimeMillis()
                             e.startEpoch = currentTimeMillis
@@ -262,6 +267,11 @@ class TaskBuildDetailService(
                         // 判断取消的task任务对应的container是否包含post任务
                         val cancelTaskPostFlag = buildStatus == BuildStatus.CANCELED && c.containPostTaskFlag == true
                         e.status = buildStatus.name
+
+                        // 自动重试时，retryCountAuto + 1
+                        if (buildStatus == BuildStatus.RETRY) {
+                            e.retryCountAuto = (e.retryCountAuto ?: 0) + 1
+                        }
                         if (e.startEpoch == null) {
                             e.elapsed = 0
                         } else {
@@ -277,9 +287,11 @@ class TaskBuildDetailService(
                                 is MarketBuildAtomElement -> {
                                     e.version = atomVersion
                                 }
+
                                 is MarketBuildLessAtomElement -> {
                                     e.version = atomVersion
                                 }
+
                                 else -> {
                                     e.version = INIT_VERSION
                                 }
@@ -365,6 +377,7 @@ class TaskBuildDetailService(
                     updateTaskStatusInfos = updateTaskStatusInfos
                 )
             }
+
             buildStatus.isCancel() -> {
                 return handleCancelTaskNormal(
                     tmpElement = tmpElement,
@@ -376,6 +389,7 @@ class TaskBuildDetailService(
                     updateTaskStatusInfos = updateTaskStatusInfos
                 )
             }
+
             buildStatus.isSkip() -> {
                 updateTaskStatusInfos?.add(
                     PipelineTaskStatusInfo(
