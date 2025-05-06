@@ -10,7 +10,6 @@
                 v-if="editing"
             >
                 <bk-select
-                    
                     class="publish-strategy-select"
                     v-model="formData"
                 >
@@ -59,7 +58,7 @@
             const vm = getCurrentInstance()
             const strategy = computed(() => vm.proxy.$store.getters['store/getDetail']?.publishStrategy ?? 'AUTO')
             const editing = ref(false)
-            const formData = ref(strategy)
+            const formData = ref(strategy.value)
 
             const strategyLabel = computed(() => vm.proxy.$t(`store.${strategy.value}`))
             const strategyDesc = computed(() => vm.proxy.$t(`store.${strategy.value}-upgradeStrategyDesc`))
@@ -107,7 +106,7 @@
                 editStrategy,
                 cancelEditing,
                 handleStrategyChange,
-                strategy
+                formData
             }
         }
     })
