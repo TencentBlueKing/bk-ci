@@ -70,7 +70,10 @@ interface ApigwAuthValidateResourceV4 {
 
     @GET
     @Path("/permission/validate")
-    @Operation(summary = "校验用户是否有具体资源实例的操作权限")
+    @Operation(
+        summary = "校验用户是否有具体资源实例的操作权限",
+        tags = ["v4_app_validate_user_resource_permission"]
+    )
     fun validateUserResourcePermission(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

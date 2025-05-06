@@ -53,13 +53,13 @@ import com.tencent.devops.store.pojo.common.platform.StoreDockingPlatformRequest
 import com.tencent.devops.store.pojo.common.publication.PublisherDeptInfo
 import com.tencent.devops.store.pojo.common.publication.PublisherInfo
 import com.tencent.devops.store.pojo.common.publication.PublishersRequest
+import java.time.LocalDateTime
+import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.concurrent.Executors
 
 @Service
 class PublishersDataServiceImpl @Autowired constructor(
@@ -395,12 +395,25 @@ class PublishersDataServiceImpl @Autowired constructor(
         //  根据解析组织名称获取组织ID
         val deptNames = organization.split("/")
         val deptInfos = mutableListOf<DeptInfo>()
-        deptNames.forEachIndexed() { index, deptName ->
+        var parentDeptId = 0
+        deptNames.forEachIndexed { index, deptName ->
             val deptVo = client.get(ServiceDeptResource::class).getDeptByName(userId, deptName).data
-            if (!deptVo?.results.isNullOrEmpty()) {
-                deptInfos.add(index, deptVo!!.results[0])
+            val targetDept: DeptInfo? = when (index) {
+                0 -> {
+                    // 第一级直接取第一个元素
+                    deptVo?.results?.getOrNull(0)
+                }
+                else -> {
+                    // 其他层级遍历查找父ID匹配项
+                    deptVo?.results?.firstOrNull { it.parent == parentDeptId }
+                }
+            }
+            targetDept?.let {
+                deptInfos.add(index, it)
+                parentDeptId = it.id // 更新父级跟踪ID
             }
         }
+
         publisherInfo.firstLevelDeptId = deptInfos.getOrNull(0)?.id?.toLong() ?: 0
         publisherInfo.firstLevelDeptName = deptInfos.getOrNull(0)?.name ?: ""
         publisherInfo.secondLevelDeptId = deptInfos.getOrNull(1)?.id?.toLong() ?: 0
