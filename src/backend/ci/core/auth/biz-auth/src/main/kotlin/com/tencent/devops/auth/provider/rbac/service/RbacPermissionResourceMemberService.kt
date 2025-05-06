@@ -283,8 +283,16 @@ class RbacPermissionResourceMemberService(
             val departedMembers = deptService.listDepartedMembers(
                 memberIds = members
             )
-            members.filterNot { departedMembers.contains(it) }.forEach {
+            members.filterNot {
+                val isMemberDeparted = departedMembers.contains(it)
+                if (isMemberDeparted) {
+                    logger.warn("This user has departed and does not need to join $projectCode|$iamGroupId|$it")
+                }
+                isMemberDeparted
+            }.forEach {
                 val shouldAddUserToGroup = shouldAddUserToGroup(
+                    projectCode = projectCode,
+                    iamGroupId = iamGroupId,
                     groupUserMap = groupUserMap,
                     groupDepartmentSet = groupDepartmentSet,
                     member = it
@@ -363,6 +371,8 @@ class RbacPermissionResourceMemberService(
     }
 
     private fun shouldAddUserToGroup(
+        projectCode: String,
+        iamGroupId: Int,
         groupUserMap: Map<String, RoleGroupMemberInfo>,
         groupDepartmentSet: Set<String>,
         member: String
@@ -370,6 +380,10 @@ class RbacPermissionResourceMemberService(
         // 校验是否将用户加入组，如果用户已经在用户组,并且过期时间超过180天,则不再添加
         val expectExpiredAt = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(VALID_EXPIRED_AT)
         if (groupUserMap.containsKey(member) && groupUserMap[member]!!.expiredAt > expectExpiredAt) {
+            logger.warn(
+                "The user's validity period in the group exceeds 180 days and does not need to be added!" +
+                    "$projectCode|$iamGroupId|$member"
+            )
             return false
         }
         // 校验用户的部门是否已经加入组，若部门已经加入，则不再添加该用户
@@ -377,6 +391,10 @@ class RbacPermissionResourceMemberService(
             val userDeptInfoSet = deptService.getUserDeptInfo(userId = member)
             val isUserBelongGroupByDepartments = groupDepartmentSet.intersect(userDeptInfoSet).isNotEmpty()
             if (isUserBelongGroupByDepartments) {
+                logger.warn(
+                    "The department of this user has already been added to the group. No need to join!" +
+                        "$projectCode|$groupDepartmentSet|$iamGroupId|$member"
+                )
                 return false
             }
         } catch (ignore: Exception) {
