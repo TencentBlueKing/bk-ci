@@ -52,7 +52,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.TimeZone
 import java.util.concurrent.TimeUnit
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 
 @Component
 class DockerHostBuildService(

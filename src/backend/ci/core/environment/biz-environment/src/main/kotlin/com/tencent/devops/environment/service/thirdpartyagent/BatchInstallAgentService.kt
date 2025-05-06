@@ -17,7 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.ZoneOffset
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 /**
  * 批量安装Agent相关

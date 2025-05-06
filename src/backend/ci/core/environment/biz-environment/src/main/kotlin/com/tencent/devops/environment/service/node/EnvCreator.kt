@@ -29,7 +29,7 @@ package com.tencent.devops.environment.service.node
 
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvironmentId
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 
 /**
  * 环境创建操作接口

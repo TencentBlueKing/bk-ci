@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.api.check
 
+import com.tencent.devops.common.api.exception.ParamBlankException
+
 /**
  * 前置条件校验工具类
  */
@@ -36,10 +38,27 @@ object Preconditions {
      * 检查对象[obj]不为空，否则抛出指定的异常[exception]
      */
     @Throws(Exception::class)
-    fun checkNotNull(obj: Any?, exception: Exception) {
+    fun <T : Any> checkNotNull(obj: T?, exception: () -> Exception): T {
         if (obj == null) {
-            throw exception
+            throw exception()
         }
+        return obj
+    }
+
+    /**
+     * 检查对象[obj]不为空，抛出默认错误内容
+     */
+    @Throws(Exception::class)
+    fun <T : Any> checkNotNull(obj: T?): T {
+        return checkNotNull(obj) { ParamBlankException("Required value was null.") }
+    }
+
+    /**
+     * 检查对象[obj]不为空, 为空则抛出[message]内容提醒上游
+     */
+    @Throws(Exception::class)
+    fun <T : Any> checkNotNull(obj: T?, message: String): T {
+        return checkNotNull(obj) { ParamBlankException(message) }
     }
 
     /**

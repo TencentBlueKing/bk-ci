@@ -42,7 +42,13 @@ import io.swagger.v3.oas.annotations.media.Schema
     JsonSubTypes.Type(value = PipelineTriggerFailedMatch::class, name = PipelineTriggerFailedMatch.classType),
     JsonSubTypes.Type(value = PipelineTriggerFailedErrorCode::class, name = PipelineTriggerFailedErrorCode.classType),
     JsonSubTypes.Type(value = PipelineTriggerFailedMsg::class, name = PipelineTriggerFailedMsg.classType),
-    JsonSubTypes.Type(value = PipelineTriggerFailedFix::class, name = PipelineTriggerFailedFix.classType)
+    JsonSubTypes.Type(value = PipelineTriggerFailedFix::class, name = PipelineTriggerFailedFix.classType),
+    JsonSubTypes.Type(
+        value = PipelineTriggerDetailMessageCode::class, name = PipelineTriggerDetailMessageCode.classType
+    ),
+    JsonSubTypes.Type(
+        value = PipelineTriggerDetailCombination::class, name = PipelineTriggerDetailCombination.classType
+    )
 )
 @Schema(title = "流水线触发事件原因详情-基类")
 @Suppress("UnnecessaryAbstractClass")

@@ -28,7 +28,7 @@
     "submit": "提交",
     "cancel": "取消",
     "import": "导入",
-    "status": "状态",
+    "status": "Agent状态",
     "install": "安装",
     "copy": "复制",
     "download": "下载",
@@ -233,7 +233,10 @@
         "remaining": "还剩",
         "canApplyCount": "台可申请",
         "selectNewNode": "请选择你的新节点",
-        "dockerMaxConcurrency": "docker构建最大并发数"
+        "dockerMaxConcurrency": "docker构建最大并发数",
+        "lastRunPipeline": "最近执行流水线",
+        "lastRunAs": "最近执行时间",
+        "usage": "用途"
     },
     "nodeTypeMap": {
         "CC": "CC",
@@ -260,12 +263,25 @@
         "BUILDING_IMAGE": "正在制作镜像中",
         "BUILD_IMAGE_SUCCESS": "制作镜像成功",
         "BUILD_IMAGE_FAILED": "制作镜像失败",
-        "UNKNOWN": "未知"
+        "UNKNOWN": "未知",
+        "NOT_INSTALLED": "未安装"
     },
     "newPool": "创建",
     "启用": "启用",
     "停用": "停用",
     "启用成功": "启用成功",
     "停用成功": "停用成功",
-    "authManage": "权限管理"
+    "authManage": "权限管理",
+    "关键字": "关键字",
+    "alias": "别名",
+    "lastModifier": "最近修改人",
+    "暂无数据": "暂无数据",
+    "搜索结果为空": "搜索结果为空",
+    "清空筛选条件": "清空筛选条件",
+    "可以尝试 调整关键词 或": "可以尝试 调整关键词 或",
+    "构建": "构建",
+    "部署": "部署",
+    "version": "版本",
+    "选择最近执行时间范围": "选择最近执行时间范围",
+    "导出": "导出"
 }

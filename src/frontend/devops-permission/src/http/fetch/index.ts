@@ -18,6 +18,7 @@ interface IHttp {
   head?: HttpMethod;
   options?: HttpMethod;
   patch?: HttpMethod;
+  DELETE?: HttpMethod;
 }
 
 // Content-Type
@@ -27,7 +28,7 @@ const contentTypeMap = {
   formData: 'multipart/form-data',
 };
 const methodsWithoutData = ['delete', 'get', 'head', 'options'];
-const methodsWithData = ['post', 'put', 'patch'];
+const methodsWithData = ['post', 'put', 'patch', 'DELETE'];
 const allMethods = [...methodsWithoutData, ...methodsWithData];
 
 // 拼装发送请求配置

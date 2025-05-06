@@ -73,7 +73,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 
 @Suppress("TooManyFunctions", "LongMethod", "LargeClass", "LongParameterList", "ComplexMethod")
 @Service

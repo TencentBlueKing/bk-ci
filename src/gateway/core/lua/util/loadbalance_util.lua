@@ -193,7 +193,7 @@ function _M:is_recovery_project(devops_project_id)
         if is_recovery ~= "1" then
             is_recovery = "0"
         end
-        recovery_project_cache:set(local_cache_key, is_recovery, 30)
+        recovery_project_cache:set(local_cache_key, is_recovery, 120)
         red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
     end
 

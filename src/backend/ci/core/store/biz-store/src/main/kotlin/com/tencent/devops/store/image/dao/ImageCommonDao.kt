@@ -159,4 +159,10 @@ class ImageCommonDao : AbstractStoreCommonDao() {
     override fun getStoreRepoHashIdByCode(dslContext: DSLContext, storeCode: String): String? {
         return null
     }
+
+    override fun getStoreCodeById(dslContext: DSLContext, storeId: String): String? {
+        return with(TImage.T_IMAGE) {
+            dslContext.select(IMAGE_CODE).from(this).where(ID.eq(storeId)).fetchOne(0, String::class.java)
+        }
+    }
 }

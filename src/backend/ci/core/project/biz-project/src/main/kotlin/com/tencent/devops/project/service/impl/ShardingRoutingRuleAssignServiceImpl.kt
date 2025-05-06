@@ -98,7 +98,8 @@ class ShardingRoutingRuleAssignServiceImpl @Autowired constructor(
             val tableShardingConfigs = tableShardingConfigService.listByModule(
                 dslContext = dslContext,
                 clusterName = clusterName,
-                moduleCode = moduleCode
+                moduleCode = moduleCode,
+                ruleType = ShardingRuleTypeEnum.TABLE
             )
             tableShardingConfigs?.forEach { tableShardingConfig ->
                 assignTableShardingRoutingRule(

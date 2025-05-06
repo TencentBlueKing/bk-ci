@@ -11,6 +11,10 @@ const MyApproval = () => import(/* webpackChunkName: "Permission" */ '../views/m
 const MyPermission = () => import(/* webpackChunkName: "Permission" */ '../views/my-permission/my-permission.vue');
 const MyProject = () => import(/* webpackChunkName: "Permission" */ '../views/my-permission/my-project.vue');
 const GroupDetail = () => import(/* webpackChunkName: "Permission" */ '../components/itsm-group-detail.vue');
+const AuthEntry = () => import(/* webpackChunkName: "Permission" */ '../views/auth/auth-entry.vue');
+const OauthHome = () => import(/* webpackChunkName: "Permission" */ '../views/auth/oauth/oauth-home.vue');
+const MyAuth = () => import(/* webpackChunkName: "Permission" */ '../views/auth/permission/my-auth.vue');
+const MyHandover = () => import(/* webpackChunkName: "Permission" */ '../views/my-permission/my-handover/index.vue');
 const router = createRouter({
   history: createWebHistory('permission'),
   routes: [
@@ -48,8 +52,39 @@ const router = createRouter({
               name: 'my-project',
               component: MyProject,
             },
+            {
+              path: 'my-handover',
+              name: 'my-handover',
+              component: MyHandover
+            }
           ],
         },
+        {
+          path: '/auth',
+          component: AuthEntry,
+          children: [
+            {
+              path: 'oauth',
+              name: 'oauth',
+              component: OauthHome,
+            },
+            {
+              path: 'repertory',
+              name: 'repertory',
+              component: MyAuth,
+            },
+            {
+              path: 'pipeline',
+              name: 'pipeline',
+              component: MyAuth,
+            },
+            {
+              path: 'env_node',
+              name: 'env_node',
+              component: MyAuth,
+            }
+          ]
+        }
       ],
     },
     {

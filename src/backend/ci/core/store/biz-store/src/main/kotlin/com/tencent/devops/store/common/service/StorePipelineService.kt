@@ -29,6 +29,7 @@ package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.UpdateStorePipelineModelRequest
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreRunPipelineParam
 
 interface StorePipelineService {
@@ -49,5 +50,26 @@ interface StorePipelineService {
      */
     fun runPipeline(
         storeRunPipelineParam: StoreRunPipelineParam
+    ): Boolean
+
+    // 创建组件内置流水线
+    fun creatStorePipelineByStoreCode(
+        storeCode: String? = null,
+        storeType: String
+    ): String
+
+    /**
+     * 删除组件内置流水线
+     * @param userId 用户ID
+     * @param storeType 组件类型
+     * @param storeCode 组件标识
+     * @param excludeProjectCode 需排除的项目
+     * @return 布尔值
+     */
+    fun deleteStoreInnerPipeline(
+        userId: String,
+        storeType: StoreTypeEnum? = null,
+        storeCode: String? = null,
+        excludeProjectCode: String? = null
     ): Boolean
 }

@@ -29,6 +29,7 @@ package com.tencent.devops.auth.provider.rbac.service
 
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
+import com.tencent.bk.sdk.iam.dto.manager.GroupMemberVerifyInfo
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
@@ -40,6 +41,7 @@ import com.tencent.devops.auth.pojo.AuthResourceGroup
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.enum.ApplyToGroupStatus
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
+import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
@@ -74,7 +76,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val iamV2ManagerService: V2ManagerService,
     private val authResourceGroupMemberDao: AuthResourceGroupMemberDao,
-    private val rbacCacheService: RbacCacheService,
+    private val rbacCommonService: RbacCommonService,
     private val redisOperation: RedisOperation,
     private val authResourceSyncDao: AuthResourceSyncDao,
     private val authResourceGroupApplyDao: AuthResourceGroupApplyDao,
@@ -160,10 +162,16 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                 if (deptService.isUserDeparted(memberId)) {
                     return@forEach
                 }
-                val verifyResults = iamV2ManagerService.verifyGroupValidMember(
-                    memberId,
-                    groupInfos.joinToString(",") { it.iamGroupId.toString() }
-                )
+                // 获取用户加入组的有效期
+                val groupIds = groupInfos.map { it.iamGroupId }
+                val verifyResults = mutableMapOf<Int, GroupMemberVerifyInfo>()
+                groupIds.chunked(20).forEach { batchGroupIds ->
+                    val batchVerifyGroupValidMember = iamV2ManagerService.verifyGroupValidMember(
+                        memberId,
+                        batchGroupIds.joinToString(",")
+                    )
+                    verifyResults.putAll(batchVerifyGroupValidMember)
+                }
                 verifyResults.forEach { (groupId, verifyResult) ->
                     if (verifyResult.belong == true && verifyResult.expiredAt > LocalDateTime.now().timestamp()) {
                         logger.info("The member of group needs to be renewed:$projectCode|$groupId|$memberId")
@@ -505,7 +513,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         logger.info("start to sync resource group member:$projectCode")
         try {
-            val resourceTypes = rbacCacheService.listResourceTypes().map { it.resourceType }
+            val resourceTypes = rbacCommonService.listResourceTypes().map { it.resourceType }
             val traceId = MDC.get(TraceTag.BIZID)
             val resourceTypeFuture = resourceTypes.map { resourceType ->
                 CompletableFuture.supplyAsync(
@@ -752,7 +760,7 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                         iamGroupId = iamGroupId,
                         memberId = iamGroupTemplate.id,
                         memberName = iamGroupTemplate.name,
-                        memberType = ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE),
+                        memberType = MemberType.TEMPLATE.type,
                         expiredTime = expiredTime
                     )
                 )

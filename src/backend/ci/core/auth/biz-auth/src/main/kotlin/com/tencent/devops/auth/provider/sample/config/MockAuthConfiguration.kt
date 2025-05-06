@@ -8,9 +8,10 @@ import com.tencent.devops.auth.provider.sample.service.SampleAuthPermissionServi
 import com.tencent.devops.auth.provider.sample.service.SampleOrganizationService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionApplyService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionExtService
+import com.tencent.devops.auth.provider.sample.service.SamplePermissionHandoverApplicationService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionItsmCallbackService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionMigrateService
-import com.tencent.devops.auth.provider.sample.service.SamplePermissionResourceGroupAndMemberFacadeService
+import com.tencent.devops.auth.provider.sample.service.SamplePermissionManageFacadeService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionResourceGroupPermissionService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionResourceGroupService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionResourceGroupSyncService
@@ -27,10 +28,11 @@ import com.tencent.devops.auth.service.PermissionAuthorizationService
 import com.tencent.devops.auth.service.SuperManagerService
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.auth.service.iam.PermissionExtService
+import com.tencent.devops.auth.service.iam.PermissionHandoverApplicationService
 import com.tencent.devops.auth.service.iam.PermissionItsmCallbackService
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
-import com.tencent.devops.auth.service.iam.PermissionResourceGroupAndMemberFacadeService
+import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
@@ -86,8 +88,8 @@ class MockAuthConfiguration {
     fun samplePermissionResourceGroupService() = SamplePermissionResourceGroupService()
 
     @Bean
-    @ConditionalOnMissingBean(PermissionResourceGroupAndMemberFacadeService::class)
-    fun samplePermissionResourceGroupAndMemberFacadeService() = SamplePermissionResourceGroupAndMemberFacadeService()
+    @ConditionalOnMissingBean(PermissionManageFacadeService::class)
+    fun samplePermissionManageFacadeService() = SamplePermissionManageFacadeService()
 
     @Bean
     @ConditionalOnMissingBean(PermissionResourceGroupPermissionService::class)
@@ -128,4 +130,8 @@ class MockAuthConfiguration {
     @Bean
     @ConditionalOnMissingBean(PermissionResourceGroupSyncService::class)
     fun samplePermissionResourceGroupSyncService() = SamplePermissionResourceGroupSyncService()
+
+    @Bean
+    @ConditionalOnMissingBean(PermissionHandoverApplicationService::class)
+    fun samplePermissionHandoverService() = SamplePermissionHandoverApplicationService()
 }

@@ -48,7 +48,7 @@ import com.tencent.devops.quality.dao.v2.QualityMetadataDao
 import com.tencent.devops.quality.pojo.po.QualityMetadataPO
 import java.io.File
 import java.util.concurrent.Executors
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL

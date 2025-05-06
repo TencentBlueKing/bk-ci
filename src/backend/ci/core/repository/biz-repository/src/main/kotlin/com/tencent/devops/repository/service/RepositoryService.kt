@@ -47,6 +47,7 @@ import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.audit.ActionAuditContent
@@ -57,6 +58,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.process.api.service.ServicePipelineYamlResource
+import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_USER_HAVE_NOT_DOWNLOAD_PEM
 import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
@@ -67,10 +69,13 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode.REPOSITORY_N
 import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_CREATE_PEM_ERROR
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
+import com.tencent.devops.repository.dao.RepositoryGithubDao
+import com.tencent.devops.repository.dao.RepositoryScmConfigDao
 import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.GithubRepository
+import com.tencent.devops.repository.pojo.RepoOauthRefVo
 import com.tencent.devops.repository.pojo.RepoRename
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryDetailInfo
@@ -95,15 +100,15 @@ import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import java.time.LocalDateTime
+import java.util.Base64
+import jakarta.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.Base64
-import javax.ws.rs.NotFoundException
 
 @Service
 @Suppress("ALL")
@@ -117,7 +122,9 @@ class RepositoryService @Autowired constructor(
     private val dslContext: DSLContext,
     private val repositoryPermissionService: RepositoryPermissionService,
     private val githubService: IGithubService,
-    private val client: Client
+    private val client: Client,
+    private val repositoryGithubDao: RepositoryGithubDao,
+    private val repositoryScmConfigDao: RepositoryScmConfigDao
 ) {
 
     @Value("\${repository.git.devopsPrivateToken}")
@@ -463,7 +470,8 @@ class RepositoryService @Autowired constructor(
                         userName = repo.userName,
                         credentialId = repo.credentialId,
                         authType = repo.authType,
-                        gitProjectId = -1L
+                        gitProjectId = -1L,
+                        credentialType = null
                     )
                 }
                 Result(gitProjectInfo)
@@ -547,32 +555,8 @@ class RepositoryService @Autowired constructor(
             .setInstanceId(repositoryId.toString())
             .setInstanceName(repository.aliasName)
             .setInstance(repository)
-        createResource(userId, projectId, repositoryId, repository.aliasName)
-        repositoryService.addResourceAuthorization(
-            projectId = projectId,
-            userId = userId,
-            repositoryId = repositoryId,
-            repository = repository
-        )
-        try {
-            if (repository.enablePac == true) {
-                client.get(ServicePipelineYamlResource::class).enable(
-                    userId = userId,
-                    projectId = projectId,
-                    repoHashId = HashUtil.encodeOtherLongId(repositoryId),
-                    scmType = repository.getScmType()
-                )
-            }
-        } catch (exception: Exception) {
-            logger.error("failed to enable pac when create repository,rollback|$projectId|$repositoryId")
-            userDelete(
-                userId = userId,
-                projectId = projectId,
-                repositoryHashId = HashUtil.encodeOtherLongId(repositoryId),
-                checkPac = false
-            )
-            throw exception
-        }
+        createResource(userId = userId, projectId = projectId, repositoryId = repositoryId, repository = repository)
+        enablePac(userId = userId, projectId = projectId, repositoryId = repositoryId, repository = repository)
         return repositoryId
     }
 
@@ -819,12 +803,16 @@ class RepositoryService @Autowired constructor(
                 repoDetailInfoMap.putAll(codeGitRepositoryService.getRepoDetailMap(repositoryIds))
             }
         }
+        val repoLogoMap = repositoryScmConfigDao.list(dslContext, limit = PageUtil.DEFAULT_PAGE_SIZE, offset = 0)
+                .associate { it.scmCode to it.logoUrl }
         val repositoryList = repositoryRecordList.map {
             val hasEditPermission = hasEditPermissionRepoList.contains(it.repositoryId)
             val hasDeletePermission = hasDeletePermissionRepoList.contains(it.repositoryId)
             val hasUsePermission = hasUsePermissionRepoList.contains(it.repositoryId)
             val hasViewPermission = hasViewPermissionRepoList.contains(it.repositoryId)
             val repoDetailInfo = repoDetailInfoMap[it.repositoryId]
+            // 兼容老数据
+            val scmCode = it.scmCode ?: it.type
             RepositoryInfoWithPermission(
                 repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
                 aliasName = it.aliasName,
@@ -842,7 +830,9 @@ class RepositoryService @Autowired constructor(
                 createUser = it.userId,
                 updatedUser = it.updatedUser ?: it.userId,
                 atom = it.atom ?: false,
-                enablePac = it.enablePac
+                enablePac = it.enablePac,
+                scmCode = scmCode,
+                logoUrl = repoLogoMap[scmCode]
             )
         }
         return Pair(SQLPage(count, repositoryList), hasCreatePermission)
@@ -1210,12 +1200,19 @@ class RepositoryService @Autowired constructor(
         )
     }
 
-    private fun createResource(user: String, projectId: String, repositoryId: Long, repositoryName: String) {
+    private fun createResource(userId: String, projectId: String, repositoryId: Long, repository: Repository) {
         repositoryPermissionService.createResource(
-            userId = user,
+            userId = userId,
             projectId = projectId,
             repositoryId = repositoryId,
-            repositoryName = repositoryName
+            repositoryName = repository.aliasName
+        )
+        val repositoryService = CodeRepositoryServiceRegistrar.getService(repository = repository)
+        repositoryService.addResourceAuthorization(
+            projectId = projectId,
+            userId = userId,
+            repositoryId = repositoryId,
+            repository = repository
         )
     }
 
@@ -1234,6 +1231,40 @@ class RepositoryService @Autowired constructor(
     private fun decode(encode: String, publicKey: String, privateKey: ByteArray): String {
         val decoder = Base64.getDecoder()
         return String(DHUtil.decrypt(decoder.decode(encode), decoder.decode(publicKey), privateKey))
+    }
+
+    private fun enablePac(
+        repository: Repository,
+        userId: String,
+        projectId: String,
+        repositoryId: Long
+    ) {
+        if (repository.enablePac != true) {
+            return
+        }
+        try {
+            client.get(ServicePipelineYamlResource::class).enable(
+                userId = userId,
+                projectId = projectId,
+                repoHashId = HashUtil.encodeOtherLongId(repositoryId),
+                scmType = repository.getScmType()
+            )
+            // TODO 后续需要删除 开启PAC时，将代码库加入灰度库白名单
+            client.get(ServiceScmWebhookResource::class).addGrayRepoWhite(
+                scmCode = repository.scmCode,
+                pac = true,
+                serverRepoNames = listOf(repository.projectName)
+            )
+        } catch (exception: Exception) {
+            logger.error("failed to enable pac when create repository,rollback|$projectId|$repositoryId")
+            userDelete(
+                userId = userId,
+                projectId = projectId,
+                repositoryHashId = HashUtil.encodeOtherLongId(repositoryId),
+                checkPac = false
+            )
+            throw exception
+        }
     }
 
     fun getRepoRecentCommitInfo(
@@ -1420,13 +1451,13 @@ class RepositoryService @Autowired constructor(
     }
 
     fun getRepository(projectId: String, repositoryHashId: String?, repoAliasName: String?): Repository {
-        if (repoAliasName.isNullOrBlank() && repoAliasName.isNullOrBlank()) {
+        if (repositoryHashId.isNullOrBlank() && repoAliasName.isNullOrBlank()) {
             throw IllegalArgumentException("repositoryHashId or repoAliasName can not be null")
         }
         return compose(
             getRepository(
                 projectId = projectId,
-                repositoryConfig = if (repositoryHashId.isNullOrBlank()) {
+                repositoryConfig = if (!repositoryHashId.isNullOrBlank()) {
                     RepositoryConfig(
                         repositoryHashId = repositoryHashId,
                         repositoryName = null,
@@ -1559,6 +1590,62 @@ class RepositoryService @Autowired constructor(
             repository = targetRepo,
             record = repositoryRecord
         )
+    }
+
+    fun listOauthRepo(
+        userId: String,
+        scmType: ScmType,
+        limit: Int,
+        offset: Int
+    ): SQLPage<RepoOauthRefVo> {
+        val list = when (scmType) {
+            ScmType.CODE_GIT -> {
+                repositoryCodeGitDao.listOauthRepo(
+                    dslContext = dslContext,
+                    userId = userId,
+                    limit = limit,
+                    offset = offset
+                )
+            }
+
+            ScmType.GITHUB -> {
+                repositoryGithubDao.listOauthRepo(
+                    dslContext = dslContext,
+                    userId = userId,
+                    limit = limit,
+                    offset = offset
+                )
+            }
+
+            else -> {
+                listOf()
+            }
+        }
+        val count = countOauthRepo(userId, scmType)
+        return SQLPage(count, list)
+    }
+
+    fun countOauthRepo(
+        userId: String,
+        scmType: ScmType
+    ): Long {
+        return when (scmType) {
+            ScmType.CODE_GIT -> {
+                repositoryCodeGitDao.countOauthRepo(
+                    dslContext = dslContext,
+                    userId = userId
+                )
+            }
+
+            ScmType.GITHUB -> {
+                repositoryGithubDao.countOauthRepo(
+                    dslContext = dslContext,
+                    userId = userId
+                )
+            }
+
+            else -> 0L
+        }
     }
 
     companion object {

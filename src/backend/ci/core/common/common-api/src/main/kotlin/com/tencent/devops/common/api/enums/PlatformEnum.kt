@@ -58,6 +58,18 @@ enum class PlatformEnum(
         }
 
         /**
+         * 根据名字获取平台
+         */
+        fun ofName(name: String): PlatformEnum {
+            for (platformEnum in values()) {
+                if (platformEnum.mean.equals(name, true)) {
+                    return platformEnum
+                }
+            }
+            return UNKNOWN
+        }
+
+        /**
          * 是否为安装包
          */
         fun isPackage(path: String): Boolean {

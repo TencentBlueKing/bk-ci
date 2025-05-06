@@ -73,7 +73,7 @@
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
-    import { mapGetters, mapState } from 'vuex'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb'
     export default {
         components: {
@@ -89,6 +89,8 @@
             ...mapState('pipelines', ['executeStatus']),
             ...mapGetters({
                 isEditing: 'atom/isEditing',
+                isBranchVersion: 'atom/isBranchVersion',
+                isReleaseVersion: 'atom/isReleaseVersion',
                 canManualStartup: 'pipelines/canManualStartup'
             }),
             ...mapState('atom', [
@@ -117,8 +119,7 @@
             },
             versionNotMatch () {
                 try {
-                    // eslint-disable-next-line eqeqeq
-                    return !this.isDebugPipeline && (this.$route.params.version && this.$route.params.version != this.pipelineInfo?.releaseVersion)
+                    return !this.isDebugPipeline && !this.isBranchVersion && !this.isReleaseVersion
                 } catch (error) {
                     return false
                 }
@@ -147,8 +148,10 @@
         },
         beforeDestroy () {
             bus.$off(UPDATE_PREVIEW_PIPELINE_NAME, this.updatePipelineName)
+            this.selectPipelineVersion(null)
         },
         methods: {
+            ...mapActions('atom', ['selectPipelineVersion']),
             updatePipelineName (name) {
                 this.pipelineName = name
             },

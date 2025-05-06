@@ -27,12 +27,12 @@
 
 package com.tencent.devops.store.common.service
 
-import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
-import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
-import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
+import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
+import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.version.VersionModel
 import org.jooq.DSLContext
 
@@ -46,6 +46,14 @@ interface StoreCommonService {
      * 根据ID获取组件名称
      */
     fun getStoreNameById(
+        storeId: String,
+        storeType: StoreTypeEnum
+    ): String
+
+    /**
+     * 根据ID获取组件名称
+     */
+    fun getStoreCodeById(
         storeId: String,
         storeType: StoreTypeEnum
     ): String

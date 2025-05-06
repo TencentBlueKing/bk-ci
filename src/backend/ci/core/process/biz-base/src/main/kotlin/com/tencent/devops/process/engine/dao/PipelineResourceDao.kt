@@ -95,6 +95,37 @@ class PipelineResourceDao {
         }
     }
 
+    fun updateReleaseVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        versionName: String?,
+        model: Model,
+        yamlStr: String?,
+        yamlVersion: String?,
+        versionNum: Int?,
+        pipelineVersion: Int?,
+        triggerVersion: Int?,
+        settingVersion: Int?
+    ) {
+        logger.info("Update the pipeline model pipelineId=$pipelineId, version=$version")
+        with(T_PIPELINE_RESOURCE) {
+            dslContext.update(this)
+                .set(VERSION, version)
+                .set(VERSION_NUM, versionNum)
+                .set(VERSION_NAME, versionName)
+                .set(MODEL, JsonUtil.toJson(model, formatted = false))
+                .set(YAML, yamlStr)
+                .set(YAML_VERSION, yamlVersion)
+                .set(PIPELINE_VERSION, pipelineVersion)
+                .set(TRIGGER_VERSION, triggerVersion)
+                .set(SETTING_VERSION, settingVersion)
+                .where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
+                .execute()
+        }
+    }
+
     fun getReleaseVersionResource(
         dslContext: DSLContext,
         projectId: String,
@@ -169,15 +200,6 @@ class PipelineResourceDao {
         return with(T_PIPELINE_RESOURCE) {
             dslContext.deleteFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
-                .execute()
-        }
-    }
-
-    fun deleteEarlyVersion(dslContext: DSLContext, projectId: String, pipelineId: String, beforeVersion: Int): Int {
-        return with(T_PIPELINE_RESOURCE) {
-            dslContext.deleteFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
-                .and(VERSION.lt(beforeVersion))
                 .execute()
         }
     }

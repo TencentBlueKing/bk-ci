@@ -31,6 +31,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
@@ -346,6 +347,27 @@ class PipelineSettingDao {
                 update.and(PIPELINE_ID.eq(self))
             }
             return update.execute()
+        }
+    }
+
+    /**
+     * 获取非继承项目的流水线列表
+     */
+    fun getNonInheritedPipelineIds(
+        dslContext: DSLContext,
+        projectId: String
+    ): List<String> {
+        with(TPipelineSetting.T_PIPELINE_SETTING) {
+            var conditionsAnd = PIPELINE_AS_CODE_SETTINGS.isNotNull
+            val inheritedDialectField =
+                JooqUtils.jsonExtractAny<Boolean?>(PIPELINE_AS_CODE_SETTINGS, "$.inheritedDialect")
+            // 不是继承项目的流水线列表
+            conditionsAnd = conditionsAnd.and(inheritedDialectField.isNotNull).and(inheritedDialectField.isFalse)
+
+            return dslContext.select(PIPELINE_ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(conditionsAnd)
+                .fetch(0, String::class.java)
         }
     }
 

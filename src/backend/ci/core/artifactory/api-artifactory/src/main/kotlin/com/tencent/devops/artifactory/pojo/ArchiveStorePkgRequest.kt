@@ -33,14 +33,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "研发商店-归档组件包请求报文体")
 data class ArchiveStorePkgRequest(
-    @get:Schema(title = "组件ID", required = true)
-    val storeId: String,
     @get:Schema(title = "组件标识", required = true)
     val storeCode: String,
     @get:Schema(title = "组件类型", required = true)
     val storeType: StoreTypeEnum,
     @get:Schema(title = "版本号", required = true)
     val version: String,
-    @get:Schema(title = "发布类型", required = false)
-    val releaseType: ReleaseTypeEnum? = null
+    @get:Schema(title = "发布类型", required = true)
+    val releaseType: ReleaseTypeEnum = ReleaseTypeEnum.COMPATIBILITY_FIX
 )

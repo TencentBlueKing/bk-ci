@@ -67,15 +67,15 @@ import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.CredentialUtils
 import com.tencent.devops.worker.common.utils.KillBuildProcessTree
 import com.tencent.devops.worker.common.utils.ShellUtil
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
 import kotlin.system.exitProcess
+import org.slf4j.LoggerFactory
 
 object Runner {
 
-    private const val maxSleepStep = 50L
+    private const val maxSleepStep = 80L
     private const val windows = 5L
     private const val millsStep = 100L
     private val logger = LoggerFactory.getLogger(Runner::class.java)
@@ -117,6 +117,7 @@ object Runner {
                         messageCode = PARAMETER_ERROR,
                         language = AgentEnv.getLocaleLanguage()
                     ) + "：${ignore.message}"
+
                 is FileNotFoundException, is IOException -> {
                     MessageUtil.getMessageByLocale(
                         messageCode = RUN_AGENT_WITHOUT_PERMISSION,
@@ -124,6 +125,7 @@ object Runner {
                         params = arrayOf("${ignore.message}")
                     )
                 }
+
                 else -> MessageUtil.getMessageByLocale(
                     messageCode = UNKNOWN_ERROR,
                     language = AgentEnv.getLocaleLanguage()
@@ -237,10 +239,9 @@ object Runner {
             logger.info("Start to execute the task($buildTask)")
             when (buildTask.status) {
                 BuildTaskStatus.DO -> {
-                    Preconditions.checkNotNull(
-                        obj = buildTask.taskId,
-                        exception = RemoteServiceException("Not valid build elementId")
-                    )
+                    Preconditions.checkNotNull(buildTask.taskId) {
+                        RemoteServiceException("Not valid build elementId")
+                    }
                     // 处理task和job级别的上下文
                     combineVariables(buildTask, buildVariables)
                     val task = TaskFactory.create(buildTask.type ?: "empty")
@@ -249,6 +250,8 @@ object Runner {
                         LoggerService.elementId = buildTask.taskId!!
                         LoggerService.stepId = buildTask.stepId ?: ""
                         LoggerService.elementName = buildTask.elementName ?: LoggerService.elementId
+                        LoggerService.loggingLineLimit = buildVariables.loggingLineLimit?.coerceIn(1, 100)
+                            ?.times(10000) ?: LOG_TASK_LINE_LIMIT
                         CredentialUtils.signToken = buildTask.signToken ?: ""
 
                         // 开始Task执行
@@ -271,9 +274,11 @@ object Runner {
                         LoggerService.elementId = ""
                         LoggerService.elementName = ""
                         LoggerService.stepId = ""
+                        LoggerService.loggingLineLimit = LOG_TASK_LINE_LIMIT
                         waitCount = 0
                     }
                 }
+
                 BuildTaskStatus.WAIT -> {
                     var sleepStep = waitCount++ / windows
                     if (sleepStep <= 0) {
@@ -283,6 +288,7 @@ object Runner {
                     logger.info("WAIT $sleepMills ms")
                     Thread.sleep(sleepMills)
                 }
+
                 BuildTaskStatus.END -> break@loop
             }
         }

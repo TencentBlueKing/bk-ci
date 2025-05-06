@@ -70,6 +70,7 @@ interface StorePkgRunEnvInfoService {
 
     /**
      * 获取安装包运行时环境信息
+     * @param devopsEnv 环境信息
      * @param userId userId
      * @param storeType 组件类型
      * @param language 开发语言
@@ -79,6 +80,7 @@ interface StorePkgRunEnvInfoService {
      * @return 安装包运行时环境信息
      */
     fun getStorePkgRunEnvInfo(
+        devopsEnv: String? = null,
         userId: String,
         storeType: StoreTypeEnum,
         language: String,

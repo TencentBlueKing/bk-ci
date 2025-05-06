@@ -36,6 +36,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TStoreMemberRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
@@ -69,6 +70,8 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
     lateinit var storeProjectRelDao: StoreProjectRelDao
     @Autowired
     lateinit var storeNotifyService: StoreNotifyService
+    @Autowired
+    lateinit var storeInnerPipelineConfig: StoreInnerPipelineConfig
 
     private val executorService = Executors.newFixedThreadPool(5)
 

@@ -92,6 +92,15 @@ interface PermissionResourceGroupPermissionService {
     ): Boolean
 
     /**
+     * 是否用户拥有项目级别权限，如整个项目流水线执行权限/项目的管理权限等。
+     * */
+    fun isGroupsHasProjectLevelPermission(
+        projectCode: String,
+        filterIamGroupIds: List<Int>,
+        action: String
+    ): Boolean
+
+    /**
      * 获取用户组有权限的资源
      * */
     fun listGroupResourcesWithPermission(

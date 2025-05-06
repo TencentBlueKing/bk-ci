@@ -57,7 +57,7 @@ import com.tencent.devops.process.yaml.v2.models.job.Job
 import com.tencent.devops.process.yaml.v2.models.job.Mutex
 import com.tencent.devops.process.yaml.v2.utils.StreamDispatchUtils
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -146,6 +146,12 @@ class ModelContainer @Autowired(required = false) constructor(
 
         val strategy = job.strategy ?: return null
 
+        if (strategy.include != null || strategy.exclude != null) {
+            return getMatrixControlOptionNew(job)
+        }
+        if (strategy.matrix == null) {
+            return null
+        }
         with(strategy) {
             if (matrix is Map<*, *>) {
                 val yaml = matrix as MutableMap<String, Any>
@@ -179,6 +185,38 @@ class ModelContainer @Autowired(required = false) constructor(
                     customDispatchInfo = dispatchInfo
                 )
             }
+        }
+    }
+
+    private fun getMatrixControlOptionNew(job: Job): MatrixControlOption? {
+
+        val strategy = job.strategy ?: return null
+
+        with(strategy) {
+            val strategyStr = if (matrix is Map<*, *>) {
+                YamlUtil.toYaml(matrix)
+            } else {
+                matrix.toString()
+            }
+
+            val includeCaseStr = if (include is List<*>) {
+                YamlUtil.toYaml(include)
+            } else {
+                include.toString()
+            }
+
+            val excludeCaseStr = if (exclude is List<*>) {
+                YamlUtil.toYaml(exclude)
+            } else {
+                exclude.toString()
+            }
+            return MatrixControlOption(
+                strategyStr = strategyStr,
+                includeCaseStr = includeCaseStr,
+                excludeCaseStr = excludeCaseStr,
+                fastKill = fastKill,
+                maxConcurrency = maxParallel
+            )
         }
     }
 

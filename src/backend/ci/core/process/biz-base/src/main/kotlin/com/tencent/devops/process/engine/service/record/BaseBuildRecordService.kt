@@ -211,8 +211,8 @@ open class BaseBuildRecordService(
             )
         } catch (ignore: Throwable) {
             logger.warn(
-                "RECORD|parse record($buildId)-recordMap(${JsonUtil.toJson(recordMap ?: "")})" +
-                    "-$executeCount with error: ",
+                "RECORD|parse record with error|$projectId|$pipelineId|$buildId|$executeCount" +
+                    "|recordMap: ${JsonUtil.toJson(recordMap ?: "")}",
                 ignore
             )
             null

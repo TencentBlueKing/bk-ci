@@ -27,6 +27,8 @@
 
 package com.tencent.devops.store.atom.service.impl
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.ARTIFACT
 import com.tencent.devops.common.api.constant.COMPONENT
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -106,6 +108,7 @@ import com.tencent.devops.store.pojo.common.KEY_TYPE
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -745,6 +748,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             storeCode = atomCode,
             storeType = StoreTypeEnum.ATOM.type.toByte()
         ) ?: ""
+        val props = atom.props
+        val params = getAtomSensitiveParams(props)
         val atomRunInfo = AtomRunInfo(
             atomCode = atomCode,
             atomName = atom.name,
@@ -753,7 +758,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             jobType = if (jobType == null) null else JobTypeEnum.valueOf(jobType),
             buildLessRunFlag = atom.buildLessRunFlag,
             inputTypeInfos = generateInputTypeInfos(atom.props),
-            atomStatus = atom.atomStatus
+            atomStatus = atom.atomStatus,
+            sensitiveParams = params?.joinToString(",")
         )
         // 更新插件当前版本号的缓存信息
         redisOperation.hset(
@@ -806,6 +812,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             if (jobType != null) atomRunInfo.jobType = jobType
             if (buildLessRunFlag != null) atomRunInfo.buildLessRunFlag = buildLessRunFlag
             if (props != null) atomRunInfo.inputTypeInfos = generateInputTypeInfos(props)
+            val params = getAtomSensitiveParams(props ?: atomRecord.props)
+            atomRunInfo.sensitiveParams = params?.joinToString(",")
             // 更新插件当前版本号的缓存信息
             redisOperation.hset(
                 key = atomRunInfoKey,
@@ -921,6 +929,24 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 }
             }
             initProjectCode
+        }
+    }
+
+    override fun getAtomSensitiveParams(props: String): List<String>? {
+        return try {
+            val propsMap: Map<String, Any> = jacksonObjectMapper().readValue(props)
+            propsMap["input"]?.let { input ->
+                (input as? Map<*, *>)?.flatMap { (key, value) ->
+                    when {
+                        value is Map<*, *> && value["isSensitive"] as? Boolean == true ->
+                            listOf(key.toString())
+                        else -> emptyList()
+                    }
+                }
+            }?.takeIf { it.isNotEmpty() }
+        } catch (e: Exception) {
+            logger.error("Parse atom props failed, props: $props", e)
+            null
         }
     }
 }

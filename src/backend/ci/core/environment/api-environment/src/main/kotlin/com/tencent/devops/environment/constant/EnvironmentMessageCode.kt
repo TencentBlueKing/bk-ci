@@ -112,4 +112,9 @@ object EnvironmentMessageCode {
     const val BK_SOLID_STATE_DISK = "bkSolidStateDisk" // {0}GB 固态硬盘
     const val BK_ESTIMATED_DELIVERY_TIME = "bkEstimatedDeliveryTime" // 预计交付周期：{0}分钟
     const val BK_HIGH_END_VERSION = "bkHighEndVersion" // 32核64G（高配版）
+    const val AGENT_VERSION = "agentVersion" // Agent版本
+    const val AGENT_STATUS = "agentStatus" // Agent版本
+    const val OS_TYPE = "osType" // 操作系统
+    const val NODE_USAGE_BUILD = "nodeUsageBuild" // 构建
+    const val NODE_USAGE_DEPLOYMENT = "nodeUsageDeployment" // 部署
 }

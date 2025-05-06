@@ -71,7 +71,7 @@ import java.util.concurrent.Executors
 @Suppress("LongParameterList")
 class RbacPermissionResourceGroupPermissionService(
     private val v2ManagerService: V2ManagerService,
-    private val rbacCacheService: RbacCacheService,
+    private val rbacCommonService: RbacCommonService,
     private val monitorSpaceService: AuthMonitorSpaceService,
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val dslContext: DSLContext,
@@ -251,7 +251,7 @@ class RbacPermissionResourceGroupPermissionService(
         action: String?
     ): List<Int> {
         val resourceType = if (action != null) {
-            rbacCacheService.getActionInfo(action).relatedResourceType
+            rbacCommonService.getActionInfo(action).relatedResourceType
         } else {
             relatedResourceType
         }
@@ -278,7 +278,9 @@ class RbacPermissionResourceGroupPermissionService(
         relatedResourceCode: String,
         action: String
     ): Boolean {
-        val resourceType = rbacCacheService.getActionInfo(action).relatedResourceType
+        if (filterIamGroupIds.isEmpty())
+            return false
+        val resourceType = rbacCommonService.getActionInfo(action).relatedResourceType
         val pipelineGroupIds = listPipelineGroupIds(
             projectCode = projectCode,
             resourceType = resourceType,
@@ -295,13 +297,32 @@ class RbacPermissionResourceGroupPermissionService(
         )
     }
 
+    override fun isGroupsHasProjectLevelPermission(
+        projectCode: String,
+        filterIamGroupIds: List<Int>,
+        action: String
+    ): Boolean {
+        if (filterIamGroupIds.isEmpty())
+            return false
+        val actionRelatedResourceType = rbacCommonService.getActionInfo(action).relatedResourceType
+        return resourceGroupPermissionDao.isGroupsHasProjectLevelPermission(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            filterIamGroupIds = filterIamGroupIds,
+            actionRelatedResourceType = actionRelatedResourceType,
+            action = action
+        )
+    }
+
     override fun listGroupResourcesWithPermission(
         projectCode: String,
         filterIamGroupIds: List<Int>,
         relatedResourceType: String,
         action: String
     ): Map<String, List<String>> {
-        val resourceType = rbacCacheService.getActionInfo(action).relatedResourceType
+        if (filterIamGroupIds.isEmpty())
+            return emptyMap()
+        val resourceType = rbacCommonService.getActionInfo(action).relatedResourceType
         return resourceGroupPermissionDao.listGroupResourcesWithPermission(
             dslContext = dslContext,
             projectCode = projectCode,
@@ -375,7 +396,7 @@ class RbacPermissionResourceGroupPermissionService(
             val (actionName, actionRelatedResourceType) = if (iamSystemId == monitorSystemId) {
                 Pair(monitorSpaceService.getMonitorActionName(action = actionId), monitorSystemId)
             } else {
-                val actionInfo = rbacCacheService.getActionInfo(action = actionId)
+                val actionInfo = rbacCommonService.getActionInfo(action = actionId)
                 Pair(actionInfo.actionName, actionInfo.relatedResourceType)
             }
             GroupPermissionDetailVo(
@@ -390,7 +411,7 @@ class RbacPermissionResourceGroupPermissionService(
     private fun buildRelatedResourceTypesName(iamSystemId: String, instancesDTO: InstancesDTO) {
         instancesDTO.let {
             val resourceTypeName = if (iamSystemId == systemId) {
-                rbacCacheService.getResourceTypeInfo(it.type).name
+                rbacCommonService.getResourceTypeInfo(it.type).name
             } else {
                 I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_MONITOR_SPACE)
             }

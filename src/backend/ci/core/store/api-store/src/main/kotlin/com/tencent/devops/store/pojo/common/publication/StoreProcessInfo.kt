@@ -29,7 +29,7 @@ package com.tencent.devops.store.pojo.common.publication
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "插件发布进度信息")
+@Schema(title = "组件发布进度信息")
 data class StoreProcessInfo(
     @get:Schema(title = "发布进度流程操作权限", required = false)
     var opPermission: Boolean? = null,

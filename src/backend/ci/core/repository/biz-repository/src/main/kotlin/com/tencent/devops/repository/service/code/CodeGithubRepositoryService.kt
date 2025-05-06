@@ -81,7 +81,8 @@ class CodeGithubRepositoryService @Autowired constructor(
                 aliasName = repository.aliasName,
                 url = repository.getFormatURL(),
                 type = ScmType.GITHUB,
-                enablePac = repository.enablePac
+                enablePac = repository.enablePac,
+                scmCode = ScmType.GITHUB.name
             )
             repositoryGithubDao.create(
                 dslContext = transactionContext,
@@ -151,24 +152,18 @@ class CodeGithubRepositoryService @Autowired constructor(
                 repository.userName,
                 gitProjectId = gitProjectId
             )
-            val githubRepositoryRecord = repositoryGithubDao.get(
-                dslContext = transactionContext,
-                repositoryId = repositoryId
-            )
-            if (githubRepositoryRecord.userName != repository.userName) {
-                repositoryAuthorizationService.batchModifyHandoverFrom(
-                    projectId = projectId,
-                    resourceAuthorizationHandoverList = listOf(
-                        ResourceAuthorizationHandoverDTO(
-                            projectCode = projectId,
-                            resourceType = AuthResourceType.CODE_REPERTORY.value,
-                            resourceName = record.aliasName,
-                            resourceCode = repositoryHashId,
-                            handoverTo = repository.userName
-                        )
+            repositoryAuthorizationService.batchModifyHandoverFrom(
+                projectId = projectId,
+                resourceAuthorizationHandoverList = listOf(
+                    ResourceAuthorizationHandoverDTO(
+                        projectCode = projectId,
+                        resourceType = AuthResourceType.CODE_REPERTORY.value,
+                        resourceName = record.aliasName,
+                        resourceCode = repositoryHashId,
+                        handoverTo = repository.userName
                     )
                 )
-            }
+            )
         }
     }
 
@@ -183,7 +178,8 @@ class CodeGithubRepositoryService @Autowired constructor(
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
             gitProjectId = record.gitProjectId.toLong(),
             enablePac = repository.enablePac,
-            yamlSyncStatus = repository.yamlSyncStatus
+            yamlSyncStatus = repository.yamlSyncStatus,
+            scmCode = repository.scmCode ?: ScmType.GITHUB.name
         )
     }
 

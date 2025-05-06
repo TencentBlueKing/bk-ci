@@ -120,7 +120,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -2231,5 +2231,51 @@ class PipelineListFacadeService @Autowired constructor(
         projectIds: List<String>
     ): List<PipelineLabelRelateInfo> {
         return pipelineLabelPipelineDao.getPipelineLabelRelateInfos(dslContext, projectIds)
+    }
+
+    fun countInheritedDialectPipeline(
+        projectId: String
+    ): Long {
+        val pipelineIds = pipelineSettingDao.getNonInheritedPipelineIds(
+            dslContext = dslContext,
+            projectId = projectId
+        )
+        return pipelineInfoDao.countExcludePipelineIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            channelCode = ChannelCode.BS,
+            excludePipelineIds = pipelineIds
+        ).toLong()
+    }
+
+    fun listInheritedDialectPipelines(
+        projectId: String,
+        page: Int?,
+        pageSize: Int?
+    ): SQLPage<PipelineIdAndName> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: 10
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        val pipelineIds = pipelineSettingDao.getNonInheritedPipelineIds(
+            dslContext = dslContext,
+            projectId = projectId
+        )
+        val count = pipelineInfoDao.countExcludePipelineIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            channelCode = ChannelCode.BS,
+            excludePipelineIds = pipelineIds
+        )
+        val records = pipelineInfoDao.listByPipelineIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            excludePipelineIds = pipelineIds,
+            channelCode = ChannelCode.BS,
+            limit = sqlLimit.limit,
+            offset = sqlLimit.offset
+        )?.map {
+            PipelineIdAndName(it.pipelineId, it.pipelineName)
+        } ?: emptyList()
+        return SQLPage(count = count.toLong(), records = records)
     }
 }

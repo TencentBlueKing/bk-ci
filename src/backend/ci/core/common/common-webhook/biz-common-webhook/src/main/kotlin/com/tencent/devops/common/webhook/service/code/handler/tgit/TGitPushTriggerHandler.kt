@@ -141,9 +141,9 @@ class TGitPushTriggerHandler(
 
     override fun getAction(event: GitPushEvent): String? {
         return when {
-            event.action_kind.isNullOrBlank() -> event.action_kind
-            event.before == EMPTY_COMMIT_ID -> TGitPushActionType.NEW_BRANCH.value
-            else -> TGitPushActionType.PUSH_FILE.value
+            !event.action_kind.isNullOrBlank() -> event.action_kind
+            event.before == EMPTY_COMMIT_ID -> TGitPushActionKind.CREATE_BRANCH.value
+            else -> TGitPushActionKind.CLIENT_PUSH.value
         }
     }
 
@@ -282,8 +282,7 @@ class TGitPushTriggerHandler(
                 changeFiles = eventPaths,
                 enableThirdFilter = enableThirdFilter,
                 thirdUrl = thirdUrl,
-                thirdSecretToken = thirdSecretToken,
-                gitScmService = gitScmService,
+                secretToken = lazy { gitScmService.getCredential(projectId, thirdSecretToken) }.value,
                 callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry,
                 failedReason = I18Variable(code = WebhookI18nConstants.THIRD_FILTER_NOT_MATCH).toJsonStr(),
                 eventType = getEventType().name

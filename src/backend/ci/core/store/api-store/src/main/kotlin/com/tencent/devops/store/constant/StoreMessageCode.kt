@@ -93,6 +93,7 @@ object StoreMessageCode {
     const val TASK_JSON_CONFIG_IS_INVALID = "2120040"
     // 研发商店: 拉取文件[{0}]失败，失败原因：{1}
     const val USER_PULL_FILE_FAIL = "2120041"
+
     // 插件包文件[{0}]不存在，请检查文件所在路径是否正确
     const val ATOM_PACKAGE_FILE_NOT_FOUND = "2120042"
     const val USER_REPOSITORY_TASK_JSON_FIELD_IS_NOT_SUPPORT = "2120043" // 研发商店：插件配置文件[task.json]{0}字段暂时只支持{1}
@@ -163,11 +164,14 @@ object StoreMessageCode {
     const val STORE_VERSION_IS_NOT_FINISH = "2120929" // 研发商店：组件[{0}]的[{1}]版本发布未结束，请稍后再试
     const val STORE_RELEASE_STEPS_ERROR = "2120930" // 研发商店：组件发布流程中状态变更顺序不正确
     const val STORE_PROJECT_COMPONENT_NO_PERMISSION = "2120931" // 研发商店：项目[{0}]没有组件[{1}]的使用权限，请先安装组件
-    const val STORE_VERSION_IS_INVALID = "2120932" // 研发商店：组件升级的版本号{0}错误，应为{1}
+    const val STORE_VERSION_IS_INVALID = "2120932" // 研发商店：组件升级的版本号{0}错误，请参照版本号升级规范填入正确版本号
     const val STORE_INSTALL_VALIDATE_FAIL = "2120933" // 研发商店: 组件{0}安装校验失败,失败原因:{1}
     const val STORE_COMPONENT_REPO_FILE_DELETE_FAIL = "2120934" // 研发商店：组件仓库文件删除失败
     // 当 queryProjectComponentFlag、installed 或 updateFlag 参数不为空时, projectCode 参数必须非空
     const val STORE_QUERY_PARAM_CHECK_FAIL = "2120935"
     const val STORE_COMPONENT_IS_NOT_ALLOW_OFFLINE = "2120936" // 研发商店：非发布状态的版本不允许下架
     const val STORE_COMPONENT_CODE_REPOSITORY_DELETE_FAIL = "2120937" // 研发商店：代码库删除失败，失败原因:{0}
+    const val STORE_COMPONENT_CONFIG_YML_FORMAT_ERROR = "2120938" // 研发商店：组件配置文件bk-config.yml配置错误，错误字段{0}
+    // 组件包文件[{0}]不存在，请检查文件所在路径是否正确
+    const val STORE_PACKAGE_FILE_NOT_FOUND = "2120939"
 }

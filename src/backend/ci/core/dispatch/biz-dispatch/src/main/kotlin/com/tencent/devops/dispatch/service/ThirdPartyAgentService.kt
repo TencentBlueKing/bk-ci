@@ -81,7 +81,7 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -489,6 +489,13 @@ class ThirdPartyAgentService @Autowired constructor(
             )
         }
         return Page(pageNotNull, pageSizeNotNull, agentBuildCount, agentBuilds)
+    }
+
+    fun listLatestBuildPipelines(agentIds: List<String>): List<AgentBuildInfo> {
+        return thirdPartyAgentBuildDao.listLatestBuildPipelines(
+            dslContext = dslContext,
+            agentIds = agentIds
+        )
     }
 
     private fun finishBuild(record: TDispatchThirdpartyAgentBuildRecord, success: Boolean) {

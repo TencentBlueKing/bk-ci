@@ -1,10 +1,15 @@
 <template>
     <section
+        class="template-list-table-wrapper"
         v-if="listData.length"
     >
         <bk-table
             class="template-list-table"
+            height="100%"
             :data="listData"
+            :pagination="pagingConfig"
+            @page-limit-change="pageCountChange"
+            @page-change="pageChange"
             @sort-change="handleSortChange"
         >
             <bk-table-column
@@ -190,17 +195,6 @@
             </bk-table-column>
         </bk-table>
 
-        <bk-pagination
-            :paging-config.sync="pagingConfig"
-            :limit="pagingConfig.limit"
-            :current="pagingConfig.current"
-            :count="pagingConfig.count"
-            @limit-change="pageCountChange"
-            @change="pageChange"
-            size="small"
-        >
-        </bk-pagination>
-
         <bk-dialog
             width="800"
             v-model="copyTemp.isShow"
@@ -224,7 +218,7 @@
                                 :class="{ 'is-danger': copyTemp.nameHasError }"
                                 @input="copyTemp.nameHasError = false"
                                 name="copyTemplateName"
-                                v-validate="&quot;required|max:30&quot;"
+                                v-validate="'required|max:30'"
                                 maxlength="30"
                             >
                         </div>
@@ -266,13 +260,13 @@
 
 <script>
     import Logo from '@/components/Logo'
-    import dayjs from 'dayjs'
-    import ExtMenu from './extMenu'
     import {
         RESOURCE_ACTION,
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
     import { navConfirm } from '@/utils/util'
+    import dayjs from 'dayjs'
+    import ExtMenu from './extMenu'
 
     export default {
         components: {
@@ -569,126 +563,130 @@
 
 <style lang="scss" scoped>
     @import '@/scss/conf';
-    .template-list-table {
-        margin: 20px 0;
-        &:after {
-            content: '';
-            clear: both;
-            display: table;
-        }
-        .bk-label.tip-bottom {
-            border-bottom: 1px dotted #63656E;
-            padding: 0;
-            margin: 10px 20px 10px 60px;
-            width: 60px;
-        }
-        .form-tips {
-            position: absolute;
-            width: 40px;
-            left: 50px;
-            bottom: 5px;
-            box-sizing: content-box;
-            padding-left: 40px;
-        }
-        .create-permission {
-            cursor: pointer;
-        }
-        .not-create-permission {
-            cursor: not-allowed;
-        }
-        .template-name {
-            max-width: 192px;
-            padding: 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            span {
-                cursor: pointer;
-                margin: 8px 13px;
+    .template-list-table-wrapper {
+        height: 100%;
+        overflow: hidden;
+
+        .template-list-table {
+            &:after {
+                content: '';
+                clear: both;
+                display: table;
             }
-        }
-        .manager-user {
-            color: $primaryColor;
-            cursor: pointer;
-        }
-        .is-disabled {
-            cursor: not-allowed !important;
-        }
-        .icon-item {
-            margin-top: 10px;
-        }
-        .pipeline-icon {
-            width: 40px;
-            height: 40px;
-        }
-        .template-name p {
-            margin-top: 10px;
-            font-size: 12px;
-            color: #C3CDD7;
-            span {
-                color: #63656E;
-            }
-        }
-        .codelib-item {
-            white-space: nowrap;
-            overflow: hidden;
-            max-width: 406px;
-            text-overflow: ellipsis;
-            font-size: 12px;
-            color: #C3CDD7;
-        }
-        .pipeline-instance {
-            color: $primaryColor;
-            cursor: pointer;
-        }
-        .handler-btn {
-            overflow: visible;
-            position: relative;
-            display: flex;
-            .btn-more {
-                position: absolute;
-                top: 50px;
-                right: -33px;
-                width: 91px;
-                max-height: 250px;
-                background: #fff;
+            .bk-label.tip-bottom {
+                border-bottom: 1px dotted #63656E;
                 padding: 0;
-                margin: 0;
-                z-index: 99;
-                overflow: auto;
-                border-radius: 2px;
-                border: 1px solid #c3cdd7;
-                transition: all 200ms;
-                box-shadow: 0 2px 6px rgba(51, 60, 72, 0.1);
-                li {
+                margin: 10px 20px 10px 60px;
+                width: 60px;
+            }
+            .form-tips {
+                position: absolute;
+                width: 40px;
+                left: 50px;
+                bottom: 5px;
+                box-sizing: content-box;
+                padding-left: 40px;
+            }
+            .create-permission {
+                cursor: pointer;
+            }
+            .not-create-permission {
+                cursor: not-allowed;
+            }
+            .template-name {
+                max-width: 192px;
+                padding: 0;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                span {
                     cursor: pointer;
-                    line-height: 40px;
-                    text-align: center;
+                    margin: 8px 13px;
+                }
+            }
+            .manager-user {
+                color: $primaryColor;
+                cursor: pointer;
+            }
+            .is-disabled {
+                cursor: not-allowed !important;
+            }
+            .icon-item {
+                margin-top: 10px;
+            }
+            .pipeline-icon {
+                width: 40px;
+                height: 40px;
+            }
+            .template-name p {
+                margin-top: 10px;
+                font-size: 12px;
+                color: #C3CDD7;
+                span {
+                    color: #63656E;
+                }
+            }
+            .codelib-item {
+                white-space: nowrap;
+                overflow: hidden;
+                max-width: 406px;
+                text-overflow: ellipsis;
+                font-size: 12px;
+                color: #C3CDD7;
+            }
+            .pipeline-instance {
+                color: $primaryColor;
+                cursor: pointer;
+            }
+            .handler-btn {
+                overflow: visible;
+                position: relative;
+                display: flex;
+                .btn-more {
+                    position: absolute;
+                    top: 50px;
+                    right: -33px;
+                    width: 91px;
+                    max-height: 250px;
+                    background: #fff;
+                    padding: 0;
+                    margin: 0;
+                    z-index: 99;
+                    overflow: auto;
+                    border-radius: 2px;
+                    border: 1px solid #c3cdd7;
+                    transition: all 200ms;
+                    box-shadow: 0 2px 6px rgba(51, 60, 72, 0.1);
+                    li {
+                        cursor: pointer;
+                        line-height: 40px;
+                        text-align: center;
+                        color: $fontColor;
+                        &:hover {
+                            color: $primaryColor;
+                            background: $primaryLightColor;
+                        }
+                    }
+                }
+                span {
+                    display: inline-block;
+                    margin-left: 5px;
                     color: $fontColor;
+                    cursor: pointer;
                     &:hover {
                         color: $primaryColor;
-                        background: $primaryLightColor;
                     }
                 }
             }
-            span {
-                display: inline-block;
-                margin-left: 5px;
-                color: $fontColor;
-                cursor: pointer;
-                &:hover {
-                    color: $primaryColor;
+            .not-permission {
+                span, .btn-more li {
+                    cursor: not-allowed;
                 }
             }
-        }
-        .not-permission {
-            span, .btn-more li {
-                cursor: not-allowed;
+            ::v-deep .cell {
+                height: 60px;
+                line-height: 60px;
             }
-        }
-        ::v-deep .cell {
-            height: 60px;
-            line-height: 60px;
         }
     }
 

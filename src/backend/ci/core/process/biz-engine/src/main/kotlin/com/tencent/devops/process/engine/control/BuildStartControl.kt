@@ -307,7 +307,7 @@ class BuildStartControl @Autowired constructor(
                         debug = buildInfo.debug
                     )
                 )
-                broadcastStartEvent(buildInfo)
+                broadcastStartEvent(buildInfo, setting)
             } else {
                 broadcastQueueEvent()
             }
@@ -497,7 +497,7 @@ class BuildStartControl @Autowired constructor(
         }
     }
 
-    private fun PipelineBuildStartEvent.broadcastStartEvent(buildInfo: BuildInfo) {
+    private fun PipelineBuildStartEvent.broadcastStartEvent(buildInfo: BuildInfo, pipelineSetting: PipelineSetting?) {
         pipelineEventDispatcher.dispatch(
             // 广播构建即将启动消息给订阅者
             PipelineBuildStartBroadCastEvent(
@@ -519,7 +519,13 @@ class BuildStartControl @Autowired constructor(
                 actionType = ActionType.START,
                 executeCount = executeCount,
                 buildStatus = BuildStatus.RUNNING.name,
-                type = PipelineBuildStatusBroadCastEventType.BUILD_START
+                type = PipelineBuildStatusBroadCastEventType.BUILD_START,
+                labels = mapOf(
+                    "startTime" to LocalDateTime.now().timestampmilli().toString(),
+                    "trigger" to buildInfo.trigger,
+                    "triggerUser" to buildInfo.triggerUser,
+                    "pipelineName" to (pipelineSetting?.pipelineName ?: "")
+                )
             )
         )
     }

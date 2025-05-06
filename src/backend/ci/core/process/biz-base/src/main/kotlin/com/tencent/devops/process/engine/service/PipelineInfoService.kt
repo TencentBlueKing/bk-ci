@@ -27,6 +27,10 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -35,10 +39,23 @@ import org.springframework.stereotype.Service
 @Service
 class PipelineInfoService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelineInfoDao: PipelineInfoDao
+    private val pipelineInfoDao: PipelineInfoDao,
+    private val redisOperation: RedisOperation
 ) {
 
     fun getPipelineName(projectId: String, pipelineId: String): String? {
         return pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId)?.pipelineName
+    }
+
+    // 敏感入参解析
+    fun transferSensitiveParam(element: Element, elementSensitiveParamInfos: Map<String, String>) {
+        if (element is MarketBuildAtomElement || element is MarketBuildLessAtomElement) {
+            val atomCode = element.getAtomCode()
+            val version = element.version
+            val params = elementSensitiveParamInfos["$atomCode:$version"]
+            if (!params.isNullOrBlank()) {
+                element.transferSensitiveParam(params.split(","))
+            }
+        }
     }
 }
