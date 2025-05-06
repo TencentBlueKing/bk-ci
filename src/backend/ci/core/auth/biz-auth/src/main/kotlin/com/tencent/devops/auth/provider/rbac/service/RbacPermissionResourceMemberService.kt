@@ -367,7 +367,7 @@ class RbacPermissionResourceMemberService(
         groupDepartmentSet: Set<String>,
         member: String
     ): Boolean {
-        // 校验是否将用户加入组，如果用户已经在用户组,并且过期时间超过30天,则不再添加
+        // 校验是否将用户加入组，如果用户已经在用户组,并且过期时间超过180天,则不再添加
         val expectExpiredAt = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(VALID_EXPIRED_AT)
         if (groupUserMap.containsKey(member) && groupUserMap[member]!!.expiredAt > expectExpiredAt) {
             return false
