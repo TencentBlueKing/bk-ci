@@ -61,3 +61,4 @@ export const imageStatusList = {
     UNDERCARRIAGING: 'store.下架中',
     UNDERCARRIAGED: 'store.已下架'
 }
+export const TEMPLATE_TABLE_COLUMN_CACHE = 'TEMPLATE_TABLE_COLUMN_CACHE'
