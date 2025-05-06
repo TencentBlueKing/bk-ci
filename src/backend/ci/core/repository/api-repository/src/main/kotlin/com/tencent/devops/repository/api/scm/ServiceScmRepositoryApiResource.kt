@@ -107,4 +107,24 @@ interface ServiceScmRepositoryApiResource {
         @QueryParam("branch")
         branch: String
     ): Result<Reference?>
+
+    @Operation(summary = "获取目标Tag信息")
+    @POST
+    @Path("/findTags")
+    fun findTags(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "代码库授权信息", required = true)
+        authRepository: AuthRepository,
+        @Parameter(description = "搜索条件", required = false)
+        @QueryParam("search")
+        search: String?,
+        @Parameter(description = "page", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @Parameter(description = "pageSize", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 20
+    ): Result<List<Reference>>
 }

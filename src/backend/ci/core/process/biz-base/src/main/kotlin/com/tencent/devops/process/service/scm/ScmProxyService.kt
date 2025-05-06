@@ -436,7 +436,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig)
         when (repo) {
-            is CodeSvnRepository -> {
+            is CodeSvnRepository, is ScmSvnRepository -> {
                 return Result(emptyList())
             }
             is CodeGitRepository -> {
@@ -509,6 +509,17 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         userName = credInfo.username,
                         search = search
                     )
+                }
+            }
+            is ScmGitRepository -> {
+                return client.get(ServiceScmRepositoryApiResource::class).findTags(
+                    projectId = projectId,
+                    authRepository = AuthRepository(repo),
+                    search = search,
+                    page = 1,
+                    pageSize = 100
+                ).let {
+                    Result(it.data?.map { ref -> ref.name } ?: listOf())
                 }
             }
             else -> {

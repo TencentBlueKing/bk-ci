@@ -201,6 +201,14 @@ class ScmApiManager constructor(
         return scmProviderManager.refs(providerProperties).findTag(providerRepository, name)
     }
 
+    fun findTags(
+        providerProperties: ScmProviderProperties,
+        providerRepository: ScmProviderRepository,
+        opts: TagListOptions
+    ): List<Reference> {
+        return scmProviderManager.refs(providerProperties).listTags(providerRepository, opts)
+    }
+
     fun listTags(
         providerProperties: ScmProviderProperties,
         providerRepository: ScmProviderRepository,

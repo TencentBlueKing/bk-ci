@@ -44,6 +44,7 @@ import com.tencent.devops.scm.api.pojo.ListOptions
 import com.tencent.devops.scm.api.pojo.Perm
 import com.tencent.devops.scm.api.pojo.Reference
 import com.tencent.devops.scm.api.pojo.RepoListOptions
+import com.tencent.devops.scm.api.pojo.TagListOptions
 import com.tencent.devops.scm.api.pojo.auth.AccessTokenScmAuth
 import com.tencent.devops.scm.api.pojo.auth.IScmAuth
 import com.tencent.devops.scm.api.pojo.repository.ScmProviderRepository
@@ -180,6 +181,29 @@ class ScmRepositoryApiService @Autowired constructor(
                 providerProperties = providerProperties,
                 providerRepository = providerRepository,
                 name = branch
+            )
+        }
+    }
+
+    fun findTags(
+        projectId: String,
+        authRepository: AuthRepository,
+        search: String?,
+        page: Int,
+        pageSize: Int
+    ): List<Reference> {
+        return invokeApi(
+            projectId = projectId,
+            authRepository = authRepository
+        ) { providerProperties, providerRepository ->
+            scmApiManager.findTags(
+                providerProperties = providerProperties,
+                providerRepository = providerRepository,
+                opts = TagListOptions.builder()
+                        .search(search)
+                        .page(page)
+                        .pageSize(pageSize)
+                        .build()
             )
         }
     }

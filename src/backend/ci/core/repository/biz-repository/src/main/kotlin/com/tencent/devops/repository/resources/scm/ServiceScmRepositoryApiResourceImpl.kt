@@ -94,4 +94,22 @@ class ServiceScmRepositoryApiResourceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun findTags(
+        projectId: String,
+        authRepository: AuthRepository,
+        search: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<List<Reference>> {
+        return Result(
+            repositoryApiService.findTags(
+                projectId = projectId,
+                authRepository = authRepository,
+                search = search,
+                page = page,
+                pageSize = pageSize
+            )
+        )
+    }
 }
