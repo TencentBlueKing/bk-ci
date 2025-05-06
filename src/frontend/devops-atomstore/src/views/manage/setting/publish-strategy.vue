@@ -11,7 +11,7 @@
             >
                 <bk-select
                     class="publish-strategy-select"
-                    v-model="formData"
+                    v-model="publishStrategy"
                 >
                     <bk-option
                         v-for="strategy in strategyOptions"
@@ -58,7 +58,7 @@
             const vm = getCurrentInstance()
             const strategy = computed(() => vm.proxy.$store.getters['store/getDetail']?.publishStrategy ?? 'AUTO')
             const editing = ref(false)
-            const formData = ref(strategy.value)
+            const publishStrategy = ref(strategy.value)
 
             const strategyLabel = computed(() => vm.proxy.$t(`store.${strategy.value}`))
             const strategyDesc = computed(() => vm.proxy.$t(`store.${strategy.value}-upgradeStrategyDesc`))
@@ -68,7 +68,7 @@
             }))
 
             watch(strategy, (newVal) => {
-                formData.value = newVal
+                publishStrategy.value = newVal
             })
 
             function editStrategy () {
@@ -76,12 +76,12 @@
             }
 
             function cancelEditing () {
-                formData.value = strategy.value
+                publishStrategy.value = strategy.value
                 editing.value = false
             }
 
             async function handleStrategyChange () {
-                if (formData.value === strategy.value) {
+                if (publishStrategy.value === strategy.value) {
                     cancelEditing()
                     return
                 }
@@ -90,7 +90,7 @@
                     const { code } = vm.proxy.$route.params
                     await vm.proxy.$store.dispatch('store/updatePublishStrategy', {
                         templateCode: code,
-                        strategy: formData.value
+                        publishStrategy: publishStrategy.value
                     })
                     await vm.proxy.$store.dispatch('store/requestTemplate', code)
                 } catch (error) {
@@ -107,7 +107,7 @@
                 editStrategy,
                 cancelEditing,
                 handleStrategyChange,
-                formData
+                publishStrategy
             }
         }
     })

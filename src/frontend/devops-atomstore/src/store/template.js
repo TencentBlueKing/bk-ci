@@ -260,7 +260,9 @@ export const actions = {
         commit(UPDATE_CURRENT_TEMPLATE, res)
     },
     updatePublishStrategy: (state, { templateCode, strategy }) => {
-        return vue.$ajax.put(`${prefix}/user/market/${templateCode}/store/publishStrategy`, JSON.stringify(strategy))
+        return vue.$ajax.put(`${prefix}/user/market/${templateCode}/store/publishStrategy`, {
+            publishStrategy
+        })
     },
     /**
      * 获取模板版本列表
