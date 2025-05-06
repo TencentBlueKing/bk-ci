@@ -92,7 +92,13 @@
                         templateCode: code,
                         publishStrategy: publishStrategy.value
                     })
-                    await vm.proxy.$store.dispatch('store/requestTemplate', code)
+                    const res = await vm.proxy.$store.dispatch('store/requestTemplate', code)
+                    vm.proxy.$store.dispatch('store/setDetail', res)
+
+                    vm.proxy.$bkMessage({
+                        message: vm.proxy.$t('store.操作成功'),
+                        theme: 'success'
+                    })
                 } catch (error) {
                     console.error(error.message)
                 } finally {
@@ -143,6 +149,7 @@
                 flex: 1;
                 align-items: center;
                 grid-gap: 6px;
+                line-height: 32px;
                 .publish-strategy-desc {
                     color: #979BA5;
                 }
