@@ -652,7 +652,7 @@ class RbacPermissionResourceMemberService(
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceMemberService::class.java)
 
         // 有效的过期时间,在30天内就是有效的
-        private const val VALID_EXPIRED_AT = 30L
+        private const val VALID_EXPIRED_AT = 180L
 
         // 自动续期有效的过期时间,在180天以上就不需要自动续期
         private val AUTO_VALID_EXPIRED_AT = TimeUnit.DAYS.toSeconds(180)
