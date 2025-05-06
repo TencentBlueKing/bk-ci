@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
@@ -143,4 +144,17 @@ interface OpProjectWorkspaceResource {
         @QueryParam("workspaceName")
         workspaceName: String
     )
+    @Operation(summary = "分配云桌面拥有者和共享人")
+    @POST
+    @Path("/assign_user")
+    fun assignUser(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "工作空间描述", required = true)
+        assigns: List<ProjectWorkspaceAssign>
+    ): Result<Boolean>
 }
