@@ -29,6 +29,7 @@
                 ></bk-table-column>
                 <bk-table-column
                     :label="$t('store.调试项目')"
+                    v-if="!isTemplate"
                     show-overflow-tooltip
                 >
                     <template slot-scope="props">
@@ -179,6 +180,7 @@
 <script>
     import api from '@/api'
     import labelList from '@/components/labelList.vue'
+    import { TYPE_ENUM } from '@/utils/constants'
     import { mapGetters } from 'vuex'
 
     export default {
@@ -190,10 +192,6 @@
             return {
                 memberCount: 0,
                 memberList: [],
-                memberType: {
-                    ADMIN: 'Owner',
-                    DEVELOPER: 'Developer'
-                },
                 permissionMap: {
                     atom: [
                         { name: this.$t('store.插件开发'), active: false, type: 'DEVELOPER' },
@@ -207,6 +205,13 @@
                         { name: this.$t('store.审批'), active: false, type: 'ADMIN' },
                         { name: this.$t('store.成员管理'), active: false, type: 'ADMIN' },
                         { name: this.$t('store.可见范围'), active: false, type: 'ADMIN' }
+                    ],
+                    template: [
+                        { name: this.$t(this.$t('store.templateSetting')), active: false, type: 'ADMIN' },
+                        { name: this.$t('store.版本发布'), active: false, type: 'ADMIN' },
+                        { name: this.$t('store.可见范围'), active: false, type: 'ADMIN' },
+                        { name: this.$t('store.审批'), active: false, type: 'ADMIN' },
+                        { name: this.$t('store.成员管理'), active: false, type: 'ADMIN' }
                     ]
                 },
                 addMemberObj: {
@@ -240,6 +245,21 @@
 
             storeCode () {
                 return this.detail[`${this.$route.params.type}Code`] ?? ''
+            },
+
+            isTemplate () {
+                return this.$route.params.type === TYPE_ENUM.template
+            },
+            memberType () {
+                const basicType = {
+                    ADMIN: 'Owner'
+                }
+                return this.isTemplate
+                    ? basicType
+                    : {
+                        ...basicType,
+                        DEVELOPER: 'Developer'
+                    }
             }
         },
 

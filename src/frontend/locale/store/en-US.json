@@ -645,4 +645,5 @@
     "MANUAL": "MANUAL",
     "MANUAL-upgradeStrategyDesc": "When there are updates in the dev store, manually install new versions as needed",
     "AUTO-upgradeStrategyDesc": "Automatically install new versions when they are released in the dev store",
+    "templateSetting": "Setting"
 }
