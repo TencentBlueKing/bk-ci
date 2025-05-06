@@ -63,7 +63,7 @@
                             <template v-else>
                                 <span>{{ props.row.projectName }}</span>
                                 <i
-                                    class="bk-icon icon-edit2"
+                                    class="devops-icon icon-edit-line"
                                     @click="startEditProject(props.row)"
                                     v-if="userInfo.isProjectAdmin || userInfo.userName === props.row.userName"
                                 ></i>

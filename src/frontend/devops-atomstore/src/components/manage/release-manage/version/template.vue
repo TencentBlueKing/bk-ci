@@ -228,7 +228,7 @@
             },
 
             statusFormatter (row, column, cellValue, index) {
-                return this.$t(templateStatusList[cellValue])
+                return this.$t(templateStatusList[cellValue] ?? '--')
             },
 
             convertTime (row, column, cellValue, index) {

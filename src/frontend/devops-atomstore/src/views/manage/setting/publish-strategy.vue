@@ -5,18 +5,35 @@
                 {{ $t('store.publishStrategy') }}
             </label>
             
-            <bk-select
+            <form
+                class="strategy-editing-form"
                 v-if="editing"
-                class="publish-strategy-select"
-                :value="strategy"
-                @change="handleStrategyChange"
             >
-                <bk-option
-                    v-for="strategy in strategyOptions"
-                    :key="strategy.id"
-                    v-bind="strategy"
-                />
-            </bk-select>
+                <bk-select
+                    
+                    class="publish-strategy-select"
+                    v-model="formData"
+                >
+                    <bk-option
+                        v-for="strategy in strategyOptions"
+                        :key="strategy.id"
+                        v-bind="strategy"
+                    />
+                </bk-select>
+                <bk-button
+                    text
+                    @click="handleStrategyChange"
+                    theme="primary"
+                >
+                    {{ $t('confirm') }}
+                </bk-button>
+                <bk-button
+                    text
+                    @click="cancelEditing"
+                >
+                    {{ $t('cancel') }}
+                </bk-button>
+            </form>
             <p
                 v-else
                 class="publish-strategy-detail"
@@ -24,7 +41,7 @@
                 <span>{{ strategyLabel }}</span>
                 <span class="publish-strategy-desc">( {{ strategyDesc }} )</span>
                 <i
-                    class="devops-icon icon-edit2"
+                    class="devops-icon icon-edit-line"
                     @click="editStrategy"
                 />
             </p>
@@ -34,7 +51,7 @@
 
 <script>
     import { PUBLISH_STRATEGY } from '@/utils/constants'
-    import { computed, defineComponent, getCurrentInstance, ref } from 'vue'
+    import { computed, defineComponent, getCurrentInstance, ref, watch } from 'vue'
 
     export default defineComponent({
 
@@ -42,6 +59,7 @@
             const vm = getCurrentInstance()
             const strategy = computed(() => vm.proxy.$store.getters['store/getDetail']?.publishStrategy ?? 'AUTO')
             const editing = ref(false)
+            const formData = ref(strategy)
 
             const strategyLabel = computed(() => vm.proxy.$t(`store.${strategy.value}`))
             const strategyDesc = computed(() => vm.proxy.$t(`store.${strategy.value}-upgradeStrategyDesc`))
@@ -50,29 +68,35 @@
                 name: `${vm.proxy.$t(`store.${key}`)} (${vm.proxy.$t(`store.${key}-upgradeStrategyDesc`)})`
             }))
 
+            watch(strategy, (newVal) => {
+                formData.value = newVal
+            })
+
             function editStrategy () {
                 editing.value = true
             }
 
-            async function handleStrategyChange (newVal) {
-                // TODO:
-                if (!newVal || newVal === strategy) {
-                    editing.value = false
+            function cancelEditing () {
+                editing.value = false
+            }
+
+            async function handleStrategyChange () {
+                if (formData.value === strategy.value) {
+                    cancelEditing()
                     return
                 }
 
                 try {
-                    console.log(newVal)
-                    const res = await vm.proxy.$store.dispatch('store/updatePublishStrategy', {
-                        projectId: vm.proxy.$route.params.projectId,
-                        templateCode: vm.proxy.$route.params.code,
-                        strategy: newVal
+                    const { code } = vm.proxy.$route.params
+                    await vm.proxy.$store.dispatch('store/updatePublishStrategy', {
+                        templateCode: code,
+                        strategy: formData.value
                     })
-                    console.log(res)
+                    await vm.proxy.$store.dispatch('store/requestTemplate', code)
                 } catch (error) {
                     console.error(error.message)
                 } finally {
-                    editing.value = false
+                    cancelEditing()
                 }
             }
             return {
@@ -81,6 +105,7 @@
                 strategyLabel,
                 strategyDesc,
                 editStrategy,
+                cancelEditing,
                 handleStrategyChange,
                 strategy
             }
@@ -103,8 +128,14 @@
                 margin-left: 56px;
                 color: #979BA5;
             }
-            .publish-strategy-select {
-                width: 360px;
+
+            .strategy-editing-form {
+                display: flex;
+                align-items: center;
+                grid-gap: 8px;
+                .publish-strategy-select {
+                    width: 360px;
+                }
             }
             
             .publish-strategy-detail {
@@ -115,9 +146,8 @@
                 .publish-strategy-desc {
                     color: #979BA5;
                 }
-                .devops-icon.icon-edit2 {
+                .devops-icon.icon-edit-line {
                     cursor: pointer;
-                    font-weight: 700;
                     padding: 0 6px;
                     &:hover {
                         color: #3a84ff;
