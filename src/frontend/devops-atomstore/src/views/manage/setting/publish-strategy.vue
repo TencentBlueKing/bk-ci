@@ -88,7 +88,7 @@
             font-size: 12px;
             align-items: center;
             .publish-strategy-select {
-                width: 222px;
+                width: 360px;
             }
             
             .publish-strategy-detail {
@@ -98,6 +98,14 @@
                 grid-gap: 6px;
                 .publish-strategy-desc {
                     color: #979BA5;
+                }
+                .devops-icon.icon-edit2 {
+                    cursor: pointer;
+                    font-weight: 700;
+                    padding: 0 6px;
+                    &:hover {
+                        color: #3a84ff;
+                    }
                 }
             }
         }
