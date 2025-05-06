@@ -19,14 +19,16 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
     import atomVersion from '@/components/manage/release-manage/version/atom.vue'
     import imageVersion from '@/components/manage/release-manage/version/image.vue'
+    import templateVersion from '@/components/manage/release-manage/version/template.vue'
+    import { mapActions, mapGetters } from 'vuex'
 
     export default {
         components: {
             atomVersion,
-            imageVersion
+            imageVersion,
+            templateVersion
         },
 
         data () {
@@ -52,6 +54,10 @@
         },
 
         methods: {
+            ...mapActions('store', [
+                'requestVersionList',
+                'requestImageVersionList'
+            ]),
             pageLimitChanged (currentLimit, prevLimit) {
                 if (currentLimit === this.pagination.limit) return
 
@@ -65,48 +71,41 @@
                 this.getVersionList()
             },
 
-            getVersionList () {
-                const methodMap = {
-                    atom: this.getAtomVersion,
-                    image: this.getImageVersion
-                }
-                const type = this.$route.params.type
-                const currentMethod = methodMap[type]
-                this.isLoading = true
-                currentMethod().catch((err) => {
+            async getVersionList () {
+                try {
+                    this.isLoading = true
+                    const type = this.$route.params.type
+                    const apiMethodMap = {
+                        atom: this.requestVersionList,
+                        image: this.requestImageVersionList,
+                        template: () => Promise.resolve({
+                            records: [{
+                                version: 'v1.0.0',
+                                templateStatus: 'RELEASED',
+                                creator: 'admin',
+                                createTime: '2022-09-15 16:48:27'
+                            }],
+                            count: 0
+                        })
+                    }
+                    const res = await apiMethodMap[type]({
+                        [`${type}Code`]: this.detail[`${type}Code`],
+                        page: this.pagination.current,
+                        pageSize: this.pagination.limit
+                    })
+                    this.versionList = res.records || []
+                    this.pagination.count = res.count
+                    const lastestStatus = this.versionList?.[0]?.[`${type}Status`]
+                    this.showEdit = ['AUDIT_REJECT', 'RELEASED', 'GROUNDING_SUSPENSION', 'UNDERCARRIAGED'].includes(lastestStatus)
+                } catch (err) {
                     this.$bkMessage({ message: err.message || err, theme: 'error' })
-                }).finally(() => {
+                } finally {
                     this.isLoading = false
-                })
-            },
-
-            getAtomVersion () {
-                return this.$store.dispatch('store/requestVersionList', {
-                    atomCode: this.detail.atomCode,
-                    page: this.pagination.current,
-                    pageSize: this.pagination.limit
-                }).then((res) => {
-                    this.versionList = res.records || []
-                    this.pagination.count = res.count
-                    const lastestVersion = this.versionList[0] || {}
-                    const lastestStatus = lastestVersion.atomStatus
-                    this.showEdit = ['AUDIT_REJECT', 'RELEASED', 'GROUNDING_SUSPENSION', 'UNDERCARRIAGED'].includes(lastestStatus)
-                })
-            },
-
-            getImageVersion () {
-                const postData = {
-                    imageCode: this.detail.imageCode,
-                    page: this.pagination.current,
-                    pageSize: this.pagination.limit
                 }
-                return this.$store.dispatch('store/requestImageVersionList', postData).then((res) => {
-                    this.versionList = res.records || []
-                    this.pagination.count = res.count
-                    const lastestVersion = this.versionList[0] || {}
-                    const lastestStatus = lastestVersion.imageStatus
-                    this.showEdit = ['AUDIT_REJECT', 'RELEASED', 'GROUNDING_SUSPENSION', 'UNDERCARRIAGED'].includes(lastestStatus)
-                })
+            },
+           
+            async fetchVersionList (param) {
+                
             }
         }
     }

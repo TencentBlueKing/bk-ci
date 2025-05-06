@@ -102,6 +102,16 @@
             options: {
                 type: Array,
                 default: () => []
+            },
+            paramValues: {
+                type: Object,
+                default: () => ({})
+            },
+            // TODO: 历史遗留问题，将ID转为String, 否则对于数字ID,无法选中
+            allIdString: Boolean,
+            affected: {
+                type: Array,
+                default: []
             }
         },
         data () {
@@ -114,7 +124,30 @@
         computed: {
             projectId () {
                 return this.$route.params.projectId
+            },
+            parsedUrl () {
+                try {
+                    const { url, element } = this
+                    const query = this.$route.params
+                    return this.urlParse(url, {
+                        bkPoolType: this?.container?.dispatchType?.buildType,
+                        ...query,
+                        ...(this.paramValues || {}),
+                        ...element
+                    })
+                } catch (error) {
+                    console.log(error)
+                    return this.url
+                }
             }
+        },
+        watch: {
+            parsedUrl () {
+                this.$nextTick(() => {
+                    this.freshList()
+                })
+            }
+
         },
         created () {
             if (this.initRequest) {
@@ -173,15 +206,8 @@
             },
             async freshList () {
                 try {
-                    const { url, element } = this
-                    const query = this.$route.params
-                    const changeUrl = this.urlParse(url, {
-                        bkPoolType: this?.container?.dispatchType?.buildType,
-                        ...query,
-                        ...element
-                    })
                     this.isLoading = true
-                    const res = await this.$ajax.get(changeUrl)
+                    const res = await this.$ajax.get(this.parsedUrl)
 
                     const resData = this.getResponseData(res, this.dataPath)
 

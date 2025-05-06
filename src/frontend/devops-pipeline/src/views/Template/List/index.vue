@@ -47,7 +47,7 @@
                 >
                 </search-select>
             </div>
-            <templateTable
+            <template-table
                 ref="selfTemp"
                 :type="templateViewId"
                 :data="tableData"
@@ -75,29 +75,31 @@
 </template>
 
 <script setup>
-    import { onMounted, ref, computed, watch } from 'vue'
-    import dayjs from 'dayjs'
-    import SearchSelect from '@blueking/search-select'
-    import '@blueking/search-select/dist/styles/index.css'
-    import templateTable from './templateTable'
-    import CreateTemplateDialog from './CreateTemplateDialog'
-    import InstallTemplateDialog from './InstallTemplateDialog'
-    import UseInstance from '@/hook/useInstance'
     import Logo from '@/components/Logo'
+    import CopyTemplateDialog from '@/components/Template/CopyTemplateDialog.vue'
+    import UseInstance from '@/hook/useInstance'
+    import useTemplateActions from '@/hook/useTemplateActions'
+    import {
+        ALL_SOURCE,
+        ALL_TEMPLATE_VIEW_ID,
+        CUSTOM_SOURCE,
+        MARKET_SOURCE,
+        TEMPLATE_ACTION_MAP,
+        TEMPLATE_VIEW_ID_MAP
+    } from '@/store/modules/templates/constants'
     import {
         RESOURCE_ACTION,
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
-    import {
-        TEMPLATE_VIEW_ID_MAP,
-        ALL_TEMPLATE_VIEW_ID,
-        TEMPLATE_ACTION_MAP,
-        ALL_SOURCE,
-        CUSTOM_SOURCE,
-        MARKET_SOURCE
-    } from '@/store/modules/templates/constants'
-    import CopyTemplateDialog from '@/components/Template/CopyTemplateDialog.vue'
-    import useTemplateActions from '@/hook/useTemplateActions'
+    import { TEMPLATE_TYPE } from '@/utils/pipelineConst'
+    import { isShallowEqual } from '@/utils/util'
+    import SearchSelect from '@blueking/search-select'
+    import '@blueking/search-select/dist/styles/index.css'
+    import dayjs from 'dayjs'
+    import { computed, onMounted, ref, watch } from 'vue'
+    import CreateTemplateDialog from './CreateTemplateDialog'
+    import InstallTemplateDialog from './InstallTemplateDialog'
+    import TemplateTable from './TemplateTable'
 
     const {
         copyTemp,
@@ -112,7 +114,7 @@
         convertToCustom
     } = useTemplateActions()
 
-    const { proxy, i18n, bkMessage } = UseInstance()
+    const { proxy, t, bkMessage } = UseInstance()
     const hasCreatePermission = ref(false)
     const searchValue = ref([])
     const tableData = ref([])
@@ -125,19 +127,19 @@
     })
     const filterData = computed(() => [
         {
-            name: i18n.t('template.name'),
+            name: t('template.name'),
             id: 'fuzzySearchName'
         },
         {
-            name: i18n.t('template.desc'),
+            name: t('template.desc'),
             id: 'desc'
         },
         {
-            name: i18n.t('template.source'),
+            name: t('template.source'),
             id: 'source'
         },
         {
-            name: i18n.t('template.lastModifiedBy'),
+            name: t('template.lastModifiedBy'),
             id: 'updater'
         }
     ])
@@ -232,7 +234,7 @@
             bkMessage({ message: err.message || err, theme: 'error' })
         }
     }
-            
+
     async function fetchTableData () {
         isTableLoading.value = true
         try {
@@ -244,21 +246,29 @@
                 ...(templateViewId.value !== ALL_TEMPLATE_VIEW_ID && { type: TEMPLATE_VIEW_ID_MAP[templateViewId.value] }),
                 ...searchParams.value
             }
-            proxy.$router.replace({
-                query: {
-                    mode: currentMode.value,
-                    ...searchParams.value
-                }
-            })
+            const query = {
+                mode: currentMode.value,
+                ...searchParams.value
+            }
+            if (!isShallowEqual(query, proxy.$route.query)) {
+                proxy.$router.replace({
+                    query: {
+                        mode: currentMode.value,
+                        ...searchParams.value
+                    }
+                })
+            }
             fetchTypeCount()
             const res = await proxy.$store.dispatch('templates/getTemplateList', param)
-            tableData.value = (res.records || []).map(x => {
-                x.updateTime = dayjs(x.updateTime).format('YYYY-MM-DD HH:mm:ss')
-                x.templateActions = [
+            tableData.value = (res.records || []).map(item => ({
+                ...item,
+                updateTime: dayjs(item.updateTime).format('YYYY-MM-DD HH:mm:ss'),
+                typeName: TEMPLATE_TYPE[item.type] ? t(`template.${TEMPLATE_TYPE[item.type]}`) : '--',
+                templateActions: [
                     {
-                        text: i18n.t('copy'), // 复制
-                        handler: () => copyTemplate(x),
-                        hasPermission: x.canEdit,
+                        text: t('copy'), // 复制
+                        handler: () => copyTemplate(item),
+                        hasPermission: item.canEdit,
                         disablePermissionApi: true,
                         isShow: true,
                         permissionData: {
@@ -269,60 +279,59 @@
                         }
                     },
                     {
-                        text: i18n.t('template.shelfStore'), // 上架研发商店
-                        handler: () => toRelativeStore(x),
-                        hasPermission: x.canEdit,
+                        text: t('template.shelfStore'), // 上架研发商店
+                        handler: () => toRelativeStore(item),
+                        hasPermission: item.canEdit,
                         disablePermissionApi: true,
-                        isShow: x.mode === 'CUSTOMIZE',
+                        isShow: item.mode === 'CUSTOMIZE',
                         permissionData: {
                             projectId: projectId.value,
                             resourceType: 'pipeline_template',
-                            resourceCode: x.id,
+                            resourceCode: item.id,
                             action: TEMPLATE_RESOURCE_ACTION.EDIT
                         }
                     },
                     {
-                        text: i18n.t('template.convertToCustom'), // 转为自定义
-                        handler: () => convertToCustom(x, fetchTableData),
-                        hasPermission: x.canEdit,
+                        text: t('template.convertToCustom'), // 转为自定义
+                        handler: () => convertToCustom(item, fetchTableData),
+                        hasPermission: item.canEdit,
                         disablePermissionApi: true,
-                        isShow: x.mode === 'CONSTRAINT',
+                        isShow: item.mode === 'CONSTRAINT',
                         permissionData: {
                             projectId: projectId.value,
                             resourceType: 'pipeline_template',
-                            resourceCode: x.id,
+                            resourceCode: item.id,
                             action: TEMPLATE_RESOURCE_ACTION.EDIT
                         }
                     },
                     {
-                        text: i18n.t('template.export'), // 导出
-                        handler: () => exportTemplate(x),
-                        hasPermission: x.canEdit,
+                        text: t('template.export'), // 导出
+                        handler: () => exportTemplate(item),
+                        hasPermission: item.canEdit,
                         disablePermissionApi: true,
                         isShow: true,
                         permissionData: {
                             projectId: projectId.value,
                             resourceType: 'pipeline_template',
-                            resourceCode: x.id,
+                            resourceCode: item.id,
                             action: TEMPLATE_RESOURCE_ACTION.EDIT
                         }
                     },
                     {
-                        text: i18n.t('delete'),
-                        handler: () => deleteTemplate(x, fetchTableData),
-                        hasPermission: x.canDelete,
+                        text: t('delete'),
+                        handler: () => deleteTemplate(item, fetchTableData),
+                        hasPermission: item.canDelete,
                         disablePermissionApi: true,
                         isShow: true,
                         permissionData: {
                             projectId: projectId.value,
                             resourceType: 'pipeline_template',
-                            resourceCode: x.id,
+                            resourceCode: item.id,
                             action: TEMPLATE_RESOURCE_ACTION.EDIT
                         }
                     }
                 ]
-                return x
-            })
+            }))
             pagination.value.count = res.count
         } catch (err) {
             bkMessage({
@@ -376,6 +385,8 @@
 
    .template-main {
         width: 100%;
+        display: flex;
+        flex-direction: column;
         padding: 24px 36px 12px 24px;
         &-header {
             display: flex;
@@ -397,7 +408,7 @@
                     background: #EAEBF0;
                     height: 32px;
                     border-radius: 2px;
-    
+
                     li{
                         height: 24px;
                         line-height: 24px;
@@ -414,26 +425,26 @@
                             text-overflow: ellipsis;
                             white-space: nowrap;
                         }
-    
+
                         svg {
                             vertical-align: middle;
                             color: #979BA5;
                             margin-right: 4px;
                         }
                     }
-    
+
                     .active {
                         padding: 0 12px;
                         background-color: #fff;
                         color: $primaryColor;
                         border-radius: 2px;
-      
+
                         svg {
                             color: $primaryColor;
                         }
                     }
                 }
-    
+
             }
             .search-input {
                 background: white;

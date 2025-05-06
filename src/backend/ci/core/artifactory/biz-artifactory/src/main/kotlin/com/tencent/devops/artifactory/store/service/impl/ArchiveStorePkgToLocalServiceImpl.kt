@@ -35,6 +35,7 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
 import org.apache.commons.io.FileUtils
+import org.apache.hc.core5.net.URIBuilder
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -43,6 +44,8 @@ import org.springframework.stereotype.Service
 import org.springframework.util.FileSystemUtils
 import java.io.File
 import java.net.URLDecoder
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @Service
 @ConditionalOnProperty(prefix = "artifactory", name = ["realm"], havingValue = REALM_LOCAL)
@@ -120,9 +123,17 @@ class ArchiveStorePkgToLocalServiceImpl : ArchiveStorePkgServiceImpl() {
     override fun createPkgShareUri(
         userId: String,
         storeType: StoreTypeEnum,
-        pkgPath: String
+        pkgPath: String,
+        queryCacheFlag: Boolean
     ): String {
         val host = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
-        return "$host/ms/artifactory/api/user/artifactories/file/download/local?filePath=$pkgPath"
+        return URIBuilder("$host/ms/artifactory/api/user/artifactories/file/download/local")
+            .apply {
+                // 显式添加所有参数
+                addParameter("filePath", URLEncoder.encode(pkgPath, StandardCharsets.UTF_8.name()))
+                addParameter("queryCacheFlag", queryCacheFlag.toString())
+            }
+            .build()
+            .toString()
     }
 }

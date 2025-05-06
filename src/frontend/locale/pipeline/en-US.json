@@ -494,7 +494,7 @@
     "uploadTemplateYamlTips": "Please upload the template YAML file",
     "templateCoverWarning": "Draft Overwrite Warning",
     "batchUpgrade": "Batch Upgrade",
-    "jumpToViewDetails": "Jump to view details",
+    "viewDetails": "Details",
     "upgradedVersion": "Upgraded version",
     "selectPipelineNum": "{0} pipeline selected",
     "batchEdit": "Batch Edit",
@@ -518,11 +518,9 @@
     "addField": "Add Field",
     "keyword": "Please enter name keyword",
     "selectAll": "Select All",
-    "pleaseSelectTemplateVersion": "Please select the template version",
+    "pleaseSelectTemplateVersion": "Please select a template version and add a new instance.",
     "instanceConfig": "Instance Config",
     "pipelineBuildParams": "Build Params",
-    "templateCoverWarningDesc": "The draft edited by {0} (created from {2}) has not been published yet. Editing the branch version will overwrite the unpublished draft. Please confirm if you want to continue.",
-    "templateOutDateCoverWarningDesc": "A new dev branch version has been submitted to the code repository. The draft edited by {0} (created from {2} on {1}) has expired. This operation will overwrite the expired draft. Please confirm whether to continue",
     "releasePipelineInstance": "Release Pipeline Instance",
     "paramDeleted": "Delete",
     "paramChanged": "Change",
@@ -530,7 +528,7 @@
     "hideDeletedParam": "Hide deleted params",
     "editInstanceName": "Edit Name",
     "copyInstance": "Copy",
-    "deleteInstanceTitleTips": "Confirm Delete Script?",
+    "deleteInstanceTitleTips": "Confirm Delete Instance?",
     "deleteInstanceContentTips": "This action cannot be undone. Please proceed with caution!",
     "templateInstanceNum": "{0} instances",
     "instance": "Instances",
@@ -539,11 +537,11 @@
     "sourceInfo": "Source Information",
     "upgradeSetting": "Upgrade Settings",
     "srcMarketTemplateName": "Dev Store Template",
-    "srcMarketTemplateLatestVersionName": "Latest Installed Version",
-    "latestInstalledVersionName": "Latest Version",
+    "srcMarketTemplateLatestVersionName": "Latest Version",
+    "latestInstalledVersionName": "Latest Installed Version",
     "upgradeStrategy": "Upgrade Strategy",
     "settingSyncStrategy": "Template Settings Sync Strategy",
-    "latestInstallVersionTitle": "<b>{0}</b> installed by {1} on {2}",
+    "latestInstallVersionTitle": "<b>{0}</b> installed {1} on {2}",
     "latestVersionTitle": "<b>{0}</b>",
     "AUTO-SYNC": "Auto Sync",
     "MANUAL-SYNC": "Manual Sync",
@@ -554,8 +552,37 @@
     "syncSettingStrategyDesc": "When auto-installing new versions, notifications/basic settings will be updated along with the template",
     "goStore": "View Store",
     "upgradeSettingSuccess": "Upgrade settings successfully",
-    "autoUpgradeStrategyTips": "After confirmation, version {0} will be automatically installed."
-},
+    "autoUpgradeStrategyTips": "After confirmation, version {0} will be automatically installed.",
+    "templateVar": "Template Variables",
+    "templateCoverWarningDesc": "The draft edited by {0} (created from {2}) has not been published yet. Editing the branch version will overwrite the unpublished draft. Please confirm if you want to continue.",
+    "templateOutDateCoverWarningDesc": "A new dev branch version has been submitted to the code repository. The draft edited by {0} (created from {2} on {1}) has expired. This operation will overwrite the expired draft. Please confirm whether to continue",
+    "reset": "Reset",
+    "cancelParticipant": "Cancel Participant",
+    "setParticipant": "Set Participant",
+    "useDefaultValue": "Use Default Value",
+    "disabledReleaseTips": "Please Select the Template Version",
+    "returnInstanceList": "Return to List",
+    "releasing": {
+      "title": "{0} pipeline instances are being released...",
+      "tips": "You may wait on the current page or close the popup to continue with other operations. You can later check the release results on the button."
+    },
+    "partOfMr": {
+      "title": "Merge request successfully created. Please handle it in the repository...",
+      "tips1": "The version has not been successfully released. Next step,",
+      "tips2": "please handle the merge request in the repository.",
+      "tips3": "In PAC mode, merging the YAML file into the default branch is considered the official release.",
+      "dealMR": "Handle Merge Request"
+    },
+    "releaseSuc": {
+      "title": "{0} pipeline instances successfully released",
+      "tips": "You can now view the released instances in the instance list."
+    },
+    "releaseFail": {
+      "title": "{0} pipeline instances failed to release",
+      "tips": "You can retry or close the popup."
+    },
+    "modifyConfig": "Modify Configuration"
+  },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
     "exportPipelineYamlTip": "Export the YAML file to the code repository to enable PAC mode, allowing maintenance of the pipeline through the code repository or UI. ",
@@ -818,7 +845,6 @@
       "execCurrent": "Before this plugin can be executed:",
       "execAfter": " And the following plugins can be executed later:",
       "stopConditions": " Otherwise, it will stop",
-      "by": "By",
       "toCheck": " Checked by man",
       "canSet": " Support using quality redlines to set quality requirement for this plugin so as to ensure the quality of this version",
       "settingNow": "Set now",
@@ -959,7 +985,7 @@
     "addAtom": "Add Plugins",
     "copyAtom": "Duplicate",
     "copyAtomFail": "Duplicate failed",
-    "showAliasName": " Display specific resource name when running",
+    "showAlias": " Display specific resource when running",
     "resourceType": " Build Resources Type",
     "addThirdSlave": " Add Self-Hosted Agent",
     "thirdSlaveTips": " If there are several Agents under the pools, assign the ones used last time; if the agents have not been used before, then assign randomly",
@@ -1282,7 +1308,7 @@
     "allNodeConcurrency": "Concurrency limit across all nodes",
     "allNodeConcurrencyPlaceholder": "The theoretical concurrency = concurrency per node * number of nodes",
     "minutes": "Minutes",
-    "customConditionExpPlaceholder": "e.g., variables.a == 1 || jobs.job1.steps.step1.outputs.b == 'api'"
+    "customConditionExpPlaceholder": "e.g., variables.a == 1 {'||'} jobs.job1.steps.step1.outputs.b == 'api'"
   },
   "主版本": "Major version",
   "特性版本": "Minor version",
@@ -1801,6 +1827,10 @@
   "allSource": "All",
   "customSource": "Custom",
   "marketSource": "Store",
+  "relyChanged": "Dependent field ({0}) values have changed, please check if the configuration is correct",
+  "releaseTemplate": "Release Template",
+  "checkTemplate": "Check Template",
   "groupLabel": "Group labels",
+  "groupLabelTips": "Variables with the same label will be displayed in the same group in the view and execution preview interface",
   "notGrouped": "Not grouped"
 }

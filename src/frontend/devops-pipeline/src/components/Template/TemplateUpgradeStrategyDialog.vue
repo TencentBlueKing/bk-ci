@@ -37,7 +37,10 @@
                 type="info"
                 :title="$t('template.autoUpgradeStrategyTips', [relatedInfo.srcMarketTemplateLatestVersionName ?? 'V1.8.0'])"
             ></bk-alert>
-            <bk-form-item :label="$t('template.settingSyncStrategy')">
+            <bk-form-item
+                v-if="isAutoUpgrade"
+                :label="$t('template.settingSyncStrategy')"
+            >
                 <bk-checkbox
                     v-model="strategyConf.syncSettingStrategy"
                     :disabled="isLoading"
@@ -54,13 +57,10 @@
 
 <script>
     import useInstance from '@/hook/useInstance'
+    import { STRATEGY_ENUM } from '@/utils/pipelineConst'
     import { computed, defineComponent, nextTick, ref } from 'vue'
     export default defineComponent({
         setup (props, ctx) {
-            const STRATEGY_ENUM = {
-                AUTO: 'AUTO',
-                MANUAL: 'MANUAL'
-            }
             const isLoading = ref(false)
             const isShow = ref(false)
             const { proxy } = useInstance()
@@ -69,6 +69,9 @@
             const strategyConf = ref({
                 upgradeStrategy: relatedInfo.value.upgradeStrategy,
                 syncSettingStrategy: relatedInfo.value.settingSyncStrategy === STRATEGY_ENUM.AUTO
+            })
+            const isAutoUpgrade = computed(() => {
+                return strategyConf.value.upgradeStrategy === STRATEGY_ENUM.AUTO
             })
 
             ctx.expose({
@@ -106,6 +109,10 @@
                     }
                 } catch (error) {
                     console.error('Error setting strategy:', error)
+                    proxy.$bkMessage({
+                        theme: 'error',
+                        message: error.message ?? error
+                    })
                 } finally {
                     isLoading.value = false
                 }
@@ -117,6 +124,7 @@
 
             function handleUpgradeStrategyChange (value) {
                 showAutoUpgradeStrategyTips.value = value === STRATEGY_ENUM.AUTO
+                strategyConf.value.syncSettingStrategy = false
             }
 
             return {
@@ -128,6 +136,7 @@
                 toogleShow,
                 relatedInfo,
                 showAutoUpgradeStrategyTips,
+                isAutoUpgrade,
                 handleUpgradeStrategyChange
             }
         }

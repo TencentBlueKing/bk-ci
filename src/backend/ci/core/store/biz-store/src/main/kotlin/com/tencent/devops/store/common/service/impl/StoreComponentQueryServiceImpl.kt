@@ -95,6 +95,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
+import com.tencent.devops.store.pojo.common.version.VersionInfo
 import com.tencent.devops.store.pojo.common.version.VersionModel
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -755,6 +756,82 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         }
         return storeCommonService.getStoreShowVersionInfo(cancelFlag, showReleaseType, showVersion)
     }
+
+    override fun getComponentUpgradeVersionInfo(
+        userId: String,
+        storeType: String,
+        storeCode: String,
+        projectCode: String,
+        instanceId: String?,
+        osName: String?,
+        osArch: String?
+    ): VersionInfo? {
+        val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
+
+        // 判断测试环境标志
+        val isTestEnv = storeProjectRelDao.getProjectRelInfo(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeTypeEnum.type.toByte(),
+            storeProjectType = StoreProjectTypeEnum.TEST,
+            projectCode = projectCode,
+            instanceId = instanceId
+        )?.firstOrNull() != null
+
+        // 获取最新可用版本
+        val statusList = if (isTestEnv) StoreStatusEnum.getTestStatusList() else listOf(StoreStatusEnum.RELEASED.name)
+        val latestVersion = storeBaseQueryDao.getMaxVersionComponentByCode(
+            dslContext = dslContext,
+            storeType = storeTypeEnum,
+            storeCode = storeCode,
+            statusList = statusList
+        )?.takeIf { it.version.isNotBlank() } ?: return null
+
+        // 获取已安装组件关系信息
+        val installedRel = storeProjectRelDao.getProjectRelInfo(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeTypeEnum.type.toByte(),
+            storeProjectType = StoreProjectTypeEnum.COMMON,
+            projectCode = projectCode,
+            instanceId = instanceId
+        )?.firstOrNull()
+
+        // 处理版本比对逻辑
+        return when {
+            installedRel == null -> createVersionInfo(latestVersion.version)
+            isUpdateRequired(
+                storeId = latestVersion.id,
+                installedTime = installedRel.createTime,
+                osName = osName,
+                osArch = osArch
+            ) -> createVersionInfo(latestVersion.version, latestVersion.version)
+            else -> null
+        }
+    }
+
+    private fun isUpdateRequired(
+        storeId: String,
+        installedTime: LocalDateTime,
+        osName: String?,
+        osArch: String?
+    ): Boolean {
+        val envRecord = storeBaseEnvQueryDao.getBaseEnvsByStoreId(
+            dslContext = dslContext,
+            storeId = storeId,
+            osName = osName,
+            osArch = osArch
+        )?.firstOrNull()
+        return envRecord?.updateTime.let { packageTime ->
+            installedTime < packageTime
+        }
+    }
+
+    private fun createVersionInfo(latestVersion: String, currentVersion: String = latestVersion) =
+        VersionInfo(
+            versionName = latestVersion,
+            versionValue = currentVersion.takeIf { it.isNotBlank() } ?: latestVersion
+        )
 
     private fun getStoreInfos(storeInfoQuery: StoreInfoQuery): Pair<Long, List<Record>> {
         if (storeInfoQuery.getSpecQueryFlag()) {

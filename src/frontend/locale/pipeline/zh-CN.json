@@ -496,7 +496,7 @@
     "stepTemplate": "Step模板",
     "templateCoverWarning": "草稿即将覆盖警告",
     "batchUpgrade": "批量升级",
-    "jumpToViewDetails": "跳转查看详情",
+    "viewDetails": "查看详情",
     "upgradedVersion": "升级版本",
     "selectPipelineNum": "已选择{0}条流水线",
     "batchEdit": "批量编辑",
@@ -520,11 +520,9 @@
     "addField": "添加字段",
     "keyword": "请输入名称关键字",
     "selectAll": "全选",
-    "pleaseSelectTemplateVersion": "请选择模板版本并新增一个实例化",
+    "pleaseSelectTemplateVersion": "请选择模板版本并新增一个实例",
     "instanceConfig": "实例配置",
     "pipelineBuildParams": "流水线入参",
-    "templateCoverWarningDesc": "{0} 编辑的草稿（从{2}创建）尚未发布。编辑分支版本将覆盖尚未发布的草稿，请确认是否继续",
-    "templateOutDateCoverWarningDesc": "已从代码库提交了新的 {2} 分支版本， {0} 编辑的草稿（于 {1} 从 {2} 创建）已过期，此操作将覆盖过期的草稿，请确认是否继续",
     "releasePipelineInstance": "发布流水线实例",
     "paramDeleted": "删除字段",
     "paramChanged": "属性值更新",
@@ -532,7 +530,7 @@
     "hideDeletedParam": "隐藏删除的字段",
     "editInstanceName": "编辑实例名称",
     "copyInstance": "复制实例",
-    "deleteInstanceTitleTips": "确认删除该脚本？",
+    "deleteInstanceTitleTips": "确认删除该实例？",
     "deleteInstanceContentTips": "删除操作无法撤回，请谨慎操作！",
     "templateInstanceNum": "共{0}条实例",
     "instance": "实例",
@@ -541,11 +539,11 @@
     "upgradeSetting": "升级设置",
     "updatePipelineInstance": "更新流水线实例",
     "srcMarketTemplateName": "研发商店模板",
-    "srcMarketTemplateLatestVersionName": "最近安装版本",
-    "latestInstalledVersionName": "最新版本",
+    "srcMarketTemplateLatestVersionName": "最新版本",
+    "latestInstalledVersionName": "最近安装版本",
     "upgradeStrategy": "升级策略",
     "settingSyncStrategy": "模板设置同步策略",
-    "latestInstallVersionTitle": "<b>{0}</b> 由 {1} 于 {2} 安装",
+    "latestInstallVersionTitle": "<b>{0}</b> {1}于 {2} 安装",
     "latestVersionTitle": "<b>{0}</b>",
     "AUTO-SYNC": "自动同步",
     "MANUAL-SYNC": "手动同步",
@@ -556,7 +554,36 @@
     "syncSettingStrategyDesc": "自动安装新版本时，通知/基础设置跟随模板一起更新",
     "goStore": "去研发商店查看",
     "upgradeSettingSuccess": "升级设置成功",
-    "autoUpgradeStrategyTips": "确定后， 将会自动安装 {0} 版本。"
+    "autoUpgradeStrategyTips": "确定后， 将会自动安装 {0} 版本。",
+    "templateVar": "模板变量",
+    "templateCoverWarningDesc": "{0} 编辑的草稿（从{2}创建）尚未发布。编辑分支版本将覆盖尚未发布的草稿，请确认是否继续",
+    "templateOutDateCoverWarningDesc": "已从代码库提交了新的 {2} 分支版本， {0} 编辑的草稿（于 {1} 从 {2} 创建）已过期，此操作将覆盖过期的草稿，请确认是否继续",
+    "reset": "重置",
+    "cancelParticipant": "取消入参",
+    "setParticipant": "设为入参",
+    "useDefaultValue": "使用默认值",
+    "disabledReleaseTips": "请选择模板版本",
+    "returnInstanceList": "返回列表",
+    "releasing": {
+      "title": "{0}个流水线实例正在发布中…",
+      "tips": "你可以在当前页等待或关闭弹窗继续其他操作后续可在按钮处查看发布结果"
+    },
+    "partOfMr": {
+      "title": "合并请求创建完成，请到代码库处理...",
+      "tips1": "版本尚未发布成功，下一步",
+      "tips2": "请到代码库处理合并请求",
+      "tips3": "PAC模式下，YAML 文件合入默认分支，才视为发布正式版本",
+      "dealMR": "处理合并请求"
+    },
+    "releaseSuc": {
+      "title": "{0}个流水线实例发布成功",
+      "tips": "接下来你可以在实例列表中查看已发布的实例"
+    },
+    "releaseFail": {
+      "title": "{0}个流水线实例发布失败",
+      "tips": "接下来你可以重试或关闭弹窗"
+    },
+    "modifyConfig": "修改配置"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",
@@ -817,7 +844,6 @@
       "execCurrent": "才会被执行:",
       "execAfter": "其后续插件才会继续执行:",
       "stopConditions": "不满足条件时将终止",
-      "by": "由",
       "toCheck": "进行人工审核",
       "canSet": "该插件支持使用质量红线服务设置质量要求，保证版本质量。",
       "settingNow": "立即配置",
@@ -957,7 +983,7 @@
     "addAtom": "新增插件",
     "copyAtom": "复制插件",
     "copyAtomFail": "复制插件失败",
-    "showAliasName": "执行时显示具体资源别名",
+    "showAlias": "执行时显示具体资源",
     "resourceType": "构建资源类型",
     "addThirdSlave": "新增第三方构建机",
     "thirdSlaveTips": "若环境下包含多个节点，则优先分配上次使用过的节点；若第一次使用，则随机分配",
@@ -1280,7 +1306,7 @@
     "allNodeConcurrency": "所有节点上的总并发",
     "allNodeConcurrencyPlaceholder": "不填则 总并发理论值=单节点最大并发*构建节点数",
     "minutes": "分钟",
-    "customConditionExpPlaceholder": "如：variables.a == 1 || jobs.job1.steps.step1.outputs.b == 'api'"
+    "customConditionExpPlaceholder": "如：variables.a == 1 {'||'} jobs.job1.steps.step1.outputs.b == 'api'"
   },
   "主版本": "主版本",
   "特性版本": "特性版本",
@@ -1802,6 +1828,10 @@
   "allSource": "全部",
   "customSource": "自定义",
   "marketSource": "研发商店",
+  "relyChanged": "依赖字段（{0}）值已变更，请检查配置是否正确",
+  "releaseTemplate": "发布模板",
+  "checkTemplate": "查看模板",
   "groupLabel": "分组标签",
+  "groupLabelTips": "拥有相同标签的变量，在查看和执行预览界面将在同一个分组下展示",
   "notGrouped": "未分组"
 }

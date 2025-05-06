@@ -1,4 +1,5 @@
 <script>
+    import Logo from '@/components/Logo'
     import NamingConventionTip from '@/components/namingConventionTip.vue'
     export default {
         name: 'form-field',
@@ -64,6 +65,10 @@
                 type: Boolean,
                 default: false
             },
+            isChange: {
+                type: Boolean,
+                default: false
+            },
             isDelete: {
                 type: Boolean,
                 default: false
@@ -71,6 +76,19 @@
             isNew: {
                 type: Boolean,
                 default: false
+            },
+            isRequiredParam: {
+                // 是否为入参
+                type: Boolean,
+                default: false
+            },
+            handleUseDefaultValue: {
+                type: Function,
+                default: () => () => {}
+            },
+            handleSetParmaRequired: {
+                type: Function,
+                default: () => () => {}
             }
         },
         computed: {
@@ -101,7 +119,7 @@
             const {
                 label, inline, required, $slots, isError, errorMsg, hideColon, desc, docsLink,
                 descLink, descLinkText, type, widthStyle, bottomDivider, customDesc, showOperateBtn,
-                statusTagConfig, isDelete
+                statusTagConfig, isDelete, isChange, isRequiredParam, $t, handleSetParmaRequired, handleUseDefaultValue
             } = this
             const descMap = desc.split('\n')
             return (
@@ -113,46 +131,78 @@
                     'is-required': required,
                     'is-danger': isError
                 }} >
-                    { label && <label title={label} class='bk-label atom-form-label' style={widthStyle}>
-                        {
-                            <span class={{ deleted: isDelete }}>{label}</span>
-                        }
-                        { hideColon ? '' : '：' }
-                        { docsLink
-                            && <a target="_blank" href={docsLink}><i class="bk-icon icon-question-circle"></i></a>
-                        }
-                        { label.trim() && (desc.trim() || customDesc) && <bk-popover placement={customDesc ? 'top-start' : 'top'} theme={customDesc ? 'light' : 'dark'} width={customDesc ? 892 : 'auto'}>
-                                <i class={{ 'bk-icon': true, 'icon-info-circle': true }} style={{ 'margin-left': hideColon ? '4px' : '0', color: hideColon ? '#979BA5' : '' }}></i>
-                                <div slot="content">
-                                    {
-                                        customDesc
-                                        ? <NamingConventionTip/>
-                                        : <div style="white-space: pre-wrap; overflow-wrap: break-word; font-size: 12px; max-width: 500px;">
-                                            {
-                                                descMap.length > 1
-                                                ? descMap.map(item => (
-                                                    <div>{item}</div>
-                                                ))
-                                                : desc
-                                            }
-                                            { descLink && <a class="desc-link" target="_blank" href={descLink}>{descLinkText}</a>}
-                                        </div>
-                                    }
+                    {
+                        label && <label title={label} class='bk-label atom-form-label' style={widthStyle}>
+                            {
+                                <span class={{ deleted: isDelete }}>{label}</span>
+                            }
+                            { hideColon ? '' : '：' }
+                            { docsLink
+                                && <a target="_blank" href={docsLink}><i class="bk-icon icon-question-circle"></i></a>
+                            }
+                            { label.trim() && (desc.trim() || customDesc) && <bk-popover placement={customDesc ? 'top-start' : 'top'} theme={customDesc ? 'light' : 'dark'} width={customDesc ? 892 : 'auto'}>
+                                    <i class={{ 'bk-icon': true, 'icon-info-circle': true }} style={{ 'margin-left': hideColon ? '4px' : '0', color: hideColon ? '#979BA5' : '' }}></i>
+                                    <div slot="content">
+                                        {
+                                            customDesc
+                                            ? <NamingConventionTip/>
+                                            : <div style="white-space: pre-wrap; overflow-wrap: break-word; font-size: 12px; max-width: 500px;">
+                                                {
+                                                    descMap.length > 1
+                                                    ? descMap.map(item => (
+                                                        <div>{item}</div>
+                                                    ))
+                                                    : desc
+                                                }
+                                                { descLink && <a class="desc-link" target="_blank" href={descLink}>{descLinkText}</a>}
+                                            </div>
+                                        }
 
-                                </div>
-                            </bk-popover>
-                        }
-                        {
-                            statusTagConfig.isShow && <span class={['status-tag', statusTagConfig.theme]}>
-                                {statusTagConfig.message}
+                                    </div>
+                                </bk-popover>
+                            }
+                            {
+                                statusTagConfig.isShow && <span class={['status-tag', statusTagConfig.theme]}>
+                                    {statusTagConfig.message}
+                                </span>
+                            }
+                        </label>
+                    }
+
+                    {
+                        showOperateBtn && !isDelete && <span
+                            class='operate-btn'
+                        >
+                            {
+                                isChange && (
+                                    <span class={['icon-item', {
+                                            'show-dot': isChange
+                                        }]}
+                                        onClick={handleUseDefaultValue}
+                                        v-bk-tooltips={$t('template.useDefaultValue')}
+                                    >
+                                        <Logo
+                                            name="use-default"
+                                            size="20"
+                                        />
+                                    </span>
+                                )
+                            }
+                            <span class={['icon-item', {
+                                    active: isRequiredParam
+                                }]}
+                                v-bk-tooltips={
+                                    isRequiredParam ? $t('template.cancelParticipant') : $t('template.setParticipant')
+                                }
+                                onClick={handleSetParmaRequired}
+                            >
+                                <Logo
+                                    name="set-param"
+                                    size="14"
+                                />
                             </span>
-                        }
-                        {
-                            showOperateBtn && !isDelete && <span class='operate-btn'>
-                                
-                            </span>
-                        }
-                    </label> }
+                        </span>
+                    }
 
                     <div class='bk-form-content'>
                         {$slots.default}
@@ -184,7 +234,6 @@
             pointer-events: auto;
         }
         .atom-form-label {
-            width: 100% !important;
             .deleted {
                 color: #a7a9ac !important;
                 text-decoration: line-through;
@@ -249,8 +298,38 @@
         }
     }
     .operate-btn {
+        display: flex;
+        justify-content: end;
+        align-items: center;
         visibility: hidden;
-        position: absolute;
-        right: 0;
+        height: 32px;
+        .icon-item {
+            position: relative;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            width: 24px;
+            height: 24px;
+            background: #EAEBF0;
+            border-radius: 2px;
+            margin-left: 6px;
+            cursor: pointer;
+            &.active {
+                background: #CDDFFE;
+            }
+        }
+        .show-dot {
+            &::after {
+                content: '';
+                position: absolute;
+                top: -2px;
+                right: -2px;
+                width: 5px;
+                height: 5px;
+                background: red;
+                border-radius: 50%;
+            }
+        }
     }
 </style>

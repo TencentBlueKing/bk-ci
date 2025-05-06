@@ -19,21 +19,36 @@
                     >
                         {{ $t('cancel') }}
                     </bk-button>
-                    <bk-button
+                    <span
                         v-if="isInstanceCreateViewType"
-
-                        theme="primary"
-                        @click="handleBatchUpgrade"
+                        v-bk-tooltips="{
+                            disabled: !!templateVersion,
+                            content: $t('template.disabledReleaseTips')
+                        }"
                     >
-                        {{ $t('release') }}
-                    </bk-button>
-                    <bk-button
+                        <bk-button
+                            :disabled="!templateVersion"
+                            theme="primary"
+                            @click="handleBatchUpgrade"
+                        >
+                            {{ $t('release') }}
+                        </bk-button>
+                    </span>
+                    <span
                         v-else
-                        theme="primary"
-                        @click="handleBatchUpgrade"
+                        v-bk-tooltips="{
+                            disabled: !!templateVersion,
+                            content: $t('template.disabledReleaseTips')
+                        }"
                     >
-                        {{ $t('template.batchUpgrade') }}
-                    </bk-button>
+                        <bk-button
+                            theme="primary"
+                            :disabled="!templateVersion"
+                            @click="handleBatchUpgrade"
+                        >
+                            {{ $t('template.batchUpgrade') }}
+                        </bk-button>
+                    </span>
                 </aside>
             </header>
             <main class="instance-contents">
@@ -56,6 +71,7 @@
                         ext-cls="instance-contents-empty"
                         slot="main"
                         type="empty"
+                        scene="part"
                     >
                         {{ $t('template.pleaseSelectTemplateVersion') }}
                     </bk-exception>
@@ -67,9 +83,14 @@
                 </bk-resize-layout>
             </main>
         </template>
-        <TemplateReleaseSideSlider
+        <ReleasePipelineSideSlider
             v-model="showRelease"
+            is-template-instance-mode
+            :version="currentVersionId"
+            :instance-list="instanceList"
             :is-instance-create-type="isInstanceCreateViewType"
+            :handle-change-file-path="handleChangeFilePath"
+            @release="handleReleaseInstance"
         />
     </section>
 </template>
@@ -78,12 +99,16 @@
     import TemplateBreadCrumb from '@/components/Template/TemplateBreadCrumb'
     import UseInstance from '@/hook/useInstance'
     import { computed, onMounted, ref, watch } from 'vue'
+    import {
+        SET_INSTANCE_LIST,
+        SET_RELEASE_BASE_ID
+    } from '@/store/modules/templates/constants'
     import InstanceAside from './InstanceAside'
     import InstanceConfig from './InstanceConfig'
     import TemplateVersionSelector from './TemplateVersionSelector'
-    import TemplateReleaseSideSlider from '@/components/Template/TemplateReleaseSideSlider'
-    const { proxy } = UseInstance()
+    import ReleasePipelineSideSlider from '@/components/PipelineHeader/ReleasePipelineSideSlider'
 
+    const { proxy } = UseInstance()
     const isLoading = ref(false)
     const showRelease = ref(false)
     const projectId = computed(() => proxy.$route.params?.projectId)
@@ -91,8 +116,10 @@
     const pipeline = computed(() => proxy.$store?.state?.atom?.pipeline)
     const pipelineInfo = computed(() => proxy.$store?.state?.atom?.pipelineInfo)
     const instanceList = computed(() => proxy.$store?.state?.templates?.instanceList)
-    const currentVersionId = computed(() => proxy?.$route.params?.version ?? pipelineInfo.value?.version)
+    const currentVersionId = computed(() => proxy?.$route.params?.version ?? pipelineInfo.value?.version) // 路径上的模板版本号
+    const templateVersion = computed(() => proxy?.$store?.state?.templates?.templateVersion) // 实例化选中的模板版本号
     const isInstanceCreateViewType = computed(() => proxy.$route.params?.type === 'create')
+    const useTemplateSettings = computed(() => proxy.$store?.state?.templates?.useTemplateSettings)
     watch(() => pipeline.value, () => {
         isLoading.value = false
     }, {
@@ -115,7 +142,6 @@
 
     function handleBatchUpgrade () {
         showRelease.value = true
-        console.log(instanceList.value, 11111)
     }
     function handleGoBack () {
         proxy.$router.push({
@@ -125,6 +151,39 @@
                 version: currentVersionId.value
             }
         })
+    }
+    function handleChangeFilePath (value, index) {
+        const list = instanceList.value.map(i => i)
+        proxy.$set(list[index], 'filePath', value)
+        
+        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, list)
+    }
+    async function handleReleaseInstance (value) {
+        const fn = !isInstanceCreateViewType.value ? 'templates/updateInstance' : 'templates/releaseInstance'
+        try {
+            const instanceReleaseInfos = instanceList.value.map(item => {
+                return {
+                    ...item,
+                    param: item.param.map(paramItem => ({
+                        ...paramItem,
+                        required: paramItem.isRequiredParam
+                    }))
+                }
+            })
+            const res = await proxy.$store.dispatch(fn, {
+                projectId: projectId.value,
+                templateId: templateId.value,
+                version: templateVersion.value,
+                params: {
+                    ...value,
+                    useTemplateSettings: useTemplateSettings.value,
+                    instanceReleaseInfos
+                }
+            })
+            proxy.$store.commit(`templates/${SET_RELEASE_BASE_ID}`, res.data)
+        } catch (e) {
+            console.err(e)
+        }
     }
     onMounted(() => {
         requestTemplateByVersion()
@@ -156,7 +215,7 @@
         height: 100%;
     }
     .instance-contents-empty {
-        margin-top: 10%;
+        margin-top: 15%;
     }
     .instance-entry-aside {
         margin-right: 24px;

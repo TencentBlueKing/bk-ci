@@ -28,7 +28,9 @@ export default {
         initialInstanceList: [],
         useTemplateSettings: false,
         templateVersion: '',
-        templateDetail: {}
+        templateDetail: {},
+        isInstanceReleasing: false, // 实例正在发布状态
+        releaseBaseId: '' // 实例发布任务ID
     },
     mutations,
     actions,
