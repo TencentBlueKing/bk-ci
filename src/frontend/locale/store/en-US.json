@@ -642,5 +642,7 @@
     "当源模板有新版本时，新版本自动发布到研发商店": "When the source template has a new version, it is automatically released to the development store",
     "publishStrategy": "Publish Strategy: ",
     "AUTO": "AUTO",
-    "MANUAL": "MANUAL"
+    "MANUAL": "MANUAL",
+    "MANUAL-upgradeStrategyDesc": "When there are updates in the dev store, manually install new versions as needed",
+    "AUTO-upgradeStrategyDesc": "Automatically install new versions when they are released in the dev store",
 }
