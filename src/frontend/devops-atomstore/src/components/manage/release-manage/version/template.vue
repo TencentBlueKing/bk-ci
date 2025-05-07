@@ -57,36 +57,31 @@
         </bk-table>
 
         <bk-sideslider
-            :is-show.sync="offlineImageData.show"
-            :title="offlineImageData.title"
-            :quick-close="offlineImageData.quickClose"
-            :width="offlineImageData.width"
+            :is-show.sync="offlineData.show"
+            :title="offlineData.title"
+            :quick-close="offlineData.quickClose"
+            :width="offlineData.width"
         >
             <template slot="content">
                 <bk-form
+                    v-if="offlineData.form"
                     ref="offlineForm"
-                    class="relate-form"
-                    label-width="100"
-                    :model="offlineImageData.form"
-                    v-bkloading="{ isLoading: offlineImageData.isLoading }"
+                    class="offline-template-version-form"
+                    
+                    :model="offlineData.form"
+                    v-bkloading="{ isLoading: offlineData.isLoading }"
                 >
                     <bk-form-item
-                        :label="$t('store.镜像名称')"
-                        property="imageName"
+                        :label="$t('store.versionName')"
+                        property="versionName"
                     >
-                        <span class="lh30">{{ offlineImageData.form.imageName }}</span>
+                        <span class="lh30">{{ offlineData.form.versionName }}</span>
                     </bk-form-item>
                     <bk-form-item
-                        :label="$t('store.镜像标识')"
-                        property="imageCode"
-                    >
-                        <span class="lh30">{{ offlineImageData.form.imageCode }}</span>
-                    </bk-form-item>
-                    <bk-form-item
-                        :label="$t('store.镜像版本')"
+                        :label="$t('store.模板版本')"
                         property="version"
                     >
-                        <span class="lh30">{{ offlineImageData.form.version }}</span>
+                        <span class="lh30">{{ offlineData.form.version }}</span>
                     </bk-form-item>
                     <bk-form-item
                         :label="$t('store.下架原因')"
@@ -96,18 +91,18 @@
                     >
                         <bk-input
                             type="textarea"
-                            v-model="offlineImageData.form.reason"
+                            v-model="offlineData.form.reason"
                             :placeholder="$t('store.请输入下架原因')"
                         ></bk-input>
                     </bk-form-item>
                     <bk-form-item>
                         <bk-button
                             theme="primary"
-                            @click.native="submitOfflineImage"
+                            @click.native="submitOfflineTemplateVersion"
                         >
                             {{ $t('store.提交') }}
                         </bk-button>
-                        <bk-button @click.native="cancelOfflineImage"> {{ $t('store.取消') }} </bk-button>
+                        <bk-button @click.native="cancelOfflineTemplate"> {{ $t('store.取消') }} </bk-button>
                     </bk-form-item>
                 </bk-form>
             </template>
@@ -117,9 +112,9 @@
 
 <script>
     import { convertTime } from '@/utils/index'
+    import { mapActions } from 'vuex'
 
     export default {
-
         props: {
             versionList: Array,
             pagination: Object
@@ -127,25 +122,14 @@
 
         data () {
             return {
-                isOverDes: false,
-                hasShowAll: false,
-                offlineImageData: {
-                    title: this.$t('store.下架镜像'),
+                offlineData: {
+                    title: this.$t('store.下架模板'),
                     quickClose: true,
                     width: 565,
                     isLoading: false,
                     show: false,
-                    versionList: [],
-                    form: {
-                        imageName: '',
-                        imageCode: '',
-                        version: '',
-                        reason: ''
-                    }
-                },
-                hasShowDetail: false,
-                detailLoading: false,
-                detail: {}
+                    form: null
+                }
             }
         },
 
@@ -181,22 +165,14 @@
         },
 
         methods: {
+            ...mapActions('store', [
+                'offlineTemplate'
+            ]),
             handlePageChange (page) {
                 this.$emit('pageChanged', page)
             },
             handleLimitChange (currentLimit, prevLimit) {
                 this.$emit('pageLimitChanged', currentLimit, prevLimit)
-            },
-            showDetail (imageId) {
-                this.hasShowDetail = true
-                this.detailLoading = true
-                this.$store.dispatch('store/requestImageDetail', imageId).then((res) => {
-                    this.detail = res || {}
-                }).catch((err) => {
-                    this.$bkMessage({ message: err.message || err, theme: 'error' })
-                }).finally(() => {
-                    this.detailLoading = false
-                })
             },
 
             requireRule (name) {
@@ -207,37 +183,37 @@
                 }
             },
 
-            submitOfflineImage (row) {
-                this.$refs.offlineForm.validate().then(() => {
-                    const postData = {
-                        imageCode: this.offlineImageData.form.imageCode,
-                        params: {
-                            version: this.offlineImageData.form.version,
-                            reason: this.offlineImageData.form.reason
-                        }
+            async submitOfflineTemplateVersion (row) {
+                try {
+                    const valid = await this.$refs.offlineForm.validate()
+                    if (!valid) {
+                        throw new Error(this.$t('store.校验失败，请修改再试'))
                     }
-                    this.offlineImageData.isLoading = true
-                    this.$store.dispatch('store/requestOfflineImage', postData).then((res) => {
-                        this.cancelOfflineImage()
-                        this.$emit('pageChanged')
-                    }).catch((err) => {
-                        this.$bkMessage({ message: err.message || err, theme: 'error' })
-                    }).finally(() => (this.offlineImageData.isLoading = false))
-                }).catch(() => this.$bkMessage({ message: this.$t('store.校验失败，请修改再试'), theme: 'error' }))
+
+                    const postData = {
+                        templateCode: this.offlineData.form.templateCode,
+                        version: this.offlineData.form.version,
+                        reason: this.offlineData.form.reason
+                    }
+                    this.offlineData.isLoading = true
+                    await this.offlineTemplate(postData)
+                    this.cancelOfflineTemplate()
+                    this.$emit('pageChanged')
+                } catch (err) {
+                    this.$bkMessage({ message: err.message || err, theme: 'error' })
+                } finally {
+                    this.offlineData.isLoading = false
+                }
             },
 
-            cancelOfflineImage () {
-                this.offlineImageData.show = false
-                this.offlineImageData.form.imageName = ''
-                this.offlineImageData.form.imageCode = ''
-                this.offlineImageData.form.version = ''
+            cancelOfflineTemplate () {
+                this.offlineData.show = false
+                this.offlineData.form = null
             },
 
             offline (row) {
-                this.offlineImageData.show = true
-                this.offlineImageData.form.imageName = row.imageName
-                this.offlineImageData.form.imageCode = row.imageCode
-                this.offlineImageData.form.version = row.version
+                this.offlineData.show = true
+                this.offlineData.form = row
             },
 
             toDetail () {
@@ -256,5 +232,8 @@
 <style lang="scss" scoped>
     .version-detail {
         padding: 20px;
+    }
+    .offline-template-version-form {
+        padding: 24px;
     }
 </style>
