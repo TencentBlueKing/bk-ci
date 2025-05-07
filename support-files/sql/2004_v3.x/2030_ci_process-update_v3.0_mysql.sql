@@ -150,6 +150,24 @@ BEGIN
             ADD COLUMN `DELETED` bit not null default b'0' comment '是否删除';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_SETTING'
+                    AND COLUMN_NAME = 'FAIL_IF_VARIABLE_INVALID') THEN
+        ALTER TABLE `T_PIPELINE_SETTING`
+            ADD COLUMN `FAIL_IF_VARIABLE_INVALID` bit default null comment '是否配置流水线变量值超长时终止执行';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_SETTING_VERSION'
+                    AND COLUMN_NAME = 'FAIL_IF_VARIABLE_INVALID') THEN
+        ALTER TABLE `T_PIPELINE_SETTING_VERSION`
+            ADD COLUMN `FAIL_IF_VARIABLE_INVALID` bit default null comment '是否配置流水线变量值超长时终止执行';
+    END IF;
+
 COMMIT;
 
 END <CI_UBF>
