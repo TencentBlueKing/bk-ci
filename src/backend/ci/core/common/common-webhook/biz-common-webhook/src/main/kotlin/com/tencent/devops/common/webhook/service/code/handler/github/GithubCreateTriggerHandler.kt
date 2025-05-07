@@ -143,7 +143,7 @@ class GithubCreateTriggerHandler : GitHookTriggerHandler<GithubCreateEvent> {
             val (includedFailedCode, excludedFailedCode) = if (event.createType() == GithubCreateRefType.TAG) {
                 WebhookI18nConstants.TAG_NAME_NOT_MATCH to WebhookI18nConstants.TAG_NAME_IGNORED
             } else {
-                WebhookI18nConstants.TARGET_BRANCH_NOT_MATCH to WebhookI18nConstants.TARGET_BRANCH_IGNORED
+                WebhookI18nConstants.BRANCH_NOT_MATCH to WebhookI18nConstants.BRANCH_IGNORED
             }
             val branchFilter = BranchFilter(
                 pipelineId = pipelineId,
