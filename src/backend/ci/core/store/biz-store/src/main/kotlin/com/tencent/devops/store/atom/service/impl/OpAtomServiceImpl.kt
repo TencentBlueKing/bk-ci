@@ -127,6 +127,11 @@ class OpAtomServiceImpl @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(OpAtomServiceImpl::class.java)
     private val fileSeparator: String = FileSystems.getDefault().separator
+    private val executorService by lazy {
+        Executors.newFixedThreadPool(1).apply {
+            Runtime.getRuntime().addShutdownHook(Thread { shutdown() })
+        }
+    }
 
     /**
      * op系统获取插件信息
@@ -634,7 +639,7 @@ class OpAtomServiceImpl @Autowired constructor(
     }
 
     override fun updateAtomSensitiveCacheConfig(userId: String, atomCode: String?): Result<Boolean> {
-        Executors.newFixedThreadPool(1).submit {
+        executorService.submit {
             logger.info("begin updateAtomSensitiveCacheConfig!!")
             val statusList = listOf(
                 AtomStatusEnum.TESTING.status.toByte(),

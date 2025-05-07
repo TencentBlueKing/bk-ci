@@ -28,6 +28,7 @@
 package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.visible.DeptInfo
 
 interface StoreDeptService {
@@ -41,4 +42,9 @@ interface StoreDeptService {
      * 获取模板下镜像对应的机构信息
      */
     fun getTemplateImageDeptMap(stageList: List<Stage>): Map<String, List<DeptInfo>?>
+
+    /**
+     * 刷新组织架构信息
+     */
+    fun refreshDeptInfo(userId: String, storeType: StoreTypeEnum): Boolean
 }
