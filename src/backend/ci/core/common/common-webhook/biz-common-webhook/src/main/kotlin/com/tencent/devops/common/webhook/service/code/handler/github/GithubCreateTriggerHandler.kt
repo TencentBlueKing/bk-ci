@@ -40,8 +40,11 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCreateEvent
+import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
+import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
+import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
 
@@ -118,8 +121,40 @@ class GithubCreateTriggerHandler : GitHookTriggerHandler<GithubCreateEvent> {
         pipelineId: String,
         repository: Repository,
         webHookParams: WebHookParams
-    ): List<WebhookFilter> {
-        return emptyList()
+    ): List<WebhookFilter>  {
+        with(webHookParams){
+            val userId = getUsername(event)
+            val userFilter = UserFilter(
+                pipelineId = pipelineId,
+                triggerOnUser = userId,
+                includedUsers = WebhookUtils.convert(includeUsers),
+                excludedUsers = WebhookUtils.convert(excludeUsers),
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_NOT_MATCH,
+                    params = listOf(userId)
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.USER_IGNORED,
+                    params = listOf(userId)
+                ).toJsonStr()
+            )
+            val triggerOnBranchName = getBranchName(event)
+            val branchFilter = BranchFilter(
+                pipelineId = pipelineId,
+                triggerOnBranchName = triggerOnBranchName,
+                includedBranches = WebhookUtils.convert(branchName),
+                excludedBranches = WebhookUtils.convert(excludeBranchName),
+                includedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.TARGET_BRANCH_NOT_MATCH,
+                    params = listOf(triggerOnBranchName)
+                ).toJsonStr(),
+                excludedFailedReason = I18Variable(
+                    code = WebhookI18nConstants.TARGET_BRANCH_IGNORED,
+                    params = listOf(triggerOnBranchName)
+                ).toJsonStr()
+            )
+            return listOf(userFilter, branchFilter)
+        }
     }
 
     private fun GithubCreateEvent.getI18nCodeAndLinkUrl() = if (ref_type == "tag") {
