@@ -50,6 +50,9 @@
             type () {
                 return this.$route.params.type
             },
+            itemName () {
+                return this.detail?.[`${this.type}Name`] ?? this.$route.params.code
+            },
             panels () {
                 return [
                     ...(this.type === TYPE_ENUM.atom ? [{ label: this.$t('store.概览'), name: 'statisticData' }] : []),
@@ -69,7 +72,7 @@
                 return [
                     { name: this.$t('store.工作台') },
                     { name: labelMap[this.type], to: { name: `${this.type}Work` } },
-                    { name: this.$route.params.code }
+                    { name: this.itemName }
                 ]
             }
            
