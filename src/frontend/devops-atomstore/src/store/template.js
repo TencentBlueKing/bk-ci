@@ -21,10 +21,6 @@ import {
     UPDATE_CURRENT_TEMPLATE
 } from '@/store/constants'
 
-import {
-
-} from './constants'
-
 const prefix = 'store/api'
 const processPrefix = 'process/api'
 const Vue = window.Vue
@@ -128,8 +124,8 @@ export const actions = {
     /**
      * 获取流水线项目模板
      */
-    requestPipelineTemplate ({ commit }, { projectCode }) {
-        return vue.$ajax.get(`${processPrefix}/user/templates/projects/${projectCode}/templates?templateType=CUSTOMIZE&storeFlag=false`)
+    requestPipelineTemplate ({ commit }, { projectCode, page, pageSize }) {
+        return vue.$ajax.get(`${processPrefix}/user/templates/projects/${projectCode}/templates?templateType=CUSTOMIZE&storeFlag=false&page=${page}&pageSize=${pageSize}`)
     },
 
     /**
@@ -162,6 +158,25 @@ export const actions = {
      */
     editTemplate ({ commit }, { params }) {
         return vue.$ajax.put(`${prefix}/user/market/desk/template/release`, params)
+    },
+
+    /**
+     * 新版上架模板
+     */
+    releaseTemplate ({ commit }, { params }) {
+        return vue.$ajax.put(`${prefix}/user/market/desk/template/v2/release`, params)
+    },
+
+    requestTemplateVersionList (_, { projectId, templateId }) {
+        const params = {
+            projectId,
+            templateId,
+            storeFlag: false,
+            page: 1,
+            pageSize: 100,
+            includeDraft: false
+        }
+        return vue.$ajax.post(`${processPrefix}/user/pipeline/template/v2/${projectId}/${templateId}/versions`, params)
     },
 
     /**
@@ -237,12 +252,25 @@ export const actions = {
     /**
      * 下架模板
      */
-    offlineTemplate ({ commit }, { templateCode }) {
-        return vue.$ajax.put(`${prefix}/user/market/desk/template/offline/templateCodes/${templateCode}/versions`)
+    offlineTemplate ({ commit }, { templateCode, ...query }) {
+        return vue.$ajax.put(`${prefix}/user/market/desk/template/offline/templateCodes/${templateCode}/versions`, {}, {
+            params: query
+        })
     },
 
     updateCurrentaTemplate ({ commit }, { res }) {
         commit(UPDATE_CURRENT_TEMPLATE, res)
+    },
+    updatePublishStrategy: (state, { templateCode, publishStrategy }) => {
+        return vue.$ajax.put(`${prefix}/user/market/${templateCode}/store/publishStrategy`, {
+            publishStrategy
+        })
+    },
+    /**
+     * 获取模板版本列表
+     */
+    requestTemplateReleasedList ({ commit }, { templateCode, page, pageSize }) {
+        return vue.$ajax.get(`${prefix}/user/market/${templateCode}/template/published/history?page=${page}&pageSize=${pageSize}`)
     }
 }
 

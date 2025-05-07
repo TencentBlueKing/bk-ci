@@ -4,12 +4,13 @@
             :text="text"
             :outline="outline"
             :theme="theme"
+            :loading="loading"
             :disabled="disabled"
             :size="size"
             @click="initDiff"
         >
             <slot>
-                {{ $t('diff') }}
+                {{ !isTemplateInstance ? $t('diff') : $t('template.diff') }}
             </slot>
         </bk-button>
         <bk-dialog
@@ -19,7 +20,7 @@
             :draggable="false"
             ext-cls="diff-version-dialog"
             width="90%"
-            :title="$t('diff')"
+            :title="!isTemplateInstance ? $t('diff') : $t('template.diff')"
         >
             <div
                 class="diff-version-dialog-content"
@@ -110,7 +111,13 @@
             disabled: {
                 type: Boolean,
                 default: false
-            }
+            },
+            loading: {
+                type: Boolean,
+                default: false
+            },
+            type: String,
+            pipelineId: String
         },
         data () {
             return {
@@ -124,7 +131,10 @@
             }
         },
         computed: {
-            ...mapGetters('atom', ['isTemplate'])
+            ...mapGetters('atom', ['isTemplate']),
+            isTemplateInstance () {
+                return this.type === 'templateInstance' && this.isTemplate
+            }
         },
 
         methods: {
@@ -132,6 +142,7 @@
                 'fetchPipelineByVersion',
                 'fetchTemplateByVersion'
             ]),
+            ...mapActions('templates', ['requestVersionCompare']),
             async fetchPipelineYaml (version) {
                 try {
                     const fn = this.isTemplate ? this.fetchTemplateByVersion : this.fetchPipelineByVersion
@@ -152,18 +163,43 @@
                     return ''
                 }
             },
+            async fetchTemplateInstanceYaml (versions) {
+                try {
+                    const res = await this.requestVersionCompare({
+                        ...this.$route.params,
+                        ...versions
+                    })
+                    return res.data
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message,
+                        zIndex: 3000
+                    })
+                    return ''
+                }
+            },
             async initDiff () {
                 this.activeVersion = this.version
                 this.currentVersion = this.latestVersion
                 this.showVersionDiffDialog = true
 
                 this.isLoadYaml = true
-                const [activeYaml, currentYaml] = await Promise.all([
-                    this.fetchPipelineYaml(this.activeVersion),
-                    this.fetchPipelineYaml(this.currentVersion)
-                ])
-                this.activeYaml = activeYaml
-                this.currentYaml = currentYaml
+                if (this.isTemplateInstance) {
+                    const { baseVersionYaml, comparedVersionYaml } = await this.fetchTemplateInstanceYaml({
+                        pipelineId: this.pipelineId,
+                        comparedVersion: this.currentVersion
+                    })
+                    this.activeYaml = comparedVersionYaml
+                    this.currentYaml = baseVersionYaml
+                } else {
+                    const [activeYaml, currentYaml] = await Promise.all([
+                        this.fetchPipelineYaml(this.activeVersion),
+                        this.fetchPipelineYaml(this.currentVersion)
+                    ])
+                    this.activeYaml = activeYaml
+                    this.currentYaml = currentYaml
+                }
                 this.isLoadYaml = false
             },
             async diffActiveVersion (version, old) {

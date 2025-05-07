@@ -1,0 +1,332 @@
+<template>
+    <bk-table
+        v-bkloading="{ isLoading }"
+        :data="data"
+        :size="tableSize"
+        height="100%"
+        :pagination="pagination"
+        @page-change="handlePageChange"
+        @page-limit-change="handlePageLimitChange"
+        @header-dragend="handelHeaderDragend"
+    >
+        <TemplateEmpty
+            slot="empty"
+            type="search-empty"
+            @clear="clearFilter"
+        />
+
+        <bk-table-column
+            v-for="col in selectedTableColumn"
+            :label="col.label"
+            :key="col.id"
+            :prop="col.id"
+            :width="col.width"
+            :show-overflow-tooltip="col.showOverflowTooltip"
+            :sortable="col.sortable"
+            :formatter="col.formatter"
+        >
+            <template slot-scope="{ row }">
+                <div
+                    v-if="col.id === 'name'"
+                    class="template-name select-text"
+                    @click="goTemplateOverview(row, 'instanceList')"
+                >
+                    <span
+                        class="template-name-area"
+                    >
+                        {{ row.name }}
+                    </span>
+                    <PacTag
+                        v-if="row.enablePac"
+                        class="pac-code-icon"
+                    />
+                </div>
+                <div
+                    class="source-name"
+                    v-else-if="col.id === 'source'"
+                >
+                    <span>{{ row.sourceName }}</span>
+                    <bk-badge
+                        v-if="row.storeFlag"
+                        class="store-source-flag"
+                        dot
+                        theme="danger"
+                        :visible="row.hasNewVersion"
+                    >
+                        <Logo
+                            size="14"
+                            name="is-store"
+                        />
+                    </bk-badge>
+                </div>
+
+                <bk-button
+                    v-else-if="col.id === 'instancePipelineCount'"
+                    text
+                    :disabled="row.instancePipelineCount <= 0"
+                    @click="goTemplateOverview(row, 'instanceList')"
+                >
+                    {{ row.instancePipelineCount }}
+                </bk-button>
+
+                <div
+                    v-else-if="col.id === 'operate'"
+                    class="template-operate"
+                >
+                    <span
+                        @click="goInstanceEntry(row)"
+                        :class="['action', row.canEdit ? 'create-permission' : 'not-create-permission']"
+                    >
+                        <span v-if="row.type === 'PIPELINE'">
+                            {{ $t('template.instantiate') }}
+                        </span>
+                    </span>
+                    <ext-menu
+                        type="template"
+                        :data="row"
+                        :config="row.templateActions"
+                    />
+                </div>
+                <template
+                    v-else
+                >
+                    <span>{{ row[col.id] || '--' }}</span>
+                </template>
+            </template>
+        </bk-table-column>
+
+        <bk-table-column
+            type="setting"
+        >
+            <bk-table-setting-content
+                :fields="tableColumns"
+                :selected="selectedTableColumn"
+                :size="tableSize"
+                @setting-change="handleSettingChange"
+            />
+        </bk-table-column>
+    </bk-table>
+</template>
+
+<script setup>
+    import Logo from '@/components/Logo'
+    import PacTag from '@/components/PacTag.vue'
+    import TemplateEmpty from '@/components/common/exception'
+    import UseInstance from '@/hook/useInstance'
+    import {
+        TEMPLATE_TABLE_COLUMN_CACHE
+    } from '@/store/modules/templates/constants'
+    import { defineProps, onBeforeMount, ref } from 'vue'
+    import ExtMenu from './extMenu'
+
+    const { proxy, t } = UseInstance()
+    defineProps({
+        data: {
+            type: Array,
+            default: () => []
+        },
+        isLoading: {
+            type: Boolean,
+            default: false
+        },
+        pagination: {
+            type: Object,
+            default: () => ({
+                current: 1,
+                count: 6,
+                limit: 20
+            })
+        }
+    })
+    const emit = defineEmits(['limit-change', 'page-change', 'clear'])
+    const tableSize = ref('small')
+    const tableColumns = [
+        {
+            id: 'name',
+            label: t('template.name'),
+            width: 220,
+            disabled: true,
+            sortable: true,
+            showOverflowTooltip: true
+        },
+        {
+            id: 'desc',
+            label: t('template.desc'),
+            width: 300,
+            showOverflowTooltip: true
+        },
+        {
+            id: 'typeName',
+            label: t('template.type'),
+            width: 100
+        },
+        {
+            id: 'releasedVersionName',
+            label: t('template.lastedVersion'),
+            width: 200
+        },
+        {
+            id: 'source',
+            label: t('template.source'),
+            width: 120
+        },
+        {
+            id: 'debugPipelineCount',
+            label: t('template.debugPipelineCount'),
+            width: 100
+        },
+        {
+            id: 'instancePipelineCount',
+            label: t('template.instancePipelineCount'),
+            width: 60
+        },
+        {
+            id: 'updater',
+            label: t('template.lastModifiedBy'),
+            width: 120
+        },
+        {
+            id: 'updateTime',
+            label: t('template.lastModifiedDate'),
+            width: 200
+        },
+        {
+            id: 'operate',
+            disabled: true,
+            label: t('operate')
+        }
+    ]
+    const tableColumnMap = tableColumns.reduce((acc, cur) => {
+        acc[cur.id] = cur
+        return acc
+    }, {})
+
+    const selectedTableColumn = ref([])
+    onBeforeMount(() => {
+        try {
+            const columnsCache = JSON.parse(localStorage.getItem(TEMPLATE_TABLE_COLUMN_CACHE))
+            if (!columnsCache) {
+                throw new Error('not cache')
+            }
+            selectedTableColumn.value = columnsCache.columns.map(col => Object.assign(tableColumnMap[col.id], {
+                width: col.width ?? tableColumnMap[col.id].width
+            }))
+            tableSize.value = columnsCache.size
+        } catch (error) {
+            selectedTableColumn.value = tableColumns
+        }
+    })
+
+    function handlePageLimitChange (limit) {
+        emit('limit-change', limit)
+    }
+    function handlePageChange (page) {
+        emit('page-change', page)
+    }
+    function clearFilter () {
+        emit('clear')
+    }
+    function goTemplateOverview (row, type) {
+        proxy.$router.push({
+            name: 'TemplateOverview',
+            params: {
+                templateId: row.id,
+                version: row.releasedVersion,
+                type
+            }
+        })
+    }
+    function goInstanceEntry (row) {
+        proxy.$router.push({
+            name: 'instanceEntry',
+            params: {
+                templateId: row.id,
+                version: row.releaseVersion,
+                type: 'create'
+            }
+        })
+    }
+    function handleSettingChange ({ fields, size }) {
+        selectedTableColumn.value = fields
+        tableSize.value = size
+        cacheTableConf({ fields, size })
+    }
+    function handelHeaderDragend (newWidth, _, column) {
+        if (tableColumnMap[column.property]) {
+            tableColumnMap[column.property].width = newWidth
+
+            cacheTableConf({
+                fields: selectedTableColumn.value,
+                size: tableSize.value
+            })
+        }
+    }
+
+    function cacheTableConf ({ fields, size }) {
+        localStorage.setItem(TEMPLATE_TABLE_COLUMN_CACHE, JSON.stringify({
+            columns: fields.map(field => ({
+                id: field.id,
+                width: field.width
+            })),
+            size
+        }))
+    }
+
+    // function sourceFilterMethod (value, row, column) {
+    //     const property = column.property
+    //     return row[property] === value
+    // }
+</script>
+
+<style lang="scss">
+@import '@/scss/mixins/ellipsis';
+@import '@/scss/conf';
+
+.template-name {
+    display: flex;
+    align-items: center;
+    grid-gap: 6px;
+    .template-name-area {
+        flex: 1;
+        @include ellipsis(1);
+    }
+    .pac-code-icon {
+        flex-shrink: 0;
+    }
+
+}
+.source-name {
+    display: flex;
+    align-items: center;
+    grid-gap: 6px;
+    height: 36px;
+    .store-source-flag {
+        font-size: 0;
+    }
+}
+.template-operate {
+    display: flex;
+    align-items: center;
+    height: 40px;
+    .action {
+        display: inline-block;
+        text-align: center;
+        min-width: 62px;
+        color: $primaryColor;
+    }
+}
+
+.select-text {
+    color: $primaryColor;
+    cursor: pointer;
+}
+
+.create-permission {
+    cursor: pointer;
+}
+
+.not-create-permission {
+    cursor: not-allowed;
+}
+
+</style>

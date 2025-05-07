@@ -18,267 +18,65 @@
             v-if="showContent"
         >
             <form class="bk-form edit-template-form">
-                <div class="bk-form-item name-form-item is-required">
-                    <label class="bk-label"> {{ $t('store.名称') }} </label>
-                    <div class="bk-form-content template-item-content is-tooltips">
-                        <div style="min-width: 40%;">
-                            <input
-                                type="text"
-                                class="bk-form-input template-name-input"
-                                :placeholder="$t('store.请输入中英文名称')"
-                                ref="templateName"
-                                name="templateName"
-                                v-model="templateForm.templateName"
-                                v-validate="{
-                                    required: true,
-                                    max: 20
-                                }"
-                                :class="{ 'is-danger': errors.has('templateName') }"
-                            >
-                            <p :class="errors.has('templateName') ? 'error-tips' : 'normal-tips'">{{ errors.first("templateName") }}</p>
-                        </div>
-                        <bk-popover placement="right">
-                            <i class="devops-icon icon-info-circle"></i>
-                            <template slot="content">
-                                <p> {{ $t('store.模板名称不超过20个字符') }} </p>
-                            </template>
-                        </bk-popover>
-                    </div>
-                </div>
                 <div
-                    class="bk-form-item is-required"
-                    ref="sortError"
+                    v-for="container in panels"
+                    :key="container.name"
                 >
-                    <label class="bk-label"> {{ $t('store.分类') }} </label>
-                    <div class="bk-form-content template-item-content template-category-content">
-                        <bk-select
-                            v-model="templateForm.classifyCode"
-                            style="width: 40%;"
-                            searchable
-                        >
-                            <bk-option
-                                v-for="(option, index) in sortList"
-                                :key="index"
-                                :id="option.classifyCode"
-                                :name="option.classifyName"
-                                @click.native="changeClassify"
-                                :placeholder="$t('store.请选择分类')"
-                            >
-                            </bk-option>
-                        </bk-select>
-                        <div
-                            v-if="formErrors.sortError"
-                            class="error-tips"
-                        >
-                            {{ $t('store.分类不能为空') }}
-                        </div>
-                    </div>
+                    <component
+                        :ref="container.name"
+                        :is="container.component"
+                        v-bind="container.props"
+                        @updateTemplateForm="updateTemplateForm"
+                    />
                 </div>
-                <div
-                    class="bk-form-item is-required"
-                    ref="categoryError"
-                >
-                    <label class="bk-label env-label"> {{ $t('store.应用范畴') }} </label>
-                    <div class="bk-form-content template-item-content category">
-                        <bk-checkbox-group v-model="templateForm.categoryIdList">
-                            <bk-checkbox
-                                :value="entry.id"
-                                v-for="entry in categoryList"
-                                :key="entry.id"
-                            >
-                                <img
-                                    class="category-icon"
-                                    :src="entry.iconUrl"
-                                    v-if="entry.iconUrl"
-                                >
-                                <span
-                                    class="bk-checkbox-text"
-                                    :style="{ 'margin-left': entry.iconUrl ? '24px' : '0' }"
-                                >{{ entry.categoryName }}</span>
-                            </bk-checkbox>
-                        </bk-checkbox-group>
-                        <div
-                            v-if="formErrors.categoryError"
-                            class="error-tips"
-                        >
-                            {{ $t('store.应用范畴不能为空') }}
-                        </div>
-                    </div>
-                </div>
-                <div class="bk-form-item">
-                    <label class="bk-label"> {{ $t('store.功能标签') }} </label>
-                    <div class="bk-form-content template-item-content">
-                        <bk-select
-                            v-model="templateForm.labelIdList"
-                            searchable
-                            multiple
-                            show-select-all
-                        >
-                            <bk-option
-                                v-for="(option, index) in labelList"
-                                :key="index"
-                                :id="option.id"
-                                :name="option.labelName"
-                                :placeholder="$t('store.请选择功能标签')"
-                            >
-                            </bk-option>
-                        </bk-select>
-                    </div>
-                </div>
-                <div class="bk-form-item introduction-form-item is-required">
-                    <label class="bk-label"> {{ $t('store.简介') }} </label>
-                    <div class="bk-form-content template-item-content is-tooltips">
-                        <input
-                            type="text"
-                            class="bk-form-input template-introduction-input"
-                            :placeholder="$t('store.展示在模板市场上的文本简介，不超过256个字符。')"
-                            name="introduction"
-                            maxlength="256"
-                            v-model="templateForm.summary"
-                            v-validate="{
-                                required: true,
-                                max: 256
-                            }"
-                            :class="{ 'is-danger': errors.has('introduction') }"
-                        >
-                        <bk-popover placement="left">
-                            <i class="devops-icon icon-info-circle"></i>
-                            <template slot="content">
-                                <p> {{ $t('store.模版一句话简介，不超过256个字符，展示在模版市场上') }} </p>
-                            </template>
-                        </bk-popover>
-                    </div>
-                    <p :class="errors.has('introduction') ? 'error-tips' : 'normal-tips'">{{ errors.first("introduction") }}</p>
-                </div>
-                <div
-                    class="bk-form-item remark-form-item is-required"
-                    ref="descError"
-                >
-                    <label class="bk-label"> {{ $t('store.详细描述') }} </label>
-                    <div class="bk-form-content template-item-content is-tooltips">
-                        <mavon-editor
-                            class="template-remark-input"
-                            :placeholder="descTemplate"
-                            ref="mdHook"
-                            v-model="templateForm.description"
-                            :toolbars="toolbarOptions"
-                            :external-link="false"
-                            :box-shadow="false"
-                            :language="mavenLang"
-                            preview-background="#fff"
-                            @imgAdd="addImage"
-                            @imgDel="delImage"
-                            @change="changeData"
-                        />
-                        <bk-popover placement="left">
-                            <i class="devops-icon icon-info-circle"></i>
-                            <template slot="content">
-                                <p> {{ $t('store.展示在模版市场查看模版详情页面，帮助用户快速了解模版功能和使用场景') }} </p>
-                            </template>
-                        </bk-popover>
-                    </div>
-                    <p
-                        v-if="formErrors.descError"
-                        class="error-tips"
-                        style="margin-left: 100px;margin-top:4px;"
-                    >
-                        {{ $t('store.详细描述不能为空') }}
-                    </p>
-                </div>
-                <div class="version-msg">
-                    <p class="form-title"> {{ $t('store.发布信息') }} </p>
-                    <hr class="cut-line">
-                </div>
-                <div class="bk-form-item name-form-item is-required">
-                    <label class="bk-label"> {{ $t('store.发布者') }} </label>
-                    <div class="bk-form-content template-item-content">
-                        <div style="width: 40%;">
-                            <input
-                                type="text"
-                                class="bk-form-input template-name-input"
-                                :placeholder="$t('store.请输入')"
-                                name="publisher"
-                                v-model="templateForm.publisher"
-                                v-validate="{
-                                    required: true,
-                                    max: 20
-                                }"
-                                :class="{ 'is-danger': errors.has('publisher') }"
-                            >
-                            <p :class="errors.has('publisher') ? 'error-tips' : 'normal-tips'">{{ errors.first("publisher") }}</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="bk-form-item versionlog-form-item">
-                    <label class="bk-label"> {{ $t('store.发布描述') }} </label>
-                    <div class="bk-form-content template-item-content">
-                        <textarea
-                            type="text"
-                            class="bk-form-input template-versionlog-input"
-                            placeholder=""
-                            v-model="templateForm.pubDescription"
-                        >
-                        </textarea>
-                    </div>
-                </div>
-                <div class="form-footer">
-                    <button
-                        class="bk-button bk-primary"
-                        type="button"
-                        @click="submit()"
-                    >
-                        {{ $t('store.提交') }}
-                    </button>
-                    <button
-                        class="bk-button bk-default"
-                        type="button"
-                        @click="$router.back()"
-                    >
-                        {{ $t('store.取消') }}
-                    </button>
-                </div>
-                <select-logo
-                    :form="templateForm"
-                    type="TEMPLATE"
-                    :is-err="formErrors.logoUrlError"
-                    ref="logoUrlError"
-                ></select-logo>
             </form>
+        </div>
+        <div class="form-footer">
+            <div>
+                <button
+                    class="bk-button bk-primary"
+                    type="button"
+                    @click="submit()"
+                >
+                    {{ $t('store.提交上架') }}
+                </button>
+                <button
+                    class="bk-button bk-default"
+                    type="button"
+                    @click="$router.back()"
+                >
+                    {{ $t('store.取消') }}
+                </button>
+            </div>
         </div>
     </div>
 </template>
 
 <script>
-    import selectLogo from '@/components/common/selectLogo'
     import breadCrumbs from '@/components/bread-crumbs.vue'
-    import { toolbars } from '@/utils/editor-options'
+    import { PublishInfo, TemplateInfo } from '@/components/editContent'
 
     export default {
         components: {
-            selectLogo,
-            breadCrumbs
+            breadCrumbs,
+            TemplateInfo,
+            PublishInfo
         },
         data () {
             return {
                 showContent: false,
-                descTemplate: '',
                 docsLink: this.BKCI_DOCS.TEMPLATE_GUIDE_DOC,
-                sortList: [],
-                labelList: [],
-                categoryList: [],
                 loading: {
                     isLoading: false,
                     title: ''
                 },
-                formErrors: {
-                    sortError: false,
-                    categoryError: false,
-                    descError: false,
-                    logoUrlError: false
-                },
                 templateForm: {
+                    projectCode: '',
+                    templateVersion: '',
+                    publishStrategy: 'MANUAL',
+                    fullScopeVisible: true,
                     templateName: '',
-                    templateType: 'FREEDOM',
+                    templateType: 'PIPELINE',
                     releaseFlag: false,
                     classifyCode: '',
                     categoryIdList: [],
@@ -293,11 +91,14 @@
             }
         },
         computed: {
+            type () {
+                return this.$route.query.type
+            },
+            hasSourceInfo () {
+                return this.$route.query.hasSourceInfo
+            },
             templateId () {
                 return this.$route.params.templateId
-            },
-            toolbarOptions () {
-                return toolbars
             },
             navList () {
                 return [
@@ -307,13 +108,23 @@
             },
             mavenLang () {
                 return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
-            }
-        },
-        watch: {
-            'templateForm.categoryList' (val) {
-                if (val.length) {
-                    this.formErrors.categoryError = false
-                }
+            },
+            panels () {
+                return [{
+                    name: 'TemplateInfo',
+                    component: TemplateInfo,
+                    props: {
+                        templateForm: this.templateForm,
+                        type: this.type,
+                        isShowInfo: this.hasSourceInfo || this.type === 'edit'
+                    }
+                }, {
+                    name: 'PublishInfo',
+                    component: PublishInfo,
+                    props: {
+                        templateForm: this.templateForm
+                    }
+                }]
             }
         },
         async created () {
@@ -321,8 +132,19 @@
         },
         methods: {
             async init () {
-                await this.initOption()
-                await this.requestTemplateDetail()
+                if (this.hasSourceInfo) {
+                    const { projectCode, templateCode, templateName } = this.$route.query
+                    Object.assign(this.templateForm, {
+                        projectCode,
+                        templateCode,
+                        templateName
+                    }, {})
+                    this.showContent = true
+                } else if (this.type === 'apply') {
+                    this.showContent = true
+                } else {
+                    await this.requestTemplateDetail()
+                }
             },
             async requestTemplateDetail () {
                 this.loading.isLoading = true
@@ -331,7 +153,9 @@
                     const res = await this.$store.dispatch('store/requestTempIdDetail', {
                         templateId: this.templateId
                     })
-                    Object.assign(this.templateForm, res, {})
+                    Object.assign(this.templateForm, res, {
+                        fullScopeVisible: res.storeVisibleDept.fullScopeVisible
+                    })
                     this.templateForm.categoryIdList = this.templateForm.categoryList.map(item => {
                         return item.id
                     })
@@ -350,104 +174,8 @@
                     setTimeout(() => {
                         this.loading.isLoading = false
                         this.showContent = true
-                        this.autoFocus()
                     }, 500)
                 }
-            },
-            initOption () {
-                this.requestTplClassify()
-                this.requestTplCategorys()
-                this.requestTplLabel()
-            },
-            async requestTplClassify () {
-                try {
-                    const res = await this.$store.dispatch('store/requestTplClassify')
-                    this.sortList = res || []
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                }
-            },
-            async requestTplCategorys () {
-                try {
-                    const res = await this.$store.dispatch('store/requestTplCategorys')
-                    this.categoryList = res || []
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                }
-            },
-            async requestTplLabel () {
-                try {
-                    const res = await this.$store.dispatch('store/requestTplLabel')
-                    this.labelList = res || []
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                }
-            },
-            changeClassify () {
-                this.formErrors.sortError = false
-            },
-            addImage (pos, file) {
-                this.uploadimg(pos, file)
-            },
-            delImage (pos) {
-                
-            },
-            changeData (value, render) {
-                if (value) {
-                    this.formErrors.descError = false
-                }
-            },
-            async uploadimg (pos, file) {
-                const formData = new FormData()
-                const config = {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
-                }
-                let message, theme
-                formData.append('file', file)
-
-                try {
-                    const res = await this.$store.dispatch('store/uploadFile', {
-                        formData,
-                        config
-                    })
-
-                    this.$refs.mdHook.$img2Url(pos, res)
-                } catch (err) {
-                    message = err.message ? err.message : err
-                    theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                    this.$refs.mdHook.$refs.toolbar_left.$imgDel(pos)
-                }
-            },
-            
-            autoFocus () {
-                this.$nextTick(() => {
-                    this.$refs.templateName.focus()
-                })
             },
             toAtomStore () {
                 this.$router.push({
@@ -462,51 +190,31 @@
                     }
                 })
             },
-            checkValid () {
-                let errorCount = 0
-                let ref = ''
-                if (!this.templateForm.logoUrl && !this.templateForm.iconData) {
-                    this.formErrors.logoUrlError = true
-                    ref = ref || 'logoUrlError'
-                    errorCount++
+            updateTemplateForm (updatedProps) {
+                this.templateForm = {
+                    ...this.templateForm,
+                    ...updatedProps
                 }
-
-                if (!this.templateForm.classifyCode) {
-                    this.formErrors.sortError = true
-                    ref = ref || 'sortError'
-                    errorCount++
-                }
-
-                if (!this.templateForm.categoryIdList.length) {
-                    this.formErrors.categoryError = true
-                    ref = ref || 'categoryError'
-                    errorCount++
-                }
-
-                if (!this.templateForm.description) {
-                    this.formErrors.descError = true
-                    ref = ref || 'descError'
-                    errorCount++
-                }
-
-                if (errorCount > 0) {
-                    const errorEle = this.$refs[ref]
-                    if (errorEle) errorEle.scrollIntoView()
-                    return false
-                }
-
-                return true
+            },
+            async isValid () {
+                const TemplateInfoValid = await this.$refs.TemplateInfo[0].validate()
+                const PublishInfo = await this.$refs.PublishInfo[0].validate()
+                const isTemplateInfoCheckValid = this.$refs.TemplateInfo[0].checkValid()
+                return TemplateInfoValid && PublishInfo && isTemplateInfoCheckValid
             },
             async submit () {
-                const isCheckValid = this.checkValid()
-                const valid = await this.$validator.validate()
-                if (isCheckValid && valid) {
+                const valid = await this.isValid()
+                if (valid) {
                     let message, theme
                     
                     try {
                         this.loading.isLoading = true
 
                         const params = {
+                            projectCode: this.templateForm.projectCode,
+                            templateVersion: this.templateForm.templateVersion,
+                            publishStrategy: this.templateForm.publishStrategy,
+                            fullScopeVisible: this.templateForm.fullScopeVisible,
                             templateCode: this.templateForm.templateCode,
                             templateName: this.templateForm.templateName,
                             templateType: this.templateForm.templateType,
@@ -521,7 +229,7 @@
                             pubDescription: this.templateForm.pubDescription || undefined
                         }
 
-                        const res = await this.$store.dispatch('store/editTemplate', {
+                        const res = await this.$store.dispatch('store/releaseTemplate', {
                             params: params
                         })
 
@@ -571,28 +279,86 @@
     @import '@/assets/scss/conf.scss';
 
     .edit-template-wrapper {
+        position: relative;
         height: 100%;
         .edit-template-content {
             margin: 20px 0;
-            height: calc(100% - 5.6vh - 40px);
+            height: calc(100% - 5.6vh - 88px);
             overflow: auto;
             display: flex;
             justify-content: center;
+            padding-bottom: 20px;
         }
         .edit-template-form {
             position: relative;
             margin: 0 auto;
             width: 1200px;
+
+            .container {
+                background-color: #fff;
+                padding: 12px 24px 30px 24px;
+                margin-bottom: 24px;
+                box-shadow: 0 2px 4px 0 #1919290d;
+                border-radius: 2px;
+                
+                .form-title {
+                    margin-top: 20px;
+                    margin-bottom: 25px;
+                    font-weight: bold;
+                    font-size: 16px;
+                    color: #4d4f56;
+                }
+
+                .form-template {
+                    margin-bottom: 25px;
+                    padding-bottom: 25px;
+                    border-bottom: 1px solid #e8e9ee;
+                }
+
+                .form-item-container {
+                    width: 94%;
+                }
+
+                .logo-label {
+                    position: absolute;
+                    right: 120px;
+                    top: 0;
+                }
+
+                .logo-label::after {
+                    color: #ea3636;
+                    content: "*";
+                    display: inline-block;
+                    font-size: 12px;
+                    height: 8px;
+                    line-height: 1;
+                    position: absolute;
+                    top: 50%;
+                    transform: translate(3px, -50%);
+                    vertical-align: middle;
+                }
+            }
+            
+            .strategy .bk-radio-text{
+                border-bottom: 1px dashed #bbbec4;
+            }
+            
             .bk-label {
-                width: 100px;
+                width: 150px;
                 font-weight: normal;
             }
             .bk-form-content {
-                margin-left: 100px;
+                margin-left: 150px;
             }
             .bk-selector .bk-form-checkbox {
                 display: block;
                 padding: 12px 0;
+            }
+            .fixed-width {
+                width: 72%;
+            }
+            .version {
+                width: 25%;
             }
             .template-category-content {
                 .bk-selector{
@@ -615,7 +381,7 @@
             }
             .introduction-form-item {
                 .error-tips {
-                    margin-left: 100px;
+                    margin-left: 150px;
                 }
             }
             .name-form-item,
@@ -638,6 +404,7 @@
             }
             .is-tooltips {
                 display: flex;
+                line-height: 0;
             }
             .introduction-form-item,
             .remark-form-item,
@@ -645,7 +412,6 @@
             .version-num-form-item  {
                 .bk-tooltip {
                     left: 101%;
-
                 }
             }
             .template-introduction-input,
@@ -695,10 +461,6 @@
             .version-msg {
                 padding: 12px 0 12px 26px;
             }
-            .form-title {
-                margin-top: 20px;
-                font-weight: bold
-            }
             .cut-line {
                 margin-top: 8px;
                 height: 1px;
@@ -708,10 +470,6 @@
             .template-versionlog-input {
                 padding: 10px;
                 height: 80px;
-            }
-            .form-footer {
-                margin-top: 26px;
-                margin-left: 100px;
             }
             .template-logo-box {
                 position: absolute;
@@ -779,6 +537,22 @@
         }
         .auto-textarea-wrapper {
             min-height: 200px;
+        }
+        .form-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            z-index: 9;
+            background-color: #fafbfd;
+            width: 100%;
+            height: 48px;
+            line-height: 48px;
+            border-top: 1px solid #e5e7ec;
+
+            div {
+                margin: 0 auto;
+            width: 1200px;
+            }
         }
     }
     .error-commit {

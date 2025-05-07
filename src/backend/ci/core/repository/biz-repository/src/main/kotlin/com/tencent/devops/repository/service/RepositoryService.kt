@@ -58,6 +58,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.process.api.service.ServicePipelineYamlResource
+import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_USER_HAVE_NOT_DOWNLOAD_PEM
 import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
@@ -554,32 +555,8 @@ class RepositoryService @Autowired constructor(
             .setInstanceId(repositoryId.toString())
             .setInstanceName(repository.aliasName)
             .setInstance(repository)
-        createResource(userId, projectId, repositoryId, repository.aliasName)
-        repositoryService.addResourceAuthorization(
-            projectId = projectId,
-            userId = userId,
-            repositoryId = repositoryId,
-            repository = repository
-        )
-        try {
-            if (repository.enablePac == true) {
-                client.get(ServicePipelineYamlResource::class).enable(
-                    userId = userId,
-                    projectId = projectId,
-                    repoHashId = HashUtil.encodeOtherLongId(repositoryId),
-                    scmType = repository.getScmType()
-                )
-            }
-        } catch (exception: Exception) {
-            logger.error("failed to enable pac when create repository,rollback|$projectId|$repositoryId")
-            userDelete(
-                userId = userId,
-                projectId = projectId,
-                repositoryHashId = HashUtil.encodeOtherLongId(repositoryId),
-                checkPac = false
-            )
-            throw exception
-        }
+        createResource(userId = userId, projectId = projectId, repositoryId = repositoryId, repository = repository)
+        enablePac(userId = userId, projectId = projectId, repositoryId = repositoryId, repository = repository)
         return repositoryId
     }
 
@@ -1223,12 +1200,19 @@ class RepositoryService @Autowired constructor(
         )
     }
 
-    private fun createResource(user: String, projectId: String, repositoryId: Long, repositoryName: String) {
+    private fun createResource(userId: String, projectId: String, repositoryId: Long, repository: Repository) {
         repositoryPermissionService.createResource(
-            userId = user,
+            userId = userId,
             projectId = projectId,
             repositoryId = repositoryId,
-            repositoryName = repositoryName
+            repositoryName = repository.aliasName
+        )
+        val repositoryService = CodeRepositoryServiceRegistrar.getService(repository = repository)
+        repositoryService.addResourceAuthorization(
+            projectId = projectId,
+            userId = userId,
+            repositoryId = repositoryId,
+            repository = repository
         )
     }
 
@@ -1247,6 +1231,40 @@ class RepositoryService @Autowired constructor(
     private fun decode(encode: String, publicKey: String, privateKey: ByteArray): String {
         val decoder = Base64.getDecoder()
         return String(DHUtil.decrypt(decoder.decode(encode), decoder.decode(publicKey), privateKey))
+    }
+
+    private fun enablePac(
+        repository: Repository,
+        userId: String,
+        projectId: String,
+        repositoryId: Long
+    ) {
+        if (repository.enablePac != true) {
+            return
+        }
+        try {
+            client.get(ServicePipelineYamlResource::class).enable(
+                userId = userId,
+                projectId = projectId,
+                repoHashId = HashUtil.encodeOtherLongId(repositoryId),
+                scmType = repository.getScmType()
+            )
+            // TODO 后续需要删除 开启PAC时，将代码库加入灰度库白名单
+            client.get(ServiceScmWebhookResource::class).addGrayRepoWhite(
+                scmCode = repository.scmCode,
+                pac = true,
+                serverRepoNames = listOf(repository.projectName)
+            )
+        } catch (exception: Exception) {
+            logger.error("failed to enable pac when create repository,rollback|$projectId|$repositoryId")
+            userDelete(
+                userId = userId,
+                projectId = projectId,
+                repositoryHashId = HashUtil.encodeOtherLongId(repositoryId),
+                checkPac = false
+            )
+            throw exception
+        }
     }
 
     fun getRepoRecentCommitInfo(

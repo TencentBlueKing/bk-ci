@@ -33,7 +33,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "安装组件到项目请求报文")
 data class InstallStoreReq(
     @get:Schema(title = "项目标识", required = true)
-    val projectCodes: ArrayList<String>,
+    val projectCodes: ArrayList<String> = arrayListOf(),
     @get:Schema(title = "组件标识", required = true)
     val storeCode: String,
     @get:Schema(title = "组件类型", required = true)

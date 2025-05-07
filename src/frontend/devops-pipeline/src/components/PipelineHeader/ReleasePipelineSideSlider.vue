@@ -16,7 +16,7 @@
                 }]"
             >
                 <template v-if="!isTemplateInstanceMode">
-                    {{ $t("releasePipeline") }}
+                    {{ $t(isTemplate ? "releaseTemplate" : "releasePipeline") }}
                     <PacTag
                         v-if="pacEnabled"
                         :info="pipelineInfo?.yamlInfo"
@@ -272,7 +272,7 @@
                             <header class="release-pac-pipeline-form-header">
                                 {{ $t("submitSetting") }}
                             </header>
-        
+
                             <bk-form-item
                                 required
                                 :label="$t('versionDesc')"
@@ -422,11 +422,11 @@
     import PacTag from '@/components/PacTag.vue'
     import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
     import ReleaseStatus from '@/components/Template/ReleaseStatus'
-    import { TARGET_ACTION_ENUM, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
-    import { mapActions, mapGetters, mapState } from 'vuex'
     import {
         SET_RELEASE_ING
     } from '@/store/modules/templates/constants'
+    import { TARGET_ACTION_ENUM, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     export default {
         components: {
             VersionDiffEntry,
@@ -674,10 +674,8 @@
             },
             'releaseParams.scmType': {
                 handler: function (val) {
-                    if (val && this.pacEnabled) {
-                        this.$nextTick(() => {
-                            this.refreshOatuStatus()
-                        })
+                    if (val) {
+                        this.$nextTick(this.refreshOatuStatus)
                     }
                 },
                 immediate: true
@@ -921,7 +919,7 @@
                         } else {
                             await this.requestPipelineSummary(this.$route.params)
                         }
-    
+
                         const tipsI18nKey = this.releaseParams.enablePac
                             ? 'pacPipelineReleaseTips'
                             : 'releaseTips'
@@ -1095,9 +1093,9 @@
                                                     }
                                                 }
                                             },
-                                            this.$t(!updateBuildNo ? 'checkPipeline' : 'return')
+                                            this.$t(!updateBuildNo ? (this.isTemplate ? 'checkTemplate' : 'checkPipeline') : 'return')
                                         )
-    
+
                                     ]
                                 )
                             ])

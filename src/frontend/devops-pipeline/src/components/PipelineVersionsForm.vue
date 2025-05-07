@@ -7,7 +7,7 @@
             <label class="pipeline-execute-version-label">
                 <span :class="{ 'deleted': isDelete }">{{ $t('versionNum') }}</span>
                 <span class="desc-text">{{ $t('mainMinorPatch') }}</span>
-             
+
                 <span :class="['status-tag', statusTagConfig.theme]">
                     {{ statusTagConfig.message }}
                 </span>
@@ -177,11 +177,11 @@
 
 <script>
     import FormField from '@/components/AtomPropertyPanel/FormField'
+    import Logo from '@/components/Logo'
     import EnumInput from '@/components/atomFormField/EnumInput'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import { allVersionKeyList, getVersionConfig } from '@/utils/pipelineConst'
     import { mapGetters } from 'vuex'
-    import Logo from '@/components/Logo'
 
     export default {
         components: {
@@ -385,12 +385,12 @@
         margin-left: 0;
         .preview-buildno-params {
             display: flex;
-            
+
             .build {
                 display: grid;
                 grid-template-columns: auto auto;
                 column-gap: 0;
-                
+
                 .build-label,
                 .build-value {
                     font-size: 12px;
@@ -453,11 +453,11 @@
 .is-new-param {
     background: #EBFAF0 !important;
 }
-    
+
 .is-change-param {
     background: #FDF4E8 !important;
 }
-    
+
 .is-delete-param {
     background: #FFF0F0 !important;
 }

@@ -13,10 +13,10 @@ devops-gitci/src/conf
 *.pem
 dist/
 .pnpm-global/
-src/assets/static/main.*.dll.js
-src/assets/static/main.dll.js
-src/assets/static/manifest.json
-
+main.*.dll.js
+main.dll.js
+manifest.json
+*.dll.js.LICENSE.txt
 
 .nx/cache
 .nx/workspace-data

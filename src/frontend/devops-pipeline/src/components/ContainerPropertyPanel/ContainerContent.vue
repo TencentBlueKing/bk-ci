@@ -24,7 +24,7 @@
                     v-if="isVmContainer(container)"
                     class="show-build-resource"
                     :value="container.showBuildResource"
-                    :text="$t('editPage.showAliasName')"
+                    :text="$t('editPage.showAlias')"
                     name="showBuildResource"
                     :handle-change="handleContainerChange"
                     :disabled="!editable"

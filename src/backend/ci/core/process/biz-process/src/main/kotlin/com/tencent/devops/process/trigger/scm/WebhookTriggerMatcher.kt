@@ -30,6 +30,7 @@ package com.tencent.devops.process.trigger.scm
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_SOURCE_WEBHOOK
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_HASH_ID
@@ -88,7 +89,11 @@ class WebhookTriggerMatcher @Autowired constructor(
                     matchStatus = MatchStatus.REPOSITORY_NOT_MATCH
                 )
             }
-            if (eventType?.name != webhook.eventType) {
+            // 兼容V1版本触发器
+            val eventType = eventType?.let {
+                if (it == CodeEventType.MERGE_REQUEST_ACCEPT) CodeEventType.MERGE_REQUEST else it
+            }?.name
+            if (eventType != webhook.eventType) {
                 return WebhookAtomResponse(
                     matchStatus = MatchStatus.EVENT_TYPE_NOT_MATCH
                 )

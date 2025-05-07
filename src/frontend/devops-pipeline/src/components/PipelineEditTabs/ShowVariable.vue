@@ -61,9 +61,9 @@
 </template>
 
 <script>
-    import { mapActions, mapState } from 'vuex'
-    import PipelineParam from './components/pipeline-param'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     import AtomOutputVar from './components/atom-output-var'
+    import PipelineParam from './components/pipeline-param'
     import PipelineVersion from './components/pipeline-version'
     import SystemVar from './components/system-var'
 
@@ -94,12 +94,6 @@
         },
         data () {
             return {
-                panels: [
-                    { name: 'pipeline', label: this.$t('newui.pipelineVar') },
-                    { name: 'atomOutput', label: this.$t('newui.atomVar') },
-                    { name: 'system', label: this.$t('newui.sysVar') },
-                    { name: 'version', label: this.$t('newui.versions') }
-                ],
                 active: 'pipeline'
             }
         },
@@ -108,6 +102,17 @@
                 'pipelineWithoutTrigger',
                 'showVariable'
             ]),
+            ...mapGetters('atom', [
+                'isTemplate'
+            ]),
+            panels () {
+                return [
+                    { name: 'pipeline', label: this.$t(this.isTemplate ? 'template.templateVar' : 'newui.pipelineVar') },
+                    { name: 'atomOutput', label: this.$t('newui.atomVar') },
+                    { name: 'system', label: this.$t('newui.sysVar') },
+                    { name: 'version', label: this.$t('newui.versions') }
+                ]
+            },
             stages () {
                 return this.pipelineWithoutTrigger?.stages || []
             },

@@ -1,6 +1,6 @@
 <script>
-    import NamingConventionTip from '@/components/namingConventionTip.vue'
     import Logo from '@/components/Logo'
+    import NamingConventionTip from '@/components/namingConventionTip.vue'
     export default {
         name: 'form-field',
         components: {
@@ -131,41 +131,44 @@
                     'is-required': required,
                     'is-danger': isError
                 }} >
-                    { label && <label title={label} class='bk-label atom-form-label' style={widthStyle}>
-                        {
-                            <span class={{ deleted: isDelete }}>{label}</span>
-                        }
-                        { hideColon ? '' : '：' }
-                        { docsLink
-                            && <a target="_blank" href={docsLink}><i class="bk-icon icon-question-circle"></i></a>
-                        }
-                        { label.trim() && (desc.trim() || customDesc) && <bk-popover placement={customDesc ? 'top-start' : 'top'} theme={customDesc ? 'light' : 'dark'} width={customDesc ? 892 : 'auto'}>
-                                <i class={{ 'bk-icon': true, 'icon-info-circle': true }} style={{ 'margin-left': hideColon ? '4px' : '0', color: hideColon ? '#979BA5' : '' }}></i>
-                                <div slot="content">
-                                    {
-                                        customDesc
-                                        ? <NamingConventionTip/>
-                                        : <div style="white-space: pre-wrap; overflow-wrap: break-word; font-size: 12px; max-width: 500px;">
-                                            {
-                                                descMap.length > 1
-                                                ? descMap.map(item => (
-                                                    <div>{item}</div>
-                                                ))
-                                                : desc
-                                            }
-                                            { descLink && <a class="desc-link" target="_blank" href={descLink}>{descLinkText}</a>}
-                                        </div>
-                                    }
-                                    
-                                </div>
-                            </bk-popover>
-                        }
-                        {
-                            statusTagConfig.isShow && <span class={['status-tag', statusTagConfig.theme]}>
-                                {statusTagConfig.message}
-                            </span>
-                        }
-                    </label> }
+                    {
+                        label && <label title={label} class='bk-label atom-form-label' style={widthStyle}>
+                            {
+                                <span class={{ deleted: isDelete }}>{label}</span>
+                            }
+                            { hideColon ? '' : '：' }
+                            { docsLink
+                                && <a target="_blank" href={docsLink}><i class="bk-icon icon-question-circle"></i></a>
+                            }
+                            { label.trim() && (desc.trim() || customDesc) && <bk-popover placement={customDesc ? 'top-start' : 'top'} theme={customDesc ? 'light' : 'dark'} width={customDesc ? 892 : 'auto'}>
+                                    <i class={{ 'bk-icon': true, 'icon-info-circle': true }} style={{ 'margin-left': hideColon ? '4px' : '0', color: hideColon ? '#979BA5' : '' }}></i>
+                                    <div slot="content">
+                                        {
+                                            customDesc
+                                            ? <NamingConventionTip/>
+                                            : <div style="white-space: pre-wrap; overflow-wrap: break-word; font-size: 12px; max-width: 500px;">
+                                                {
+                                                    descMap.length > 1
+                                                    ? descMap.map(item => (
+                                                        <div>{item}</div>
+                                                    ))
+                                                    : desc
+                                                }
+                                                { descLink && <a class="desc-link" target="_blank" href={descLink}>{descLinkText}</a>}
+                                            </div>
+                                        }
+
+                                    </div>
+                                </bk-popover>
+                            }
+                            {
+                                statusTagConfig.isShow && <span class={['status-tag', statusTagConfig.theme]}>
+                                    {statusTagConfig.message}
+                                </span>
+                            }
+                        </label>
+                    }
+
                     {
                         showOperateBtn && !isDelete && <span
                             class='operate-btn'
@@ -200,7 +203,7 @@
                             </span>
                         </span>
                     }
-                    
+
                     <div class='bk-form-content'>
                         {$slots.default}
                         {isError ? $slots.errorTip || <p class='bk-form-help is-danger'>{errorMsg}</p> : null}

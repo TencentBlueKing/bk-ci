@@ -169,14 +169,14 @@ export default function useTemplateActions () {
     function toRelativeStore (row) {
         if (!row.canEdit) return
 
-        const href = `${WEB_URL_PREFIX}/store/workList/template?projectCode=${projectId.value}&templateId=${row.id}`
+        const href = `${WEB_URL_PREFIX}/store/editTemplate?templateCode=${row.id}&projectCode=${row.projectId}&templateName=${row.name}&templateVersion=${row.releasedVersion}&hasSourceInfo=true`
         window.open(href, '_blank')
     }
     /**
    * 转为自定义
    * @param row
    */
-    async function convertToCustom (row) {
+    async function convertToCustom (row, fetchTableData) {
         if (!row.canEdit) return
         nextTick(() => {
             bkInfo({
@@ -199,8 +199,25 @@ export default function useTemplateActions () {
                     h('div', { class: 'custom-tip' }, t('template.customTip'))
                 ]),
                 confirmLoading: true,
-                confirmFn: () => {
-                          
+                confirmFn: async () => {
+                    isTableLoading.value = true
+                    try {
+                        await proxy.$store.dispatch('templates/transformTemplateToCustom', {
+                            projectId: projectId.value,
+                            templateId: row.id
+                        })
+                        bkMessage({ message: t('template.deleteSuc'), theme: 'success' })
+                        if (typeof fetchTableData === 'function') {
+                            fetchTableData()
+                        }
+                    } catch (err) {
+                        bkMessage({
+                            message: err.message || err,
+                            theme: 'error'
+                        })
+                    } finally {
+                        isTableLoading.value = false
+                    }
                 }
             })
         })

@@ -1054,6 +1054,9 @@ export default {
         return request.get(`/${PROCESS_API_URL_PREFIX}/user/scm/${projectId}/${repositoryHashId}/branches`, {
             params: searchParams
         })
+    },
+    setTemplateStrategy (_, { projectId, templateId, ...strategy }) {
+        return request.put(`/${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/updateUpgradeStrategy`, strategy)
     }
 
 }

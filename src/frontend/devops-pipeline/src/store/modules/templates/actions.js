@@ -17,11 +17,11 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import ajax from '@/utils/request'
 import {
     PROCESS_API_URL_PREFIX
     // STORE_API_URL_PREFIX
 } from '@/store/constants'
+import ajax from '@/utils/request'
 import {
     SET_TEMPLATE_DETAIL
 } from './constants'
@@ -101,6 +101,18 @@ const actions = {
             return res.data
         })
     },
+    requestVersionCompare (_, { projectId, templateId, pipelineId, comparedVersion }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/${templateId}/compare?pipelineId=${pipelineId}&comparedVersion=${comparedVersion}`)
+    },
+    templatePreviewDetail (_, { projectId, templateId }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/latest/details`).then(response => response.data)
+    },
+    transformTemplateToCustom (_, { projectId, templateId }) {
+        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/transformTemplateToCustom`).then(response => response.data)
+    },
+    templateUpdateUpgradeStrategy (_, { projectId, templateId }) {
+        return ajax.put(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/updateUpgradeStrategy`).then(response => response.data)
+    },
     updateInstance ({ commit }, { projectId, templateId, version, params }) {
         return ajax.put(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}/async/update?version=${version}`, params)
     },
@@ -127,6 +139,7 @@ const actions = {
     fetchReleaseTaskStatus ({ commit }, { projectId, taskId }) {
         return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/task/${taskId}`)
     }
+
 }
 
 export default actions
