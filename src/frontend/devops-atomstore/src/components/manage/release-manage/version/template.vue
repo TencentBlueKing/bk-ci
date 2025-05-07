@@ -189,14 +189,14 @@
                     if (!valid) {
                         throw new Error(this.$t('store.校验失败，请修改再试'))
                     }
+                    const { templateCode, version, reason } = this.offlineData.form
 
-                    const postData = {
-                        templateCode: this.offlineData.form.templateCode,
-                        version: this.offlineData.form.version,
-                        reason: this.offlineData.form.reason
-                    }
                     this.offlineData.isLoading = true
-                    await this.offlineTemplate(postData)
+                    await this.offlineTemplate({
+                        templateCode,
+                        version,
+                        reason
+                    })
                     this.cancelOfflineTemplate()
                     this.$emit('pageChanged')
                 } catch (err) {
