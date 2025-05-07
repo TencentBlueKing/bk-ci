@@ -492,7 +492,7 @@
     "已下架": "Unpublished",
     "草稿": "Draft",
     "1、不再在模版市场中展示": "1、no longer displayed in the template store",
-    "2、已使用模版的流水线可以继续使用，但有模版已下架标识": "2、pipelines that are currently using this template can continue to do so, but a \"unpublished template\" logo must be displayed in the pipeline.",
+    "2、已使用模版的流水线可以继续使用，但有「模版已下架」标识": "2、pipelines that are currently using this template can continue to do so, but a \"unpublished template\" logo must be displayed in the pipeline.",
     "移除成功": "Successfully Delete",
     "下架成功": "Successfully Unpublished",
     "关联成功": "Successfully Linked",
@@ -640,10 +640,16 @@
     "模板图标": "Template Icon",
     "当源模板有新版本时，按需手动发布新版本到商店": "When the source template has a new version, manually release the new version to the store on demand",
     "当源模板有新版本时，新版本自动发布到研发商店": "When the source template has a new version, it is automatically released to the development store",
+    "提交上架": "Submit for Listing",
     "publishStrategy": "Publish Strategy: ",
     "AUTO": "AUTO",
     "MANUAL": "MANUAL",
     "MANUAL-upgradeStrategyDesc": "When there are updates in the dev store, manually install new versions as needed",
     "AUTO-upgradeStrategyDesc": "Automatically install new versions when they are released in the dev store",
-    "templateSetting": "Setting"
+    "templateSetting": "Setting",
+    "模板描述": "Template Description",
+    "最新版本": "Latest Version",
+    "更新人": "Updated By",
+    "模板名称/模板描述/模板类型/所属项目/状态/更新人": "Template Name/Template Description/Template Type/Project/Status/Updated By",
+    "确认下架该模板？": "Confirm to delist this template?"
 }
