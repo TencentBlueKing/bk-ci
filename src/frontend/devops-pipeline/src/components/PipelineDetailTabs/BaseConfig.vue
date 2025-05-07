@@ -158,6 +158,10 @@
                         value: this.basicInfo?.buildNumRule ?? '--'
                     },
                     {
+                        key: 'settings.failIfVariableInvalid',
+                        value: this.$t(this.basicInfo?.failIfVariableInvalid ? 'true' : 'false')
+                    },
+                    {
                         key: 'parallelSetting',
                         value: this.$t(`settings.runningOption.${runLockType ?? '--'}`)
                     },
