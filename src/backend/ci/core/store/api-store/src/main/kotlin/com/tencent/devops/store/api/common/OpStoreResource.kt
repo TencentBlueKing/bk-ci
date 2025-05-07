@@ -37,6 +37,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
@@ -64,5 +65,17 @@ interface OpStoreResource {
         @Parameter(description = "需排除的项目", required = false)
         @QueryParam("excludeProjectCode")
         excludeProjectCode: String? = null
+    ): Result<Boolean>
+
+    @Operation(summary = "刷新研发商店组织架构信息")
+    @PUT
+    @Path("/dept/info/refresh")
+    fun refreshDeptInfo(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "组件类型", required = true)
+        @QueryParam("storeType")
+        storeType: StoreTypeEnum
     ): Result<Boolean>
 }

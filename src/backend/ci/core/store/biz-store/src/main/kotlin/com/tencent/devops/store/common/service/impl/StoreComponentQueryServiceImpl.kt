@@ -859,16 +859,18 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             versionValue = versionValue
         )
 
-    private fun getStoreInfos(storeInfoQuery: StoreInfoQuery): Pair<Long, List<Record>> {
+    private fun getStoreInfos(userDeptList: List<Int>, storeInfoQuery: StoreInfoQuery): Pair<Long, List<Record>> {
         if (storeInfoQuery.getSpecQueryFlag()) {
             handleQueryStoreCodes(storeInfoQuery)
         }
         val count = marketStoreQueryDao.count(
             dslContext = dslContext,
+            userDeptList = userDeptList,
             storeInfoQuery = storeInfoQuery
         )
         val storeInfos = marketStoreQueryDao.list(
             dslContext = dslContext,
+            userDeptList = userDeptList,
             storeInfoQuery = storeInfoQuery
         )
 
@@ -979,7 +981,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 val results: List<MarketItem>?
                 watcher.start("getStoreInfos")
                 // 分页查询组件信息
-                val (count, storeInfos) = getStoreInfos(storeInfoQuery)
+                val (count, storeInfos) = getStoreInfos(userDeptList, storeInfoQuery)
                 try {
                     watcher.start("handleMarketItem")
                     results = handleMarketItem(

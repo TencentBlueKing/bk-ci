@@ -30,13 +30,15 @@ package com.tencent.devops.store.common.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.OpStoreResource
+import com.tencent.devops.store.common.service.StoreDeptService
 import com.tencent.devops.store.common.service.StorePipelineService
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpStoreResourceImpl @Autowired constructor(
-    private val storePipelineService: StorePipelineService
+    private val storePipelineService: StorePipelineService,
+    private val storeDeptService: StoreDeptService
 ) : OpStoreResource {
 
     override fun deleteStoreInnerPipeline(
@@ -51,6 +53,15 @@ class OpStoreResourceImpl @Autowired constructor(
                 storeType = storeType,
                 storeCode = storeCode,
                 excludeProjectCode = excludeProjectCode
+            )
+        )
+    }
+
+    override fun refreshDeptInfo(userId: String, storeType: StoreTypeEnum): Result<Boolean> {
+        return Result(
+            storeDeptService.refreshDeptInfo(
+                userId = userId,
+                storeType = storeType
             )
         )
     }
