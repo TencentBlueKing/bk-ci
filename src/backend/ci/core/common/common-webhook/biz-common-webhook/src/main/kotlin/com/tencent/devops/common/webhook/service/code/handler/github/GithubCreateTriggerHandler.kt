@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
+import com.tencent.devops.common.webhook.enums.code.github.GithubCreateRefType
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_NAME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE_USERNAME
@@ -139,17 +140,22 @@ class GithubCreateTriggerHandler : GitHookTriggerHandler<GithubCreateEvent> {
                 ).toJsonStr()
             )
             val triggerOnBranchName = getBranchName(event)
+            val (includedFailedCode, excludedFailedCode) = if (event.createType() == GithubCreateRefType.TAG) {
+                WebhookI18nConstants.TAG_NAME_NOT_MATCH to WebhookI18nConstants.TAG_NAME_IGNORED
+            } else {
+                WebhookI18nConstants.TARGET_BRANCH_NOT_MATCH to WebhookI18nConstants.TARGET_BRANCH_IGNORED
+            }
             val branchFilter = BranchFilter(
                 pipelineId = pipelineId,
                 triggerOnBranchName = triggerOnBranchName,
                 includedBranches = WebhookUtils.convert(branchName),
                 excludedBranches = WebhookUtils.convert(excludeBranchName),
                 includedFailedReason = I18Variable(
-                    code = WebhookI18nConstants.TARGET_BRANCH_NOT_MATCH,
+                    code = includedFailedCode,
                     params = listOf(triggerOnBranchName)
                 ).toJsonStr(),
                 excludedFailedReason = I18Variable(
-                    code = WebhookI18nConstants.TARGET_BRANCH_IGNORED,
+                    code = excludedFailedCode,
                     params = listOf(triggerOnBranchName)
                 ).toJsonStr()
             )
@@ -157,7 +163,7 @@ class GithubCreateTriggerHandler : GitHookTriggerHandler<GithubCreateEvent> {
         }
     }
 
-    private fun GithubCreateEvent.getI18nCodeAndLinkUrl() = if (ref_type == "tag") {
+    private fun GithubCreateEvent.getI18nCodeAndLinkUrl() = if (createType() == GithubCreateRefType.TAG) {
         WebhookI18nConstants.GITHUB_CREATE_TAG_EVENT_DESC to
                 "${repository.getRepoUrl()}/releases/tag/$ref"
     } else {
