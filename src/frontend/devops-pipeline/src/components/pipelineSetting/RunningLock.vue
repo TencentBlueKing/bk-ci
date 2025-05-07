@@ -41,13 +41,27 @@
                 >
                     {{ $t('settings.validatebuildNum') }}
                 </p>
-                <bk-checkbox
-                    v-model="pipelineSetting.failIfVariableInvalid"
+            </bk-form-item>
+            <bk-form-item
+                ext-cls="variable-invalid"
+            >
+                <div class="layout-label">
+                    <label class="ui-inner-label">
+                        <span class="bk-label-text">{{ $t('settings.whenVariableExceedsLength') }}</span>
+                    </label>
+                </div>
+                <bk-radio-group
+                    v-model="proxyFailIfVariableInvalid"
                     @change="val => handleBaseInfoChange('failIfVariableInvalid', val)"
-                    ext-cls="variable-invalid"
                 >
-                    {{ $t('settings.failIfVariableInvalid') }}
-                </bk-checkbox>
+                    <bk-radio :value="false">{{ $t('settings.clearTheValue') }}</bk-radio>
+                    <bk-radio
+                        :value="true"
+                        class="ml20"
+                    >
+                        {{ $t('settings.errorAndHalt') }}
+                    </bk-radio>
+                </bk-radio-group>
             </bk-form-item>
             <bk-form-item :label="$t('template.parallelSetting')">
                 <bk-radio-group
@@ -216,6 +230,14 @@
             handleRunningLockChange: Function
         },
         computed: {
+            proxyFailIfVariableInvalid: {
+                get () {
+                    return this.pipelineSetting.failIfVariableInvalid ?? false
+                },
+                set (val) {
+                    this.pipelineSetting.failIfVariableInvalid = val
+                }
+            },
             runTypeMap () {
                 return {
                     MULTIPLE: 'MULTIPLE',
@@ -321,7 +343,9 @@
             }
         }
         .variable-invalid {
-            margin-top: 20px;
+            color: #63656E;
+            font-size: 12px;
+            font-weight: 500;
         }
         .single-lock-sub-form {
             margin-bottom: 20px;

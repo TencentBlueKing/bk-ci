@@ -389,7 +389,9 @@
     "concurrentTimeout": "Queue Timeout for Exceeding Limit",
     "maxConRunningQueueSizeTips": "The range of maximum concurrency is between 1 and 200-200之间",
     "maxConcurrencyPlaceholder": "Default to system settings when not specified",
-    "failIfVariableInvalid": "Report an error and terminate execution when the pipeline variable exceeds the length limit (4K)"
+    "whenVariableExceedsLength": "When pipeline variable value exceeds length (>4K)",
+    "clearTheValue": "Clear the value and continue running",
+    "errorAndHalt": "Error and terminate running"
   },
   "template": {
     "addTemplate": "New Template",
