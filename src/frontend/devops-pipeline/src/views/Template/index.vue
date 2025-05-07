@@ -15,12 +15,12 @@
 </template>
 
 <script setup>
-    import { onMounted, ref } from 'vue'
-    import TemplateGroupAside from './TemplateGroupAside'
     import {
         PIPELINE_ASIDE_PANEL_TOGGLE,
         PIPELINE_GROUP_ASIDE_WIDTH_CACHE
     } from '@/store/constants'
+    import { onMounted, ref } from 'vue'
+    import TemplateGroupAside from './TemplateGroupAside'
 
     const initialDivide = ref(Number(localStorage.getItem(PIPELINE_GROUP_ASIDE_WIDTH_CACHE)) || 280)
     function handleCollapseChange (val) {
@@ -30,7 +30,7 @@
     function afterResize (width) {
         localStorage.setItem(PIPELINE_GROUP_ASIDE_WIDTH_CACHE, JSON.stringify(width))
     }
-    
+
     onMounted(() => {
         if (localStorage.getItem(PIPELINE_ASIDE_PANEL_TOGGLE) === 'true') {
             this.$refs.resizeLayout.setCollapse(true)

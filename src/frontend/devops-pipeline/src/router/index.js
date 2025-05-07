@@ -22,7 +22,7 @@
  * @example 路由组件名统一首字母大写
  */
 
-import { getCacheViewId, getTemplateCacheViewId } from '@/utils/util'
+import { getCacheViewId } from '@/utils/util'
 import Vue from 'vue'
 import Router from 'vue-router'
 import pipelines from './router'
@@ -35,12 +35,12 @@ const createRouter = (store, isInIframe) => {
         routes: pipelines
     })
     router.beforeEach((to, from, next) => {
-        if (['PipelineManageList', 'TemplateManageList'].includes(to.name) && !to.params.viewId) {
+        if (['PipelineManageList'].includes(to.name) && !to.params.viewId) {
             next({
                 ...to,
                 params: {
                     ...to.params,
-                    viewId: to.name === 'PipelineManageList' ? getCacheViewId(to.params.projectId) : getTemplateCacheViewId()
+                    viewId: getCacheViewId(to.params.projectId)
                 }
             })
         } else {

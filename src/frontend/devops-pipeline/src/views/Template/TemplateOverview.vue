@@ -92,6 +92,7 @@
         RESOURCE_ACTION,
         TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
+    import { getTemplateCacheViewId } from '@/utils/util'
     import Instance from '@/views/Template/InstanceList'
     import { computed } from 'vue'
     import ExtMenu from './List/extMenu'
@@ -273,7 +274,10 @@
     }
     function goTemplateManageList () {
         proxy.$router.push({
-            name: 'TemplateManageList'
+            name: 'TemplateManageList',
+            params: {
+                templateViewId: getTemplateCacheViewId()
+            }
         })
     }
 
