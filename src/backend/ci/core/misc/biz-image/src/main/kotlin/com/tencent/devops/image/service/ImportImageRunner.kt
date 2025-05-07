@@ -32,7 +32,7 @@ import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.exception.NotFoundException
 import com.github.dockerjava.api.model.AuthConfig
 import com.github.dockerjava.core.DefaultDockerClientConfig
-import com.github.dockerjava.core.DockerClientBuilder
+import com.github.dockerjava.core.DockerClientImpl
 import com.github.dockerjava.core.command.PushImageResultCallback
 import com.tencent.devops.image.dao.UploadImageTaskDao
 import com.tencent.devops.image.pojo.DockerImage
@@ -117,7 +117,7 @@ class ImportImageRunner constructor(
     }
 
     private fun getClient(): DockerClient {
-        return DockerClientBuilder.getInstance(dockerClientConfig).build()
+        return DockerClientImpl.getInstance(dockerClientConfig)
     }
 
     private fun reTagImages(images: List<DockerImage>, isBuildImage: Boolean) {
@@ -157,9 +157,9 @@ class ImportImageRunner constructor(
             val imageFullName = "${image.imageName}:${image.imageTag}"
             logger.info("push image: $imageFullName")
             val authConfig = AuthConfig()
-                    .withUsername(dockerClientConfig.registryUsername)
-                    .withPassword(dockerClientConfig.registryPassword)
-                    .withRegistryAddress(dockerClientConfig.registryUrl)
+                .withUsername(dockerClientConfig.registryUsername)
+                .withPassword(dockerClientConfig.registryPassword)
+                .withRegistryAddress(dockerClientConfig.registryUrl)
             getClient()
                 .pushImageCmd(imageFullName)
                 .withAuthConfig(authConfig)

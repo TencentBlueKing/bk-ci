@@ -40,4 +40,5 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-impl")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson")
     api("org.springframework.boot:spring-boot-starter-aop")
+    implementation("org.bouncycastle:bcpkix-jdk15on")
 }

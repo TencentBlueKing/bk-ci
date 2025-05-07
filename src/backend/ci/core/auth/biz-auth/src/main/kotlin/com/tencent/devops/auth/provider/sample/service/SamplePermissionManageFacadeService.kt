@@ -22,6 +22,7 @@ import com.tencent.devops.auth.pojo.vo.BatchOperateGroupMemberCheckVo
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.HandoverAuthorizationDetailVo
 import com.tencent.devops.auth.pojo.vo.HandoverGroupDetailVo
+import com.tencent.devops.auth.pojo.vo.MemberExitsProjectCheckVo
 import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
 import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.common.api.model.SQLPage
@@ -39,6 +40,7 @@ class SamplePermissionManageFacadeService : PermissionManageFacadeService {
         relatedResourceCode: String?,
         action: String?,
         operateChannel: OperateChannel?,
+        uniqueManagerGroupsQueryFlag: Boolean?,
         start: Int?,
         limit: Int?
     ): SQLPage<GroupDetailsInfoVo> = SQLPage(0, emptyList())
@@ -52,7 +54,8 @@ class SamplePermissionManageFacadeService : PermissionManageFacadeService {
         relatedResourceType: String?,
         relatedResourceCode: String?,
         action: String?,
-        operateChannel: OperateChannel?
+        operateChannel: OperateChannel?,
+        uniqueManagerGroupsQueryFlag: Boolean?
     ): List<ResourceType2CountVo> = emptyList()
 
     override fun listIamGroupIdsByConditions(
@@ -173,5 +176,19 @@ class SamplePermissionManageFacadeService : PermissionManageFacadeService {
 
     override fun isProjectMember(projectCode: String, userId: String): Boolean {
         return true
+    }
+
+    override fun checkMemberExitsProject(
+        projectCode: String,
+        userId: String
+    ): MemberExitsProjectCheckVo {
+        return MemberExitsProjectCheckVo()
+    }
+
+    override fun memberExitsProject(
+        projectCode: String,
+        request: RemoveMemberFromProjectReq
+    ): String {
+        return ""
     }
 }

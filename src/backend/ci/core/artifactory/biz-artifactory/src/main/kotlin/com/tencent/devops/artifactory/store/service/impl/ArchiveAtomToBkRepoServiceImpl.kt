@@ -9,8 +9,8 @@ import com.tencent.devops.common.api.constant.STATIC
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import java.io.File
 import java.io.InputStream
-import javax.servlet.http.HttpServletResponse
-import javax.ws.rs.NotFoundException
+import jakarta.servlet.http.HttpServletResponse
+import jakarta.ws.rs.NotFoundException
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 

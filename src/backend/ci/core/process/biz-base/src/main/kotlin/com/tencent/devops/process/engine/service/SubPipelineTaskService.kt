@@ -114,7 +114,10 @@ class SubPipelineTaskService @Autowired constructor(
         inputMap: Map<String, Any>,
         contextMap: Map<String, String>
     ): SubPipelineTaskParam? {
-        val subProjectId = inputMap.getOrDefault("projectId", projectId).toString()
+        // projectId为空使用当前流水线的projectId
+        val subProjectId = inputMap["projectId"]?.let { projectIdStr ->
+            if (projectIdStr is String && projectIdStr.isNotBlank()) projectIdStr else null
+        } ?: projectId
         val subPipelineTypeStr = inputMap.getOrDefault("subPipelineType", "ID")
         val subPipelineName = inputMap["subPipelineName"]?.toString()
         val subPipelineId = inputMap["subPip"]?.toString()

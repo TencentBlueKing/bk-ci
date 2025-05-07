@@ -41,6 +41,10 @@ class UserProjectServiceResourceImpl constructor(private val userProjectServiceS
         return userProjectServiceService.updateCollected(userId, serviceId, collector)
     }
 
+    override fun getServiceUrl(userId: String, projectId: String?, serviceId: Long): Result<String> {
+        return userProjectServiceService.getServiceUrl(userId, projectId, serviceId)
+    }
+
     override fun getServiceList(userId: String, projectId: String?): Result<List<ServiceListVO>> {
         return userProjectServiceService.listService(userId, projectId)
     }

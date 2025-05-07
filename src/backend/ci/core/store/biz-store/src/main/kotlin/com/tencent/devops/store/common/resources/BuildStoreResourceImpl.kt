@@ -30,18 +30,25 @@ package com.tencent.devops.store.common.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.BuildStoreResource
-import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfResp
-import com.tencent.devops.store.pojo.common.env.StorePkgRunEnvInfo
+import com.tencent.devops.store.common.service.StorePackageDeployService
+import com.tencent.devops.store.common.service.StorePkgRunEnvInfoService
+import com.tencent.devops.store.common.service.StoreReleaseService
+import com.tencent.devops.store.common.service.UserSensitiveConfService
 import com.tencent.devops.store.pojo.common.enums.FieldTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.common.service.StorePkgRunEnvInfoService
-import com.tencent.devops.store.common.service.UserSensitiveConfService
+import com.tencent.devops.store.pojo.common.env.StorePkgRunEnvInfo
+import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfResp
+import java.io.InputStream
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildStoreResourceImpl @Autowired constructor(
     private val sensitiveConfService: UserSensitiveConfService,
-    private val storePkgRunEnvInfoService: StorePkgRunEnvInfoService
+    private val storePkgRunEnvInfoService: StorePkgRunEnvInfoService,
+    private val storePackageDeployService: StorePackageDeployService,
+    private val storeReleaseService: StoreReleaseService
 ) : BuildStoreResource {
 
     override fun getSensitiveConf(
@@ -80,5 +87,27 @@ class BuildStoreResourceImpl @Autowired constructor(
                 runtimeVersion = runtimeVersion
             )
         )
+    }
+
+    override fun oneClickDeployComponent(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<String?> {
+        return Result(
+            storePackageDeployService.oneClickDeployComponent(
+                userId = userId,
+                storeCode = storeCode,
+                storeType = storeType,
+                inputStream = inputStream,
+                disposition = disposition,
+            )
+        )
+    }
+
+    override fun getProcessInfo(userId: String, storeId: String): Result<StoreProcessInfo> {
+        return Result(storeReleaseService.getProcessInfo(userId, storeId))
     }
 }

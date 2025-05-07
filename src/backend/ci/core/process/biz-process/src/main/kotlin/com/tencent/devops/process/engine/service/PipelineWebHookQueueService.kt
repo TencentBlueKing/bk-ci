@@ -145,7 +145,7 @@ class PipelineWebHookQueueService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                variables = variables.mapValues { it.value.toString() }
+                variables = variables.filter { it.value != null }.mapValues { it.value.toString() }
             ) { pipelineWebHookQueue ->
                 logger.info("webhook queue start on webhook trigger|$projectId|$pipelineId|$buildId")
                 with(pipelineWebHookQueue) {

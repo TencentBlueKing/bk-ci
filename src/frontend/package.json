@@ -124,6 +124,11 @@
       "http-proxy-middleware@<2.0.7": ">=2.0.7",
       "elliptic@<6.6.0": ">=6.6.0",
       "cross-spawn@<7.0.5": ">=7.0.5"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "vue-demi",
+      "husky",
+      "vue-echarts"
+    ]
   }
 }

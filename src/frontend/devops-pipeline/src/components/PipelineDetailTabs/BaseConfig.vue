@@ -250,8 +250,9 @@
         width: 600px;
         .parallel-conf-detail-row {
             line-height: 32px;
+            align-items: center;
+            grid-template-columns: 150px 1fr;
             > label {
-                line-height: 32px;
                 color: #63656e;
             }
             > span {

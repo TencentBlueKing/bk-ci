@@ -57,12 +57,14 @@ data class CodeGitRepository(
     @get:Schema(title = "仓库是否开启pac", required = false)
     override val enablePac: Boolean? = false,
     @get:Schema(title = "yaml同步状态", required = false)
-    override val yamlSyncStatus: String? = null
+    override val yamlSyncStatus: String? = null,
+    @get:Schema(title = "代码库标识", required = false)
+    override val scmCode: String = ScmType.CODE_GIT.name,
+    @get:Schema(title = "凭证类型", required = false)
+    val credentialType: String? = ""
 ) : Repository {
     companion object {
         const val classType = "codeGit"
-        // 内部工蜂
-        const val SCM_CODE = "TGIT"
     }
 
     override fun getStartPrefix(): String {

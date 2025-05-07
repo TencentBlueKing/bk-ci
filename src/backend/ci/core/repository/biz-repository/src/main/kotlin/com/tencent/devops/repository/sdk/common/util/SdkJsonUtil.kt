@@ -13,7 +13,7 @@ import java.lang.reflect.Type
 
 object SdkJsonUtil {
     private val OBJECT_MAPPER = ObjectMapper().apply {
-        registerModule(KotlinModule())
+        registerModule(KotlinModule.Builder().build())
         enable(SerializationFeature.INDENT_OUTPUT)
         enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
         enable(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature())

@@ -29,7 +29,7 @@ package com.tencent.devops.store.pojo.common
 
 import com.tencent.devops.store.pojo.common.publication.StoreBaseFeatureRequest
 import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.Valid
+import jakarta.validation.Valid
 
 @Schema(title = "研发商店-组件基本信息修改请求报文体")
 data class StoreBaseInfoUpdateRequest(

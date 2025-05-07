@@ -309,6 +309,7 @@
     "升级后，该项目下的流水线引用变量时仅支持X模式。": "After the upgrade, the pipelines under this project only support the {'${{xxx}}'} mode when referencing variables.",
     "升级有可能导致存量流水线X，请谨慎操作。": "The upgrade might cause existing pipelines to {0}, please proceed with caution.",
     "运行失败": "Run failed",
+    "唯一拥有者": "Sole owner",
     "唯一管理员，不可直接移出。请交接或停用项目": "The sole administrator, cannot be removed directly. Please hand over or deactivate the project",
     "唯一拥有者，不可直接移出。请交接或删除资源": "The sole owner, cannot be removed directly. Please hand over or delete resources",
     "无法直接移出": "Cannot be removed directly",

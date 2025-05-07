@@ -36,6 +36,7 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.code.WebhookCommit
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
+import com.tencent.devops.process.trigger.scm.WebhookGrayService
 import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
 import com.tencent.devops.process.webhook.pojo.event.commit.GithubWebhookEvent
 import org.springframework.cloud.stream.function.StreamBridge
@@ -45,13 +46,16 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceScmWebhookResourceImpl @Autowired constructor(
     private val pipelineBuildWebhookService: PipelineBuildWebhookService,
     private val streamBridge: StreamBridge,
-    private val pipelineWebhookService: PipelineWebhookService
+    private val pipelineWebhookService: PipelineWebhookService,
+    private val webhookGrayService: WebhookGrayService
 ) : ServiceScmWebhookResource {
     override fun webHookCodeGithubCommit(webhook: GithubWebhook): Result<Boolean> {
-        return Result(CodeWebhookEventDispatcher.dispatchGithubEvent(
-            streamBridge = streamBridge,
-            event = GithubWebhookEvent(githubWebhook = webhook)
-        ))
+        return Result(
+            CodeWebhookEventDispatcher.dispatchGithubEvent(
+                streamBridge = streamBridge,
+                event = GithubWebhookEvent(githubWebhook = webhook)
+            )
+        )
     }
 
     override fun webhookCommit(projectId: String, webhookCommit: WebhookCommit): Result<String> {
@@ -82,5 +86,14 @@ class ServiceScmWebhookResourceImpl @Autowired constructor(
                 pageSize = pageSize
             )
         )
+    }
+
+    override fun addGrayRepoWhite(scmCode: String, pac: Boolean, serverRepoNames: List<String>): Result<Boolean> {
+        webhookGrayService.addGrayRepoWhite(
+            scmCode = scmCode,
+            pac = pac,
+            serverRepoNames = serverRepoNames
+        )
+        return Result(true)
     }
 }

@@ -34,5 +34,7 @@ data class StoreTestItem(
     @get:Schema(title = "项目代码", required = true)
     val projectCode: String,
     @get:Schema(title = "实例ID", required = false)
-    val instanceId: String? = null
+    val instanceId: String? = null,
+    @get:Schema(title = "实例名称", required = false)
+    val instanceName: String? = null
 )
