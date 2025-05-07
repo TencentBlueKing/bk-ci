@@ -872,7 +872,7 @@
     "addAtom": "Add Plugins",
     "copyAtom": "Duplicate",
     "copyAtomFail": "Duplicate failed",
-    "showAliasName": " Display specific resource name when running",
+    "showAlias": " Display specific resource when running",
     "resourceType": " Build Resources Type",
     "addThirdSlave": " Add Self-Hosted Agent",
     "thirdSlaveTips": " If there are several Agents under the pools, assign the ones used last time; if the agents have not been used before, then assign randomly",
@@ -1606,7 +1606,7 @@
   "versionRuleA": "Additional bits: Modified version of other information of the pipeline, such as name, description, running settings, etc.",
   "willRelease": "To be released",
   "clickToAddStage": "Click to add the first pipeline stage",
-  "buildMsg": "Build Message",
+  "buildMsg": "Build",
   "executeStepPreview": "Preview of steps to be executed",
   "yamlFilePathErrorTip": "File path must end with .yml or .yaml",
   "yamlFilePathPlaceholder": "build.yml or build.yaml",
@@ -1705,5 +1705,8 @@
   "noDraft": "No drafts available for deletion",
   "isTaskTermination": "Are you sure you want to terminate the task execution?",
   "pipelineNameConventions": "Pipeline Naming Conventions:",
-  "addLabels": "Add Label"
+  "addLabels": "Add Label",
+  "groupLabel": "Group labels",
+  "groupLabelTips": "Variables with the same label will be displayed in the same group in the view and execution preview interface",
+  "notGrouped": "Not grouped"
 }

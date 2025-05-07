@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_store
 
-**文档版本：** 1.0.8
+**文档版本：** 1.0.9
 
 **文档描述：** devops_ci_store 的数据库文档
 | 表名                  | 说明       |
@@ -821,10 +821,11 @@
 |  7   | TYPE |   varchar   | 32 |   0    |    Y     |  N   |       | 类型  |
 |  8   | RD_TYPE |   varchar   | 32 |   0    |    Y     |  N   |       | 研发类型  |
 |  9   | WEIGHT |   int   | 10 |   0    |    Y     |  N   |       | 权重（数值越大代表权重越高）  |
-|  10   | CREATOR |   varchar   | 50 |   0    |    N     |  N   |   system    | 创建人  |
-|  11   | MODIFIER |   varchar   | 50 |   0    |    N     |  N   |   system    | 最近修改人  |
-|  12   | UPDATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 修改时间  |
-|  13   | CREATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 创建时间  |
+|  10   | SHOW_FLAG |   bit   | 1 |   0    |    Y     |  N   |   b'1'    | 是否在首页展示，TRUE：是 FALSE：不是  |
+|  11   | CREATOR |   varchar   | 50 |   0    |    N     |  N   |   system    | 创建人  |
+|  12   | MODIFIER |   varchar   | 50 |   0    |    N     |  N   |   system    | 最近修改人  |
+|  13   | UPDATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 修改时间  |
+|  14   | CREATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 创建时间  |
 
 **表名：** <a>T_STORE_BASE_FEATURE_EXT</a>
 
@@ -1333,11 +1334,12 @@
 |  4   | TYPE |   tinyint   | 4 |   0    |    N     |  N   |       | 类型  |
 |  5   | VERSION |   varchar   | 256 |   0    |    Y     |  N   |       | 版本号  |
 |  6   | INSTANCE_ID |   varchar   | 256 |   0    |    Y     |  N   |       | 实例 ID  |
-|  7   | CREATOR |   varchar   | 50 |   0    |    N     |  N   |   system    | 创建者  |
-|  8   | MODIFIER |   varchar   | 50 |   0    |    N     |  N   |   system    | 修改者  |
-|  9   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
-|  10   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
-|  11   | STORE_TYPE |   tinyint   | 4 |   0    |    N     |  N   |   0    | store 组件类型  |
+|  7   | INSTANCE_NAME |   varchar   | 256 |   0    |    Y     |  N   |       | 实例名称  |
+|  8   | CREATOR |   varchar   | 50 |   0    |    N     |  N   |   system    | 创建者  |
+|  9   | MODIFIER |   varchar   | 50 |   0    |    N     |  N   |   system    | 修改者  |
+|  10   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  11   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+|  12   | STORE_TYPE |   tinyint   | 4 |   0    |    N     |  N   |   0    | store 组件类型  |
 
 **表名：** <a>T_STORE_PUBLISHER_INFO</a>
 

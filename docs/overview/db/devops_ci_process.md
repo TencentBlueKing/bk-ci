@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_process
 
-**文档版本：** 1.0.8
+**文档版本：** 1.0.9
 
 **文档描述：** devops_ci_process 的数据库文档
 | 表名                  | 说明       |
@@ -1022,6 +1022,7 @@
 |  9   | REPLAY_REQUEST_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 重放请求 ID  |
 |  10   | REQUEST_PARAMS |   text   | 65535 |   0    |    Y     |  N   |       | 请求参数  |
 |  11   | CREATE_TIME |   timestamp   | 19 |   0    |    N     |  Y   |   CURRENT_TIMESTAMP    | 事件时间  |
+|  12   | EVENT_BODY |   longtext   | 2147483647 |   0    |    Y     |  N   |       | 事件体  |
 
 **表名：** <a>T_PIPELINE_TRIGGER_REVIEW</a>
 
@@ -1224,6 +1225,11 @@
 |  4   | FILE_PATH |   varchar   | 512 |   0    |    N     |  N   |       | 文件路径  |
 |  5   | FILE_PATH_MD5 |   varchar   | 64 |   0    |    N     |  Y   |       | 文件路径 MD5  |
 |  6   | CREATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  7   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+|  8   | COMMIT_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 文件 commitId  |
+|  9   | BLOB_ID |   varchar   | 64 |   0    |    N     |  N   |       | 文件 blob_id  |
+|  10   | COMMIT_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 提交时间  |
+|  11   | DELETED |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 是否删除  |
 
 **表名：** <a>T_PIPELINE_YAML_INFO</a>
 

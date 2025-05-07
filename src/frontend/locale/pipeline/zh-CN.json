@@ -867,7 +867,7 @@
     "addAtom": "新增插件",
     "copyAtom": "复制插件",
     "copyAtomFail": "复制插件失败",
-    "showAliasName": "执行时显示具体资源别名",
+    "showAlias": "执行时显示具体资源",
     "resourceType": "构建资源类型",
     "addThirdSlave": "新增第三方构建机",
     "thirdSlaveTips": "若环境下包含多个节点，则优先分配上次使用过的节点；若第一次使用，则随机分配",
@@ -1604,7 +1604,7 @@
   "versionRuleA": "附加位：流水线其他信息修改版本，如名称、描述、运行设置等",
   "willRelease": "待发布",
   "clickToAddStage": "点击添加第一个流水线Stage",
-  "buildMsg": "构建信息",
+  "buildMsg": "构建",
   "executeStepPreview": "预览待执行的步骤",
   "yamlFilePathErrorTip": "YAML 文件路径需要以yml或者yaml结尾",
   "yamlFilePathPlaceholder": "build.yml 或者 build.yaml",
@@ -1703,5 +1703,8 @@
   "noDraft": "暂无可删除的草稿",
   "isTaskTermination": "确认中止任务执行吗？",
   "pipelineNameConventions": "流水线命名规范：",
-  "addLabels": "添加标签"
+  "addLabels": "添加标签",
+  "groupLabel": "分组标签",
+  "groupLabelTips": "拥有相同标签的变量，在查看和执行预览界面将在同一个分组下展示",
+  "notGrouped": "未分组"
 }
