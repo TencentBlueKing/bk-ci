@@ -745,7 +745,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                isContinue = taskPauseExecute.isContinue,
+                isContinue = taskPauseExecute.toContinue,
                 taskId = taskPauseExecute.taskId,
                 element = taskPauseExecute.element,
                 stageId = taskPauseExecute.stageId,

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -39,7 +40,8 @@ data class BuildTaskPauseInfo(
     @get:Schema(title = "element信息,若插件内有变量变更需给出变更后的element")
     val element: Element?,
     @get:Schema(title = "是否继续 true:继续构建 false：停止构建")
-    val isContinue: Boolean,
+    @JsonProperty("isContinue")
+    val toContinue: Boolean,
     @get:Schema(title = "当前stageId")
     val stageId: String,
     @get:Schema(title = "当前containerId")
