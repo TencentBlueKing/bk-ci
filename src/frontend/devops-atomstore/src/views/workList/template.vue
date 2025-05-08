@@ -537,7 +537,7 @@
 
             routerAtoms (code) {
                 this.$router.push({
-                    name: 'setting',
+                    name: 'version',
                     params: {
                         code,
                         type: 'template'
