@@ -1,7 +1,7 @@
 
 import { TEMPLATE_MODE } from '@/store/modules/templates/constants'
+import { computed, nextTick, ref } from 'vue'
 import UseInstance from './useInstance'
-import { ref, computed, nextTick } from 'vue'
 
 export default function useTemplateActions () {
     const { proxy, t, bkMessage, bkInfo, h, validator } = UseInstance()

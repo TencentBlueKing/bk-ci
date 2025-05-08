@@ -133,7 +133,8 @@
         },
         methods: {
             ...mapActions('store', [
-                'requestTemplateDetail'
+                'requestTemplateDetail',
+                'releaseTemplate'
             ]),
             async init () {
                 if (this.hasSourceInfo) {
@@ -212,28 +213,14 @@
                     try {
                         this.loading.isLoading = true
 
-                        const params = {
-                            projectCode: this.templateForm.projectCode,
-                            templateVersion: this.templateForm.templateVersion,
-                            publishStrategy: this.templateForm.publishStrategy,
-                            fullScopeVisible: this.templateForm.fullScopeVisible,
-                            templateCode: this.templateForm.templateCode,
-                            templateName: this.templateForm.templateName,
-                            templateType: this.templateForm.templateType,
-                            categoryIdList: this.templateForm.categoryIdList,
-                            classifyCode: this.templateForm.classifyCode,
-                            labelIdList: this.templateForm.labelIdList.filter(i => i !== 'null' && i !== ' ' && i),
-                            publisher: this.templateForm.publisher,
-                            logoUrl: this.templateForm.logoUrl || undefined,
-                            iconData: this.templateForm.iconData || undefined,
-                            summary: this.templateForm.summary || undefined,
-                            description: this.templateForm.description || undefined,
-                            pubDescription: this.templateForm.pubDescription || undefined
-                        }
-
-                        const res = await this.$store.dispatch('store/releaseTemplate', {
-                            params: params
-                        })
+                        const res = await this.releaseTemplate(Object.keys(this.templateForm).reduce((acc, key) => {
+                            if (Array.isArray(acc[key])) {
+                                acc[key] = acc[key].filter(i => i !== 'null' && i !== ' ' && i)
+                            } else {
+                                acc[key] = this.templateForm[key] ?? undefined
+                            }
+                            return acc
+                        }, {}))
 
                         message = this.$t('store.提交成功')
                         theme = 'success'

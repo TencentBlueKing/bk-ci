@@ -151,14 +151,14 @@ export const actions = {
     /**
      * 获取模板标签
      */
-    requestTplLabel ({ commit }) {
+    requestTplLabel () {
         return vue.$ajax.get(`${prefix}/user/market/template/label/labels`)
     },
 
     /**
      * 新版上架模板
      */
-    releaseTemplate ({ commit }, { params }) {
+    releaseTemplate (_, params) {
         return vue.$ajax.put(`${prefix}/user/market/desk/template/v2/release`, params)
     },
 
