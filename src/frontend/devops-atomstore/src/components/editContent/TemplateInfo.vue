@@ -345,8 +345,8 @@
 </template>
 
 <script>
-    import { toolbars } from '@/utils/editor-options'
     import selectLogo from '@/components/common/selectLogo'
+    import { toolbars } from '@/utils/editor-options'
 
     export default {
         name: 'TemplateInfo',
@@ -520,7 +520,7 @@
                 try {
                     const res = await this.$store.dispatch('store/requestTemplateVersionList', {
                         projectId: this.templateForm.projectCode,
-                        templateId: this.templateForm.templateCode
+                        templateCode: this.templateForm.templateCode
                     })
                     this.total = res.count
                     this.versionList = [...this.versionList, ...res.records]

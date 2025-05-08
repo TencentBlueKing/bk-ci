@@ -230,7 +230,7 @@
                 this.$router.push({
                     name: 'editTemplate',
                     params: {
-                        templateId: this.versionList[0].templateId
+                        templateCode: this.$route.params.code
                     },
                     query: {
                         type: 'edit'

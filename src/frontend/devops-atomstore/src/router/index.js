@@ -202,7 +202,7 @@ const routes = [
                 }
             },
             {
-                path: 'editTemplate/:templateId?',
+                path: 'editTemplate/:templateCode?',
                 name: 'editTemplate',
                 component: editTemplate,
                 meta: {
@@ -225,7 +225,7 @@ const routes = [
                 }
             },
             {
-                path: 'upgradeTemplate/:templateId',
+                path: 'upgradeTemplate/:templateCode',
                 name: 'upgradeTemplate',
                 component: upgradeTemplate,
                 meta: {

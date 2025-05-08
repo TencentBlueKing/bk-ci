@@ -160,12 +160,12 @@
                             class="shelf-btn"
                             v-if="props.row.templateStatus === 'INIT' || props.row.templateStatus === 'UNDERCARRIAGED'
                                 || props.row.templateStatus === 'GROUNDING_SUSPENSION' || props.row.templateStatus === 'AUDIT_REJECT'"
-                            @click="editHandle(props.row.templateId)"
+                            @click="editHandle(props.row.templateCode)"
                         > {{ $t('store.上架') }} </span>
                         <span
                             class="shelf-btn"
                             v-if="props.row.templateStatus === 'RELEASED'"
-                            @click="editHandle(props.row.templateId)"
+                            @click="editHandle(props.row.templateCode)"
                         > {{ $t('store.升级') }} </span>
                         <span>
                             <a
@@ -182,7 +182,7 @@
                         <span
                             class="schedule-btn"
                             v-if="props.row.templateStatus === 'AUDITING'"
-                            @click="toTemplateProgress(props.row.templateId)"
+                            @click="toTemplateProgress(props.row.templateCode)"
                         > {{ $t('store.进度') }} </span>
                         <span
                             class="obtained-btn"
@@ -252,8 +252,8 @@
 </template>
 
 <script>
+    import { TEMPLATE_TABLE_COLUMN_CACHE, templateStatusList } from '@/store/constants'
     import { debounce } from '@/utils/index'
-    import { templateStatusList, TEMPLATE_TABLE_COLUMN_CACHE } from '@/store/constants'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
 
@@ -545,11 +545,11 @@
                 })
             },
 
-            toTemplateProgress (id) {
+            toTemplateProgress (templateCode) {
                 this.$router.push({
                     name: 'upgradeTemplate',
                     params: {
-                        templateId: id
+                        templateCode
                     }
                 })
             },
@@ -579,11 +579,11 @@
                 })
             },
 
-            editHandle (templateId) {
+            editHandle (templateCode) {
                 this.$router.push({
                     name: 'editTemplate',
                     params: {
-                        templateId
+                        templateCode
                     },
                     query: {
                         type: 'edit'

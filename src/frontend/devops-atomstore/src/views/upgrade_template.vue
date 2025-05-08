@@ -221,8 +221,8 @@
             }
         },
         computed: {
-            templateId () {
-                return this.$route.params.templateId
+            templateCode () {
+                return this.$route.params.templateCode
             },
             isOver () {
                 return this.progressStatus.length && this.progressStatus[2].status === 'success'
@@ -251,9 +251,7 @@
                 this.loading.isLoading = true
 
                 try {
-                    const res = await this.$store.dispatch('store/requestTempIdDetail', {
-                        templateId: this.templateId
-                    })
+                    const res = await this.$store.dispatch('store/requestTemplateDetail', this.templateCode)
 
                     Object.assign(this.templateDetail, res)
                     this.templateDetail.categoryList = res.categoryList.map(item => {
@@ -282,11 +280,9 @@
                     this.showContent = true
                 }
             },
-            async requestTplRelease (atomId) {
+            async requestTplRelease () {
                 try {
-                    const res = await this.$store.dispatch('store/requestTplRelease', {
-                        templateId: this.templateId
-                    })
+                    const res = await this.$store.dispatch('store/requestTplRelease', this.templateCode)
 
                     this.progressStatus = res.processInfos
                     if (!this.isOver) {
@@ -307,9 +303,7 @@
 
                 this.loading.isLoading = true
                 try {
-                    await this.$store.dispatch('store/cancelReleaseTemplate', {
-                        templateId: this.templateId
-                    })
+                    await this.$store.dispatch('store/cancelReleaseTemplate', this.templateCode)
 
                     message = this.$t('store.取消成功')
                     theme = 'success'

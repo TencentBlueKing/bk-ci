@@ -97,8 +97,8 @@
             hasSourceInfo () {
                 return this.$route.query.hasSourceInfo
             },
-            templateId () {
-                return this.$route.params.templateId
+            templateCode () {
+                return this.$route.params.templateCode
             },
             navList () {
                 return [
@@ -150,9 +150,7 @@
                 this.loading.isLoading = true
 
                 try {
-                    const res = await this.$store.dispatch('store/requestTempIdDetail', {
-                        templateId: this.templateId
-                    })
+                    const res = await this.$store.dispatch('store/requestTemplateDetail', this.templateCode)
                     Object.assign(this.templateForm, res, {
                         fullScopeVisible: res.storeVisibleDept.fullScopeVisible
                     })
@@ -182,11 +180,11 @@
                     name: 'atomHome'
                 })
             },
-            toPublishProgress (id) {
+            toPublishProgress (templateCode) {
                 this.$router.push({
                     name: 'upgradeTemplate',
                     params: {
-                        templateId: id
+                        templateCode
                     }
                 })
             },
