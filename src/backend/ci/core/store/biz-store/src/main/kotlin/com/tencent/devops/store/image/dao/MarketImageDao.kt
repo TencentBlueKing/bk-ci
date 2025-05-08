@@ -223,7 +223,7 @@ class MarketImageDao @Autowired constructor() {
         desc: Boolean?,
         page: Int?,
         pageSize: Int?,
-        recommendFlag: Boolean?
+        recommendFlag: Boolean? = null
     ): Result<Record19<String, String, String, Byte, String, String, String, String, String, Byte, String, Boolean,
             Boolean, String, LocalDateTime, String, String, LocalDateTime, LocalDateTime>> {
         val (tImage, tImageFeature, conditions) = formatConditions(
@@ -352,7 +352,7 @@ class MarketImageDao @Autowired constructor() {
         score: Int?,
         // 来源，精确匹配
         imageSourceType: ImageType?,
-        recommendFlag: Boolean?
+        recommendFlag: Boolean? = null
     ): Int {
         val (tImage, tImageFeature, conditions) = formatConditions(
             keyword = keyword,

@@ -248,7 +248,7 @@ abstract class ImageService @Autowired constructor() {
         score: Int?,
         imageSourceType: ImageType?,
         interfaceName: String? = "Anon interface",
-        recommendFlag: Boolean?
+        recommendFlag: Boolean? = null
     ): Int {
         // 获取镜像
         val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode.split(",")
@@ -281,7 +281,7 @@ abstract class ImageService @Autowired constructor() {
         page: Int?,
         pageSize: Int?,
         interfaceName: String? = "Anon interface",
-        recommendFlag: Boolean?
+        recommendFlag: Boolean? = null
     ): List<MarketImageItem> {
         val results = mutableListOf<MarketImageItem>()
 
