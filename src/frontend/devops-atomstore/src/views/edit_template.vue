@@ -224,7 +224,7 @@
 
                         message = this.$t('store.提交成功')
                         theme = 'success'
-                        this.toPublishProgress(this.templateCode)
+                        this.toPublishProgress(this.templateForm.templateCode)
                     } catch (err) {
                         if (err.httpStatus === 200) {
                             const h = this.$createElement
