@@ -129,7 +129,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val envNodeDao: EnvNodeDao,
     private val envDao: EnvDao,
     private val agentPipelineRefDao: AgentPipelineRefDao,
-    private val agentDisconnectNotifyService: IAgentDisconnectNotifyService?,
     private val slaveGatewayService: SlaveGatewayService,
     private val thirdPartyAgentHeartbeatUtils: ThirdPartyAgentHeartbeatUtils,
     private val client: Client,
