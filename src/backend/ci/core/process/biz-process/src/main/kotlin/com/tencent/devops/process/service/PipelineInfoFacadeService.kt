@@ -1428,7 +1428,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         var success = false
         val opDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
         try {
-            if (checkPermission) {
+            if (checkPermission && archiveFlag != true) {
                 watcher.start("perm_v_perm")
                 val permission = AuthPermission.DELETE
                 pipelinePermissionService.validPipelinePermission(
@@ -1448,12 +1448,34 @@ class PipelineInfoFacadeService @Autowired constructor(
                     )
                 )
                 watcher.stop()
+            } else if (archiveFlag == true) {
+                watcher.start("perm_v_perm")
+                // 检查用户是否有管理已归档流水线数据的权限
+                val permission = AuthPermission.MANAGE_ARCHIVED_PIPELINE
+                if (!pipelinePermissionService.checkPipelinePermission(
+                        userId = userId,
+                        projectId = projectId,
+                        permission = permission,
+                        authResourceType = AuthResourceType.PROJECT
+                    )
+                ) {
+                    val language = I18nUtil.getLanguage()
+                    throw PermissionForbiddenException(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = CommonMessageCode.USER_NO_PIPELINE_PERMISSION,
+                            language = language,
+                            params = arrayOf(permission.getI18n(language))
+                        )
+                    )
+                }
+                watcher.stop()
             }
 
             val existModel = pipelineRepositoryService.getPipelineResourceVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                queryDslContext = opDslContext
+                queryDslContext = opDslContext,
+                archiveFlag = archiveFlag
             )?.model
                 ?: throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -1468,7 +1490,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 channelCode = channelCode ?: ChannelCode.BS
             )
             modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, null, param)
-            if (archiveFlag == true) {
+            if (archiveFlag != true) {
                 watcher.start("s_c_yaml_del")
                 val setting = pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId)
                 if (setting.pipelineAsCodeSettings?.enable == true) {
@@ -1496,7 +1518,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 userId = userId,
                 channelCode = channelCode,
                 delete = delete,
-                opDslContext = opDslContext
+                opDslContext = opDslContext,
+                archiveFlag = archiveFlag
             )
             watcher.stop()
 

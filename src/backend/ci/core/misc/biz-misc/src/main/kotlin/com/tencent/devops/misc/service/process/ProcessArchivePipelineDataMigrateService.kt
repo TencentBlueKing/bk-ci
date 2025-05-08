@@ -41,6 +41,7 @@ import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -57,6 +58,7 @@ import com.tencent.devops.misc.task.MigratePipelineDataTask
 import com.tencent.devops.misc.utils.MiscUtils
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceShardingRoutingRuleResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -237,7 +239,19 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
             val sourceClusterName = originDbShardingRoutingRule.clusterName
             val targetClusterName = tmpArchiveDbShardingRoutingRule.clusterName
             try {
+                val channelCode = processDao.getPipelineInfoByPipelineId(
+                    dslContext = dslContext, projectId = projectId, pipelineId = pipelineId
+                )?.channel?.let {
+                    ChannelCode.valueOf(it)
+                } ?: ChannelCode.BS
                 migrationLock.lock()
+                client.get(ServicePipelineResource::class).delete(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    channelCode = channelCode,
+                    checkFlag = false
+                )
                 // 删除流水线权限相关的数据
                 authResourceApi.deleteResource(
                     serviceCode = pipelineAuthServiceCode,

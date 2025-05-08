@@ -54,7 +54,9 @@ import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.TTemplatePipeline
@@ -144,7 +146,8 @@ class PipelineListFacadeService @Autowired constructor(
     private val pipelineLabelPipelineDao: PipelineLabelPipelineDao,
     private val pipelineRecentUseService: PipelineRecentUseService,
     private val pipelineListQueryParamService: PipelineListQueryParamService,
-    private val pipelineYamlService: PipelineYamlService
+    private val pipelineYamlService: PipelineYamlService,
+    private val redisOperation: RedisOperation
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -908,17 +911,17 @@ class PipelineListFacadeService @Autowired constructor(
             pipelineIds = pipelineList.map { it.pipelineId }
         )
         return pipelineList.map { pipeline ->
-            pipeline.copy(
-                permissions = PipelinePermissions(
-                    canManage = permissionToListMap[AuthPermission.MANAGE]?.contains(pipeline.pipelineId) ?: false,
-                    canDelete = permissionToListMap[AuthPermission.DELETE]?.contains(pipeline.pipelineId) ?: false,
-                    canView = permissionToListMap[AuthPermission.VIEW]?.contains(pipeline.pipelineId) ?: false,
-                    canEdit = permissionToListMap[AuthPermission.EDIT]?.contains(pipeline.pipelineId) ?: false,
-                    canExecute = permissionToListMap[AuthPermission.EXECUTE]?.contains(pipeline.pipelineId) ?: false,
-                    canDownload = permissionToListMap[AuthPermission.DOWNLOAD]?.contains(pipeline.pipelineId) ?: false,
-                    canShare = permissionToListMap[AuthPermission.SHARE]?.contains(pipeline.pipelineId) ?: false
-                )
+            val pipelineId = pipeline.pipelineId
+            val limitFlag = redisOperation.isMember(
+                key = BkApiUtil.getApiAccessLimitPipelinesKey(),
+                item = pipelineId
             )
+            val permissions = if (limitFlag) {
+                PipelinePermissions(canManage = false, canView = true)
+            } else {
+                buildPipelinePermissions(permissionToListMap, pipelineId)
+            }
+            pipeline.copy(permissions = permissions)
         }
     }
 
@@ -927,30 +930,43 @@ class PipelineListFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String
     ): PipelinePermissions {
-        val permissionToListMap = pipelinePermissionService.filterPipelines(
-            userId = userId,
-            projectId = projectId,
-            authPermissions = setOf(
-                AuthPermission.MANAGE,
-                AuthPermission.VIEW,
-                AuthPermission.DELETE,
-                AuthPermission.SHARE,
-                AuthPermission.EDIT,
-                AuthPermission.DOWNLOAD,
-                AuthPermission.EXECUTE
-            ),
-            pipelineIds = listOf(pipelineId)
+        val limitFlag = redisOperation.isMember(
+            key = BkApiUtil.getApiAccessLimitPipelinesKey(),
+            item = pipelineId
         )
-        return PipelinePermissions(
-            canManage = permissionToListMap[AuthPermission.MANAGE]?.contains(pipelineId) ?: false,
-            canDelete = permissionToListMap[AuthPermission.DELETE]?.contains(pipelineId) ?: false,
-            canView = permissionToListMap[AuthPermission.VIEW]?.contains(pipelineId) ?: false,
-            canEdit = permissionToListMap[AuthPermission.EDIT]?.contains(pipelineId) ?: false,
-            canExecute = permissionToListMap[AuthPermission.EXECUTE]?.contains(pipelineId) ?: false,
-            canDownload = permissionToListMap[AuthPermission.DOWNLOAD]?.contains(pipelineId) ?: false,
-            canShare = permissionToListMap[AuthPermission.SHARE]?.contains(pipelineId) ?: false
-        )
+        return if (limitFlag) {
+            PipelinePermissions(canManage = false, canView = true)
+        } else {
+            val permissionToListMap = pipelinePermissionService.filterPipelines(
+                userId = userId,
+                projectId = projectId,
+                authPermissions = setOf(
+                    AuthPermission.MANAGE,
+                    AuthPermission.VIEW,
+                    AuthPermission.DELETE,
+                    AuthPermission.SHARE,
+                    AuthPermission.EDIT,
+                    AuthPermission.DOWNLOAD,
+                    AuthPermission.EXECUTE
+                ),
+                pipelineIds = listOf(pipelineId)
+            )
+            buildPipelinePermissions(permissionToListMap, pipelineId)
+        }
     }
+
+    private fun buildPipelinePermissions(
+        permissionToListMap: Map<AuthPermission, List<String>>,
+        pipelineId: String
+    ) = PipelinePermissions(
+        canManage = permissionToListMap[AuthPermission.MANAGE]?.contains(pipelineId) ?: false,
+        canDelete = permissionToListMap[AuthPermission.DELETE]?.contains(pipelineId) ?: false,
+        canView = permissionToListMap[AuthPermission.VIEW]?.contains(pipelineId) ?: false,
+        canEdit = permissionToListMap[AuthPermission.EDIT]?.contains(pipelineId) ?: false,
+        canExecute = permissionToListMap[AuthPermission.EXECUTE]?.contains(pipelineId) ?: false,
+        canDownload = permissionToListMap[AuthPermission.DOWNLOAD]?.contains(pipelineId) ?: false,
+        canShare = permissionToListMap[AuthPermission.SHARE]?.contains(pipelineId) ?: false
+    )
 
     fun getCount(userId: String, projectId: String): PipelineCount {
         val authPipelines = pipelinePermissionService.getResourceByPermission(
