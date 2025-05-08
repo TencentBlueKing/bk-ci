@@ -38,7 +38,7 @@ class PipelineBuildExtTencentService @Autowired constructor(
             buildId = task.buildId,
             stageId = task.stageId,
             containerId = task.containerId,
-            taskId = null,
+            taskId = task.taskId,
             variables = variables,
             executeCount = task.executeCount
         ))
