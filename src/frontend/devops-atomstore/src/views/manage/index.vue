@@ -39,7 +39,6 @@
 
         data () {
             return {
-                activeTab: '',
                 isLoading: true
             }
         },
