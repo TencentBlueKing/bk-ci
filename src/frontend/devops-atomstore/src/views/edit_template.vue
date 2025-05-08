@@ -213,7 +213,7 @@
                     try {
                         this.loading.isLoading = true
 
-                        const res = await this.releaseTemplate(Object.keys(this.templateForm).reduce((acc, key) => {
+                        await this.releaseTemplate(Object.keys(this.templateForm).reduce((acc, key) => {
                             if (Array.isArray(acc[key])) {
                                 acc[key] = acc[key].filter(i => i !== 'null' && i !== ' ' && i)
                             } else {
@@ -224,9 +224,7 @@
 
                         message = this.$t('store.提交成功')
                         theme = 'success'
-                        if (res) {
-                            this.toPublishProgress(res)
-                        }
+                        this.toPublishProgress(this.templateCode)
                     } catch (err) {
                         if (err.httpStatus === 200) {
                             const h = this.$createElement
