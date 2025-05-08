@@ -122,8 +122,8 @@ class GithubCreateTriggerHandler : GitHookTriggerHandler<GithubCreateEvent> {
         pipelineId: String,
         repository: Repository,
         webHookParams: WebHookParams
-    ): List<WebhookFilter>  {
-        with(webHookParams){
+    ): List<WebhookFilter> {
+        with(webHookParams) {
             val userId = getUsername(event)
             val userFilter = UserFilter(
                 pipelineId = pipelineId,
