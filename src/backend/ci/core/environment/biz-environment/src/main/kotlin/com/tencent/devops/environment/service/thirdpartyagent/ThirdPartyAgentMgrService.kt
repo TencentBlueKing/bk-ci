@@ -129,8 +129,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val envNodeDao: EnvNodeDao,
     private val envDao: EnvDao,
     private val agentPipelineRefDao: AgentPipelineRefDao,
-    @Autowired(required = false)
-    private val agentDisconnectNotifyService: IAgentDisconnectNotifyService?,
     private val slaveGatewayService: SlaveGatewayService,
     private val thirdPartyAgentHeartbeatUtils: ThirdPartyAgentHeartbeatUtils,
     private val client: Client,
@@ -1138,7 +1136,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         agentRecord.version = startInfo.version ?: ""
         agentRecord.masterVersion = startInfo.masterVersion ?: ""
         thirdPartyAgentDao.saveAgent(dslContext, agentRecord)
-
 
         if (agentRecord.nodeId == null) {
             return status
