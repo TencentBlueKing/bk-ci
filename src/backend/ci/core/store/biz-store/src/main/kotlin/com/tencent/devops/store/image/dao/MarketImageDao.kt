@@ -222,7 +222,8 @@ class MarketImageDao @Autowired constructor() {
         // 是否降序
         desc: Boolean?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        recommendFlag: Boolean?
     ): Result<Record19<String, String, String, Byte, String, String, String, String, String, Byte, String, Boolean,
             Boolean, String, LocalDateTime, String, String, LocalDateTime, LocalDateTime>> {
         val (tImage, tImageFeature, conditions) = formatConditions(
@@ -232,7 +233,9 @@ class MarketImageDao @Autowired constructor() {
             rdType = rdType,
             dslContext = dslContext
         )
-
+        if (recommendFlag != null) {
+            conditions.add(tImageFeature.RECOMMEND_FLAG.eq(recommendFlag))
+        }
         val baseStep = dslContext.select(
             tImage.ID.`as`(KEY_IMAGE_ID),
             tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
@@ -348,7 +351,8 @@ class MarketImageDao @Autowired constructor() {
         // 评分大于等于score的镜像
         score: Int?,
         // 来源，精确匹配
-        imageSourceType: ImageType?
+        imageSourceType: ImageType?,
+        recommendFlag: Boolean?
     ): Int {
         val (tImage, tImageFeature, conditions) = formatConditions(
             keyword = keyword,
@@ -357,6 +361,9 @@ class MarketImageDao @Autowired constructor() {
             rdType = rdType,
             dslContext = dslContext
         )
+        if (recommendFlag != null) {
+            conditions.add(tImageFeature.RECOMMEND_FLAG.eq(recommendFlag))
+        }
         // 查的是最近已发布版本，一个imageCode只有一条记录
         val baseStep = dslContext.select(
             DSL.count(tImage.ID)
