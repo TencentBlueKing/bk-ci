@@ -16,6 +16,7 @@ import com.tencent.devops.repository.pojo.enums.ScmConfigStatus
 import com.tencent.devops.repository.pojo.oauth.Oauth2Url
 import com.tencent.devops.repository.pojo.oauth.OauthTokenInfo
 import com.tencent.devops.repository.pojo.oauth.OauthTokenVo
+import com.tencent.devops.repository.pojo.oauth.OauthUserVo
 import com.tencent.devops.repository.service.code.CodeRepositoryManager
 import com.tencent.devops.repository.service.github.GithubOAuthService
 import com.tencent.devops.repository.service.hub.ScmTokenApiService
@@ -52,15 +53,29 @@ class RepositoryOauthService @Autowired constructor(
             oauth2Enabled = true,
             limit = limit.limit,
             offset = limit.offset
-        ).records
-        return scmConfigList.map { scmConfig ->
-            oauth2TokenStoreManager.get(
+        ).records.filter {
+            // 新的代码源开启OAUTH授权后，才需展示OAUTH信息
+            if (it.scmType == ScmType.SCM_SVN || it.scmType == ScmType.SCM_GIT) {
+                it.oauth2Enabled == true
+            } else {
+                true
+            }
+        }
+        val list = mutableListOf<OauthTokenVo>()
+        scmConfigList.forEach { scmConfig ->
+            val tokenList = oauth2TokenStoreManager.list(
                 userId = userId,
                 scmCode = scmConfig.scmCode
-            )?.let {
-                convertOauthVo(scmConfig = scmConfig, oauthInfo = it)
-            } ?: convertEmptyOauthVo(userId = userId, scmConfig = scmConfig)
+            )
+            if (tokenList.isEmpty()) {
+                list.add(convertEmptyOauthVo(userId = userId, scmConfig = scmConfig))
+            } else {
+                tokenList.forEach {
+                    list.add(convertOauthVo(scmConfig = scmConfig, oauthInfo = it))
+                }
+            }
         }
+        return list
     }
 
     /**
@@ -102,11 +117,12 @@ class RepositoryOauthService @Autowired constructor(
 
     fun delete(
         userId: String,
-        scmCode: String
+        scmCode: String,
+        username: String
     ) {
         val repoCondition = RepoCondition(
             authType = RepoAuthType.OAUTH,
-            oauthUserId = userId,
+            oauthUserId = username,
             scmCode = scmCode
         )
         val count = codeRepositoryManager.countByCondition(
@@ -119,28 +135,31 @@ class RepositoryOauthService @Autowired constructor(
                 errorCode = RepositoryMessageCode.OAUTH_INFO_OCCUPIED_CANNOT_DELETE
             )
         }
-        oauth2TokenStoreManager.delete(userId = userId, scmCode = scmCode)
+        // 删除指定用户名的授权信息
+        oauth2TokenStoreManager.delete(username = username, scmCode = scmCode, userId = userId)
     }
 
     fun oauthUrl(
         userId: String,
         scmCode: String,
-        redirectUrl: String
+        redirectUrl: String,
+        username: String
     ): Oauth2Url {
         val url = when (scmCode) {
             // GITHUB 相关sdk尚未完善，完善后移除这部分代码
             ScmType.GITHUB.name -> {
                 githubOAuthService.getGithubOauth(
-                    userId = userId,
+                    userId = username,
                     projectId = "",
                     redirectUrlTypeEnum = RedirectUrlTypeEnum.SPEC,
                     specRedirectUrl = redirectUrl,
-                    repoHashId = null
+                    repoHashId = null,
+                    operator = userId
                 ).redirectUrl
             }
 
             else -> {
-                val state = encodeOauthState(userId = userId, redirectUrl = redirectUrl)
+                val state = encodeOauthState(userId = userId, redirectUrl = redirectUrl, username = username)
                 scmTokenApiService.authorizationUrl(scmCode = scmCode, state = state)
             }
         }
@@ -155,6 +174,13 @@ class RepositoryOauthService @Autowired constructor(
         val oauth2State = decodeOauthState(state)
         val oauth2AccessToken = scmTokenApiService.callback(scmCode = scmCode, code = code)
         val user = scmUserApiService.getUser(scmCode = scmCode, accessToken = oauth2AccessToken.accessToken)
+        // 重置的授权用户与实际用户不一致
+        if (user.username != oauth2State.username) {
+            logger.warn(
+                "oauth authorization mismatch: actual user [${user.username}] does not match " +
+                        "target user [${oauth2State.username}], potential security risk"
+            )
+        }
         val oauthTokenInfo = with(oauth2AccessToken) {
             OauthTokenInfo(
                 accessToken = accessToken,
@@ -169,11 +195,24 @@ class RepositoryOauthService @Autowired constructor(
         return oauth2State.redirectUrl
     }
 
+    fun oauthUserList(
+        userId: String,
+        scmCode: String
+    ): List<OauthUserVo> {
+        return oauth2TokenStoreManager.list(userId = userId, scmCode = scmCode).map {
+            OauthUserVo(
+                username = it.userId,
+                operator = it.operator ?: it.userId
+            )
+        }
+    }
+
     private fun encodeOauthState(
         userId: String,
-        redirectUrl: String
+        redirectUrl: String,
+        username: String
     ): String {
-        val oauth2State = Oauth2State(userId = userId, redirectUrl = redirectUrl)
+        val oauth2State = Oauth2State(userId = userId, redirectUrl = redirectUrl, username = username)
         return Base64.getEncoder().encodeToString(JsonUtil.toJson(oauth2State, false).toByteArray())
     }
 

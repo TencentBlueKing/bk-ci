@@ -112,6 +112,7 @@ object RepositoryMessageCode {
     const val ERROR_SCM_CONFIG_IN_USED_CAN_NOT_DELETE = "2115060" // 代码源[{0}]已关联代码库,不能删除
     const val ERROR_NOT_SUPPORT_REPOSITORY_AUTH = "2115061" // 不支持的代码库鉴权方式
     const val ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC = "2115062" // 仅支持git类型代码库开启PAC
+    const val ERROR_NOT_OAUTH_PROXY_FORBIDDEN_DELETE = "2115063" // 非OAUTH授权代持人无法删除
 
     const val BK_REQUEST_FILE_SIZE_LIMIT = "bkRequestFileSizeLimit" // 请求文件不能超过1M
     const val OPERATION_ADD_CHECK_RUNS = "OperationAddCheckRuns" // 添加检测任务

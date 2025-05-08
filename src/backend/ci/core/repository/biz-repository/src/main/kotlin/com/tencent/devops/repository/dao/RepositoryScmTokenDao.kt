@@ -31,6 +31,7 @@ import com.tencent.devops.model.repository.tables.TRepositoryScmToken
 import com.tencent.devops.model.repository.tables.records.TRepositoryScmTokenRecord
 import com.tencent.devops.repository.pojo.oauth.RepositoryScmToken
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -65,7 +66,8 @@ class RepositoryScmTokenDao {
                 REFRESH_TOKEN,
                 EXPIRES_IN,
                 CREATE_TIME,
-                UPDATE_TIME
+                UPDATE_TIME,
+                OPERATOR
             )
                 .values(
                     scmToken.userId,
@@ -75,13 +77,15 @@ class RepositoryScmTokenDao {
                     scmToken.refreshToken,
                     scmToken.expiresIn,
                     now,
-                    now
+                    now,
+                    scmToken.operator
                 )
                 .onDuplicateKeyUpdate()
                 .set(ACCESS_TOKEN, scmToken.accessToken)
                 .set(REFRESH_TOKEN, scmToken.refreshToken)
                 .set(EXPIRES_IN, scmToken.expiresIn)
                 .set(UPDATE_TIME, LocalDateTime.now())
+                .set(OPERATOR, scmToken.operator)
                 .execute()
         }
     }
@@ -92,6 +96,15 @@ class RepositoryScmTokenDao {
                 .where(USER_ID.eq(userId))
                 .and(SCM_CODE.eq(scmCode))
                 .execute()
+        }
+    }
+
+    fun list(dslContext: DSLContext, operator: String, scmCode: String): Result<TRepositoryScmTokenRecord>{
+        with(TRepositoryScmToken.T_REPOSITORY_SCM_TOKEN) {
+            return dslContext.selectFrom(this)
+                    .where(OPERATOR.eq(operator))
+                    .and(SCM_CODE.eq(scmCode))
+                    .fetch()
         }
     }
 }

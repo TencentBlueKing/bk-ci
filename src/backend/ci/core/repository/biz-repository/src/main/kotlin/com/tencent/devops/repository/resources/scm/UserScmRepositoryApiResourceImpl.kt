@@ -43,14 +43,16 @@ class UserScmRepositoryApiResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         scmCode: String,
-        search: String?
+        search: String?,
+        username: String?
     ): Result<AuthorizeResult> {
         return Result(
             repositoryApiService.listRepoBaseInfo(
                 userId = userId,
                 projectId = projectId,
                 scmCode = scmCode,
-                search = search
+                search = search,
+                username = username
             )
         )
     }

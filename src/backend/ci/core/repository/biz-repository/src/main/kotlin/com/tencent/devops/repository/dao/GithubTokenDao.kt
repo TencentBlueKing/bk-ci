@@ -139,10 +139,19 @@ class GithubTokenDao {
      */
     fun delete(
         dslContext: DSLContext,
-        userId: String
+        username: String
     ) {
         with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
-            dslContext.deleteFrom(this).where(USER_ID.eq(userId))
+            dslContext.deleteFrom(this).where(USER_ID.eq(username)).execute()
+        }
+    }
+
+    fun listToken(
+        dslContext: DSLContext,
+        operator: String
+    ): List<TRepositoryGithubTokenRecord> {
+        with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
+            return dslContext.selectFrom(this).where(OPERATOR.eq(operator)).fetch()
         }
     }
 }

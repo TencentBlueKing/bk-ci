@@ -452,6 +452,7 @@ class RepositoryScmConfigService @Autowired constructor(
                 credentialTypeList = getCredentialTypeVos(credentialTypeList),
                 oauthType = oauthType,
                 oauthScmCode = oauthScmCode,
+                oauth2Enabled = oauth2Enabled,
                 status = status,
                 mergeEnabled = mergeEnabled,
                 pacEnabled = pacEnabled,

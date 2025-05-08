@@ -29,22 +29,10 @@ package com.tencent.devops.repository.pojo.oauth
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "Token模型")
-data class RepositoryScmToken(
-    @get:Schema(title = "服务端用户名")
-    var userId: String = "",
-    @get:Schema(title = "代码库类型")
-    var scmCode: String = "",
-    @get:Schema(title = "应用类型")
-    var appType: String = "",
-    @get:Schema(title = "鉴权token")
-    var accessToken: String = "",
-    @get:Schema(title = "刷新token")
-    var refreshToken: String = "",
-    @get:Schema(title = "过期时间")
-    val expiresIn: Long = 0L,
-    @get:Schema(title = "创建时间")
-    val createTime: Long? = 0L,
-    @get:Schema(title = "蓝盾操作者用户名")
-    var operator: String = ""
+@Schema(title = "用户代码库Oauth授权信息")
+data class OauthUserVo(
+    @get:Schema(title = "授权账号")
+    val username: String,
+    @get:Schema(title = "操作人")
+    val operator: String
 )

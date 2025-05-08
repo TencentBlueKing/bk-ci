@@ -92,4 +92,12 @@ class GitTokenDao {
                 .execute()
         }
     }
+
+    fun listToken(dslContext: DSLContext, operator: String): List<TRepositoryGitTokenRecord> {
+        with(TRepositoryGitToken.T_REPOSITORY_GIT_TOKEN) {
+            return dslContext.selectFrom(this)
+                .where(OPERATOR.eq(operator))
+                .fetch()
+        }
+    }
 }
