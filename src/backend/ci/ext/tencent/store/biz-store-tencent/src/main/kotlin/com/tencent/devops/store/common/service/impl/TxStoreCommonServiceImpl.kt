@@ -50,12 +50,12 @@ class TxStoreCommonServiceImpl : StoreCommonServiceImpl() {
         return if (defaultFlag || (members != null && members.contains(userId))) {
             true
         } else {
-            visibleList != null && (visibleList.contains(0) || visibleList.intersect(userDeptList).count() > 0)
+            visibleList != null && (visibleList.contains(0) || visibleList.intersect(userDeptList.toSet()).isNotEmpty())
         }
     }
 
     override fun generateStoreVisibleData(
-        storeCodeList: List<String?>,
+        storeCodeList: List<String>,
         storeType: StoreTypeEnum
     ): HashMap<String, MutableList<Int>>? {
         return storeVisibleDeptService.batchGetVisibleDept(storeCodeList, storeType).data
