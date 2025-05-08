@@ -52,7 +52,8 @@ const state = {
         isCopyDialogShow: false,
         addToDialogShow: false,
         isDisableDialogShow: false,
-        isArchiveDialogShow: false
+        isArchiveDialogShow: false,
+        isShowDeleteArchivedDialog: false
     }
 }
 

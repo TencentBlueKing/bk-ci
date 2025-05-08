@@ -16,6 +16,7 @@
                     {{ $t('patchAddTo') }}
                 </bk-button>
                 <bk-button
+                    v-if="!isArchiveView"
                     :disabled="!isSelected"
                     @click="toggleArchive"
                 >
@@ -77,6 +78,13 @@
             @cancel="toggleArchive"
             @done="refreshList"
         />
+        <delete-archived-dialog
+            type="archiveBatch"
+            :is-show-delete-archived-dialog="isDeleteArchiveShow"
+            :pipeline-list="selected"
+            @done="refreshList"
+            @cancel="toggleDeleteConfirm"
+        />
     </main>
 </template>
 
@@ -88,6 +96,8 @@
     import PipelineSearcher from './PipelineSearcher'
     import { ARCHIVE_VIEW_ID } from '@/store/constants'
     import ArchiveDialog from '@/views/PipelineList/ArchiveDialog'
+    import DeleteArchivedDialog from '@/views/PipelineList/DeleteArchivedDialog'
+    import ArchiveViewName from '@/components/pipelineList/archiveViewName'
 
     export default {
         name: 'patch-manage-list',
@@ -97,6 +107,7 @@
             AddToGroupDialog,
             ArchiveViewName,
             ArchiveDialog,
+            DeleteArchivedDialog,
             RemoveConfirmDialog
         },
         data () {
@@ -107,6 +118,7 @@
                 filters: restQuery,
                 isConfirmShow: false,
                 isArchiveShow: false,
+                isDeleteArchiveShow: false,
                 tableHeight: null
             }
         },
@@ -167,7 +179,11 @@
                 this.selected = selected
             },
             toggleDeleteConfirm () {
-                this.isConfirmShow = !this.isConfirmShow
+                if (this.isArchiveView) {
+                    this.isDeleteArchiveShow = !this.isDeleteArchiveShow
+                } else {
+                    this.isConfirmShow = !this.isConfirmShow
+                }
             },
             refreshList () {
                 this.$refs.pipelineTable?.refresh?.()

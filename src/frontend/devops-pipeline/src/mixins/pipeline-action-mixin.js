@@ -69,6 +69,7 @@ export default {
             'deletePipeline',
             'copyPipeline',
             'restorePipeline',
+            'deleteMigrateArchive',
             'lockPipeline'
         ]),
         async getPipelines (query = {}) {
@@ -273,13 +274,13 @@ export default {
                     disable: isRunning,
                     tooltips: isRunning ? this.$t('archive.unableToFile') : false,
                     handler: this.archiveHandler,
-                    hasPermission: pipeline.permissions.canDelete,
+                    hasPermission: pipeline.permissions.canArchive,
                     disablePermissionApi: true,
                     permissionData: {
                         projectId: pipeline.projectId,
                         resourceType: 'pipeline',
                         resourceCode: pipeline.pipelineId,
-                        action: RESOURCE_ACTION.CREATE
+                        action: RESOURCE_ACTION.ARCHIVED
                     }
                 },
                 {
@@ -352,7 +353,6 @@ export default {
         },
         archiveHandler (pipeline) {
             this.updatePipelineActionState({
-                confirmType: 'archive',
                 isArchiveDialogShow: true,
                 activePipelineList: [pipeline]
             })
@@ -398,7 +398,20 @@ export default {
         closeArchiveDialog () {
             this.updatePipelineActionState({
                 isArchiveDialogShow: false,
-                confirmType: '',
+                activePipelineList: []
+            })
+        },
+
+        openDeleteArchivedDialog (pipeline) {
+            this.updatePipelineActionState({
+                isShowDeleteArchivedDialog: true,
+                activePipelineList: [pipeline]
+            })
+        },
+
+        closeDeleteArchiveDialog () {
+            this.updatePipelineActionState({
+                isShowDeleteArchivedDialog: false,
                 activePipelineList: []
             })
         },

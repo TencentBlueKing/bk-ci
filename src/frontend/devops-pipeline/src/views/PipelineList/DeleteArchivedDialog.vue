@@ -3,7 +3,7 @@
         ext-cls="bk-devops-center-align-dialog archive"
         width="480"
         render-directive="if"
-        v-model="isArchiveDialogShow"
+        v-model="isShowDeleteArchivedDialog"
         :mask-close="false"
         :auto-close="false"
         :draggable="false"
@@ -15,10 +15,7 @@
                 <i class="devops-icon icon-exclamation" />
             </span>
             <div class="archive-title">
-                <span v-if="isArchiveBatch">
-                    {{ $t('archive.isArchiveConfirmedTitles', [pipelineList.length]) }}
-                </span>
-                <span v-else>{{ $t('archive.isArchiveConfirmedTitle') }}</span>
+                <span>{{ $t('deletePipelineConfirm') }}</span>
             </div>
         </template>
         <main>
@@ -33,15 +30,9 @@
             <div class="active-tip-block">
                 <i18n
                     tag="p"
-                    path="archive.archiveTips1"
+                    path="archive.afterArchivedPipelineDeletion"
                 >
-                    <span class="active-tip">{{ $t('archive.archiveTips2') }}</span>
-                </i18n>
-                <i18n
-                    tag="p"
-                    path="archive.archiveTips3"
-                >
-                    <span class="active-tip">{{ $t('archive.archiveTips4') }}</span>
+                    <span class="active-tip">{{ $t('archive.cannotBeRecovered') }}</span>
                 </i18n>
             </div>
 
@@ -59,11 +50,11 @@
         </main>
         <footer slot="footer">
             <bk-button
-                theme="warning"
+                theme="danger"
                 :loading="isSubmiting"
                 @click="submit"
             >
-                {{ $t('archive.archive') }}
+                {{ $t('delete') }}
             </bk-button>
             <bk-button @click="cancel">
                 {{ $t('cancel') }}
@@ -75,9 +66,9 @@
 <script>
     import { mapActions } from 'vuex'
     export default {
-        name: 'archive-dialog',
+        name: 'delete-archive-dialog',
         props: {
-            isArchiveDialogShow: Boolean,
+            isShowDeleteArchivedDialog: Boolean,
             pipelineList: {
                 type: Array,
                 requied: true
@@ -96,73 +87,58 @@
             pipelineName () {
                 return this.pipelineList[0]?.pipelineName
             },
+            pipelineId  () {
+                return this.pipelineList[0]?.pipelineId
+            },
             projectId () {
                 return this.$route.params.projectId
             }
         },
         methods: {
             ...mapActions('pipelines', [
-                'migrateArchivePipelineList',
-                'batchMigrateArchivePipelineList',
+                'deleteMigrateArchive',
+                'batchDeleteMigrateArchive',
                 'requestGetGroupLists'
             ]),
-            async handleSingleArchive () {
-                const { pipelineId } = this.pipelineList[0]
-                return await this.migrateArchivePipelineList({
+            async handleSingleDeleteArchive () {
+                return await this.deleteMigrateArchive({
                     projectId: this.projectId,
-                    pipelineId
+                    pipelineId: this.pipelineId
                 })
             },
-            async handleBatchArchive () {
+            async handleBatchDeleteArchive () {
                 const pipelineIds = this.pipelineList.map(pipeline => pipeline.pipelineId)
-                return await this.batchMigrateArchivePipelineList({
+                return await this.batchDeleteMigrateArchive({
                     projectId: this.projectId,
                     pipelineIds
                 })
             },
             async submit () {
                 if (this.isSubmiting) return
+                let message = this.$t('archive.pipelineDeletionSuccess')
+                let theme = 'success'
 
                 try {
                     this.isSubmiting = true
                     let res
                     if (this.isArchiveBatch) {
-                        res = await this.handleBatchArchive()
+                        res = await this.handleBatchDeleteArchive()
                     } else {
-                        res = await this.handleSingleArchive()
+                        res = await this.handleSingleDeleteArchive()
                     }
-                    if (res) {
-                        const h = this.$createElement
-                        const instance = this.$bkInfo({
-                            type: 'success',
-                            width: 460,
-                            closeIcon: false,
-                            showFooter: false,
-                            title: this.$t('archive.submissionSuccess'),
-                            subHeader: h('div', {
-                                class: 'archiving-running'
-                            }, [
-                                h('p', this.$t('archive.archivingTaskRunning')),
-                                h('p', { class: 'tips' }, this.$t('archive.deleteOrMoveYamlInRepoIfPacModeEnabled')),
-                                h('bk-button', {
-                                    class: 'button',
-                                    on: {
-                                        click: () => {
-                                            this.$bkInfo.close(instance.id)
-                                            // this.requestGetGroupLists(this.$route.params)
-                                            // this.$emit('done')
-                                        }
-                                    }
-                                }, this.$t('return'))
-                            ])
-                        })
+                    if (!res) {
+                        throw Error(this.$t('archive.pipelineDeletionFailure'))
                     }
+                    this.requestGetGroupLists(this.$route.params)
+                    this.$emit('done')
                 } catch (e) {
-                    this.$showTips({
-                        message: e.message || this.$t('archive.archivePipelineFail'),
-                        theme: 'error'
-                    })
+                    message = e.message || this.$t('archive.pipelineDeletionFailure')
+                    theme = 'error'
                 } finally {
+                    this.$showTips({
+                        message,
+                        theme
+                    })
                     this.isSubmiting = false
                     this.cancel()
                 }
@@ -214,7 +190,6 @@
   }
   .active-tip-block {
     width: 416px;
-    height: 68px;
     background: #F5F6FA;
     border-radius: 2px;
     padding: 12px 16px;
@@ -229,46 +204,30 @@
     }
   }
   .archive-pipeline-list {
-        border: 1px solid #DCDEE5;
-        border-radius: 2px;
-        margin-top: 16px;
-        overflow: auto;
-        flex: 1;
+    border: 1px solid #DCDEE5;
+    border-radius: 2px;
+    margin-top: 16px;
+    overflow: auto;
+    flex: 1;
+    width: 100%;
+    max-height: 320px;
+
+    >li {
         width: 100%;
-        max-height: 320px;
+        height: 40px;
+        padding: 0 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        grid-gap: 12px;
+        overflow: hidden;
+        text-align: left;
+        border-bottom: 1px solid #DCDEE5;
 
-        >li {
-            width: 100%;
-            height: 40px;
-            padding: 0 8px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            grid-gap: 12px;
-            overflow: hidden;
-            text-align: left;
-            border-bottom: 1px solid #DCDEE5;
-
-            &:last-child {
-                border-bottom: 0;
-            }
+        &:last-child {
+            border-bottom: 0;
         }
     }
-}
-</style>
-<style lang="scss">
-.archiving-running {
-    font-size: 14px;
-    color: #63656e;
-    text-align: left;
-
-    .tips {
-        margin: 10px 0;
-        padding: 0 10px;
-        background-color: #f5f6fa;
-    }
-    .button {
-        float: right;
-    }
+  }
 }
 </style>
