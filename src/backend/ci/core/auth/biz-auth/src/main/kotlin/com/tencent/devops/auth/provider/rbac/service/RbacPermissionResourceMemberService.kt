@@ -23,6 +23,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
@@ -201,8 +202,7 @@ class RbacPermissionResourceMemberService(
         expiredAt: Long,
         iamGroupId: Int
     ): Boolean {
-        if (memberType == MemberType.USER.type &&
-            deptService.isUserDeparted(memberId)) {
+        if (memberType == MemberType.USER.type && deptService.isUserDeparted(memberId)) {
             return true
         }
         // 获取对应的资源组
@@ -262,6 +262,7 @@ class RbacPermissionResourceMemberService(
         members: List<String>?,
         departments: List<String>?
     ): Boolean {
+        logger.info("batch add resource group members :$projectCode|$iamGroupId|$expiredTime|$members|$departments")
         // 校验用户组是否属于该项目
         verifyGroupBelongToProject(
             projectCode = projectCode,
@@ -276,7 +277,9 @@ class RbacPermissionResourceMemberService(
         }
         val groupMembers = iamV2ManagerService.getRoleGroupMemberV2(iamGroupId, pageInfoDTO).results
         val groupUserMap = groupMembers.filter { it.type == userType }.associateBy { it.id }
-        val groupDepartmentSet = groupMembers.filter { it.type == deptType }.map { it.id }.toSet()
+        val groupDepartmentSet = groupMembers.filter {
+            it.type == deptType && it.expiredAt > LocalDateTime.now().timestamp()
+        }.map { it.id }.toSet()
         // 校验用户是否应该加入用户组
         val iamMemberInfos = mutableListOf<ManagerMember>()
         if (!members.isNullOrEmpty()) {
