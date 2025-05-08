@@ -1,74 +1,73 @@
 <template>
-    <div>
-        <bk-popover
-            ref="dotMenuRef"
-            :width="400"
-            placement="bottom-start"
-            theme="dot-menu light"
-            trigger="click"
-            :transfer="true"
-            ext-cls="template-ext-menu"
-            :on-show="handleShowMenu"
-            :on-hide="handleHideMenu"
+    <bk-popover
+        ref="dotMenuRef"
+        :width="400"
+        placement="bottom-start"
+        theme="dot-menu light"
+        trigger="click"
+        :transfer="true"
+        class="add-field-popover"
+        :on-show="handleShowMenu"
+        :on-hide="handleHideMenu"
+    >
+        <div class="add-field-btn">
+            <bk-icon
+                type="plus-circle-shape"
+                class="add-icon"
+            />
+            {{ $t('template.addField') }}
+        </div>
+        <div
+            slot="content"
+            class="popover-container"
         >
-            <bk-button
-                type="primary"
-                size="small"
-            >
-                {{ $t('template.addField') }}
-            </bk-button>
-            <div
-                slot="content"
-                class="popover-container"
-            >
-                <bk-input
-                    clearable
-                    v-model="searchKey"
-                    :right-icon="'bk-icon icon-search'"
-                    :placeholder="$t('template.keyword')"
-                    class="search-input"
-                    @right-icon-click="handlerSearch"
-                />
-                <div class="container-groups">
-                    <div
-                        v-for="(group, groupIndex) in filteredGroups"
-                        :key="groupIndex"
-                        class="group"
-                    >
-                        <div class="group-title">
-                            <p>
-                                {{ group.title }}
-                                <span
-                                    v-if="group.itemCount"
-                                    class="item-count"
-                                >
-                                    （{{ group.itemCount }}）
-                                </span>
-                            </p>
-                            <bk-checkbox
-                                :value="group.isAll"
-                                ext-cls="item-check"
-                                @change="value => handleGroupSelect(value, group)"
+            <bk-input
+                clearable
+                v-model="searchKey"
+                :right-icon="'bk-icon icon-search'"
+                :placeholder="$t('template.keyword')"
+                class="search-input"
+                @right-icon-click="handlerSearch"
+            />
+            <div class="container-groups">
+                <div
+                    v-for="(group, groupIndex) in filteredGroups"
+                    :key="groupIndex"
+                    class="group"
+                >
+                    <div class="group-title">
+                        <p>
+                            {{ group.title }}
+                            <span
+                                v-if="group.itemCount"
+                                class="item-count"
                             >
-                                {{ $t('template.selectAll') }}
-                            </bk-checkbox>
-                        </div>
-                        <div class="group-content">
-                            <div
-                                v-for="(item, itemIndex) in group.items"
-                                :key="itemIndex"
-                                @click="toggleItemSelection(group, item)"
-                                :class="{ 'item-selected': item.selected }"
-                                v-if="item.name.includes(searchKey)"
-                            >
-                                {{ item.name }}
-                            </div>
+                                （{{ group.itemCount }}）
+                            </span>
+                        </p>
+                        <bk-checkbox
+                            :value="group.isAll"
+                            ext-cls="item-check"
+                            @change="value => handleGroupSelect(value, group)"
+                        >
+                            {{ $t('template.selectAll') }}
+                        </bk-checkbox>
+                    </div>
+                    <div class="group-content">
+                        <div
+                            v-for="(item, itemIndex) in group.items"
+                            :key="itemIndex"
+                            @click="toggleItemSelection(group, item)"
+                            :class="{ 'item-selected': item.selected }"
+                            v-if="item.name.includes(searchKey)"
+                        >
+                            {{ item.name }}
                         </div>
                     </div>
                 </div>
             </div>
-        </bk-popover>
-    </div>
+        </div>
+    </bk-popover>
 </template>
 
 <script setup>
@@ -118,67 +117,79 @@
 </script>
 
 <style lang="scss">
-.template-ext-menu {
+.add-field-popover {
+    .add-field-btn {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        color: #1768EF;
+        font-size: 12px;
+        .add-icon {
+            font-size: 14px !important;
+            margin-right: 5px;
+            color: #3A84FF;
+        }
+    }
+}
+.popover-container {
+    width: 400px;
+    padding: 10px 12px;
+
+    .search-input {
+        margin-bottom: 12px;
+    }
+    .container-groups{
+        max-height: 500px;
+        overflow: auto;
+    }
   
-  .popover-container {
-      margin: 9px 0;
+    .group {
+        margin-bottom: 12px;
 
-      .search-input {
-          margin-bottom: 12px;
-      }
-      .container-groups{
-          max-height: 500px;
-          overflow: auto;
-      }
-      
-      .group {
-          margin-bottom: 12px;
-  
-          .group-title {
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              font-size: 12px;
-              color: #313238;
-              line-height: 22px;
+        .group-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #313238;
+            line-height: 22px;
 
-              p {
-                  font-weight: 700;
+            p {
+                font-weight: 700;
 
-                  .item-count {
-                      font-weight: 500;
-                      color: #63656E;
-                  }
-              }
-          }
-          
-          .group-content {
-              display: grid;
-              flex-wrap: wrap;
-              gap: 8px;
-              grid-template-columns: repeat(2, 1fr);
-              color: #63656E;
-              margin-top: 4px;
-          }
-          
-          .group-content div {
-              box-sizing: border-box;
-              height: 32px;
-              padding: 6px;
-              font-size: 12px;
-              cursor: pointer;
-              border-radius: 2px;
-              &:hover {
-                  background: #F5F7FA;
-              }
-          }
-          
-          .item-selected {
-              background: #F5F7FA;
-              color: #3A84FF;
-              border-radius: 2px;
-          }
-      }
-  }
+                .item-count {
+                    font-weight: 500;
+                    color: #63656E;
+                }
+            }
+        }
+        
+        .group-content {
+            display: grid;
+            flex-wrap: wrap;
+            gap: 8px;
+            grid-template-columns: repeat(2, 1fr);
+            color: #63656E;
+            margin-top: 4px;
+        }
+        
+        .group-content div {
+            box-sizing: border-box;
+            height: 32px;
+            padding: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 2px;
+            &:hover {
+                background: #F5F7FA;
+            }
+        }
+        
+        .item-selected {
+            background: #F5F7FA;
+            color: #3A84FF;
+            border-radius: 2px;
+        }
+    }
 }
 </style>

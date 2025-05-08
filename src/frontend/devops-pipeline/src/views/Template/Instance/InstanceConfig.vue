@@ -356,10 +356,10 @@
         }
     })
     function compareParams (instance, template) {
-        const instanceParams = instance.param
-        const templateParams = template.params
-        const instanceBuildNo = instance.buildNo
-        const templateBuildNo = template.buildNo
+        const instanceParams = instance?.param
+        const templateParams = template?.params
+        const instanceBuildNo = instance?.buildNo
+        const templateBuildNo = template?.buildNo
 
         // 非入参的参数直接赋值模板配置的入参默认值
         if (instanceBuildNo.required && !templateBuildNo.required) {

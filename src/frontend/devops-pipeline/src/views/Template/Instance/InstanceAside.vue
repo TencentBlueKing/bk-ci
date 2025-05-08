@@ -199,7 +199,12 @@
         const { params, buildNo } = deepClone(curTemplateDetail.value)
         const newInstance = {
             enablePac: false,
-            param: params,
+            param: params.map(p => {
+                return {
+                    ...p,
+                    isRequiredParam: p.required
+                }
+            }),
             buildNo
         }
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, [...instanceList.value, newInstance])

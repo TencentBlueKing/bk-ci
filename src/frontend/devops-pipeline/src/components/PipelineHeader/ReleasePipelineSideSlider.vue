@@ -52,9 +52,7 @@
                                 :key="item.pipelineName"
                                 class="release-version-list"
                             >
-                                <p>
-                                    <span class="instance-name">{{ item.pipelineName }}</span>
-                                </p>
+                                <span class="instance-name">{{ item.pipelineName }}</span>
                                 <span
                                     v-bk-overflow-tips
                                     class="release-pipeline-new-version"
@@ -868,9 +866,9 @@
             },
             async releasePipeline () {
                 if (this.isTemplateInstanceMode) {
-                    this.$store.commit(`templates/${SET_RELEASE_ING}`, true)
                     try {
                         await this.$refs?.releaseForm?.validate?.()
+                        this.$store.commit(`templates/${SET_RELEASE_ING}`, true)
                         this.$emit('release')
                     } catch (e) {
                         console.error(e)
@@ -1542,21 +1540,20 @@
 
         .instance-name {
             flex: 1;
+            max-width: 100px;
             font-size: 12px;
             color: #4D4F56;
         }
-    }
-
-    .release-pipeline-new-version {
-        background: #f5f6fa;
-        border-radius: 10px;
-        background: rgba(151, 155, 165, .1);
-        border-color: rgba(220, 222, 229, .6);
-        height: 22px;
-        line-height: 22px;
-        padding: 0 12px;
-        min-width: 150px;
-        max-width: 300px;
+        .release-pipeline-new-version {
+            background: #f5f6fa;
+            border-radius: 10px;
+            background: rgba(151, 155, 165, .1);
+            border-color: rgba(220, 222, 229, .6);
+            height: 22px;
+            line-height: 22px;
+            padding: 0 12px;
+            width: 175px;
+        }
     }
 
     span {

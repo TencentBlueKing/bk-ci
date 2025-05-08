@@ -582,7 +582,8 @@
       "tips": "You can retry or close the popup."
     },
     "modifyConfig": "Modify Configuration",
-    "batchEditInstance": "Batch Edit Instance"
+    "batchEditInstance": "Batch Edit Instance",
+    "batchEditInstanceTips": "The added field configuration will apply to all instances. If left blank, the field value will be cleared by default."
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
