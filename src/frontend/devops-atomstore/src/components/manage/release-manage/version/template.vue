@@ -3,6 +3,7 @@
         <bk-button
             theme="primary"
             class="version-button"
+            @click="toUpgrade"
         >
             {{ $t('store.新增版本') }}
         </bk-button>
@@ -222,6 +223,17 @@
                     params: {
                         type: 'template',
                         code: this.$route.params.code
+                    }
+                })
+            },
+            toUpgrade () {
+                this.$router.push({
+                    name: 'editTemplate',
+                    params: {
+                        templateId: this.versionList[0].templateId
+                    },
+                    query: {
+                        type: 'edit'
                     }
                 })
             }

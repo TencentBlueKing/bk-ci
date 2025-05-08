@@ -104,8 +104,10 @@ export const actions = {
     /**
      * 模板列表
      */
-    requestTemplateList ({ commit }, { templateName, page, pageSize }) {
-        return vue.$ajax.get(`${prefix}/user/market/desk/template/list?templateName=${templateName}&page=${page}&pageSize=${pageSize}`)
+    requestTemplateList ({ commit }, params) {
+        return vue.$ajax.get(`${prefix}/user/market/desk/template/v2/list`, {
+            params
+        })
     },
     /*
      * 模板市场首页
@@ -151,13 +153,6 @@ export const actions = {
      */
     requestTplLabel ({ commit }) {
         return vue.$ajax.get(`${prefix}/user/market/template/label/labels`)
-    },
-
-    /**
-     * 上架模板
-     */
-    editTemplate ({ commit }, { params }) {
-        return vue.$ajax.put(`${prefix}/user/market/desk/template/release`, params)
     },
 
     /**
