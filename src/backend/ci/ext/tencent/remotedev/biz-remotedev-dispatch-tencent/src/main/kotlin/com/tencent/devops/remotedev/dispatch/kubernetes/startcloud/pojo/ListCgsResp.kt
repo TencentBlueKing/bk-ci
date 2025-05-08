@@ -1,7 +1,9 @@
 package com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.remotedev.pojo.remotedev.Instance
+import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ListCgsResp(
@@ -34,6 +36,8 @@ data class ListCgsRespDataBasic(
     val clusterId: String?,
     val orderId: String?,
     val needLock: Boolean,
+    @get:Schema(title = "isCopying", required = false)
+    @get:JsonProperty("isCopying")
     val isCopying: Boolean?,
     val imageStandard: Boolean?,
     val node: String?,
