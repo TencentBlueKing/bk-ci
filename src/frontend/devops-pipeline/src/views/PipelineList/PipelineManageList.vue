@@ -95,69 +95,71 @@
                         v-model="filters"
                         :is-archive-view="isArchiveView"
                     />
-                    <bk-dropdown-menu
-                        trigger="click"
-                        class="pipeline-sort-dropdown-menu"
-                        align="right"
-                    >
-                        <template slot="dropdown-trigger">
-                            <bk-button class="icon-button">
-                                <logo
-                                    :name="currentSortIconName"
-                                    size="12"
-                                />
-                            </bk-button>
-                        </template>
-                        <ul
-                            class="bk-dropdown-list"
-                            slot="dropdown-content"
+                    <template v-if="!isArchiveView">
+                        <bk-dropdown-menu
+                            trigger="click"
+                            class="pipeline-sort-dropdown-menu"
+                            align="right"
                         >
-                            <li
-                                v-for="item in sortList"
-                                :key="item.id"
-                                :active="item.active"
-                                @click="changeSortType(item.id)"
-                            >
-                                <a
-                                    class="pipeline-sort-item"
-                                    href="javascript:;"
-                                >
-                                    {{ item.name }}
+                            <template slot="dropdown-trigger">
+                                <bk-button class="icon-button">
                                     <logo
-                                        class="pipeline-sort-item-icon"
-                                        :name="item.sortIcon"
+                                        :name="currentSortIconName"
                                         size="12"
                                     />
-                                </a>
-                            </li>
-                        </ul>
-                    </bk-dropdown-menu>
-                    <div class="bk-button-group">
-                        <bk-button
-                            :class="{
-                                'icon-button': true,
-                                'is-selected': isTableLayout
-                            }"
-                            @click="switchLayout('table')"
-                        >
-                            <logo
-                                name="list"
-                                size="14"
-                            />
-                        </bk-button>
-                        <bk-button
-                            :class="{
-                                'icon-button': true,
-                                'is-selected': isCardLayout
-                            }"
-                            @click="switchLayout('card')"
-                        >
-                            <logo
-                                name="card"
-                                size="14"
-                            />
-                        </bk-button>
-                    </div>
+                                </bk-button>
+                            </template>
+                            <ul
+                                class="bk-dropdown-list"
+                                slot="dropdown-content"
+                            >
+                                <li
+                                    v-for="item in sortList"
+                                    :key="item.id"
+                                    :active="item.active"
+                                    @click="changeSortType(item.id)"
+                                >
+                                    <a
+                                        class="pipeline-sort-item"
+                                        href="javascript:;"
+                                    >
+                                        {{ item.name }}
+                                        <logo
+                                            class="pipeline-sort-item-icon"
+                                            :name="item.sortIcon"
+                                            size="12"
+                                        />
+                                    </a>
+                                </li>
+                            </ul>
+                        </bk-dropdown-menu>
+                        <div class="bk-button-group">
+                            <bk-button
+                                :class="{
+                                    'icon-button': true,
+                                    'is-selected': isTableLayout
+                                }"
+                                @click="switchLayout('table')"
+                            >
+                                <logo
+                                    name="list"
+                                    size="14"
+                                />
+                            </bk-button>
+                            <bk-button
+                                :class="{
+                                    'icon-button': true,
+                                    'is-selected': isCardLayout
+                                }"
+                                @click="switchLayout('card')"
+                            >
+                                <logo
+                                    name="card"
+                                    size="14"
+                                />
+                            </bk-button>
+                        </div>
+                    </template>
                 </div>
             </header>
         </template>
@@ -226,6 +228,12 @@
             @done="refresh"
             @cancel="closeArchiveDialog"
         />
+        <delete-archived-dialog
+            :is-show-delete-archived-dialog="pipelineActionState.isShowDeleteArchivedDialog"
+            :pipeline-list="pipelineActionState.activePipelineList"
+            @done="refresh"
+            @cancel="closeDeleteArchiveDialog"
+        />
     </main>
 </template>
 <script>
@@ -243,6 +251,7 @@
     import PipelineSearcher from './PipelineSearcher'
     import ArchiveViewName from '@/components/pipelineList/archiveViewName'
     import ArchiveDialog from '@/views/PipelineList/ArchiveDialog'
+    import DeleteArchivedDialog from '@/views/PipelineList/DeleteArchivedDialog'
 
     import Logo from '@/components/Logo'
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
@@ -275,6 +284,7 @@
             PipelineGroupEditDialog,
             ArchiveViewName,
             ArchiveDialog,
+            DeleteArchivedDialog,
             DisableDialog
         },
         mixins: [piplineActionMixin],

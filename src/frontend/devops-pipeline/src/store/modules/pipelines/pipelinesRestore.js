@@ -55,6 +55,23 @@ const actions = {
         return ajax.post(`${prefix}/archive/projects/${projectId}/pipelines/${pipelineId}/data/migrate?cancelFlag=false`).then(response => {
             return response.data
         })
+    },
+    batchMigrateArchivePipelineList (_, { projectId, pipelineIds }) {
+        return ajax.post(`${prefix}/archive/projects/${projectId}/data/migrate?cancelFlag=false`, pipelineIds).then(response => {
+            return response.data
+        })
+    },
+    batchDeleteMigrateArchive (_, params) {
+        return ajax.delete(`${prefix}/pipelines/batchDelete?archiveFlag=true`, {
+            data: params
+        }).then(response => {
+            return response.data
+        })
+    },
+    deleteMigrateArchive (_, { projectId, pipelineId }) {
+        return ajax.delete(`${prefix}/pipelines/${projectId}/${pipelineId}?archiveFlag=true`).then(response => {
+            return response.data
+        })
     }
 }
 

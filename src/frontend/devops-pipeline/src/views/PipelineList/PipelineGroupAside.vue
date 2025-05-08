@@ -138,6 +138,9 @@
                 :class="['footer-item',{
                     active: $route.params.viewId === item.viewId
                 }]"
+                v-perm="item.isCheckPermission ? {
+                    permissionData: item.permissionData
+                } : {}"
                 @click="item.handler"
             >
                 <logo
@@ -336,13 +339,21 @@
                         logo: 'archive',
                         title: this.$t('archive.archiveLibrary'),
                         viewId: ARCHIVE_VIEW_ID,
-                        handler: this.goArchiveLibrary
+                        handler: this.goArchiveLibrary,
+                        isCheckPermission: true,
+                        permissionData: {
+                            projectId: this.$route.params.projectId,
+                            resourceType: 'project',
+                            resourceCode: this.$route.params.projectId,
+                            action: PROJECT_RESOURCE_ACTION.ARCHIVED
+                        }
                     },
                     {
                         logo: 'delete',
                         title: this.$t('restore.recycleBin'),
                         viewId: DELETED_VIEW_ID,
-                        handler: this.goRecycleBin
+                        handler: this.goRecycleBin,
+                        isCheckPermission: false
                     }
                 ]
             }
