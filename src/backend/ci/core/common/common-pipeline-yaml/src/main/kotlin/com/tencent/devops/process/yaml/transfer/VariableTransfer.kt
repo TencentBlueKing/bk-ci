@@ -62,7 +62,7 @@ class VariableTransfer {
         val result = mutableMapOf<String, Variable>()
         model.getTriggerContainer().params.forEach {
             if (it.id in ignoredVariable) return@forEach
-            val props = when {
+            var props = when {
                 // 不带
                 it.type == BuildFormPropertyType.STRING && it.desc.isNullOrEmpty() -> null
                 it.type == BuildFormPropertyType.STRING -> VariableProps(
@@ -138,6 +138,26 @@ class VariableTransfer {
                 else -> null
             }
             val const = it.constant.nullIfDefault(false)
+
+            if (it.name?.isNotEmpty() == true) {
+                props = props ?: VariableProps()
+                props.label = it.name
+            }
+
+            if (it.valueNotEmpty.nullIfDefault(false) != null) {
+                props = props ?: VariableProps()
+                props.required = it.valueNotEmpty
+            }
+
+            if (it.desc.nullIfDefault("") != null) {
+                props = props ?: VariableProps()
+                props.description = it.desc
+            }
+
+            if (it.category.nullIfDefault("") != null) {
+                props = props ?: VariableProps()
+                props.group = it.category
+            }
             result[it.id] = Variable(
                 value = if (CascadePropertyUtils.supportCascadeParam(it.type)) {
                     CascadePropertyUtils.parseDefaultValue(it.id, it.defaultValue, it.type)
@@ -149,21 +169,6 @@ class VariableTransfer {
                 const = const,
                 props = props
             )
-
-            if (it.name?.isNotEmpty() == true) {
-                val p = result[it.id]?.props ?: VariableProps()
-                p.label = it.name
-            }
-
-            if (it.valueNotEmpty.nullIfDefault(false) != null) {
-                val p = result[it.id]?.props ?: VariableProps()
-                p.required = it.valueNotEmpty
-            }
-
-            if (it.desc.nullIfDefault("") != null) {
-                val p = result[it.id]?.props ?: VariableProps()
-                p.description = it.desc
-            }
         }
         return if (result.isEmpty()) {
             null
@@ -231,6 +236,7 @@ class VariableTransfer {
                         BuildFormValue(key = it.id.toString(), value = it.label ?: it.id.toString())
                     },
                     desc = variable.props?.description,
+                    category = variable.props?.group,
                     repoHashId = variable.props?.repoHashId,
                     relativePath = null,
                     scmType = ScmType.parse(variable.props?.scmType),

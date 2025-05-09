@@ -101,6 +101,7 @@ data class VariableProps(
     val type: String? = null,
     val options: List<VariablePropOption>? = null,
     var description: String? = null,
+    var group: String? = null,
     val multiple: Boolean? = null,
     var required: Boolean? = null,
     @JsonProperty("repo-id")
