@@ -82,9 +82,9 @@ class WebhookGrayCompareService @Autowired constructor(
         val bizId = MDC.get(TraceTag.BIZID)
         ThreadPoolUtil.submitAction(
             corePoolSize = 5,
-            maximumPoolSize = 10,
+            maximumPoolSize = 5,
             keepAliveTime = 0L,
-            queue = LinkedBlockingQueue(100),
+            queue = LinkedBlockingQueue(10),
             action = {
                 MDC.put(TraceTag.BIZID, bizId)
                 compareWebhook(scmType, request, matcher)
