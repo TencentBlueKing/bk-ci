@@ -27,9 +27,8 @@
 </template>
 
 <script setup name='TemplateGroupAside'>
-    import { ref, computed, onMounted } from 'vue'
-    import UseInstance from '@/hook/useInstance'
     import Logo from '@/components/Logo'
+    import UseInstance from '@/hook/useInstance'
     import {
         ALL_TEMPLATE_VIEW_ID,
         PIPELINE_TEMPLATE_VIEW_ID,
@@ -38,11 +37,12 @@
         // STEP_TEMPLATE_VIEW_ID,
         TEMPLATE_VIEW_ID_CACHE
     } from '@/store/modules/templates/constants'
+    import { computed, onMounted, ref } from 'vue'
 
     const { proxy } = UseInstance()
     const countMap = ref({})
     const projectId = computed(() => proxy.$route.params.projectId)
-    const currentViewId = computed(() => proxy.$route.params.viewId || localStorage.getItem(TEMPLATE_VIEW_ID_CACHE) || ALL_TEMPLATE_VIEW_ID)
+    const currentViewId = computed(() => proxy.$route.params.templateViewId || ALL_TEMPLATE_VIEW_ID)
     const navList = computed(() => {
         const list = [
             {
@@ -97,12 +97,12 @@
             console.error(err)
         }
     }
-    function handleChangeMenu (viewId) {
-        localStorage.setItem(TEMPLATE_VIEW_ID_CACHE, viewId)
+    function handleChangeMenu (templateViewId) {
+        localStorage.setItem(TEMPLATE_VIEW_ID_CACHE, templateViewId)
         proxy.$router.push({
             name: 'TemplateManageList',
             params: {
-                viewId
+                templateViewId
             }
         })
     }

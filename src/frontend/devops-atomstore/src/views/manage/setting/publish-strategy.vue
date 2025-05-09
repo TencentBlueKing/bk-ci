@@ -92,7 +92,7 @@
                         templateCode: code,
                         publishStrategy: publishStrategy.value
                     })
-                    const res = await vm.proxy.$store.dispatch('store/requestTemplate', code)
+                    const res = await vm.proxy.$store.dispatch('store/requestTemplateDetail', code)
                     vm.proxy.$store.dispatch('store/setDetail', res)
 
                     vm.proxy.$bkMessage({

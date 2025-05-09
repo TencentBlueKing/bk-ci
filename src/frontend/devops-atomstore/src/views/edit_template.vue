@@ -55,6 +55,7 @@
 <script>
     import breadCrumbs from '@/components/bread-crumbs.vue'
     import { PublishInfo, TemplateInfo } from '@/components/editContent'
+    import { mapActions } from 'vuex'
 
     export default {
         components: {
@@ -97,8 +98,8 @@
             hasSourceInfo () {
                 return this.$route.query.hasSourceInfo
             },
-            templateId () {
-                return this.$route.params.templateId
+            templateCode () {
+                return this.$route.params.templateCode
             },
             navList () {
                 return [
@@ -131,6 +132,10 @@
             this.init()
         },
         methods: {
+            ...mapActions('store', [
+                'requestTemplateDetail',
+                'releaseTemplate'
+            ]),
             async init () {
                 if (this.hasSourceInfo) {
                     const { projectCode, templateCode, templateName } = this.$route.query
@@ -143,16 +148,14 @@
                 } else if (this.type === 'apply') {
                     this.showContent = true
                 } else {
-                    await this.requestTemplateDetail()
+                    await this.getTemplateDetail()
                 }
             },
-            async requestTemplateDetail () {
+            async getTemplateDetail () {
                 this.loading.isLoading = true
 
                 try {
-                    const res = await this.$store.dispatch('store/requestTempIdDetail', {
-                        templateId: this.templateId
-                    })
+                    const res = await this.requestTemplateDetail(this.templateCode)
                     Object.assign(this.templateForm, res, {
                         fullScopeVisible: res.storeVisibleDept.fullScopeVisible
                     })
@@ -182,11 +185,11 @@
                     name: 'atomHome'
                 })
             },
-            toPublishProgress (id) {
+            toPublishProgress (templateCode) {
                 this.$router.push({
                     name: 'upgradeTemplate',
                     params: {
-                        templateId: id
+                        templateCode
                     }
                 })
             },
@@ -210,34 +213,18 @@
                     try {
                         this.loading.isLoading = true
 
-                        const params = {
-                            projectCode: this.templateForm.projectCode,
-                            templateVersion: this.templateForm.templateVersion,
-                            publishStrategy: this.templateForm.publishStrategy,
-                            fullScopeVisible: this.templateForm.fullScopeVisible,
-                            templateCode: this.templateForm.templateCode,
-                            templateName: this.templateForm.templateName,
-                            templateType: this.templateForm.templateType,
-                            categoryIdList: this.templateForm.categoryIdList,
-                            classifyCode: this.templateForm.classifyCode,
-                            labelIdList: this.templateForm.labelIdList.filter(i => i !== 'null' && i !== ' ' && i),
-                            publisher: this.templateForm.publisher,
-                            logoUrl: this.templateForm.logoUrl || undefined,
-                            iconData: this.templateForm.iconData || undefined,
-                            summary: this.templateForm.summary || undefined,
-                            description: this.templateForm.description || undefined,
-                            pubDescription: this.templateForm.pubDescription || undefined
-                        }
-
-                        const res = await this.$store.dispatch('store/releaseTemplate', {
-                            params: params
-                        })
+                        await this.releaseTemplate(Object.keys(this.templateForm).reduce((acc, key) => {
+                            if (Array.isArray(acc[key])) {
+                                acc[key] = acc[key].filter(i => i !== 'null' && i !== ' ' && i)
+                            } else {
+                                acc[key] = this.templateForm[key] ?? undefined
+                            }
+                            return acc
+                        }, {}))
 
                         message = this.$t('store.提交成功')
                         theme = 'success'
-                        if (res) {
-                            this.toPublishProgress(res)
-                        }
+                        this.toPublishProgress(this.templateForm.templateCode)
                     } catch (err) {
                         if (err.httpStatus === 200) {
                             const h = this.$createElement

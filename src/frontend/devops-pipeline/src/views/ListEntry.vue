@@ -23,6 +23,7 @@
 
 <script>
     import MoreRoute from '@/components/MoreRoute'
+    import { getCacheViewId, getTemplateCacheViewId } from '@/utils/util'
     import { computed, defineComponent, getCurrentInstance } from 'vue'
 
     export default defineComponent({
@@ -47,7 +48,14 @@
                 if (activePanel.value === name) return
                 // 跳转到对应的路由
                 vm.proxy.$router.push({
-                    name
+                    name,
+                    params: name === 'PipelineManageList'
+                        ? {
+                            viewId: getCacheViewId(vm.proxy.$route.params.projectId)
+                        }
+                        : {
+                            templateViewId: getTemplateCacheViewId()
+                        }
                 })
             }
             return {
@@ -59,7 +67,7 @@
     })
 </script>
 <style lang="scss">
-    @import './../../scss/conf';
+    @import '@/scss/conf';
 
     .pipeline-content {
         display: flex;

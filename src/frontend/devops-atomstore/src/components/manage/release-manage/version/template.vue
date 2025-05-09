@@ -3,6 +3,7 @@
         <bk-button
             theme="primary"
             class="version-button"
+            @click="toUpgrade"
         >
             {{ $t('store.新增版本') }}
         </bk-button>
@@ -42,6 +43,7 @@
                         >
                             {{ $t('store.查看') }}
                         </bk-button>
+                        
                         <bk-button
                             text
                             theme="primary"
@@ -50,6 +52,15 @@
                             @click="offline(props.row)"
                         >
                             {{ $t('store.下架') }}
+                        </bk-button>
+                        <bk-button
+                            v-else
+                            text
+                            theme="primary"
+                            size="small"
+                            @click="online(props.row)"
+                        >
+                            {{ $t('store.上架') }}
                         </bk-button>
                     </section>
                 </template>
@@ -166,7 +177,8 @@
 
         methods: {
             ...mapActions('store', [
-                'offlineTemplate'
+                'offlineTemplate',
+                'releaseTemplateVersion'
             ]),
             handlePageChange (page) {
                 this.$emit('pageChanged', page)
@@ -183,7 +195,7 @@
                 }
             },
 
-            async submitOfflineTemplateVersion (row) {
+            async submitOfflineTemplateVersion () {
                 try {
                     const valid = await this.$refs.offlineForm.validate()
                     if (!valid) {
@@ -216,12 +228,43 @@
                 this.offlineData.form = row
             },
 
+            async online (row) {
+                this.$bkInfo({
+                    title: this.$t('store.onlineTips', [row.versionName]),
+                    confirmFn: async () => {
+                        try {
+                            await this.releaseTemplateVersion({
+                                version: row.version,
+                                templateCode: row.templateCode
+                            })
+                            this.$emit('pageChanged')
+                        } catch (e) {
+                            this.$bkMessage({
+                                theme: 'error',
+                                message: e.message || e
+                            })
+                        }
+                    }
+                })
+            },
+
             toDetail () {
                 this.$router.push({
                     name: 'details',
                     params: {
                         type: 'template',
                         code: this.$route.params.code
+                    }
+                })
+            },
+            toUpgrade () {
+                this.$router.push({
+                    name: 'editTemplate',
+                    params: {
+                        templateCode: this.$route.params.code
+                    },
+                    query: {
+                        type: 'edit'
                     }
                 })
             }

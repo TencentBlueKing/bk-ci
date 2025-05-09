@@ -169,7 +169,7 @@
     }
     const projectId = computed(() => proxy.$route.params.projectId)
     const templateViewId = computed(() => {
-        return proxy.$route.params.viewId
+        return proxy.$route.params.templateViewId
     })
     const searchParams = computed(() => searchValue.value.reduce((acc, filter) => {
         acc[filter.id] = filter.values.map(val => val.id).join(',')

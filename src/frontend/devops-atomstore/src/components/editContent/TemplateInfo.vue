@@ -85,7 +85,7 @@
                     class="bk-form-content template-item-content"
                     v-else
                 >
-                    {{ templateOptionName || templateForm.projectName }}
+                    {{ templateOptionName || templateForm.templateName }}
                 </div>
             </div>
             <div class="bk-form-item">
@@ -345,8 +345,9 @@
 </template>
 
 <script>
-    import { toolbars } from '@/utils/editor-options'
     import selectLogo from '@/components/common/selectLogo'
+    import { toolbars } from '@/utils/editor-options'
+    import { mapActions } from 'vuex'
 
     export default {
         name: 'TemplateInfo',
@@ -413,6 +414,10 @@
             this.initOption()
         },
         methods: {
+            ...mapActions('store', [
+                'requestPipelineTemplate',
+                'requestTemplateVersionList'
+            ]),
             initOption () {
                 this.requestTplClassify()
                 this.requestTplCategorys()
@@ -500,7 +505,7 @@
             async selectedTplProject () {
                 this.selectLoading = true
                 try {
-                    const res = await this.$store.dispatch('store/requestPipelineTemplate', {
+                    const res = await this.requestPipelineTemplate({
                         projectCode: this.templateForm.projectCode,
                         page: this.page,
                         pageSize: this.pageSize
@@ -518,9 +523,9 @@
             async getVersionList () {
                 this.selectLoading = true
                 try {
-                    const res = await this.$store.dispatch('store/requestTemplateVersionList', {
+                    const res = await this.requestTemplateVersionList({
                         projectId: this.templateForm.projectCode,
-                        templateId: this.templateForm.templateCode
+                        templateCode: this.templateForm.templateCode
                     })
                     this.total = res.count
                     this.versionList = [...this.versionList, ...res.records]

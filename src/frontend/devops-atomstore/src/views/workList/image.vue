@@ -501,7 +501,7 @@
 
             goToImageDetail (code) {
                 this.$router.push({
-                    name: 'version',
+                    name: 'releaseManage',
                     params: {
                         code,
                         type: 'image'

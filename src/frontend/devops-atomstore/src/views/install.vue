@@ -135,8 +135,8 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
     import breadCrumbs from '@/components/bread-crumbs.vue'
+    import { mapActions, mapGetters } from 'vuex'
 
     export default {
         components: {
@@ -188,8 +188,8 @@
 
         created () {
             this.isLoading = true
-            Promise.all([this.requestDetail(), this.requestRelativeProject()]).then(() => {
-                this.requestProjectList()
+            Promise.all([this.requestDetail(), this.fetchRelativeProject()]).then(() => {
+                this.fetchProjectList()
             }).catch((err) => {
                 this.$bkMessage({ message: err.messgae || err, theme: 'error' })
             }).finally(() => {
@@ -198,6 +198,18 @@
         },
 
         methods: {
+            ...mapActions('store', [
+                'requestAtom',
+                'requestTemplateDetail',
+                'requestImageDetailByCode',
+                'requestRelativeProject',
+                'requestRelativeTplProject',
+                'requestRelativeImageProject',
+                'requestProjectList',
+                'installAtom',
+                'installTemplate',
+                'installImage'
+            ]),
             fromFilter (val) {
                 let res = ''
                 switch (val) {
@@ -211,59 +223,42 @@
                 return res
             },
     
-            requestDetail () {
+            async requestDetail () {
                 const methods = {
-                    atom: this.getAtomDetail,
-                    template: this.getTemplateDetail,
-                    image: this.getImageDetail
+                    atom: this.requestAtom,
+                    template: this.requestTemplateDetail,
+                    image: this.requestImageDetailByCode
                 }
 
-                return methods[this.type]()
+                const res = await methods[this.type](this.code)
+                this.name = res[`${this.type}Name`] || res.name || ''
+                this.id = res[`${this.type}Id`]
             },
 
-            getAtomDetail () {
-                return this.$store.dispatch('store/requestAtom', this.code).then((res) => {
-                    this.name = res.name
-                    this.id = res.atomId
-                })
-            },
-
-            getTemplateDetail () {
-                return this.$store.dispatch('store/requestTemplate', this.code).then((res) => {
-                    this.name = res.templateName
-                    this.id = res.templateId
-                })
-            },
-
-            getImageDetail () {
-                return this.$store.dispatch('store/requestImageDetailByCode', this.code).then((res) => {
-                    this.name = res.imageName
-                    this.id = res.imageId
-                })
-            },
-
-            requestRelativeProject () {
+            async fetchRelativeProject () {
                 const methods = {
-                    atom: 'store/requestRelativeProject',
-                    template: 'store/requestRelativeTplProject',
-                    image: 'store/requestRelativeImageProject'
+                    atom: this.requestRelativeProject,
+                    template: this.requestRelativeTplProject,
+                    image: this.requestRelativeImageProject
                 }
 
-                return this.$store.dispatch(methods[this.type], this.code).then((res) => {
-                    this.installedProject = res
-                })
+                const res = await methods[this.type](this.code)
+                this.installedProject = res
             },
 
-            requestProjectList () {
-                this.projectListLoading = true
-                this.$store.dispatch('store/requestProjectList').then((res) => {
+            async fetchProjectList () {
+                try {
+                    this.projectListLoading = true
+                    const res = await this.requestProjectList()
                     res.forEach((item) => {
                         const isInstalled = this.installedProject.some(project => project.projectCode === item.projectCode)
                         if (!isInstalled) this.projectList.push(item)
                     })
-                }).catch((err) => {
+                } catch (err) {
                     this.$bkMessage({ message: err.messgae || err, theme: 'error' })
-                }).finally(() => (this.projectListLoading = false))
+                } finally {
+                    this.projectListLoading = false
+                }
             },
 
             toBack () {
@@ -300,23 +295,30 @@
                 this.installError = !(Array.isArray(data) && data.length > 0)
             },
 
-            confirm () {
-                if (!this.project.length) {
-                    this.installError = true
-                    return
-                }
+            async confirm () {
+                try {
+                    if (!this.project.length) {
+                        this.installError = true
+                        return
+                    }
 
-                const methods = {
-                    atom: this.installAtom,
-                    template: this.installTemplate,
-                    image: this.installImage
-                }
+                    const methods = {
+                        atom: this.installAtom,
+                        template: this.installTemplate,
+                        image: this.installImage
+                    }
 
-                this.isLoading = true
-                methods[this.type]().then(() => {
+                    this.isLoading = true
+                
+                    await methods[this.type]({
+                        
+                        [`${this.type}Code`]: this.code,
+                        projectCode: this.project
+                        
+                    })
                     this.isINstallSuccess = true
                     this.$bkMessage({ message: this.$t('store.安装成功'), theme: 'success' })
-                }).catch((err) => {
+                } catch (err) {
                     if (err.httpStatus === 200) {
                         const h = this.$createElement
                         const subHeader = h('p', {
@@ -339,31 +341,9 @@
                     } else {
                         this.$bkMessage({ message: err.message || err, theme: 'error' })
                     }
-                }).finally(() => (this.isLoading = false))
-            },
-
-            installAtom () {
-                const params = {
-                    atomCode: this.code,
-                    projectCode: this.project
+                } finally {
+                    this.isLoading = false
                 }
-                return this.$store.dispatch('store/installAtom', { params })
-            },
-
-            installTemplate () {
-                const params = {
-                    templateCode: this.code,
-                    projectCodeList: this.project
-                }
-                return this.$store.dispatch('store/installTemplate', { params })
-            },
-
-            installImage () {
-                const params = {
-                    imageCode: this.code,
-                    projectCodeList: this.project
-                }
-                return this.$store.dispatch('store/installImage', params)
             }
         }
     }

@@ -22,25 +22,53 @@
  * @example 路由组件名统一首字母大写
  */
 
-import { getCacheViewId, getTemplateCacheViewId } from '@/utils/util'
+import { getCacheViewId } from '@/utils/util'
 import Vue from 'vue'
-import Router from 'vue-router'
+import VueRouter from 'vue-router'
 import pipelines from './router'
 
-Vue.use(Router)
+Vue.use(VueRouter)
+
+// 扩展router.push, 如果重复进入同一页面, 同一个页面指代fullPath完全一致
+const originalPush = VueRouter.prototype.push
+VueRouter.prototype.push = function push (location) {
+    const {
+        fullPath
+    } = this.resolve(location).route
+
+    if (fullPath === this.history.current.fullPath) {
+        console.log('samePath', fullPath, this.history.current.fullPath)
+        return
+    }
+    return originalPush.call(this, location).catch(err => err)
+}
+
+// 同时覆盖router.replace
+const originalReplace = VueRouter.prototype.replace
+VueRouter.prototype.replace = function replace (location) {
+    const {
+        fullPath
+    } = this.resolve(location).route
+
+    if (fullPath === this.history.current.fullPath) {
+        console.log('samePath', fullPath, this.history.current.fullPath)
+        return
+    }
+    return originalReplace.call(this, location).catch(err => err)
+}
 
 const createRouter = (store, isInIframe) => {
-    const router = new Router({
+    const router = new VueRouter({
         mode: 'history',
         routes: pipelines
     })
     router.beforeEach((to, from, next) => {
-        if (['PipelineManageList', 'TemplateManageList'].includes(to.name) && !to.params.viewId) {
+        if (['PipelineManageList'].includes(to.name) && !to.params.viewId) {
             next({
                 ...to,
                 params: {
                     ...to.params,
-                    viewId: to.name === 'PipelineManageList' ? getCacheViewId(to.params.projectId) : getTemplateCacheViewId()
+                    viewId: getCacheViewId(to.params.projectId)
                 }
             })
         } else {

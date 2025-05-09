@@ -41,7 +41,7 @@
                     <template slot-scope="props">
                         <div
                             class="tempalte-name"
-                            @click="routerAtoms(props.row.templateCode)"
+                            @click="goTemplateDetail(props.row.templateCode)"
                         >
                             <img
                                 :src="props.row.logoUrl"
@@ -73,7 +73,7 @@
                     :min-width="100"
                     show-overflow-tooltip
                     :filters="templateTypeFilters"
-                    :filter-method="templateTypeFilterMethod "
+                    :filter-method="filterMethod "
                     :filter-multiple="false"
                 ></bk-table-column>
                 <bk-table-column
@@ -83,7 +83,7 @@
                     :min-width="100"
                     show-overflow-tooltip
                     :filters="projectFilters"
-                    :filter-method="projectFilterMethod "
+                    :filter-method="filterMethod "
                     :filter-multiple="false"
                 ></bk-table-column>
                 <bk-table-column
@@ -160,12 +160,12 @@
                             class="shelf-btn"
                             v-if="props.row.templateStatus === 'INIT' || props.row.templateStatus === 'UNDERCARRIAGED'
                                 || props.row.templateStatus === 'GROUNDING_SUSPENSION' || props.row.templateStatus === 'AUDIT_REJECT'"
-                            @click="editHandle(props.row.templateId)"
+                            @click="editHandle(props.row.templateCode)"
                         > {{ $t('store.上架') }} </span>
                         <span
                             class="shelf-btn"
                             v-if="props.row.templateStatus === 'RELEASED'"
-                            @click="editHandle(props.row.templateId)"
+                            @click="editHandle(props.row.templateCode)"
                         > {{ $t('store.升级') }} </span>
                         <span>
                             <a
@@ -182,7 +182,7 @@
                         <span
                             class="schedule-btn"
                             v-if="props.row.templateStatus === 'AUDITING'"
-                            @click="toTemplateProgress(props.row.templateId)"
+                            @click="toTemplateProgress(props.row.templateCode)"
                         > {{ $t('store.进度') }} </span>
                         <span
                             class="obtained-btn"
@@ -191,7 +191,7 @@
                         > {{ $t('store.下架') }} </span>
                         <span
                             style="margin-right:0"
-                            @click="deleteTemplate(props.row)"
+                            @click="delete (props.row)"
                             v-if="['INIT', 'GROUNDING_SUSPENSION', 'UNDERCARRIAGED'].includes(props.row.templateStatus)"
                         > {{ $t('store.移除') }} </span>
                     </template>
@@ -252,10 +252,11 @@
 </template>
 
 <script>
+    import { TEMPLATE_TABLE_COLUMN_CACHE, templateStatusList } from '@/store/constants'
     import { debounce } from '@/utils/index'
-    import { templateStatusList, TEMPLATE_TABLE_COLUMN_CACHE } from '@/store/constants'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
+    import { mapActions } from 'vuex'
 
     export default {
         components: {
@@ -440,12 +441,17 @@
         },
 
         methods: {
+            ...mapActions('store', [
+                'offlineTemplate',
+                'deleteTemplate',
+                'requestTemplateList'
+            ]),
             async requestList () {
                 this.isLoading = true
                 const page = this.pagination.current
                 const pageSize = this.pagination.limit
                 try {
-                    const res = await this.$store.dispatch('store/requestTemplateList', {
+                    const res = await this.requestTemplateList({
                         templateName: '',
                         page,
                         pageSize,
@@ -470,23 +476,24 @@
                 return `${year} ${time}`
             },
 
-            deleteTemplate (row) {
-                this.isLoading = true
+            async delete (row) {
                 let message = this.$t('store.移除成功')
                 let theme = 'success'
+                try {
+                    this.isLoading = true
 
-                this.$store.dispatch('store/deleteTemplate', row.templateCode).then((res) => {
+                    await this.deleteTemplate(row.templateCode)
                     this.requestList()
-                }).catch((err) => {
+                } catch (err) {
                     message = err.message || err
                     theme = 'error'
-                }).finally(() => {
+                } finally {
                     this.$bkMessage({ message, theme })
                     this.isLoading = false
-                })
+                }
             },
 
-            async pageCountChanged (currentLimit, prevLimit) {
+            async pageCountChanged (currentLimit) {
                 if (currentLimit === this.pagination.limit) return
 
                 this.pagination.current = 1
@@ -514,7 +521,7 @@
 
                 this.offlineTempConfig.isLoading = true
                 try {
-                    await this.$store.dispatch('store/offlineTemplate', {
+                    await this.offlineTemplate({
                         templateCode: this.curHandlerTemp.templateCode
                     })
 
@@ -535,9 +542,9 @@
                 }
             },
 
-            routerAtoms (code) {
+            goTemplateDetail (code) {
                 this.$router.push({
-                    name: 'setting',
+                    name: 'releaseManage',
                     params: {
                         code,
                         type: 'template'
@@ -545,11 +552,11 @@
                 })
             },
 
-            toTemplateProgress (id) {
+            toTemplateProgress (templateCode) {
                 this.$router.push({
                     name: 'upgradeTemplate',
                     params: {
-                        templateId: id
+                        templateCode
                     }
                 })
             },
@@ -579,22 +586,18 @@
                 })
             },
 
-            editHandle (templateId) {
+            editHandle (templateCode) {
                 this.$router.push({
                     name: 'editTemplate',
                     params: {
-                        templateId
+                        templateCode
                     },
                     query: {
                         type: 'edit'
                     }
                 })
             },
-            projectFilterMethod (value, row, column) {
-                const property = column.property
-                return row[property] === value
-            },
-            templateTypeFilterMethod (value, row, column) {
+            filterMethod (value, row, column) {
                 const property = column.property
                 return row[property] === value
             },

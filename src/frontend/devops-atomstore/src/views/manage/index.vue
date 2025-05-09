@@ -7,6 +7,7 @@
 
         <transition-tab
             :panels="panels"
+            :active-tab="currentTabName"
             @tab-change="tabChange"
             @child-tab-change="childTabChange"
         />
@@ -38,7 +39,6 @@
 
         data () {
             return {
-                activeTab: '',
                 isLoading: true
             }
         },
@@ -47,13 +47,19 @@
             ...mapGetters('store', {
                 detail: 'getDetail'
             }),
+            currentTabName () {
+                return this.$route.name
+            },
             type () {
                 return this.$route.params.type
+            },
+            itemName () {
+                return this.detail?.[`${this.type}Name`] ?? this.$route.params.code
             },
             panels () {
                 return [
                     ...(this.type === TYPE_ENUM.atom ? [{ label: this.$t('store.概览'), name: 'statisticData' }] : []),
-                    ...(this.type !== TYPE_ENUM.image ? [{ label: this.$t('store.发布管理'), name: 'version' }] : []),
+                    ...(this.type !== TYPE_ENUM.image ? [{ label: this.$t('store.发布管理'), name: 'releaseManage' }] : []),
                     ...(this.type === TYPE_ENUM.atom ? [{ label: this.$t('store.协作审批'), name: 'approval' }] : []),
                     ...(this.type !== TYPE_ENUM.template ? [{ label: this.$t('store.基本信息'), name: 'show' }] : []),
                     { label: this.$t('store.基本设置'), name: 'setting' }
@@ -69,7 +75,7 @@
                 return [
                     { name: this.$t('store.工作台') },
                     { name: labelMap[this.type], to: { name: `${this.type}Work` } },
-                    { name: this.$route.params.code }
+                    { name: this.itemName }
                 ]
             }
            
@@ -82,7 +88,7 @@
         methods: {
             ...mapActions('store', [
                 'requestAtom',
-                'requestTemplate',
+                'requestTemplateDetail',
                 'requestImageDetailByCode',
                 'setDetail',
                 'clearDetail',
@@ -118,7 +124,7 @@
                 const code = this.$route.params.code
                 const methodUrl = {
                     atom: this.requestAtom,
-                    template: this.requestTemplate,
+                    template: this.requestTemplateDetail,
                     image: this.requestImageDetailByCode
                 }
                 const res = await methodUrl[this.type](code)

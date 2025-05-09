@@ -38,7 +38,7 @@ const statisticPipeline = () => import(/* webpackChunkName: 'overView' */ '@/vie
 const approval = () => import(/* webpackChunkName: 'approval' */ '@/views/manage/approval.vue') // 研发商店管理页面
 const setting = () => import(/* webpackChunkName: 'setting' */ '@/views/manage/setting/index.vue') // 研发商店管理页面
 
-const version = () => import(/* webpackChunkName: 'releaseManage' */ '@/views/manage/release-manage/version.vue') // 研发商店管理页面
+const releaseManage = () => import(/* webpackChunkName: 'releaseManage' */ '@/views/manage/release-manage/index.vue') // 研发商店管理页面
 
 const editAtom = () => import(/* webpackChunkName: 'editAtom' */ '@/views/edit_atom.vue') // 上架/升级流水线插件
 const releaseProgress = () => import(/* webpackChunkName: 'releaseProgress' */ '@/views/release_progress.vue') // 发布进度
@@ -167,9 +167,9 @@ const routes = [
                         component: approval
                     },
                     {
-                        path: 'releaseManage/version',
-                        name: 'version',
-                        component: version
+                        path: 'releaseManage',
+                        name: 'releaseManage',
+                        component: releaseManage
                     }
                 ],
                 meta: {
@@ -202,7 +202,7 @@ const routes = [
                 }
             },
             {
-                path: 'editTemplate/:templateId?',
+                path: 'editTemplate/:templateCode?',
                 name: 'editTemplate',
                 component: editTemplate,
                 meta: {
@@ -225,7 +225,7 @@ const routes = [
                 }
             },
             {
-                path: 'upgradeTemplate/:templateId',
+                path: 'upgradeTemplate/:templateCode',
                 name: 'upgradeTemplate',
                 component: upgradeTemplate,
                 meta: {

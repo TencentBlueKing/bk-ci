@@ -139,7 +139,6 @@
 
 <script>
     import Badge from '@/components/Badge.vue'
-
     import RollbackEntry from '@/components/PipelineDetailTabs/RollbackEntry'
     import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
     import VersionHistorySideSlider from '@/components/PipelineDetailTabs/VersionHistorySideSlider'
@@ -371,6 +370,7 @@
                         routeType = noRecordVersion ? pipelineTabIdMap.pipeline : this.$route.params.type
                     }
                 }
+
                 this.$router.replace({
                     query: this.$route.query,
                     params: {

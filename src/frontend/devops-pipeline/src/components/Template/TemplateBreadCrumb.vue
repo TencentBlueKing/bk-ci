@@ -42,6 +42,7 @@
 <script>
     import Logo from '@/components/Logo'
     import TemplateNameCrumbItem from '@/components/Template/TemplateNameCrumbItem'
+    import { getTemplateCacheViewId } from '@/utils/util'
     import { computed, defineComponent } from 'vue'
     import { useI18n } from 'vue-i18n-bridge'
 
@@ -63,7 +64,10 @@
         setup (props) {
             const { t } = useI18n()
             const manageRoute = {
-                name: 'TemplateManageList'
+                name: 'TemplateManageList',
+                params: {
+                    templateViewId: getTemplateCacheViewId()
+                }
             }
             const breadCrumbs = computed(() => [
                 {

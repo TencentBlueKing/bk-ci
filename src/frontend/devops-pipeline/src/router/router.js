@@ -21,7 +21,7 @@ const pipelines = () => import(/* webpackChunkName: "pipelines" */'../views')
 
 const CreatePipeline = () => import(/* webpackChunkName: "pipelineCreate" */'../views/CreatePipeline.vue')
 
-const pipelineListEntry = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList')
+const ListEntry = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/ListEntry')
 const PipelineManageList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/list')
 const PipelineListAuth = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/Auth')
 
@@ -31,8 +31,8 @@ const AtomDebug = () => import(/* webpackChunkName: "atomDebug" */'../views/Atom
 const AtomManage = () => import(/* webpackChunkName: "atomManage" */'../views/AtomManage.vue')
 
 // 流水线模板
-const TemplateList = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/List/')
-const templateGroup = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/')
+const TemplateEntry = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/Template/')
+const TemplateList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/Template/List/')
 const templateEntry = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/TemplateEntry')
 const TemplateOverview = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/TemplateOverview')
 const templateEdit = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/edit.vue')
@@ -95,14 +95,14 @@ const routes = [
             },
             {
                 path: 'list',
-                component: pipelineListEntry,
+                component: ListEntry,
                 children: [
                     {
                         path: 'template',
-                        component: templateGroup,
+                        component: TemplateEntry,
                         children: [
                             {
-                                path: ':viewId?',
+                                path: ':templateViewId',
                                 name: 'TemplateManageList',
                                 component: TemplateList
                             }
