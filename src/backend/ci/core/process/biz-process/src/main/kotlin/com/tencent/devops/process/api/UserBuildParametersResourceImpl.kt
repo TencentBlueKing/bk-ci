@@ -43,6 +43,8 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
 import com.tencent.devops.common.pipeline.pojo.BuildParameterGroup
+import com.tencent.devops.process.pojo.pipeline.PipelineBuildParamFormProp
+import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.webhook.TriggerBuildParamUtils
 import org.slf4j.LoggerFactory
@@ -53,7 +55,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserBuildParametersResourceImpl @Autowired constructor(
     private val client: Client,
     private val pipelineListFacadeService: PipelineListFacadeService,
-    private val scmProxyService: ScmProxyService
+    private val scmProxyService: ScmProxyService,
+    private val pipelineBuildFacadeService: PipelineBuildFacadeService
 ) : UserBuildParametersResource {
 
     companion object {
@@ -255,5 +258,24 @@ class UserBuildParametersResourceImpl @Autowired constructor(
         result.addAll(branches)
         result.addAll(tags)
         return result
+    }
+
+    override fun buildParamFormProp(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        includeConst: Boolean?,
+        includeNotRequired: Boolean?,
+        version: Int?
+    ): Result<List<PipelineBuildParamFormProp>> {
+        val buildParamFormProp = pipelineBuildFacadeService.getBuildParamFormProp(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            includeConst = includeConst,
+            includeNotRequired = includeNotRequired,
+            userId = userId,
+            version = version
+        )
+        return Result(buildParamFormProp)
     }
 }

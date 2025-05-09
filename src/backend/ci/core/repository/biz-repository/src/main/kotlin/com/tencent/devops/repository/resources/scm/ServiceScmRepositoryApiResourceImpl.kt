@@ -33,6 +33,7 @@ import com.tencent.devops.repository.api.scm.ServiceScmRepositoryApiResource
 import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.repository.service.hub.ScmRepositoryApiService
 import com.tencent.devops.scm.api.pojo.Perm
+import com.tencent.devops.scm.api.pojo.Reference
 import com.tencent.devops.scm.api.pojo.repository.ScmServerRepository
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -58,6 +59,56 @@ class ServiceScmRepositoryApiResourceImpl @Autowired constructor(
                 projectId = projectId,
                 username = username,
                 authRepository = authRepository
+            )
+        )
+    }
+
+    override fun findBranches(
+        projectId: String,
+        authRepository: AuthRepository,
+        search: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<List<Reference>> {
+        return Result(
+            repositoryApiService.findBranches(
+                projectId = projectId,
+                authRepository = authRepository,
+                search = search,
+                page = page,
+                pageSize = pageSize
+            )
+        )
+    }
+
+    override fun getBranch(
+        projectId: String,
+        authRepository: AuthRepository,
+        branch: String
+    ): Result<Reference?> {
+        return Result(
+            repositoryApiService.getBranch(
+                projectId = projectId,
+                authRepository = authRepository,
+                branch = branch
+            )
+        )
+    }
+
+    override fun findTags(
+        projectId: String,
+        authRepository: AuthRepository,
+        search: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<List<Reference>> {
+        return Result(
+            repositoryApiService.findTags(
+                projectId = projectId,
+                authRepository = authRepository,
+                search = search,
+                page = page,
+                pageSize = pageSize
             )
         )
     }

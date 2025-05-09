@@ -42,6 +42,7 @@ import com.tencent.devops.process.plugin.trigger.timer.listener.PipelineTimerBui
 import com.tencent.devops.process.plugin.trigger.timer.listener.PipelineTimerChangerListener
 import com.tencent.devops.process.plugin.trigger.timer.quartz.PipelineJobBean
 import com.tencent.devops.process.plugin.trigger.timer.quartz.QuartzSchedulerManager
+import com.tencent.devops.process.plugin.trigger.timer.quartz.QuartzTraceJobListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.quartz.QuartzProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
@@ -78,7 +79,12 @@ class TriggerConfiguration {
     }
 
     @Bean
-    fun schedulerManager(quartzProperties: QuartzProperties) = QuartzSchedulerManager(quartzProperties)
+    fun schedulerManager(
+        quartzProperties: QuartzProperties,
+        quartzTraceJobListener: QuartzTraceJobListener
+    ) = QuartzSchedulerManager(
+        quartzProperties, quartzTraceJobListener
+    )
 
     @Bean
     fun pipelineEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
