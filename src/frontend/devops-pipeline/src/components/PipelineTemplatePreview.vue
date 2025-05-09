@@ -12,6 +12,7 @@
         @cancel="handleCancel"
     >
         <mode-switch
+            style="width: 150px;"
             :is-yaml-support="isYamlSupport"
             :yaml-invalid-msg="yamlInvalidMsg"
             read-only

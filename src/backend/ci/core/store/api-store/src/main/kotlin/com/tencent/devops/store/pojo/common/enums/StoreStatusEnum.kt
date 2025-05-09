@@ -66,5 +66,14 @@ enum class StoreStatusEnum(val isProcessing: Boolean) {
                 AUDITING.name
             )
         }
+
+        fun getStoreFinalStatusList(): List<String> {
+            return mutableListOf(
+                AUDIT_REJECT.name,
+                RELEASED.name,
+                GROUNDING_SUSPENSION.name,
+                UNDERCARRIAGED.name
+            )
+        }
     }
 }

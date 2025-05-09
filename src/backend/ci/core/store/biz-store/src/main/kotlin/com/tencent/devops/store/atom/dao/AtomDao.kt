@@ -96,6 +96,7 @@ import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Record3
+import org.jooq.Record5
 import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.impl.DSL
@@ -1463,5 +1464,41 @@ class AtomDao : AtomBaseDao() {
             .orderBy(ta.CREATE_TIME, ta.ID)
         if (offset != null && limit != null) sql.offset(offset).limit(limit)
         return sql.skipCheck().fetch()
+    }
+
+    fun getAtomProps(dslContext: DSLContext, atomCode: String, version: String): String? {
+        with(TAtom.T_ATOM) {
+            return dslContext.select(PROPS)
+                .from(this)
+                .where(ATOM_CODE.eq(atomCode).and(VERSION.eq(version)))
+                .fetchOne(0, String::class.java)
+        }
+    }
+
+    fun queryAtomByStatus(
+        dslContext: DSLContext,
+        atomCode: String? = null,
+        statusList: List<Byte>,
+        offset: Int? = null,
+        limit: Int? = null
+    ): Result<Record5<String, String, String, Byte, Boolean>> {
+        with(TAtom.T_ATOM) {
+            val conditions = mutableListOf<Condition>()
+            if (!atomCode.isNullOrBlank()) {
+                conditions.add(ATOM_CODE.eq(atomCode))
+            }
+            conditions.add(ATOM_STATUS.`in`(statusList))
+            val step = dslContext.select(
+                ATOM_CODE,
+                VERSION,
+                PROPS,
+                ATOM_STATUS,
+                LATEST_FLAG
+            ).from(this)
+                .where(conditions)
+                .orderBy(CREATE_TIME, ID)
+            if (offset != null && limit != null) step.offset(offset).limit(limit)
+            return step.fetch()
+        }
     }
 }
