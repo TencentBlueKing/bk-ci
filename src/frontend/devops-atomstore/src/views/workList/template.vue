@@ -41,7 +41,7 @@
                     <template slot-scope="props">
                         <div
                             class="tempalte-name"
-                            @click="routerAtoms(props.row.templateCode)"
+                            @click="goTemplateDetail(props.row.templateCode)"
                         >
                             <img
                                 :src="props.row.logoUrl"
@@ -535,7 +535,7 @@
                 }
             },
 
-            routerAtoms (code) {
+            goTemplateDetail (code) {
                 this.$router.push({
                     name: 'version',
                     params: {
