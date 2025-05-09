@@ -504,7 +504,7 @@ class ProjectBillsService(
             templateCode = BK_REPORT_BILLS_DATA_FAILED_NOTIFY,
             bodyParams = bodyParams,
             titleParams = bodyParams,
-            notifyType = mutableSetOf(NotifyType.WEWORK.name),
+            notifyType = mutableSetOf(NotifyType.WEWORK.name, NotifyType.RTX.name),
             receivers = billNofifyUser.split(",").toMutableSet()
         )
         kotlin.runCatching {
