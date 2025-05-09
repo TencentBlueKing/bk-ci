@@ -63,6 +63,8 @@ data class NodeBaseInfo(
     val envEnableNode: Boolean?,
     @get:Schema(title = "最后更新时间")
     val lastModifyTime: Long? = null,
+    @get:Schema(title = "主机名")
+    val nodeName: String? = null,
     @get:Schema(title = "机型")
     val size: String? = null
 )
