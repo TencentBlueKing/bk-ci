@@ -24,7 +24,9 @@ import {
     UPDATE_INSTANCE_LIST,
     UPDATE_USE_TEMPLATE_SETTING,
     SET_RELEASE_ING,
-    SET_RELEASE_BASE_ID
+    SET_RELEASE_BASE_ID,
+    SHOW_TASK_DETAIL,
+    SET_TASK_DETAIL
 } from './constants'
 export default {
     [SET_INSTANCE_LIST]: (state, list) => {
@@ -48,5 +50,11 @@ export default {
     },
     [SET_RELEASE_BASE_ID]: (state, value) => {
         Vue.set(state, 'releaseBaseId', value)
+    },
+    [SHOW_TASK_DETAIL]: (state, value) => {
+        Vue.set(state, 'showTaskDetail', value)
+    },
+    [SET_TASK_DETAIL]: (state, value) => {
+        Vue.set(state, 'instanceTaskDetail', value)
     }
 }

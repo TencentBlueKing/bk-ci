@@ -100,7 +100,10 @@
                 }"
                 @click="handleToInstanceEntry"
             >
-                {{ $t('template.instantiate') }}
+                <div>
+                    {{ $t('template.instantiate') }}
+                    <instance-task-menu />
+                </div>
             </bk-button>
             <template v-else-if="!isTemplate">
                 <template v-if="editAndExecutable">
@@ -142,6 +145,7 @@
     import VersionHistorySideSlider from '@/components/PipelineDetailTabs/VersionHistorySideSlider'
     import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
     import TemplateBreadCrumb from '@/components/Template/TemplateBreadCrumb.vue'
+    import InstanceTaskMenu from '@/components/Template/InstanceTaskMenu.vue'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
@@ -159,7 +163,8 @@
             VersionSelector,
             VersionHistorySideSlider,
             VersionDiffEntry,
-            RollbackEntry
+            RollbackEntry,
+            InstanceTaskMenu
         },
         props: {
             isSwitchPipeline: Boolean

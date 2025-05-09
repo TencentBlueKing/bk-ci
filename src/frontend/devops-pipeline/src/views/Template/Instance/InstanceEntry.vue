@@ -95,6 +95,7 @@
         />
         <BatchEditConfig
             v-model="showBatchEdit"
+            @change="handleBatchChange"
         />
     </section>
 </template>
@@ -106,6 +107,7 @@
     import { computed, onMounted, ref, watch } from 'vue'
     import {
         SET_INSTANCE_LIST,
+        SET_RELEASE_ING,
         SET_RELEASE_BASE_ID
     } from '@/store/modules/templates/constants'
     import InstanceAside from './InstanceAside'
@@ -122,6 +124,7 @@
     const pipeline = computed(() => proxy.$store?.state?.atom?.pipeline)
     const pipelineInfo = computed(() => proxy.$store?.state?.atom?.pipelineInfo)
     const instanceList = computed(() => proxy.$store?.state?.templates?.instanceList)
+    const showTaskDetail = computed(() => proxy.$store?.state?.templates?.showTaskDetail)
     const currentVersionId = computed(() => proxy?.$route.params?.version ?? pipelineInfo.value?.version) // 路径上的模板版本号
     const templateVersion = computed(() => proxy?.$store?.state?.templates?.templateVersion) // 实例化选中的模板版本号
     const isInstanceCreateViewType = computed(() => proxy.$route.params?.type === 'create')
@@ -130,6 +133,16 @@
         isLoading.value = false
     }, {
         deep: true
+    })
+    watch(() => showTaskDetail.value, (value) => {
+        if (value) {
+            proxy.$store.commit(`templates/${SET_RELEASE_ING}`, true)
+            setTimeout(() => {
+                handleBatchUpgrade()
+            }, 600)
+        }
+    }, {
+        immediate: true
     })
     async function requestTemplateByVersion (version = currentVersionId.value) {
         try {
@@ -191,8 +204,19 @@
         }
     }
     function handleBatchEdit () {
-        console.log(123)
         showBatchEdit.value = true
+    }
+    function handleBatchChange (params) {
+        const updateMap = new Map(params.map(item => [item.id, item.defaultValue]))
+
+        for (const instance of instanceList.value) {
+            for (const p of instance.param) {
+                if (updateMap.has(p.id)) {
+                    p.defaultValue = updateMap.get(p.id)
+                }
+            }
+        }
+        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, instanceList.value)
     }
     onMounted(() => {
         requestTemplateByVersion()

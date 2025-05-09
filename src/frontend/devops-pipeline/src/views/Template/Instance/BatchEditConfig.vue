@@ -1,25 +1,17 @@
 <template>
     <bk-sideslider
         :is-show.sync="value"
-        :width="640"
+        :width="1000"
         :title="$t('template.batchEditInstance')"
         @shown="showBatchEditSlider"
         @hidden="hideBatchEditSlider"
         ext-cls="batch-edit-side-slider"
     >
-        <template
-            slot="content"
-        >
-            <div
-                class="batch-edit-content"
-            >
-                <bk-alert
-                    class="mb10"
-                    type="warning"
-                    :title="$t('template.batchEditInstanceTips')"
-                />
-                <InstanceAddField />
-            </div>
+        <template slot="content">
+            <InstanceAddField
+                @confirm="confirmChange"
+                @cancel="hideBatchEditSlider"
+            />
         </template>
     </bk-sideslider>
 </template>
@@ -37,6 +29,10 @@
     }
     function showBatchEditSlider () {
         proxy.$emit('input', true)
+    }
+    function confirmChange (params) {
+        proxy.$emit('input', false)
+        proxy.$emit('change', params)
     }
 </script>
 

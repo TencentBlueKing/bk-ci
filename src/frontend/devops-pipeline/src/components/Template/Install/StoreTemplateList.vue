@@ -149,12 +149,12 @@
     @import '@/scss/conf';
     @import "@/scss/mixins/ellipsis";
     .store-template-list {
-        padding: 20px;
+        margin-top: 20px;
         .template-list {
             height: 350px;
             display: grid;
             grid-gap: 16px;
-            margin: 16px 24px;
+            margin-top: 14px;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             grid-auto-rows: 72px;
             overflow: auto;

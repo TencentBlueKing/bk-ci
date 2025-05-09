@@ -109,7 +109,7 @@
     </div>
 </template>
 <script setup>
-    import { ref, computed, watch } from 'vue'
+    import { ref, computed, watch, onUnmounted } from 'vue'
     import UseInstance from '@/hook/useInstance'
     import {
         RELEASE_STATUS,
@@ -192,7 +192,8 @@
             const res = await proxy.$store.dispatch('templates/fetchTaskDetailParams', {
                 projectId: projectId.value,
                 templateId: templateId.value,
-                taskId: releaseBaseId.value
+                taskId: releaseBaseId.value,
+                status: RELEASE_STATUS.FAILED
             })
             proxy.$emit('cancel')
             console.log(res, 123)
@@ -200,6 +201,9 @@
             console.error(e)
         }
     }
+    onUnmounted(() => {
+        clearTimeout(timer.value)
+    })
 </script>
 <style lang="scss">
 .release-status-main {

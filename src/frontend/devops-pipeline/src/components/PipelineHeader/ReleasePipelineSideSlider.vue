@@ -421,7 +421,8 @@
     import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
     import ReleaseStatus from '@/components/Template/ReleaseStatus'
     import {
-        SET_RELEASE_ING
+        SET_RELEASE_ING,
+        SHOW_TASK_DETAIL
     } from '@/store/modules/templates/constants'
     import { TARGET_ACTION_ENUM, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
@@ -502,7 +503,7 @@
             ...mapState('pipelines', ['isManage']),
             ...mapGetters('atom', ['pacEnabled', 'yamlInfo', 'isTemplate']),
             ...mapState('common', ['pacSupportScmTypeList']),
-            ...mapState('templates', ['isInstanceReleasing', 'useTemplateSettings', 'templateVersion']),
+            ...mapState('templates', ['isInstanceReleasing', 'useTemplateSettings', 'templateVersion', 'showTaskDetail', 'instanceTaskDetail']),
             filePathDir () {
                 return `.ci/${this.isTemplateInstanceMode ? '' : this.isTemplate ? 'templates/' : ''}`
             },
@@ -700,6 +701,17 @@
                 deep: true,
                 handler: function (val) {
                     this.prefetchReleaseVersion(val)
+                }
+            },
+            showTaskDetail: {
+                immediate: true,
+                handler: function (val) {
+                    if (val) {
+                        this.releaseParams.description = this.instanceTaskDetail.description ?? ''
+                        this.releaseParams.enablePac = this.instanceTaskDetail.enablePac ?? false
+                        this.releaseParams.targetBranch = this.instanceTaskDetail.targetBranch ?? ''
+                        this.releaseParams.targetAction = this.instanceTaskDetail.targetAction ?? ''
+                    }
                 }
             }
         },
@@ -1131,6 +1143,7 @@
                     targetAction: ''
                 }
                 this.$store.commit(`templates/${SET_RELEASE_ING}`, false)
+                this.$store.commit(`templates/${SHOW_TASK_DETAIL}`, false)
             },
             cancelRelease () {
                 this.$emit('input', false)

@@ -128,8 +128,11 @@ const actions = {
         return ajax.post(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/task/${baseId}/retry`)
     },
     // 发布失败修改配置，获取发布实例化任务的参数
-    fetchTaskDetailParams ({ commit }, { projectId, baseId }) {
-        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/task/${baseId}/config`)
+    fetchTaskDetailParams ({ commit }, { projectId, baseId, status }) {
+        const url = status
+            ? `${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/task/${baseId}/detail?status=${status}`
+            : `${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/task/${baseId}/detail`
+        return ajax.get(url)
     },
     // 获取正在发布的实例化任务列表
     fetchReleaseTaskList ({ commit }, { projectId, templateId }) {
