@@ -165,7 +165,6 @@
                     fetchReleaseTaskStatus()
                 }, 3000)
             } else {
-                proxy.$store.commit(`templates/${SET_RELEASE_BASE_ID}`, '')
                 clearTimeout(timer.value)
             }
         } catch (e) {
@@ -202,6 +201,7 @@
         }
     }
     onUnmounted(() => {
+        proxy.$store.commit(`templates/${SET_RELEASE_BASE_ID}`, '')
         clearTimeout(timer.value)
     })
 </script>

@@ -880,7 +880,6 @@
                 if (this.isTemplateInstanceMode) {
                     try {
                         await this.$refs?.releaseForm?.validate?.()
-                        this.$store.commit(`templates/${SET_RELEASE_ING}`, true)
                         this.$emit('release')
                     } catch (e) {
                         console.error(e)
