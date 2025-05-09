@@ -498,7 +498,7 @@ class ProjectBillsService(
         }
     }
 
-    fun notifyTest(){
+    fun notifyTest() {
         val bodyParams = mapOf("projectCodes" to "test,test")
         val request = SendNotifyMessageTemplateRequest(
             templateCode = BK_REPORT_BILLS_DATA_FAILED_NOTIFY,
