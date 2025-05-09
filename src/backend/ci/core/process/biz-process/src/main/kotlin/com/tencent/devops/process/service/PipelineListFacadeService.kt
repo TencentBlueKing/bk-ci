@@ -906,7 +906,8 @@ class PipelineListFacadeService @Autowired constructor(
                 AuthPermission.SHARE,
                 AuthPermission.EDIT,
                 AuthPermission.DOWNLOAD,
-                AuthPermission.EXECUTE
+                AuthPermission.EXECUTE,
+                AuthPermission.ARCHIVE
             ),
             pipelineIds = pipelineList.map { it.pipelineId }
         )
@@ -947,7 +948,8 @@ class PipelineListFacadeService @Autowired constructor(
                     AuthPermission.SHARE,
                     AuthPermission.EDIT,
                     AuthPermission.DOWNLOAD,
-                    AuthPermission.EXECUTE
+                    AuthPermission.EXECUTE,
+                    AuthPermission.ARCHIVE
                 ),
                 pipelineIds = listOf(pipelineId)
             )
@@ -965,7 +967,8 @@ class PipelineListFacadeService @Autowired constructor(
         canEdit = permissionToListMap[AuthPermission.EDIT]?.contains(pipelineId) ?: false,
         canExecute = permissionToListMap[AuthPermission.EXECUTE]?.contains(pipelineId) ?: false,
         canDownload = permissionToListMap[AuthPermission.DOWNLOAD]?.contains(pipelineId) ?: false,
-        canShare = permissionToListMap[AuthPermission.SHARE]?.contains(pipelineId) ?: false
+        canShare = permissionToListMap[AuthPermission.SHARE]?.contains(pipelineId) ?: false,
+        canArchive = permissionToListMap[AuthPermission.ARCHIVE]?.contains(pipelineId) ?: false
     )
 
     fun getCount(userId: String, projectId: String): PipelineCount {
