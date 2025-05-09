@@ -30,6 +30,7 @@ import org.apache.commons.lang3.concurrent.BasicThreadFactory
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.RejectedExecutionHandler
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
@@ -41,7 +42,8 @@ object ThreadPoolUtil {
         keepAliveTime: Long = 0,
         unit: TimeUnit = TimeUnit.SECONDS,
         threadNamePrefix: String,
-        queue: LinkedBlockingQueue<Runnable> = LinkedBlockingQueue(1)
+        queue: LinkedBlockingQueue<Runnable> = LinkedBlockingQueue(1),
+        handler: RejectedExecutionHandler = ThreadPoolExecutor.DiscardPolicy()
     ): ThreadPoolExecutor {
         val threadFactory = BasicThreadFactory.Builder().namingPattern(threadNamePrefix).build()
         return ThreadPoolExecutor(
@@ -51,10 +53,13 @@ object ThreadPoolUtil {
             unit,
             queue,
             threadFactory,
-            ThreadPoolExecutor.DiscardPolicy()
+            handler
         )
     }
 
+    /**
+     * 注意: executor建议定义成成员变量，避免每次都创建,如果定义局部变量,在使用完后应在finally调用shutdown方法关闭,避免线程暴涨
+     */
     fun submitAction(
         executor: ThreadPoolExecutor = defaultExecutor,
         actionTitle: String,
@@ -63,11 +68,16 @@ object ThreadPoolUtil {
         val startTime = System.currentTimeMillis()
         val bizId = MDC.get(BIZID)
         executor.submit {
-            MDC.put(BIZID, bizId)
-            logger.info("start thread action [$actionTitle]")
-            action.invoke()
-            logger.info("finish thread action [$actionTitle] | time cost: ${System.currentTimeMillis() - startTime}")
-            MDC.remove(BIZID)
+            try {
+                MDC.put(BIZID, bizId)
+                logger.info("start thread action [$actionTitle]")
+                action.invoke()
+                logger.info(
+                    "finish thread action [$actionTitle] | time cost: ${System.currentTimeMillis() - startTime}"
+                )
+            } finally {
+                MDC.remove(BIZID)
+            }
         }
     }
 
