@@ -74,24 +74,30 @@ class WebhookGrayCompareService @Autowired constructor(
     private val pipelineYamlService: PipelineYamlService,
     private val webhookTriggerMatcher: WebhookTriggerMatcher
 ) {
+
+    private val threadPoolExecutor = ThreadPoolUtil.getThreadPoolExecutor(
+        corePoolSize = 5,
+        maximumPoolSize = 5,
+        keepAliveTime = 0L,
+        queue = LinkedBlockingQueue(10),
+    )
+
     fun asyncCompareWebhook(
         scmType: ScmType,
         request: WebhookRequest,
         matcher: ScmWebhookMatcher
     ) {
         val bizId = MDC.get(TraceTag.BIZID)
-        ThreadPoolUtil.submitAction(
-            corePoolSize = 5,
-            maximumPoolSize = 5,
-            keepAliveTime = 0L,
-            queue = LinkedBlockingQueue(10),
-            action = {
-                MDC.put(TraceTag.BIZID, bizId)
-                compareWebhook(scmType, request, matcher)
-                MDC.remove(TraceTag.BIZID)
-            },
-            actionTitle = "async compare webhook|scmType: $scmType|repoName: ${matcher.getRepoName()}"
-        )
+        val actionTitle = "async compare webhook|scmType: $scmType|repoName: ${matcher.getRepoName()}"
+        threadPoolExecutor.submit {
+            val startTime = System.currentTimeMillis()
+            logger.info("start thread action [$actionTitle]")
+            MDC.put(TraceTag.BIZID, bizId)
+            compareWebhook(scmType, request, matcher)
+            MDC.remove(TraceTag.BIZID)
+            logger.info("finish thread action [$actionTitle]")
+            logger.info("$actionTitle time cost: ${System.currentTimeMillis() - startTime}")
+        }
     }
 
     fun compareWebhook(scmType: ScmType, request: WebhookRequest, matcher: ScmWebhookMatcher) {
