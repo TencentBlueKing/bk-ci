@@ -233,10 +233,8 @@ export const actions = {
     /**
      * 下架模板
      */
-    offlineTemplate ({ commit }, { templateCode, ...query }) {
-        return vue.$ajax.put(`${prefix}/user/market/desk/template/offline/templateCodes/${templateCode}/versions`, {}, {
-            params: query
-        })
+    offlineTemplate (_, { templateCode, ...params }) {
+        return vue.$ajax.put(`${prefix}/user/market/desk/template/v2/offline/templateCodes/${templateCode}/versions`, params)
     },
 
     updateCurrentaTemplate ({ commit }, { res }) {
