@@ -33,7 +33,7 @@ import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
 object ThreadPoolUtil {
-    private fun getThreadPoolExecutor(
+    fun getThreadPoolExecutor(
         corePoolSize: Int = 1,
         maximumPoolSize: Int = 1,
         keepAliveTime: Long = 0,
