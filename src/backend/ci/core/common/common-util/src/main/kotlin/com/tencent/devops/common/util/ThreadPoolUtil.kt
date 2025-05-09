@@ -82,6 +82,6 @@ object ThreadPoolUtil {
     }
 
     private val logger = LoggerFactory.getLogger(ThreadPoolUtil::class.java)
-    private val defaultExecutor = getThreadPoolExecutor(threadNamePrefix = "thread-action-")
+    private val defaultExecutor = getThreadPoolExecutor(threadNamePrefix = "thread-action-%d")
     private const val BIZID = "bizId"
 }

@@ -80,7 +80,7 @@ class WebhookGrayCompareService @Autowired constructor(
         maximumPoolSize = 5,
         keepAliveTime = 0L,
         queue = LinkedBlockingQueue(10),
-        threadNamePrefix = "webhook-gray-compare-"
+        threadNamePrefix = "webhook-gray-compare-%d"
     )
 
     fun asyncCompareWebhook(
