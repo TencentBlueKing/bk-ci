@@ -537,7 +537,7 @@
 
             goTemplateDetail (code) {
                 this.$router.push({
-                    name: 'version',
+                    name: 'releaseManage',
                     params: {
                         code,
                         type: 'template'

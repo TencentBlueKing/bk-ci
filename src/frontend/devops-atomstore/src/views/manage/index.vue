@@ -59,7 +59,7 @@
             panels () {
                 return [
                     ...(this.type === TYPE_ENUM.atom ? [{ label: this.$t('store.概览'), name: 'statisticData' }] : []),
-                    ...(this.type !== TYPE_ENUM.image ? [{ label: this.$t('store.发布管理'), name: 'version' }] : []),
+                    ...(this.type !== TYPE_ENUM.image ? [{ label: this.$t('store.发布管理'), name: 'releaseManage' }] : []),
                     ...(this.type === TYPE_ENUM.atom ? [{ label: this.$t('store.协作审批'), name: 'approval' }] : []),
                     ...(this.type !== TYPE_ENUM.template ? [{ label: this.$t('store.基本信息'), name: 'show' }] : []),
                     { label: this.$t('store.基本设置'), name: 'setting' }
