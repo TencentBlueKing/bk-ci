@@ -91,12 +91,11 @@ class WebhookGrayCompareService @Autowired constructor(
         val actionTitle = "async compare webhook|scmType: $scmType|repoName: ${matcher.getRepoName()}"
         threadPoolExecutor.submit {
             val startTime = System.currentTimeMillis()
-            logger.info("start thread action [$actionTitle]")
             MDC.put(TraceTag.BIZID, bizId)
+            logger.info("start $actionTitle")
             compareWebhook(scmType, request, matcher)
+            logger.info("finish $actionTitle time cost: ${System.currentTimeMillis() - startTime}")
             MDC.remove(TraceTag.BIZID)
-            logger.info("finish thread action [$actionTitle]")
-            logger.info("$actionTitle time cost: ${System.currentTimeMillis() - startTime}")
         }
     }
 
