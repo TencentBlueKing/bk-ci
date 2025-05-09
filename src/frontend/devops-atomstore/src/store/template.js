@@ -175,6 +175,13 @@ export const actions = {
     },
 
     /**
+     * 模板版本上架
+     */
+    releaseTemplateVersion (_, params) {
+        return vue.$ajax.put(`${prefix}/user/market/desk/template/v2/release/versions`, params)
+    },
+
+    /**
      * 根据templateCode获取模板详情
      */
     requestTemplateDetail ({ commit }, code) {
