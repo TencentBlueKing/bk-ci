@@ -590,8 +590,7 @@ class OpAtomServiceImpl @Autowired constructor(
             action = {
                 updateAtomRepoFlagAction(
                     userId = userId,
-                    atomCode = atomCode,
-                    threadPoolExecutor = it
+                    atomCode = atomCode
                 )
             },
             actionTitle = "updateAtomRepoFlag"
@@ -601,8 +600,7 @@ class OpAtomServiceImpl @Autowired constructor(
 
     private fun updateAtomRepoFlagAction(
         userId: String,
-        atomCode: String?,
-        threadPoolExecutor: ThreadPoolExecutor
+        atomCode: String?
     ) {
         val limit = 100
         var offset = 0
@@ -628,8 +626,6 @@ class OpAtomServiceImpl @Autowired constructor(
             } while (recordSize == limit)
         } catch (ignored: Exception) {
             logger.warn("updateAtomRepoFlag failed", ignored)
-        } finally {
-            threadPoolExecutor.shutdown()
         }
     }
 

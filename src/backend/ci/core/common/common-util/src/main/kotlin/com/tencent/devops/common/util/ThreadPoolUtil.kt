@@ -26,11 +26,13 @@
  */
 package com.tencent.devops.common.util
 
+import org.apache.commons.lang3.concurrent.BasicThreadFactory
 import org.slf4j.LoggerFactory
-import java.util.concurrent.Executors
+import org.slf4j.MDC
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+
 
 object ThreadPoolUtil {
     fun getThreadPoolExecutor(
@@ -38,41 +40,38 @@ object ThreadPoolUtil {
         maximumPoolSize: Int = 1,
         keepAliveTime: Long = 0,
         unit: TimeUnit = TimeUnit.SECONDS,
+        threadNamePrefix: String,
         queue: LinkedBlockingQueue<Runnable> = LinkedBlockingQueue(1)
-    ) = ThreadPoolExecutor(
-        corePoolSize,
-        maximumPoolSize,
-        keepAliveTime,
-        unit,
-        queue,
-        Executors.defaultThreadFactory(),
-        ThreadPoolExecutor.DiscardPolicy()
-    )
+    ): ThreadPoolExecutor {
+        val threadFactory = BasicThreadFactory.Builder().namingPattern(threadNamePrefix).build()
+        return ThreadPoolExecutor(
+            corePoolSize,
+            maximumPoolSize,
+            keepAliveTime,
+            unit,
+            queue,
+            threadFactory,
+            ThreadPoolExecutor.DiscardPolicy()
+        )
+    }
 
     fun submitAction(
-        corePoolSize: Int = 1,
-        maximumPoolSize: Int = 1,
-        keepAliveTime: Long = 0,
-        unit: TimeUnit = TimeUnit.SECONDS,
-        queue: LinkedBlockingQueue<Runnable> = LinkedBlockingQueue(1),
+        executor: ThreadPoolExecutor = defaultExecutor,
         actionTitle: String,
-        action: (threadPoolExecutor: ThreadPoolExecutor) -> Unit
+        action: () -> Unit
     ) {
         val startTime = System.currentTimeMillis()
-        val threadPoolExecutor = getThreadPoolExecutor(
-            corePoolSize = corePoolSize,
-            maximumPoolSize = maximumPoolSize,
-            keepAliveTime = keepAliveTime,
-            unit = unit,
-            queue = queue
-        )
-        threadPoolExecutor.submit {
+        val bizId = MDC.get(BIZID)
+        executor.submit {
+            MDC.put(BIZID, bizId)
             logger.info("start thread action [$actionTitle]")
-            action.invoke(threadPoolExecutor)
+            action.invoke()
+            logger.info("finish thread action [$actionTitle] | time cost: ${System.currentTimeMillis() - startTime}")
+            MDC.remove(BIZID)
         }
-        logger.info("finish thread action [$actionTitle]")
-        logger.info("$actionTitle time cost: ${System.currentTimeMillis() - startTime}")
     }
 
     private val logger = LoggerFactory.getLogger(ThreadPoolUtil::class.java)
+    private val defaultExecutor = getThreadPoolExecutor(threadNamePrefix = "thread-action-")
+    private const val BIZID = "bizId"
 }
