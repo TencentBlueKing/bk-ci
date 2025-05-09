@@ -497,20 +497,4 @@ class ProjectBillsService(
             }
         }
     }
-
-    fun notifyTest() {
-        val bodyParams = mapOf("projectCodes" to "test,test")
-        val request = SendNotifyMessageTemplateRequest(
-            templateCode = BK_REPORT_BILLS_DATA_FAILED_NOTIFY,
-            bodyParams = bodyParams,
-            titleParams = bodyParams,
-            notifyType = mutableSetOf(NotifyType.WEWORK.name, NotifyType.RTX.name),
-            receivers = billNofifyUser.split(",").toMutableSet()
-        )
-        kotlin.runCatching {
-            client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
-        }.onFailure {
-            logger.warn("notify email fail ${it.message}|$bodyParams")
-        }
-    }
 }
