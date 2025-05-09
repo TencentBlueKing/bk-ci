@@ -28,12 +28,14 @@
 package com.tencent.devops.environment.service.thirdpartyagent
 
 import com.tencent.devops.common.api.enums.AgentStatus
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.agent.AgentArchType
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getFileMD5
@@ -86,7 +88,10 @@ class DownloadAgentInstallService @Autowired constructor(
         val agentRecord = getAgentRecord(agentId)
 
         if (agentRecord.status == AgentStatus.IMPORT_OK.status) {
-            throw RuntimeException("Agent already installed. Please obtain the install url again")
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_AGENT_ALREADY_INSTALL,
+                defaultMessage = "Agent already installed. Please obtain the install url again"
+            )
         }
 
         /**

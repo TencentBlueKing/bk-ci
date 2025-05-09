@@ -211,7 +211,7 @@ class ThirdPartyAgentService @Autowired constructor(
             if (agentResult.data!!.secretKey != secretKey) {
                 logger.warn(
                     "The secretKey($secretKey) is not match the expect one(${agentResult.data!!.secretKey} " +
-                        "of project($projectId) and agent($agentId)"
+                            "of project($projectId) and agent($agentId)"
                 )
                 throw NotFoundException("Fail to get the agent")
             }
@@ -244,7 +244,7 @@ class ThirdPartyAgentService @Autowired constructor(
                 } catch (e: RemoteServiceException) {
                     logger.warn(
                         "notify agent task[$build.projectId|${build.buildId}|${build.vmSeqId}|$agentId]" +
-                            " claim failed, cause: ${e.message} agent project($projectId)"
+                                " claim failed, cause: ${e.message} agent project($projectId)"
                     )
                 }
                 pipelineEventDispatcher.dispatch(
@@ -280,9 +280,9 @@ class ThirdPartyAgentService @Autowired constructor(
                 // 只有凭据ID的参与计算
                 if (dockerInfo != null) {
                     if ((
-                            dockerInfo.credential?.user.isNullOrBlank() &&
-                                dockerInfo.credential?.password.isNullOrBlank()
-                            ) &&
+                                dockerInfo.credential?.user.isNullOrBlank() &&
+                                        dockerInfo.credential?.password.isNullOrBlank()
+                                ) &&
                         !(dockerInfo.credential?.credentialId.isNullOrBlank())
                     ) {
                         val (userName, password) = try {
@@ -410,10 +410,10 @@ class ThirdPartyAgentService @Autowired constructor(
         }
     }
 
-    fun finishBuild(buildId: String, vmSeqId: String?, buildResult: Boolean) {
+    fun finishBuild(buildId: String, vmSeqId: String?, buildResult: Boolean, executeCount: Int?) {
         val now = LocalDateTime.now().timestampmilli()
         if (vmSeqId.isNullOrBlank()) {
-            val records = thirdPartyAgentBuildDao.list(dslContext, buildId)
+            val records = thirdPartyAgentBuildDao.list(dslContext, buildId, executeCount)
             if (records.isEmpty()) {
                 return
             }
@@ -431,7 +431,12 @@ class ThirdPartyAgentService @Autowired constructor(
                 finishBuild(record, buildResult)
             }
         } else {
-            val record = thirdPartyAgentBuildDao.get(dslContext, buildId, vmSeqId) ?: return
+            val record = thirdPartyAgentBuildDao.getWithExecuteCount(
+                dslContext = dslContext,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                executeCount = executeCount
+            ) ?: return
             // 取消时兜底结束时间
             commonUtil.updateQueueTime(
                 projectId = record.projectId,
@@ -501,7 +506,7 @@ class ThirdPartyAgentService @Autowired constructor(
     private fun finishBuild(record: TDispatchThirdpartyAgentBuildRecord, success: Boolean) {
         logger.info(
             "Finish the third party agent(${record.agentId}) build(${record.buildId}) " +
-                "of seq(${record.vmSeqId}) and status(${record.status})"
+                    "of seq(${record.vmSeqId}) and status(${record.status})"
         )
         val agentResult = client.get(ServiceThirdPartyAgentResource::class)
             .getAgentByIdGlobal(record.projectId, record.agentId)
@@ -545,9 +550,9 @@ class ThirdPartyAgentService @Autowired constructor(
         // 有些并发情况可能会导致在finish时AgentBuild状态没有被置为Done在这里改一下
         val buildRecord = thirdPartyAgentBuildDao.get(dslContext, buildInfo.buildId, buildInfo.vmSeqId)
         if (buildRecord != null && (
-                buildRecord.status != PipelineTaskStatus.DONE.status ||
-                    buildRecord.status != PipelineTaskStatus.FAILURE.status
-                )
+                    buildRecord.status != PipelineTaskStatus.DONE.status ||
+                            buildRecord.status != PipelineTaskStatus.FAILURE.status
+                    )
         ) {
             thirdPartyAgentBuildDao.updateStatus(
                 dslContext = dslContext,
@@ -603,9 +608,9 @@ class ThirdPartyAgentService @Autowired constructor(
         }
         // 构建需要使用构建的项目id跳转，防止是共享agent，agent链接使用上报的项目Id即可
         val buildUrl = "${HomeHostUtil.innerServerHost()}/console/pipeline/${buildRecord.projectId}/" +
-            "${buildRecord.pipelineId}/detail/${buildRecord.buildId}/executeDetail"
+                "${buildRecord.pipelineId}/detail/${buildRecord.buildId}/executeDetail"
         val agentUrl = "${HomeHostUtil.innerServerHost()}/console/environment/$projectId/" +
-            "nodeDetail/${agentResult.data!!.nodeId}"
+                "nodeDetail/${agentResult.data!!.nodeId}"
         client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
             SendNotifyMessageTemplateRequest(
                 templateCode = workerErrorRtxTemplate!!,
@@ -850,7 +855,7 @@ class ThirdPartyAgentService @Autowired constructor(
                         "oldIp" to agent.ip,
                         "newIp" to newIp,
                         "url" to "${HomeHostUtil.innerServerHost()}/console/environment/$projectId/" +
-                            "nodeDetail/$nodeHashId"
+                                "nodeDetail/$nodeHashId"
                     )
                 )
             )
