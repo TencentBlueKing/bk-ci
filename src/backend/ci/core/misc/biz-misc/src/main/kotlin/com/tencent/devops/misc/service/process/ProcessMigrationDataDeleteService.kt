@@ -203,6 +203,7 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
             processDataDeleteDao.deletePipelineBuildSummary(dslContext, projectId, pipelineIds)
             processDataDeleteDao.deletePipelineBuildHistory(dslContext, projectId, pipelineIds)
             processDataDeleteDao.deletePipelineInfo(dslContext, projectId, pipelineIds)
+            processDataDeleteDao.deletePipelineBuildHistoryDebug(dslContext, projectId, pipelineIds)
         }
         logger.info("project[$projectId]|pipeline[$pipelineIds] deleteProjectPipelineRelData success!")
     }
@@ -222,6 +223,13 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
             processDataDeleteDao.deletePipelineRecentUse(dslContext, projectId, pipelineId)
             processDataDeleteDao.deletePipelineTriggerDetail(dslContext, projectId, pipelineId)
             processDataDeleteDao.deletePipelineAuditResource(dslContext, projectId, pipelineId)
+            processDataDeleteDao.deletePipelineTimerBranch(dslContext, projectId, pipelineId)
+            processDataDeleteDao.deletePipelineYamlInfo(dslContext, projectId, pipelineId)
+            processDataDeleteDao.deletePipelineYamlVersion(dslContext, projectId, pipelineId)
+            processDataDeleteDao.deletePipelineOperationLog(dslContext, projectId, pipelineId)
+            processDataDeleteDao.deletePipelineWebhookVersion(dslContext, projectId, pipelineId)
+            processDataDeleteDao.deletePipelineCallback(dslContext, projectId, pipelineId)
+            processDataDeleteDao.deletePipelineSubRef(dslContext, projectId, pipelineId)
             if (broadcastTableDeleteFlag != false) {
                 // 如果广播表数据清理标识不是false才清理广播表的数据（迁移库如果和原库一起组成数据库集群则不需要清理广播表数据）
                 processDataDeleteDao.deletePipelineRemoteAuth(dslContext, projectId, pipelineId)
@@ -314,6 +322,9 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
         processDataDeleteDao.deleteProjectPipelineCallback(dslContext, projectId)
         processDataDeleteDao.deleteTemplate(dslContext, projectId)
         processDataDeleteDao.deletePipelineViewTop(dslContext, projectId)
+        processDataDeleteDao.deletePipelineYamlSync(dslContext, projectId)
+        processDataDeleteDao.deletePipelineYamlBranchFile(dslContext, projectId)
+        processDataDeleteDao.deletePipelineYamlView(dslContext, projectId)
         if (clearBaseBuildData) {
             processDataDeleteDao.deletePipelineTriggerEvent(dslContext, projectId)
             processDataDeleteDao.deleteProjectPipelineCallbackHistory(dslContext, projectId)

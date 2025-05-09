@@ -1429,7 +1429,8 @@ class PipelineRepositoryService constructor(
         version: Int? = null,
         includeDraft: Boolean? = false,
         queryDslContext: DSLContext? = null,
-        encryptedFlag: Boolean? = false
+        encryptedFlag: Boolean? = false,
+        archiveFlag: Boolean? = false
     ): PipelineResourceVersion? {
         // TODO 取不到则直接从旧版本表读，待下架
         val resource = if (version == null) {
@@ -1485,22 +1486,24 @@ class PipelineRepositoryService constructor(
                 }
             }
         }
-        pipelineCallbackDao.list(
-            dslContext = queryDslContext ?: dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            event = null
-        ).let { records ->
-            if (records.isNotEmpty) {
-                // 填充流水线级别回调
-                resource?.model?.events = records.associate {
-                    it.name to PipelineCallbackEvent(
-                        callbackEvent = CallBackEvent.valueOf(it.eventType),
-                        callbackUrl = it.url,
-                        secretToken = it.secretToken?.let { AESUtil.decrypt(aesKey, it) },
-                        region = CallBackNetWorkRegionType.valueOf(it.region),
-                        callbackName = it.name
-                    )
+        if (archiveFlag != true) {
+            pipelineCallbackDao.list(
+                dslContext = queryDslContext ?: dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                event = null
+            ).let { records ->
+                if (records.isNotEmpty) {
+                    // 填充流水线级别回调
+                    resource?.model?.events = records.associate {
+                        it.name to PipelineCallbackEvent(
+                            callbackEvent = CallBackEvent.valueOf(it.eventType),
+                            callbackUrl = it.url,
+                            secretToken = it.secretToken?.let { AESUtil.decrypt(aesKey, it) },
+                            region = CallBackNetWorkRegionType.valueOf(it.region),
+                            callbackName = it.name
+                        )
+                    }
                 }
             }
         }
@@ -1643,10 +1646,12 @@ class PipelineRepositoryService constructor(
         pipelineId: String,
         userId: String,
         channelCode: ChannelCode?,
-        delete: Boolean
+        delete: Boolean,
+        opDslContext: DSLContext? = null,
+        archiveFlag: Boolean? = false
     ): DeletePipelineResult {
-
-        val record = pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId, channelCode)
+        val finalDslContext = opDslContext ?: dslContext
+        val record = pipelineInfoDao.getPipelineInfo(finalDslContext, projectId, pipelineId, channelCode)
             ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
@@ -1658,7 +1663,7 @@ class PipelineRepositoryService constructor(
         val lock = PipelineModelLock(redisOperation, pipelineId)
         try {
             lock.lock()
-            dslContext.transaction { configuration ->
+            finalDslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
 
                 if (delete) {
@@ -1685,54 +1690,56 @@ class PipelineRepositoryService constructor(
                         userId = userId,
                         channelCode = channelCode
                     )
-                    // 同时要对Setting中的name做设置
-                    pipelineSettingDao.updateSetting(
-                        dslContext = transactionContext,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        name = deleteName,
-                        desc = "DELETE BY $userId in $deleteTime"
-                    )
-                    // 同时要对对应setting version中的name做设置,不然恢复时流水线详情展示的名称不对
-                    pipelineVersionSimple?.settingVersion?.let {
-                        pipelineSettingVersionDao.updateSetting(
-                            dslContext = transactionContext,
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            version = it,
-                            name = deleteName,
-                            desc = "DELETE BY $userId in $deleteTime"
-                        )
-                    }
-
                     // #4201 标志关联模板为删除
                     templatePipelineDao.softDelete(
                         dslContext = transactionContext,
                         projectId = projectId,
                         pipelineId = pipelineId
                     )
+                    if (archiveFlag != true) {
+                        // 同时要对Setting中的name做设置
+                        pipelineSettingDao.updateSetting(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            name = deleteName,
+                            desc = "DELETE BY $userId in $deleteTime"
+                        )
+                        // 同时要对对应setting version中的name做设置,不然恢复时流水线详情展示的名称不对
+                        pipelineVersionSimple?.settingVersion?.let {
+                            pipelineSettingVersionDao.updateSetting(
+                                dslContext = transactionContext,
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                version = it,
+                                name = deleteName,
+                                desc = "DELETE BY $userId in $deleteTime"
+                            )
+                        }
+                    }
                 }
-
-                pipelineModelTaskDao.deletePipelineTasks(transactionContext, projectId, pipelineId)
-                pipelineYamlInfoDao.deleteByPipelineId(transactionContext, projectId, pipelineId)
-                subPipelineTaskService.batchDelete(transactionContext, projectId, pipelineId)
-                pipelineEventDispatcher.dispatch(
-                    PipelineDeleteEvent(
-                        source = "delete_pipeline",
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        userId = userId,
-                        clearUpModel = delete
-                    ),
-                    PipelineModelAnalysisEvent(
-                        source = "delete_pipeline",
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        userId = userId,
-                        model = "",
-                        channelCode = record.channel
+                if (archiveFlag != true) {
+                    pipelineModelTaskDao.deletePipelineTasks(transactionContext, projectId, pipelineId)
+                    pipelineYamlInfoDao.deleteByPipelineId(transactionContext, projectId, pipelineId)
+                    subPipelineTaskService.batchDelete(transactionContext, projectId, pipelineId)
+                    pipelineEventDispatcher.dispatch(
+                        PipelineDeleteEvent(
+                            source = "delete_pipeline",
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            userId = userId,
+                            clearUpModel = delete
+                        ),
+                        PipelineModelAnalysisEvent(
+                            source = "delete_pipeline",
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            userId = userId,
+                            model = "",
+                            channelCode = record.channel
+                        )
                     )
-                )
+                }
             }
         } finally {
             lock.unlock()

@@ -52,6 +52,7 @@ import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationDTO
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelUpdate
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
@@ -69,6 +70,7 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.PipelineViewType
@@ -140,8 +142,7 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val transferService: PipelineTransferYamlService,
     private val yamlFacadeService: PipelineYamlFacadeService,
     private val operationLogService: PipelineOperationLogService,
-    private val pipelineAuthorizationService: PipelineAuthorizationService,
-    private val pipelineAsCodeService: PipelineAsCodeService
+    private val pipelineAuthorizationService: PipelineAuthorizationService
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -1420,12 +1421,14 @@ class PipelineInfoFacadeService @Autowired constructor(
         pipelineId: String,
         channelCode: ChannelCode? = null,
         checkPermission: Boolean = true,
-        delete: Boolean = false
+        delete: Boolean = false,
+        archiveFlag: Boolean? = false
     ): DeletePipelineResult {
         val watcher = Watcher(id = "deletePipeline|$pipelineId|$userId")
         var success = false
+        val opDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
         try {
-            if (checkPermission) {
+            if (checkPermission && archiveFlag != true) {
                 watcher.start("perm_v_perm")
                 val permission = AuthPermission.DELETE
                 pipelinePermissionService.validPipelinePermission(
@@ -1445,9 +1448,35 @@ class PipelineInfoFacadeService @Autowired constructor(
                     )
                 )
                 watcher.stop()
+            } else if (archiveFlag == true) {
+                watcher.start("perm_v_perm")
+                // 检查用户是否有管理已归档流水线数据的权限
+                val permission = AuthPermission.MANAGE_ARCHIVED_PIPELINE
+                if (!pipelinePermissionService.checkPipelinePermission(
+                        userId = userId,
+                        projectId = projectId,
+                        permission = permission,
+                        authResourceType = AuthResourceType.PROJECT
+                    )
+                ) {
+                    val language = I18nUtil.getLanguage()
+                    throw PermissionForbiddenException(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = CommonMessageCode.USER_NO_PIPELINE_PERMISSION,
+                            language = language,
+                            params = arrayOf(permission.getI18n(language))
+                        )
+                    )
+                }
+                watcher.stop()
             }
 
-            val existModel = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)?.model
+            val existModel = pipelineRepositoryService.getPipelineResourceVersion(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                queryDslContext = opDslContext,
+                archiveFlag = archiveFlag
+            )?.model
                 ?: throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
@@ -1461,24 +1490,26 @@ class PipelineInfoFacadeService @Autowired constructor(
                 channelCode = channelCode ?: ChannelCode.BS
             )
             modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, null, param)
-            watcher.start("s_c_yaml_del")
-            val setting = pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId)
-            if (setting.pipelineAsCodeSettings?.enable == true) {
-                // 检查yaml是否已经在默认分支删除
-                val yamlExist = yamlFacadeService.yamlExistInDefaultBranch(
-                    projectId = projectId, pipelineId = pipelineId
-                )
-                if (yamlExist) {
-                    throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_DELETE_YAML_PIPELINE_IN_DEFAULT_BRANCH
+            if (archiveFlag != true) {
+                watcher.start("s_c_yaml_del")
+                val setting = pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId)
+                if (setting.pipelineAsCodeSettings?.enable == true) {
+                    // 检查yaml是否已经在默认分支删除
+                    val yamlExist = yamlFacadeService.yamlExistInDefaultBranch(
+                        projectId = projectId, pipelineId = pipelineId
+                    )
+                    if (yamlExist) {
+                        throw ErrorCodeException(
+                            errorCode = ProcessMessageCode.ERROR_DELETE_YAML_PIPELINE_IN_DEFAULT_BRANCH
+                        )
+                    }
+                    pipelineSettingFacadeService.saveSetting(
+                        userId = userId, projectId = projectId, pipelineId = pipelineId,
+                        setting = setting.copy(
+                            pipelineAsCodeSettings = PipelineAsCodeSettings(false)
+                        )
                     )
                 }
-                pipelineSettingFacadeService.saveSetting(
-                    userId = userId, projectId = projectId, pipelineId = pipelineId,
-                    setting = setting.copy(
-                        pipelineAsCodeSettings = PipelineAsCodeSettings(false)
-                    )
-                )
             }
             watcher.start("s_r_pipeline_del")
             val deletePipelineResult = pipelineRepositoryService.deletePipeline(
@@ -1486,7 +1517,9 @@ class PipelineInfoFacadeService @Autowired constructor(
                 pipelineId = pipelineId,
                 userId = userId,
                 channelCode = channelCode,
-                delete = delete
+                delete = delete,
+                opDslContext = opDslContext,
+                archiveFlag = archiveFlag
             )
             watcher.stop()
 
