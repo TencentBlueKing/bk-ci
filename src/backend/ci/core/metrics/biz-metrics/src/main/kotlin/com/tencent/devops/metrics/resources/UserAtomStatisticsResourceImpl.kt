@@ -76,7 +76,6 @@ class UserAtomStatisticsResourceImpl @Autowired constructor(
         )
     }
 
-
     @BkApiPermission([BkApiHandleType.PROJECT_MEMBER_CHECK])
     override fun queryAtomExecuteStatisticsInfo(
         projectId: String,
