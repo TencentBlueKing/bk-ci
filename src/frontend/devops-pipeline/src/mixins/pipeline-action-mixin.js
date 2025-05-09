@@ -88,11 +88,43 @@ export default {
                         viewId
                     })
                 } else if (viewId === ARCHIVE_VIEW_ID) {
-                    return this.requestArchivePipelineList({
+                    const { page, count, records } = await this.requestArchivePipelineList({
                         projectId: this.$route.params.projectId,
                         ...queryParams,
                         viewId
                     })
+                    const pipelineList = records.map((item, index) => Object.assign(item, {
+                        ...item,
+                        latestBuildStartDate: this.getLatestBuildFromNow(item.latestBuildStartTime),
+                        updater: item.lastModifyUser,
+                        updateDate: convertTime(item.updateTime),
+                        duration: this.calcDuration(item),
+                        latestBuildUserId: item.lastModifyUser,
+                        onlyDraftVersion: item.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING,
+                        historyRoute: {
+                            name: 'pipelinesHistory',
+                            params: {
+                                projectId: item.projectId,
+                                pipelineId: item.pipelineId,
+                                type: item.onlyDraftVersion ? pipelineTabIdMap.pipeline : 'history'
+                            }
+                        },
+                        latestBuildRoute: {
+                            name: 'pipelinesDetail',
+                            params: {
+                                type: 'executeDetail',
+                                projectId: item.projectId,
+                                pipelineId: item.pipelineId,
+                                buildNo: item.latestBuildId
+                            }
+                        }
+                    }))
+
+                    return {
+                        page,
+                        count,
+                        records: pipelineList
+                    }
                 } else {
                     if (!isShallowEqual(queryParams, this.$route.query)) {
                         this.$router.replace({
