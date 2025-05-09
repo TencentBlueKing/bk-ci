@@ -131,10 +131,13 @@
                 </template>
             </article>
         </div>
-        <footer class="recycle-pipeline-group-footer">
+        <footer
+            class="recycle-pipeline-group-footer"
+            :key="projectId"
+        >
             <div
-                v-for="(item,idx) in footerBtns"
-                :key="idx"
+                v-for="(item, idx) in footerBtns"
+                :key="projectId + idx"
                 :class="['footer-item',{
                     active: $route.params.viewId === item.viewId
                 }]"
@@ -266,6 +269,9 @@
                 'fixedGroupIdSet',
                 'groupNamesMap'
             ]),
+            projectId () {
+                return this.$route.params.projectId
+            },
             groupNameRules () {
                 return [{
                     validator: this.checkGroupNameValid,
@@ -315,9 +321,9 @@
                     hasPermission: this.isManage,
                     disablePermissionApi: true,
                     permissionData: {
-                        projectId: this.$route.params.projectId,
+                        projectId: this.projectId,
                         resourceType: 'project',
-                        resourceCode: this.$route.params.projectId,
+                        resourceCode: this.projectId,
                         action: PROJECT_RESOURCE_ACTION.MANAGE
                     }
                 }]
@@ -342,9 +348,9 @@
                         handler: this.goArchiveLibrary,
                         isCheckPermission: true,
                         permissionData: {
-                            projectId: this.$route.params.projectId,
+                            projectId: this.projectId,
                             resourceType: 'project',
-                            resourceCode: this.$route.params.projectId,
+                            resourceCode: this.projectId,
                             action: PROJECT_RESOURCE_ACTION.ARCHIVED
                         }
                     },
@@ -431,9 +437,9 @@
                                     hasPermission: this.isManage,
                                     disablePermissionApi: true,
                                     permissionData: {
-                                        projectId: this.$route.params.projectId,
+                                        projectId: this.projectId,
                                         resourceType: 'project',
-                                        resourceCode: this.$route.params.projectId,
+                                        resourceCode: this.projectId,
                                         action: PROJECT_RESOURCE_ACTION.MANAGE
                                     }
                                 }
@@ -488,7 +494,7 @@
                     }
                     this.renaming = true
                     await this.updatePipelineGroup({
-                        projectId: this.$route.params.projectId,
+                        projectId: this.projectId,
                         id: view.id,
                         projected: view.projected,
                         name: this.newViewName
@@ -513,7 +519,7 @@
                 try {
                     this.isSticking = true
                     await this.toggleStickyTop({
-                        projectId: this.$route.params.projectId,
+                        projectId: this.projectId,
                         viewId: view.id,
                         enabled: !view.top
                     })
@@ -537,7 +543,7 @@
                 try {
                     this.isDeleting = true
                     await this.deletePipelineGroup({
-                        projectId: this.$route.params.projectId,
+                        projectId: this.projectId,
                         ...view
                     })
                     this.requestGetGroupLists(this.$route.params)
@@ -568,7 +574,7 @@
             },
             updateGroupPipelineCount (viewId) {
                 this.requestGroupPipelineCount({
-                    projectId: this.$route.params.projectId,
+                    projectId: this.projectId,
                     viewId
                 })
             },
@@ -576,7 +582,7 @@
                 if (viewId !== this.$route.params.viewId) {
                     this.updateGroupPipelineCount(viewId)
 
-                    cacheViewId(this.$route.params.projectId, viewId)
+                    cacheViewId(this.projectId, viewId)
                     this.$router.push({
                         params: {
                             ...this.$route.params,
@@ -598,7 +604,7 @@
                     this.isAdding = true
                     const viewId = await this.addPipelineGroup({
                         ...this.newPipelineGroup,
-                        projectId: this.$route.params.projectId,
+                        projectId: this.projectId,
                         viewType: 2,
                         logic: 'AND',
                         filters: [],

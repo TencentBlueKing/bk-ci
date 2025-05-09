@@ -130,7 +130,7 @@
             </template>
         </bk-table-column>
         <bk-table-column
-            v-if="allRenderColumnMap.ownGroupName && (isAllPipelineView || isPatchView || isDeleteView)"
+            v-if="allRenderColumnMap.ownGroupName && (isAllPipelineView || isPatchView || isDeleteView) && !isArchiveView"
             :width="tableWidthMap.viewNames"
             min-width="300"
             :label="$t('ownGroupName')"
@@ -179,7 +179,7 @@
             </div>
         </bk-table-column>
         <bk-table-column
-            v-if="allRenderColumnMap.label"
+            v-if="allRenderColumnMap.label && !isArchiveView"
             :label="$t('label')"
             :width="tableWidthMap.groupLabel"
             min-width="200"
@@ -320,7 +320,7 @@
                                 class="pipeline-cell-link pipeline-exec-msg-title"
                                 :disabled="props.row.permissions && !props.row.permissions.canView"
                                 v-perm="{
-                                    hasPermission: props.row.permissions && props.row.permissions.canView,
+                                    hasPermission: (props.row.permissions && props.row.permissions.canView) || isArchiveView,
                                     disablePermissionApi: true,
                                     permissionData: {
                                         projectId,
@@ -381,7 +381,7 @@
             >
                 <div
                     class="latest-build-multiple-row"
-                    v-if="!props.row.delete"
+                    v-if="!props.row.delete || isArchiveView"
                     slot-scope="props"
                 >
                     <p>{{ props.row.latestBuildStartDate }}</p>
@@ -410,7 +410,7 @@
             >
                 <div
                     class="latest-build-multiple-row"
-                    v-if="!props.row.delete"
+                    v-if="!props.row.delete || isArchiveView"
                     slot-scope="props"
                 >
                     <p>{{ props.row.updater }}</p>
