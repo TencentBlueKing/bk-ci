@@ -34,6 +34,7 @@ import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineArchiveEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBatchArchiveEvent
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
@@ -44,6 +45,7 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.service.PipelineListQueryParamService
+import com.tencent.devops.process.util.BuildMsgUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
@@ -192,6 +194,13 @@ class ArchivePipelineManageService @Autowired constructor(
         pipelineInfo.latestBuildId = pipelineBuildSummaryRecord?.latestBuildId
         val pipelineBuildHistoryRecord = pipelineBuildMap[pipelineRecord.pipelineId]
         pipelineInfo.trigger = pipelineBuildHistoryRecord?.trigger
+        pipelineBuildHistoryRecord?.let {
+            pipelineInfo.lastBuildMsg = BuildMsgUtils.getBuildMsg(
+                buildMsg = pipelineBuildHistoryRecord.buildMsg,
+                startType = StartType.toStartType(pipelineBuildHistoryRecord.trigger),
+                channelCode = pipelineBuildHistoryRecord.channelCode
+            )
+        }
         pipelineInfos.add(pipelineInfo)
     }
 }
