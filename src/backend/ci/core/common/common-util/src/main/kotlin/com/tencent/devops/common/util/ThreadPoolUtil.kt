@@ -34,7 +34,6 @@ import java.util.concurrent.RejectedExecutionHandler
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
-
 object ThreadPoolUtil {
     fun getThreadPoolExecutor(
         corePoolSize: Int = 1,
