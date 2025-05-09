@@ -1536,7 +1536,7 @@
                   "description" : {
                     "type" : "string"
                   },
-                  "category" : {
+                  "group" : {
                     "type" : "string"
                   },
                   "multiple" : {
@@ -1714,7 +1714,7 @@
                 "description" : {
                   "type" : "string"
                 },
-                "category" : {
+                "group" : {
                   "type" : "string"
                 },
                 "multiple" : {

@@ -63,8 +63,6 @@ class VariableTransfer {
         model.getTriggerContainer().params.forEach {
             if (it.id in ignoredVariable) return@forEach
             var props = when {
-                // 不带
-                it.type == BuildFormPropertyType.STRING && it.desc.isNullOrEmpty() -> null
                 it.type == BuildFormPropertyType.STRING -> VariableProps(
                     type = VariablePropType.VUEX_INPUT.value
                 )
@@ -92,6 +90,7 @@ class VariableTransfer {
                     type = VariablePropType.GIT_REF.value,
                     repoHashId = it.repoHashId
                 )
+
                 CascadePropertyUtils.supportCascadeParam(it.type) -> {
                     // 级联选择器类型变量
                     VariableProps(
@@ -167,7 +166,7 @@ class VariableTransfer {
                 readonly = if (const == true) null else it.readOnly.nullIfDefault(false),
                 allowModifyAtStartup = if (const != true) it.required.nullIfDefault(true) else null,
                 const = const,
-                props = props
+                props = if (props?.empty() == false) props else null
             )
         }
         return if (result.isEmpty()) {
