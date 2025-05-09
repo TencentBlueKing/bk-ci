@@ -316,7 +316,6 @@
                         }
                         return res
                     }, this.element.data.input)
-                    console.log(1111, atomDefaultValue, this.atomPropsModel, atomValue)
                     return atomValue
                 } catch (e) {
                     console.warn('getAtomInput error', e)

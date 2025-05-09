@@ -302,7 +302,7 @@
                         message: this.$t('subpage.rebuildSuc'),
                         theme: 'success'
                     })
-                } else if (res.code === 2101260) {
+                } else if (res.code === 2101272) {
                     this.loading = false
                     this.$bkInfo({
                         title: this.$t('history.rePlay'),

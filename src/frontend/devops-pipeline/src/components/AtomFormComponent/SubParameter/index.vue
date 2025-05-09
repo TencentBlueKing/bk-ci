@@ -20,7 +20,7 @@
                 <li
                     class="param-input"
                     v-for="(parameter, index) in parameters"
-                    :key="index"
+                    :key="parameter.key"
                 >
                     <bk-select
                         class="input-com"
@@ -138,7 +138,7 @@
                 })
             },
             cutParam (index) {
-                this.parameters = this.parameters.filter((item, i) => i !== index)
+                this.parameters.splice(index, 1)
                 this.updateParameters()
             },
 
