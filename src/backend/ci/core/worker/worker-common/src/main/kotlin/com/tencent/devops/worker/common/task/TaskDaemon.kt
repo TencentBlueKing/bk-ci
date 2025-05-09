@@ -142,6 +142,6 @@ class TaskDaemon(
     }
 
     companion object {
-        private const val PARAM_MAX_LENGTH = 4000 // 流水线参数最大长度
+        const val PARAM_MAX_LENGTH = 4000 // 流水线参数最大长度
     }
 }

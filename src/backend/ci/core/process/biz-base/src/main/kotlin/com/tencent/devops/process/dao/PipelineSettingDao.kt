@@ -94,7 +94,8 @@ class PipelineSettingDao {
                 SUCCESS_SUBSCRIPTION,
                 FAILURE_SUBSCRIPTION,
                 VERSION,
-                PIPELINE_AS_CODE_SETTINGS
+                PIPELINE_AS_CODE_SETTINGS,
+                FAIL_IF_VARIABLE_INVALID
             ).values(
                 setting.projectId,
                 setting.pipelineName,
@@ -129,7 +130,8 @@ class PipelineSettingDao {
                 JsonUtil.toJson(successSubscriptionList, false),
                 JsonUtil.toJson(failSubscriptionList, false),
                 setting.version,
-                setting.pipelineAsCodeSettings?.let { JsonUtil.toJson(it, false) }
+                setting.pipelineAsCodeSettings?.let { JsonUtil.toJson(it, false) },
+                setting.failIfVariableInvalid
             ).onDuplicateKeyUpdate()
                 .set(NAME, setting.pipelineName)
                 .set(DESC, setting.desc)
@@ -162,6 +164,7 @@ class PipelineSettingDao {
                 .set(FAILURE_SUBSCRIPTION, JsonUtil.toJson(failSubscriptionList, false))
                 .set(VERSION, setting.version)
                 .set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
+                .set(FAIL_IF_VARIABLE_INVALID, setting.failIfVariableInvalid)
             // pipelineAsCodeSettings 默认传空不更新
             setting.pipelineAsCodeSettings?.let { self ->
                 insert.set(PIPELINE_AS_CODE_SETTINGS, JsonUtil.toJson(self, false))
@@ -435,6 +438,7 @@ class PipelineSettingDao {
                     maxQueueSize = t.maxQueueSize,
                     maxPipelineResNum = t.maxPipelineResNum,
                     maxConRunningQueueSize = t.maxConRunningQueueSize,
+                    failIfVariableInvalid = t.failIfVariableInvalid,
                     buildNumRule = t.buildNumRule,
                     concurrencyCancelInProgress = t.concurrencyCancelInProgress,
                     concurrencyGroup = t.concurrencyGroup,

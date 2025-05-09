@@ -67,6 +67,7 @@ import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_BUILD_URL
 import com.tencent.devops.process.utils.PIPELINE_CREATE_USER
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
+import com.tencent.devops.process.utils.PIPELINE_FAIL_IF_VARIABLE_INVALID_FLAG
 import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
@@ -226,7 +227,8 @@ class PipelineBuildService(
                 } else {
                     null
                 },
-                pipelineDialectType = pipelineDialectType.name
+                pipelineDialectType = pipelineDialectType.name,
+                failIfVariableInvalid = setting.failIfVariableInvalid
             )
 
             val context = StartBuildContext.init(
@@ -291,7 +293,8 @@ class PipelineBuildService(
         isMobile: Boolean,
         debug: Boolean? = false,
         pipelineAuthorizer: String? = null,
-        pipelineDialectType: String
+        pipelineDialectType: String,
+        failIfVariableInvalid: Boolean? = false
     ) {
         val userName = when (startType) {
             StartType.PIPELINE -> pipelineParamMap[PIPELINE_START_PIPELINE_USER_ID]?.value
@@ -383,6 +386,11 @@ class PipelineBuildService(
             readOnly = true
         )
         pipelineParamMap[PIPELINE_DIALECT] = BuildParameters(PIPELINE_DIALECT, pipelineDialectType, readOnly = true)
+        if (failIfVariableInvalid == true) {
+            pipelineParamMap[PIPELINE_FAIL_IF_VARIABLE_INVALID_FLAG] = BuildParameters(
+                PIPELINE_FAIL_IF_VARIABLE_INVALID_FLAG, true, readOnly = true
+            )
+        }
         // 自定义触发源材料信息
         startValues?.get(BK_CI_MATERIAL_ID)?.let {
             pipelineParamMap[BK_CI_MATERIAL_ID] = BuildParameters(
