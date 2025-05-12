@@ -106,6 +106,7 @@ export default {
                             params: {
                                 projectId: item.projectId,
                                 pipelineId: item.pipelineId,
+                                archiveFlag: true,
                                 type: item.onlyDraftVersion ? pipelineTabIdMap.pipeline : 'history'
                             }
                         },

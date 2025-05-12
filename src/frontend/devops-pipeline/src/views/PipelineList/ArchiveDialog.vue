@@ -263,7 +263,7 @@
     text-align: left;
 
     .tips {
-        margin: 10px 0;
+        margin: 10px 0 20px;
         padding: 0 10px;
         background-color: #f5f6fa;
     }
