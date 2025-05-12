@@ -61,9 +61,9 @@
                     </template>
                 </bk-table-column>
                 <bk-table-column
-                    v-if="allRenderColumnMap.desc"
+                    v-if="allRenderColumnMap.description"
                     :label="$t('store.模板描述')"
-                    prop="desc"
+                    prop="description"
                     show-overflow-tooltip
                 ></bk-table-column>
                 <bk-table-column
@@ -72,10 +72,11 @@
                     prop="typeName"
                     :min-width="100"
                     show-overflow-tooltip
-                    :filters="templateTypeFilters"
-                    :filter-method="filterMethod "
-                    :filter-multiple="false"
-                ></bk-table-column>
+                >
+                    <template>
+                        {{ $t('store.流水线模板') }}
+                    </template>
+                </bk-table-column>
                 <bk-table-column
                     v-if="allRenderColumnMap.projectName"
                     :label="$t('store.所属项目')"
@@ -127,11 +128,22 @@
                     </template>
                 </bk-table-column>
                 <bk-table-column
-                    v-if="allRenderColumnMap.version"
+                    v-if="allRenderColumnMap.latestPublishedVersionName"
                     :label="$t('store.最新版本')"
-                    prop="version"
+                    prop="latestPublishedVersionName"
                     show-overflow-tooltip
-                ></bk-table-column>
+                >
+                    <template slot-scope="{ row }">
+                        <p class="last-version">
+                            <span :class="row.latestReleasedVersion !== row.latestPublishedVersion ? 'active' : ''">{{ row.latestPublishedVersionName }}</span>
+                            <bk-icon
+                                v-if="row.latestReleasedVersion !== row.latestPublishedVersion"
+                                type="arrows-up-shape"
+                                class="arrows-up-shape"
+                            />
+                        </p>
+                    </template>
+                </bk-table-column>
                 <bk-table-column
                     v-if="allRenderColumnMap.modifier"
                     :label="$t('store.更新人')"
@@ -309,7 +321,6 @@
                     count: 1,
                     limit: 10
                 },
-                projectFilters: [],
                 templateTypeFilters: [{ text: this.$t('store.流水线'), value: 'PIPELINE' }],
                 tableSize: 'small',
                 tableColumn: [],
@@ -332,11 +343,7 @@
                     },
                     {
                         name: this.$t('store.模板描述'),
-                        id: 'desc'
-                    },
-                    {
-                        name: this.$t('store.模板类型'),
-                        id: 'typeName'
+                        id: 'description'
                     },
                     {
                         name: this.$t('store.所属项目'),
@@ -344,7 +351,11 @@
                     },
                     {
                         name: this.$t('store.状态'),
-                        id: 'templateStatus'
+                        id: 'status',
+                        children: ['AUDITING', 'RELEASED', 'GROUNDING_SUSPENSION', 'INIT', 'AUDIT_REJECT', 'UNDERCARRIAGED'].map(item => ({
+                            id: item,
+                            name: this.$t(this.templateStatusMap[item])
+                        }))
                     },
                     {
                         name: this.$t('store.更新人'),
@@ -357,6 +368,12 @@
                     acc[filter.id] = filter.values.map(val => val.id).join(',')
                     return acc
                 }, {})
+            },
+            projectFilters () {
+                return this.renderList.map(item => ({
+                    text: item.projectName,
+                    value: item.projectName
+                }))
             }
         },
 
@@ -378,7 +395,7 @@
                     showOverflowTooltip: true
                 },
                 {
-                    id: 'desc',
+                    id: 'description',
                     label: this.$t('store.模板描述'),
                     width: 300,
                     showOverflowTooltip: true
@@ -399,7 +416,7 @@
                     width: 150
                 },
                 {
-                    id: 'version',
+                    id: 'latestPublishedVersionName',
                     label: this.$t('store.最新版本'),
                     width: 120
                 },
@@ -426,11 +443,11 @@
             } else {
                 this.selectedTableColumn = [
                     { id: 'templateName' },
-                    { id: 'desc' },
+                    { id: 'description' },
                     { id: 'typeName' },
                     { id: 'projectName' },
                     { id: 'templateStatus' },
-                    { id: 'version' },
+                    { id: 'latestPublishedVersionName' },
                     { id: 'modifier' },
                     { id: 'updateTime' },
                     { id: 'operate' }
@@ -452,7 +469,6 @@
                 const pageSize = this.pagination.limit
                 try {
                     const res = await this.requestTemplateList({
-                        templateName: '',
                         page,
                         pageSize,
                         ...this.searchParams
@@ -644,8 +660,8 @@
                     margin-left: 10px;
                     background: #E1ECFF;
                     border-radius: 12px;
-                    width: 60px;
-                    height: 22px;
+                    width: 55px;
+                    height: 20px;
                     line-height: 1;
                     display: grid;
                     align-items: center;
@@ -670,6 +686,21 @@
                         border-radius: 50%;
                         flex-shrink: 0;
                     }
+                }
+            }
+            .last-version {
+                padding: 2px;
+                .active {
+                    color: #F8B64F;
+                }
+                .arrows-up-shape {
+                    width: 14px;
+                    height: 14px;
+                    background: #F8B64F;
+                    border-radius: 2px;
+                    color: #fff;
+                    padding: 2px;
+                    margin-left: 5px;
                 }
             }
         }
