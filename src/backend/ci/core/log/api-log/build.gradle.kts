@@ -27,7 +27,7 @@
 
 dependencies {
     api(project(":core:common:common-api"))
-    api(project(":core:common:common-client"))
+    api(project(":core:common:common-event"))
     api("io.github.resilience4j:resilience4j-circuitbreaker")
 }
 

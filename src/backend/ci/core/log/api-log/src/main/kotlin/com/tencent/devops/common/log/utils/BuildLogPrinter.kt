@@ -27,20 +27,21 @@
 
 package com.tencent.devops.common.log.utils
 
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.log.pojo.message.LogMessage
-import com.tencent.devops.log.api.print.ServiceLogPrintResource
+import com.tencent.devops.log.event.LogOriginEvent
+import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.log.meta.Ansi
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import org.slf4j.LoggerFactory
+import org.springframework.cloud.stream.function.StreamBridge
 
 @Suppress("LongParameterList", "TooManyFunctions")
 class BuildLogPrinter(
-    private val client: Client,
-    private val circuitBreakerRegistry: CircuitBreakerRegistry
-) {
+    private val circuitBreakerRegistry: CircuitBreakerRegistry,
+    private val streamBridge: StreamBridge,
+    ) {
 
     fun addLine(
         buildId: String,
@@ -54,22 +55,20 @@ class BuildLogPrinter(
     ) {
         try {
             doWithCircuitBreaker {
-                genLogPrintPrintResource().addLogLine(
-                    buildId = buildId,
-                    logMessage = genLogMessage(
-                        message = message,
-                        tag = tag,
-                        subTag = subTag,
-                        containerHashId = containerHashId,
-                        logType = LogType.LOG,
-                        executeCount = executeCount,
-                        jobId = jobId,
-                        stepId = stepId
-                    )
+                val logLine = genLogMessage(
+                    message = message,
+                    tag = tag,
+                    subTag = subTag,
+                    containerHashId = containerHashId,
+                    logType = LogType.LOG,
+                    executeCount = executeCount,
+                    jobId = jobId,
+                    stepId = stepId
                 )
+                LogOriginEvent(buildId, listOf(logLine)).sendTo(streamBridge)
             }
         } catch (e: CallNotPermittedException) {
-            logger.warn("[LOG]|LOG_SERVER_ERROR|causingCircuitBreakerName=${e.causingCircuitBreakerName}|$buildId|")
+            logger.warn("[LOG]|LOG_MQ_ERROR|causingCircuitBreakerName=${e.causingCircuitBreakerName}|$buildId|")
         } catch (ignore: Exception) {
             logger.error("[$buildId]|addLine error|message=$message", ignore)
         }
@@ -78,13 +77,10 @@ class BuildLogPrinter(
     fun addLines(buildId: String, logMessages: List<LogMessage>) {
         try {
             doWithCircuitBreaker {
-                genLogPrintPrintResource().addLogMultiLine(
-                    buildId = buildId,
-                    logMessages = logMessages
-                )
+                LogOriginEvent(buildId, logMessages).sendTo(streamBridge)
             }
         } catch (e: CallNotPermittedException) {
-            logger.warn("[LOG]|LOG_SERVER_ERROR|causingCircuitBreakerName=${e.causingCircuitBreakerName}|$buildId|")
+            logger.warn("[LOG]|LOG_MQ_ERROR|causingCircuitBreakerName=${e.causingCircuitBreakerName}|$buildId|")
         } catch (ignore: Exception) {
             logger.error("[$buildId]|addLines error|logMessages=$logMessages", ignore)
         }
@@ -164,9 +160,7 @@ class BuildLogPrinter(
     ) {
         try {
             doWithCircuitBreaker {
-                genLogPrintPrintResource().addLogLine(
-                    buildId = buildId,
-                    logMessage = genLogMessage(
+                val logLine = genLogMessage(
                         message = "$LOG_ERROR_FLAG${message.replace("\n", "\n$LOG_ERROR_FLAG")}",
                         tag = tag,
                         subTag = subTag,
@@ -176,10 +170,10 @@ class BuildLogPrinter(
                         jobId = jobId,
                         stepId = stepId
                     )
-                )
+                LogOriginEvent(buildId, listOf(logLine)).sendTo(streamBridge)
             }
         } catch (e: CallNotPermittedException) {
-            logger.warn("[LOG]|LOG_SERVER_ERROR|causingCircuitBreakerName=${e.causingCircuitBreakerName}|$buildId|")
+            logger.warn("[LOG]|LOG_MQ_ERROR|causingCircuitBreakerName=${e.causingCircuitBreakerName}|$buildId|")
         } catch (ignore: Exception) {
             logger.error("[$buildId]|addErrorLine error|message=$message", ignore)
         }
@@ -197,22 +191,20 @@ class BuildLogPrinter(
     ) {
         try {
             doWithCircuitBreaker {
-                genLogPrintPrintResource().addLogLine(
-                    buildId = buildId,
-                    logMessage = genLogMessage(
-                        message = "$LOG_DEBUG_FLAG${message.replace("\n", "\n$LOG_DEBUG_FLAG")}",
-                        tag = tag,
-                        subTag = subTag,
-                        containerHashId = containerHashId,
-                        logType = LogType.DEBUG,
-                        executeCount = executeCount,
-                        jobId = jobId,
-                        stepId = stepId
-                    )
+                val logLine = genLogMessage(
+                    message = "$LOG_DEBUG_FLAG${message.replace("\n", "\n$LOG_DEBUG_FLAG")}",
+                    tag = tag,
+                    subTag = subTag,
+                    containerHashId = containerHashId,
+                    logType = LogType.DEBUG,
+                    executeCount = executeCount,
+                    jobId = jobId,
+                    stepId = stepId
                 )
+                LogOriginEvent(buildId, listOf(logLine)).sendTo(streamBridge)
             }
         } catch (e: CallNotPermittedException) {
-            logger.warn("[LOG]|LOG_SERVER_ERROR|causingCircuitBreakerName=${e.causingCircuitBreakerName}|$buildId|")
+            logger.warn("[LOG]|LOG_MQ_ERROR|causingCircuitBreakerName=${e.causingCircuitBreakerName}|$buildId|")
         } catch (ignore: Exception) {
             logger.error("[$buildId]|addDebugLine error|message=$message", ignore)
         }
@@ -230,22 +222,20 @@ class BuildLogPrinter(
     ) {
         try {
             doWithCircuitBreaker {
-                genLogPrintPrintResource().addLogLine(
-                    buildId = buildId,
-                    logMessage = genLogMessage(
-                        message = "$LOG_WARN_FLAG${message.replace("\n", "\n$LOG_WARN_FLAG")}",
-                        tag = tag,
-                        subTag = subTag,
-                        containerHashId = containerHashId,
-                        logType = LogType.WARN,
-                        executeCount = executeCount,
-                        jobId = jobId,
-                        stepId = stepId
-                    )
+                val logLine = genLogMessage(
+                    message = "$LOG_WARN_FLAG${message.replace("\n", "\n$LOG_WARN_FLAG")}",
+                    tag = tag,
+                    subTag = subTag,
+                    containerHashId = containerHashId,
+                    logType = LogType.WARN,
+                    executeCount = executeCount,
+                    jobId = jobId,
+                    stepId = stepId
                 )
+                LogOriginEvent(buildId, listOf(logLine)).sendTo(streamBridge)
             }
         } catch (e: CallNotPermittedException) {
-            logger.warn("[LOG]|LOG_SERVER_ERROR|causingCircuitBreakerName=${e.causingCircuitBreakerName}|$buildId|")
+            logger.warn("[LOG]|LOG_MQ_ERROR|causingCircuitBreakerName=${e.causingCircuitBreakerName}|$buildId|")
         } catch (ignore: Exception) {
             logger.error("[$buildId]|addWarnLine error|message=$message", ignore)
         }
@@ -322,16 +312,17 @@ class BuildLogPrinter(
         stepId: String? = null
     ) {
         try {
-            genLogPrintPrintResource().updateLogStatus(
+            LogStatusEvent(
                 buildId = buildId,
                 finished = true,
                 tag = tag,
                 subTag = subTag,
-                containerHashId = containerHashId,
+                jobId = containerHashId,
                 executeCount = executeCount,
-                jobId = jobId,
+                logStorageMode = null,
+                userJobId = jobId,
                 stepId = stepId
-            )
+            ).sendTo(streamBridge)
         } catch (ignore: Exception) {
             logger.warn("[$buildId]|stopLog fail", ignore)
         }
@@ -347,15 +338,17 @@ class BuildLogPrinter(
         stepId: String? = null
     ) {
         try {
-            genLogPrintPrintResource().addLogStatus(
+            LogStatusEvent(
                 buildId = buildId,
+                finished = false,
                 tag = tag,
                 subTag = subTag,
-                containerHashId = containerHashId,
+                jobId = containerHashId,
                 executeCount = executeCount,
-                jobId = jobId,
+                logStorageMode = null,
+                userJobId = jobId,
                 stepId = stepId
-            )
+            ).sendTo(streamBridge)
         } catch (ignore: Exception) {
             logger.warn("[$buildId]|stopLog fail", ignore)
         }
@@ -381,10 +374,6 @@ class BuildLogPrinter(
         jobId = jobId ?: "",
         stepId = stepId ?: ""
     )
-
-    private fun genLogPrintPrintResource(): ServiceLogPrintResource {
-        return client.get(ServiceLogPrintResource::class)
-    }
 
     private fun <T> doWithCircuitBreaker(
         action: () -> T
