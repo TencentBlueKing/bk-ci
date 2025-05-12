@@ -27,12 +27,13 @@
 
 package com.tencent.devops.log.configuration
 
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
@@ -44,7 +45,9 @@ import java.time.Duration
 class LogPrinterConfiguration {
 
     @Bean
-    fun buildLogPrinter(client: Client): BuildLogPrinter {
+    fun buildLogPrinter(
+        @Autowired streamBridge: StreamBridge
+    ): BuildLogPrinter {
         val builder = CircuitBreakerConfig.custom()
         builder.enableAutomaticTransitionFromOpenToHalfOpen()
         builder.writableStackTraceEnabled(false)
@@ -60,6 +63,6 @@ class LogPrinterConfiguration {
         builder.slowCallDurationThreshold(Duration.ofSeconds(1))
         // 滑动窗口大小为 100，默认值
         builder.slidingWindowSize(100)
-        return BuildLogPrinter(client, CircuitBreakerRegistry.of(builder.build()))
+        return BuildLogPrinter(streamBridge, CircuitBreakerRegistry.of(builder.build()))
     }
 }

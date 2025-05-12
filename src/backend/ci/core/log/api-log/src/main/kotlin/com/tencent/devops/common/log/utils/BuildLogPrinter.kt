@@ -39,9 +39,9 @@ import org.springframework.cloud.stream.function.StreamBridge
 
 @Suppress("LongParameterList", "TooManyFunctions")
 class BuildLogPrinter(
-    private val circuitBreakerRegistry: CircuitBreakerRegistry,
     private val streamBridge: StreamBridge,
-    ) {
+    private val circuitBreakerRegistry: CircuitBreakerRegistry
+) {
 
     fun addLine(
         buildId: String,
