@@ -40,7 +40,7 @@ import jakarta.ws.rs.Produces
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "SIGNATURE_CALLBACK", description = "签名回调接口")
-@Path("/open/signature")
+@Path("/external/signature")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface SignatureCallbackResource {
