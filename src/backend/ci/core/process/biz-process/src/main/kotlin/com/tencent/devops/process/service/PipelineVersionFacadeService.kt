@@ -132,14 +132,13 @@ class PipelineVersionFacadeService @Autowired constructor(
         pipelineId: String,
         archiveFlag: Boolean? = false
     ): PipelineDetail {
-        val detailInfo = pipelineListFacadeService.getPipelineDetail(userId, projectId, pipelineId)
-            ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
-                params = arrayOf(pipelineId)
-            )
+        val detailInfo = pipelineListFacadeService.getPipelineDetail(
+            userId = userId, projectId = projectId, pipelineId = pipelineId, archiveFlag = archiveFlag
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID, params = arrayOf(pipelineId)
+        )
         val draftResource = pipelineRepositoryService.getDraftVersionResource(
-            projectId = projectId,
-            pipelineId = pipelineId
+            projectId = projectId, pipelineId = pipelineId, archiveFlag = archiveFlag
         )
         // 有草稿且不是空白的编排才可以发布
         val canRelease = draftResource != null && draftResource.model.stages.size > 1
@@ -148,12 +147,17 @@ class PipelineVersionFacadeService @Autowired constructor(
         val releaseResource = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId,
-            version = detailInfo.pipelineVersion
+            version = detailInfo.pipelineVersion,
+            archiveFlag = archiveFlag
         ) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
             params = arrayOf(pipelineId)
         )
-        val yamlInfo = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, releaseResource.version)
+        val yamlInfo = if (archiveFlag != true) {
+            pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, releaseResource.version)
+        } else {
+            null
+        }
         var baseVersion: Int? = null
         var baseVersionName: String? = null
         var baseVersionStatus: VersionStatus? = null
@@ -162,19 +166,24 @@ class PipelineVersionFacadeService @Autowired constructor(
                 pipelineRepositoryService.getPipelineResourceVersion(
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    version = base
+                    version = base,
+                    archiveFlag = archiveFlag
                 )
             }
             baseResource?.let { baseVersion = it.version }
             baseResource?.status?.let { baseVersionStatus = it }
             baseResource?.versionName?.let { baseVersionName = it }
         }
-        val releaseSetting = pipelineSettingFacadeService.userGetSetting(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            detailInfo = detailInfo
-        )
+        val releaseSetting = if (archiveFlag != true) {
+            pipelineSettingFacadeService.userGetSetting(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                detailInfo = detailInfo
+            )
+        } else {
+            null
+        }
         /**
          * 获取最新版本和版本名称
          *
@@ -184,7 +193,10 @@ class PipelineVersionFacadeService @Autowired constructor(
             // 分支版本,需要获取当前分支最新的激活版本
             VersionStatus.BRANCH -> {
                 val branchVersion = pipelineRepositoryService.getBranchVersionResource(
-                    projectId, pipelineId, releaseResource.versionName
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    branchName = releaseResource.versionName,
+                    archiveFlag = archiveFlag
                 )
                 Pair(branchVersion?.version ?: releaseResource.version, branchVersion?.versionName)
             }
@@ -200,11 +212,10 @@ class PipelineVersionFacadeService @Autowired constructor(
             Pair(draftResource.version, null)
         }
         val permissions = pipelineListFacadeService.getPipelinePermissions(userId, projectId, pipelineId)
-        val yamlExist = pipelineYamlFacadeService.yamlExistInDefaultBranch(
-            projectId = projectId,
-            pipelineId = pipelineId
-        )
-        pipelineRecentUseService.record(userId, projectId, pipelineId)
+        val yamlExist = archiveFlag.takeUnless { it == true }?.run {
+            pipelineRecentUseService.record(userId, projectId, pipelineId)
+            pipelineYamlFacadeService.yamlExistInDefaultBranch(projectId, pipelineId)
+        }
         return PipelineDetail(
             pipelineId = detailInfo.pipelineId,
             pipelineName = detailInfo.pipelineName,
@@ -222,7 +233,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             updateTime = detailInfo.updateTime,
             viewNames = detailInfo.viewNames,
             latestVersionStatus = detailInfo.latestVersionStatus,
-            runLockType = releaseSetting.runLockType,
+            runLockType = releaseSetting?.runLockType,
             permissions = permissions,
             version = version,
             versionName = versionName,
