@@ -1433,22 +1433,23 @@ class PipelineRepositoryService constructor(
         archiveFlag: Boolean? = false
     ): PipelineResourceVersion? {
         // TODO 取不到则直接从旧版本表读，待下架
+        val finalDslContext = queryDslContext ?: dslContext
         val resource = if (version == null) {
             if (includeDraft == true) pipelineResourceVersionDao.getDraftVersionResource(
-                dslContext = queryDslContext ?: dslContext,
+                dslContext = finalDslContext,
                 projectId = projectId,
                 pipelineId = pipelineId
             ) else null
         } else {
             pipelineResourceVersionDao.getVersionResource(
-                dslContext = queryDslContext ?: dslContext,
+                dslContext = finalDslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = version,
                 includeDraft = includeDraft
             )
         } ?: pipelineResourceDao.getReleaseVersionResource(
-            dslContext = queryDslContext ?: dslContext,
+            dslContext = finalDslContext,
             projectId = projectId,
             pipelineId = pipelineId
         )
@@ -1488,7 +1489,7 @@ class PipelineRepositoryService constructor(
         }
         if (archiveFlag != true) {
             pipelineCallbackDao.list(
-                dslContext = queryDslContext ?: dslContext,
+                dslContext = finalDslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 event = null

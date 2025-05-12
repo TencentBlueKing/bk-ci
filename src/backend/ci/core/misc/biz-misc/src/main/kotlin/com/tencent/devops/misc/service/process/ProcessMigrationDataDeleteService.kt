@@ -218,8 +218,6 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
         if (archivePipelineFlag != true) {
             processDataDeleteDao.deletePipelineBuildContainer(dslContext, projectId, pipelineId)
             processDataDeleteDao.deletePipelineBuildStage(dslContext, projectId, pipelineId)
-            processDataDeleteDao.deletePipelineFavor(dslContext, projectId, pipelineId)
-            processDataDeleteDao.deletePipelineViewGroup(dslContext, projectId, pipelineId)
             processDataDeleteDao.deletePipelineRecentUse(dslContext, projectId, pipelineId)
             processDataDeleteDao.deletePipelineTriggerDetail(dslContext, projectId, pipelineId)
             processDataDeleteDao.deletePipelineAuditResource(dslContext, projectId, pipelineId)
@@ -237,6 +235,8 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                 processDataDeleteDao.deletePipelineTimer(dslContext, projectId, pipelineId)
             }
         }
+        processDataDeleteDao.deletePipelineFavor(dslContext, projectId, pipelineId)
+        processDataDeleteDao.deletePipelineViewGroup(dslContext, projectId, pipelineId)
     }
 
     private fun deletePipelineBuildDataByBuilds(

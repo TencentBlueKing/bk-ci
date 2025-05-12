@@ -124,7 +124,6 @@ class ArchivePipelineManageService @Autowired constructor(
             dslContext = archiveShardingDslContext,
             projectId = projectId,
             pipelineFilterParamList = pipelineFilterParamList,
-            includeDelete = true,
             userId = userId
         )
         val pipelineRecords = pipelineBuildSummaryDao.listPipelineInfoBuildSummary(
@@ -134,7 +133,6 @@ class ArchivePipelineManageService @Autowired constructor(
             pipelineFilterParamList = pipelineFilterParamList,
             page = page,
             pageSize = pageSize,
-            includeDelete = true,
             collation = collation ?: PipelineCollation.DEFAULT,
             userId = userId
         )

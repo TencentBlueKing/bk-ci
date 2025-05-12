@@ -74,12 +74,20 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
     override fun getPipelineVersionDetail(
         userId: String,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        archiveFlag: Boolean?
     ): Result<PipelineDetail> {
         checkParam(userId, projectId)
-        pipelineRecentUseService.record(userId, projectId, pipelineId)
+        if (archiveFlag != true) {
+            pipelineRecentUseService.record(userId, projectId, pipelineId)
+        }
         return Result(
-            pipelineVersionFacadeService.getPipelineDetailIncludeDraft(userId, projectId, pipelineId)
+            pipelineVersionFacadeService.getPipelineDetailIncludeDraft(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                archiveFlag = archiveFlag
+            )
         )
     }
 

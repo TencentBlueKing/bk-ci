@@ -1426,7 +1426,6 @@ class PipelineInfoFacadeService @Autowired constructor(
     ): DeletePipelineResult {
         val watcher = Watcher(id = "deletePipeline|$pipelineId|$userId")
         var success = false
-        val opDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
         try {
             if (checkPermission && archiveFlag != true) {
                 watcher.start("perm_v_perm")
@@ -1470,27 +1469,27 @@ class PipelineInfoFacadeService @Autowired constructor(
                 }
                 watcher.stop()
             }
-
-            val existModel = pipelineRepositoryService.getPipelineResourceVersion(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                queryDslContext = opDslContext,
-                archiveFlag = archiveFlag
-            )?.model
-                ?: throw ErrorCodeException(
-                    statusCode = Response.Status.NOT_FOUND.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
-                )
-            ActionAuditContext.current().addInstanceInfo(pipelineId, existModel.name, null, null)
-            // 对已经存在的模型做删除前处理
-            val param = BeforeDeleteParam(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                channelCode = channelCode ?: ChannelCode.BS
-            )
-            modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, null, param)
+            val opDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
             if (archiveFlag != true) {
+                val existModel = pipelineRepositoryService.getPipelineResourceVersion(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    queryDslContext = opDslContext,
+                    archiveFlag = archiveFlag
+                )?.model
+                    ?: throw ErrorCodeException(
+                        statusCode = Response.Status.NOT_FOUND.statusCode,
+                        errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
+                    )
+                ActionAuditContext.current().addInstanceInfo(pipelineId, existModel.name, null, null)
+                // 对已经存在的模型做删除前处理
+                val param = BeforeDeleteParam(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    channelCode = channelCode ?: ChannelCode.BS
+                )
+                modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, null, param)
                 watcher.start("s_c_yaml_del")
                 val setting = pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId)
                 if (setting.pipelineAsCodeSettings?.enable == true) {

@@ -77,7 +77,10 @@ interface UserPipelineVersionResource {
         projectId: String,
         @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @Parameter(description = "归档库标识", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<PipelineDetail>
 
     @Operation(summary = "草稿发布为正式版本的信息预览")

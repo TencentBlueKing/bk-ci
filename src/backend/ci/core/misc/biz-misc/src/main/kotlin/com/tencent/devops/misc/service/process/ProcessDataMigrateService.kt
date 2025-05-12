@@ -103,6 +103,11 @@ class ProcessDataMigrateService @Autowired constructor(
         private const val MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE =
             "MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE"
         private const val MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT_KEY = "MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT"
+        private val executorService by lazy {
+            Executors.newFixedThreadPool(30).apply {
+                Runtime.getRuntime().addShutdownHook(Thread { shutdown() })
+            }
+        }
     }
 
     @Value("\${sharding.migration.timeout:#{2}}")
@@ -156,7 +161,7 @@ class ProcessDataMigrateService @Autowired constructor(
                 dataTag = dataTag
             )
             // 开启异步任务迁移项目的数据
-            Executors.newFixedThreadPool(1).submit {
+            executorService.submit {
                 logger.info("migrateProjectData begin,params:[$userId|$projectId]")
                 try {
                     doMigrateProjectDataTask(

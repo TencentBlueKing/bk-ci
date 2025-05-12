@@ -129,7 +129,8 @@ class PipelineVersionFacadeService @Autowired constructor(
     fun getPipelineDetailIncludeDraft(
         userId: String,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        archiveFlag: Boolean? = false
     ): PipelineDetail {
         val detailInfo = pipelineListFacadeService.getPipelineDetail(userId, projectId, pipelineId)
             ?: throw ErrorCodeException(
