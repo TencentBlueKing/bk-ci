@@ -197,7 +197,7 @@
                                 onClick={handleSetParmaRequired}
                             >
                                 <Logo
-                                    name="set-param"
+                                    name={isRequiredParam ? 'set-param-active' : 'set-param-default'}
                                     size="14"
                                 />
                             </span>

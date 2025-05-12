@@ -235,7 +235,6 @@
     ])
 
     function getNavComponent (type) {
-        console.log(pipelineInfo.value, 'pipelineInfo')
         switch (type) {
             case 'pipeline':
             case 'trigger':

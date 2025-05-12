@@ -65,6 +65,7 @@
                     <InstanceAside
                         slot="aside"
                         :is-instance-create-type="isInstanceCreateViewType"
+                        @batchEdit="handleBatchEdit"
                     />
                     <bk-exception
                         v-if="isInstanceCreateViewType && !instanceList.length"
@@ -92,15 +93,21 @@
             :handle-change-file-path="handleChangeFilePath"
             @release="handleReleaseInstance"
         />
+        <BatchEditConfig
+            v-model="showBatchEdit"
+            @change="handleBatchChange"
+        />
     </section>
 </template>
 
 <script setup name="InstanceEntry">
     import TemplateBreadCrumb from '@/components/Template/TemplateBreadCrumb'
+    import BatchEditConfig from './BatchEditConfig'
     import UseInstance from '@/hook/useInstance'
     import { computed, onMounted, ref, watch } from 'vue'
     import {
         SET_INSTANCE_LIST,
+        SET_RELEASE_ING,
         SET_RELEASE_BASE_ID
     } from '@/store/modules/templates/constants'
     import InstanceAside from './InstanceAside'
@@ -111,11 +118,13 @@
     const { proxy } = UseInstance()
     const isLoading = ref(false)
     const showRelease = ref(false)
+    const showBatchEdit = ref(false)
     const projectId = computed(() => proxy.$route.params?.projectId)
     const templateId = computed(() => proxy.$route.params?.templateId)
     const pipeline = computed(() => proxy.$store?.state?.atom?.pipeline)
     const pipelineInfo = computed(() => proxy.$store?.state?.atom?.pipelineInfo)
     const instanceList = computed(() => proxy.$store?.state?.templates?.instanceList)
+    const showTaskDetail = computed(() => proxy.$store?.state?.templates?.showTaskDetail)
     const currentVersionId = computed(() => proxy?.$route.params?.version ?? pipelineInfo.value?.version) // 路径上的模板版本号
     const templateVersion = computed(() => proxy?.$store?.state?.templates?.templateVersion) // 实例化选中的模板版本号
     const isInstanceCreateViewType = computed(() => proxy.$route.params?.type === 'create')
@@ -124,6 +133,16 @@
         isLoading.value = false
     }, {
         deep: true
+    })
+    watch(() => showTaskDetail.value, (value) => {
+        if (value) {
+            proxy.$store.commit(`templates/${SET_RELEASE_ING}`, true)
+            setTimeout(() => {
+                handleBatchUpgrade()
+            }, 600)
+        }
+    }, {
+        immediate: true
     })
     async function requestTemplateByVersion (version = currentVersionId.value) {
         try {
@@ -158,7 +177,7 @@
         
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, list)
     }
-    async function handleReleaseInstance (value) {
+    async function handleReleaseInstance () {
         const fn = !isInstanceCreateViewType.value ? 'templates/updateInstance' : 'templates/releaseInstance'
         try {
             const instanceReleaseInfos = instanceList.value.map(item => {
@@ -175,7 +194,6 @@
                 templateId: templateId.value,
                 version: templateVersion.value,
                 params: {
-                    ...value,
                     useTemplateSettings: useTemplateSettings.value,
                     instanceReleaseInfos
                 }
@@ -184,6 +202,21 @@
         } catch (e) {
             console.err(e)
         }
+    }
+    function handleBatchEdit () {
+        showBatchEdit.value = true
+    }
+    function handleBatchChange (params) {
+        const updateMap = new Map(params.map(item => [item.id, item.defaultValue]))
+
+        for (const instance of instanceList.value) {
+            for (const p of instance.param) {
+                if (updateMap.has(p.id)) {
+                    p.defaultValue = updateMap.get(p.id)
+                }
+            }
+        }
+        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, instanceList.value)
     }
     onMounted(() => {
         requestTemplateByVersion()
