@@ -13,7 +13,7 @@
             <search-select
                 class="search-select"
                 :data="filterData"
-                :placeholder="$t('store.模板名称/模板描述/模板类型/所属项目/状态/更新人')"
+                :placeholder="$t('store.模板名称/模板描述/所属项目/状态/更新人')"
                 :values="searchValue"
                 @change="handleSearchChange"
             >
@@ -45,18 +45,13 @@
                         >
                             <img
                                 :src="props.row.logoUrl"
-                                width="40"
-                                height="40"
+                                width="34"
+                                height="34"
                             >
                             <span
                                 class="atom-name"
                                 :title="props.row.templateName"
                             >{{ props.row.templateName }}</span>
-                            
-                            <span class="pac-tag">
-                                <i class="devops-icon icon-code" />
-                                PAC
-                            </span>
                         </div>
                     </template>
                 </bk-table-column>
@@ -339,18 +334,22 @@
                 return [
                     {
                         name: this.$t('store.模板名称'),
+                        default: true,
                         id: 'templateName'
                     },
                     {
                         name: this.$t('store.模板描述'),
+                        default: true,
                         id: 'description'
                     },
                     {
                         name: this.$t('store.所属项目'),
+                        default: true,
                         id: 'projectName'
                     },
                     {
                         name: this.$t('store.状态'),
+                        default: true,
                         id: 'status',
                         children: ['AUDITING', 'RELEASED', 'GROUNDING_SUSPENSION', 'INIT', 'AUDIT_REJECT', 'UNDERCARRIAGED'].map(item => ({
                             id: item,
@@ -359,6 +358,7 @@
                     },
                     {
                         name: this.$t('store.更新人'),
+                        default: true,
                         id: 'modifier'
                     }
                 ]
@@ -654,38 +654,8 @@
                 display: flex;
                 align-items: center;
                 img {
-                    margin: 5px 5px;
-                }
-                .pac-tag {
-                    margin-left: 10px;
-                    background: #E1ECFF;
-                    border-radius: 12px;
-                    width: 55px;
-                    height: 20px;
-                    line-height: 1;
-                    display: grid;
-                    align-items: center;
-                    grid-auto-flow: column;
-                    font-size: 12px;
-                    color: #699DF4;
-                    cursor: pointer;
-                    &:hover {
-                        color: #3A84FF;
-                        .devops-icon {
-                            background: #3A84FF;
-                        }
-                    }
-                    .devops-icon {
-                        width: 20px;
-                        height: 20px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        background: #699DF4;
-                        color: white;
-                        border-radius: 50%;
-                        flex-shrink: 0;
-                    }
+                    margin: 5px;
+                    border-radius: 50%;
                 }
             }
             .last-version {

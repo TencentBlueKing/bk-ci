@@ -650,7 +650,7 @@
     "模板描述": "Template Description",
     "最新版本": "Latest Version",
     "更新人": "Updated By",
-    "模板名称/模板描述/模板类型/所属项目/状态/更新人": "Template Name/Template Description/Template Type/Project/Status/Updated By",
+    "模板名称/模板描述/所属项目/状态/更新人": "Template Name/Template Description/Project/Status/Updated By",
     "确认下架该模板？": "Confirm to delist this template?",
     "versionName": "Version Name",
     "onlineTips": "Confirm to release version {0}?"
