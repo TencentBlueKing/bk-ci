@@ -190,7 +190,8 @@ export const DEFAULT_PARAM = {
         type: CONTAINER_TYPE,
         typeDesc: 'buildResource',
         required: true,
-        readOnly: false
+        readOnly: false,
+        replaceKey: '{{__keywords__}}'
     },
     [ARTIFACTORY]: {
         id: 'artifactory',

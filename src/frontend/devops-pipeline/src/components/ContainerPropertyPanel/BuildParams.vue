@@ -246,6 +246,8 @@
                                                     :url="getBuildResourceUrl"
                                                     param-id="displayName"
                                                     param-name="displayName"
+                                                    setting-key="displayName"
+                                                    display-key="displayName"
                                                     :disabled="disabled"
                                                     name="defaultValue"
                                                     :value="param.defaultValue"
@@ -489,30 +491,30 @@
 </template>
 
 <script>
-    import FileParamInput from '@/components/atomFormField/FileParamInput'
     import Accordion from '@/components/atomFormField/Accordion'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import EnumInput from '@/components/atomFormField/EnumInput'
+    import FileParamInput from '@/components/atomFormField/FileParamInput'
     import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
     import RequestSelector from '@/components/atomFormField/RequestSelector'
     import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
-    import {
-        PROCESS_API_URL_PREFIX,
-        REPOSITORY_API_URL_PREFIX,
-        ENVIRONMENT_API_URL_PREFIX
-    } from '@/store/constants'
     import SelectTypeParam from '@/components/PipelineEditTabs/components/children/select-type-param'
+    import {
+        ENVIRONMENT_API_URL_PREFIX,
+        PROCESS_API_URL_PREFIX,
+        REPOSITORY_API_URL_PREFIX
+    } from '@/store/constants'
     import {
         CODE_LIB_OPTION,
         CODE_LIB_TYPE,
         DEFAULT_PARAM,
+        getBranchOption,
         getParamsDefaultValueLabel,
         getParamsDefaultValueLabelTips,
         getRepoOption,
         isArtifactoryParam,
-        getBranchOption,
         isBooleanParam,
         isBuildResourceParam,
         isCodelibParam,
@@ -520,14 +522,14 @@
         isFileParam,
         isGitParam,
         isMultipleParam,
+        isRepoParam,
         isStringParam,
         isSubPipelineParam,
         isSvnParam,
         isTextareaParam,
         PARAM_LIST,
         STRING,
-        SUB_PIPELINE_OPTION,
-        isRepoParam
+        SUB_PIPELINE_OPTION
     } from '@/store/modules/atom/paramsConfig'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { deepCopy } from '@/utils/util'
@@ -658,6 +660,9 @@
             },
             getBuildResourceUrl () {
                 return `${ENVIRONMENT_API_URL_PREFIX}/user/envnode/${this.$route.params.projectId}/listNew?nodeType=THIRDPARTY&page=1&pageSize=100`
+            },
+            getBuildResourceSearchUrl () {
+                return `${this.getBuildResourceUrl}&keywords={{__keywords__}}`
             }
         },
 
