@@ -47,14 +47,14 @@ class ClientUpgradeService @Autowired constructor(
             inCurrentVersion = currentClientVersion,
             record = record,
             props = dynamicProps,
-            noMax = data.forceUpdate ?: false
+            forceUpdate = data.forceUpdate ?: false
         )
         val startVersion = checkVersion(
             upgradeComp = ClientUpgradeComp.START,
             inCurrentVersion = currentStartVersion,
             record = record,
             props = dynamicProps,
-            noMax = data.forceUpdate ?: false
+            forceUpdate = data.forceUpdate ?: false
         )
         return ClientUpgradeResp(clientVersion, startVersion)
     }
@@ -114,14 +114,14 @@ class ClientUpgradeService @Autowired constructor(
                 inCurrentVersion = clientCurrentVersion,
                 record = it,
                 props = dynamicProps,
-                noMax = false
+                forceUpdate = false
             )
             val startCan = checkVersion(
                 upgradeComp = ClientUpgradeComp.START,
                 inCurrentVersion = startCurrentVersion,
                 record = it,
                 props = dynamicProps,
-                noMax = false
+                forceUpdate = false
             )
             if (!clientCan.isNullOrBlank() || !startCan.isNullOrBlank()) {
                 canUpgradeMacAddressSet.add(it.macAddress)
@@ -177,7 +177,7 @@ class ClientUpgradeService @Autowired constructor(
         inCurrentVersion: String?,
         record: TClientRecord,
         props: UpgradeDynamicProps,
-        noMax: Boolean
+        forceUpdate: Boolean
     ): String? {
         // 为空的上报版本不参与比较，start除外
         val version = when (upgradeComp) {
@@ -192,7 +192,7 @@ class ClientUpgradeService @Autowired constructor(
         val currentUser = record.currentUser
         val userVersion = props.userVersion(upgradeComp)
         if (currentUser.isNotBlank() && userVersion.containsKey(currentUser)) {
-            return if (version != userVersion[currentUser]?.trim()) {
+            return if (!forceUpdate && version != userVersion[currentUser]?.trim()) {
                 userVersion[currentUser]
             } else {
                 null
@@ -206,7 +206,7 @@ class ClientUpgradeService @Autowired constructor(
         val workspaceVersion = props.workspaceNames(upgradeComp)
         currentWorkspaceNames.forEach { workspaceName ->
             if (workspaceVersion.containsKey(workspaceName)) {
-                return if (version != workspaceVersion[workspaceName]?.trim()) {
+                return if (!forceUpdate && version != workspaceVersion[workspaceName]?.trim()) {
                     workspaceVersion[workspaceName]
                 } else {
                     null
@@ -219,7 +219,7 @@ class ClientUpgradeService @Autowired constructor(
         val projectVersion = props.projectVersion(upgradeComp)
         currentProjectIds.forEach { projectId ->
             if (projectVersion.containsKey(projectId)) {
-                return if (version != projectVersion[projectId]?.trim()) {
+                return if (!forceUpdate && version != projectVersion[projectId]?.trim()) {
                     projectVersion[projectId]
                 } else {
                     null
@@ -232,12 +232,12 @@ class ClientUpgradeService @Autowired constructor(
             comp = upgradeComp,
             os = OS.parse(record.os) ?: return null
         ))).trim().ifBlank { return null }
-        if (version == currentVersion) {
+        if (!forceUpdate && version == currentVersion) {
             return null
         }
 
         // 正常升级检查最大升级数
-        if (!noMax) {
+        if (!forceUpdate) {
             val canUpgradeNumb = props.canUpgradeNumb(upgradeComp) ?: return null
             if (canUpgradeNumb - 1 < 0) {
                 return null
