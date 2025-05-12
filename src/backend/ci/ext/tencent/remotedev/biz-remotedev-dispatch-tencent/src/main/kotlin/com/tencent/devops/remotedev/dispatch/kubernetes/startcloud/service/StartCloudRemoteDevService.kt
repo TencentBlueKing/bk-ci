@@ -54,6 +54,8 @@ import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmData
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmResp
 import com.tencent.devops.remotedev.pojo.remotedev.TaskCommonResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import org.jooq.DSLContext
@@ -361,6 +363,15 @@ class StartCloudRemoteDevService @Autowired constructor(
 
     override fun deleteImage(imageId: String, delaySeconds: Int?): String? {
         return workspaceBcsClient.deleteImage(imageId, delaySeconds)?.taskID
+    }
+
+    override fun syncVm(data: SyncVmData): SyncVmResp? {
+        val res = workspaceBcsClient.syncVm(data) ?: return null
+        return SyncVmResp(
+            taskID = res.taskID,
+            environmentUid = res.environmentUid,
+            taskUid = res.taskUid
+        )
     }
 
     override fun getWorkspaceUrl(userId: String, workspaceName: String): String {

@@ -59,6 +59,8 @@ import com.tencent.devops.remotedev.pojo.op.OpDiskOperatorData
 import com.tencent.devops.remotedev.pojo.op.OpDiskOperatorDataResp
 import com.tencent.devops.remotedev.pojo.op.OpDiskOperatorDiskType
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmData
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.service.BKNodemanService
@@ -993,6 +995,12 @@ class ExpertSupportService @Autowired constructor(
         taskId: String
     ): WorkspaceTaskStatus? {
         return remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.BCS).taskStatus(taskId)
+    }
+
+    fun syncVm(
+        data: SyncVmData
+    ): SyncVmResp? {
+        return remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.BCS).syncVm(data)
     }
 
     companion object {

@@ -41,6 +41,8 @@ import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmData
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmResp
 import com.tencent.devops.remotedev.pojo.remotedev.TaskResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
@@ -898,4 +900,14 @@ interface ServiceRemoteDevResource {
         userId: String,
         data: ProjectStrategyInfo
     ): Result<Boolean>
+
+    @Operation(summary = "同步Vm数据盘")
+    @POST
+    @Path("/sync_vm")
+    fun syncVm(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: SyncVmData
+    ): Result<SyncVmResp>
 }
