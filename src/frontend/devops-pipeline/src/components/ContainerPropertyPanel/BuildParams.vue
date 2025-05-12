@@ -254,7 +254,7 @@
                                                     :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                                     :data-vv-scope="`param-${param.id}`"
                                                     :replace-key="param.replaceKey"
-                                                    :search-url="param.searchUrl"
+                                                    :search-url="getBuildResourceSearchUrl"
                                                 ></request-selector>
                                                 <request-selector
                                                     v-if="isSubPipelineParam(param.type)"
