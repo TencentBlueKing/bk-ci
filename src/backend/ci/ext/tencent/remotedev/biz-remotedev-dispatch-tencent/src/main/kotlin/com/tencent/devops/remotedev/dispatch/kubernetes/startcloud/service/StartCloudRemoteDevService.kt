@@ -113,10 +113,14 @@ class StartCloudRemoteDevService @Autowired constructor(
                     pvcs = event.devFile.pvcs,
                     tolerations = if (event.devFile.specifyTaints != null) {
                         listOf(EnvironmentCreateBasicBody.Toleration(value = checkNotNull(event.devFile.specifyTaints)))
-                    } else null,
+                    } else {
+                        null
+                    },
                     nodeSelector = if (event.devFile.specifyTaints != null) {
                         mapOf("bkbcs.tencent.com/node-group" to checkNotNull(event.devFile.specifyTaints))
-                    } else null
+                    } else {
+                        null
+                    }
                 )
             )
         )
@@ -260,19 +264,23 @@ class StartCloudRemoteDevService @Autowired constructor(
         pipelineId: String,
         machineType: String?,
         zoneId: String?,
-        live: Boolean?
+        live: Boolean?,
+        specifyTaints: String?
     ): TaskCommonResp {
         val resp = workspaceBcsClient.startOperateWorkspace(
             userId = userId,
             action = EnvironmentAction.CLONE_VM,
             workspaceName = workspaceName,
+            // 优化：提取specifyTaints的处理逻辑，避免重复判断和checkNotNull调用
             environmentOperate = EnvironmentOperate(
                 uid = getEnvironmentUid(workspaceName),
                 userId = userId,
                 pipelineId = pipelineId,
                 zoneId = zoneId,
                 machineType = machineType,
-                live = live
+                live = live,
+                tolerations = specifyTaints?.let { listOf(EnvironmentCreateBasicBody.Toleration(value = it)) },
+                nodeSelector = specifyTaints?.let { mapOf("bkbcs.tencent.com/node-group" to it) }
             )
         )
         return TaskCommonResp(taskId = resp.taskID, taskUid = resp.taskUid)

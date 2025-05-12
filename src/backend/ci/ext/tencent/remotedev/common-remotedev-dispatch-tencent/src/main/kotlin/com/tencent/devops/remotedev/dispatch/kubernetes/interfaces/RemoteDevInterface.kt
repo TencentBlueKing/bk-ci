@@ -104,7 +104,8 @@ interface RemoteDevInterface {
         pipelineId: String,
         machineType: String?,
         zoneId: String?,
-        live: Boolean?
+        live: Boolean?,
+        specifyTaints: String?
     ): TaskCommonResp
 
     /**
