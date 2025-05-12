@@ -376,6 +376,7 @@ object ProcessMessageCode {
     const val ERROR_PAC_DEFAULT_BRANCH_FILE_DELETED = "2101269" // 默认分支yaml文件已删除
     const val ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC = "2101270" // 仅支持git类型代码库开启PAC
     const val ERROR_NOT_REPOSITORY_PUSH_PERMISSION = "2101271" // 用户 [{0}] 没有仓库 [{1}] PUSH权限
+    const val ERROR_FAIL_IF_VARIABLE_INVALID = "2101273" // 参数[{0}]值超过系统限制(4K)，启动失败
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

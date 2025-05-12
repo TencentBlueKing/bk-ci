@@ -85,6 +85,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_UPDATE_USER
+import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_MAX
 import com.tencent.devops.process.utils.PIPELINE_VERSION
 import com.tencent.devops.process.utils.PROJECT_NAME
 import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
@@ -169,6 +170,9 @@ class PipelineBuildService(
                 pipelineId = pipeline.pipelineId,
                 pipelineVersion = signPipelineVersion
             )
+        }
+        if (setting?.failIfVariableInvalid == true) {
+            failIfVariableInvalid(pipelineParamMap)
         }
         val bucketSize = setting!!.maxConRunningQueueSize
         val lockKey = "PipelineRateLimit:${pipeline.pipelineId}"
@@ -429,5 +433,16 @@ class PipelineBuildService(
                 BuildParameters(key = TraceTag.TRACE_HEADER_DEVOPS_BIZID, value = bizId)
         }
 //        return originStartParams
+    }
+
+    fun failIfVariableInvalid(pipelineParamMap: MutableMap<String, BuildParameters>) {
+        pipelineParamMap.forEach { (key, value) ->
+            if (value.value.toString().length > PIPELINE_VARIABLES_STRING_LENGTH_MAX) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_FAIL_IF_VARIABLE_INVALID,
+                    params = arrayOf(key)
+                )
+            }
+        }
     }
 }
