@@ -39,11 +39,12 @@ import io.mockk.mockk
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.cloud.stream.function.StreamBridge
 
 class DependOnControlTest {
     private val pipelineContainerService: PipelineContainerService = mockk()
-    private val client: Client = mockk()
-    private val buildLogPrinter: BuildLogPrinter = BuildLogPrinter(client, mockk())
+    private val streamBridge: StreamBridge = mockk()
+    private val buildLogPrinter: BuildLogPrinter = BuildLogPrinter(streamBridge, mockk())
     private val dependOnControl = DependOnControl(
         pipelineContainerService = pipelineContainerService,
         buildLogPrinter = buildLogPrinter
