@@ -253,7 +253,7 @@
                                                     :value="param.defaultValue"
                                                     :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                                     :data-vv-scope="`param-${param.id}`"
-                                                    :replace-key="param.replaceKey"
+                                                    replace-key="\{\{__keywords__\}\}"
                                                     :search-url="getBuildResourceSearchUrl"
                                                 ></request-selector>
                                                 <request-selector

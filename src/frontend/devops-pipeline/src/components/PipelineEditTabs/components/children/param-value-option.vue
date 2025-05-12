@@ -218,7 +218,7 @@
                 :data-vv-scope="'pipelineParam'"
                 :value="param.defaultValue"
                 :handle-change="handleChange"
-                :replace-key="param.replaceKey"
+                replace-key="\{\{__keywords__\}\}"
                 :search-url="getBuildResourceSearchUrl"
             >
             </request-selector>
