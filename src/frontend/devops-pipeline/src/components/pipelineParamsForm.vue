@@ -230,11 +230,17 @@
                                 })
                             }
                             if (isBuildResourceParam(param.type)) {
-                                restParam.toggleVisible = (isShow) => {
-                                    if (isShow) {
-                                        this.fetchBuildResourceList(param)
-                                    }
-                                }
+                                const url = `environment/api/user/envnode/${this.$route.params.projectId}/listNew?nodeType=THIRDPARTY&page=1&pageSize=100`
+                                const paramId = 'displayName'
+                                Object.assign(restParam, {
+                                    url,
+                                    paramId,
+                                    paramName: paramId,
+                                    settingKey: paramId,
+                                    displayKey: paramId,
+                                    replaceKey: '{{__keywords__}}',
+                                    searchUrl: `${url}&keywords={{__keywords__}}`
+                                })
                             }
                         }
                     }
@@ -311,7 +317,7 @@
             isObject,
             getBranchOption,
             getParamComponentType (param) {
-                if (isRemoteType(param)) {
+                if (isRemoteType(param) || isBuildResourceParam(param.type)) {
                     return 'request-selector'
                 } else {
                     return ParamComponentMap[param.type]
