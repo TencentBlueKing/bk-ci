@@ -146,14 +146,17 @@
             },
             globalParams: {
                 get () {
-                    return this.params.filter(p => !allVersionKeyList.includes(p.id) && p.id !== 'BK_CI_BUILD_MSG')
+                    return this.params.filter(p => !allVersionKeyList.includes(p.id) && p.id !== 'BK_CI_BUILD_MSG').map(i => ({
+                        ...i,
+                        category: i.category ?? ''
+                    }))
                 },
                 set (params) {
                     this.updateContainerParams('params', [...params, ...this.versions])
                 }
             },
             renderParams () {
-                return !this.searchStr ? this.globalParams : this.globalParams.filter(item => (item.id.includes(this.searchStr) || item.name.includes(this.searchStr) || item.desc.includes(this.searchStr)))
+                return !this.searchStr ? this.globalParams : this.globalParams.filter(item => (item.id?.includes(this.searchStr) || item.name?.includes(this.searchStr) || item.desc?.includes(this.searchStr)))
             },
             requiredParamList () {
                 return this.renderParams.filter(item => !item.constant && item.required)
@@ -219,8 +222,18 @@
                 if (!(key in listMap)) {
                     return listMap
                 }
-                const { [key]: value, ...rest } = listMap
-                return { [key]: value, ...rest }
+                const sortListMap = {}
+                const keys = Object.keys(listMap)
+                if (keys.includes(key)) {
+                    keys.splice(keys.indexOf(key), 1)
+                    keys.unshift(key)
+                }
+                Object.keys(listMap)
+                    .sort()
+                    .forEach(k => {
+                        sortListMap[k] = listMap[k]
+                    })
+                return sortListMap
             },
          
             handleSort (preEleId, newEleId, isPrefix) {
