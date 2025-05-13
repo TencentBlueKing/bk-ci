@@ -28,7 +28,7 @@
 package com.tencent.devops.worker.common.logger
 
 import com.tencent.bkrepo.repository.pojo.token.TokenType
-import com.tencent.devops.common.log.constant.Constants.BULK_BUFFER_SIZE
+import com.tencent.devops.log.constant.Constants.BULK_BUFFER_SIZE
 import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.log.pojo.enums.LogType

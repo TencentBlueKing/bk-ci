@@ -1,4 +1,4 @@
-package com.tencent.devops.common.log.constant
+package com.tencent.devops.log.constant
 
 /**
  * 流水线微服务模块请求返回状态码

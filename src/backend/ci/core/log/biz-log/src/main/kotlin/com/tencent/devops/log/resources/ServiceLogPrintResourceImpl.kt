@@ -32,8 +32,8 @@ import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.print.ServiceLogPrintResource
-import com.tencent.devops.log.event.LogOriginEvent
-import com.tencent.devops.log.event.LogStatusEvent
+import com.tencent.devops.common.log.event.LogOriginEvent
+import com.tencent.devops.common.log.event.LogStatusEvent
 import com.tencent.devops.log.service.BuildLogPrintService
 import com.tencent.devops.log.service.IndexService
 import org.slf4j.LoggerFactory

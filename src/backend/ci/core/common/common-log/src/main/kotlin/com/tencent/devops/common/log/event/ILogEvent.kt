@@ -25,26 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.event
+package com.tencent.devops.common.log.event
 
-import com.tencent.devops.common.log.pojo.enums.LogStorageMode
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.stream.constants.StreamBinder
-import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.common.event.pojo.IEvent
 
-@Event(StreamBinding.LOG_STATUS_EVENT_DESTINATION, binder = StreamBinder.EXTEND_RABBIT)
-data class LogStatusEvent(
-    override val buildId: String,
-    val finished: Boolean,
-    val tag: String?,
-    val subTag: String?,
-    /*此 jobId 实际为 container id*/
-    val jobId: String?,
-    /*此 jobId 将是用户可选填的 job id*/
-    val userJobId: String?,
-    val stepId: String?,
-    val executeCount: Int?,
-    val logStorageMode: LogStorageMode?,
-    override var retryTime: Int = 2,
-    override var delayMills: Int = 0
-) : ILogEvent(buildId, retryTime, delayMills)
+open class ILogEvent(
+    open val buildId: String,
+    override var retryTime: Int,
+    override var delayMills: Int
+) : IEvent(delayMills, retryTime) {
+    companion object {
+        private const val DELAY_DURATION_MILLS = 3 * 1000
+    }
+
+    fun getNextDelayMills(retryTime: Int): Int {
+        return DELAY_DURATION_MILLS * (3 - retryTime)
+    }
+}

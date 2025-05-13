@@ -25,17 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.event
+package com.tencent.devops.common.log.meta
 
-import com.tencent.devops.common.log.pojo.message.LogMessage
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.stream.constants.StreamBinder
-import com.tencent.devops.common.stream.constants.StreamBinding
+enum class AnsiColor(val value: Int) {
+    BLACK(0),
+    RED(1),
+    GREEN(2),
+    YELLOW(3),
+    BLUE(4),
+    MAGENTA(5),
+    CYAN(6),
+    WHITE(7),
+    DEFAULT(9);
 
-@Event(StreamBinding.LOG_ORIGIN_EVENT_DESTINATION, binder = StreamBinder.EXTEND_RABBIT)
-data class LogOriginEvent(
-    override val buildId: String,
-    val logs: List<LogMessage>,
-    override var retryTime: Int = 2,
-    override var delayMills: Int = 0
-) : ILogEvent(buildId, retryTime, delayMills)
+    fun fg(): Int {
+        return value + 30
+    }
+
+    fun bg(): Int {
+        return value + 40
+    }
+
+    fun fgBright(): Int {
+        return value + 90
+    }
+
+    fun bgBright(): Int {
+        return value + 100
+    }
+}

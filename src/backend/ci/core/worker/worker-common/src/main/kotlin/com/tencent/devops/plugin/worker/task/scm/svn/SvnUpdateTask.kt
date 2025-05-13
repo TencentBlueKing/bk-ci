@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.SVNVersion
-import com.tencent.devops.log.meta.Ansi
+import com.tencent.devops.common.log.meta.Ansi
 import com.tencent.devops.plugin.worker.task.scm.util.DirectoryUtil
 import com.tencent.devops.plugin.worker.task.scm.util.RepoCommitUtil
 import com.tencent.devops.plugin.worker.task.scm.util.SvnUtil

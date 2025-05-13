@@ -31,9 +31,9 @@ import com.tencent.devops.common.log.pojo.EndPageQueryLogs
 import com.tencent.devops.common.log.pojo.PageQueryLogs
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.log.pojo.enums.LogType
-import com.tencent.devops.log.event.LogOriginEvent
-import com.tencent.devops.log.event.LogStatusEvent
-import com.tencent.devops.log.event.LogStorageEvent
+import com.tencent.devops.common.log.event.LogOriginEvent
+import com.tencent.devops.common.log.event.LogStatusEvent
+import com.tencent.devops.common.log.event.LogStorageEvent
 import jakarta.ws.rs.core.Response
 
 @Suppress("LongParameterList", "TooManyFunctions")

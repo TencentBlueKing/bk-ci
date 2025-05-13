@@ -27,7 +27,7 @@
 
 package com.tencent.devops.log.lucene
 
-import com.tencent.devops.common.log.constant.Constants
+import com.tencent.devops.log.constant.Constants
 import com.tencent.devops.common.log.pojo.LogLine
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.redis.RedisOperation

@@ -31,10 +31,10 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.log.configuration.LogServiceConfig
 import com.tencent.devops.log.configuration.StorageProperties
-import com.tencent.devops.log.event.ILogEvent
-import com.tencent.devops.log.event.LogOriginEvent
+import com.tencent.devops.common.log.event.ILogEvent
+import com.tencent.devops.common.log.event.LogOriginEvent
 import com.tencent.devops.log.jmx.LogPrintBean
-import com.tencent.devops.log.meta.Ansi
+import com.tencent.devops.common.log.meta.Ansi
 import com.tencent.devops.log.util.LogErrorCodeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

@@ -31,7 +31,7 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.exception.ExecuteException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.es.client.LogClient
-import com.tencent.devops.common.log.constant.LogMessageCode.LOG_INDEX_HAS_BEEN_CLEANED
+import com.tencent.devops.log.constant.LogMessageCode.LOG_INDEX_HAS_BEEN_CLEANED
 import com.tencent.devops.common.log.pojo.EndPageQueryLogs
 import com.tencent.devops.common.log.pojo.LogLine
 import com.tencent.devops.common.log.pojo.PageQueryLogs
@@ -44,9 +44,9 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.es.ESClient
-import com.tencent.devops.log.event.LogOriginEvent
-import com.tencent.devops.log.event.LogStatusEvent
-import com.tencent.devops.log.event.LogStorageEvent
+import com.tencent.devops.common.log.event.LogOriginEvent
+import com.tencent.devops.common.log.event.LogStatusEvent
+import com.tencent.devops.common.log.event.LogStorageEvent
 import com.tencent.devops.log.jmx.CreateIndexBean
 import com.tencent.devops.log.jmx.LogStorageBean
 import com.tencent.devops.log.service.BuildLogPrintService
@@ -54,7 +54,7 @@ import com.tencent.devops.log.service.IndexService
 import com.tencent.devops.log.service.LogService
 import com.tencent.devops.log.service.LogStatusService
 import com.tencent.devops.log.service.LogTagService
-import com.tencent.devops.common.log.constant.Constants
+import com.tencent.devops.log.constant.Constants
 import com.tencent.devops.log.util.ESIndexUtils
 import com.tencent.devops.log.util.IndexNameUtils
 import java.io.IOException

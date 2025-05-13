@@ -27,9 +27,9 @@
 
 package com.tencent.devops.log.service
 
-import com.tencent.devops.log.event.LogOriginEvent
-import com.tencent.devops.log.event.LogStatusEvent
-import com.tencent.devops.log.event.LogStorageEvent
+import com.tencent.devops.common.log.event.LogOriginEvent
+import com.tencent.devops.common.log.event.LogStatusEvent
+import com.tencent.devops.common.log.event.LogStorageEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component

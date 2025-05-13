@@ -25,11 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.configuration
+package com.tencent.devops.common.log.configuration
 
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -48,21 +46,6 @@ class LogPrinterConfiguration {
     fun buildLogPrinter(
         @Autowired streamBridge: StreamBridge
     ): BuildLogPrinter {
-        val builder = CircuitBreakerConfig.custom()
-        builder.enableAutomaticTransitionFromOpenToHalfOpen()
-        builder.writableStackTraceEnabled(false)
-        // 当熔断后等待 300s 放开熔断
-        builder.waitDurationInOpenState(Duration.ofSeconds(300))
-        // 熔断放开后，运行通过的请求数，如果达到熔断条件，继续熔断
-        builder.permittedNumberOfCallsInHalfOpenState(100)
-        // 当错误率达到 10% 开启熔断
-        builder.failureRateThreshold(10.0F)
-        // 慢请求超过 10% 开启熔断
-        builder.slowCallRateThreshold(10.0F)
-        // 请求超过 1s 就是慢请求
-        builder.slowCallDurationThreshold(Duration.ofSeconds(1))
-        // 滑动窗口大小为 100，默认值
-        builder.slidingWindowSize(100)
-        return BuildLogPrinter(streamBridge, CircuitBreakerRegistry.of(builder.build()))
+        return BuildLogPrinter(streamBridge)
     }
 }

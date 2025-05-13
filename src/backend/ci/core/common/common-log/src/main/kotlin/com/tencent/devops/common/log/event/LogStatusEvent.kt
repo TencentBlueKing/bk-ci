@@ -25,10 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.meta
+package com.tencent.devops.common.log.event
 
-enum class AnsiErase(val value: Int) {
-    FORWARD(0),
-    BACKWARD(1),
-    ALL(2);
-}
+import com.tencent.devops.common.log.pojo.enums.LogStorageMode
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.stream.constants.StreamBinder
+import com.tencent.devops.common.stream.constants.StreamBinding
+
+@Event(StreamBinding.LOG_STATUS_EVENT_DESTINATION, binder = StreamBinder.EXTEND_RABBIT)
+data class LogStatusEvent(
+    override val buildId: String,
+    val finished: Boolean,
+    val tag: String?,
+    val subTag: String?,
+    /*此 jobId 实际为 container id*/
+    val jobId: String?,
+    /*此 jobId 将是用户可选填的 job id*/
+    val userJobId: String?,
+    val stepId: String?,
+    val executeCount: Int?,
+    val logStorageMode: LogStorageMode?,
+    override var retryTime: Int = 2,
+    override var delayMills: Int = 0
+) : ILogEvent(buildId, retryTime, delayMills)

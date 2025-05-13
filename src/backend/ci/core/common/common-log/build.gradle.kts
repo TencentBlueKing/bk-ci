@@ -25,20 +25,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.event
-
-import com.tencent.devops.common.event.pojo.IEvent
-
-open class ILogEvent(
-    open val buildId: String,
-    override var retryTime: Int,
-    override var delayMills: Int
-) : IEvent(delayMills, retryTime) {
-    companion object {
-        private const val DELAY_DURATION_MILLS = 3 * 1000
-    }
-
-    fun getNextDelayMills(retryTime: Int): Int {
-        return DELAY_DURATION_MILLS * (3 - retryTime)
-    }
+dependencies {
+    api(project(":core:common:common-event"))
 }
