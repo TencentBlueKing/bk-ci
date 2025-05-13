@@ -622,7 +622,7 @@ class RbacAuthConfiguration {
         authResourceService = authResourceService,
         dslContext = dslContext,
         permissionManageFacadeService = permissionManageFacadeService,
-        permissionAuthorizationService =permissionAuthorizationService,
+        permissionAuthorizationService = permissionAuthorizationService,
         deptService = deptService
     )
 
