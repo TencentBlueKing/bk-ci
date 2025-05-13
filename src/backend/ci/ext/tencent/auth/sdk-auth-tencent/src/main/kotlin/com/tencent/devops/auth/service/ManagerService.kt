@@ -44,12 +44,14 @@ import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
 
 class ManagerService @Autowired constructor(
-    val client: Client,
-    val config: CommonConfig
+    val client: Client
 ) {
 
     @Autowired
     private lateinit var redisOperation: RedisOperation
+
+    @Autowired
+    private lateinit var config: CommonConfig
 
     private val userPermissionMap = CacheBuilder.newBuilder()
         .maximumSize(50000)
