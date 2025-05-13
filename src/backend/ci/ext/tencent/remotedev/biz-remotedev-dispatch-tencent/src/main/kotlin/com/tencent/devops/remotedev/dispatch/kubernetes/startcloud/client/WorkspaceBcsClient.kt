@@ -24,6 +24,7 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.Environm
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.ListCgsResp
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.ListCgsRespData
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.ResourceEstimateByVmRequest
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.SyncVmReq
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
 import com.tencent.devops.remotedev.pojo.image.ListImagesData
@@ -36,7 +37,6 @@ import com.tencent.devops.remotedev.pojo.remotedev.ResourceEstimateByVmResponse
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmResp
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmRespData
-import com.tencent.devops.remotedev.pojo.remotedev.SyncVmData
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import java.net.SocketTimeoutException
 import java.util.UUID
@@ -450,7 +450,7 @@ class WorkspaceBcsClient @Autowired constructor(
     }
 
     fun syncVm(
-        data: SyncVmData
+        data: SyncVmReq
     ): EnvironmentCreateRsp.EnvironmentCreateRspData? {
         val url = "$bcsCloudUrl/api/v1/remotedevenv/sync/vm"
         val body = JsonUtil.toJson(data, false)

@@ -1012,5 +1012,5 @@ interface ApigwRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         data: SyncVmData
-    ): Result<SyncVmResp>
+    ): Result<SyncVmResp?>
 }

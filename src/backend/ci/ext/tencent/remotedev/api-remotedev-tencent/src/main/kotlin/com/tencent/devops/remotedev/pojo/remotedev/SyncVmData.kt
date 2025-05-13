@@ -2,8 +2,8 @@ package com.tencent.devops.remotedev.pojo.remotedev
 
 data class SyncVmData(
     val syncOnly: Boolean?,
-    val targetEnvID: String,
-    val uid: String
+    val targetWorkspaceName: String,
+    val sourceWorkspaceName: String
 )
 
 data class SyncVmResp(

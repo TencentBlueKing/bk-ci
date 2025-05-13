@@ -696,7 +696,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).updateProjectStrategy(userId, data)
     }
 
-    override fun syncVm(userId: String, data: SyncVmData): Result<SyncVmResp> {
+    override fun syncVm(userId: String, data: SyncVmData): Result<SyncVmResp?> {
         logger.info("syncVm |$userId|$data")
         return client.get(ServiceRemoteDevResource::class).syncVm(userId, data)
     }
