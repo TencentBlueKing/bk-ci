@@ -27,8 +27,8 @@
 
 package com.tencent.devops.common.log.utils
 
-import com.tencent.devops.common.log.pojo.enums.LogType
-import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.common.api.enums.log.LogType
+import com.tencent.devops.common.api.pojo.log.LogMessage
 import com.tencent.devops.common.log.event.LogOriginEvent
 import com.tencent.devops.common.log.event.LogStatusEvent
 import com.tencent.devops.common.log.meta.Ansi

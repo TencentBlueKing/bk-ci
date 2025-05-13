@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.PropertyUtil
-import com.tencent.devops.common.log.pojo.enums.LogStorageMode
+import com.tencent.devops.common.api.enums.log.LogStorageMode
 import com.tencent.devops.common.service.env.Env
 import com.tencent.devops.worker.common.exception.PropertyNotExistException
 import com.tencent.devops.worker.common.service.SensitiveValueService

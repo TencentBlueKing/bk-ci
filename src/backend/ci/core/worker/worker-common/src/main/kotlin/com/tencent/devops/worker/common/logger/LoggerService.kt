@@ -29,10 +29,10 @@ package com.tencent.devops.worker.common.logger
 
 import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.log.constant.Constants.BULK_BUFFER_SIZE
-import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
-import com.tencent.devops.common.log.pojo.enums.LogStorageMode
-import com.tencent.devops.common.log.pojo.enums.LogType
-import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.common.api.pojo.log.TaskBuildLogProperty
+import com.tencent.devops.common.api.enums.log.LogStorageMode
+import com.tencent.devops.common.api.enums.log.LogType
+import com.tencent.devops.common.api.pojo.log.LogMessage
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.common.util.HttpRetryUtils
 import com.tencent.devops.process.pojo.BuildVariables

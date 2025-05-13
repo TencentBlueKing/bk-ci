@@ -25,34 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log.pojo.message
+package com.tencent.devops.log.pojo
+
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  *
  * Powered By Tencent
  */
-data class LegacyLogMessage(
-    val tag: String,
+@Schema(title = "日志行号查询模型")
+data class QueryLogLineNum(
+    @get:Schema(title = "构建ID", required = true)
     val buildId: String,
-    val message: String,
-    val timestamp: Long,
-    val nanoTime: Long
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other == null || other.javaClass != this.javaClass) return false
-
-        val otherObj = other as LegacyLogMessage
-        return this.buildId == otherObj.buildId &&
-            this.nanoTime == otherObj.nanoTime
-    }
-
-    override fun hashCode(): Int {
-        return "${buildId}_$nanoTime".hashCode()
-    }
-
-    override fun toString(): String {
-        return "LegacyLogMessage(tag='$tag', buildId='$buildId', " +
-            "message='$message', timestamp=$timestamp, nanoTime=$nanoTime)"
-    }
-}
+    @get:Schema(title = "是否结束", required = true)
+    var finished: Boolean,
+    @get:Schema(title = "日志存储状态", required = false)
+    var lastLineNum: Long
+)

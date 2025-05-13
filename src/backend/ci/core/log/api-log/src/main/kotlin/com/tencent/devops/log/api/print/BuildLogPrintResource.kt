@@ -31,10 +31,10 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.log.pojo.QueryLogs
-import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
-import com.tencent.devops.common.log.pojo.enums.LogType
-import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.log.pojo.QueryLogs
+import com.tencent.devops.common.api.pojo.log.TaskBuildLogProperty
+import com.tencent.devops.common.api.enums.log.LogType
+import com.tencent.devops.common.api.pojo.log.LogMessage
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter

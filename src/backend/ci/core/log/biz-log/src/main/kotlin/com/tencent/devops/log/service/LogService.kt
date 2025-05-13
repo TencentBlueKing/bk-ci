@@ -27,10 +27,10 @@
 
 package com.tencent.devops.log.service
 
-import com.tencent.devops.common.log.pojo.EndPageQueryLogs
-import com.tencent.devops.common.log.pojo.PageQueryLogs
-import com.tencent.devops.common.log.pojo.QueryLogs
-import com.tencent.devops.common.log.pojo.enums.LogType
+import com.tencent.devops.log.pojo.EndPageQueryLogs
+import com.tencent.devops.log.pojo.PageQueryLogs
+import com.tencent.devops.log.pojo.QueryLogs
+import com.tencent.devops.common.api.enums.log.LogType
 import com.tencent.devops.common.log.event.LogOriginEvent
 import com.tencent.devops.common.log.event.LogStatusEvent
 import com.tencent.devops.common.log.event.LogStorageEvent

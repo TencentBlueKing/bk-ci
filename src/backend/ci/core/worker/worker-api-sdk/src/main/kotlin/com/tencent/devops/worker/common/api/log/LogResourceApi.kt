@@ -30,9 +30,9 @@ package com.tencent.devops.worker.common.api.log
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
-import com.tencent.devops.common.log.pojo.enums.LogStorageMode
-import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.common.api.pojo.log.TaskBuildLogProperty
+import com.tencent.devops.common.api.enums.log.LogStorageMode
+import com.tencent.devops.common.api.pojo.log.LogMessage
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.LOGS_END_STATUS_FAILED
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.LOGS_REPORT_FAILED

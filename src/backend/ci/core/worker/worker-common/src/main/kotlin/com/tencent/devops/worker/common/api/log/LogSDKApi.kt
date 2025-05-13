@@ -28,9 +28,9 @@
 package com.tencent.devops.worker.common.api.log
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
-import com.tencent.devops.common.log.pojo.enums.LogStorageMode
-import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.common.api.pojo.log.TaskBuildLogProperty
+import com.tencent.devops.common.api.enums.log.LogStorageMode
+import com.tencent.devops.common.api.pojo.log.LogMessage
 import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 
 interface LogSDKApi : WorkerRestApiSDK {

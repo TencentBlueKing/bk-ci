@@ -25,23 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log.pojo.message
+package com.tencent.devops.log.pojo
 
-import com.tencent.devops.common.log.pojo.enums.LogType
+import com.tencent.devops.common.api.enums.log.LogStatus
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  *
  * Powered By Tencent
  */
-data class LogMessageWithLineNo(
-    val tag: String,
-    val containerHashId: String = "",
-    val subTag: String? = null,
-    val message: String,
-    var timestamp: Long = 0,
-    val logType: LogType = LogType.LOG,
-    var lineNo: Long = 0,
-    var executeCount: Int? = 1,
-    val jobId: String?,
-    val stepId: String?
+@Schema(title = "结尾的日志查询模型")
+data class EndPageQueryLogs(
+    @get:Schema(title = "构建ID", required = true)
+    val buildId: String,
+    @get:Schema(title = "开始行号", required = true)
+    var startLineNo: Long = 0L,
+    @get:Schema(title = "结束行号", required = true)
+    var endLineNo: Long = 0L,
+    @get:Schema(title = "日志列表", required = true)
+    var logs: List<LogLine> = listOf(),
+    @get:Schema(title = "所用时间", required = false)
+    var timeUsed: Long = 0,
+    @get:Schema(title = "日志查询状态", required = false)
+    var status: Int = LogStatus.SUCCEED.status
 )

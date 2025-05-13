@@ -25,25 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log.pojo.enums
+package com.tencent.devops.common.api.pojo.log
 
+import com.tencent.devops.common.api.enums.log.LogType
 import io.swagger.v3.oas.annotations.media.Schema
 
-enum class LogStorageMode {
-    @Schema(title = "上报服务")
-    UPLOAD,
-    @Schema(title = "本地保存")
-    LOCAL,
-    @Schema(title = "仓库已归档")
-    ARCHIVED;
-
-    companion object {
-        fun parse(modeName: String?): LogStorageMode {
-            return when (modeName) {
-                LOCAL.name -> LOCAL
-                ARCHIVED.name -> ARCHIVED
-                else -> UPLOAD
-            }
-        }
+/**
+ *
+ * Powered By Tencent
+ */
+@Schema(title = "日志模型")
+data class LogMessage(
+    @get:Schema(title = "日志内容信息")
+    var message: String,
+    @get:Schema(title = "时间戳")
+    val timestamp: Long,
+    @get:Schema(title = "标签")
+    val tag: String = "",
+    @get:Schema(title = "step Id")
+    val stepId: String = "",
+    @get:Schema(title = "job id")
+    val jobId: String = "",
+    @get:Schema(title = "container Hash Id")
+    val containerHashId: String = "",
+    @get:Schema(title = "日志类型")
+    val logType: LogType = LogType.LOG,
+    @get:Schema(title = "执行次数")
+    val executeCount: Int? = null,
+    @get:Schema(title = "子标签")
+    val subTag: String? = null
+) {
+    override fun toString(): String {
+        return "LogMessage(tag='$tag', subTag='$subTag', jobId='$jobId', message='$message', " +
+            "timestamp=$timestamp), logType=$logType, executeCount=$executeCount)"
     }
 }

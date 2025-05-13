@@ -34,6 +34,7 @@ dependencies {
     api(project(":core:common:common-db"))
     api(project(":core:common:common-event"))
     api(project(":core:common:common-es"))
+    api(project(":core:common:common-log"))
     api(project(":core:auth:api-auth"))
 
     api("org.apache.logging.log4j:log4j-core")

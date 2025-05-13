@@ -28,8 +28,8 @@
 package com.tencent.devops.log.lucene
 
 import com.tencent.devops.log.constant.Constants
-import com.tencent.devops.common.log.pojo.LogLine
-import com.tencent.devops.common.log.pojo.enums.LogType
+import com.tencent.devops.log.pojo.LogLine
+import com.tencent.devops.common.api.enums.log.LogType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.service.IndexService
 import java.io.File

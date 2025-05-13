@@ -38,7 +38,7 @@ import com.tencent.devops.common.event.pojo.measure.ProjectUserDailyEvent
 import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsData
 import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsEvent
 import com.tencent.devops.common.event.pojo.measure.UserOperateCounterData
-import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.common.api.pojo.log.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType

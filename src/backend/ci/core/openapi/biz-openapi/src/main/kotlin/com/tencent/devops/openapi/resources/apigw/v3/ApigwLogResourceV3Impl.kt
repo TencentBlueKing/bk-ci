@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.log.pojo.QueryLogLineNum
-import com.tencent.devops.common.log.pojo.QueryLogStatus
-import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.log.pojo.QueryLogLineNum
+import com.tencent.devops.log.pojo.QueryLogStatus
+import com.tencent.devops.log.pojo.QueryLogs
 import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.ServiceLogResource

@@ -25,9 +25,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log.pojo.message
+package com.tencent.devops.log.pojo
 
-import com.tencent.devops.common.log.pojo.enums.LogType
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
@@ -35,28 +34,36 @@ import io.swagger.v3.oas.annotations.media.Schema
  * Powered By Tencent
  */
 @Schema(title = "日志模型")
-data class LogMessage(
-    @get:Schema(title = "日志内容信息")
-    var message: String,
-    @get:Schema(title = "时间戳")
+data class LogLine(
+    @get:Schema(title = "日志行号", required = true)
+    val lineNo: Long,
+    @get:Schema(title = "日志时间戳", required = true)
     val timestamp: Long,
-    @get:Schema(title = "标签")
+    @get:Schema(title = "日志消息体", required = true)
+    val message: String,
+    @get:Schema(title = "日志权重级", required = true)
+    val priority: Byte = 0,
+    @get:Schema(title = "日志tag", required = true)
     val tag: String = "",
-    @get:Schema(title = "step Id")
-    val stepId: String = "",
-    @get:Schema(title = "job id")
+    @get:Schema(title = "日志子tag", required = true)
+    val subTag: String = "",
+    @get:Schema(title = "日志jobId", required = true)
     val jobId: String = "",
-    @get:Schema(title = "container Hash Id")
-    val containerHashId: String = "",
-    @get:Schema(title = "日志类型")
-    val logType: LogType = LogType.LOG,
-    @get:Schema(title = "执行次数")
-    val executeCount: Int? = null,
-    @get:Schema(title = "子标签")
-    val subTag: String? = null
+    @get:Schema(title = "日志containerHashId", required = true)
+    val containerHashId: String?,
+    @get:Schema(title = "日志stepId", required = true)
+    val stepId: String?,
+    @get:Schema(title = "日志执行次数", required = true)
+    val executeCount: Int? = 1
 ) {
-    override fun toString(): String {
-        return "LogMessage(tag='$tag', subTag='$subTag', jobId='$jobId', message='$message', " +
-            "timestamp=$timestamp), logType=$logType, executeCount=$executeCount)"
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || javaClass != other.javaClass) return false
+
+        return lineNo == (other as LogLine).lineNo
+    }
+
+    override fun hashCode(): Int {
+        return (lineNo xor lineNo.ushr(32)).toInt()
     }
 }

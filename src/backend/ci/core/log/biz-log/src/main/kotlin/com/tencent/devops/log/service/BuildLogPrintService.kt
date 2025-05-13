@@ -28,7 +28,7 @@
 package com.tencent.devops.log.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.log.pojo.enums.LogType
+import com.tencent.devops.common.api.enums.log.LogType
 import com.tencent.devops.log.configuration.LogServiceConfig
 import com.tencent.devops.log.configuration.StorageProperties
 import com.tencent.devops.common.log.event.ILogEvent

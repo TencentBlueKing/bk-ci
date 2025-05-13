@@ -28,8 +28,8 @@
 package com.tencent.devops.log.resources
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.log.pojo.enums.LogStorageMode
-import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.common.api.enums.log.LogStorageMode
+import com.tencent.devops.common.api.pojo.log.LogMessage
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.print.ServiceLogPrintResource
 import com.tencent.devops.common.log.event.LogOriginEvent

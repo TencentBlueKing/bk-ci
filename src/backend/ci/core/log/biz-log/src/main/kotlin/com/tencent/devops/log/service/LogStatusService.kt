@@ -28,9 +28,9 @@
 package com.tencent.devops.log.service
 
 import com.tencent.devops.common.db.utils.JooqUtils
-import com.tencent.devops.common.log.pojo.QueryLogStatus
-import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
-import com.tencent.devops.common.log.pojo.enums.LogStorageMode
+import com.tencent.devops.log.pojo.QueryLogStatus
+import com.tencent.devops.common.api.pojo.log.TaskBuildLogProperty
+import com.tencent.devops.common.api.enums.log.LogStorageMode
 import com.tencent.devops.log.dao.LogStatusDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired

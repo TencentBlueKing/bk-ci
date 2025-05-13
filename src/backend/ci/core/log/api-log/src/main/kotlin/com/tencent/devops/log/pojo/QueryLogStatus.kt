@@ -25,31 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log.pojo
+package com.tencent.devops.log.pojo
 
-import com.tencent.devops.common.log.pojo.enums.LogStatus
+import com.tencent.devops.common.api.enums.log.LogStorageMode
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  *
  * Powered By Tencent
  */
-@Schema(title = "日志查询模型")
-data class QueryLogs(
+@Schema(title = "日志状态查询模型")
+data class QueryLogStatus(
     @get:Schema(title = "构建ID", required = true)
     val buildId: String,
     @get:Schema(title = "是否结束", required = true)
     var finished: Boolean,
-    @get:Schema(title = "是否有后续日志", required = false)
-    var hasMore: Boolean? = false,
-    @get:Schema(title = "日志列表", required = true)
-    var logs: MutableList<LogLine> = mutableListOf(),
-    @get:Schema(title = "所用时间", required = false)
-    var timeUsed: Long = 0,
-    @get:Schema(title = "日志查询状态", required = false)
-    var status: Int = LogStatus.SUCCEED.status,
-    @get:Schema(title = "日志子tag列表", required = false)
-    var subTags: List<String>? = null,
-    @get:Schema(title = "错误信息", required = false)
-    var message: String? = null
+    @get:Schema(title = "日志存储状态", required = false)
+    var logMode: LogStorageMode
 )

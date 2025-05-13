@@ -30,8 +30,8 @@ package com.tencent.devops.worker.common.utils
 import com.tencent.devops.common.api.util.KeyReplacement
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ReplacementUtils
-import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
-import com.tencent.devops.common.log.pojo.enums.LogStorageMode
+import com.tencent.devops.common.api.pojo.log.TaskBuildLogProperty
+import com.tencent.devops.common.api.enums.log.LogStorageMode
 import com.tencent.devops.worker.common.COMMON_ENV_CONTEXT
 import com.tencent.devops.worker.common.JOB_OS_CONTEXT
 import com.tencent.devops.worker.common.WORKSPACE_CONTEXT

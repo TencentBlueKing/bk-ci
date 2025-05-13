@@ -25,45 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log.pojo
+package com.tencent.devops.common.api.pojo.log
 
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.enums.log.LogType
 
 /**
  *
  * Powered By Tencent
  */
-@Schema(title = "日志模型")
-data class LogLine(
-    @get:Schema(title = "日志行号", required = true)
-    val lineNo: Long,
-    @get:Schema(title = "日志时间戳", required = true)
-    val timestamp: Long,
-    @get:Schema(title = "日志消息体", required = true)
+data class LogMessageWithLineNo(
+    val tag: String,
+    val containerHashId: String = "",
+    val subTag: String? = null,
     val message: String,
-    @get:Schema(title = "日志权重级", required = true)
-    val priority: Byte = 0,
-    @get:Schema(title = "日志tag", required = true)
-    val tag: String = "",
-    @get:Schema(title = "日志子tag", required = true)
-    val subTag: String = "",
-    @get:Schema(title = "日志jobId", required = true)
-    val jobId: String = "",
-    @get:Schema(title = "日志containerHashId", required = true)
-    val containerHashId: String?,
-    @get:Schema(title = "日志stepId", required = true)
-    val stepId: String?,
-    @get:Schema(title = "日志执行次数", required = true)
-    val executeCount: Int? = 1
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other == null || javaClass != other.javaClass) return false
-
-        return lineNo == (other as LogLine).lineNo
-    }
-
-    override fun hashCode(): Int {
-        return (lineNo xor lineNo.ushr(32)).toInt()
-    }
-}
+    var timestamp: Long = 0,
+    val logType: LogType = LogType.LOG,
+    var lineNo: Long = 0,
+    var executeCount: Int? = 1,
+    val jobId: String?,
+    val stepId: String?
+)
