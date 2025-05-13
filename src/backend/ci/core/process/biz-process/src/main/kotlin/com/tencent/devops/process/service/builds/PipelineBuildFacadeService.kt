@@ -542,7 +542,12 @@ class PipelineBuildFacadeService(
                                             )
                                         }
                                     }
-                                    pipelineTaskService.getByTaskId(null, projectId, buildId, taskId)
+                                    pipelineTaskService.getByTaskId(
+                                        transactionContext = null,
+                                        projectId = projectId,
+                                        buildId = buildId,
+                                        taskId = element.id
+                                    )
                                         ?: run {
                                             throw ErrorCodeException(
                                                 errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY
