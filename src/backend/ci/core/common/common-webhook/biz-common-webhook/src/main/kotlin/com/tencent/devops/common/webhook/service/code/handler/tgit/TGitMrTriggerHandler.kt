@@ -45,6 +45,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_DESC
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ID
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_IID
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_PROPOSER
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_TAPD_ISSUES
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_TITLE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
@@ -96,6 +97,7 @@ import com.tencent.devops.common.webhook.util.WebhookUtils.getBranch
 import com.tencent.devops.process.engine.service.code.filter.CommitMessageFilter
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.enums.TapdRefType
 import com.tencent.devops.scm.pojo.WebhookCommit
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
@@ -393,7 +395,18 @@ class TGitMrTriggerHandler(
             startParams.putIfEmpty(PIPELINE_GIT_MR_DESC, event.object_attributes.description!!)
         }
         startParams.putIfEmpty(PIPELINE_GIT_MR_PROPOSER, event.user.username)
-
+        // 关联TAPD相关信息
+        if (!projectId.isNullOrBlank() && repository != null) {
+            val tapdItems = eventCacheService.getTapdItem(
+                projectId = projectId,
+                repo = repository,
+                refType = TapdRefType.MR,
+                iid = event.object_attributes.iid
+            )?.joinToString(separator = ",") { it.id.toString() }
+            if (!tapdItems.isNullOrEmpty()) {
+                startParams[PIPELINE_GIT_MR_TAPD_ISSUES] = tapdItems
+            }
+        }
         return startParams
     }
 

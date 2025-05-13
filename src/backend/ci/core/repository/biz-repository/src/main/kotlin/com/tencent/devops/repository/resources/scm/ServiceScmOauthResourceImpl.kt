@@ -40,6 +40,7 @@ import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.GitTagInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import org.slf4j.LoggerFactory
@@ -282,6 +283,24 @@ class ServiceScmOauthResourceImpl @Autowired constructor(private val scmOauthSer
                 type = type,
                 token = token,
                 crId = crId
+            )
+        )
+    }
+
+    override fun getTagInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        tagName: String
+    ): Result<GitTagInfo?> {
+        return Result(
+            scmOauthService.getTag(
+                projectName = projectName,
+                url = url,
+                type = type,
+                token = token,
+                tagName = tagName
             )
         )
     }
