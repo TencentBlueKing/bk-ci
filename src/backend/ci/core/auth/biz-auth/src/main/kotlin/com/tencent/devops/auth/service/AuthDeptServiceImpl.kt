@@ -287,7 +287,6 @@ class AuthDeptServiceImpl @Autowired constructor(
 
         if (membersNotInCache.isNotEmpty()) {
             val memberInfos = fetchMemberInfos(membersNotInCache, memberType)
-            logger.info("list member infos :$memberInfos")
             membersNotInCache.forEach { memberId ->
                 val memberInfo = when (memberType) {
                     ManagerScopesEnum.USER -> memberInfos.firstOrNull { it.name == memberId }
