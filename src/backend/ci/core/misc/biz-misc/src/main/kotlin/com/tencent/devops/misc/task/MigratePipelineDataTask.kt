@@ -423,18 +423,18 @@ class MigratePipelineDataTask constructor(
                         webhookBuildParameterRecords = webhookBuildParameterRecords
                     )
                 }
-                // 迁移T_PIPELINE_TRIGGER_REVIEW相关表数据
-                val pipelineTriggerReviewRecords = processDataMigrateDao.getPipelineTriggerReviewRecords(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    buildIds = rids
+            }
+            // 迁移T_PIPELINE_TRIGGER_REVIEW相关表数据
+            val pipelineTriggerReviewRecords = processDataMigrateDao.getPipelineTriggerReviewRecords(
+                dslContext = dslContext,
+                projectId = projectId,
+                buildIds = rids
+            )
+            if (pipelineTriggerReviewRecords.isNotEmpty()) {
+                processDataMigrateDao.migratePipelineTriggerReviewData(
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    pipelineTriggerReviewRecords = pipelineTriggerReviewRecords
                 )
-                if (pipelineTriggerReviewRecords.isNotEmpty()) {
-                    processDataMigrateDao.migratePipelineTriggerReviewData(
-                        migratingShardingDslContext = migratingShardingDslContext,
-                        pipelineTriggerReviewRecords = pipelineTriggerReviewRecords
-                    )
-                }
             }
             // 迁移T_PIPELINE_BUILD_RECORD_CONTAINER相关表数据
             val buildRecordContainerRecords = processDataMigrateDao.getPipelineBuildRecordContainerRecords(

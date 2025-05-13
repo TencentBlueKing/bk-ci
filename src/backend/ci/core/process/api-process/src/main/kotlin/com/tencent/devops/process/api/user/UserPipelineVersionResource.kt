@@ -270,7 +270,10 @@ interface UserPipelineVersionResource {
         pipelineId: String,
         @Parameter(description = "跳转定位的版本号", required = false)
         @PathParam("version")
-        version: Int
+        version: Int,
+        @Parameter(description = "是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<PipelineVersionSimple>
 
     @Operation(summary = "获取流水线操作日志列表（分页）")

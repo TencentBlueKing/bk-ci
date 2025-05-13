@@ -260,8 +260,8 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                 processDataDeleteDao.deletePipelineBuildTemplateAcrossInfo(
                     dslContext = dslContext, projectId = projectId, pipelineId = pipelineId, buildIds = buildIds
                 )
-                processDataDeleteDao.deletePipelineTriggerReview(dslContext, projectId, buildIds)
             }
+            processDataDeleteDao.deletePipelineTriggerReview(dslContext, projectId, buildIds)
             processDataDeleteDao.deletePipelineBuildRecordContainer(dslContext, projectId, buildIds)
             processDataDeleteDao.deletePipelineBuildRecordModel(dslContext, projectId, buildIds)
             processDataDeleteDao.deletePipelineBuildRecordStage(dslContext, projectId, buildIds)

@@ -157,7 +157,7 @@ class ArchivePipelineFacadeService @Autowired constructor(
                 authResourceType = AuthResourceType.PROJECT
             )
         ) {
-            val language = I18nUtil.getLanguage()
+            val language = I18nUtil.getLanguage(userId)
             throw PermissionForbiddenException(
                 I18nUtil.getCodeLanMessage(
                     messageCode = CommonMessageCode.USER_NO_PIPELINE_PERMISSION,

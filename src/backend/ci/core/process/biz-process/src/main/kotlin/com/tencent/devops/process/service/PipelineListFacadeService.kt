@@ -31,10 +31,8 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Page
@@ -45,7 +43,6 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
@@ -106,6 +103,8 @@ import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineStatusService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.service.view.PipelineViewService
+import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
+import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
@@ -117,6 +116,7 @@ import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
 import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.quality.api.v2.pojo.response.QualityPipeline
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.Record4
 import org.jooq.Result
@@ -125,7 +125,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
-import jakarta.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -1964,47 +1963,14 @@ class PipelineListFacadeService @Autowired constructor(
         pipelineId: String,
         archiveFlag: Boolean? = false
     ): PipelineDetailInfo? {
-        if (archiveFlag == true) {
-            // 检查用户是否有管理已归档流水线数据的权限
-            val permission = AuthPermission.MANAGE_ARCHIVED_PIPELINE
-            if (!pipelinePermissionService.checkPipelinePermission(
-                    userId = userId,
-                    projectId = projectId,
-                    permission = permission,
-                    authResourceType = AuthResourceType.PROJECT
-                )
-            ) {
-                throw PermissionForbiddenException(
-                    MessageUtil.getMessageByLocale(
-                        messageCode = CommonMessageCode.USER_NO_PIPELINE_PERMISSION,
-                        language = I18nUtil.getLanguage(),
-                        params = arrayOf(permission.getI18n(I18nUtil.getLanguage()))
-                    )
-                )
-            }
-        } else {
-            val permission = AuthPermission.VIEW
-            if (!pipelinePermissionService.checkPipelinePermission(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    permission = permission
-                )
-            ) {
-                throw PermissionForbiddenException(
-                    MessageUtil.getMessageByLocale(
-                        CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                        I18nUtil.getLanguage(userId),
-                        arrayOf(
-                            userId,
-                            projectId,
-                            permission.getI18n(I18nUtil.getLanguage(userId)),
-                            pipelineId
-                        )
-                    )
-                )
-            }
-        }
+        val userPipelinePermissionCheckStrategy =
+            UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+        UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.VIEW
+        )
         val finalDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
             projectId = projectId,

@@ -1070,12 +1070,14 @@ class PipelineVersionFacadeService @Autowired constructor(
     fun getPipelineVersion(
         projectId: String,
         pipelineId: String,
-        version: Int
+        version: Int,
+        archiveFlag: Boolean? = false
     ): PipelineVersionSimple {
         return repositoryVersionService.getPipelineVersionSimple(
             projectId = projectId,
             pipelineId = pipelineId,
-            version = version
+            version = version,
+            archiveFlag = archiveFlag
         ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,

@@ -99,6 +99,8 @@ import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
+import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
+import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.transfer.aspect.IPipelineTransferAspect
@@ -115,7 +117,7 @@ import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
 import java.time.LocalDateTime
-import java.util.LinkedList
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 @Suppress("ALL")
@@ -1425,46 +1427,16 @@ class PipelineInfoFacadeService @Autowired constructor(
         val watcher = Watcher(id = "deletePipeline|$pipelineId|$userId")
         var success = false
         try {
-            if (checkPermission && archiveFlag != true) {
+            if (checkPermission) {
                 watcher.start("perm_v_perm")
-                val permission = AuthPermission.DELETE
-                pipelinePermissionService.validPipelinePermission(
+                val userPipelinePermissionCheckStrategy =
+                    UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+                UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
                     userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    permission = permission,
-                    message = MessageUtil.getMessageByLocale(
-                        USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                        I18nUtil.getLanguage(userId),
-                        arrayOf(
-                            userId,
-                            projectId,
-                            permission.getI18n(I18nUtil.getLanguage(userId)),
-                            pipelineId
-                        )
-                    )
+                    permission = AuthPermission.DELETE
                 )
-                watcher.stop()
-            } else if (archiveFlag == true) {
-                watcher.start("perm_v_perm")
-                // 检查用户是否有管理已归档流水线数据的权限
-                val permission = AuthPermission.MANAGE_ARCHIVED_PIPELINE
-                if (!pipelinePermissionService.checkPipelinePermission(
-                        userId = userId,
-                        projectId = projectId,
-                        permission = permission,
-                        authResourceType = AuthResourceType.PROJECT
-                    )
-                ) {
-                    val language = I18nUtil.getLanguage()
-                    throw PermissionForbiddenException(
-                        MessageUtil.getMessageByLocale(
-                            messageCode = CommonMessageCode.USER_NO_PIPELINE_PERMISSION,
-                            language = language,
-                            params = arrayOf(permission.getI18n(language))
-                        )
-                    )
-                }
                 watcher.stop()
             }
             if (archiveFlag != true) {

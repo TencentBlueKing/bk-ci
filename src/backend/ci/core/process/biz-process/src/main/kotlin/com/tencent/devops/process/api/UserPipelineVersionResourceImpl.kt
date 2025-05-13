@@ -57,8 +57,10 @@ import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.PipelineRecentUseService
 import com.tencent.devops.process.service.PipelineVersionFacadeService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
+import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import jakarta.ws.rs.core.Response
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 @Suppress("ALL")
@@ -357,31 +359,24 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        version: Int
+        version: Int,
+        archiveFlag: Boolean?
     ): Result<PipelineVersionSimple> {
         checkParam(userId, projectId)
-        val permission = AuthPermission.VIEW
-        pipelinePermissionService.validPipelinePermission(
+        val userPipelinePermissionCheckStrategy =
+            UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+        UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            permission = permission,
-            message = MessageUtil.getMessageByLocale(
-                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                I18nUtil.getLanguage(userId),
-                arrayOf(
-                    userId,
-                    projectId,
-                    permission.getI18n(I18nUtil.getLanguage(userId)),
-                    pipelineId
-                )
-            )
+            permission = AuthPermission.VIEW
         )
         return Result(
             pipelineVersionFacadeService.getPipelineVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = version
+                version = version,
+                archiveFlag = archiveFlag
             )
         )
     }
