@@ -41,6 +41,7 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.GitTagInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.QualityUtils
@@ -470,6 +471,22 @@ class ScmOauthService @Autowired constructor(
             event = null
         ).getCommitReviewInfo(crId = crId)
     }
+
+    fun getTag(projectName: String, url: String, type: ScmType, token: String?, tagName: String): GitTagInfo? {
+        return ScmOauthFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            userName = null,
+            event = null
+        ).getTag(tagName = tagName)
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ScmOauthService::class.java)
     }

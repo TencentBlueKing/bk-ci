@@ -45,6 +45,7 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.GitTagInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import org.slf4j.LoggerFactory
@@ -335,6 +336,22 @@ class TencentScmOauthServiceImpl @Autowired constructor(
             )
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add commit check")
         }
+    }
+
+    override fun getTag(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        tagName: String
+    ): GitTagInfo? {
+        return client.getScm(ServiceScmOauthResource::class).getTagInfo(
+            projectName = projectName,
+            url = url,
+            type = type,
+            token = token,
+            tagName = tagName
+        ).data
     }
 
     companion object {

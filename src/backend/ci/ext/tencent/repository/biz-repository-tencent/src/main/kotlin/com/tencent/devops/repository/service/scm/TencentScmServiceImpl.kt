@@ -46,6 +46,7 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.GitTagInfo
 import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.pojo.RevisionInfo
@@ -460,6 +461,22 @@ class TencentScmServiceImpl @Autowired constructor(
                 password = password,
                 url = url
             )
+        ).data
+    }
+
+    override fun getTag(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        tagName: String
+    ): GitTagInfo? {
+        return client.getScm(ServiceScmResource::class).getTagInfo(
+            projectName = projectName,
+            url = url,
+            type = type,
+            token = token,
+            tagName = tagName
         ).data
     }
 
