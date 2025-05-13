@@ -43,6 +43,7 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.GitTagInfo
 import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -393,6 +394,15 @@ class CodeGitScmImpl constructor(
             url = url,
             username = privateKey!!,
             password = passPhrase!!
+        )
+    }
+
+    override fun getTag(tagName: String): GitTagInfo? {
+        val url = "projects/${urlEncode(projectName)}/repository/tags/${urlEncode(tagName)}"
+        return gitApi.getTagInfo(
+            host = apiUrl,
+            url = url,
+            token = token
         )
     }
 

@@ -105,7 +105,9 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_REVIEW_STATE
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_REVIEW_TYPE
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_SHA
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_SHA_SHORT
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAG_DESC
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAG_FROM
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_ISSUES
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_WORKSPACE
 
 @SuppressWarnings("TooManyFunctions")
@@ -242,7 +244,7 @@ object TriggerBuildParamUtils {
      * git事件触发MR变量名列表
      */
     private fun gitWebhookTriggerMr() {
-        val params = listOf(
+        val params = mutableListOf(
             CI_MR_PROPOSER,
             CI_HEAD_REPO_URL,
             CI_BASE_REPO_URL,
@@ -258,7 +260,7 @@ object TriggerBuildParamUtils {
             CI_MILESTONE_ID
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType]?.putAll(
-            mapOf(CodeEventType.MERGE_REQUEST.name to params)
+            mapOf(CodeEventType.MERGE_REQUEST.name to params.plus(CI_TAPD_ISSUES))
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeGithubWebHookTriggerElement.classType]?.putAll(
             mapOf(CodeEventType.PULL_REQUEST.name to params)
@@ -277,7 +279,8 @@ object TriggerBuildParamUtils {
     private fun gitWebhookTriggerTag() {
         val params = listOf(
             CI_COMMIT_AUTHOR,
-            CI_TAG_FROM
+            CI_TAG_FROM,
+            CI_TAG_DESC
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType]?.putAll(
             mapOf(CodeEventType.TAG_PUSH.name to params)

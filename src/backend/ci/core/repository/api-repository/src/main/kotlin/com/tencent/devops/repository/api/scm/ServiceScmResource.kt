@@ -36,6 +36,7 @@ import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.GitTagInfo
 import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.pojo.RevisionInfo
@@ -419,4 +420,25 @@ interface ServiceScmResource {
     fun getLoginSession(
         reposSessionRequest: RepoSessionRequest
     ): Result<LoginSession?>
+
+    @Operation(summary = "获取指定 TAG")
+    @GET
+    @Path("getTagInfo")
+    fun getTagInfo(
+        @Parameter(description = "项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @Parameter(description = "仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @Parameter(description = "仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @Parameter(description = "token", required = true)
+        @QueryParam("token")
+        token: String?,
+        @Parameter(description = "tagName", required = true)
+        @QueryParam("tagName")
+        tagName: String
+    ): Result<GitTagInfo?>
 }
