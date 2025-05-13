@@ -412,7 +412,12 @@ class PipelineBuildRetryService @Autowired constructor(
                 )
             }
         }
-        pipelineTaskService.getByTaskId(null, projectId, buildId, taskId) ?: throw ErrorCodeException(
+        pipelineTaskService.getByTaskId(
+            transactionContext = null,
+            projectId = projectId,
+            buildId = buildId,
+            taskId = element.id
+        ) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY
         )
 
