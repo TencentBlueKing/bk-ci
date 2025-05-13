@@ -32,10 +32,13 @@ import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
 import com.tencent.devops.auth.pojo.enum.JoinedType
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
+import com.tencent.devops.auth.service.PermissionAuthorizationService
 import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
+import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationHandoverConditionRequest
+import com.tencent.devops.common.auth.enums.HandoverChannelCode
 import org.jboss.logging.Logger
 import org.jooq.DSLContext
 
@@ -44,6 +47,7 @@ class MigratePermissionHandoverService(
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val authResourceService: AuthResourceService,
     private val permissionManageFacadeService: PermissionManageFacadeService,
+    private val permissionAuthorizationService: PermissionAuthorizationService,
     private val dslContext: DSLContext
 ) {
     fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO) {
@@ -92,9 +96,22 @@ class MigratePermissionHandoverService(
                         iamGroupId = resourceManagerGroup.relationId.toInt(),
                         members = listOf(handoverFrom)
                     )
+                    permissionAuthorizationService.resetResourceAuthorizationByResourceType(
+                        operator = "system",
+                        projectCode = projectCode,
+                        condition = ResourceAuthorizationHandoverConditionRequest(
+                            projectCode = projectCode,
+                            resourceType = resourceType,
+                            fullSelection = true,
+                            handoverFrom = handoverFrom,
+                            handoverTo = handoverTo,
+                            filterResourceCodes = listOf(resourceCode),
+                            handoverChannel = HandoverChannelCode.MANAGER
+                        )
+                    )
                 } catch (ignore: Exception) {
                     logger.warn(
-                        "handover permissions|operate group failed:$projectCode|" +
+                        "handover permissions|operate group failed:$projectCode|$resourceCode|$resourceType|" +
                             "${resourceManagerGroup!!.relationId}|${ignore.message}"
                     )
                 }
@@ -117,9 +134,10 @@ class MigratePermissionHandoverService(
             val userJoinedGroups = permissionManageFacadeService.getMemberGroupsDetails(
                 projectId = projectCode,
                 memberId = handoverFrom
-            ).records.filter { it.joinedType == JoinedType.DIRECT }.map { it.groupId }
-            userJoinedGroups.forEach { iamGroupId ->
+            ).records.filter { it.joinedType == JoinedType.DIRECT }
+            userJoinedGroups.forEach { groupInfo ->
                 val handoverTo = handoverToList.random()
+                val iamGroupId = groupInfo.groupId
                 logger.info("handover resource permissions :$projectCode|$handoverFrom|$handoverTo|$iamGroupId")
                 try {
                     permissionResourceMemberService.addGroupMember(
@@ -134,9 +152,23 @@ class MigratePermissionHandoverService(
                         iamGroupId = iamGroupId,
                         members = listOf(handoverFrom)
                     )
+                    permissionAuthorizationService.resetResourceAuthorizationByResourceType(
+                        operator = "system",
+                        projectCode = projectCode,
+                        condition = ResourceAuthorizationHandoverConditionRequest(
+                            projectCode = projectCode,
+                            resourceType = groupInfo.resourceType,
+                            fullSelection = true,
+                            handoverFrom = handoverFrom,
+                            handoverTo = handoverTo,
+                            filterResourceCodes = listOf(groupInfo.resourceCode),
+                            handoverChannel = HandoverChannelCode.MANAGER,
+                            checkPermission = false
+                        )
+                    )
                 } catch (ignore: Exception) {
                     logger.warn(
-                        "handover permissions|operate group failed:$projectCode|$iamGroupId|${ignore.message}"
+                        "handover permissions|operate group failed:$projectCode|$iamGroupId|${ignore.message}|$ignore"
                     )
                 }
             }

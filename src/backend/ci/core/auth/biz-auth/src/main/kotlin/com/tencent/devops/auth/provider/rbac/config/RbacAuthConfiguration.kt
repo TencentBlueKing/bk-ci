@@ -613,13 +613,15 @@ class RbacAuthConfiguration {
         authResourceService: AuthResourceService,
         authResourceGroupMemberService: PermissionResourceMemberService,
         dslContext: DSLContext,
+        permissionAuthorizationService: PermissionAuthorizationService,
         permissionManageFacadeService: PermissionManageFacadeService
     ) = MigratePermissionHandoverService(
         permissionResourceMemberService = permissionResourceMemberService,
         authResourceGroupDao = authResourceGroupDao,
         authResourceService = authResourceService,
         dslContext = dslContext,
-        permissionManageFacadeService = permissionManageFacadeService
+        permissionManageFacadeService = permissionManageFacadeService,
+        permissionAuthorizationService =permissionAuthorizationService
     )
 
     @Bean
