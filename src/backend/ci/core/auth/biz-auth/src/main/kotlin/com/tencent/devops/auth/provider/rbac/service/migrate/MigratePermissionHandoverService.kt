@@ -28,12 +28,14 @@
 
 package com.tencent.devops.auth.provider.rbac.service.migrate
 
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
 import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
+import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.PermissionAuthorizationService
 import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
@@ -51,6 +53,7 @@ class MigratePermissionHandoverService(
     private val permissionManageFacadeService: PermissionManageFacadeService,
     private val permissionAuthorizationService: PermissionAuthorizationService,
     private val dslContext: DSLContext,
+    private val deptService: DeptService
 ) {
     fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO) {
         val handoverFrom = permissionHandoverDTO.handoverFrom
@@ -131,6 +134,7 @@ class MigratePermissionHandoverService(
                     handoverToList = handoverToList
                 )
             }
+            val handoverTo = handoverToList.random()
             try {
                 permissionManageFacadeService.batchHandoverGroupMembersFromManager(
                     userId = "system",
@@ -143,7 +147,11 @@ class MigratePermissionHandoverService(
                         ),
                         checkRepertoryAuthorization = false,
                         handoverTo = ResourceMemberInfo(
-                            id = handoverToList.random(),
+                            id = handoverTo,
+                            name = deptService.getMemberInfo(
+                                memberId = handoverTo,
+                                memberType = ManagerScopesEnum.USER
+                            ).displayName,
                             type = MemberType.USER.type
                         )
                     )
