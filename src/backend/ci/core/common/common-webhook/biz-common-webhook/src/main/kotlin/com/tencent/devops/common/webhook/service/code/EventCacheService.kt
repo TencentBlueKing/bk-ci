@@ -285,7 +285,7 @@ class EventCacheService @Autowired constructor(
             val tapdWorkItems = gitScmService.getTapdItem(
                 projectId = projectId,
                 repo = repo,
-                refType = refType.name,
+                refType = refType.value,
                 iid = iid
             )
             eventCache?.tapdWorkItems = tapdWorkItems
