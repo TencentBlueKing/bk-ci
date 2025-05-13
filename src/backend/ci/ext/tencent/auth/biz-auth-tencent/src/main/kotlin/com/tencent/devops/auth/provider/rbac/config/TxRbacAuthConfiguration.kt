@@ -39,6 +39,7 @@ import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.service.BkTag
+import com.tencent.devops.common.service.config.CommonConfig
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -54,7 +55,7 @@ import org.springframework.core.Ordered
 @Suppress("LongParameterList")
 class TxRbacAuthConfiguration {
     @Bean
-    fun managerService(client: Client) = ManagerService(client)
+    fun managerService(client: Client, config: CommonConfig) = ManagerService(client, config)
 
     @Bean
     @Primary
