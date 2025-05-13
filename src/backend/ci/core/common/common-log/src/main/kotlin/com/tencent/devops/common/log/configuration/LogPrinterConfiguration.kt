@@ -35,7 +35,6 @@ import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
-import java.time.Duration
 
 @Configuration
 @ConditionalOnWebApplication
