@@ -624,7 +624,7 @@ class GitScmService @Autowired constructor(
             client.get(ServiceGitResource::class).getTapdWorkItems(
                 accessToken = token,
                 tokenType = tokenType,
-                gitProjectId = URLEncoder.encode(repo.projectName, "UTF-8"),
+                gitProjectId = repo.projectName,
                 type = refType,
                 iid = iid
             ).data ?: listOf()
