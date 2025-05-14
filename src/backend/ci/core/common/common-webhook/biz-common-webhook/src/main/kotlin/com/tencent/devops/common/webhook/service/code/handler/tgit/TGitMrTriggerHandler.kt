@@ -402,7 +402,7 @@ class TGitMrTriggerHandler(
                 repo = repository,
                 refType = TapdRefType.MR,
                 iid = event.object_attributes.iid
-            )?.joinToString(separator = ",") { it.id.toString() }
+            )?.joinToString(separator = ",") { it.tapdId.toString() }
             if (!tapdItems.isNullOrEmpty()) {
                 startParams[PIPELINE_GIT_MR_TAPD_ISSUES] = tapdItems
             }
