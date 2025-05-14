@@ -25,8 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:metrics:biz-metrics"))
-    api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:metrics:api-metrics-tencent"))
-}
+package com.tencent.devops.process.pojo.eplus
+
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(title = "流水线失效提醒通知配置")
+data class PipelineExpirationInfo(
+    @get:Schema(title = "项目管理员", required = true)
+    val receivers: List<String>,
+    @get:Schema(title = "项目ID", required = true)
+    val projectId: String,
+    @get:Schema(title = "流水线ID列表", required = true)
+    val pipelineIds: List<String>,
+    @get:Schema(title = "流水线链接", required = true)
+    val linksMap: Map<String, String>
+)
