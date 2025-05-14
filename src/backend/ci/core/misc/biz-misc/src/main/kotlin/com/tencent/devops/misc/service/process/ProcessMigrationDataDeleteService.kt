@@ -199,11 +199,11 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
             processDataDeleteDao.deletePipelineLabelPipeline(dslContext, projectId, pipelineIds)
             processDataDeleteDao.deleteTemplatePipeline(dslContext, projectId, pipelineIds)
             processDataDeleteDao.deletePipelineBuildSummary(dslContext, projectId, pipelineIds)
-            processDataDeleteDao.deletePipelineBuildHistory(dslContext, projectId, pipelineIds)
-            processDataDeleteDao.deletePipelineInfo(dslContext, projectId, pipelineIds)
             processDataDeleteDao.deletePipelineBuildHistoryDebug(dslContext, projectId, pipelineIds)
             processDataDeleteDao.deletePipelineSetting(dslContext, projectId, pipelineIds)
             processDataDeleteDao.deletePipelineSettingVersion(dslContext, projectId, pipelineIds)
+            processDataDeleteDao.deletePipelineBuildHistory(dslContext, projectId, pipelineIds)
+            processDataDeleteDao.deletePipelineInfo(dslContext, projectId, pipelineIds)
         }
         logger.info("project[$projectId]|pipeline[$pipelineIds] deleteProjectPipelineRelData success!")
     }
@@ -254,13 +254,13 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                 processDataDeleteDao.deletePipelineWebhookBuildParameter(dslContext, projectId, buildIds)
                 processDataDeleteDao.deletePipelineWebhookQueue(dslContext, projectId, buildIds)
                 processDataDeleteDao.deletePipelineBuildTask(dslContext, projectId, buildIds)
-                processDataDeleteDao.deleteReport(
-                    dslContext = dslContext, projectId = projectId, pipelineId = pipelineId, buildIds = buildIds
-                )
                 processDataDeleteDao.deletePipelineBuildTemplateAcrossInfo(
                     dslContext = dslContext, projectId = projectId, pipelineId = pipelineId, buildIds = buildIds
                 )
             }
+            processDataDeleteDao.deleteReport(
+                dslContext = dslContext, projectId = projectId, pipelineId = pipelineId, buildIds = buildIds
+            )
             processDataDeleteDao.deletePipelineTriggerReview(dslContext, projectId, buildIds)
             processDataDeleteDao.deletePipelineBuildRecordContainer(dslContext, projectId, buildIds)
             processDataDeleteDao.deletePipelineBuildRecordModel(dslContext, projectId, buildIds)

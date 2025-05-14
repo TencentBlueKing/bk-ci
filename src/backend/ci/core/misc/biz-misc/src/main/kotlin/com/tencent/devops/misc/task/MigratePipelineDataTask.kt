@@ -181,6 +181,14 @@ class MigratePipelineDataTask constructor(
                     migratingShardingDslContext = migratingShardingDslContext,
                     processDataMigrateDao = processDbMigrateDao
                 )
+                // 迁移T_REPORT表数据
+                migrateReportData(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    dslContext = dslContext,
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    processDataMigrateDao = processDbMigrateDao
+                )
                 if (archiveFlag != true) {
                     // 迁移T_PIPELINE_BUILD_CONTAINER表数据
                     migratePipelineBuildContainerData(
@@ -216,14 +224,6 @@ class MigratePipelineDataTask constructor(
                     )
                     // 迁移T_PIPELINE_WEBHOOK_QUEUE表数据
                     migratePipelineWebhookQueueData(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        dslContext = dslContext,
-                        migratingShardingDslContext = migratingShardingDslContext,
-                        processDataMigrateDao = processDbMigrateDao
-                    )
-                    // 迁移T_REPORT表数据
-                    migrateReportData(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         dslContext = dslContext,

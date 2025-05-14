@@ -71,14 +71,14 @@ class ProcessDataClearService @Autowired constructor(
             processDataDeleteDao.deleteTemplatePipeline(context, projectId, pipelineIds)
             processDataDeleteDao.deletePipelineBuildSummary(context, projectId, pipelineIds)
             processDataDeleteDao.deletePipelineBuildHistoryDebug(context, projectId, pipelineIds)
+            processDataDeleteDao.deletePipelineFavor(dslContext, projectId, pipelineId)
+            processDataDeleteDao.deletePipelineViewGroup(dslContext, projectId, pipelineId)
+            processDataDeleteDao.deletePipelineSetting(context, projectId, pipelineIds)
+            processDataDeleteDao.deletePipelineSettingVersion(context, projectId, pipelineIds)
             if (archiveFlag != true) {
                 processDataDeleteDao.deletePipelineModelTask(context, projectId, pipelineIds)
-                processDataDeleteDao.deletePipelineSetting(context, projectId, pipelineIds)
-                processDataDeleteDao.deletePipelineSettingVersion(context, projectId, pipelineIds)
                 processDataDeleteDao.deletePipelineBuildContainer(dslContext, projectId, pipelineId)
                 processDataDeleteDao.deletePipelineBuildStage(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineFavor(dslContext, projectId, pipelineId)
-                processDataDeleteDao.deletePipelineViewGroup(dslContext, projectId, pipelineId)
                 processDataDeleteDao.deletePipelineRecentUse(dslContext, projectId, pipelineId)
                 processDataDeleteDao.deletePipelineTriggerDetail(dslContext, projectId, pipelineId)
                 processDataDeleteDao.deletePipelineAuditResource(dslContext, projectId, pipelineId)
@@ -150,18 +150,18 @@ class ProcessDataClearService @Autowired constructor(
             processDataDeleteDao.deletePipelineBuildRecordStage(context, projectId, buildIds)
             processDataDeleteDao.deletePipelineBuildRecordContainer(context, projectId, buildIds)
             processDataDeleteDao.deletePipelineBuildRecordTask(context, projectId, buildIds)
-            if (archiveFlag == true) {
-                processDataDeleteDao.deletePipelineBuildHistory(context, projectId, buildIds)
-                // 归档库构建数据清理无需执行方法后的逻辑
-                return@transaction
-            }
-            processDataDeleteDao.deletePipelineBuildDetail(context, projectId, buildIds)
             processDataDeleteDao.deleteReport(
                 dslContext = context,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildIds = buildIds
             )
+            if (archiveFlag == true) {
+                processDataDeleteDao.deletePipelineBuildHistory(context, projectId, buildIds)
+                // 归档库构建数据清理无需执行方法后的逻辑
+                return@transaction
+            }
+            processDataDeleteDao.deletePipelineBuildDetail(context, projectId, buildIds)
             JooqUtils.retryWhenDeadLock {
                 processDataDeleteDao.deletePipelineBuildTemplateAcrossInfo(
                     dslContext = context,
