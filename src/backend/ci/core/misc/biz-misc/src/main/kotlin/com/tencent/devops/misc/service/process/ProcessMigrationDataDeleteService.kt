@@ -193,8 +193,6 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
         if (!pipelineIds.isNullOrEmpty()) {
             if (archivePipelineFlag != true) {
                 processDataDeleteDao.deletePipelineModelTask(dslContext, projectId, pipelineIds)
-                processDataDeleteDao.deletePipelineSetting(dslContext, projectId, pipelineIds)
-                processDataDeleteDao.deletePipelineSettingVersion(dslContext, projectId, pipelineIds)
             }
             processDataDeleteDao.deletePipelineResource(dslContext, projectId, pipelineIds)
             processDataDeleteDao.deletePipelineResourceVersion(dslContext, projectId, pipelineIds)
@@ -204,6 +202,8 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
             processDataDeleteDao.deletePipelineBuildHistory(dslContext, projectId, pipelineIds)
             processDataDeleteDao.deletePipelineInfo(dslContext, projectId, pipelineIds)
             processDataDeleteDao.deletePipelineBuildHistoryDebug(dslContext, projectId, pipelineIds)
+            processDataDeleteDao.deletePipelineSetting(dslContext, projectId, pipelineIds)
+            processDataDeleteDao.deletePipelineSettingVersion(dslContext, projectId, pipelineIds)
         }
         logger.info("project[$projectId]|pipeline[$pipelineIds] deleteProjectPipelineRelData success!")
     }

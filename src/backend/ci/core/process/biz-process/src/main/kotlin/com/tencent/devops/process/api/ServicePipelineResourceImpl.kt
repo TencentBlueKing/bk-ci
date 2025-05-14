@@ -40,12 +40,14 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelUpdate
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -389,10 +391,17 @@ class ServicePipelineResourceImpl @Autowired constructor(
     override fun getPipelineInfo(
         projectId: String,
         pipelineId: String,
-        channelCode: ChannelCode?
+        channelCode: ChannelCode?,
+        archiveFlag: Boolean?
     ): Result<PipelineInfo?> {
         checkProjectId(projectId)
-        return Result(pipelineRepositoryService.getPipelineInfo(projectId, pipelineId))
+        return Result(
+            pipelineRepositoryService.getPipelineInfo(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
+            )
+        )
     }
 
     @AuditEntry(actionId = ActionId.PIPELINE_DELETE)

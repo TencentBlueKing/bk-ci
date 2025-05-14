@@ -165,6 +165,22 @@ class MigratePipelineDataTask constructor(
                     migratingShardingDslContext = migratingShardingDslContext,
                     processDataMigrateDao = processDbMigrateDao
                 )
+                // 迁移T_PIPELINE_SETTING表数据
+                migratePipelineSettingData(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    dslContext = dslContext,
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    processDataMigrateDao = processDbMigrateDao
+                )
+                // 迁移T_PIPELINE_SETTING_VERSION表数据
+                migratePipelineSettingVersionData(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    dslContext = dslContext,
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    processDataMigrateDao = processDbMigrateDao
+                )
                 if (archiveFlag != true) {
                     // 迁移T_PIPELINE_BUILD_CONTAINER表数据
                     migratePipelineBuildContainerData(
@@ -192,22 +208,6 @@ class MigratePipelineDataTask constructor(
                     )
                     // 迁移T_PIPELINE_MODEL_TASK表数据
                     migratePipelineModelTaskData(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        dslContext = dslContext,
-                        migratingShardingDslContext = migratingShardingDslContext,
-                        processDataMigrateDao = processDbMigrateDao
-                    )
-                    // 迁移T_PIPELINE_SETTING表数据
-                    migratePipelineSettingData(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        dslContext = dslContext,
-                        migratingShardingDslContext = migratingShardingDslContext,
-                        processDataMigrateDao = processDbMigrateDao
-                    )
-                    // 迁移T_PIPELINE_SETTING_VERSION表数据
-                    migratePipelineSettingVersionData(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         dslContext = dslContext,
