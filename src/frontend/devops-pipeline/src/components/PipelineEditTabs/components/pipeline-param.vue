@@ -43,12 +43,9 @@
         >
             <param-group
                 v-for="group in pipelineParamGroups"
-                :editable="editable"
+                v-bind="group"
                 :key="group.key"
-                :title="group.title"
-                :tips="group.tips"
-                :item-num="group.listNum"
-                :list-map="group.listMap"
+                :editable="editable"
                 :handle-edit="handleEdit"
                 :handle-update="handleUpdate"
                 :handle-sort="handleSort"
@@ -105,6 +102,9 @@
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import ParamGroup from './children/param-group'
     import PipelineParamForm from './pipeline-param-form'
+    import {
+        getParamsGroupByLabel
+    } from '@/store/modules/atom/paramsConfig'
 
     export default {
         components: {
@@ -174,19 +174,22 @@
                         title: this.$t('newui.pipelineParam.buildParam'),
                         tips: this.$t('newui.pipelineParam.buildParamTips'),
                         listNum: this.requiredParamList.length,
-                        listMap: this.getParamsGroupByLabel(this.requiredParamList)
+                        listMap: getParamsGroupByLabel(this.requiredParamList).listMap ?? {},
+                        sortedCategories: getParamsGroupByLabel(this.requiredParamList).sortedCategories ?? []
                     },
                     {
                         key: 'constantParam',
                         title: this.$t('newui.pipelineParam.constParam'),
                         listNum: this.constantParamList.length,
-                        listMap: this.getParamsGroupByLabel(this.constantParamList)
+                        listMap: getParamsGroupByLabel(this.constantParamList).listMap ?? {},
+                        sortedCategories: getParamsGroupByLabel(this.constantParamList).sortedCategories ?? []
                     },
                     {
                         key: 'otherParam',
                         title: this.$t('newui.pipelineParam.otherVar'),
                         listNum: this.otherParamList.length,
-                        listMap: this.getParamsGroupByLabel(this.otherParamList)
+                        listMap: getParamsGroupByLabel(this.otherParamList).listMap ?? {},
+                        sortedCategories: getParamsGroupByLabel(this.otherParamList).sortedCategories ?? []
                     }
                 ]
             },
@@ -195,9 +198,9 @@
             },
             sortParamsList () {
                 return [
-                    ...this.flattenMultipleObjects(this.getParamsGroupByLabel(this.requiredParamList)),
-                    ...this.flattenMultipleObjects(this.getParamsGroupByLabel(this.constantParamList)),
-                    ...this.flattenMultipleObjects(this.getParamsGroupByLabel(this.otherParamList))
+                    ...this.flattenMultipleObjects(getParamsGroupByLabel(this.requiredParamList)),
+                    ...this.flattenMultipleObjects(getParamsGroupByLabel(this.constantParamList)),
+                    ...this.flattenMultipleObjects(getParamsGroupByLabel(this.otherParamList))
                 ]
             }
         },
@@ -207,33 +210,6 @@
             },
             initParamsSort () {
                 this.updateContainerParams('params', [...this.sortParamsList, ...this.versions])
-            },
-            getParamsGroupByLabel (list) {
-                const key = this.$t('notGrouped')
-                const listMap = list.reduce((acc, item) => {
-                    const categoryKey = item.category || key
-                    if (!acc[categoryKey]) {
-                        acc[categoryKey] = []
-                    }
-                    acc[categoryKey].push(item)
-                    return acc
-                }, {})
-                
-                if (!(key in listMap)) {
-                    return listMap
-                }
-                const sortListMap = {}
-                const keys = Object.keys(listMap)
-                if (keys.includes(key)) {
-                    keys.splice(keys.indexOf(key), 1)
-                    keys.unshift(key)
-                }
-                Object.keys(listMap)
-                    .sort()
-                    .forEach(k => {
-                        sortListMap[k] = listMap[k]
-                    })
-                return sortListMap
             },
          
             handleSort (preEleId, newEleId, isPrefix) {
