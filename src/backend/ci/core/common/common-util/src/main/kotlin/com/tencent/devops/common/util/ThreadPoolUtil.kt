@@ -26,14 +26,14 @@
  */
 package com.tencent.devops.common.util
 
+import org.slf4j.LoggerFactory
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-import org.slf4j.LoggerFactory
 
 object ThreadPoolUtil {
-    private fun getThreadPoolExecutor(
+    fun getThreadPoolExecutor(
         corePoolSize: Int = 1,
         maximumPoolSize: Int = 1,
         keepAliveTime: Long = 0,
@@ -46,7 +46,7 @@ object ThreadPoolUtil {
         unit,
         queue,
         Executors.defaultThreadFactory(),
-        ThreadPoolExecutor.AbortPolicy()
+        ThreadPoolExecutor.DiscardPolicy()
     )
 
     fun submitAction(
