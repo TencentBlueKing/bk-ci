@@ -63,6 +63,7 @@ import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.net.URLEncoder
 import java.util.Base64
 
 @Suppress("ALL")
@@ -623,7 +624,7 @@ class GitScmService @Autowired constructor(
             client.get(ServiceGitResource::class).getTapdWorkItems(
                 accessToken = token,
                 tokenType = tokenType,
-                gitProjectId = repo.projectName,
+                gitProjectId = URLEncoder.encode(repo.projectName, "UTF-8"),
                 type = refType,
                 iid = iid
             ).data ?: listOf()
