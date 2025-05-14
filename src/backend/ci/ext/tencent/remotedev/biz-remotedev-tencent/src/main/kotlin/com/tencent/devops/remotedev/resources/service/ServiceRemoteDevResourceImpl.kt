@@ -57,6 +57,8 @@ import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmData
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmResp
 import com.tencent.devops.remotedev.pojo.remotedev.TaskResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
@@ -935,5 +937,9 @@ class ServiceRemoteDevResourceImpl(
     override fun updateProjectStrategy(userId: String, data: ProjectStrategyInfo): Result<Boolean> {
         projectStrategyService.createOrUpdateStrategy(data)
         return Result(true)
+    }
+
+    override fun syncVm(userId: String, data: SyncVmData): Result<SyncVmResp?> {
+        return Result(expertSupportService.syncVm(data))
     }
 }

@@ -45,6 +45,8 @@ import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmData
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmResp
 import com.tencent.devops.remotedev.pojo.remotedev.TaskResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
@@ -692,5 +694,10 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun updateProjectStrategy(userId: String, data: ProjectStrategyInfo): Result<Boolean> {
         logger.info("updateProjectStrategy |$userId|$data")
         return client.get(ServiceRemoteDevResource::class).updateProjectStrategy(userId, data)
+    }
+
+    override fun syncVm(userId: String, data: SyncVmData): Result<SyncVmResp?> {
+        logger.info("syncVm |$userId|$data")
+        return client.get(ServiceRemoteDevResource::class).syncVm(userId, data)
     }
 }
