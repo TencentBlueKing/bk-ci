@@ -1700,26 +1700,24 @@ class PipelineRepositoryService constructor(
                         projectId = projectId,
                         pipelineId = pipelineId
                     )
-                    if (archiveFlag != true) {
-                        // 同时要对Setting中的name做设置
-                        pipelineSettingDao.updateSetting(
+                    // 同时要对Setting中的name做设置
+                    pipelineSettingDao.updateSetting(
+                        dslContext = transactionContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        name = deleteName,
+                        desc = "DELETE BY $userId in $deleteTime"
+                    )
+                    // 同时要对对应setting version中的name做设置,不然恢复时流水线详情展示的名称不对
+                    pipelineVersionSimple?.settingVersion?.let {
+                        pipelineSettingVersionDao.updateSetting(
                             dslContext = transactionContext,
                             projectId = projectId,
                             pipelineId = pipelineId,
+                            version = it,
                             name = deleteName,
                             desc = "DELETE BY $userId in $deleteTime"
                         )
-                        // 同时要对对应setting version中的name做设置,不然恢复时流水线详情展示的名称不对
-                        pipelineVersionSimple?.settingVersion?.let {
-                            pipelineSettingVersionDao.updateSetting(
-                                dslContext = transactionContext,
-                                projectId = projectId,
-                                pipelineId = pipelineId,
-                                version = it,
-                                name = deleteName,
-                                desc = "DELETE BY $userId in $deleteTime"
-                            )
-                        }
                     }
                 }
                 if (archiveFlag != true) {
@@ -1801,8 +1799,8 @@ class PipelineRepositoryService constructor(
         }.toMap()
     }
 
-    fun getBuildNo(projectId: String, pipelineId: String): Int? {
-        return pipelineBuildSummaryDao.get(dslContext, projectId, pipelineId)?.buildNo
+    fun getBuildNo(projectId: String, pipelineId: String, queryDslContext: DSLContext? = null): Int? {
+        return pipelineBuildSummaryDao.get(queryDslContext ?: dslContext, projectId, pipelineId)?.buildNo
     }
 
     fun getSetting(projectId: String, pipelineId: String): PipelineSetting? {

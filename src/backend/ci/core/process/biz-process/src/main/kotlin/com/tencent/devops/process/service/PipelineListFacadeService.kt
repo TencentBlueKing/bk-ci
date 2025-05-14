@@ -1926,7 +1926,8 @@ class PipelineListFacadeService @Autowired constructor(
         projectId: String,
         pipelineName: String?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        archiveFlag: Boolean? = false
     ): List<PipelineIdAndName> {
         logger.info("searchIdAndName |$projectId|$pipelineName| $page| $pageSize")
         val pageNotNull = page ?: 0
@@ -1934,7 +1935,7 @@ class PipelineListFacadeService @Autowired constructor(
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         val pipelineRecords =
             pipelineInfoDao.searchByProject(
-                dslContext = dslContext,
+                dslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT),
                 pipelineName = pipelineName,
                 projectCode = projectId,
                 limit = sqlLimit.limit,

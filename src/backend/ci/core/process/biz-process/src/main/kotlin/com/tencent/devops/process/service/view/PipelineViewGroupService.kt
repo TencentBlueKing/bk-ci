@@ -883,9 +883,14 @@ class PipelineViewGroupService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        viewType: Int? = null
+        viewType: Int? = null,
+        queryDslContext: DSLContext? = null
     ): List<PipelineNewViewSummary> {
-        val viewGroupRecords = pipelineViewGroupDao.listByPipelineId(dslContext, projectId, pipelineId)
+        val viewGroupRecords = pipelineViewGroupDao.listByPipelineId(
+            dslContext = queryDslContext ?: dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
         val viewRecords = pipelineViewDao.list(
             dslContext = dslContext,
             projectId = projectId,

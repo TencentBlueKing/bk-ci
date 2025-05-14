@@ -208,7 +208,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = version
+                version = version,
+                archiveFlag = archiveFlag
             )
         )
     }

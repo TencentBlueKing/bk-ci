@@ -52,6 +52,7 @@ import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationDTO
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelUpdate
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
@@ -69,6 +70,7 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.PipelineViewType
@@ -1352,20 +1354,28 @@ class PipelineInfoFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         userId: String,
-        pipelineInfo: PipelineInfo
+        pipelineInfo: PipelineInfo,
+        archiveFlag: Boolean? = false
     ): Model {
         try {
             val triggerContainer = model.getTriggerContainer()
+            val finalDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
             // #10958 每次存储model都需要忽略当前的推荐版本号值，在返回前端时重查
             triggerContainer.buildNo?.apply {
-                currentBuildNo = pipelineRepositoryService.getBuildNo(projectId = projectId, pipelineId = pipelineId)
-                    ?: buildNo
+                currentBuildNo = pipelineRepositoryService.getBuildNo(
+                    projectId = projectId, pipelineId = pipelineId, queryDslContext = finalDslContext
+                ) ?: buildNo
             }
             // 兼容性处理
             BuildPropertyCompatibilityTools.fix(triggerContainer.params)
 
             // 获取流水线labels
-            val groups = pipelineGroupService.getGroups(userId = userId, projectId = projectId, pipelineId = pipelineId)
+            val groups = pipelineGroupService.getGroups(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                archiveFlag = archiveFlag
+            )
             val labels = mutableListOf<String>()
             groups.forEach {
                 labels.addAll(it.labels)
@@ -1385,14 +1395,19 @@ class PipelineInfoFacadeService @Autowired constructor(
 
             // 部分老的模板实例没有templateId，需要手动加上
             if (model.instanceFromTemplate == true) {
-                model.templateId = templateService.getTemplateIdByPipeline(projectId, pipelineId)
+                model.templateId = templateService.getTemplateIdByPipeline(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    queryDslContext = finalDslContext
+                )
             }
             // 静态组
             model.staticViews = pipelineViewGroupService.listViewByPipelineId(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                viewType = PipelineViewType.STATIC
+                viewType = PipelineViewType.STATIC,
+                queryDslContext = finalDslContext
             ).map { it.id }
             return model
         } catch (e: Exception) {

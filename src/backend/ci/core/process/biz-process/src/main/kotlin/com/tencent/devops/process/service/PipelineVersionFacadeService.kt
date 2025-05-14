@@ -749,7 +749,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             userId = userId,
-            pipelineInfo = pipelineInfo
+            pipelineInfo = pipelineInfo,
+            archiveFlag = archiveFlag
         )
         /* 兼容存量数据 */
         model.desc = setting.desc
@@ -762,7 +763,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             repositoryVersionService.getPipelineVersionSimple(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = it
+                version = it,
+                archiveFlag = archiveFlag
             )
         }
         val (yamlSupported, yamlPreview, msg) = try {
@@ -771,7 +773,8 @@ class PipelineVersionFacadeService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 resource = resource,
-                editPermission = editPermission
+                editPermission = editPermission,
+                archiveFlag = archiveFlag
             )
             Triple(true, response, null)
         } catch (e: PipelineTransferException) {
