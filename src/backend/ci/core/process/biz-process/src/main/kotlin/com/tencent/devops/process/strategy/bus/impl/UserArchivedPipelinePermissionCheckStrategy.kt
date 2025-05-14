@@ -47,7 +47,7 @@ class UserArchivedPipelinePermissionCheckStrategy : IUserPipelinePermissionCheck
         permission: AuthPermission
     ) {
         val pipelinePermissionService = SpringContextUtil.getBean(PipelinePermissionService::class.java)
-        val language = I18nUtil.getLanguage()
+        val language = I18nUtil.getLanguage(userId)
         if (permission == AuthPermission.ARCHIVE) {
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,

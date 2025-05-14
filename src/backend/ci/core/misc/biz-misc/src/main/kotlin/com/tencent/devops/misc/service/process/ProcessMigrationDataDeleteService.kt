@@ -193,14 +193,15 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
         if (!pipelineIds.isNullOrEmpty()) {
             if (archivePipelineFlag != true) {
                 processDataDeleteDao.deletePipelineModelTask(dslContext, projectId, pipelineIds)
-                processDataDeleteDao.deletePipelineSetting(dslContext, projectId, pipelineIds)
-                processDataDeleteDao.deletePipelineSettingVersion(dslContext, projectId, pipelineIds)
             }
             processDataDeleteDao.deletePipelineResource(dslContext, projectId, pipelineIds)
             processDataDeleteDao.deletePipelineResourceVersion(dslContext, projectId, pipelineIds)
             processDataDeleteDao.deletePipelineLabelPipeline(dslContext, projectId, pipelineIds)
             processDataDeleteDao.deleteTemplatePipeline(dslContext, projectId, pipelineIds)
             processDataDeleteDao.deletePipelineBuildSummary(dslContext, projectId, pipelineIds)
+            processDataDeleteDao.deletePipelineBuildHistoryDebug(dslContext, projectId, pipelineIds)
+            processDataDeleteDao.deletePipelineSetting(dslContext, projectId, pipelineIds)
+            processDataDeleteDao.deletePipelineSettingVersion(dslContext, projectId, pipelineIds)
             processDataDeleteDao.deletePipelineBuildHistory(dslContext, projectId, pipelineIds)
             processDataDeleteDao.deletePipelineInfo(dslContext, projectId, pipelineIds)
         }
@@ -217,11 +218,16 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
         if (archivePipelineFlag != true) {
             processDataDeleteDao.deletePipelineBuildContainer(dslContext, projectId, pipelineId)
             processDataDeleteDao.deletePipelineBuildStage(dslContext, projectId, pipelineId)
-            processDataDeleteDao.deletePipelineFavor(dslContext, projectId, pipelineId)
-            processDataDeleteDao.deletePipelineViewGroup(dslContext, projectId, pipelineId)
             processDataDeleteDao.deletePipelineRecentUse(dslContext, projectId, pipelineId)
             processDataDeleteDao.deletePipelineTriggerDetail(dslContext, projectId, pipelineId)
             processDataDeleteDao.deletePipelineAuditResource(dslContext, projectId, pipelineId)
+            processDataDeleteDao.deletePipelineTimerBranch(dslContext, projectId, pipelineId)
+            processDataDeleteDao.deletePipelineYamlInfo(dslContext, projectId, pipelineId)
+            processDataDeleteDao.deletePipelineYamlVersion(dslContext, projectId, pipelineId)
+            processDataDeleteDao.deletePipelineOperationLog(dslContext, projectId, pipelineId)
+            processDataDeleteDao.deletePipelineWebhookVersion(dslContext, projectId, pipelineId)
+            processDataDeleteDao.deletePipelineCallback(dslContext, projectId, pipelineId)
+            processDataDeleteDao.deletePipelineSubRef(dslContext, projectId, pipelineId)
             if (broadcastTableDeleteFlag != false) {
                 // 如果广播表数据清理标识不是false才清理广播表的数据（迁移库如果和原库一起组成数据库集群则不需要清理广播表数据）
                 processDataDeleteDao.deletePipelineRemoteAuth(dslContext, projectId, pipelineId)
@@ -229,6 +235,8 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                 processDataDeleteDao.deletePipelineTimer(dslContext, projectId, pipelineId)
             }
         }
+        processDataDeleteDao.deletePipelineFavor(dslContext, projectId, pipelineId)
+        processDataDeleteDao.deletePipelineViewGroup(dslContext, projectId, pipelineId)
     }
 
     private fun deletePipelineBuildDataByBuilds(
@@ -246,14 +254,14 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                 processDataDeleteDao.deletePipelineWebhookBuildParameter(dslContext, projectId, buildIds)
                 processDataDeleteDao.deletePipelineWebhookQueue(dslContext, projectId, buildIds)
                 processDataDeleteDao.deletePipelineBuildTask(dslContext, projectId, buildIds)
-                processDataDeleteDao.deleteReport(
-                    dslContext = dslContext, projectId = projectId, pipelineId = pipelineId, buildIds = buildIds
-                )
                 processDataDeleteDao.deletePipelineBuildTemplateAcrossInfo(
                     dslContext = dslContext, projectId = projectId, pipelineId = pipelineId, buildIds = buildIds
                 )
-                processDataDeleteDao.deletePipelineTriggerReview(dslContext, projectId, buildIds)
             }
+            processDataDeleteDao.deleteReport(
+                dslContext = dslContext, projectId = projectId, pipelineId = pipelineId, buildIds = buildIds
+            )
+            processDataDeleteDao.deletePipelineTriggerReview(dslContext, projectId, buildIds)
             processDataDeleteDao.deletePipelineBuildRecordContainer(dslContext, projectId, buildIds)
             processDataDeleteDao.deletePipelineBuildRecordModel(dslContext, projectId, buildIds)
             processDataDeleteDao.deletePipelineBuildRecordStage(dslContext, projectId, buildIds)
@@ -314,6 +322,9 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
         processDataDeleteDao.deleteProjectPipelineCallback(dslContext, projectId)
         processDataDeleteDao.deleteTemplate(dslContext, projectId)
         processDataDeleteDao.deletePipelineViewTop(dslContext, projectId)
+        processDataDeleteDao.deletePipelineYamlSync(dslContext, projectId)
+        processDataDeleteDao.deletePipelineYamlBranchFile(dslContext, projectId)
+        processDataDeleteDao.deletePipelineYamlView(dslContext, projectId)
         if (clearBaseBuildData) {
             processDataDeleteDao.deletePipelineTriggerEvent(dslContext, projectId)
             processDataDeleteDao.deleteProjectPipelineCallbackHistory(dslContext, projectId)

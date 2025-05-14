@@ -45,7 +45,7 @@ class UserNormalPipelinePermissionCheckStrategy : IUserPipelinePermissionCheckSt
         permission: AuthPermission
     ) {
         val pipelinePermissionService = SpringContextUtil.getBean(PipelinePermissionService::class.java)
-        val language = I18nUtil.getLanguage()
+        val language = I18nUtil.getLanguage(userId)
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
             projectId = projectId,

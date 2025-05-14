@@ -42,7 +42,6 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.CsvUtil
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -60,6 +59,8 @@ import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineAtomRel
+import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
+import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_PROJECT_ID
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -69,8 +70,6 @@ import com.tencent.devops.store.pojo.atom.AtomProp
 import com.tencent.devops.store.pojo.atom.AtomReplaceRequest
 import com.tencent.devops.store.pojo.atom.AtomReplaceRollBack
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import java.text.MessageFormat
-import java.time.LocalDateTime
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
@@ -80,6 +79,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
+import java.text.MessageFormat
+import java.time.LocalDateTime
 
 @Service
 @RefreshScope
@@ -397,32 +398,29 @@ class PipelineAtomService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         version: Int?,
-        checkPermission: Boolean = true
+        checkPermission: Boolean = true,
+        archiveFlag: Boolean? = false
     ): Result<Map<String, AtomProp>?> {
         if (checkPermission) {
-            val permission = AuthPermission.VIEW
-            pipelinePermissionService.validPipelinePermission(
+            val userPipelinePermissionCheckStrategy =
+                UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+            UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                permission = permission,
-                message = MessageUtil.getMessageByLocale(
-                    CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                    I18nUtil.getLanguage(userId),
-                    arrayOf(
-                        userId,
-                        projectId,
-                        permission.getI18n(I18nUtil.getLanguage(userId)),
-                        pipelineId
-                    )
-                )
+                permission = AuthPermission.VIEW
             )
         }
-        val model = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, version, true)?.model
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
-            )
+        val model = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            includeDraft = true,
+            archiveFlag = archiveFlag
+        )?.model ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
+        )
         // 获取流水线下插件标识集合
         val atomCodes = ModelUtils.getModelAtoms(model)
         return client.get(ServiceAtomResource::class).getAtomProps(atomCodes)

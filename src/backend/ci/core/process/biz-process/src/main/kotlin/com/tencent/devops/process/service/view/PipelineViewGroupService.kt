@@ -108,9 +108,11 @@ class PipelineViewGroupService @Autowired constructor(
 
     fun getViewNameMap(
         projectId: String,
-        pipelineIds: MutableSet<String>
+        pipelineIds: MutableSet<String>,
+        queryDslContext: DSLContext? = null
     ): Map<String/*pipelineId*/, MutableList<String>/*viewNames*/> {
-        val pipelineViewGroups = pipelineViewGroupDao.listByPipelineIds(dslContext, projectId, pipelineIds)
+        val finalDslContext = queryDslContext ?: dslContext
+        val pipelineViewGroups = pipelineViewGroupDao.listByPipelineIds(finalDslContext, projectId, pipelineIds)
         if (pipelineViewGroups.isEmpty()) {
             return emptyMap()
         }
@@ -881,9 +883,14 @@ class PipelineViewGroupService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        viewType: Int? = null
+        viewType: Int? = null,
+        queryDslContext: DSLContext? = null
     ): List<PipelineNewViewSummary> {
-        val viewGroupRecords = pipelineViewGroupDao.listByPipelineId(dslContext, projectId, pipelineId)
+        val viewGroupRecords = pipelineViewGroupDao.listByPipelineId(
+            dslContext = queryDslContext ?: dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
         val viewRecords = pipelineViewDao.list(
             dslContext = dslContext,
             projectId = projectId,

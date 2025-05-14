@@ -103,6 +103,11 @@ class ProcessDataMigrateService @Autowired constructor(
         private const val MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE =
             "MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE"
         private const val MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT_KEY = "MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT"
+        private val executorService by lazy {
+            Executors.newFixedThreadPool(30).apply {
+                Runtime.getRuntime().addShutdownHook(Thread { shutdown() })
+            }
+        }
     }
 
     @Value("\${sharding.migration.timeout:#{2}}")
@@ -156,7 +161,7 @@ class ProcessDataMigrateService @Autowired constructor(
                 dataTag = dataTag
             )
             // 开启异步任务迁移项目的数据
-            Executors.newFixedThreadPool(1).submit {
+            executorService.submit {
                 logger.info("migrateProjectData begin,params:[$userId|$projectId]")
                 try {
                     doMigrateProjectDataTask(
@@ -476,6 +481,9 @@ class ProcessDataMigrateService @Autowired constructor(
         migrateTemplateData(migratingShardingDslContext, projectId)
         migratePipelineViewTopData(migratingShardingDslContext, projectId)
         migrateProjectPipelineTriggerEventData(migratingShardingDslContext, projectId)
+        migrateProjectPipelineYamlSyncData(migratingShardingDslContext, projectId)
+        migrateProjectPipelineYamlBranchFileData(migratingShardingDslContext, projectId)
+        migrateProjectPipelineYamlViewData(migratingShardingDslContext, projectId)
     }
 
     private fun doAfterMigrationBus(
@@ -885,5 +893,62 @@ class ProcessDataMigrateService @Autowired constructor(
             }
             offset += MEDIUM_PAGE_SIZE
         } while (pipelineTriggerEventRecords.size == MEDIUM_PAGE_SIZE)
+    }
+
+    private fun migrateProjectPipelineYamlSyncData(migratingShardingDslContext: DSLContext, projectId: String) {
+        var offset = 0
+        do {
+            val pipelineYamlSyncRecords = processDataMigrateDao.getProjectPipelineYamlSyncRecords(
+                dslContext = dslContext,
+                projectId = projectId,
+                limit = MEDIUM_PAGE_SIZE,
+                offset = offset
+            )
+            if (pipelineYamlSyncRecords.isNotEmpty()) {
+                processDataMigrateDao.migrateProjectPipelineYamlSyncData(
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    pipelineYamlSyncRecords = pipelineYamlSyncRecords
+                )
+            }
+            offset += MEDIUM_PAGE_SIZE
+        } while (pipelineYamlSyncRecords.size == MEDIUM_PAGE_SIZE)
+    }
+
+    private fun migrateProjectPipelineYamlBranchFileData(migratingShardingDslContext: DSLContext, projectId: String) {
+        var offset = 0
+        do {
+            val pipelineYamlBranchFileRecords = processDataMigrateDao.getProjectPipelineYamlBranchFileRecords(
+                dslContext = dslContext,
+                projectId = projectId,
+                limit = MEDIUM_PAGE_SIZE,
+                offset = offset
+            )
+            if (pipelineYamlBranchFileRecords.isNotEmpty()) {
+                processDataMigrateDao.migrateProjectPipelineYamlBranchFileData(
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    pipelineYamlBranchFileRecords = pipelineYamlBranchFileRecords
+                )
+            }
+            offset += MEDIUM_PAGE_SIZE
+        } while (pipelineYamlBranchFileRecords.size == MEDIUM_PAGE_SIZE)
+    }
+
+    private fun migrateProjectPipelineYamlViewData(migratingShardingDslContext: DSLContext, projectId: String) {
+        var offset = 0
+        do {
+            val pipelineYamlViewRecords = processDataMigrateDao.getProjectPipelineYamlViewRecords(
+                dslContext = dslContext,
+                projectId = projectId,
+                limit = MEDIUM_PAGE_SIZE,
+                offset = offset
+            )
+            if (pipelineYamlViewRecords.isNotEmpty()) {
+                processDataMigrateDao.migrateProjectPipelineYamlViewData(
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    pipelineYamlViewRecords = pipelineYamlViewRecords
+                )
+            }
+            offset += MEDIUM_PAGE_SIZE
+        } while (pipelineYamlViewRecords.size == MEDIUM_PAGE_SIZE)
     }
 }
