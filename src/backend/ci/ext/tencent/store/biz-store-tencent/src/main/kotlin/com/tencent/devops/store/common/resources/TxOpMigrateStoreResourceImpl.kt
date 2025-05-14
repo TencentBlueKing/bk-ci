@@ -31,18 +31,12 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.TxOpMigrateStoreResource
 import com.tencent.devops.store.common.service.TxOpMigrateStoreInfoService
-import com.tencent.devops.store.common.service.TxOpMigrateStoreLogoService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class TxOpMigrateStoreResourceImpl @Autowired constructor(
-    private val txOpMigrateStoreLogoService: TxOpMigrateStoreLogoService,
     private val txOpMigrateStoreInfoService: TxOpMigrateStoreInfoService
 ) : TxOpMigrateStoreResource {
-
-    override fun migrateStoreLogo(): Result<Boolean> {
-        return Result(txOpMigrateStoreLogoService.migrateStoreLogo())
-    }
 
     override fun migrateStoreDescription(): Result<Boolean> {
         return Result(txOpMigrateStoreInfoService.migrateStoreDescription())

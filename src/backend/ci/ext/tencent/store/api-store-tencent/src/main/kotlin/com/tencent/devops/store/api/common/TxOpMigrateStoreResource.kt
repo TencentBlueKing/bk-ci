@@ -42,11 +42,6 @@ import jakarta.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface TxOpMigrateStoreResource {
 
-    @Operation(summary = "迁移logo")
-    @PUT
-    @Path("/logo")
-    fun migrateStoreLogo(): Result<Boolean>
-
     @Operation(summary = "迁移组件描述引用文件")
     @PUT
     @Path("/description")
