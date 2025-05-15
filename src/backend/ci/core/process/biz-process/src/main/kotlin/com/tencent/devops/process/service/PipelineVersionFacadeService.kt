@@ -1016,7 +1016,8 @@ class PipelineVersionFacadeService @Autowired constructor(
         versionName: String? = null,
         creator: String? = null,
         description: String? = null,
-        buildOnly: Boolean? = false
+        buildOnly: Boolean? = false,
+        archiveFlag: Boolean? = false
     ): Page<PipelineVersionSimple> {
         var slqLimit: SQLLimit? = null
         if (pageSize != -1) slqLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
@@ -1029,11 +1030,12 @@ class PipelineVersionFacadeService @Autowired constructor(
             limit -= 1
             pipelineRepositoryService.getDraftVersionResource(
                 projectId = projectId,
-                pipelineId = pipelineId
+                pipelineId = pipelineId,
+                archiveFlag = archiveFlag
             )?.toSimple()?.apply {
                 baseVersionName = baseVersion?.let {
                     repositoryVersionService.getPipelineVersionSimple(
-                        projectId, pipelineId, it
+                        projectId = projectId, pipelineId = pipelineId, version = it, archiveFlag = archiveFlag
                     )?.versionName
                 }
             }
@@ -1044,10 +1046,15 @@ class PipelineVersionFacadeService @Autowired constructor(
             repositoryVersionService.getPipelineVersionSimple(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = fromVersion
+                version = fromVersion,
+                archiveFlag = archiveFlag
             )
         } else null
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
+        )
         var (size, pipelines) = repositoryVersionService.listPipelineReleaseVersion(
             pipelineInfo = pipelineInfo,
             projectId = projectId,
@@ -1058,7 +1065,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             excludeVersion = fromVersion,
             offset = offset,
             limit = limit,
-            buildOnly = buildOnly
+            buildOnly = buildOnly,
+            archiveFlag = archiveFlag
         )
         draftResource?.let {
             size++

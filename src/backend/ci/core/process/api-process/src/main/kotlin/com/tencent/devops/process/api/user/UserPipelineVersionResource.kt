@@ -255,7 +255,10 @@ interface UserPipelineVersionResource {
         page: Int?,
         @Parameter(description = "每页多少条", required = false, example = "5")
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @Parameter(description = "是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<Page<PipelineVersionSimple>>
 
     @Operation(summary = "获取指定版本号的流水线编排版本信息")
