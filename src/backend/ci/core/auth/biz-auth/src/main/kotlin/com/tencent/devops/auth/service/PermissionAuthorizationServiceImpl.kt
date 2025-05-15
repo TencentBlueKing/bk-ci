@@ -279,6 +279,8 @@ class PermissionAuthorizationServiceImpl(
     ): Map<ResourceAuthorizationHandoverStatus, List<ResourceAuthorizationHandoverDTO>> {
         logger.info("user reset resource authorization|$operator|$projectCode|$condition")
         val result = mutableMapOf<ResourceAuthorizationHandoverStatus, List<ResourceAuthorizationHandoverDTO>>()
+        if (!needToHandoverResourceTypes.contains(condition.resourceType))
+            return emptyMap()
         if (condition.checkPermission) {
             validateOperatorPermission(
                 operator = operator,
@@ -286,6 +288,7 @@ class PermissionAuthorizationServiceImpl(
             )
         }
         val resourceAuthorizationList = getResourceAuthorizationList(condition = condition)
+        if (resourceAuthorizationList.isEmpty()) return emptyMap()
         val handoverResult2Records = handoverResourceAuthorizations(
             projectId = projectCode,
             preCheck = condition.preCheck,
