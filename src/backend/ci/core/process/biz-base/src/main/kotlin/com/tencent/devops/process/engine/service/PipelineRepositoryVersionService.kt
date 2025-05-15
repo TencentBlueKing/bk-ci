@@ -185,14 +185,16 @@ class PipelineRepositoryVersionService(
         versionName: String?,
         creator: String?,
         description: String?,
-        buildOnly: Boolean? = false
+        buildOnly: Boolean? = false,
+        archiveFlag: Boolean? = false
     ): Pair<Int, MutableList<PipelineVersionSimple>> {
         if (pipelineInfo == null) {
             return Pair(0, mutableListOf())
         }
+        val finalDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
         // 计算包括草稿在内的总数
         var count = pipelineResourceVersionDao.count(
-            dslContext = dslContext,
+            dslContext = finalDslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             includeDraft = false,
@@ -202,7 +204,7 @@ class PipelineRepositoryVersionService(
             buildOnly = buildOnly
         )
         val result = pipelineResourceVersionDao.listPipelineVersion(
-            dslContext = dslContext,
+            dslContext = finalDslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             pipelineInfo = pipelineInfo,
@@ -220,7 +222,7 @@ class PipelineRepositoryVersionService(
         val noSearch = versionName.isNullOrBlank() && creator.isNullOrBlank() && description.isNullOrBlank()
         if (result.isEmpty() && pipelineInfo.latestVersionStatus?.isNotReleased() != true && noSearch) {
             pipelineResourceDao.getReleaseVersionResource(
-                dslContext, projectId, pipelineId
+                finalDslContext, projectId, pipelineId
             )?.let { record ->
                 count = 1
                 result.add(
