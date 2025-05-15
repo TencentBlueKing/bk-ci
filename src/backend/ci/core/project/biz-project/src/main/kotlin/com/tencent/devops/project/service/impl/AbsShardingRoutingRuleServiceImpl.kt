@@ -98,7 +98,7 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
                 )
                 // 发送规则新增事件消息
                 shardingRoutingRuleDispatcher.dispatch(
-                    ShardingRoutingRuleBroadCastEvent(routingName = key, actionType = CrudEnum.CREATE)
+                    ShardingRoutingRuleBroadCastEvent(routingName = key, actionType = CrudEnum.CREATAE)
                 )
             }
         } finally {
