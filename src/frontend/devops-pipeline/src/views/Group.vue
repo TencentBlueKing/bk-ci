@@ -1,5 +1,6 @@
 <template>
     <article class="group-list">
+        <pipeline-header :title="$t('labelManage')"></pipeline-header>
         <section
             class="loading-wrapper"
             v-bkloading="{
@@ -205,6 +206,7 @@
 </template>
 
 <script>
+    import pipelineHeader from '@/components/devops/pipeline-header.vue'
     import Logo from '@/components/Logo'
     import imgemptyTips from '@/components/pipelineList/imgEmptyTips'
     import { mapGetters } from 'vuex'
@@ -218,7 +220,8 @@
             }
         },
         components: {
-            'empty-tips': imgemptyTips,
+            pipelineHeader,
+            emptyTips: imgemptyTips,
             logo: Logo
         },
         data () {
@@ -649,7 +652,7 @@
 </script>
 
 <style lang='scss'>
-    @import './../../scss/conf';
+    @import './../scss/conf';
 
     body {
         position: relative;
@@ -723,10 +726,8 @@
             color: #979BA5;
         }
         &-content {
-            // display: flex;
-            // flex-wrap: wrap;
             margin: 0 auto;
-            padding-top: 16px;
+
             transform: translateX(10px)
         }
         &-center {

@@ -28,6 +28,7 @@
 package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.classify.Classify
 import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -169,8 +170,11 @@ interface ServiceStoreResource {
         projectCode: String,
         @Parameter(description = "用户ID", required = true)
         @QueryParam("userId")
-        userId: String
-    ): Result<Boolean>
+        userId: String,
+        @Parameter(description = "实例ID", required = false)
+        @QueryParam("instanceId")
+        instanceId: String? = null
+    ): Result<StoreBaseInfo?>
 
     @Operation(summary = "获取组件分类信息列表")
     @GET

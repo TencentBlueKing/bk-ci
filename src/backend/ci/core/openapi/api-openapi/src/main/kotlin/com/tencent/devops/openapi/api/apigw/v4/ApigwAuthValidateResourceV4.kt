@@ -67,4 +67,34 @@ interface ApigwAuthValidateResourceV4 {
         @Parameter(description = "用户Id", required = true)
         userId: String
     ): Result<Boolean>
+
+    @GET
+    @Path("/permission/validate")
+    @Operation(
+        summary = "校验用户是否有具体资源实例的操作权限",
+        tags = ["v4_app_validate_user_resource_permission"]
+    )
+    fun validateUserResourcePermission(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @PathParam("projectId")
+        @Parameter(description = "项目ID", required = true)
+        projectId: String,
+        @QueryParam("userId")
+        @Parameter(description = "用户Id", required = true)
+        userId: String,
+        @QueryParam("action")
+        @Parameter(description = "action类型", required = true)
+        action: String,
+        @QueryParam("resourceType")
+        @Parameter(description = "资源类型", required = true)
+        resourceType: String,
+        @QueryParam("resourceCode")
+        @Parameter(description = "资源code", required = true)
+        resourceCode: String
+    ): Result<Boolean>
 }

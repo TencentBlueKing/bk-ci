@@ -149,6 +149,7 @@
     width: 100%;
     height: 100%;
     padding: 24px;
+    overflow: scroll;
 }
 .startup-parameter-wrapper {
   border-radius: 2px;

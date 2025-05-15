@@ -43,7 +43,7 @@ data class RepositoryScmConfigReq(
     @get:Schema(title = "代码库类型", required = true)
     val scmType: ScmType?,
     @get:Schema(title = "代码库域名,多个用;分割", required = true)
-    val hosts: String,
+    val hosts: String?,
     @get:Schema(title = "logo链接", required = true)
     val logoUrl: String?,
     @get:Schema(title = "支持的授权类型", required = true)

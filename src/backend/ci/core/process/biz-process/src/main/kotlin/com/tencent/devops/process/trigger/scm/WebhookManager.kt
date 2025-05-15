@@ -74,10 +74,6 @@ class WebhookManager @Autowired constructor(
                 logger.info(
                     "webhook request body parsed|webhookData:${JsonUtil.toJson(webhookData.webhook, false)}"
                 )
-                if (webhookData.webhook.skipCi()) {
-                    logger.info("skip this webhook request|scmCode:$scmCode")
-                    return
-                }
                 handleWebhookData(
                     requestId = requestId,
                     scmCode = scmCode,
