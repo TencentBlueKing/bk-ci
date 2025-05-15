@@ -130,18 +130,22 @@
     const filterData = computed(() => [
         {
             name: t('template.name'),
+            default: true,
             id: 'fuzzySearchName'
         },
         {
             name: t('template.desc'),
+            default: true,
             id: 'desc'
         },
         {
             name: t('template.source'),
+            default: true,
             id: 'source'
         },
         {
             name: t('template.lastModifiedBy'),
+            default: true,
             id: 'updater'
         }
     ])

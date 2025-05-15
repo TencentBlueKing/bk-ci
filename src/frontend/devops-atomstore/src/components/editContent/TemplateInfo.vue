@@ -477,9 +477,11 @@
                 this.versionList = []
                 this.page = 1
             },
-            handleChangeProjectCode () {
+            handleChangeProjectCode (val) {
+                const templateName = this.templateList.find(item => item.templateId === val)?.name
                 this.$emit('updateTemplateForm', {
-                    templateVersion: ''
+                    templateVersion: '',
+                    templateName
                 })
                 this.versionList = []
             },
