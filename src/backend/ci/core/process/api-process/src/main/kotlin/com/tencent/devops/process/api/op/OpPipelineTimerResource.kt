@@ -25,46 +25,55 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.user
+package com.tencent.devops.process.api.op
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.pipeline.PipelineBuildParamFormProp
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import jakarta.ws.rs.Consumes
-import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
-@Tag(name = "USER_SUBPIPELINE", description = "获取子流水线信息")
-@Path("/user/subpipeline")
+@Tag(name = "OP_PIPELINE_TIMER_UPDATE", description = "OP-流水线-更新流水线定时触发信息")
+@Path("/op/pipeline/timer")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserSubPipelineInfoResource {
-    @Operation(summary = "获取子流水线启动参数")
-    @GET
-    @Path("/manualStartupInfo")
-    fun subpipManualStartupInfo(
+interface OpPipelineTimerResource {
+
+    @Operation(summary = "更新定时触发器信息")
+    @POST
+    @Path("/update")
+    fun updatePipelineTimerInfo(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = false)
         @QueryParam("projectId")
-        projectId: String,
-        @Parameter(description = "流水线ID", required = false, example = "")
-        @QueryParam("subPip")
-        pipelineId: String,
-        @Parameter(description = "是否包含常量", required = false, example = "")
-        @QueryParam("includeConst")
-        includeConst: Boolean? = true,
-        @Parameter(description = "是否包含非入参", required = false, example = "")
-        @QueryParam("includeNotRequired")
-        includeNotRequired: Boolean? = true
-    ): Result<List<PipelineBuildParamFormProp>>
+        projectId: String?,
+        @Parameter(description = "流水线id", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?
+    ): Result<Boolean>
+
+    @Operation(summary = "更新定时触发器分支版本信息")
+    @POST
+    @Path("/updateBranch")
+    fun updatePipelineTimerBranchInfo(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String?,
+        @Parameter(description = "流水线id", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?
+    ): Result<Boolean>
 }
