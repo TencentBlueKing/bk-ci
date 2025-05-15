@@ -207,11 +207,9 @@
             <request-selector
                 v-if="isBuildResourceParam(param.type)"
                 :popover-min-width="250"
-                :url="getBuildResourceUrl"
+                :url="`${buildResourceUrl}&displayName=${param.defaultValue ?? ''}`"
                 param-id="displayName"
                 param-name="displayName"
-                setting-key="displayName"
-                display-key="displayName"
                 :disabled="disabled"
                 name="defaultValue"
                 v-validate="{ required: valueRequired }"
@@ -219,7 +217,7 @@
                 :value="param.defaultValue"
                 :handle-change="handleChange"
                 replace-key="\{\{__keywords__\}\}"
-                :search-url="getBuildResourceSearchUrl"
+                :search-url="buildResourceSearchUrl"
             >
             </request-selector>
             <request-selector
@@ -294,40 +292,40 @@
 
 <script>
     import FormField from '@/components/AtomPropertyPanel/FormField'
-    import EnumInput from '@/components/atomFormField/EnumInput'
-    import FileParamInput from '@/components/atomFormField/FileParamInput'
-    import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
-    import RequestSelector from '@/components/atomFormField/RequestSelector'
-    import Selector from '@/components/atomFormField/Selector'
-    import VuexInput from '@/components/atomFormField/VuexInput'
-    import VuexTextarea from '@/components/atomFormField/VuexTextarea'
-    import validMixins from '@/components/validMixins'
-    import { ENVIRONMENT_API_URL_PREFIX, PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX } from '@/store/constants'
-    import {
-        CODE_LIB_OPTION,
-        CODE_LIB_TYPE,
-        getBranchOption,
-        getParamsDefaultValueLabel,
-        getParamsDefaultValueLabelTips,
-        getRepoOption,
-        isArtifactoryParam,
-        isBooleanParam,
-        isBuildResourceParam,
-        isCodelibParam,
-        isEnumParam,
-        isFileParam,
-        isGitParam,
-        isMultipleParam,
-        isRepoParam,
-        isStringParam,
-        isSubPipelineParam,
-        isSvnParam,
-        isTextareaParam,
-        SUB_PIPELINE_OPTION
-    } from '@/store/modules/atom/paramsConfig'
-    import { getParamsValuesMap } from '@/utils/util'
-    import { mapGetters } from 'vuex'
-    import SelectTypeParam from './select-type-param'
+import EnumInput from '@/components/atomFormField/EnumInput'
+import FileParamInput from '@/components/atomFormField/FileParamInput'
+import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
+import RequestSelector from '@/components/atomFormField/RequestSelector'
+import Selector from '@/components/atomFormField/Selector'
+import VuexInput from '@/components/atomFormField/VuexInput'
+import VuexTextarea from '@/components/atomFormField/VuexTextarea'
+import validMixins from '@/components/validMixins'
+import { ENVIRONMENT_API_URL_PREFIX, PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX } from '@/store/constants'
+import {
+CODE_LIB_OPTION,
+CODE_LIB_TYPE,
+getBranchOption,
+getParamsDefaultValueLabel,
+getParamsDefaultValueLabelTips,
+getRepoOption,
+isArtifactoryParam,
+isBooleanParam,
+isBuildResourceParam,
+isCodelibParam,
+isEnumParam,
+isFileParam,
+isGitParam,
+isMultipleParam,
+isRepoParam,
+isStringParam,
+isSubPipelineParam,
+isSvnParam,
+isTextareaParam,
+SUB_PIPELINE_OPTION
+} from '@/store/modules/atom/paramsConfig'
+import { getParamsValuesMap } from '@/utils/util'
+import { mapGetters } from 'vuex'
+import SelectTypeParam from './select-type-param'
 
     const BOOLEAN = [
         {
@@ -406,11 +404,11 @@
             isRemoteSelect () {
                 return this.param?.payload?.type === 'remote'
             },
-            getBuildResourceUrl () {
+            buildResourceUrl () {
                 return `${ENVIRONMENT_API_URL_PREFIX}/user/envnode/${this.$route.params.projectId}/listNew?nodeType=THIRDPARTY&page=1&pageSize=100`
             },
-            getBuildResourceSearchUrl () {
-                return `${this.getBuildResourceUrl}&keywords={{__keywords__}}`
+            buildResourceSearchUrl () {
+                return `${this.buildResourceUrl}&keywords={{__keywords__}}`
             }
         },
         created () {

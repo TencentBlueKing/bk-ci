@@ -243,18 +243,17 @@
                                                     v-if="isBuildResourceParam(param.type)"
                                                     style="max-width: 250px"
                                                     :popover-min-width="250"
-                                                    :url="getBuildResourceUrl"
+                                                    :url="`${buildResourceUrl}&displayName=${param.defaultValue}`"
                                                     param-id="displayName"
                                                     param-name="displayName"
-                                                    setting-key="displayName"
-                                                    display-key="displayName"
+
                                                     :disabled="disabled"
                                                     name="defaultValue"
                                                     :value="param.defaultValue"
                                                     :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                                     :data-vv-scope="`param-${param.id}`"
                                                     replace-key="\{\{__keywords__\}\}"
-                                                    :search-url="getBuildResourceSearchUrl"
+                                                    :search-url="buildResourceSearchUrl"
                                                 ></request-selector>
                                                 <request-selector
                                                     v-if="isSubPipelineParam(param.type)"
@@ -492,50 +491,50 @@
 
 <script>
     import Accordion from '@/components/atomFormField/Accordion'
-    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
-    import EnumInput from '@/components/atomFormField/EnumInput'
-    import FileParamInput from '@/components/atomFormField/FileParamInput'
-    import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
-    import RequestSelector from '@/components/atomFormField/RequestSelector'
-    import Selector from '@/components/atomFormField/Selector'
-    import VuexInput from '@/components/atomFormField/VuexInput'
-    import VuexTextarea from '@/components/atomFormField/VuexTextarea'
-    import SelectTypeParam from '@/components/PipelineEditTabs/components/children/select-type-param'
-    import {
-        ENVIRONMENT_API_URL_PREFIX,
-        PROCESS_API_URL_PREFIX,
-        REPOSITORY_API_URL_PREFIX
-    } from '@/store/constants'
-    import {
-        CODE_LIB_OPTION,
-        CODE_LIB_TYPE,
-        DEFAULT_PARAM,
-        getBranchOption,
-        getParamsDefaultValueLabel,
-        getParamsDefaultValueLabelTips,
-        getRepoOption,
-        isArtifactoryParam,
-        isBooleanParam,
-        isBuildResourceParam,
-        isCodelibParam,
-        isEnumParam,
-        isFileParam,
-        isGitParam,
-        isMultipleParam,
-        isRepoParam,
-        isStringParam,
-        isSubPipelineParam,
-        isSvnParam,
-        isTextareaParam,
-        PARAM_LIST,
-        STRING,
-        SUB_PIPELINE_OPTION
-    } from '@/store/modules/atom/paramsConfig'
-    import { allVersionKeyList } from '@/utils/pipelineConst'
-    import { deepCopy } from '@/utils/util'
-    import draggable from 'vuedraggable'
-    import { mapGetters } from 'vuex'
-    import validMixins from '../validMixins'
+import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
+import EnumInput from '@/components/atomFormField/EnumInput'
+import FileParamInput from '@/components/atomFormField/FileParamInput'
+import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
+import RequestSelector from '@/components/atomFormField/RequestSelector'
+import Selector from '@/components/atomFormField/Selector'
+import VuexInput from '@/components/atomFormField/VuexInput'
+import VuexTextarea from '@/components/atomFormField/VuexTextarea'
+import SelectTypeParam from '@/components/PipelineEditTabs/components/children/select-type-param'
+import {
+ENVIRONMENT_API_URL_PREFIX,
+PROCESS_API_URL_PREFIX,
+REPOSITORY_API_URL_PREFIX
+} from '@/store/constants'
+import {
+CODE_LIB_OPTION,
+CODE_LIB_TYPE,
+DEFAULT_PARAM,
+getBranchOption,
+getParamsDefaultValueLabel,
+getParamsDefaultValueLabelTips,
+getRepoOption,
+isArtifactoryParam,
+isBooleanParam,
+isBuildResourceParam,
+isCodelibParam,
+isEnumParam,
+isFileParam,
+isGitParam,
+isMultipleParam,
+isRepoParam,
+isStringParam,
+isSubPipelineParam,
+isSvnParam,
+isTextareaParam,
+PARAM_LIST,
+STRING,
+SUB_PIPELINE_OPTION
+} from '@/store/modules/atom/paramsConfig'
+import { allVersionKeyList } from '@/utils/pipelineConst'
+import { deepCopy } from '@/utils/util'
+import draggable from 'vuedraggable'
+import { mapGetters } from 'vuex'
+import validMixins from '../validMixins'
 
     const BOOLEAN = [
         {
@@ -658,11 +657,11 @@
                     disabled: this.disabled
                 }
             },
-            getBuildResourceUrl () {
+            buildResourceUrl () {
                 return `${ENVIRONMENT_API_URL_PREFIX}/user/envnode/${this.$route.params.projectId}/listNew?nodeType=THIRDPARTY&page=1&pageSize=100`
             },
-            getBuildResourceSearchUrl () {
-                return `${this.getBuildResourceUrl}&keywords={{__keywords__}}`
+            buildResourceSearchUrl () {
+                return `${this.buildResourceUrl}&keywords={{__keywords__}}`
             }
         },
 

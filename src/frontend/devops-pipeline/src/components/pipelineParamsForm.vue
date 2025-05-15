@@ -108,43 +108,43 @@
 
 <script>
     import CascadeRequestSelector from '@/components/atomFormField/CascadeRequestSelector'
-    import EnumInput from '@/components/atomFormField/EnumInput'
-    import FileParamInput from '@/components/atomFormField/FileParamInput'
-    import RequestSelector from '@/components/atomFormField/RequestSelector'
-    import Selector from '@/components/atomFormField/Selector'
-    import VuexInput from '@/components/atomFormField/VuexInput'
-    import VuexTextarea from '@/components/atomFormField/VuexTextarea'
-    import FormField from '@/components/AtomPropertyPanel/FormField'
-    import metadataList from '@/components/common/metadata-list'
-    import renderSortCategoryParams from '@/components/renderSortCategoryParams'
-    import {
-        ARTIFACTORY,
-        BOOLEAN,
-        BOOLEAN_LIST,
-        CODE_LIB,
-        CONTAINER_TYPE,
-        ENUM,
-        getBranchOption,
-        GIT_REF,
-        isArtifactoryParam,
-        isBuildResourceParam,
-        isCodelibParam,
-        isEnumParam,
-        isFileParam,
-        isGitParam,
-        isMultipleParam,
-        isRemoteType,
-        isRepoParam,
-        isSvnParam,
-        MULTIPLE,
-        ParamComponentMap,
-        REPO_REF,
-        STRING,
-        SUB_PIPELINE,
-        SVN_TAG,
-        TEXTAREA
-    } from '@/store/modules/atom/paramsConfig'
-    import { isObject, isShallowEqual } from '@/utils/util'
+import EnumInput from '@/components/atomFormField/EnumInput'
+import FileParamInput from '@/components/atomFormField/FileParamInput'
+import RequestSelector from '@/components/atomFormField/RequestSelector'
+import Selector from '@/components/atomFormField/Selector'
+import VuexInput from '@/components/atomFormField/VuexInput'
+import VuexTextarea from '@/components/atomFormField/VuexTextarea'
+import FormField from '@/components/AtomPropertyPanel/FormField'
+import metadataList from '@/components/common/metadata-list'
+import renderSortCategoryParams from '@/components/renderSortCategoryParams'
+import {
+ARTIFACTORY,
+BOOLEAN,
+BOOLEAN_LIST,
+CODE_LIB,
+CONTAINER_TYPE,
+ENUM,
+getBranchOption,
+GIT_REF,
+isArtifactoryParam,
+isBuildResourceParam,
+isCodelibParam,
+isEnumParam,
+isFileParam,
+isGitParam,
+isMultipleParam,
+isRemoteType,
+isRepoParam,
+isSvnParam,
+MULTIPLE,
+ParamComponentMap,
+REPO_REF,
+STRING,
+SUB_PIPELINE,
+SVN_TAG,
+TEXTAREA
+} from '@/store/modules/atom/paramsConfig'
+import { isObject, isShallowEqual } from '@/utils/util'
 
     export default {
 
@@ -210,7 +210,7 @@
                                 affectedChanged,
                                 affectTips: affectedChanged && Object.keys(affected).length > 0 ? this.$t('relyChanged', [Object.keys(affected).join('/')]) : ''
                             }
-                        } else {
+                        } else if (!isBuildResourceParam(param.type)) {
                             restParam = {
                                 ...restParam,
                                 displayKey: 'value',
@@ -233,11 +233,9 @@
                                 const url = `environment/api/user/envnode/${this.$route.params.projectId}/listNew?nodeType=THIRDPARTY&page=1&pageSize=100`
                                 const paramId = 'displayName'
                                 Object.assign(restParam, {
-                                    url,
+                                    url: `${url}&displayName=${value || ''}`,
                                     paramId,
                                     paramName: paramId,
-                                    settingKey: paramId,
-                                    displayKey: paramId,
                                     replaceKey: '{{__keywords__}}',
                                     searchUrl: `${url}&keywords={{__keywords__}}`
                                 })
