@@ -207,19 +207,17 @@
             <request-selector
                 v-if="isBuildResourceParam(param.type)"
                 :popover-min-width="250"
-                :url="getBuildResourceUrl"
+                :url="`${buildResourceUrl}&displayName=${param.defaultValue ?? ''}`"
                 param-id="displayName"
                 param-name="displayName"
-                setting-key="displayName"
-                display-key="displayName"
                 :disabled="disabled"
                 name="defaultValue"
                 v-validate="{ required: valueRequired }"
                 :data-vv-scope="'pipelineParam'"
                 :value="param.defaultValue"
                 :handle-change="handleChange"
-                :replace-key="param.replaceKey"
-                :search-url="getBuildResourceSearchUrl"
+                replace-key="\{\{__keywords__\}\}"
+                :search-url="buildResourceSearchUrl"
             >
             </request-selector>
             <request-selector
@@ -406,11 +404,11 @@
             isRemoteSelect () {
                 return this.param?.payload?.type === 'remote'
             },
-            getBuildResourceUrl () {
+            buildResourceUrl () {
                 return `${ENVIRONMENT_API_URL_PREFIX}/user/envnode/${this.$route.params.projectId}/listNew?nodeType=THIRDPARTY&page=1&pageSize=100`
             },
-            getBuildResourceSearchUrl () {
-                return `${this.getBuildResourceUrl}&keywords={{__keywords__}}`
+            buildResourceSearchUrl () {
+                return `${this.buildResourceUrl}&keywords={{__keywords__}}`
             }
         },
         created () {

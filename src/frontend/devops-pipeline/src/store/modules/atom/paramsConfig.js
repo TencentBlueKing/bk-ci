@@ -312,7 +312,7 @@ export const ParamComponentMap = {
     [SVN_TAG]: 'Selector',
     [GIT_REF]: 'Selector',
     [CODE_LIB]: 'Selector',
-    [CONTAINER_TYPE]: 'Selector',
+    [CONTAINER_TYPE]: 'RequestSelector',
     [ARTIFACTORY]: 'Selector',
     [SUB_PIPELINE]: 'Selector',
     [CUSTOM_FILE]: 'FileParamInput',

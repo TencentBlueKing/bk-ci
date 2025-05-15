@@ -210,7 +210,7 @@
                                 affectedChanged,
                                 affectTips: affectedChanged && Object.keys(affected).length > 0 ? this.$t('relyChanged', [Object.keys(affected).join('/')]) : ''
                             }
-                        } else {
+                        } else if (!isBuildResourceParam(param.type)) {
                             restParam = {
                                 ...restParam,
                                 displayKey: 'value',
@@ -233,11 +233,9 @@
                                 const url = `environment/api/user/envnode/${this.$route.params.projectId}/listNew?nodeType=THIRDPARTY&page=1&pageSize=100`
                                 const paramId = 'displayName'
                                 Object.assign(restParam, {
-                                    url,
+                                    url: `${url}&displayName=${value || ''}`,
                                     paramId,
                                     paramName: paramId,
-                                    settingKey: paramId,
-                                    displayKey: paramId,
                                     replaceKey: '{{__keywords__}}',
                                     searchUrl: `${url}&keywords={{__keywords__}}`
                                 })
@@ -317,7 +315,7 @@
             isObject,
             getBranchOption,
             getParamComponentType (param) {
-                if (isRemoteType(param) || isBuildResourceParam(param.type)) {
+                if (isRemoteType(param)) {
                     return 'request-selector'
                 } else {
                     return ParamComponentMap[param.type]
