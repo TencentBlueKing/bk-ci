@@ -47,15 +47,15 @@
                 >
                     <span>{{ row.sourceName }}</span>
                     <bk-badge
-                        v-if="row.storeFlag"
+                        v-if="row.upgradeFlag || row.publishFlag || row.storeFlag"
                         class="store-source-flag"
                         dot
                         theme="danger"
-                        :visible="row.hasNewVersion"
+                        :visible="row.upgradeFlag || row.publishFlag"
                     >
                         <Logo
-                            size="14"
-                            name="is-store"
+                            size="12"
+                            :name="row.storeFlag ? 'is-store' : 'template-upgrade'"
                         />
                     </bk-badge>
                 </div>
@@ -200,7 +200,6 @@
         acc[cur.id] = cur
         return acc
     }, {})
-
     const selectedTableColumn = ref([])
     onBeforeMount(() => {
         try {

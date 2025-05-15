@@ -121,8 +121,7 @@
                         projectId: projectId.value,
                         params: {
                             marketTemplateId: storeTemplateInfo.value.code,
-                            marketTemplateProjectId: storeTemplateInfo.value.srcProjectId,
-                            marketTemplateVersion: storeTemplateInfo.value.version
+                            marketTemplateProjectId: storeTemplateInfo.value.srcProjectId
                         }
                     })
         } catch (e) {
