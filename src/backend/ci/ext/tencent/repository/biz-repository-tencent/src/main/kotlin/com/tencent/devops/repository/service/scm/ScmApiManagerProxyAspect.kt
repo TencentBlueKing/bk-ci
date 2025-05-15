@@ -81,6 +81,7 @@ class ScmApiManagerProxyAspect @Autowired constructor(
         val parameterValues = pjp.args
         val parameterNames = signature.parameterNames
         val parameterTypes = method.parameterTypes
+        val genericParameterTypes = method.genericParameterTypes
         val parameters = parameterNames.mapIndexed { index, name ->
             val parameterType = parameterTypes[index]
             ScmApiParameter(
@@ -91,7 +92,7 @@ class ScmApiManagerProxyAspect @Autowired constructor(
                     if (ReflectUtil.isPrimitiveOrStringType(parameterType)) {
                         it
                     } else {
-                        JsonUtil.toJson(it)
+                        JsonUtil.toJsonForType(it, genericParameterTypes[index])
                     }
                 }
             )
