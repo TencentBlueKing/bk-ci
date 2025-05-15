@@ -28,6 +28,7 @@
 package com.tencent.devops.repository.service
 
 import com.tencent.devops.scm.api.exception.NotFoundScmApiException
+import com.tencent.devops.scm.api.exception.UnAuthorizedScmApiException
 import com.tencent.devops.scm.api.pojo.BranchListOptions
 import com.tencent.devops.scm.api.pojo.Change
 import com.tencent.devops.scm.api.pojo.Comment
@@ -62,6 +63,7 @@ import com.tencent.devops.scm.api.pojo.repository.ScmServerRepository
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import com.tencent.devops.scm.spring.manager.ScmProviderManager
 import com.tencent.devops.scm.spring.properties.ScmProviderProperties
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 /**
@@ -468,10 +470,24 @@ class ScmApiManager constructor(
 
     fun webhookEnrich(
         providerProperties: ScmProviderProperties,
-        providerRepository: ScmProviderRepository,
+        providerRepositories: List<ScmProviderRepository>,
         webhook: Webhook
     ): Webhook {
-        return scmProviderManager.webhookEnricher(providerProperties).enrich(providerRepository, webhook)
+        var enrichHook = webhook
+        providerRepositories.forEach { providerRepository ->
+            try {
+                enrichHook = scmProviderManager.webhookEnricher(providerProperties).enrich(providerRepository, webhook)
+                return enrichHook
+            } catch (ignored: UnAuthorizedScmApiException) {
+                return@forEach
+            } catch (ignored: Exception) {
+                logger.warn("enrich webhook failed", ignored)
+                return enrichHook
+            }
+        }
+        // 所有仓库都授权失效
+        logger.warn("enrich webhook failed|all provider repository is unAuthorized")
+        return enrichHook
     }
 
     /*============================================token============================================*/
@@ -510,5 +526,9 @@ class ScmApiManager constructor(
         providerRepository: ScmProviderRepository
     ) {
         scmProviderManager.command(providerProperties).remoteInfo(providerRepository)
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(ScmApiManager::class.java)
     }
 }
