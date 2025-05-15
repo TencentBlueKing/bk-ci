@@ -60,7 +60,8 @@ class TxMetricsServiceManageServiceImpl(
     @Value("\${eplus.ms.metrics.panelPid:#{null}}")
     private val panelPid: Int? = null
 
-    private val performAnalysisPanelPid = 7280
+    @Value("\${eplus.ms.metrics.performAnalysisPanelPid:#{null}}")
+    private val performAnalysisPanelPid: Int? = null
 
     override fun doSpecBus(
         userId: String,
