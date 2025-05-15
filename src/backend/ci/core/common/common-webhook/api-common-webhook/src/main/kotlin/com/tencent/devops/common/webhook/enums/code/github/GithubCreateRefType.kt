@@ -25,13 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo.job
+package com.tencent.devops.common.webhook.enums.code.github
 
-import io.swagger.v3.oas.annotations.media.Schema
-
-data class AgentVersionInfo(
-    @get:Schema(title = "节点ID")
-    val nodeId: Long,
-    @get:Schema(title = "节点agent版本")
-    val agentVersion: String?
-)
+/*
+ * Github create ref type
+ */
+enum class GithubCreateRefType {
+    TAG,
+    BRANCH;
+}

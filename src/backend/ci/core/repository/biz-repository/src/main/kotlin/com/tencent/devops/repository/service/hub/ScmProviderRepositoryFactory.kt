@@ -44,12 +44,11 @@ class ScmProviderRepositoryFactory @Autowired constructor(
 ) {
 
     fun create(
-        projectId: String,
         properties: ScmProviderProperties,
         authRepository: AuthRepository
     ): ScmProviderRepository {
         val auth = providerAuthFactory.createScmAuth(
-            projectId = projectId, authRepository = authRepository
+            authRepository = authRepository
         )
         return when (properties.providerType) {
             ScmProviderType.GIT.name -> {

@@ -37,6 +37,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,6 +49,9 @@ class ManagerService @Autowired constructor(
 
     @Autowired
     private lateinit var redisOperation: RedisOperation
+
+    @Autowired
+    private lateinit var config: CommonConfig
 
     private val userPermissionMap = CacheBuilder.newBuilder()
         .maximumSize(50000)
@@ -173,7 +177,10 @@ class ManagerService @Autowired constructor(
                 logger.warn(
                     "The user cannot access the project because the contract has not been signed.$projectId|$userId"
                 )
-                throw ErrorCodeException(errorCode = ERROR_USER_CONTRACT_NOT_SIGNED)
+                throw ErrorCodeException(
+                    errorCode = ERROR_USER_CONTRACT_NOT_SIGNED,
+                    params = arrayOf("${config.devopsHostGateway}/console/pipeline/$projectId")
+                )
             }
         }
     }

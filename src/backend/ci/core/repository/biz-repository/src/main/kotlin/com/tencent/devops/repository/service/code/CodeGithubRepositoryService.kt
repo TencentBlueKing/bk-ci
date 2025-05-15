@@ -41,6 +41,8 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode.GITHUB_INVAL
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.dao.RepositoryGithubDao
 import com.tencent.devops.repository.pojo.GithubRepository
+import com.tencent.devops.repository.pojo.RepoCondition
+import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.sdk.github.request.GetRepositoryRequest
@@ -255,5 +257,25 @@ class CodeGithubRepositoryService @Autowired constructor(
                 )
             )
         }
+    }
+
+    override fun listByCondition(
+        repoCondition: RepoCondition,
+        limit: Int,
+        offset: Int
+    ): List<Repository>? {
+        return repositoryGithubDao.listByCondition(
+            dslContext = dslContext,
+            repoCondition = repoCondition,
+            limit = limit,
+            offset = offset
+        )
+    }
+
+    override fun countByCondition(repoCondition: RepoCondition): Long {
+        return repositoryGithubDao.countByCondition(
+            dslContext = dslContext,
+            repoCondition = repoCondition
+        )
     }
 }

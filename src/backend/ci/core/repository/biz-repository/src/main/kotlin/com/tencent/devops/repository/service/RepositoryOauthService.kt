@@ -1,5 +1,6 @@
 package com.tencent.devops.repository.service
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
@@ -9,12 +10,14 @@ import com.tencent.devops.repository.pojo.Oauth2State
 import com.tencent.devops.repository.pojo.RepoCondition
 import com.tencent.devops.repository.pojo.RepoOauthRefVo
 import com.tencent.devops.repository.pojo.RepositoryScmConfig
+import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.ScmConfigStatus
 import com.tencent.devops.repository.pojo.oauth.Oauth2Url
 import com.tencent.devops.repository.pojo.oauth.OauthTokenInfo
 import com.tencent.devops.repository.pojo.oauth.OauthTokenVo
 import com.tencent.devops.repository.service.code.CodeRepositoryManager
+import com.tencent.devops.repository.service.github.GithubOAuthService
 import com.tencent.devops.repository.service.hub.ScmTokenApiService
 import com.tencent.devops.repository.service.hub.ScmUserApiService
 import com.tencent.devops.repository.service.oauth2.Oauth2TokenStoreManager
@@ -32,7 +35,8 @@ class RepositoryOauthService @Autowired constructor(
     private val codeRepositoryManager: CodeRepositoryManager,
     private val scmConfigService: RepositoryScmConfigService,
     private val scmTokenApiService: ScmTokenApiService,
-    private val scmUserApiService: ScmUserApiService
+    private val scmUserApiService: ScmUserApiService,
+    val githubOAuthService: GithubOAuthService
 ) {
     fun list(
         userId: String,
@@ -124,8 +128,23 @@ class RepositoryOauthService @Autowired constructor(
         scmCode: String,
         redirectUrl: String
     ): Oauth2Url {
-        val state = encodeOauthState(userId = userId, redirectUrl = redirectUrl)
-        val url = scmTokenApiService.authorizationUrl(scmCode = scmCode, state = state)
+        val url = when (scmCode) {
+            // GITHUB 相关sdk尚未完善，完善后移除这部分代码
+            ScmType.GITHUB.name -> {
+                githubOAuthService.getGithubOauth(
+                    userId = userId,
+                    projectId = "",
+                    redirectUrlTypeEnum = RedirectUrlTypeEnum.SPEC,
+                    specRedirectUrl = redirectUrl,
+                    repoHashId = null
+                ).redirectUrl
+            }
+
+            else -> {
+                val state = encodeOauthState(userId = userId, redirectUrl = redirectUrl)
+                scmTokenApiService.authorizationUrl(scmCode = scmCode, state = state)
+            }
+        }
         return Oauth2Url(url)
     }
 

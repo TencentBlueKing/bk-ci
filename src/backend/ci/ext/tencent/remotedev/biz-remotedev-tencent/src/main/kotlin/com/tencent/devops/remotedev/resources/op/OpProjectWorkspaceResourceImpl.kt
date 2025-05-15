@@ -19,6 +19,7 @@ import com.tencent.devops.remotedev.api.op.OpProjectWorkspaceResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
@@ -37,6 +38,7 @@ import com.tencent.devops.remotedev.service.WorkspaceXlsxExportService
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_CONFIG_INFO
 import com.tencent.devops.remotedev.service.workspace.CreateControl
+import com.tencent.devops.remotedev.service.workspace.DeliverControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import jakarta.ws.rs.core.Response
@@ -57,7 +59,8 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     private val client: Client,
     private val notifyControl: NotifyControl,
     private val streamBridge: StreamBridge,
-    private val configCacheService: ConfigCacheService
+    private val configCacheService: ConfigCacheService,
+    private val deliverControl: DeliverControl
 ) : OpProjectWorkspaceResource {
     @AuditEntry(
         actionId = TencentActionId.CGS_ASSIGN,
@@ -270,6 +273,17 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
             userId = userId,
             workspaceName = workspaceName
         )
+    }
+
+    override fun assignUser(userId: String, workspaceName: String, assigns: List<ProjectWorkspaceAssign>): Result<Boolean> {
+        deliverControl.assignUser2Workspace(
+            userId = userId,
+            workspaceName = workspaceName,
+            assigns = assigns,
+            checkPermission = false
+        )
+
+        return Result(true)
     }
 
     companion object {

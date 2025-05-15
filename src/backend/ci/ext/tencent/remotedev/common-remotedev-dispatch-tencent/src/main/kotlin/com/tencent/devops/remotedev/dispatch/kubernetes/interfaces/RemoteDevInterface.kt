@@ -38,6 +38,8 @@ import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmData
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmResp
 import com.tencent.devops.remotedev.pojo.remotedev.TaskCommonResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 
@@ -104,7 +106,8 @@ interface RemoteDevInterface {
         pipelineId: String,
         machineType: String?,
         zoneId: String?,
-        live: Boolean?
+        live: Boolean?,
+        specifyTaints: String?
     ): TaskCommonResp
 
     /**
@@ -167,4 +170,8 @@ interface RemoteDevInterface {
         imageId: String,
         delaySeconds: Int?
     ): String?
+
+    fun syncVm(
+        data: SyncVmData
+    ): SyncVmResp?
 }

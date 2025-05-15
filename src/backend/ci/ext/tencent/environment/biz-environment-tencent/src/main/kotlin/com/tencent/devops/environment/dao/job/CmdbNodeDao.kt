@@ -44,7 +44,6 @@ import com.tencent.devops.environment.pojo.dto.CmdbNodeStatusDTO
 import com.tencent.devops.environment.pojo.dto.NodeUpdateAttrDTO
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
-import com.tencent.devops.environment.pojo.job.AgentVersionInfo
 import com.tencent.devops.environment.pojo.job.UpdateTNodeInfo
 import com.tencent.devops.environment.pojo.job.jobreq.Host
 import com.tencent.devops.environment.pojo.job.jobresp.NodeAttr
@@ -88,19 +87,9 @@ class CmdbNodeDao @Autowired constructor(
         }
     }
 
-    fun batchUpdateBuildAgentVersionByNodeId(
-        dslContext: DSLContext,
-        buildNodeAgentVersionInfoList: List<AgentVersionInfo>
-    ) {
+    fun updateVersionByNodeId(dslContext: DSLContext, nodeId: Long, version:String) {
         with(TNode.T_NODE) {
-            val batchUpdate = dslContext.batch(
-                buildNodeAgentVersionInfoList.map {
-                    dslContext.update(this)
-                        .set(AGENT_VERSION, it.agentVersion)
-                        .where(NODE_ID.eq(it.nodeId))
-                }
-            )
-            batchUpdate.execute()
+            dslContext.update(this).set(AGENT_VERSION, version).where(NODE_ID.eq(nodeId)).execute()
         }
     }
 

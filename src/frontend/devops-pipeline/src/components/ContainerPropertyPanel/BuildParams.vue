@@ -491,50 +491,50 @@
 
 <script>
     import Accordion from '@/components/atomFormField/Accordion'
-    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
-    import EnumInput from '@/components/atomFormField/EnumInput'
-    import FileParamInput from '@/components/atomFormField/FileParamInput'
-    import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
-    import RequestSelector from '@/components/atomFormField/RequestSelector'
-    import Selector from '@/components/atomFormField/Selector'
-    import VuexInput from '@/components/atomFormField/VuexInput'
-    import VuexTextarea from '@/components/atomFormField/VuexTextarea'
-    import SelectTypeParam from '@/components/PipelineEditTabs/components/children/select-type-param'
-    import {
-        ENVIRONMENT_API_URL_PREFIX,
-        PROCESS_API_URL_PREFIX,
-        REPOSITORY_API_URL_PREFIX
-    } from '@/store/constants'
-    import {
-        CODE_LIB_OPTION,
-        CODE_LIB_TYPE,
-        DEFAULT_PARAM,
-        getBranchOption,
-        getParamsDefaultValueLabel,
-        getParamsDefaultValueLabelTips,
-        getRepoOption,
-        isArtifactoryParam,
-        isBooleanParam,
-        isBuildResourceParam,
-        isCodelibParam,
-        isEnumParam,
-        isFileParam,
-        isGitParam,
-        isMultipleParam,
-        isRepoParam,
-        isStringParam,
-        isSubPipelineParam,
-        isSvnParam,
-        isTextareaParam,
-        PARAM_LIST,
-        STRING,
-        SUB_PIPELINE_OPTION
-    } from '@/store/modules/atom/paramsConfig'
-    import { allVersionKeyList } from '@/utils/pipelineConst'
-    import { deepCopy } from '@/utils/util'
-    import draggable from 'vuedraggable'
-    import { mapGetters } from 'vuex'
-    import validMixins from '../validMixins'
+import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
+import EnumInput from '@/components/atomFormField/EnumInput'
+import FileParamInput from '@/components/atomFormField/FileParamInput'
+import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
+import RequestSelector from '@/components/atomFormField/RequestSelector'
+import Selector from '@/components/atomFormField/Selector'
+import VuexInput from '@/components/atomFormField/VuexInput'
+import VuexTextarea from '@/components/atomFormField/VuexTextarea'
+import SelectTypeParam from '@/components/PipelineEditTabs/components/children/select-type-param'
+import {
+ENVIRONMENT_API_URL_PREFIX,
+PROCESS_API_URL_PREFIX,
+REPOSITORY_API_URL_PREFIX
+} from '@/store/constants'
+import {
+CODE_LIB_OPTION,
+CODE_LIB_TYPE,
+DEFAULT_PARAM,
+getBranchOption,
+getParamsDefaultValueLabel,
+getParamsDefaultValueLabelTips,
+getRepoOption,
+isArtifactoryParam,
+isBooleanParam,
+isBuildResourceParam,
+isCodelibParam,
+isEnumParam,
+isFileParam,
+isGitParam,
+isMultipleParam,
+isRepoParam,
+isStringParam,
+isSubPipelineParam,
+isSvnParam,
+isTextareaParam,
+PARAM_LIST,
+STRING,
+SUB_PIPELINE_OPTION
+} from '@/store/modules/atom/paramsConfig'
+import { allVersionKeyList } from '@/utils/pipelineConst'
+import { deepCopy } from '@/utils/util'
+import draggable from 'vuedraggable'
+import { mapGetters } from 'vuex'
+import validMixins from '../validMixins'
 
     const BOOLEAN = [
         {

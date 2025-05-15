@@ -113,12 +113,11 @@
              */
             hostId: {
                 handler (val) {
+                    this.editor && this.editor.setValue('')
+                    this.editor && this.editor.clearSelection()
                     if (val) {
                         this.autoScrollTimeout()
                         this.fetchLogContent()
-                    } else {
-                        this.editor && this.editor.setValue('')
-                        this.editor && this.editor.clearSelection()
                     }
                 },
                 immediate: true

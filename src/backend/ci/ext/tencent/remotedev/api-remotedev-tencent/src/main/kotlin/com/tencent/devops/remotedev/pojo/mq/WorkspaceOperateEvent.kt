@@ -50,6 +50,7 @@ data class WorkspaceOperateEvent(
     val formatDataDisk: Boolean? = null,
     val live: Boolean? = null,
     val rebuildRemoveOwner: Boolean? = null,
+    val specifyTaints: String? = null,
     override val workspaceName: String,
     override var delayMills: Int = 0,
     override var retryTime: Int = 0

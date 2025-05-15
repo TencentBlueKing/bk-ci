@@ -30,7 +30,7 @@ package com.tencent.devops.process.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
+import com.tencent.devops.process.pojo.pipeline.PipelineBuildParamFormProp
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -66,5 +66,5 @@ interface UserSubPipelineInfoResource {
         @Parameter(description = "是否包含非入参", required = false, example = "")
         @QueryParam("includeNotRequired")
         includeNotRequired: Boolean? = true
-    ): Result<List<SubPipelineStartUpInfo>>
+    ): Result<List<PipelineBuildParamFormProp>>
 }
