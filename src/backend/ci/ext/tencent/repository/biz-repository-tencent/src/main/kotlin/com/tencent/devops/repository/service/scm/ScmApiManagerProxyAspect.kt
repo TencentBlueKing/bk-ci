@@ -30,6 +30,7 @@ package com.tencent.devops.repository.service.scm
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReflectUtil
 import com.tencent.devops.common.client.Client
@@ -37,7 +38,6 @@ import com.tencent.devops.repository.service.ScmProxy
 import com.tencent.devops.scm.api.ServiceScmApiProxyResource
 import com.tencent.devops.scm.pojo.ScmApiParameter
 import com.tencent.devops.scm.pojo.ScmApiRequest
-import com.tencent.devops.scm.sdk.tgit.TGitApiException
 import com.tencent.devops.scm.spring.properties.ScmProviderProperties
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
@@ -81,6 +81,7 @@ class ScmApiManagerProxyAspect @Autowired constructor(
         val parameterValues = pjp.args
         val parameterNames = signature.parameterNames
         val parameterTypes = method.parameterTypes
+        val genericParameterTypes = method.genericParameterTypes
         val parameters = parameterNames.mapIndexed { index, name ->
             val parameterType = parameterTypes[index]
             ScmApiParameter(
@@ -91,7 +92,7 @@ class ScmApiManagerProxyAspect @Autowired constructor(
                     if (ReflectUtil.isPrimitiveOrStringType(parameterType)) {
                         it
                     } else {
-                        JsonUtil.toJson(it)
+                        JsonUtil.toJsonForType(it, genericParameterTypes[index])
                     }
                 }
             )
@@ -109,7 +110,7 @@ class ScmApiManagerProxyAspect @Autowired constructor(
                 methodName = methodName,
                 request = request
             ).data
-        } catch (ignored: TGitApiException) {
+        } catch (ignored: RemoteServiceException) {
             throw OperationException(ignored.message ?: "")
         }
         return data?.let {
