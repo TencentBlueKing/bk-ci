@@ -24,6 +24,11 @@ const optionConfigMixin = {
             ATOM_OPTION: {}
         }
     },
+    computed: {
+        customExpressionsDoc () {
+            return this.$pipelineDocs.CUSTOM_EXPRESSIONS_DOC
+        }
+    },
     created () {
         this.ATOM_OPTION = {
             enable: {
@@ -182,6 +187,7 @@ const optionConfigMixin = {
                 default: '',
                 required: true,
                 maxLength: 512,
+                docsLink: this.customExpressionsDoc,
                 label: this.$t('storeMap.customConditionExp'),
                 isHidden: (element) => {
                     return element?.additionalOptions?.runCondition !== 'CUSTOM_CONDITION_MATCH'
