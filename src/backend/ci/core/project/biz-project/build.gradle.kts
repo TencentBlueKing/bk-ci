@@ -38,6 +38,7 @@ dependencies {
     api(project(":core:project:api-project"))
     api(project(":core:auth:api-auth"))
     api(project(":core:artifactory:api-artifactory"))
+    api(project(":core:process:api-process"))
 
     api("com.amazonaws:aws-java-sdk-s3")
     api("net.coobird:thumbnailator")
