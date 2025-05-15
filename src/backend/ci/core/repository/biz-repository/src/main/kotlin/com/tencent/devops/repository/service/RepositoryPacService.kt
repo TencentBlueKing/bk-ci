@@ -294,7 +294,8 @@ class RepositoryPacService @Autowired constructor(
         val condition = RepoCondition(
             projectId = projectId,
             scmCode = repository.scmCode,
-            projectName = serverRepository.fullName
+            projectName = serverRepository.fullName,
+            enablePac = true
         )
         val existsPacRepo = codeRepositoryService.listByCondition(repoCondition = condition, offset = 1, limit = 1)
         if (!existsPacRepo.isNullOrEmpty()) {
