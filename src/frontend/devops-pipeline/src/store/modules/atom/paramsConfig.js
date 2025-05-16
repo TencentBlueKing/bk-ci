@@ -389,7 +389,7 @@ export const getParamsGroupByLabel = (list) => {
 
         if (isEnglishA && !isEnglishB) return -1
         if (!isEnglishA && isEnglishB) return 1
-        return a.localeCompare(b, 'en-US', {
+        return a.localeCompare(b, 'zh-CN', {
             sensitivity: 'case',
             numeric: true
         })
