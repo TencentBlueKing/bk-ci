@@ -36,6 +36,8 @@ import com.tencent.devops.common.api.util.ReflectUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.service.ScmProxy
 import com.tencent.devops.scm.api.ServiceScmApiProxyResource
+import com.tencent.devops.scm.api.exception.NotFoundScmApiException
+import com.tencent.devops.scm.api.exception.UnAuthorizedScmApiException
 import com.tencent.devops.scm.pojo.ScmApiParameter
 import com.tencent.devops.scm.pojo.ScmApiRequest
 import com.tencent.devops.scm.spring.properties.ScmProviderProperties
@@ -47,6 +49,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.annotation.AnnotationUtils
 import org.springframework.stereotype.Service
+import java.lang.RuntimeException
 
 /**
  * scm api接口代理
@@ -111,7 +114,8 @@ class ScmApiManagerProxyAspect @Autowired constructor(
                 request = request
             ).data
         } catch (ignored: RemoteServiceException) {
-            throw OperationException(ignored.message ?: "")
+            // 根据errorCode匹配实际异常信息
+            handleException(ignored)
         }
         return data?.let {
             if (ReflectUtil.isPrimitiveOrStringType(method.returnType)) {
@@ -119,6 +123,15 @@ class ScmApiManagerProxyAspect @Autowired constructor(
             } else {
                 JsonUtil.toForType(it.toString(), signature.method.genericReturnType)
             }
+        }
+    }
+
+    fun handleException(ignored: RemoteServiceException): RuntimeException {
+        val errorMsg = ignored.message ?: ""
+        throw when (ignored.errorCode) {
+            401 -> UnAuthorizedScmApiException(errorMsg)
+            404 -> NotFoundScmApiException(errorMsg)
+            else -> OperationException(errorMsg)
         }
     }
 
