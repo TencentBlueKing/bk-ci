@@ -146,7 +146,10 @@
             },
             globalParams: {
                 get () {
-                    return this.params.filter(p => !allVersionKeyList.includes(p.id) && p.id !== 'BK_CI_BUILD_MSG')
+                    return this.params.filter(p => !allVersionKeyList.includes(p.id) && p.id !== 'BK_CI_BUILD_MSG').map(i => ({
+                        ...i,
+                        category: i.category ?? ''
+                    }))
                 },
                 set (params) {
                     this.updateContainerParams('params', [...params, ...this.versions])

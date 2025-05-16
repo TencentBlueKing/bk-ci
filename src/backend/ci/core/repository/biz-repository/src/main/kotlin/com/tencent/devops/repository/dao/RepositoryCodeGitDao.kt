@@ -192,9 +192,14 @@ class RepositoryCodeGitDao {
             if (!oauthUserId.isNullOrEmpty()) {
                 conditions.add(t2.USER_NAME.eq(oauthUserId))
             }
-            authType?.let { t2.AUTH_TYPE.eq(it.name) }
+            authType?.let {
+                conditions.add(t2.AUTH_TYPE.eq(it.name))
+            }
             if (!scmCode.isNullOrEmpty()) {
                 conditions.add(t1.SCM_CODE.eq(scmCode))
+            }
+            enablePac?.let {
+                conditions.add(t1.ENABLE_PAC.eq(enablePac))
             }
         }
         return conditions

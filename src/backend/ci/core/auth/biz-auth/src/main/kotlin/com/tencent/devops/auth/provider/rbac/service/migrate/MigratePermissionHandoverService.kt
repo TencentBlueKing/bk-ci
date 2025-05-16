@@ -28,14 +28,21 @@
 
 package com.tencent.devops.auth.provider.rbac.service.migrate
 
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
+import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
-import com.tencent.devops.auth.pojo.enum.JoinedType
+import com.tencent.devops.auth.pojo.enum.MemberType
+import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
+import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.auth.service.PermissionAuthorizationService
 import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
+import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationHandoverConditionRequest
+import com.tencent.devops.common.auth.enums.HandoverChannelCode
 import org.jboss.logging.Logger
 import org.jooq.DSLContext
 
@@ -44,7 +51,9 @@ class MigratePermissionHandoverService(
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val authResourceService: AuthResourceService,
     private val permissionManageFacadeService: PermissionManageFacadeService,
-    private val dslContext: DSLContext
+    private val permissionAuthorizationService: PermissionAuthorizationService,
+    private val dslContext: DSLContext,
+    private val deptService: DeptService
 ) {
     fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO) {
         val handoverFrom = permissionHandoverDTO.handoverFrom
@@ -92,9 +101,22 @@ class MigratePermissionHandoverService(
                         iamGroupId = resourceManagerGroup.relationId.toInt(),
                         members = listOf(handoverFrom)
                     )
+                    permissionAuthorizationService.resetResourceAuthorizationByResourceType(
+                        operator = "system",
+                        projectCode = projectCode,
+                        condition = ResourceAuthorizationHandoverConditionRequest(
+                            projectCode = projectCode,
+                            resourceType = resourceType,
+                            fullSelection = true,
+                            handoverFrom = handoverFrom,
+                            handoverTo = handoverTo,
+                            filterResourceCodes = listOf(resourceCode),
+                            handoverChannel = HandoverChannelCode.MANAGER
+                        )
+                    )
                 } catch (ignore: Exception) {
                     logger.warn(
-                        "handover permissions|operate group failed:$projectCode|" +
+                        "handover permissions|operate group failed:$projectCode|$resourceCode|$resourceType|" +
                             "${resourceManagerGroup!!.relationId}|${ignore.message}"
                     )
                 }
@@ -103,7 +125,6 @@ class MigratePermissionHandoverService(
     }
 
     fun handoverAllPermissions(permissionHandoverDTO: PermissionHandoverDTO) {
-        val handoverFrom = permissionHandoverDTO.handoverFrom
         val handoverToList = permissionHandoverDTO.handoverToList
         permissionHandoverDTO.projectList.forEach { projectCode ->
             // 是否将交接人直接加入管理员组
@@ -113,32 +134,30 @@ class MigratePermissionHandoverService(
                     handoverToList = handoverToList
                 )
             }
-            // 交接用户组权限
-            val userJoinedGroups = permissionManageFacadeService.getMemberGroupsDetails(
-                projectId = projectCode,
-                memberId = handoverFrom
-            ).records.filter { it.joinedType == JoinedType.DIRECT }.map { it.groupId }
-            userJoinedGroups.forEach { iamGroupId ->
-                val handoverTo = handoverToList.random()
-                logger.info("handover resource permissions :$projectCode|$handoverFrom|$handoverTo|$iamGroupId")
-                try {
-                    permissionResourceMemberService.addGroupMember(
-                        projectCode = projectCode,
-                        memberId = handoverTo,
-                        memberType = USER_TYPE,
-                        expiredAt = GROUP_EXPIRED_TIME,
-                        iamGroupId = iamGroupId
+            val handoverTo = handoverToList.random()
+            try {
+                permissionManageFacadeService.batchHandoverGroupMembersFromManager(
+                    userId = "system",
+                    projectCode = projectCode,
+                    handoverMemberDTO = GroupMemberHandoverConditionReq(
+                        allSelection = true,
+                        targetMember = ResourceMemberInfo(
+                            id = permissionHandoverDTO.handoverFrom,
+                            type = MemberType.USER.type
+                        ),
+                        checkRepertoryAuthorization = false,
+                        handoverTo = ResourceMemberInfo(
+                            id = handoverTo,
+                            name = deptService.getMemberInfo(
+                                memberId = handoverTo,
+                                memberType = ManagerScopesEnum.USER
+                            ).displayName,
+                            type = MemberType.USER.type
+                        )
                     )
-                    permissionResourceMemberService.batchDeleteResourceGroupMembers(
-                        projectCode = projectCode,
-                        iamGroupId = iamGroupId,
-                        members = listOf(handoverFrom)
-                    )
-                } catch (ignore: Exception) {
-                    logger.warn(
-                        "handover permissions|operate group failed:$projectCode|$iamGroupId|${ignore.message}"
-                    )
-                }
+                )
+            } catch (ex: Exception) {
+                logger.warn("handover all permissions failed: $projectCode|$ex")
             }
         }
     }
