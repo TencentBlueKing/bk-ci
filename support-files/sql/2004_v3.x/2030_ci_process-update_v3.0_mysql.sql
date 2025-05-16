@@ -188,6 +188,24 @@ BEGIN
   DROP PRIMARY KEY, ADD PRIMARY KEY (`PROJECT_ID`, `PIPELINE_ID`, `TASK_ID`, `REPO_HASH_ID`, `BRANCH`);
   END IF;
 
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_SETTING'
+                    AND COLUMN_NAME = 'FAIL_IF_VARIABLE_INVALID') THEN
+        ALTER TABLE `T_PIPELINE_SETTING`
+            ADD COLUMN `FAIL_IF_VARIABLE_INVALID` bit default null comment '是否配置流水线变量值超长时终止执行';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_SETTING_VERSION'
+                    AND COLUMN_NAME = 'FAIL_IF_VARIABLE_INVALID') THEN
+        ALTER TABLE `T_PIPELINE_SETTING_VERSION`
+            ADD COLUMN `FAIL_IF_VARIABLE_INVALID` bit default null comment '是否配置流水线变量值超长时终止执行';
+    END IF;
+
 COMMIT;
 
 END <CI_UBF>

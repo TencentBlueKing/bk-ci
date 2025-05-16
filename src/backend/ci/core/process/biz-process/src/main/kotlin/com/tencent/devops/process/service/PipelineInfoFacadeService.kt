@@ -119,7 +119,7 @@ import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
 import java.time.LocalDateTime
-import java.util.*
+import java.util.LinkedList
 import java.util.concurrent.TimeUnit
 
 @Suppress("ALL")
@@ -174,35 +174,26 @@ class PipelineInfoFacadeService @Autowired constructor(
         storageType: PipelineStorageType? = PipelineStorageType.MODEL,
         archiveFlag: Boolean? = false
     ): Response {
-        if (archiveFlag != true) {
-            val language = I18nUtil.getLanguage(userId)
-            val permission = AuthPermission.EDIT
-            pipelinePermissionService.validPipelinePermission(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                permission = permission,
-                message = MessageUtil.getMessageByLocale(
-                    USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                    language,
-                    arrayOf(
-                        userId,
-                        projectId,
-                        permission.getI18n(I18nUtil.getLanguage(userId)),
-                        pipelineId
-                    )
+        val language = I18nUtil.getLanguage(userId)
+        val permission = AuthPermission.EDIT
+        val userPipelinePermissionCheckStrategy =
+            UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+        UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission,
+            message = MessageUtil.getMessageByLocale(
+                USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                language,
+                arrayOf(
+                    userId,
+                    projectId,
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
+                    pipelineId
                 )
             )
-        } else {
-            val userPipelinePermissionCheckStrategy =
-                UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
-            UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                permission = AuthPermission.EDIT
-            )
-        }
+        )
 
         val targetVersion = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId, pipelineId = pipelineId, version = version, archiveFlag = archiveFlag

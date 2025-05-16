@@ -1536,6 +1536,9 @@
                   "description" : {
                     "type" : "string"
                   },
+                  "group" : {
+                    "type" : "string"
+                  },
                   "multiple" : {
                     "type" : "boolean"
                   },
@@ -1709,6 +1712,9 @@
                   }
                 },
                 "description" : {
+                  "type" : "string"
+                },
+                "group" : {
                   "type" : "string"
                 },
                 "multiple" : {
@@ -2185,6 +2191,9 @@
       }
     },
     "disable-pipeline" : {
+      "type" : "boolean"
+    },
+    "fail-if-variable-invalid" : {
       "type" : "boolean"
     },
     "recommended-version" : {

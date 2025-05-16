@@ -170,4 +170,6 @@ object WorkerMessageCode {
     // [警告]该插件处于下架过渡期，后续可能无法正常工作！
     const val BK_ATOM_IS_IN_THE_TRANSITION_PERIOD_OF_DELISTING = "bkAtomIsInTheTransitionPeriodOfDelisting"
     const val BK_GET_OUTPUT_ARTIFACTVALUE_ERROR = "bkGetOutputArtifactvalueError" // 获取输出构件[artifact]值错误
+    // 错误，对变量 [{0}] 赋值失败，超过 {1} 个字符（当前长度为 {2}）
+    const val BK_VARIABLE_PARAM_MAX_LENGTH = "bkVariableParamMaxLength"
 }

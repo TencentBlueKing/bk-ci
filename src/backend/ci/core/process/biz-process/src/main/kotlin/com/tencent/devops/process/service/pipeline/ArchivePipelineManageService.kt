@@ -65,6 +65,10 @@ class ArchivePipelineManageService @Autowired constructor(
     private val sampleEventDispatcher: SampleEventDispatcher
 ) {
 
+    companion object {
+        private const val PIPELINE_BATCH_ARCHIVE_EXPIRED_IN_HOUR = 36L // 流水线批量归档过期时间
+    }
+
     fun migrateData(
         userId: String,
         projectId: String,
@@ -97,7 +101,7 @@ class ArchivePipelineManageService @Autowired constructor(
                 pipelineIds = pipelineIds,
                 userId = userId,
                 cancelFlag = cancelFlag,
-                expiredInHour = 36
+                expiredInHour = PIPELINE_BATCH_ARCHIVE_EXPIRED_IN_HOUR
             )
         )
         return true

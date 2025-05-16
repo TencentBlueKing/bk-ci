@@ -158,28 +158,19 @@ class TXPipelineExportService @Autowired constructor(
         exportFile: Boolean = false,
         archiveFlag: Boolean? = false
     ): Triple<String, Model, Map<String, List<List<PipelineExportV2YamlConflictMapItem>>>> {
-        if (archiveFlag != true) {
-            pipelinePermissionService.validPipelinePermission(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                permission = AuthPermission.EDIT,
-                message = MessageUtil.getMessageByLocale(
-                    messageCode = BK_NO_RIGHT_EXPORT_PIPELINE,
-                    language = I18nUtil.getLanguage(userId),
-                    params = arrayOf(userId, projectId)
-                )
+        val userPipelinePermissionCheckStrategy =
+            UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+        UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.EDIT,
+            message = MessageUtil.getMessageByLocale(
+                messageCode = BK_NO_RIGHT_EXPORT_PIPELINE,
+                language = I18nUtil.getLanguage(userId),
+                params = arrayOf(userId, projectId)
             )
-        } else {
-            val userPipelinePermissionCheckStrategy =
-                UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
-            UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                permission = AuthPermission.EDIT
-            )
-        }
+        )
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
             projectId = projectId,
             pipelineId = pipelineId,
