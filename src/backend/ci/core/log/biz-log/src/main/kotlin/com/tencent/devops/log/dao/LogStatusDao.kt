@@ -27,7 +27,7 @@
 
 package com.tencent.devops.log.dao
 
-import com.tencent.devops.common.log.pojo.enums.LogStorageMode
+import com.tencent.devops.common.api.enums.log.LogStorageMode
 import com.tencent.devops.model.log.tables.TLogStatus
 import com.tencent.devops.model.log.tables.records.TLogStatusRecord
 import org.jooq.DSLContext

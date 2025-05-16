@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.trigger.scm.listener
 
-import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.common.api.pojo.log.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.process.engine.service.WebhookBuildParameterService

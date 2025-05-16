@@ -36,5 +36,5 @@ dependencies {
     api(project(":core:common:common-pipeline"))
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:common:common-dispatch-sdk"))
-    api(project(":core:log:api-log"))
+    api(project(":core:common:common-log"))
 }

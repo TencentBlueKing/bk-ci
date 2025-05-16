@@ -29,9 +29,9 @@ package com.tencent.devops.log.configuration
 
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.ScsConsumerBuilder
-import com.tencent.devops.log.event.LogOriginEvent
-import com.tencent.devops.log.event.LogStatusEvent
-import com.tencent.devops.log.event.LogStorageEvent
+import com.tencent.devops.common.log.event.LogOriginEvent
+import com.tencent.devops.common.log.event.LogStatusEvent
+import com.tencent.devops.common.log.event.LogStorageEvent
 import com.tencent.devops.log.jmx.LogPrintBean
 import com.tencent.devops.log.service.BuildLogListenerService
 import com.tencent.devops.log.service.BuildLogPrintService

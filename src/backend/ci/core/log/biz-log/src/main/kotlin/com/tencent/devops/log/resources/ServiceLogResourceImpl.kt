@@ -28,12 +28,12 @@
 package com.tencent.devops.log.resources
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.log.pojo.QueryLogLineNum
-import com.tencent.devops.common.log.pojo.QueryLogStatus
+import com.tencent.devops.log.pojo.QueryLogLineNum
+import com.tencent.devops.log.pojo.QueryLogStatus
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.ServiceLogResource
-import com.tencent.devops.common.log.pojo.QueryLogs
-import com.tencent.devops.common.log.pojo.enums.LogType
+import com.tencent.devops.log.pojo.QueryLogs
+import com.tencent.devops.common.api.enums.log.LogType
 import com.tencent.devops.log.service.BuildLogQueryService
 import org.springframework.beans.factory.annotation.Autowired
 import jakarta.ws.rs.core.Response

@@ -28,7 +28,6 @@
 dependencies {
     api("org.reflections:reflections")
     api(project(":core:process:api-process"))
-    api(project(":core:log:api-log"))
     api(project(":core:store:api-store"))
     api(project(":core:dispatch:api-dispatch"))
     api(project(":core:ticket:api-ticket"))
@@ -37,6 +36,7 @@ dependencies {
     api(project(":core:common:common-archive"))
     api(project(":core:common:common-pipeline"))
     api(project(":core:common:common-test"))
+    api(project(":core:common:common-log"))
     api("org.apache.commons:commons-exec")
     api("org.apache.commons:commons-compress")
     api("com.github.oshi:oshi-core")

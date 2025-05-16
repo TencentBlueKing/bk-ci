@@ -29,8 +29,8 @@ package com.tencent.devops.gpt.service
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.log.pojo.enums.LogStatus
-import com.tencent.devops.common.log.pojo.enums.LogType
+import com.tencent.devops.common.api.enums.log.LogStatus
+import com.tencent.devops.common.api.enums.log.LogType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.redis.RedisLock

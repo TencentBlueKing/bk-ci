@@ -31,7 +31,7 @@ dependencies {
     api(project(":core:common:common-service"))
     api(project(":core:common:common-web"))
     api(project(":core:common:common-redis"))
-    api(project(":core:log:api-log"))
+    api(project(":core:common:common-log"))
     api(project(":core:common:common-security"))
     api("com.github.docker-java:docker-java-core")
     api("com.github.docker-java:docker-java-transport-okhttp")

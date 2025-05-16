@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.control
 
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.option.JobControlOption
@@ -42,8 +41,7 @@ import org.junit.jupiter.api.Test
 
 class DependOnControlTest {
     private val pipelineContainerService: PipelineContainerService = mockk()
-    private val client: Client = mockk()
-    private val buildLogPrinter: BuildLogPrinter = BuildLogPrinter(client, mockk())
+    private val buildLogPrinter: BuildLogPrinter = BuildLogPrinter(mockk())
     private val dependOnControl = DependOnControl(
         pipelineContainerService = pipelineContainerService,
         buildLogPrinter = buildLogPrinter

@@ -30,7 +30,7 @@ package com.tencent.devops.stream.resources.user
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.log.pojo.QueryLogs
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.user.UserStreamLogResource
 import com.tencent.devops.stream.permission.StreamPermissionService

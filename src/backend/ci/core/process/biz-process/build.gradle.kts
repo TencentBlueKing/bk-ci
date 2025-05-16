@@ -41,7 +41,6 @@ dependencies {
     api(project(":core:misc:api-plugin"))
     api(project(":core:notify:api-notify"))
     api(project(":core:process:biz-base"))
-    api(project(":core:log:api-log"))
     api(project(":core:common:common-webhook:biz-common-webhook"))
     api(project(":core:auth:api-auth"))
     api(project(":core:common:common-pipeline-yaml"))
