@@ -316,8 +316,6 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
         processDataDeleteDao.deletePipelineBuildRecordTask(dslContext, projectId, buildIds)
     }
 
-
-
     /**
      * 删除项目直接相关的数据
      * @param dslContext jooq上下文

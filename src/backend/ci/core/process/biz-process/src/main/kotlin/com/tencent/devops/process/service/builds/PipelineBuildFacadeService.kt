@@ -1301,28 +1301,19 @@ class PipelineBuildFacadeService(
         debugVersion: Int? = null,
         archiveFlag: Boolean? = false
     ): ModelRecord {
-        if (archiveFlag != true) {
-            pipelinePermissionService.validPipelinePermission(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                permission = AuthPermission.VIEW,
-                message = MessageUtil.getMessageByLocale(
-                    ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
-                    I18nUtil.getLanguage(userId),
-                    arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_DETAIL))
-                )
+        val userPipelinePermissionCheckStrategy =
+            UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+        UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.VIEW,
+            message = MessageUtil.getMessageByLocale(
+                ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                I18nUtil.getLanguage(userId),
+                arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_DETAIL))
             )
-        } else {
-            val userPipelinePermissionCheckStrategy =
-                UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
-            UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                permission = AuthPermission.VIEW
-            )
-        }
+        )
         // 如果请求的参数是草稿版本的版本号，则用该版本查询调试记录，否则正常调用普通构建
         val targetDebugVersion = debugVersion?.takeIf {
             val draftVersion = pipelineRepositoryService.getDraftVersionResource(projectId, pipelineId, archiveFlag)
