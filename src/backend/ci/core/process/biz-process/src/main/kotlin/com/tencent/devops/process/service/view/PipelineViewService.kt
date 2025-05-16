@@ -759,9 +759,9 @@ class PipelineViewService @Autowired constructor(
                     } else {
                         false
                     }
-                }else if (filter is PipelineViewFilterByPacRepo) {
+                } else if (filter is PipelineViewFilterByPacRepo) {
                     false
-                }  else {
+                } else {
                     continue
                 }
 
