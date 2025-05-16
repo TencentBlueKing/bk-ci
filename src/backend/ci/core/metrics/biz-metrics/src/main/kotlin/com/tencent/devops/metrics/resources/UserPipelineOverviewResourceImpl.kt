@@ -29,6 +29,8 @@ package com.tencent.devops.metrics.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.metrics.api.UserPipelineOverviewResource
 import com.tencent.devops.metrics.utils.QueryParamCheckUtil.checkDateInterval
 import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getEndDateTime
@@ -44,6 +46,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserPipelineOverviewResourceImpl @Autowired constructor(
     private val pipelineOverviewManageService: PipelineOverviewManageService
 ) : UserPipelineOverviewResource {
+
+    @BkApiPermission([BkApiHandleType.PROJECT_MEMBER_CHECK])
     override fun queryPipelineSumInfo(
         projectId: String,
         userId: String,
@@ -66,6 +70,7 @@ class UserPipelineOverviewResourceImpl @Autowired constructor(
         )
     }
 
+    @BkApiPermission([BkApiHandleType.PROJECT_MEMBER_CHECK])
     override fun queryPipelineTrendInfo(
         projectId: String,
         userId: String,
