@@ -2193,6 +2193,9 @@
     "disable-pipeline" : {
       "type" : "boolean"
     },
+    "fail-if-variable-invalid" : {
+      "type" : "boolean"
+    },
     "recommended-version" : {
       "type" : "object",
       "additionalProperties" : false,
