@@ -704,8 +704,18 @@ class UserPipelineResourceImpl @Autowired constructor(
     }
 
     @AuditEntry(actionId = ActionId.PIPELINE_EDIT)
-    override fun exportPipeline(userId: String, projectId: String, pipelineId: String): Response {
-        return pipelineInfoFacadeService.exportPipeline(userId, projectId, pipelineId)
+    override fun exportPipeline(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        archiveFlag: Boolean?
+    ): Response {
+        return pipelineInfoFacadeService.exportPipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            archiveFlag = archiveFlag
+        )
     }
 
     @AuditEntry(

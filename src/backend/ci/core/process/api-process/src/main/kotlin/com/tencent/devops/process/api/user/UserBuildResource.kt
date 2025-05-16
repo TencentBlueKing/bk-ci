@@ -334,7 +334,10 @@ interface UserBuildResource {
         buildNum: Int,
         @Parameter(description = "查看指定版本调试数据", required = false, example = "false")
         @QueryParam("version")
-        debugVersion: Int? = null
+        debugVersion: Int? = null,
+        @Parameter(description = "是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<ModelRecord>
 
     @Operation(summary = "获取已完成的最新构建详情")

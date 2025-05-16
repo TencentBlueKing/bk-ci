@@ -568,7 +568,10 @@ interface UserPipelineResource {
         projectId: String,
         @Parameter(description = "流水线Id", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @Parameter(description = "归档库标识", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Response
 
     @Operation(summary = "导入流水线模板")

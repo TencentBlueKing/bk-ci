@@ -115,12 +115,11 @@ class BatchTaskFinishListener @Autowired constructor(
         val titleParams = mapOf(KEY_START_TIME to startTime, BATCH_ID to batchId, NAME to batchTaskName)
 
         // 过滤失败任务并构建错误信息
-        val failTaskResults = taskResults?.filter { !it.success }
-        val errorMsg = if (!failTaskResults.isNullOrEmpty()) {
-            buildErrorMessage(failTaskResults)
-        } else {
-            ""
-        }
+        val errorMsg = taskResults
+            ?.filterNot { it.success }
+            ?.takeIf { it.isNotEmpty() }
+            ?.let { buildErrorMessage(it) }
+            ?: ""
 
         // 构建消息内容参数（包含成功数、失败数和错误信息）
         val bodyParams = mapOf(

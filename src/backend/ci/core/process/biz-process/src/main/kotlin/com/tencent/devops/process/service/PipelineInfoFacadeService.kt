@@ -119,7 +119,7 @@ import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
 import java.time.LocalDateTime
-import java.util.LinkedList
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 @Suppress("ALL")
@@ -171,36 +171,50 @@ class PipelineInfoFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         version: Int? = null,
-        storageType: PipelineStorageType? = PipelineStorageType.MODEL
+        storageType: PipelineStorageType? = PipelineStorageType.MODEL,
+        archiveFlag: Boolean? = false
     ): Response {
-        val language = I18nUtil.getLanguage(userId)
-        val permission = AuthPermission.EDIT
-        pipelinePermissionService.validPipelinePermission(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            permission = permission,
-            message = MessageUtil.getMessageByLocale(
-                USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                language,
-                arrayOf(
-                    userId,
-                    projectId,
-                    permission.getI18n(I18nUtil.getLanguage(userId)),
-                    pipelineId
+        if (archiveFlag != true) {
+            val language = I18nUtil.getLanguage(userId)
+            val permission = AuthPermission.EDIT
+            pipelinePermissionService.validPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = permission,
+                message = MessageUtil.getMessageByLocale(
+                    USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    language,
+                    arrayOf(
+                        userId,
+                        projectId,
+                        permission.getI18n(I18nUtil.getLanguage(userId)),
+                        pipelineId
+                    )
                 )
             )
-        )
-
-        val targetVersion = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, version)
-            ?: throw OperationException(
-                I18nUtil.getCodeLanMessage(ILLEGAL_PIPELINE_MODEL_JSON, language = I18nUtil.getLanguage(userId))
+        } else {
+            val userPipelinePermissionCheckStrategy =
+                UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+            UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.EDIT
             )
+        }
+
+        val targetVersion = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId, pipelineId = pipelineId, version = version, archiveFlag = archiveFlag
+        ) ?: throw OperationException(
+            I18nUtil.getCodeLanMessage(ILLEGAL_PIPELINE_MODEL_JSON, language = I18nUtil.getLanguage(userId))
+        )
         val settingInfo = pipelineSettingFacadeService.userGetSetting(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            version = targetVersion.settingVersion ?: 1
+            version = targetVersion.settingVersion ?: 1,
+            archiveFlag = archiveFlag
         )
         val model = targetVersion.model
         // 适配兼容老数据

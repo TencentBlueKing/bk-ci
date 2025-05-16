@@ -161,10 +161,10 @@ class ReportService @Autowired constructor(
             buildId = reportListDTO.buildId
         )
         return reportRecordList.map {
-            val taskRecord = if (archiveFlag != true) {
-                pipelineTaskService.getBuildTask(projectId, reportListDTO.buildId, it.elementId)
-            } else {
+            val taskRecord = if (archiveFlag == true) {
                 null
+            } else {
+                pipelineTaskService.getBuildTask(projectId, reportListDTO.buildId, it.elementId)
             }
             val atomCode = taskRecord?.atomCode ?: ""
             val atomName = taskRecord?.taskName ?: ""
