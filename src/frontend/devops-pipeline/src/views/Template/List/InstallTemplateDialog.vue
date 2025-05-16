@@ -7,8 +7,9 @@
         :title="$t('template.installOrImportTemplate')"
         :position="dialogPosition"
         :ok-text="confirmBtnText"
-        :confirm-fn="handleConfirmInstall"
-        :on-close="handleCancelInstall"
+        :loading="loading"
+        @confirm="handleConfirmInstall"
+        @cancel="handleCancelInstall"
     >
         <bk-tab
             class="install-type-tab"
@@ -52,6 +53,7 @@
     const emit = defineEmits(['update:value', 'confirm'])
 
     const storeTemplateInfo = ref({})
+    const loading = ref(false)
     const activeTab = ref(INSTALL_TYPE_STORE)
     const dialogPosition = {
         top: '120'
@@ -84,13 +86,14 @@
     })
 
     function handleCancelInstall () {
-        emit('update:value', false)
+        emit('cancel', false)
     }
 
-    function handleConfirmInstall () {
+    async function handleConfirmInstall () {
+        let res = null
         switch (activeTab.value) {
             case INSTALL_TYPE_STORE:
-                importTemplateFromStore()
+                res = await importTemplateFromStore()
                 break
             case INSTALL_TYPE_REPOSITORY:
                 console.log(INSTALL_TYPE_REPOSITORY)
@@ -99,7 +102,7 @@
                 console.log(INSTALL_TYPE_LOCAL)
                 break
         }
-        emit('confirm')
+        emit('confirm', res)
     }
     function handleSubChange (val) {
         switch (activeTab.value) {
@@ -117,20 +120,28 @@
 
     async function importTemplateFromStore () {
         try {
-            await proxy.$store?.dispatch('templates/importTemplateFromStore', {
-                        projectId: projectId.value,
-                        params: {
-                            marketTemplateId: storeTemplateInfo.value.code,
-                            marketTemplateProjectId: storeTemplateInfo.value.srcProjectId,
-                            marketTemplateVersion: storeTemplateInfo.value.version
-                        }
-                    })
+            toggleLoading(true)
+            const res = await proxy.$store?.dispatch('templates/importTemplateFromStore', {
+                projectId: projectId.value,
+                params: {
+                    marketTemplateId: storeTemplateInfo.value.code,
+                    marketTemplateProjectId: storeTemplateInfo.value.srcProjectId
+                }
+            })
+
+            return res
         } catch (e) {
             bkMessage({
                 theme: 'error',
                 message: e.message || e
             })
+        } finally {
+            toggleLoading()
         }
+    }
+
+    function toggleLoading () {
+        loading.value = !loading.value
     }
 </script>
 
