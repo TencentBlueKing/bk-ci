@@ -38,13 +38,15 @@ class UserPipelinePermissionCheckContext(
         userId: String,
         projectId: String,
         pipelineId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        message: String? = null
     ) {
         strategy.checkUserPipelinePermission(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            permission = permission
+            permission = permission,
+            message = message
         )
     }
 }
