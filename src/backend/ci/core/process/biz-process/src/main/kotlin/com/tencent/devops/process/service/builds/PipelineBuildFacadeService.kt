@@ -185,9 +185,6 @@ class PipelineBuildFacadeService(
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
     private var cancelIntervalLimitTime: Int = 60 // 取消间隔时间为60秒
 
-    @Value("\${pipeline.build.retry.limit_days:28}")
-    private var retryLimitDays: Int = 28
-
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildFacadeService::class.java)
         private const val RETRY_THIRD_AGENT_ENV = "RETRY_THIRD_AGENT_ENV"

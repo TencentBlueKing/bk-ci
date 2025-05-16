@@ -30,17 +30,14 @@ object BatchTaskUtil {
      * @return Boolean 返回true表示服务匹配，false表示不匹配
      */
     fun isServiceMatched(targetService: String?): Boolean {
-        if (targetService == null) {
-            return false
-        }
-        // 获取当前运行的服务名称
+        if (targetService == null) return false
+
         val currentService = BkServiceUtil.getApplicationName() ?: ""
-        // 服务名称不匹配时记录日志并返回false
-        return if (currentService != targetService) {
+        val isMatch = currentService == targetService
+
+        if (!isMatch) {
             logger.info("Skip event for other service: target=$targetService, current=$currentService")
-            false
-        } else {
-            true
         }
+        return isMatch
     }
 }

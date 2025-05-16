@@ -44,7 +44,8 @@ class UserArchivedPipelinePermissionCheckStrategy : IUserPipelinePermissionCheck
         userId: String,
         projectId: String,
         pipelineId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        message: String?
     ) {
         val pipelinePermissionService = SpringContextUtil.getBean(PipelinePermissionService::class.java)
         val language = I18nUtil.getLanguage(userId)
@@ -54,7 +55,7 @@ class UserArchivedPipelinePermissionCheckStrategy : IUserPipelinePermissionCheck
                 projectId = projectId,
                 pipelineId = pipelineId,
                 permission = permission,
-                message = I18nUtil.getCodeLanMessage(
+                message = message ?: I18nUtil.getCodeLanMessage(
                     messageCode = CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
                     language = language,
                     params = arrayOf(userId, projectId, permission.getI18n(language), pipelineId)
