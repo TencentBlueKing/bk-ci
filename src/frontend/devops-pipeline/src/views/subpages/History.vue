@@ -95,6 +95,11 @@
             ShowVariable,
             DelegationPermission
         },
+        data () {
+            return {
+                shouldRetainArchiveFlag: false
+            }
+        },
         computed: {
             ...mapState('atom', ['pipelineInfo', 'pipeline', 'pipelineSetting', 'activePipelineVersion', 'switchingVersion']),
             ...mapGetters('atom', ['isActiveDraftVersion', 'isReleaseVersion', 'isReleasePipeline', 'isBranchVersion']),
@@ -205,26 +210,18 @@
             }
         },
         beforeDestroy () {
+            this.resetHistoryFilterCondition({ retainArchiveFlag: this.shouldRetainArchiveFlag })
             this.selectPipelineVersion(null)
             this.resetAtomModalMap()
         },
         beforeRouteLeave (to, from, next) {
-            if (to.query.archiveFlag && (to.name === 'pipelinesDetail' || to.name === 'draftDebugRecord')) {
-                this.resetHistoryFilterCondition({ retainArchiveFlag: true })
-                if (this.archiveFlag) {
-                    this.setHistoryPageStatus({
-                        query: {
-                            archiveFlag: this.archiveFlag
-                        }
-                    })
-                }
-            } else {
-                this.resetHistoryFilterCondition()
-            }
+            // 判断目标路由是否需要保留 archiveFlag
+            const routesToKeepArchiveFlag = ['pipelinesDetail', 'draftDebugRecord']
+            this.shouldRetainArchiveFlag = routesToKeepArchiveFlag.includes(to.name) && to.query.archiveFlag !== undefined
             next()
         },
         methods: {
-            ...mapActions('pipelines', ['resetHistoryFilterCondition', 'setHistoryPageStatus']),
+            ...mapActions('pipelines', ['resetHistoryFilterCondition']),
             ...mapActions('atom', [
                 'selectPipelineVersion',
                 'resetAtomModalMap'

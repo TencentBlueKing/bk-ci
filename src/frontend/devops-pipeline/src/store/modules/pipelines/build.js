@@ -56,9 +56,9 @@ const actions = {
     setHistoryPageStatus ({ commit, state }, newStatus) {
         commit('updateHistoryPageStatus', newStatus)
     },
-    resetHistoryFilterCondition ({ commit }, retainArchiveFlag = false) {
-        const currentQuery = state.currentQuery || {}
-        const newQuery = (retainArchiveFlag && currentQuery.archiveFlag) ? { archiveFlag: currentQuery.archiveFlag } : {}
+    resetHistoryFilterCondition ({ commit, state }, { retainArchiveFlag = false } = {}) {
+        const archiveFlag = state.historyPageStatus.query.archiveFlag
+        const newQuery = retainArchiveFlag && archiveFlag ? { archiveFlag } : {}
 
         commit('updateHistoryPageStatus', {
             count: 0,

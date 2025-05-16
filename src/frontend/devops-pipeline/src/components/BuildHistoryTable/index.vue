@@ -1203,13 +1203,6 @@
             },
             clearFilter () {
                 this.resetHistoryFilterCondition({ retainArchiveFlag: true })
-                if (this.archiveFlag) {
-                    this.setHistoryPageStatus({
-                        query: {
-                            archiveFlag: this.archiveFlag
-                        }
-                    })
-                }
                 this.$nextTick(() => {
                     this.requestHistory()
                 })
