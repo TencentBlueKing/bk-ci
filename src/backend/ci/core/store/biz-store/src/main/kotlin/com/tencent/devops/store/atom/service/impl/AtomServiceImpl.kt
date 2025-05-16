@@ -1445,4 +1445,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         }
         return Result(versionInfo)
     }
+
+    override fun getAtomId(atomCode: String, version: String): String? {
+        return atomDao.getAtomIdByVersionWithCode(dslContext, atomCode, version)
+    }
 }

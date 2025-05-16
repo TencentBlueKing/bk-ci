@@ -52,12 +52,14 @@ import com.tencent.devops.store.common.dao.StoreBaseManageDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreLabelRelDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
+import com.tencent.devops.store.common.dao.StoreVersionLogDao
 import com.tencent.devops.store.common.handler.StoreDeleteCheckHandler
 import com.tencent.devops.store.common.handler.StoreDeleteCodeRepositoryHandler
 import com.tencent.devops.store.common.handler.StoreDeleteDataPersistHandler
 import com.tencent.devops.store.common.handler.StoreDeleteHandlerChain
 import com.tencent.devops.store.common.handler.StoreDeleteRepoFileHandler
 import com.tencent.devops.store.common.lock.StoreCodeLock
+import com.tencent.devops.store.common.service.AbstractStoreComponentPkgSizeHandleService
 import com.tencent.devops.store.common.service.StoreBaseInstallService
 import com.tencent.devops.store.common.service.StoreComponentManageService
 import com.tencent.devops.store.common.service.StoreManagementExtraService
@@ -70,6 +72,7 @@ import com.tencent.devops.store.pojo.common.InstalledPkgFileShaContentRequest
 import com.tencent.devops.store.pojo.common.KEY_REPOSITORY_AUTHORIZER
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
+import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
@@ -145,6 +148,10 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
 
     @Autowired
     lateinit var redisOperation: RedisOperation
+
+    @Autowired
+    lateinit var storeVersionLogDao: StoreVersionLogDao
+
 
     companion object {
         private val logger = LoggerFactory.getLogger(StoreComponentManageServiceImpl::class.java)
@@ -538,6 +545,29 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         return SpringContextUtil.getBean(
             StoreBaseInstallService::class.java,
             beanName
+        )
+    }
+
+    override fun updateComponentVersionSize(
+        storeId: String,
+        storePackageInfoReqs: List<StorePackageInfoReq>,
+        storeType: StoreTypeEnum
+    ): Boolean {
+        return getStoreComponentPkgSizeHandleService(storeType.name).updateComponentVersionSize(
+            storeId = storeId,
+            storePackageInfoReqs = storePackageInfoReqs,
+            storeType = storeType
+        )
+    }
+
+    override fun batchUpdateComponentsVersionSize(storeType: StoreTypeEnum) {
+        getStoreComponentPkgSizeHandleService(storeType.name).batchUpdateComponentsVersionSize()
+    }
+
+    private fun getStoreComponentPkgSizeHandleService(storeType: String): AbstractStoreComponentPkgSizeHandleService {
+        return SpringContextUtil.getBean(
+            AbstractStoreComponentPkgSizeHandleService::class.java,
+            "${storeType}_PKG_SIZE_HANDLE_SERVICE"
         )
     }
 }
