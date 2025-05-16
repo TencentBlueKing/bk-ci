@@ -483,6 +483,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_SETTING` (
 CREATE TABLE IF NOT EXISTS `T_PIPELINE_TIMER` (
   `PROJECT_ID` varchar(32) NOT NULL COMMENT '项目ID',
   `PIPELINE_ID` varchar(34) NOT NULL COMMENT '流水线ID',
+  `TASK_ID` varchar(64)  DEFAULT '' COMMENT '插件ID',
   `CRONTAB` varchar(2048) NOT NULL COMMENT '任务ID',
   `CREATOR` varchar(64) NOT NULL COMMENT '创建者',
   `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -490,8 +491,8 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_TIMER` (
   `REPO_HASH_ID` varchar(64) COMMENT '代码库HASH ID',
   `BRANCHS` text  COMMENT '分支列表',
   `NO_SCM` bit(1)  DEFAULT FALSE COMMENT '源代码未更新则不触发构建',
-  PRIMARY KEY (`PROJECT_ID`,`PIPELINE_ID`),
-  UNIQUE KEY `IDX_PIPELINE_ID` (`PIPELINE_ID`)
+  `START_PARAM` text COMMENT '启动参数',
+  PRIMARY KEY (`PROJECT_ID`,`PIPELINE_ID`,`TASK_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
 
 -- ----------------------------
@@ -501,12 +502,13 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_TIMER_BRANCH`
 (
     `PROJECT_ID`   varchar(32)  not null comment '项目ID',
     `PIPELINE_ID`  varchar(34)  not null comment '流水线ID',
+    `TASK_ID`  varchar(64)  not null comment '插件ID',
     `REPO_HASH_ID` varchar(64)  not null comment '代码库HASH ID',
     `BRANCH`       varchar(255) not null comment '分支',
     `REVISION`     varchar(40)  not null comment '提交版本',
     `CREATE_TIME`  timestamp default CURRENT_TIMESTAMP not null COMMENT '创建时间',
     `UPDATE_TIME`  timestamp default CURRENT_TIMESTAMP not null COMMENT '更新时间',
-    primary key (`PROJECT_ID`, `PIPELINE_ID`, `REPO_HASH_ID`, `BRANCH`)
+    primary key (`PROJECT_ID`, `PIPELINE_ID`, `TASK_ID`, `REPO_HASH_ID`, `BRANCH`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '定时触发分支版本';
 
 -- ----------------------------

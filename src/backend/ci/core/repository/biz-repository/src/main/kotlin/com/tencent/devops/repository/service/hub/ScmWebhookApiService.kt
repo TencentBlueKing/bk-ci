@@ -27,12 +27,14 @@
 
 package com.tencent.devops.repository.service.hub
 
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.repository.service.RepositoryScmConfigService
 import com.tencent.devops.repository.service.RepositoryService
 import com.tencent.devops.repository.service.ScmApiManager
 import com.tencent.devops.scm.api.pojo.HookRequest
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
+import com.tencent.devops.scm.spring.manager.ScmProviderManager
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -44,7 +46,8 @@ class ScmWebhookApiService @Autowired constructor(
     private val repositoryService: RepositoryService,
     private val providerRepositoryFactory: ScmProviderRepositoryFactory,
     private val repositoryScmConfigService: RepositoryScmConfigService,
-    private val scmApiManager: ScmApiManager
+    private val scmApiManager: ScmApiManager,
+    private val scmProviderManager: ScmProviderManager
 ) : AbstractScmApiService(
     repositoryService = repositoryService,
     providerRepositoryFactory = providerRepositoryFactory,
@@ -52,19 +55,22 @@ class ScmWebhookApiService @Autowired constructor(
 ) {
     fun webhookParse(scmCode: String, request: HookRequest): Webhook {
         val properties = repositoryScmConfigService.getProps(scmCode = scmCode)
-        return scmApiManager.webhookParse(providerProperties = properties, request = request)
+        return scmProviderManager.webhookParser(properties).parse(request)
     }
 
-    fun webhookEnrich(projectId: String, webhook: Webhook, authRepository: AuthRepository): Webhook {
-        return invokeApi(
-            projectId = projectId,
-            authRepository = authRepository
-        ) { properties, providerRepository ->
-            scmApiManager.webhookEnrich(
-                providerProperties = properties,
-                providerRepository = providerRepository,
-                webhook = webhook
+    fun webhookEnrich(webhook: Webhook, authRepoList: List<AuthRepository>): Webhook {
+        val scmCode = authRepoList.firstOrNull()?.scmCode ?: throw InvalidParamException("scmCode is empty")
+        val properties = repositoryScmConfigService.getProps(scmCode = scmCode)
+        val providerRepositories = authRepoList.map {
+            providerRepositoryFactory.create(
+                properties = properties,
+                authRepository = it
             )
         }
+        return scmApiManager.webhookEnrich(
+            providerProperties = properties,
+            providerRepositories = providerRepositories,
+            webhook = webhook
+        )
     }
 }

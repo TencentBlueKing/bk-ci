@@ -30,8 +30,8 @@ package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.pipeline.PipelineBuildParamFormProp
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
-import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -64,7 +64,7 @@ interface ServiceSubPipelineResource {
         @Parameter(description = "流水线ID", required = false, example = "")
         @PathParam("pipelineId")
         pipelineId: String
-    ): Result<List<SubPipelineStartUpInfo>>
+    ): Result<List<PipelineBuildParamFormProp>>
 
     @Operation(summary = "从构建机启动指定项目的子流水线")
     @POST
