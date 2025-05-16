@@ -1725,6 +1725,21 @@
   "addLabels": "Add Label",
   "relyChanged": "Dependent field ({0}) values have changed, please check if the configuration is correct",
   "pipelineDataBoard": "EPlus",
+  "cron": {
+    "分": "Minute",
+    "时": "Hour",
+    "日": "Day",
+    "周": "Week",
+    "月": "Month",
+    "下次：": "Next:",
+    "小时": "Hour"
+  },
+  "enterRepoAlias": "Please enter the repository alias",
+  "pacRepoNotSet": "The associated PAC repository will be automatically monitored, no need to set it",
+  "addParam": "Add",
+  "selectRepo": "Select Repository",
+  "enterAlias": "Enter Alias",
+  "monitorPac": "Monitor PAC",
   "groupLabel": "Group labels",
   "groupLabelTips": "Variables with the same label will be displayed in the same group in the view and execution preview interface",
   "notGrouped": "Not grouped"
