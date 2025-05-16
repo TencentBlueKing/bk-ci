@@ -70,6 +70,9 @@
                             ...this.$route.params,
                             buildNo: response.data.id,
                             executeCount: undefined
+                        },
+                        query: {
+                            archiveFlag: this.$route.query.archiveFlag
                         }
                     })
                 } catch (error) {

@@ -365,13 +365,6 @@
                         ...(this.archiveFlag ? { archiveFlag: this.archiveFlag } : {})
                     }
                 })
-                if (this.archiveFlag) {
-                    this.setHistoryPageStatus({
-                        query: {
-                            archiveFlag: this.archiveFlag
-                        }
-                    })
-                }
             }
         }
     }

@@ -72,6 +72,12 @@
             @close="closeDisablePipeline"
             @done="afterDisablePipeline"
         />
+        <delete-archived-dialog
+            :is-show-delete-archived-dialog="pipelineActionState.isShowDeleteArchivedDialog"
+            :pipeline-list="pipelineActionState.activePipelineList"
+            @done="afterRemovePipeline"
+            @cancel="closeDeleteArchiveDialog"
+        />
     </div>
 </template>
 
@@ -88,6 +94,7 @@
     import { RESOURCE_ACTION, TEMPLATE_RESOURCE_ACTION } from '@/utils/permission'
     import { pipelineTabIdMap } from '@/utils/pipelineConst'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
+    import DeleteArchivedDialog from '@/views/PipelineList/DeleteArchivedDialog'
     export default {
         components: {
             ImportPipelinePopup,
@@ -95,6 +102,7 @@
             CopyPipelineDialog,
             SaveAsTemplateDialog,
             RemoveConfirmDialog,
+            DeleteArchivedDialog,
             DisableDialog
         },
         mixins: [pipelineActionMixin],
@@ -245,7 +253,13 @@
                         },
                         {
                             label: 'delete',
-                            handler: () => this.deleteHandler(pipeline),
+                            handler: () => {
+                                if (this.archiveFlag) {
+                                    this.openDeleteArchivedDialog(pipeline)
+                                } else {
+                                    this.deleteHandler(pipeline)
+                                }
+                            },
                             vPerm: {
                                 hasPermission: pipeline.permissions?.canDelete,
                                 disablePermissionApi: true,
