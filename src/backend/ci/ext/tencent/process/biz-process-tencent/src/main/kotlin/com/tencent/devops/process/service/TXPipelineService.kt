@@ -121,6 +121,8 @@ import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.quality.QualityPipeline
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.op.GitCiMarketAtomService
+import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
+import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
@@ -293,8 +295,20 @@ class TXPipelineService @Autowired constructor(
         return pipelineListFacadeService.listPipelineInfo(userId, projectId, request?.pipelineId, request?.templateId)
     }
 
-    fun exportYaml(userId: String, projectId: String, pipelineId: String, isGitCI: Boolean = false): Response {
-        val (model, yamlSb) = checkPermissionAndGetHead(userId, projectId, pipelineId, isGitCI)
+    fun exportYaml(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        isGitCI: Boolean = false,
+        archiveFlag: Boolean? = false
+    ): Response {
+        val (model, yamlSb) = checkPermissionAndGetHead(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            isGitCI = isGitCI,
+            archiveFlag = archiveFlag
+        )
         // 在stages对象的生成中会添加顶部注释，所以放在分隔注释上面
         val stages = getStageFromModel(userId, projectId, pipelineId, model, yamlSb, isGitCI)
         yamlSb.append("################################################################" +
@@ -1165,25 +1179,36 @@ class TXPipelineService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        isGitCI: Boolean
+        isGitCI: Boolean,
+        archiveFlag: Boolean? = false
     ): Pair<Model, StringBuilder> {
-        pipelinePermissionService.validPipelinePermission(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            permission = AuthPermission.EDIT,
-            message = MessageUtil.getMessageByLocale(
-                messageCode = BK_NO_RIGHT_EXPORT_PIPELINE,
-                language = I18nUtil.getLanguage(userId),
-                params = arrayOf(userId, projectId)
+        if (archiveFlag != true) {
+            pipelinePermissionService.validPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.EDIT,
+                message = MessageUtil.getMessageByLocale(
+                    messageCode = BK_NO_RIGHT_EXPORT_PIPELINE,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(userId, projectId)
+                )
             )
-        )
-        val model = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)
-            ?.model ?: throw CustomException(
-            Response.Status.BAD_REQUEST,
-            MessageUtil.getMessageByLocale(
-                messageCode = ERROR_PIPELINE_NOT_EXISTS,
-                language = I18nUtil.getLanguage(userId)
+        } else {
+            val userPipelinePermissionCheckStrategy =
+                UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+            UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.EDIT
+            )
+        }
+        val model = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId, pipelineId = pipelineId, archiveFlag = archiveFlag
+        )?.model ?: throw CustomException(
+            Response.Status.BAD_REQUEST, MessageUtil.getMessageByLocale(
+                messageCode = ERROR_PIPELINE_NOT_EXISTS, language = I18nUtil.getLanguage(userId)
             ) + "！"
         )
         val yamlSb = StringBuilder()
