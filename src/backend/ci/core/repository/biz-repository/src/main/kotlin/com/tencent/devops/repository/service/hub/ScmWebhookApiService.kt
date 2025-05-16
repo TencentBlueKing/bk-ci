@@ -58,18 +58,14 @@ class ScmWebhookApiService @Autowired constructor(
         return scmProviderManager.webhookParser(properties).parse(request)
     }
 
-    fun webhookEnrich(webhook: Webhook, authRepoList: List<AuthRepository>): Webhook {
-        val scmCode = authRepoList.firstOrNull()?.scmCode ?: throw InvalidParamException("scmCode is empty")
-        val properties = repositoryScmConfigService.getProps(scmCode = scmCode)
-        val providerRepositories = authRepoList.map {
-            providerRepositoryFactory.create(
-                properties = properties,
-                authRepository = it
-            )
-        }
+    fun webhookEnrich(webhook: Webhook, authRepo: AuthRepository): Webhook {
+        val properties = repositoryScmConfigService.getProps(scmCode = authRepo.scmCode)
         return scmApiManager.webhookEnrich(
             providerProperties = properties,
-            providerRepositories = providerRepositories,
+            providerRepository = providerRepositoryFactory.create(
+                properties = properties,
+                authRepository = authRepo
+            ),
             webhook = webhook
         )
     }
