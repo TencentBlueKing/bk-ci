@@ -449,7 +449,9 @@ class ProcessDataDeleteDao {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             val conditions = mutableListOf<Condition>().apply {
                 add(PROJECT_ID.eq(projectId))
-                add(BUILD_ID.`in`(buildIds))
+                if (buildIds.isNotEmpty()) {
+                    add(BUILD_ID.`in`(buildIds))
+                }
                 if (skipTaskDeleteFlag == true) {
                     // 为了构建详情页组装数据方便，skip状态的post和质量红线相关task记录不删除
                     add(STATUS.eq(BuildStatus.SKIP.name))

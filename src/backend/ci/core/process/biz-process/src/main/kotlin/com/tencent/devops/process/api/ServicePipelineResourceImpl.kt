@@ -399,6 +399,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
             pipelineRepositoryService.getPipelineInfo(
                 projectId = projectId,
                 pipelineId = pipelineId,
+                channelCode = channelCode,
                 queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
             )
         )

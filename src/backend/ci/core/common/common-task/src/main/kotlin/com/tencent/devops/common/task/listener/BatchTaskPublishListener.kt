@@ -68,14 +68,14 @@ class BatchTaskPublishListener @Autowired constructor(
         val taskId = event.taskId
         // 生成Redis存储key并保存任务结果
         val batchTaskResultKey = BatchTaskUtil.generateBatchTaskResultKey(taskType, batchId)
-        redisOperation.hset(
-            key = batchTaskResultKey, hashKey = taskId, values = JsonUtil.toJson(taskResult)
-        )
-        // 设置Redis key过期时间（单位：小时转秒）
-        val expiredInHour = event.expiredInHour
-        redisOperation.expire(key = batchTaskResultKey, expiredInSecond = expiredInHour * 3600L)
         BatchTaskLock(redisOperation, batchId).use { lock ->
             lock.lock()
+            redisOperation.hset(
+                key = batchTaskResultKey, hashKey = taskId, values = JsonUtil.toJson(taskResult)
+            )
+            // 设置Redis key过期时间（单位：小时转秒）
+            val expiredInHour = event.expiredInHour
+            redisOperation.expire(key = batchTaskResultKey, expiredInSecond = expiredInHour * 3600L)
             // 更新完成任务计数
             val completedNum = redisOperation.increment(
                 key = BatchTaskUtil.generateBatchTaskCompletedKey(taskType, batchId), incr = 1

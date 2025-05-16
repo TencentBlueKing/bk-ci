@@ -36,8 +36,6 @@ import org.springframework.stereotype.Service
 class ProcessArchivePipelineTaskParamService : TaskParamService {
 
     override fun getKeyParamMap(data: Map<String, Any>): Map<String, Any> {
-        return mutableMapOf<String, Any>().apply {
-            put(I18nUtil.getCodeLanMessage(KEY_PIPELINE_ID), data[KEY_PIPELINE_ID].toString())
-        }
+        return mapOf(I18nUtil.getCodeLanMessage(KEY_PIPELINE_ID) to data[KEY_PIPELINE_ID].toString())
     }
 }
