@@ -46,7 +46,9 @@ import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.service.BkTag
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
@@ -83,7 +85,8 @@ class ProjectLocalService @Autowired constructor(
     private val projectPermissionService: ProjectPermissionService,
     private val tokenService: ClientTokenService,
     private val projectExtPermissionService: ProjectExtPermissionService,
-    private val bkTag: BkTag
+    private val bkTag: BkTag,
+    private val commonConfig: CommonConfig
 ) {
 
     @Value("\${tag.stream:#{null}}")
@@ -91,6 +94,8 @@ class ProjectLocalService @Autowired constructor(
 
     @Value("\${tag.rbac:#{null}}")
     private var rbacTag: String = ""
+
+    private val outerImageUrl = commonConfig.devopsOuterHostGateWay + "/images"
 
     fun listForApp(
         userId: String,
@@ -142,19 +147,7 @@ class ProjectLocalService @Autowired constructor(
                 enabled = true
             ).asSequence().filter {
                 it.projectName.contains(searchName, true)
-            }.map {
-                AppProjectVO(
-                    projectCode = it.englishName,
-                    projectName = it.projectName,
-                    logoUrl = if (it.logoAddr.startsWith("http://radosgw.open.oa.com")) {
-                        "https://dev-download.bkdevops.qq.com/images" +
-                                it.logoAddr.removePrefix("http://radosgw.open.oa.com")
-                    } else {
-                        it.logoAddr
-                    },
-                    projectSource = ProjectSourceEnum.BK_CI.id
-                )
-            }.toList()
+            }.map { it.toAppProjectVO() }.toList()
 
             finalRecords.addAll(records)
 
@@ -167,19 +160,7 @@ class ProjectLocalService @Autowired constructor(
                 limit = limit,
                 searchName = searchName,
                 enabled = true
-            ).map {
-                AppProjectVO(
-                    projectCode = it.englishName,
-                    projectName = it.projectName,
-                    logoUrl = if (it.logoAddr.startsWith("http://radosgw.open.oa.com")) {
-                        "https://dev-download.bkdevops.qq.com/images" +
-                                it.logoAddr.removePrefix("http://radosgw.open.oa.com")
-                    } else {
-                        it.logoAddr
-                    },
-                    projectSource = ProjectSourceEnum.BK_CI.id
-                )
-            }
+            ).map { it.toAppProjectVO() }
 
             val hasNext = if (records.size < limit) {
                 false
@@ -661,9 +642,24 @@ class ProjectLocalService @Autowired constructor(
         )
     }
 
+    /**
+     * 转换成VO
+     */
+    private fun TProjectRecord.toAppProjectVO() = AppProjectVO(
+        projectCode = this.englishName,
+        projectName = this.projectName,
+        logoUrl = if (this.logoAddr.startsWith(STATIC_FILE_WOA_COM)) {
+            outerImageUrl + this.logoAddr.removePrefix(STATIC_FILE_WOA_COM)
+        } else {
+            this.logoAddr
+        },
+        projectSource = ProjectSourceEnum.BK_CI.id
+    )
+
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectLocalService::class.java)
-        const val PROJECT_LIST = "project_list"
-        const val PROJECT_CREATE = "project_create"
+        private const val STATIC_FILE_WOA_COM = "https://staticfile.woa.com"
+        private const val PROJECT_LIST = "project_list"
+        private const val PROJECT_CREATE = "project_create"
     }
 }
