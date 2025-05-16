@@ -66,7 +66,11 @@
             async fetchPipelineInfo () {
                 try {
                     this.isLoading = true
-                    await this.requestPipelineSummary(this.$route.params)
+                    const params = {
+                        ...this.$route.params,
+                        ...this.$route.query
+                    }
+                    await this.requestPipelineSummary(params)
                 } catch (error) {
                     this.handleError(error, {
                         projectId: this.$route.params.projectId,

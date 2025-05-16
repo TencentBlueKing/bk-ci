@@ -210,8 +210,11 @@ const actions = {
             return response.data
         })
     },
-    searchPipelineList ({ commit, state, dispatch }, { projectId, searchName = '' }) {
-        const url = `/${PROCESS_API_URL_PREFIX}/user/pipelineInfos/${projectId}/searchByName?pipelineName=${encodeURIComponent(searchName)}`
+    searchPipelineList ({ commit, state, dispatch }, { projectId, searchName = '', archiveFlag }) {
+        let url = `/${PROCESS_API_URL_PREFIX}/user/pipelineInfos/${projectId}/searchByName?pipelineName=${encodeURIComponent(searchName)}`
+        if (archiveFlag !== undefined && archiveFlag !== null) {
+            url += `?archiveFlag=${encodeURIComponent(archiveFlag)}`
+        }
 
         return ajax.get(url).then(response => {
             return response.data
@@ -380,8 +383,12 @@ const actions = {
         })
     },
     // 流水线历史版本列表
-    requestPipelineVersionList (_, { projectId, pipelineId, ...params }) {
-        return ajax.get(`${versionPrefix}/projects/${projectId}/pipelines/${pipelineId}/versions`, {
+    requestPipelineVersionList (_, { projectId, pipelineId, archiveFlag, ...params }) {
+        let url = `${versionPrefix}/projects/${projectId}/pipelines/${pipelineId}/versions`
+        if (archiveFlag !== undefined && archiveFlag !== null) {
+            url += `?archiveFlag=${encodeURIComponent(archiveFlag)}`
+        }
+        return ajax.get(url, {
             params
         }).then(res => res.data)
     },

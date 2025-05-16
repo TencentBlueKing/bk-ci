@@ -39,7 +39,7 @@
             class="pipeline-history-right-aside"
         >
             <VersionDiffEntry
-                v-if="!isTemplatePipeline && !editAndExecutable"
+                v-if="!isTemplatePipeline && !editAndExecutable && !archiveFlag"
                 :text="false"
                 outline
                 :version="currentVersion"
@@ -48,7 +48,7 @@
                 {{ $t("diff") }}
             </VersionDiffEntry>
             <RollbackEntry
-                v-if="showRollback && (isReleasePipeline || onlyBranchPipeline)"
+                v-if="showRollback && (isReleasePipeline || onlyBranchPipeline) && !archiveFlag"
                 :text="false"
                 :has-permission="canEdit"
                 :version="currentVersion"
@@ -65,7 +65,7 @@
                 {{ operateName }}
             </RollbackEntry>
             <bk-button
-                v-else-if="onlyBranchPipeline && activePipelineVersion?.version === releaseVersion"
+                v-else-if="onlyBranchPipeline && activePipelineVersion?.version === releaseVersion && !archiveFlag"
                 theme="primary"
                 outline
                 v-perm="{
@@ -83,7 +83,10 @@
                 {{ $t("edit") }}
             </bk-button>
             <template v-if="editAndExecutable">
-                <span v-bk-tooltips="tooltip">
+                <span
+                    v-if="!archiveFlag"
+                    v-bk-tooltips="tooltip"
+                >
                     <bk-button
                         :disabled="!executable"
                         theme="primary"
@@ -225,6 +228,9 @@
             },
             RESOURCE_ACTION () {
                 return RESOURCE_ACTION
+            },
+            archiveFlag () {
+                return this.$route.query.archiveFlag
             }
         },
         watch: {
@@ -271,11 +277,13 @@
                 try {
                     if (this.currentVersion) {
                         this.setSwitchingPipelineVersion(true)
-                        await this.requestPipeline({
+                        const urlParams = {
                             projectId: this.projectId,
                             pipelineId: this.pipelineId,
-                            version: this.currentVersion
-                        })
+                            version: this.currentVersion,
+                            archiveFlag: this.archiveFlag
+                        }
+                        await this.requestPipeline(urlParams)
                     }
                 } catch (error) {
                     this.$bkMessage({

@@ -104,6 +104,9 @@
             activeChild () {
                 return this.getNavComponent(this.activeMenuItem)
             },
+            archiveFlag () {
+                return this.$route.query.archiveFlag
+            },
             asideNav () {
                 return [
                     {
@@ -189,7 +192,7 @@
                                 },
                                 name: 'changeLog'
                             }
-                        ].map((child) => ({
+                        ].filter(child => !this.archiveFlag || child.name === 'changeLog').map((child) => ({
                             ...child,
                             disabled: !this.isReleaseVersion,
                             active: this.activeMenuItem === child.name
@@ -202,12 +205,26 @@
             }
         },
         beforeDestroy () {
-            this.resetHistoryFilterCondition()
             this.selectPipelineVersion(null)
             this.resetAtomModalMap()
         },
+        beforeRouteLeave (to, from, next) {
+            if (to.query.archiveFlag && (to.name === 'pipelinesDetail' || to.name === 'draftDebugRecord')) {
+                this.resetHistoryFilterCondition({ retainArchiveFlag: true })
+                if (this.archiveFlag) {
+                    this.setHistoryPageStatus({
+                        query: {
+                            archiveFlag: this.archiveFlag
+                        }
+                    })
+                }
+            } else {
+                this.resetHistoryFilterCondition()
+            }
+            next()
+        },
         methods: {
-            ...mapActions('pipelines', ['resetHistoryFilterCondition']),
+            ...mapActions('pipelines', ['resetHistoryFilterCondition', 'setHistoryPageStatus']),
             ...mapActions('atom', [
                 'selectPipelineVersion',
                 'resetAtomModalMap'
@@ -263,7 +280,8 @@
                     params: {
                         ...this.$route.params,
                         type: child.name
-                    }
+                    },
+                    query: this.$route.query
                 })
             },
             switchToReleaseVersion () {
@@ -271,7 +289,8 @@
                     params: {
                         ...this.$route.params,
                         version: this.pipelineInfo?.releaseVersion
-                    }
+                    },
+                    query: this.$route.query
                 })
             }
         }
