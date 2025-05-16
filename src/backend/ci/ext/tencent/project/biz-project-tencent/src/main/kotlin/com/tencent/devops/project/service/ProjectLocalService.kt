@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.archive.config.BkRepoConfig
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
@@ -86,7 +87,8 @@ class ProjectLocalService @Autowired constructor(
     private val tokenService: ClientTokenService,
     private val projectExtPermissionService: ProjectExtPermissionService,
     private val bkTag: BkTag,
-    private val commonConfig: CommonConfig
+    private val commonConfig: CommonConfig,
+    private val bkRepoConfig: BkRepoConfig
 ) {
 
     @Value("\${tag.stream:#{null}}")
@@ -648,8 +650,8 @@ class ProjectLocalService @Autowired constructor(
     private fun TProjectRecord.toAppProjectVO() = AppProjectVO(
         projectCode = this.englishName,
         projectName = this.projectName,
-        logoUrl = if (this.logoAddr.startsWith(STATIC_FILE_WOA_COM)) {
-            outerImageUrl + this.logoAddr.removePrefix(STATIC_FILE_WOA_COM)
+        logoUrl = if (this.logoAddr.startsWith(bkRepoConfig.bkrepoStaticRepoPrefixUrl)) {
+            outerImageUrl + this.logoAddr.removePrefix(bkRepoConfig.bkrepoStaticRepoPrefixUrl)
         } else {
             this.logoAddr
         },
@@ -658,7 +660,6 @@ class ProjectLocalService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectLocalService::class.java)
-        private const val STATIC_FILE_WOA_COM = "https://staticfile.woa.com"
         private const val PROJECT_LIST = "project_list"
         private const val PROJECT_CREATE = "project_create"
     }
