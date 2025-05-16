@@ -119,6 +119,9 @@
             curPipelineId () {
                 return this.pipelineInfo?.pipelineId
             },
+            archiveFlag () {
+                return this.$route.query.archiveFlag
+            },
             actionConfMenus () {
                 const { projectId } = this.$route.params
                 const pipeline = {
@@ -126,7 +129,7 @@
                     projectId,
                     pac: this.pacEnabled
                 }
-                return [
+                const menuItems = [
                     [
                         {
                             label: this.pipelineInfo?.hasCollect ? 'uncollect' : 'collect',
@@ -256,6 +259,18 @@
                         }
                     ]
                 ]
+
+                if (this.archiveFlag) {
+                    // 归档时只保留导出和删除
+                    return menuItems.map(subMenu =>
+                        subMenu.filter(item =>
+                            item.label === 'newlist.exportPipelineJson'
+                            || item.label === 'delete'
+                        )
+                    ).filter(subMenu => subMenu.length > 0)
+                }
+
+                return menuItems
             }
         },
         methods: {

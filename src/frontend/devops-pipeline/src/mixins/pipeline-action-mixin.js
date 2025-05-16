@@ -106,8 +106,10 @@ export default {
                             params: {
                                 projectId: item.projectId,
                                 pipelineId: item.pipelineId,
-                                archiveFlag: true,
                                 type: item.onlyDraftVersion ? pipelineTabIdMap.pipeline : 'history'
+                            },
+                            query: {
+                                archiveFlag: true
                             }
                         },
                         latestBuildRoute: {
@@ -117,6 +119,9 @@ export default {
                                 projectId: item.projectId,
                                 pipelineId: item.pipelineId,
                                 buildNo: item.latestBuildId
+                            },
+                            query: {
+                                archiveFlag: true
                             }
                         }
                     }))

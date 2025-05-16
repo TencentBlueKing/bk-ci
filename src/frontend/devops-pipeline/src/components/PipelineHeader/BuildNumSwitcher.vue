@@ -60,7 +60,8 @@
                     const response = await this.requestPipelineExecDetailByBuildNum({
                         buildNum: nextBuildNum,
                         ...this.$route.params,
-                        version: this.version
+                        version: this.version,
+                        archiveFlag: this.$route.query.archiveFlag
                     })
                     this.$router.push({
                         name: 'pipelinesDetail',
