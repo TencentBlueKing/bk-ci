@@ -880,7 +880,7 @@
                 if (this.isTemplateInstanceMode) {
                     try {
                         await this.$refs?.releaseForm?.validate?.()
-                        this.$emit('release')
+                        this.$emit('release', this.releaseParams)
                     } catch (e) {
                         console.error(e)
                     }

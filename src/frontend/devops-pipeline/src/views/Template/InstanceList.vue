@@ -10,22 +10,24 @@
             v-if="showContent && showInstanceList"
         >
             <section class="info-header">
-                <div
+                <bk-popover
                     class="instance-handle-row"
-                    v-bk-tooltips="updateConfig"
+                    placement="right"
+                    :disabled="!disabledBatchBtn"
+                    :width="300"
                 >
                     <bk-button
                         class="batch-update"
-                        :disabled="!selectItemList.length"
+                        :disabled="disabledBatchBtn"
                         @click="batchUpdateInstance()"
                     >
                         <span>{{ $t('template.batchUpdateInstance') }}</span>
                     </bk-button>
-                </div>
-                <div id="update-html">
-                    <p>{{ $t('template.batchUpdateTip1') }}</p>
-                    <p>{{ $t('template.batchUpdateTip2') }}</p>
-                </div>
+                    <div slot="content">
+                        <p>{{ $t('template.batchUpdateTip1') }}</p>
+                        <p>{{ $t('template.batchUpdateTip2') }}</p>
+                    </div>
+                </bk-popover>
                 <!-- <bk-input
                     :placeholder="$t('search')"
                     ext-cls="instance-handle-row-right"
@@ -57,20 +59,73 @@
                         :label="$t('template.pipelineInstanceName')"
                         prop="pipelineName"
                     >
-                        <template slot-scope="props">
+                        <template slot-scope="{ row }">
                             <span
                                 class="pipeline-name"
-                                :title="props.row.pipelineName"
-                                @click="toPipelineHistory(props.row.pipelineId)"
-                            >{{ props.row.pipelineName }}</span>
+                                :title="row.pipelineName"
+                                @click="toPipelineHistory(row.pipelineId)"
+                            >
+                                {{ row.pipelineName }}
+                            </span>
+                            <pac-tag
+                                v-if="row.enabledPac"
+                            />
                         </template>
                     </bk-table-column>
                     <bk-table-column
                         :label="$t('template.currentVision')"
-                        prop="versionName"
-                    ></bk-table-column>
+                        prop="pipelineVersionName"
+                        :width="300"
+                    >
+                        <template slot-scope="{ row }">
+                            <div class="version-wrapper">
+                                {{ row.pipelineVersionName }}
+                                <span
+                                    class="template-version"
+                                    v-if="[TEMPLATE_INSTANCE_PIPELINE_STATUS.PENDING_UPDATE, TEMPLATE_INSTANCE_PIPELINE_STATUS.UPDATED].includes(row.status)"
+                                >
+                                    {{ $t('template.from') }} {{ row.fromTemplateVersionName }}
+                                </span>
+
+                                <template v-if="row.status === TEMPLATE_INSTANCE_PIPELINE_STATUS.PENDING_UPDATE">
+                                    <logo
+                                        name="update"
+                                        :size="14"
+                                    />
+                                </template>
+
+                                <template
+                                    v-if="row.status === TEMPLATE_INSTANCE_PIPELINE_STATUS.UPDATING"
+                                >
+                                    <span class="template-version">
+                                        {{ $t('template.Upgrading') }}
+                                        <bk-loading
+                                            class="loading-icon"
+                                            theme="primary"
+                                            mode="spin"
+                                            size="mini"
+                                            is-loading
+                                        />
+                                    </span>
+                                </template>
+
+                                <template
+                                    v-if="row.status === TEMPLATE_INSTANCE_PIPELINE_STATUS.FAILED"
+                                >
+                                    <span class="template-version">
+                                        {{ $t('template.UpgradeFailed') }}
+                                        <logo
+                                            name="failed-circle-fill"
+                                            :size="14"
+                                        />
+                                    </span>
+                                </template>
+                            </div>
+                        </template>
+                    </bk-table-column>
                     <bk-table-column
                         :label="$t('template.newestVersion')"
+                        :width="140"
                     >
                         <template>
                             <span>{{ currentVersionName }}</span>
@@ -78,40 +133,46 @@
                     </bk-table-column>
                     <bk-table-column
                         :label="$t('template.codeRepo')"
-                        prop="codeRepo"
-                    ></bk-table-column>
+                        prop="repoAliasName"
+                    >
+                        <template slot-scope="{ row }">
+                            {{ row.repoAliasName || '--' }}
+                        </template>
+                    </bk-table-column>
                     <bk-table-column
                         :label="$t('template.lastModifiedBy')"
                         prop="updater"
-                    ></bk-table-column>
+                        :width="150"
+                    >
+                    </bk-table-column>
                     <bk-table-column
                         :label="$t('lastUpdateTime')"
                         prop="updateTime"
+                        :width="250"
                     >
-                        <template slot-scope="props">
-                            <span>{{ localConvertTime(props.row.updateTime) }}</span>
+                        <template slot-scope="{ row }">
+                            <span>{{ localConvertTime(row.updateTime) }}</span>
                         </template>
                     </bk-table-column>
                     <bk-table-column
                         :label="$t('operate')"
-                        width="250"
                     >
-                        <template slot-scope="props">
+                        <template slot-scope="{ row }">
                             <bk-button
                                 class="mr10"
                                 theme="primary"
                                 text
-                                :disabled="!props.row.hasPermission"
-                                @click="updateInstance(props.row)"
+                                :disabled="!row.canEdit || !!row.pullRequestUrl"
+                                @click="updateInstance(row)"
                             >
                                 {{ $t('template.updateInstance') }}
                             </bk-button>
                             <bk-button
+                                v-if="row.pullRequestUrl"
                                 class="mr10"
                                 theme="primary"
                                 text
-                                :disabled="!props.row.hasPermission"
-                                @click="HandleMR(props.row)"
+                                @click="HandleMR(row)"
                             >
                                 {{ $t('template.handleMR') }}
                             </bk-button>
@@ -119,16 +180,16 @@
                                 class="mr10"
                                 theme="primary"
                                 text
-                                @click="copyAsTemplateInstance(props.row)"
-                                :disabled="!props.row.hasPermission"
+                                @click="copyAsTemplateInstance(row)"
+                                :disabled="!row.canEdit"
                             >
                                 {{ $t('copy') }}
                             </bk-button>
                             <version-diff-entry
-                                v-if="props.row.version !== currentVersion"
-                                :version="props.row.version"
+                                v-if="row.version !== currentVersion"
+                                :version="row.version"
                                 :latest-version="currentVersion"
-                                :pipeline-id="props.row.pipelineId"
+                                :pipeline-id="row.pipelineId"
                                 type="templateInstance"
                             />
                         </template>
@@ -147,13 +208,17 @@
 </template>
 
 <script setup>
-    import emptyTips from '@/components/pipelineList/imgEmptyTips'
-    import UseInstance from '@/hook/useInstance'
-    import { SET_INSTANCE_LIST } from '@/store/modules/templates/constants'
-    import { convertTime } from '@/utils/util'
     import { computed, onMounted, ref } from 'vue'
+    import { convertTime } from '@/utils/util'
+    import {
+        SET_INSTANCE_LIST,
+        TEMPLATE_INSTANCE_PIPELINE_STATUS
+    } from '@/store/modules/templates/constants'
+    import PacTag from '@/components/PacTag'
+    import Logo from '@/components/Logo'
+    import emptyTips from '@/components/pipelineList/imgEmptyTips'
     import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
-
+    import UseInstance from '@/hook/useInstance'
     const { proxy, showTips, t } = UseInstance()
     const isLoading = ref(false)
     const searchable = ref(false)
@@ -166,12 +231,7 @@
         count: 0,
         limit: 10
     })
-    const updateConfig = ref({
-        allowHTML: true,
-        width: 290,
-        placement: 'top-middle',
-        content: '#update-html'
-    })
+
     const emptyTipsConfig = ref({
         title: t('template.instanceEmptyTitle'),
         desc: t('template.instanceEmptyDesc'),
@@ -184,20 +244,23 @@
             }
         ]
     })
-
     const showInstanceList = computed(() => showContent.value && (instanceList.value.length || searchable.value))
     const projectId = computed(() => proxy.$route.params.projectId)
     const templateId = computed(() => proxy.$route.params.templateId)
     const pipelineInfo = computed(() => proxy.$store?.state?.atom?.pipelineInfo)
-
     const currentVersion = computed(() => pipelineInfo.value?.releaseVersion)
     const currentVersionName = computed(() => pipelineInfo.value?.releaseVersionName)
-
     const searchParams = computed(() => searchValue.value.reduce((acc, filter) => {
         acc[filter.id] = filter.values.map(val => val.id).join(',')
         return acc
     }, {}))
+    const disabledBatchBtn = computed(() => {
+        const enabledSet = new Set(selectItemList.value.map(item => item.enabledPac))
+        if (enabledSet.size > 1) return true
 
+        const repoValues = selectItemList.value.map(item => item.repoAliasName).filter(Boolean)
+        return !(repoValues.length === 0 || new Set(repoValues).size === 1) || !selectItemList.value.length
+    })
     onMounted(() => {
         requestInstanceList()
     })
@@ -240,11 +303,11 @@
         }
     }
     function selectItem (items) {
-        selectItemList.value = items.filter(i => i.hasPermission)
-        return items.filter(i => i.hasPermission)
+        selectItemList.value = items.filter(i => i.canEdit)
+        return items.filter(i => i.canEdit)
     }
     function isUpdating (row) {
-        return row.status !== 'UPDATING' && row.hasPermission
+        return row.status !== 'UPDATING' && row.canEdit
     }
     function localConvertTime (timestamp) {
         return convertTime(timestamp)
@@ -262,13 +325,13 @@
         proxy.$router.push(route)
     }
     function updateInstance (row) {
-        if (row.hasPermission) {
+        if (row.canEdit) {
             proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, [row])
             createInstance(row.templateId, 'upgrade')
         }
     }
     function HandleMR (row) {
-        // TO DO
+        window.open(row.pullRequestUrl, '_blank')
     }
     function copyAsTemplateInstance (row) {
         const route = {
@@ -343,6 +406,7 @@
             .pipeline-name {
                 color: $primaryColor;
                 cursor: pointer;
+                margin-right: 5px;
             }
             .disabled-checkbox {
                 position: absolute;
@@ -370,6 +434,21 @@
                 display: inline-block;
                 margin-right: 20px;
                 cursor: pointer;
+            }
+            .template-version {
+                color: #979BA5;
+                margin: 0 5px;
+            }
+            .version-wrapper {
+                display: table;
+                align-items: center;
+            }
+            .loading-icon {
+                display: ruby;
+                .bk-spin-loading {
+                    margin: auto;
+                    padding-left: 12px;
+                }
             }
         }
         .batch-update {

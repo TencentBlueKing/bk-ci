@@ -177,7 +177,7 @@
         
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, list)
     }
-    async function handleReleaseInstance () {
+    async function handleReleaseInstance (value) {
         const fn = !isInstanceCreateViewType.value ? 'templates/updateInstance' : 'templates/releaseInstance'
         try {
             const instanceReleaseInfos = instanceList.value.map(item => {
@@ -195,7 +195,8 @@
                 version: templateVersion.value,
                 params: {
                     useTemplateSettings: useTemplateSettings.value,
-                    instanceReleaseInfos
+                    instanceReleaseInfos,
+                    ...value
                 }
             })
             proxy.$store.commit(`templates/${SET_RELEASE_BASE_ID}`, res.data)

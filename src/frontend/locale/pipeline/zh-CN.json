@@ -587,7 +587,10 @@
     "batchEditInstance": "批量编辑实例",
     "batchEditInstanceTips": "添加的字段配置将会应用于所有实例，如未填写，则默认为清空该字段值",
     "releaseTaskHeaderTips": "有 {0} 个发布任务进行中",
-    "views": "查看"
+    "views": "查看",
+    "from": "来自",
+    "Upgrading": "升级中",
+    "UpgradeFailed": "升级失败"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",

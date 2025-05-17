@@ -585,7 +585,10 @@
     "batchEditInstance": "Batch Edit Instance",
     "batchEditInstanceTips": "The added field configuration will apply to all instances. If left blank, the field value will be cleared by default.", 
     "releaseTaskHeaderTips": "{0} release tasks are in progress.",
-    "views": "Views"
+    "views": "Views",
+    "from": "From",
+    "Upgrading": "Upgrading",
+    "UpgradeFailed": "Upgrade Failed"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",

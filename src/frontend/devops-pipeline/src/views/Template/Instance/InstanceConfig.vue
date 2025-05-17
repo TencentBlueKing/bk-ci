@@ -362,7 +362,7 @@
         const templateBuildNo = template?.buildNo
 
         // 非入参的参数直接赋值模板配置的入参默认值
-        if (instanceBuildNo.required && !templateBuildNo.required) {
+        if (instanceBuildNo?.required && !templateBuildNo?.required) {
             instanceParams.forEach(i => {
                 if (allVersionKeyList.includes(i.id)) {
                     const newValue = templateParams.find(t => t.id === i.id)?.defaultValue
@@ -409,7 +409,7 @@
     }
     function compareBuild (instanceBuildNo, templateBuildNo) {
         // 将模板的推荐版本号配置覆盖实例推荐版本号
-        if (instanceBuildNo.required !== templateBuildNo.required) {
+        if (instanceBuildNo?.required !== templateBuildNo?.required) {
             return {
                 ...instanceBuildNo,
                 ...templateBuildNo

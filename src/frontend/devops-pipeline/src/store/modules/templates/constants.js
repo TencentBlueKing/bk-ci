@@ -68,10 +68,18 @@ export const SET_RELEASE_BASE_ID = 'SET_RELEASE_BASE_ID'
 export const SHOW_TASK_DETAIL = 'SHOW_TASK_DETAIL'
 export const SET_TASK_DETAIL = 'SET_TASK_DETAIL'
 
-// 实例化发布状态
+// 实例化流水线发布任务状态
 export const RELEASE_STATUS = {
     INIT: 'INIT',
     INSTANCING: 'INSTANCING',
     SUCCESS: 'SUCCESS',
+    FAILED: 'FAILED'
+}
+
+// 模板实例化流水线状态
+export const TEMPLATE_INSTANCE_PIPELINE_STATUS = {
+    PENDING_UPDATE: 'PENDING_UPDATE',
+    UPDATING: 'UPDATING',
+    UPDATED: 'UPDATED',
     FAILED: 'FAILED'
 }
