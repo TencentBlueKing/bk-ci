@@ -162,16 +162,8 @@ export const actions = {
         return vue.$ajax.put(`${prefix}/user/market/desk/template/v2/release`, params)
     },
 
-    requestTemplateVersionList (_, { projectId, templateCode }) {
-        const params = {
-            projectId,
-            templateId: templateCode,
-            storeFlag: false,
-            page: 1,
-            pageSize: 100,
-            includeDraft: false
-        }
-        return vue.$ajax.post(`${processPrefix}/user/pipeline/template/v2/${projectId}/${templateCode}/versions`, params)
+    requestTemplateVersionList (_, params) {
+        return vue.$ajax.post(`${processPrefix}/user/pipeline/template/v2/${params.projectId}/${params.templateCode}/versions`, params)
     },
 
     /**
