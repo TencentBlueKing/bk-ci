@@ -28,7 +28,6 @@
 package com.tencent.devops.repository.service
 
 import com.tencent.devops.scm.api.exception.NotFoundScmApiException
-import com.tencent.devops.scm.api.exception.UnAuthorizedScmApiException
 import com.tencent.devops.scm.api.pojo.BranchListOptions
 import com.tencent.devops.scm.api.pojo.Change
 import com.tencent.devops.scm.api.pojo.Comment
