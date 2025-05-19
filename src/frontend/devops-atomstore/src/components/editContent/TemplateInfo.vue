@@ -63,7 +63,8 @@
                         @change="handleChangeProjectCode"
                         enable-scroll-load
                         :scroll-loading="selectLoading"
-                        @scroll-end="handlerScrollEnd('templateCode')"
+                        :loading="codesSelectLoading"
+                        @scroll-end="selectedTplProject()"
                     >
                         <bk-option
                             v-for="option in templateList"
@@ -106,12 +107,12 @@
                         v-model="templateForm.templateVersion"
                         class="fixed-width version"
                         searchable
-                        :disabled="!templateForm.templateCode"
-                        :placeholder="$t('store.请选择模板版本')"
+                        :disabled="!templateForm.templateCode || !versionList.length"
+                        :placeholder="(templateForm.templateCode && !versionList.length) ? $t('store.当前模板的版本已全部上架') : $t('store.请选择模板版本')"
                         enable-scroll-load
-                        :scroll-loading="selectLoading"
-                        @toggle="getVersionList"
-                        @scroll-end="handlerScrollEnd('templateVersion')"
+                        :loading="versionsSelectLoading"
+                        :scroll-loading="bottomLoading"
+                        @scroll-end="getVersionList()"
                     >
                         <bk-option
                             v-for="option in versionList"
@@ -380,11 +381,21 @@
                     templateCodeErrors: false,
                     projectCodeErrors: false
                 },
-                page: 1,
-                pageSize: 20,
-                flag: '',
-                total: null,
-                selectLoading: false
+                bottomLoading: false,
+                versionsSelectLoading: false,
+                versionsHasNext: true,
+                versionsPagination: {
+                    page: 1,
+                    count: 0,
+                    limit: 10
+                },
+                codesSelectLoading: false,
+                codesHasNext: false,
+                codesPagination: {
+                    page: 1,
+                    count: 0,
+                    limit: 10
+                }
             }
         },
         computed: {
@@ -404,7 +415,15 @@
             'templateForm.projectCode': {
                 handler (newVal) {
                     if (newVal) {
-                        this.selectedTplProject()
+                        this.selectedTplProject(1)
+                    }
+                },
+                immediate: true
+            },
+            'templateForm.templateCode': {
+                handler (newVal) {
+                    if (newVal) {
+                        this.getVersionList(1)
                     }
                 },
                 immediate: true
@@ -475,7 +494,6 @@
                 })
                 this.templateList = []
                 this.versionList = []
-                this.page = 1
             },
             handleChangeProjectCode (val) {
                 const templateName = this.templateList.find(item => item.templateId === val)?.name
@@ -485,56 +503,71 @@
                 })
                 this.versionList = []
             },
-            handlerScrollEnd (flag) {
-                const listTypeMap = {
-                    templateCode: {
-                        list: this.templateList,
-                        fetchMethod: this.selectedTplProject
-                    },
-                    templateVersion: {
-                        list: this.versionList,
-                        fetchMethod: this.getVersionList
-                    }
-                }
-
-                const { list, fetchMethod } = listTypeMap[flag] || {}
-                
-                if (list && list.length < this.total) {
-                    this.page++
-                    fetchMethod()
-                }
-            },
-            async selectedTplProject () {
-                this.selectLoading = true
+            async selectedTplProject (page) {
                 try {
+                    const nextPage = page ?? this.codesPagination.page + 1
+                    if (nextPage > 1 && !this.codesHasNext) return
+                    if (nextPage === 1) {
+                        this.codesSelectLoading = true
+                    } else {
+                        this.bottomLoading = true
+                    }
                     const res = await this.requestPipelineTemplate({
                         projectCode: this.templateForm.projectCode,
-                        page: this.page,
-                        pageSize: this.pageSize
+                        page: nextPage,
+                        pageSize: this.codesPagination.limit
                     })
-                    this.total = res.count
-                    
                     const data = res.models.filter(i => i.canEdit)
-                    this.templateList = [...this.templateList, ...data]
+                    if (page === 1) {
+                        this.templateList = data
+                    } else {
+                        this.templateList = [...this.templateList, ...data]
+                    }
+                    this.codesHasNext = res.count > this.templateList.length
                 } catch (err) {
                     this.handleError(err)
                 } finally {
-                    this.selectLoading = false
+                    this.codesSelectLoading = false
+                    this.bottomLoading = false
                 }
             },
-            async getVersionList () {
-                this.selectLoading = true
+            async getVersionList (page) {
                 try {
+                    const nextPage = page ?? this.versionsPagination.page + 1
+                    if (nextPage > 1 && !this.versionsHasNext) return
+                    if (nextPage === 1) {
+                        this.versionsSelectLoading = true
+                    } else {
+                        this.bottomLoading = true
+                    }
                     const res = await this.requestTemplateVersionList({
                         projectId: this.templateForm.projectCode,
-                        templateCode: this.templateForm.templateCode
+                        templateId: this.templateForm.templateCode,
+                        page: nextPage,
+                        pageSize: this.versionsPagination.limit,
+                        storeFlag: false,
+                        includeDraft: false,
+                        status: 'RELEASED'
                     })
-                    this.total = res.count
-                    this.versionList = [...this.versionList, ...res.records]
+
+                    const versions = res.records
+                    if (page === 1) {
+                        this.versionList = versions
+                    } else {
+                        this.versionList = [...this.versionList, ...versions]
+                    }
+                    this.versionsHasNext = res.count > this.versionList.length
                 } catch (err) {
                     this.handleError(err)
                 } finally {
-                    this.selectLoading = false
+                    this.bottomLoading = false
+                    this.versionsSelectLoading = false
+                }
+            },
+            selectorToggle (status) {
+                if (status) {
+                    this.versionsHasNext = true
+                    this.getVersionList(1)
                 }
             },
             autoFocus () {
