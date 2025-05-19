@@ -40,6 +40,7 @@
                     <bk-input
                         v-model="parameter.value"
                         :type="getInputType(parameter.type)"
+                        :precision="0"
                         class="input-com"
                         :disabled="disabled"
                         :title="parameter.value"
