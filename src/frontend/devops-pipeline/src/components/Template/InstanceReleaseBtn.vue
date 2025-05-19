@@ -10,7 +10,13 @@
             :val="taskList.length"
             :visible="!!taskList.length"
         >
-            {{ $t('template.instantiate') }}
+            <bk-button
+                theme="primary"
+                v-perm="permData"
+                @click="handleInstance"
+            >
+                {{ $t('template.instantiate') }}
+            </bk-button>
         </bk-badge>
         <template slot="content">
             <div class="task-card">
@@ -63,6 +69,9 @@
         SET_RELEASE_BASE_ID,
         UPDATE_USE_TEMPLATE_SETTING
     } from '@/store/modules/templates/constants'
+    defineProps({
+        permData: Object
+    })
     const { proxy } = UseInstance()
     const templateId = computed(() => proxy?.$route?.params.templateId)
     const projectId = computed(() => proxy?.$route?.params.projectId)
@@ -109,6 +118,9 @@
         } catch (e) {
             console.error(e)
         }
+    }
+    function handleInstance () {
+        proxy.$emit('click')
     }
     onMounted(() => {
         fetchTaskList()
