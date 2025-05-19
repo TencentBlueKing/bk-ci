@@ -30,7 +30,7 @@ object BatchTaskUtil {
      * @return Boolean 返回true表示服务匹配，false表示不匹配
      */
     fun isServiceMatched(targetService: String?): Boolean {
-        if (targetService == null) return false
+        if (targetService.isNullOrBlank()) return false
 
         val currentService = BkServiceUtil.getApplicationName() ?: ""
         val isMatch = currentService == targetService

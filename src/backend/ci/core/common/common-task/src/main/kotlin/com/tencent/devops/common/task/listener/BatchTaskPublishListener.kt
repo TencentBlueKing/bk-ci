@@ -82,16 +82,17 @@ class BatchTaskPublishListener @Autowired constructor(
             ) ?: 0
             // 获取总任务数
             val totalNum =
-                redisOperation.get(BatchTaskUtil.generateBatchTaskTotalKey(taskType, batchId))?.toLongOrNull()
-                    ?: 0
+                redisOperation.get(BatchTaskUtil.generateBatchTaskTotalKey(taskType, batchId))?.toLongOrNull() ?: 0
             // 检查是否完成所有任务，若完成则触发完成事件
-            if (completedNum >= totalNum) {
-                sampleEventDispatcher.dispatch(BatchTaskFinishEvent(
-                    userId = event.userId,
-                    taskType = taskType,
-                    batchId = batchId,
-                    targetService = event.targetService
-                ))
+            if (totalNum > 0 && completedNum == totalNum) {
+                sampleEventDispatcher.dispatch(
+                    BatchTaskFinishEvent(
+                        userId = event.userId,
+                        taskType = taskType,
+                        batchId = batchId,
+                        targetService = event.targetService
+                    )
+                )
             }
         }
     }

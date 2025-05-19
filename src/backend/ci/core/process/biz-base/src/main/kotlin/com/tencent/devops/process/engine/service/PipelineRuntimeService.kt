@@ -2050,7 +2050,7 @@ class PipelineRuntimeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildNum: Int,
-        debugVersion: Int?,
+        debugVersion: Int? = null,
         archiveFlag: Boolean? = false
     ): String? {
         return pipelineBuildDao.getBuildByBuildNum(
