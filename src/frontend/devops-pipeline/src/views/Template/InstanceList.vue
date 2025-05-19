@@ -276,7 +276,25 @@
             },
             {
                 name: proxy.$t('status'),
-                id: 'status'
+                id: 'status',
+                children: [
+                    {
+                        name: proxy.$t('template.instanceStatus.pendingUpdate'),
+                        id: TEMPLATE_INSTANCE_PIPELINE_STATUS.PENDING_UPDATE
+                    },
+                    {
+                        name: proxy.$t('template.instanceStatus.updating'),
+                        id: TEMPLATE_INSTANCE_PIPELINE_STATUS.UPDATING
+                    },
+                    {
+                        name: proxy.$t('template.instanceStatus.updated'),
+                        id: TEMPLATE_INSTANCE_PIPELINE_STATUS.UPDATED
+                    },
+                    {
+                        name: proxy.$t('template.instanceStatus.failed'),
+                        id: TEMPLATE_INSTANCE_PIPELINE_STATUS.FAILED
+                    }
+                ]
             },
             {
                 name: proxy.$t('versionNum'),
