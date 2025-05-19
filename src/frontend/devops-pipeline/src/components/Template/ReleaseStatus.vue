@@ -14,6 +14,13 @@
            
             <p class="release-status-title">{{ $t('template.releasing.title', [instanceNum]) }}</p>
             <p class="sub-message">{{ $t('template.releasing.tips') }}</p>
+
+            <bk-button
+                class="mt20"
+                @click="handleToInstanceList"
+            >
+                {{ $t('template.returnInstanceList') }}
+            </bk-button>
         </section>
         <section
             class="content-wrapper"
@@ -100,9 +107,9 @@
                     {{ $t('template.modifyConfig') }}
                 </bk-button>
                 <bk-button
-                    @click="handleCancelRelease"
+                    @click="handleToInstanceList"
                 >
-                    {{ $t('close') }}
+                    {{ $t('template.returnInstanceList') }}
                 </bk-button>
             </div>
         </section>
@@ -183,9 +190,7 @@
             console.error(e)
         }
     }
-    function handleCancelRelease () {
-        proxy.$emit('cancel')
-    }
+
     async function handleModifyConfig () {
         try {
             const res = await proxy.$store.dispatch('templates/fetchTaskDetailParams', {
