@@ -719,13 +719,12 @@ class RepositoryDao {
 
     fun updateScmCode(
         dslContext: DSLContext,
-        repositoryId: Long,
-        scmCode: String
+        repositoryId: Set<Long>
     ) {
         with(TRepository.T_REPOSITORY) {
             dslContext.update(this)
-                .set(SCM_CODE, scmCode)
-                .where(REPOSITORY_ID.eq(repositoryId))
+                .set(SCM_CODE, TYPE)
+                .where(REPOSITORY_ID.`in`(repositoryId))
                 .execute()
         }
     }

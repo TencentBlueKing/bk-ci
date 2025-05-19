@@ -686,11 +686,10 @@ class OPRepositoryService @Autowired constructor(
                 limit = limit,
                 offset = offset
             )
-            repoList.forEach {
+            repoList.chunked(25) {
                 repositoryDao.updateScmCode(
                     dslContext = dslContext,
-                    repositoryId = it.repositoryId,
-                    scmCode = it.type
+                    repositoryId = it.map { it.repositoryId }.toSet()
                 )
             }
             offset += limit
