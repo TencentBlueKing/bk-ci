@@ -27,22 +27,12 @@
 
 package com.tencent.devops.process.api.user
 
-import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessMessageCode.MAXIMUM_NUMBER_QUEUES_ILLEGAL
-import com.tencent.devops.process.constant.ProcessMessageCode.MAXIMUM_QUEUE_LENGTH_ILLEGAL
 import com.tencent.devops.process.service.DockerBuildService
 import com.tencent.devops.process.service.TXPipelineService
 import com.tencent.devops.process.service.pipelineExport.TXPipelineExportService
-import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
-import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
-import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
-import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN
 import jakarta.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -98,29 +88,6 @@ class TXUserPipelineResourceImpl @Autowired constructor(
     private fun checkPipelineId(pipelineId: String) {
         if (pipelineId.isBlank()) {
             throw ParamBlankException("Invalid pipelineId")
-        }
-    }
-
-    private fun checkParam(setting: PipelineSetting) {
-        if (setting.runLockType == PipelineRunLockType.SINGLE || setting.runLockType == PipelineRunLockType.SINGLE_LOCK) {
-            if (setting.waitQueueTimeMinute < PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN ||
-                    setting.waitQueueTimeMinute > PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
-            ) {
-                throw InvalidParamException(
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = MAXIMUM_QUEUE_LENGTH_ILLEGAL
-                    )
-                )
-            }
-            if (setting.maxQueueSize < PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN ||
-                    setting.maxQueueSize > PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
-            ) {
-                throw InvalidParamException(
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = MAXIMUM_NUMBER_QUEUES_ILLEGAL
-                    )
-                )
-            }
         }
     }
 }
