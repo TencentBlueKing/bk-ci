@@ -285,10 +285,11 @@
                         }
                     },
                     {
-                        text: t('template.shelfStore'), // 上架研发商店
+                        text: t(`template.${item.storeFlag ? 'upgradeOnStore' : 'shelfStore'}`), // 上架研发商店
                         handler: () => toRelativeStore(item),
                         hasPermission: item.canEdit,
                         disablePermissionApi: true,
+                        disable: item.storeFlag && !item.publishFlag,
                         isShow: item.mode === 'CUSTOMIZE',
                         permissionData: {
                             projectId: projectId.value,
