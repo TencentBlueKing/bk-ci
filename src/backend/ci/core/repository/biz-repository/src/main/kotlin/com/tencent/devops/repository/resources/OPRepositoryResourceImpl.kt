@@ -118,4 +118,17 @@ class OPRepositoryResourceImpl @Autowired constructor(
         )
         return Result(true)
     }
+
+    override fun updateRepoScmCode(projectId: String?, repoHashId: String?): Result<Boolean> {
+        opRepositoryService.updateAction(
+            "updateRepoCredentialType",
+            listOf {
+                opRepositoryService.updateRepoScmCode(
+                    projectId = projectId,
+                    repoHashId = repoHashId
+                )
+            }
+        )
+        return Result(true)
+    }
 }
