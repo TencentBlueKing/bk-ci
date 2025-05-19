@@ -18,8 +18,9 @@
 
 <script>
     import { SET_PIPELINE_INFO } from '@/store/modules/atom/constants'
-    import { RESOURCE_ACTION } from '@/utils/permission'
+    import { RESOURCE_ACTION, PROJECT_RESOURCE_ACTION } from '@/utils/permission'
     import { mapActions, mapState } from 'vuex'
+    import { SET_PROJECT_PERM } from '@/store/modules/common/constants'
 
     export default {
         data () {
@@ -41,10 +42,21 @@
                 immediate: true
             }
         },
-        created () {
+        async created () {
             this.$store.dispatch('requestProjectDetail', {
                 projectId: this.$route.params.projectId
             })
+            try {
+                const { data } = await this.$store.dispatch('common/validatePermission', {
+                    projectId: this.$route.params.projectId,
+                    resourceType: 'project',
+                    resourceCode: 'yu-test',
+                    actionList: [PROJECT_RESOURCE_ACTION.ARCHIVED]
+                })
+                this.$store.commit(`common/${SET_PROJECT_PERM}`, data[PROJECT_RESOURCE_ACTION.ARCHIVED])
+            } catch (error) {
+                console.log(error)
+            }
         },
         beforeDestroy () {
             this.setPipeline(null)

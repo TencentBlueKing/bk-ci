@@ -118,6 +118,9 @@
             ...mapState('atom', ['pipelineInfo']),
             ...mapState('pipelines', ['pipelineActionState']),
             ...mapGetters('atom', ['pacEnabled', 'isCurPipelineLocked']),
+            ...mapState('common', [
+                'hasProjectPermission'
+            ]),
             isTemplatePipeline () {
                 return this.pipelineInfo?.instanceFromTemplate ?? false
             },
@@ -160,7 +163,7 @@
                             label: 'newlist.exportPipelineJson',
                             handler: this.exportPipeline,
                             vPerm: {
-                                hasPermission: pipeline.permissions?.canEdit,
+                                hasPermission: pipeline.permissions?.canEdit && this.hasProjectPermission,
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId,
@@ -261,7 +264,7 @@
                                 }
                             },
                             vPerm: {
-                                hasPermission: pipeline.permissions?.canDelete,
+                                hasPermission: pipeline.permissions?.canDelete && this.hasProjectPermission,
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId,
