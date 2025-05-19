@@ -39,7 +39,7 @@
                     <span class="input-seg">=</span>
                     <bk-input
                         v-model="parameter.value"
-                        :type="parameter.type === 'textarea' ? 'textarea' : 'text'"
+                        :type="getInputType(parameter.type)"
                         class="input-com"
                         :disabled="disabled"
                         :title="parameter.value"
@@ -192,6 +192,14 @@
                 this.$ajax.get(url).then((res) => {
                     this.subParamsKeyList = res.data?.properties || res.data || []
                 }).catch(e => this.$showTips({ message: e.message, theme: 'error' })).finally(() => (this.isLoading = false))
+            },
+            getInputType (type) {
+                const typeMap = {
+                    textarea: 'textarea',
+                    long: 'number'
+                }
+
+                return typeMap[type] || 'text'
             }
         }
     }
