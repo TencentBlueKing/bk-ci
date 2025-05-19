@@ -590,7 +590,13 @@
     "views": "查看",
     "from": "来自",
     "Upgrading": "升级中",
-    "UpgradeFailed": "升级失败"
+    "UpgradeFailed": "升级失败",
+    "goView": "去查看",
+    "goUpgrade": "去升级",
+    "goRelease": "去发布",
+    "storeFlag":"已上架研发商店，",
+    "upgradeFlag":"有版本可升级，",
+    "publishFlag":"有新版本可以发布到研发商店，"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",

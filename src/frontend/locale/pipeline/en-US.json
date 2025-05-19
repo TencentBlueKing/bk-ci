@@ -588,7 +588,13 @@
     "views": "Views",
     "from": "From",
     "Upgrading": "Upgrading",
-    "UpgradeFailed": "Upgrade Failed"
+    "UpgradeFailed": "Upgrade Failed",
+    "goView": "View",
+    "goUpgrade": "Upgrade", 
+    "goRelease": "Publish",
+    "storeFlag": "Already listed in the store, ",
+    "upgradeFlag": "There is a version available for upgrade, ",
+    "publishFlag": "There is a new version that can be published to the store, "
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
