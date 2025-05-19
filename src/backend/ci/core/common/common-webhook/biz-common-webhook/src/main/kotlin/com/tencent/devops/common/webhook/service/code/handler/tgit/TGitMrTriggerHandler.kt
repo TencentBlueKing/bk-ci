@@ -396,13 +396,17 @@ class TGitMrTriggerHandler(
         }
         startParams.putIfEmpty(PIPELINE_GIT_MR_PROPOSER, event.user.username)
         // 关联TAPD相关信息
-        if (!projectId.isNullOrBlank() && repository != null) {
+        if (
+                !projectId.isNullOrBlank() &&
+                repository != null &&
+                repository.getScmType() == ScmType.CODE_GIT
+        ) {
             val tapdItems = eventCacheService.getTapdItem(
                 projectId = projectId,
                 repo = repository,
                 refType = TapdRefType.MR,
                 iid = event.object_attributes.iid
-            )?.joinToString(separator = ",") { it.id.toString() }
+            )?.joinToString(separator = ",") { it.tapdId.toString() }
             if (!tapdItems.isNullOrEmpty()) {
                 startParams[PIPELINE_GIT_MR_TAPD_ISSUES] = tapdItems
             }

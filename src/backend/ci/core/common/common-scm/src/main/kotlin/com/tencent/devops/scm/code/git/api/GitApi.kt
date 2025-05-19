@@ -619,7 +619,7 @@ open class GitApi {
         type: String,
         iid: Long
     ): List<TapdWorkItem> {
-        val url = "projects/$id/tapd_workitems"
+        val url = "projects/${urlEncode(id)}/tapd_workitems"
         val queryParam = "type=$type&iid=$iid"
         val request = get(host, token, url, queryParam)
         return JsonUtil.getObjectMapper().readValue(

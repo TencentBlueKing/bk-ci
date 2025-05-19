@@ -279,11 +279,10 @@ object TriggerBuildParamUtils {
     private fun gitWebhookTriggerTag() {
         val params = listOf(
             CI_COMMIT_AUTHOR,
-            CI_TAG_FROM,
-            CI_TAG_DESC
+            CI_TAG_FROM
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType]?.putAll(
-            mapOf(CodeEventType.TAG_PUSH.name to params)
+            mapOf(CodeEventType.TAG_PUSH.name to params.plus(CI_TAG_DESC))
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeTGitWebHookTriggerElement.classType]?.putAll(
             mapOf(CodeEventType.TAG_PUSH.name to params)
