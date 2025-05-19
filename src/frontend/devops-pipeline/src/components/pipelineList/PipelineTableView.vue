@@ -1026,6 +1026,11 @@
                         pipelineId: pipeline.pipelineId
                     }
                 })
+            },
+            toggleSelection (list) {
+                list.forEach(item => {
+                    this.$refs.pipelineTable.toggleRowSelection(item, false)
+                })
             }
         }
     }

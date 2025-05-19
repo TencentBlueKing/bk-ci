@@ -22,6 +22,27 @@
             </div>
         </template>
         <main>
+            <bk-alert
+                v-if="unableToArchivePipelines.length"
+                type="warning"
+                :show-icon="false"
+                class="mb10"
+            >
+                <div
+                    slot="title"
+                    class="can-not-delete-tips"
+                >
+                    <span class="can-not-delete-tips-content">
+                        {{ $t('archive.unableToArchive', [unableToArchivePipelines.length]) }}
+                    </span>
+                    <span
+                        class="text-link"
+                        @click="removeUnableToArchivePipeline"
+                    >
+                        {{ $t('archive.removeUnarchivablePipelines') }}
+                    </span>
+                </div>
+            </bk-alert>
             <p
                 v-if="!isArchiveBatch"
                 class="active-tip-head"
@@ -74,6 +95,8 @@
 
 <script>
     import { mapActions } from 'vuex'
+    import { statusAlias } from '@/utils/pipelineStatus'
+
     export default {
         name: 'archive-dialog',
         props: {
@@ -98,6 +121,9 @@
             },
             projectId () {
                 return this.$route.params.projectId
+            },
+            unableToArchivePipelines () {
+                return this.pipelineList.filter(pipeline => pipeline.latestBuildStatus === statusAlias.RUNNING || pipeline.onlyDraftVersion)
             }
         },
         methods: {
@@ -169,6 +195,9 @@
             },
             cancel () {
                 this.$emit('cancel')
+            },
+            removeUnableToArchivePipeline () {
+                this.$emit('toggleSelection', this.unableToArchivePipelines)
             }
         }
     }
@@ -213,7 +242,7 @@
     }
   }
   .active-tip-block {
-    width: 416px;
+    width: 100%;
     height: 68px;
     background: #F5F6FA;
     border-radius: 2px;
@@ -269,6 +298,25 @@
     }
     .button {
         float: right;
+    }
+}
+.remove-Unarchivable {
+    color: #3a84ff;
+    cursor: pointer;
+
+}
+.can-not-delete-tips {
+    display: flex;
+    align-items: center;
+    position: relative;
+    grid-gap: 16px;
+    .can-not-delete-tips-content {
+        flex: 1;
+    }
+    >.text-link {
+        color: #3a84ff;
+        cursor: pointer;
+        flex-shrink: 0;
     }
 }
 </style>

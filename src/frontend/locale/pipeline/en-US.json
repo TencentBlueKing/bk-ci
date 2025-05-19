@@ -1725,7 +1725,10 @@
     "cannotBeRecovered": "cannot be recovered",
     "submissionSuccess": "Submission successful",
     "archivingTaskRunning": "Archiving task is running asynchronously, and the archiving result will be notified upon completion.",
-    "deleteOrMoveYamlInRepoIfPacModeEnabled": "If the pipeline has PAC mode enabled, please delete/move the YAML file in the repository yourself to avoid automatic re-creation of the corresponding pipeline when the repository is triggered."
+    "deleteOrMoveYamlInRepoIfPacModeEnabled": "If the pipeline has PAC mode enabled, please delete/move the YAML file in the repository yourself to avoid automatic re-creation of the corresponding pipeline when the repository is triggered.",
+    "onlyDraftVersion": "Only draft version, no need to archive, deletion is recommended",
+    "unableToArchive": "There are {0} pipelines unable to be archived",
+    "removeUnarchivablePipelines": "Remove unarchivable pipelines"
   },
   "groupLabel": "Group labels",
   "groupLabelTips": "Variables with the same label will be displayed in the same group in the view and execution preview interface",

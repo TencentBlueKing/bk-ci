@@ -75,6 +75,7 @@
             type="archiveBatch"
             :is-archive-dialog-show="isArchiveShow"
             :pipeline-list="selected"
+            @toggleSelection="toggleSelection"
             @cancel="toggleArchive"
             @done="refreshList"
         />
@@ -187,6 +188,9 @@
             },
             refreshList () {
                 this.$refs.pipelineTable?.refresh?.()
+            },
+            toggleSelection (list) {
+                this.$refs.pipelineTable?.toggleSelection?.(list)
             }
         }
     }
