@@ -3,14 +3,15 @@
         theme="light"
         ext-cls="instance-task-menu"
     >
-        <div
-            class="outer-circle"
-            v-if="taskList.length"
+        <bk-badge
+            theme="danger"
+            class="task-menu-badge"
+            :max="99"
+            :val="taskList.length"
+            :visible="!!taskList.length"
         >
-            <div class="inner-circle">
-                <span class="circle-num">{{ taskList.length }}</span>
-            </div>
-        </div>
+            {{ $t('template.instantiate') }}
+        </bk-badge>
         <template slot="content">
             <div class="task-card">
                 <i18n
@@ -115,32 +116,9 @@
 </script>
 
 <style lang="scss" scoped>
-    .outer-circle {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #FFF;
-        border-radius: 50%;
-        max-height: 26px;
-        padding: 3px;
+    .task-menu-badge {
+        height: 32px;
     }
-
-    .inner-circle {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #EA3636;
-        border-radius: 50%;
-        max-height: 20px;
-        padding: 0 6px;
-    }
-
-    .circle-num {
-        color: white;
-        font-size: 14px;
-        text-align: center;
-    }
-
     .task-card {
         .task-item {
             position: relative;

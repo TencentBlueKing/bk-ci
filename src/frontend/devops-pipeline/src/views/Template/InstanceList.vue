@@ -344,8 +344,9 @@
         }
         proxy.$router.push(route)
     }
-    function toPipelineHistory () {
-        // to do..
+    function toPipelineHistory (pipelineId) {
+        const url = `${WEB_URL_PREFIX}/pipeline/${projectId.value}/${pipelineId}/history`
+        window.open(url, '_blank')
     }
     function batchUpdateInstance () {
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, selectItemList.value)

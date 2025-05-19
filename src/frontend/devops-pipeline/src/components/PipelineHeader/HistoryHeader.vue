@@ -101,7 +101,7 @@
                 @click="handleToInstanceEntry"
             >
                 <div>
-                    {{ $t('template.instantiate') }}
+                    <!-- {{ $t('template.instantiate') }} -->
                     <instance-task-menu />
                 </div>
             </bk-button>
