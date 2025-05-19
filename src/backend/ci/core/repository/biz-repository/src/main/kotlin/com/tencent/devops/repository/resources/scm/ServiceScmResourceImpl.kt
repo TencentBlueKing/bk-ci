@@ -44,6 +44,7 @@ import com.tencent.devops.scm.pojo.GitTagInfo
 import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -365,6 +366,26 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
                 type = type,
                 token = token,
                 tagName = tagName
+            )
+        )
+    }
+
+    override fun getTapdWorkItems(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        refType: String,
+        iid: Long
+    ): Result<List<TapdWorkItem>> {
+        return Result(
+            scmService.getTapdWorkItems(
+                projectName = projectName,
+                url = url,
+                type = type,
+                token = token,
+                refType = refType,
+                iid = iid
             )
         )
     }

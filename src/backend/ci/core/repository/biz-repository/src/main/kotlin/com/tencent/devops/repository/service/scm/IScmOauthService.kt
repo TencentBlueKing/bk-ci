@@ -39,6 +39,7 @@ import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitTagInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.scm.pojo.TokenCheckResult
 
 @Suppress("ALL")
@@ -191,4 +192,16 @@ interface IScmOauthService {
         token: String?,
         tagName: String
     ): GitTagInfo?
+
+    /**
+     * 获取mr关联的tapd单
+     */
+    fun getTapdWorkItems(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        refType: String,
+        iid: Long
+    ): List<TapdWorkItem>
 }

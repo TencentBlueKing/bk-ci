@@ -396,7 +396,11 @@ class TGitMrTriggerHandler(
         }
         startParams.putIfEmpty(PIPELINE_GIT_MR_PROPOSER, event.user.username)
         // 关联TAPD相关信息
-        if (!projectId.isNullOrBlank() && repository != null) {
+        if (
+                !projectId.isNullOrBlank() &&
+                repository != null &&
+                repository.getScmType() == ScmType.CODE_GIT
+        ) {
             val tapdItems = eventCacheService.getTapdItem(
                 projectId = projectId,
                 repo = repository,

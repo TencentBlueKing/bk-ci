@@ -46,6 +46,7 @@ import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitTagInfo
 import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.scm.utils.code.git.GitUtils.urlEncode
 import org.eclipse.jgit.api.Git
@@ -403,6 +404,16 @@ class CodeGitScmImpl constructor(
             host = apiUrl,
             url = url,
             token = token
+        )
+    }
+
+    override fun getTapdWorkItems(refType: String, iid: Long): List<TapdWorkItem> {
+        return gitApi.getTapdWorkitems(
+            host = apiUrl,
+            token = token,
+            id = projectName,
+            type = refType,
+            iid = iid
         )
     }
 

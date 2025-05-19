@@ -621,15 +621,27 @@ class GitScmService @Autowired constructor(
                 scmType = repo.getScmType(),
                 repoUrl = repo.url
             )
-            client.get(ServiceGitResource::class).getTapdWorkItems(
-                accessToken = token,
-                tokenType = tokenType,
-                gitProjectId = repo.projectName,
-                type = refType,
-                iid = iid
-            ).data ?: listOf()
-        } catch (ignored: Exception) {
-            logger.warn("fail to get tapd item", ignored)
+            if (type.first == RepoAuthType.OAUTH) {
+                client.get(ServiceScmOauthResource::class).getTapdWorkItems(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    refType = refType,
+                    iid = iid
+                ).data
+            } else {
+                client.get(ServiceScmResource::class).getTapdWorkItems(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    refType = refType,
+                    iid = iid
+                ).data
+            } ?: listOf()
+        } catch (e: Exception) {
+            logger.warn("fail to get tapd item", e)
             listOf()
         }
     }
