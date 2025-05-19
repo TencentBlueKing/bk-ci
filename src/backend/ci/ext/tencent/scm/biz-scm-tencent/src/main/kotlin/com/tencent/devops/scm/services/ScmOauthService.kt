@@ -43,6 +43,7 @@ import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitTagInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.QualityUtils
 import org.slf4j.LoggerFactory
@@ -485,6 +486,28 @@ class ScmOauthService @Autowired constructor(
             userName = null,
             event = null
         ).getTag(tagName = tagName)
+    }
+
+    fun getTapdWorkItems(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        refType: String,
+        iid: Long
+    ): List<TapdWorkItem> {
+        return ScmOauthFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            userName = null,
+            event = null
+        ).getTapdWorkItems(refType = refType, iid = iid)
     }
 
     companion object {

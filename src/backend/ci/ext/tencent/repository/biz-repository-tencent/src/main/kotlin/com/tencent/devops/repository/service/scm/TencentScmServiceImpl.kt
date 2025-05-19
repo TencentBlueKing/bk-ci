@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.service.TencentScmMonitorService
+import com.tencent.devops.scm.api.ServiceScmOauthResource
 import com.tencent.devops.scm.api.ServiceScmResource
 import com.tencent.devops.scm.code.git.api.GitHook
 import com.tencent.devops.scm.enums.CodeSvnRegion
@@ -50,6 +51,7 @@ import com.tencent.devops.scm.pojo.GitTagInfo
 import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -478,6 +480,24 @@ class TencentScmServiceImpl @Autowired constructor(
             token = token,
             tagName = tagName
         ).data
+    }
+
+    override fun getTapdWorkItems(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        refType: String,
+        iid: Long
+    ): List<TapdWorkItem> {
+        return client.getScm(ServiceScmOauthResource::class).getTapdWorkItems(
+            projectName = projectName,
+            url = url,
+            type = type,
+            token = token,
+            refType = refType,
+            iid = iid
+        ).data ?: listOf()
     }
 
     companion object{
