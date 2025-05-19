@@ -236,6 +236,7 @@ export default {
                 : {}
             const isDynamicGroup = this.currentGroup?.viewType === 1
             const isRunning = pipeline.latestBuildStatus === statusAlias.RUNNING
+            const isDraft = pipeline.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING
 
             return [
                 {
@@ -309,8 +310,8 @@ export default {
                     : []),
                 {
                     text: this.$t('archive.archive'),
-                    disable: isRunning,
-                    tooltips: isRunning ? this.$t('archive.unableToFile') : false,
+                    disable: isRunning || isDraft,
+                    tooltips: isRunning ? this.$t('archive.unableToFile') : isDraft ? this.$t('archive.onlyDraftVersion') : false,
                     handler: this.archiveHandler,
                     hasPermission: pipeline.permissions.canArchive,
                     disablePermissionApi: true,
