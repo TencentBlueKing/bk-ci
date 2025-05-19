@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.service.TencentScmMonitorService
-import com.tencent.devops.scm.api.ServiceScmOauthResource
 import com.tencent.devops.scm.api.ServiceScmResource
 import com.tencent.devops.scm.code.git.api.GitHook
 import com.tencent.devops.scm.enums.CodeSvnRegion
@@ -490,7 +489,7 @@ class TencentScmServiceImpl @Autowired constructor(
         refType: String,
         iid: Long
     ): List<TapdWorkItem> {
-        return client.getScm(ServiceScmOauthResource::class).getTapdWorkItems(
+        return client.getScm(ServiceScmResource::class).getTapdWorkItems(
             projectName = projectName,
             url = url,
             type = type,
