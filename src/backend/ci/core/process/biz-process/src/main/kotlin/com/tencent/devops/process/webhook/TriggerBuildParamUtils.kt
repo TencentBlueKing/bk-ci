@@ -266,7 +266,7 @@ object TriggerBuildParamUtils {
             mapOf(CodeEventType.PULL_REQUEST.name to params)
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeTGitWebHookTriggerElement.classType]?.putAll(
-            mapOf(CodeEventType.MERGE_REQUEST.name to params)
+            mapOf(CodeEventType.MERGE_REQUEST.name to params.plus(CI_TAPD_ISSUES))
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitlabWebHookTriggerElement.classType]?.putAll(
             mapOf(CodeEventType.MERGE_REQUEST.name to params)
@@ -285,7 +285,7 @@ object TriggerBuildParamUtils {
             mapOf(CodeEventType.TAG_PUSH.name to params.plus(CI_TAG_DESC))
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeTGitWebHookTriggerElement.classType]?.putAll(
-            mapOf(CodeEventType.TAG_PUSH.name to params)
+            mapOf(CodeEventType.TAG_PUSH.name to params.plus(CI_TAG_DESC))
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitlabWebHookTriggerElement.classType]?.putAll(
             mapOf(CodeEventType.TAG_PUSH.name to params)

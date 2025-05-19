@@ -399,7 +399,7 @@ class TGitMrTriggerHandler(
         if (
                 !projectId.isNullOrBlank() &&
                 repository != null &&
-                repository.getScmType() == ScmType.CODE_GIT
+                repository.getScmType() in listOf(ScmType.CODE_GIT, ScmType.CODE_TGIT)
         ) {
             val tapdItems = eventCacheService.getTapdItem(
                 projectId = projectId,
