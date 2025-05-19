@@ -89,8 +89,9 @@
 
                                 <template v-if="row.status === TEMPLATE_INSTANCE_PIPELINE_STATUS.PENDING_UPDATE">
                                     <logo
+                                        class="update-icon"
                                         name="update"
-                                        :size="14"
+                                        :size="12"
                                     />
                                 </template>
 
@@ -442,6 +443,10 @@
             .version-wrapper {
                 display: table;
                 align-items: center;
+            }
+            .update-icon {
+                position: relative;
+                top: 2px;
             }
             .loading-icon {
                 display: ruby;
