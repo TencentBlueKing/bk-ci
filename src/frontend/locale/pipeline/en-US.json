@@ -597,7 +597,13 @@
     "publishFlag": "There is a new version that can be published to the store, ",
     "upgradeOnStore": "Upgrade on Store",
     "upgradeTemplate": "Upgrade",
-    "templateUpgradeSuccess": "Upgrade template successfully"
+    "templateUpgradeSuccess": "Upgrade template successfully",
+    "instanceStatus": {
+      "pendingUpdate": "Pending Update",
+      "updating": "Updating",
+      "updated": "Update Successful",
+      "failed": "Update Failed"
+    }
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",

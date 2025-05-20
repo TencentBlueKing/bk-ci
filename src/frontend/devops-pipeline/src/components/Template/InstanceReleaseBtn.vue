@@ -3,14 +3,21 @@
         theme="light"
         ext-cls="instance-task-menu"
     >
-        <div
-            class="outer-circle"
-            v-if="taskList.length"
+        <bk-badge
+            theme="danger"
+            class="task-menu-badge"
+            :max="99"
+            :val="taskList.length"
+            :visible="!!taskList.length"
         >
-            <div class="inner-circle">
-                <span class="circle-num">{{ taskList.length }}</span>
-            </div>
-        </div>
+            <bk-button
+                theme="primary"
+                v-perm="permData"
+                @click="handleInstance"
+            >
+                {{ $t('template.instantiate') }}
+            </bk-button>
+        </bk-badge>
         <template slot="content">
             <div class="task-card">
                 <i18n
@@ -62,6 +69,9 @@
         SET_RELEASE_BASE_ID,
         UPDATE_USE_TEMPLATE_SETTING
     } from '@/store/modules/templates/constants'
+    defineProps({
+        permData: Object
+    })
     const { proxy } = UseInstance()
     const templateId = computed(() => proxy?.$route?.params.templateId)
     const projectId = computed(() => proxy?.$route?.params.projectId)
@@ -109,38 +119,18 @@
             console.error(e)
         }
     }
+    function handleInstance () {
+        proxy.$emit('click')
+    }
     onMounted(() => {
         fetchTaskList()
     })
 </script>
 
 <style lang="scss" scoped>
-    .outer-circle {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #FFF;
-        border-radius: 50%;
-        max-height: 26px;
-        padding: 3px;
+    .task-menu-badge {
+        height: 32px;
     }
-
-    .inner-circle {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #EA3636;
-        border-radius: 50%;
-        max-height: 20px;
-        padding: 0 6px;
-    }
-
-    .circle-num {
-        color: white;
-        font-size: 14px;
-        text-align: center;
-    }
-
     .task-card {
         .task-item {
             position: relative;

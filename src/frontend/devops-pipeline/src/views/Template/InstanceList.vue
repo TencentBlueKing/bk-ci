@@ -28,16 +28,15 @@
                         <p>{{ $t('template.batchUpdateTip2') }}</p>
                     </div>
                 </bk-popover>
-                <!-- <bk-input
-                    :placeholder="$t('search')"
-                    ext-cls="instance-handle-row-right"
-                    :clearable="true"
-                    right-icon="icon-search"
-                    v-model="searchKey"
-                    @enter="query"
-                    @clear="query"
-                >
-                </bk-input> -->
+                <search-select
+                    class="search-pipeline-input"
+                    v-model="searchValue"
+                    :data="searchList"
+                    clearable
+                    :placeholder="filterTips"
+                    :show-condition="false"
+                    @change="handleChange"
+                />
             </section>
             <section class="instance-table">
                 <bk-table
@@ -89,8 +88,9 @@
 
                                 <template v-if="row.status === TEMPLATE_INSTANCE_PIPELINE_STATUS.PENDING_UPDATE">
                                     <logo
+                                        class="update-icon"
                                         name="update"
-                                        :size="14"
+                                        :size="12"
                                     />
                                 </template>
 
@@ -208,7 +208,7 @@
 </template>
 
 <script setup>
-    import { computed, onMounted, ref } from 'vue'
+    import { computed, ref, watch } from 'vue'
     import { convertTime } from '@/utils/util'
     import {
         SET_INSTANCE_LIST,
@@ -219,9 +219,10 @@
     import emptyTips from '@/components/pipelineList/imgEmptyTips'
     import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
     import UseInstance from '@/hook/useInstance'
+    import SearchSelect from '@blueking/search-select'
+
     const { proxy, showTips, t } = UseInstance()
     const isLoading = ref(false)
-    const searchable = ref(false)
     const showContent = ref(false)
     const searchValue = ref([])
     const instanceList = ref([])
@@ -244,7 +245,7 @@
             }
         ]
     })
-    const showInstanceList = computed(() => showContent.value && (instanceList.value.length || searchable.value))
+    const showInstanceList = computed(() => showContent.value && (instanceList.value.length || searchValue.value.length))
     const projectId = computed(() => proxy.$route.params.projectId)
     const templateId = computed(() => proxy.$route.params.templateId)
     const pipelineInfo = computed(() => proxy.$store?.state?.atom?.pipelineInfo)
@@ -261,8 +262,59 @@
         const repoValues = selectItemList.value.map(item => item.repoAliasName).filter(Boolean)
         return !(repoValues.length === 0 || new Set(repoValues).size === 1) || !selectItemList.value.length
     })
-    onMounted(() => {
+
+    const searchList = computed(() => {
+        const list = [
+            {
+                name: proxy.$t('template.pipelineInstanceName'),
+                id: 'pipelineName',
+                default: true
+            },
+            {
+                name: proxy.$t('template.lastModifiedBy'),
+                id: 'updater'
+            },
+            {
+                name: proxy.$t('status'),
+                id: 'status',
+                children: [
+                    {
+                        name: proxy.$t('template.instanceStatus.pendingUpdate'),
+                        id: TEMPLATE_INSTANCE_PIPELINE_STATUS.PENDING_UPDATE
+                    },
+                    {
+                        name: proxy.$t('template.instanceStatus.updating'),
+                        id: TEMPLATE_INSTANCE_PIPELINE_STATUS.UPDATING
+                    },
+                    {
+                        name: proxy.$t('template.instanceStatus.updated'),
+                        id: TEMPLATE_INSTANCE_PIPELINE_STATUS.UPDATED
+                    },
+                    {
+                        name: proxy.$t('template.instanceStatus.failed'),
+                        id: TEMPLATE_INSTANCE_PIPELINE_STATUS.FAILED
+                    }
+                ]
+            },
+            {
+                name: proxy.$t('versionNum'),
+                id: 'pipelineVersionName'
+            },
+            {
+                
+                name: proxy.$t('template.codeRepo'),
+                id: 'repoAliasName'
+            }
+        ]
+        return list.filter((data) => {
+            return !searchValue.value.find(val => val.id === data.id)
+        })
+    })
+    const filterTips = computed(() => searchList.value.map(item => item.name).join(' / '))
+    watch(() => searchValue.value, () => {
         requestInstanceList()
+    }, {
+        immediate: true
     })
 
     async function requestInstanceList () {
@@ -343,8 +395,9 @@
         }
         proxy.$router.push(route)
     }
-    function toPipelineHistory () {
-        // to do..
+    function toPipelineHistory (pipelineId) {
+        const url = `${WEB_URL_PREFIX}/pipeline/${projectId.value}/${pipelineId}/history`
+        window.open(url, '_blank')
     }
     function batchUpdateInstance () {
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, selectItemList.value)
@@ -387,6 +440,13 @@
         .bk-form-control {
             display: inline-table;
             width: 200px;
+        }
+        .search-pipeline-input {
+            width: 680px;
+            background: white;
+            ::placeholder {
+                color: #c4c6cc;
+            }
         }
         .instance-handle-row {
             display: flex;
@@ -442,6 +502,10 @@
             .version-wrapper {
                 display: table;
                 align-items: center;
+            }
+            .update-icon {
+                position: relative;
+                top: 2px;
             }
             .loading-icon {
                 display: ruby;

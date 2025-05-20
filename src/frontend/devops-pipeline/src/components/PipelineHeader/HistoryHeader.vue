@@ -85,10 +85,10 @@
             >
                 {{ isTemplate ? $t('template.editTemplate') : $t('edit') }}
             </bk-button>
-            <bk-button
+
+            <instance-release-btn
                 v-if="isTemplate && canInstantiate"
-                theme="primary"
-                v-perm="{
+                :perm-data="{
                     hasPermission: canEdit,
                     disablePermissionApi: true,
                     permissionData: {
@@ -99,12 +99,7 @@
                     }
                 }"
                 @click="handleToInstanceEntry"
-            >
-                <div>
-                    {{ $t('template.instantiate') }}
-                    <instance-task-menu />
-                </div>
-            </bk-button>
+            />
             <template v-else-if="!isTemplate">
                 <template v-if="editAndExecutable">
                     <span v-bk-tooltips="tooltip">
@@ -144,7 +139,7 @@
     import VersionHistorySideSlider from '@/components/PipelineDetailTabs/VersionHistorySideSlider'
     import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
     import TemplateBreadCrumb from '@/components/Template/TemplateBreadCrumb.vue'
-    import InstanceTaskMenu from '@/components/Template/InstanceTaskMenu.vue'
+    import InstanceReleaseBtn from '@/components/Template/InstanceReleaseBtn.vue'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
@@ -163,7 +158,7 @@
             VersionHistorySideSlider,
             VersionDiffEntry,
             RollbackEntry,
-            InstanceTaskMenu
+            InstanceReleaseBtn
         },
         props: {
             isSwitchPipeline: Boolean
