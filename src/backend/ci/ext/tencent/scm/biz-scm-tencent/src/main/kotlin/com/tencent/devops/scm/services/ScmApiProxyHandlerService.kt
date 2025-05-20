@@ -58,6 +58,7 @@ class ScmApiProxyHandlerService : BeanPostProcessor {
         return bean
     }
 
+    @SuppressWarnings("NestedBlockDepth")
     fun invoke(request: ScmApiRequest): Any? {
         with(request) {
             logger.info("handle scm api request|serviceName:$serviceName|methodName:$methodName")

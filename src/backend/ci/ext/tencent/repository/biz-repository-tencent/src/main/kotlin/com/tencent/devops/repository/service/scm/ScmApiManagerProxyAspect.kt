@@ -47,7 +47,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.annotation.AnnotationUtils
 import org.springframework.stereotype.Service
-import java.lang.RuntimeException
 
 /**
  * scm api接口代理
