@@ -597,7 +597,9 @@
     "storeFlag":"已上架研发商店，",
     "upgradeFlag":"有版本可升级，",
     "publishFlag":"有新版本可以发布到研发商店，",
-    "upgradeOnStore": "去研发商店升级"
+    "upgradeOnStore": "去研发商店升级",
+    "upgradeTemplate": "模板升级",
+    "templateUpgradeSuccess": "模板升级成功"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",

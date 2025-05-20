@@ -1,7 +1,7 @@
 <template>
     <bk-table
         v-bkloading="{ isLoading }"
-        :data="tableData"
+        :data="data"
         :size="tableSize"
         height="100%"
         :pagination="pagination"
@@ -29,7 +29,7 @@
                 <div
                     v-if="col.id === 'name'"
                     class="template-name select-text"
-                    @click="goTemplateOverview(row, 'instanceList')"
+                    @click="goTemplateOverview(row.overviewParams)"
                 >
                     <span
                         class="template-name-area"
@@ -63,14 +63,13 @@
                         </bk-badge>
                         <div slot="content">
                             <span>{{ row.sourceTooltip?.content }}</span>
-                            <router-link
-                                v-if="row.sourceTooltip?.actionLink"
-                                target="_blank"
+                            <span
+
                                 class="text-link"
-                                :to="row.sourceTooltip?.actionLink"
+                                @click="row.sourceTooltip?.handler()"
                             >
                                 {{ row.sourceTooltip?.actionLabel }}
-                            </router-link>
+                            </span>
                         </div>
                     </bk-popover>
                 </div>
@@ -79,7 +78,7 @@
                     v-else-if="col.id === 'instancePipelineCount'"
                     text
                     :disabled="row.instancePipelineCount <= 0"
-                    @click="goTemplateOverview(row, 'instanceList')"
+                    @click="goTemplateOverview(row.overviewParams)"
                 >
                     {{ row.instancePipelineCount }}
                 </bk-button>
@@ -124,18 +123,22 @@
 </template>
 
 <script setup>
+    import TemplateEmpty from '@/components/common/exception'
     import Logo from '@/components/Logo'
     import PacTag from '@/components/PacTag.vue'
-    import TemplateEmpty from '@/components/common/exception'
     import UseInstance from '@/hook/useInstance'
+    import useTemplateActions from '@/hook/useTemplateActions'
     import {
         TEMPLATE_TABLE_COLUMN_CACHE
     } from '@/store/modules/templates/constants'
-    import { computed, defineProps, onBeforeMount, ref } from 'vue'
+    import { defineProps, onBeforeMount, ref } from 'vue'
     import ExtMenu from './extMenu'
 
     const { proxy, t } = UseInstance()
-    const props = defineProps({
+    const {
+        goTemplateOverview
+    } = useTemplateActions()
+    defineProps({
         data: {
             type: Array,
             default: () => []
@@ -216,12 +219,6 @@
         return acc
     }, {})
     const selectedTableColumn = ref([])
-    const tableData = computed(() => {
-        return props.data.map(item => ({
-            ...item,
-            sourceTooltip: getFlagTooltips(item)
-        }))
-    })
 
     onBeforeMount(() => {
         try {
@@ -238,38 +235,6 @@
         }
     })
 
-    function getFlagTooltips (row) {
-        if (row.storeFlag || row.upgradeFlag || row.publishFlag) {
-            const i18nPrefix = 'template.'
-            let content = ''
-            let actionLabel = ''
-            let actionLink = ''
-
-            switch (true) {
-                case row.storeFlag && !row.publishFlag:
-                    content = t(i18nPrefix + 'storeFlag')
-                    actionLabel = t(i18nPrefix + 'goView')
-                    actionLink = `${WEB_URL_PREFIX}/store/manage/template/${row.id}/detail/show`
-                    break
-                case row.upgradeFlag:
-                    content = t(i18nPrefix + 'upgradeFlag')
-                    actionLabel = t(i18nPrefix + 'goUpgrade')
-                    actionLink = `${WEB_URL_PREFIX}/store`
-                    break
-                case row.publishFlag:
-                    content = t(i18nPrefix + 'publishFlag')
-                    actionLabel = t(i18nPrefix + 'goRelease')
-                    actionLink = `${WEB_URL_PREFIX}/store/editTemplate?templateCode=${row.id}&projectCode=${row.projectId}&templateName=${row.name}&templateVersion=${row.releasedVersion}&hasSourceInfo=true`
-                    break
-            }
-            return {
-                content,
-                actionLabel,
-                actionLink
-            }
-        }
-    }
-
     function handlePageLimitChange (limit) {
         emit('limit-change', limit)
     }
@@ -279,16 +244,7 @@
     function clearFilter () {
         emit('clear')
     }
-    function goTemplateOverview (row, type) {
-        proxy.$router.push({
-            name: 'TemplateOverview',
-            params: {
-                templateId: row.id,
-                version: row.releasedVersion,
-                type
-            }
-        })
-    }
+
     function goInstanceEntry (row) {
         proxy.$router.push({
             name: 'instanceEntry',

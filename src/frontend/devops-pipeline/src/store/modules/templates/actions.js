@@ -56,8 +56,8 @@ const actions = {
             return response.data
         })
     },
-    importTemplateFromStore (_, { projectId, params }) {
-        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/create/market`, params)
+    importTemplateFromStore (_, { projectId, templateId, params }) {
+        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/create/market${templateId ? `?templateId=${templateId}` : ''}`, params)
     },
     getSourceCount (_, params) {
         return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${params.projectId}/getSource2Count`, params).then(response => {
@@ -84,8 +84,8 @@ const actions = {
     rollbackTemplateVersion (_, { projectId, templateId, version }) {
         return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/rollbackDraft?version=${version}`).then(response => response.data)
     },
-    requestTemplateVersionList (_, { projectId, templateId, params }) {
-        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/versions`, params).then(response => response.data)
+    requestTemplateVersionList (_, params) {
+        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${params.projectId}/${params.templateId}/versions`, params).then(response => response.data)
     },
     fetchTemplateByVersion ({ commit }, { projectId, templateId, version }) {
         return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/${version}/details/`).then(res => {

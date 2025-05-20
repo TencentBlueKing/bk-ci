@@ -18,11 +18,11 @@
  */
 
 import {
+    AUTH_URL_PREFIX,
     BACKEND_API_URL_PREFIX,
     FETCH_ERROR,
     PROCESS_API_URL_PREFIX,
-    STORE_API_URL_PREFIX,
-    AUTH_URL_PREFIX
+    STORE_API_URL_PREFIX
 } from '@/store/constants'
 import ajax from '@/utils/request'
 
@@ -381,13 +381,6 @@ const actions = {
     requestPipelineVersionList (_, { projectId, pipelineId, ...params }) {
         return ajax.get(`${versionPrefix}/projects/${projectId}/pipelines/${pipelineId}/versions`, {
             params
-        }).then(res => res.data)
-    },
-    requestTemplateVersionList (_, { projectId, templateId, ...params }) {
-        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/versions`, {
-            ...params,
-            projectId,
-            templateId
         }).then(res => res.data)
     },
     // 删除流水线历史版本

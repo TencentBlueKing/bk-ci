@@ -67,11 +67,11 @@
 </template>
 
 <script setup>
-    import { ref, defineProps, computed, onMounted } from 'vue'
     import Logo from '@/components/Logo'
-    import UseInstance from '@/hook/useInstance'
     import PipelineTemplatePreview from '@/components/PipelineTemplatePreview'
+    import UseInstance from '@/hook/useInstance'
     import { UPDATE_USE_TEMPLATE_SETTING } from '@/store/modules/templates/constants'
+    import { computed, defineProps, onMounted, ref } from 'vue'
     defineProps({
         isInstanceCreateType: Boolean
     })
@@ -90,11 +90,7 @@
             const res = await proxy.$store.dispatch('templates/requestTemplateVersionList', {
                 projectId: projectId.value,
                 templateId: templateId.value,
-                params: {
-                    includeDraft: false,
-                    projectId: projectId.value,
-                    templateId: templateId.value
-                }
+                includeDraft: false
             })
             versionList.value = res.records
             if (versionList.value.length) {
@@ -172,7 +168,7 @@
         .apply-tips {
             border-bottom: 1px dashed #979ba5;
         }
-        
+
     }
     .apply-checkbox {
         margin-left: 15px;

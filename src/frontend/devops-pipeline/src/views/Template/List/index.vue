@@ -73,6 +73,13 @@
             @confirm="afterInstallTemplate"
             @cancel="handleCancelInstallTemplate"
         />
+        <UpgradeFromStoreDialog
+            v-model="showTemplateUpgradeDialog"
+            :template-id="upgradingTemplate?.id"
+            :project-id="upgradingTemplate?.srcTemplateProjectId"
+            @confirm="upgradeTemplate"
+            @cancel="hideUpgradeDialog"
+        />
     </article>
 </template>
 
@@ -102,6 +109,7 @@
     import CreateTemplateDialog from './CreateTemplateDialog'
     import InstallTemplateDialog from './InstallTemplateDialog'
     import TemplateTable from './TemplateTable'
+    import UpgradeFromStoreDialog from './UpgradeFromStoreDialog.vue'
 
     const {
         copyTemp,
@@ -122,6 +130,8 @@
     const tableData = ref([])
     const showAddTemplateDialog = ref(false)
     const showInstallTemplateDialog = ref(false)
+    const showTemplateUpgradeDialog = ref(false)
+    const upgradingTemplate = ref()
     const pagination = ref({
         current: 1,
         count: 0,
@@ -192,6 +202,40 @@
         searchValue.value = echoQueryParameters()
         hasPipelineTemplatePermission()
     })
+
+    function getFlagTooltips (row) {
+        if (row.storeFlag || row.upgradeFlag || row.publishFlag) {
+            const i18nPrefix = 'template.'
+            let content = ''
+            let actionLabel = ''
+            let handler = () => {
+                console.log(1)
+            }
+
+            switch (true) {
+                case row.storeFlag && !row.publishFlag:
+                    content = t(i18nPrefix + 'storeFlag')
+                    actionLabel = t(i18nPrefix + 'goView')
+                    handler = () => goTemplateOverview(row.overviewParams)
+                    break
+                case row.upgradeFlag:
+                    content = t(i18nPrefix + 'upgradeFlag')
+                    actionLabel = t(i18nPrefix + 'goUpgrade')
+                    handler = () => showUpgradeTemplateFromStore(row)
+                    break
+                case row.publishFlag:
+                    content = t(i18nPrefix + 'publishFlag')
+                    actionLabel = t(i18nPrefix + 'goRelease')
+                    handler = () => toRelativeStore(row)
+                    break
+            }
+            return {
+                content,
+                actionLabel,
+                handler
+            }
+        }
+    }
 
     async function fetchTypeCount () {
         try {
@@ -270,6 +314,11 @@
                 ...item,
                 updateTime: dayjs(item.updateTime).format('YYYY-MM-DD HH:mm:ss'),
                 typeName: TEMPLATE_TYPE[item.type] ? t(`template.${TEMPLATE_TYPE[item.type]}`) : '--',
+                sourceTooltip: getFlagTooltips(item),
+                overviewParams: {
+                    templateId: item.id,
+                    version: item.releasedVersion
+                },
                 templateActions: [
                     {
                         text: t('copy'), // 复制
@@ -381,12 +430,50 @@
 
     function afterInstallTemplate (res) {
         handleCancelInstallTemplate()
-        console.log(res)
         fetchTableData()
     }
 
     function handleCancelInstallTemplate () {
         showInstallTemplateDialog.value = false
+    }
+
+    function showUpgradeTemplateFromStore (row) {
+        showTemplateUpgradeDialog.value = true
+        upgradingTemplate.value = row
+    }
+
+    function hideUpgradeDialog () {
+        showTemplateUpgradeDialog.value = false
+        upgradingTemplate.value = null
+    }
+
+    async function upgradeTemplate (version, done) {
+        if (!upgradingTemplate.value) return
+        try {
+            await proxy.$store.dispatch('templates/importTemplateFromStore', {
+                projectId: projectId.value,
+                templateId: upgradingTemplate.value.id,
+                params: {
+                    marketTemplateId: upgradingTemplate.value.srcTemplateId,
+                    marketTemplateProjectId: upgradingTemplate.value.srcTemplateProjectId,
+                    marketTemplateVersion: version,
+                    copySettings: true
+                }
+            })
+
+            proxy.$bkMessage({
+                theme: 'success',
+                message: t('template.templateUpgradeSuccess')
+            })
+            hideUpgradeDialog()
+            done()
+            fetchTableData()
+        } catch (error) {
+            proxy.$bkMessage({
+                theme: 'error',
+                message: error.message || error
+            })
+        }
     }
 
 </script>
