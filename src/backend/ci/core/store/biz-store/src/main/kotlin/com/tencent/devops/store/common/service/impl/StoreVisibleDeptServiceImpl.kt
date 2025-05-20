@@ -36,7 +36,6 @@ import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
 import com.tencent.devops.store.common.dao.StoreDeptRelDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.service.StoreVisibleDeptService
-import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.pojo.common.visible.UserStoreDeptInfoRequest
 import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -147,26 +146,15 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
             )
         }
         val pendingDeptInfoList = mutableListOf<DeptInfo>()
-        deptInfos.forEach {
-            val deptId = it.deptId
+        deptInfos.forEach forEach@{
             val count = storeDeptRelDao.countByCodeAndDeptId(
                 dslContext = dslContext,
                 storeCode = storeCode,
-                deptId = deptId,
+                deptId = it.deptId,
                 storeType = storeType.type.toByte()
             )
             if (count > 0) {
                 return@forEach
-            }
-            if (deptId != 0) {
-                // 获取父部门层级信息
-                val parentDeptInfoList = client.get(ServiceProjectOrganizationResource::class)
-                    .getParentDeptInfos(deptId.toString(), 10).data
-                if (parentDeptInfoList.isNullOrEmpty()) {
-                    return@forEach
-                }
-                // 生成标准化的组织机构信息结构并添加
-                pendingDeptInfoList.addAll(StoreUtils.generateStoreDeptInfo(parentDeptInfoList))
             }
             pendingDeptInfoList.add(it)
         }

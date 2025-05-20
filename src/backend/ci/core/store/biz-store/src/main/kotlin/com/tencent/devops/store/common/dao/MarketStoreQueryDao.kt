@@ -166,17 +166,19 @@ class MarketStoreQueryDao {
         )
 
         val finalConditions = if (storeType == StoreTypeEnum.DEVX) {
+            val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
             val deptCondition = tStoreDeptRel.STORE_CODE.eq(tStoreBase.STORE_CODE)
                 .and(tStoreDeptRel.STORE_TYPE.eq(tStoreBase.STORE_TYPE))
                 .and(tStoreDeptRel.DEPT_ID.`in`(userDeptList))
-
-            conditions.plus(
-                DSL.exists(
-                    dslContext.selectOne()
-                        .from(tStoreDeptRel)
-                        .where(deptCondition)
-                )
+            val existsCondition = DSL.exists(
+                dslContext.selectOne()
+                    .from(tStoreDeptRel)
+                    .where(deptCondition)
             )
+            val publicFlagCondition = tStoreBaseFeature.PUBLIC_FLAG.eq(true)
+            val combinedCondition = DSL.or(publicFlagCondition, existsCondition)
+
+            conditions.plus(combinedCondition)
         } else {
             conditions
         }

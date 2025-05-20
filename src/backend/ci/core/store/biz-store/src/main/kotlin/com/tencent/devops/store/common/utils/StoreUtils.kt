@@ -36,7 +36,6 @@ import com.tencent.devops.store.pojo.common.STORE_PUBLIC_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.common.visible.DeptInfo
 
 object StoreUtils {
 
@@ -162,28 +161,5 @@ object StoreUtils {
         )
         // 判断最近一个组件版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许修改基本信息
         return componentFinalStatusList.contains(status)
-    }
-
-    fun generateStoreDeptInfo(deptInfoList: List<com.tencent.devops.project.pojo.DeptInfo>) : List<DeptInfo> {
-        // 创建ID到对象的快速查找表
-        val deptMap = deptInfoList.associateBy { it.id }
-
-        // 按组织层级升序排序
-        val sortedList = deptInfoList.sortedBy { it.level.toInt() }
-
-        return sortedList.map { dept ->
-            // 递归构建部门路径
-            val pathSegments = mutableListOf<String>().apply {
-                var currentDept: com.tencent.devops.project.pojo.DeptInfo? = dept
-                while (currentDept != null) {
-                    add(currentDept.name)
-                    currentDept = deptMap[currentDept.parentId]
-                }
-            }.reversed()  // 反转得到从根到当前节点的顺序
-            DeptInfo(
-                deptId = dept.id.toInt(),
-                deptName = pathSegments.joinToString("/"),
-            )
-        }
     }
 }
