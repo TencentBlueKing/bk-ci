@@ -106,13 +106,6 @@ class WebhookRequestService(
             // 日志保存异常,不影响正常触发
             logger.warn("Failed to save webhook request", ignored)
         }
-        if (scmType == ScmType.CODE_GIT || scmType == ScmType.CODE_TGIT) {
-            webhookGrayCompareService.asyncCompareWebhook(
-                scmType = scmType,
-                request = request,
-                matcher = matcher
-            )
-        }
         val repoName = matcher.getRepoName()
         // 如果整个仓库都开启灰度，则全部走新逻辑
         val grayRepo = grayService.isGrayRepo(scmType.name, repoName)

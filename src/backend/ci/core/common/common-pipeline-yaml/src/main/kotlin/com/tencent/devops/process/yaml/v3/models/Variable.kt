@@ -101,6 +101,7 @@ data class VariableProps(
     val type: String? = null,
     val options: List<VariablePropOption>? = null,
     var description: String? = null,
+    var group: String? = null,
     val multiple: Boolean? = null,
     var required: Boolean? = null,
     @JsonProperty("repo-id")
@@ -119,7 +120,13 @@ data class VariableProps(
     @JsonProperty("metadata")
     val properties: Map<String, String>? = null,
     val payload: Any? = null
-)
+) {
+    fun empty(): Boolean {
+        return label == null && (type == null || type == VariablePropType.VUEX_INPUT.value) && options == null &&
+            description == null && group == null && multiple == null && required == null && repoHashId == null &&
+            scmType == null && containerType == null && glob == null && properties == null && payload == null
+    }
+}
 
 /**
  * Variable 属性中的选项对象
@@ -134,6 +141,7 @@ data class VariablePropOption(
     val label: String? = null,
     val description: String? = null
 )
+
 data class BuildContainerTypeYaml(
     @JsonProperty("build-type")
     @get:Schema(title = "build-type")
