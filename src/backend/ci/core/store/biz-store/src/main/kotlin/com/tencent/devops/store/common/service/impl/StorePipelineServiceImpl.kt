@@ -237,7 +237,7 @@ class StorePipelineServiceImpl @Autowired constructor(
         storeCode: String?,
         excludeProjectCode: String?
     ): Boolean {
-        executorService.submit {
+        executorService.execute {
             logger.info("begin deleteStoreInnerPipeline!!")
             try {
                 doDeleteStoreInnerPipelineBus(
@@ -247,7 +247,7 @@ class StorePipelineServiceImpl @Autowired constructor(
                     userId = userId
                 )
             } catch (ignored: Throwable) {
-                logger.error("deleteStoreInnerPipeline error", ignored)
+                logger.error("deleteStoreInnerPipeline error | storeType=$storeType | storeCode=$storeCode", ignored)
             }
             logger.info("end deleteStoreInnerPipeline!!")
         }

@@ -165,7 +165,7 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
      * 同步使用插件流水线数量到汇总数据统计表
      */
     override fun asyncUpdateStorePipelineNum(): Boolean {
-        asyncExecutor.submit {
+        asyncExecutor.execute {
             logger.info("begin asyncUpdateStorePipelineNum!!")
             try {
                 batchUpdatePipelineNum()
@@ -182,12 +182,12 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
         startTime: LocalDateTime,
         endTime: LocalDateTime
     ): Boolean {
-        asyncExecutor.submit {
+        asyncExecutor.execute {
             logger.info("begin asyncAtomDailyStatisticInfo!!")
             try {
                 batchUpdateAtomDailyStatisticInfo(storeType, startTime, endTime)
             } catch (ignored: Throwable) {
-                logger.error("asyncAtomDailyStatisticInfo error", ignored)
+                logger.error("asyncAtomDailyStatisticInfo error | storeType=$storeType", ignored)
             }
             logger.info("end asyncAtomDailyStatisticInfo!!")
         }
