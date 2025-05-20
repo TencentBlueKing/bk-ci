@@ -86,7 +86,9 @@ class TXUserPipelineResourceImpl @Autowired constructor(
     }
 
     private fun checkParam(setting: PipelineSetting) {
-        if (setting.runLockType == PipelineRunLockType.SINGLE || setting.runLockType == PipelineRunLockType.SINGLE_LOCK) {
+        if (setting.runLockType == PipelineRunLockType.SINGLE ||
+                setting.runLockType == PipelineRunLockType.SINGLE_LOCK
+        ) {
             if (setting.waitQueueTimeMinute < PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN ||
                     setting.waitQueueTimeMinute > PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
             ) {
