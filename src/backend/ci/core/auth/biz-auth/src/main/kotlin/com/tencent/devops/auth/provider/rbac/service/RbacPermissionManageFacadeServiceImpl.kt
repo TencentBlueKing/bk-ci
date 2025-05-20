@@ -31,6 +31,7 @@ import com.tencent.devops.auth.pojo.enum.JoinedType
 import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.pojo.enum.RemoveMemberButtonControl
+import com.tencent.devops.auth.pojo.request.BatchRemoveMemberFromProjectReq
 import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRemoveConditionReq
@@ -1848,6 +1849,23 @@ class RbacPermissionManageFacadeServiceImpl(
         }
     }
 
+    override fun batchRemoveMemberFromProject(
+        userId: String,
+        projectCode: String,
+        removeMemberFromProjectReq: BatchRemoveMemberFromProjectReq
+    ): List<ResourceMemberInfo> {
+        return removeMemberFromProjectReq.targetMembers.flatMap { member ->
+            removeMemberFromProject(
+                userId = userId,
+                projectCode = projectCode,
+                removeMemberFromProjectReq = RemoveMemberFromProjectReq(
+                    targetMember = member,
+                    handoverTo = removeMemberFromProjectReq.handoverTo
+                )
+            )
+        }.distinct()
+    }
+
     override fun removeMemberFromProjectCheck(
         userId: String,
         projectCode: String,
@@ -1876,6 +1894,21 @@ class RbacPermissionManageFacadeServiceImpl(
                 true
             }
         return isMemberHasNoPermission && isMemberHasNoAuthorizations
+    }
+
+    override fun batchRemoveMemberFromProjectCheck(
+        userId: String,
+        projectCode: String,
+        targetMembers: List<ResourceMemberInfo>
+    ): Boolean = targetMembers.all { member ->
+        removeMemberFromProjectCheck(
+            userId = userId,
+            projectCode = projectCode,
+            removeMemberFromProjectReq = RemoveMemberFromProjectReq(
+                targetMember = member,
+                handoverTo = null
+            )
+        )
     }
 
     override fun handleHanoverApplication(request: HandoverOverviewUpdateReq): Boolean {

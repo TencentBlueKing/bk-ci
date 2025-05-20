@@ -7,6 +7,7 @@ import com.tencent.devops.auth.pojo.dto.InvalidAuthorizationsDTO
 import com.tencent.devops.auth.pojo.enum.BatchOperateType
 import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.enum.OperateChannel
+import com.tencent.devops.auth.pojo.request.BatchRemoveMemberFromProjectReq
 import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRemoveConditionReq
@@ -148,10 +149,22 @@ class SamplePermissionManageFacadeService : PermissionManageFacadeService {
         removeMemberFromProjectReq: RemoveMemberFromProjectReq
     ): List<ResourceMemberInfo> = emptyList()
 
+    override fun batchRemoveMemberFromProject(
+        userId: String,
+        projectCode: String,
+        removeMemberFromProjectReq: BatchRemoveMemberFromProjectReq
+    ): List<ResourceMemberInfo> = emptyList()
+
     override fun removeMemberFromProjectCheck(
         userId: String,
         projectCode: String,
         removeMemberFromProjectReq: RemoveMemberFromProjectReq
+    ): Boolean = true
+
+    override fun batchRemoveMemberFromProjectCheck(
+        userId: String,
+        projectCode: String,
+        targetMembers: List<ResourceMemberInfo>
     ): Boolean = true
 
     override fun handleHanoverApplication(request: HandoverOverviewUpdateReq): Boolean = true

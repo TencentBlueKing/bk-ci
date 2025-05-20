@@ -7,6 +7,7 @@ import com.tencent.devops.auth.pojo.dto.InvalidAuthorizationsDTO
 import com.tencent.devops.auth.pojo.enum.BatchOperateType
 import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.enum.OperateChannel
+import com.tencent.devops.auth.pojo.request.BatchRemoveMemberFromProjectReq
 import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRemoveConditionReq
@@ -215,12 +216,30 @@ interface PermissionManageFacadeService {
     ): List<ResourceMemberInfo>
 
     /**
+     * 批量将用户移出项目-管理员视角
+     * */
+    fun batchRemoveMemberFromProject(
+        userId: String,
+        projectCode: String,
+        removeMemberFromProjectReq: BatchRemoveMemberFromProjectReq
+    ): List<ResourceMemberInfo>
+
+    /**
      * 将用户移出项目检查-管理员视角
      * */
     fun removeMemberFromProjectCheck(
         userId: String,
         projectCode: String,
         removeMemberFromProjectReq: RemoveMemberFromProjectReq
+    ): Boolean
+
+    /**
+     * 批量将用户移出项目检查-管理员视角
+     * */
+    fun batchRemoveMemberFromProjectCheck(
+        userId: String,
+        projectCode: String,
+        targetMembers: List<ResourceMemberInfo>
     ): Boolean
 
     /**
