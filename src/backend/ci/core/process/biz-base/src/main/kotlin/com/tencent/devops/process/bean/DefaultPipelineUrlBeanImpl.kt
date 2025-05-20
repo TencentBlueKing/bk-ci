@@ -41,12 +41,38 @@ class DefaultPipelineUrlBeanImpl constructor(private val commonConfig: CommonCon
         stageId: String?,
         needShortUrl: Boolean
     ): String {
-        return "${HomeHostUtil
-            .getHost(commonConfig.devopsHostGateway!!)}/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
+        return "${
+            HomeHostUtil
+                .getHost(commonConfig.devopsHostGateway!!)
+        }/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
     }
 
     override fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
-        return "${HomeHostUtil
-            .getHost(commonConfig.devopsHostGateway!!)}/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
+        return "${
+            HomeHostUtil
+                .getHost(commonConfig.devopsHostGateway!!)
+        }/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
+    }
+
+    override fun genBuildReviewUrl(
+        projectCode: String,
+        pipelineId: String,
+        buildId: String,
+        stageId: String?,
+        taskId: String?,
+        needShortUrl: Boolean
+    ): String {
+        val baseUrl = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!) +
+            "/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
+
+        val queryParams = mutableListOf<String>()
+        stageId?.let { queryParams.add("review_stage_id=$it") }
+        taskId?.let { queryParams.add("review_task_id=$it") }
+
+        return if (queryParams.isNotEmpty()) {
+            "$baseUrl?${queryParams.joinToString("&")}"
+        } else {
+            baseUrl
+        }
     }
 }
