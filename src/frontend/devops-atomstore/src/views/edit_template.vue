@@ -54,8 +54,8 @@
 
 <script>
     import breadCrumbs from '@/components/bread-crumbs.vue'
-import { PublishInfo, TemplateInfo } from '@/components/editContent'
-import { mapActions } from 'vuex'
+    import { PublishInfo, TemplateInfo } from '@/components/editContent'
+    import { mapActions } from 'vuex'
 
     export default {
         components: {

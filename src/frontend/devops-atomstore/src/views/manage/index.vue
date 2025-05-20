@@ -26,10 +26,10 @@
 
 <script>
     import api from '@/api'
-import breadCrumbs from '@/components/bread-crumbs.vue'
-import transitionTab from '@/components/transition-tab.vue'
-import { TYPE_ENUM } from '@/utils/constants'
-import { mapActions, mapGetters } from 'vuex'
+    import breadCrumbs from '@/components/bread-crumbs.vue'
+    import transitionTab from '@/components/transition-tab.vue'
+    import { TYPE_ENUM } from '@/utils/constants'
+    import { mapActions, mapGetters } from 'vuex'
 
     export default {
         components: {
