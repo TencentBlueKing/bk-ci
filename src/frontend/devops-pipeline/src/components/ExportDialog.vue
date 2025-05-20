@@ -109,7 +109,7 @@
                         icon: 'export-prebuild',
                         name: `${this.pipelineName}.yml`,
                         tips: this.$t('newlist.exportYamlTip'),
-                        exportUrl: `${API_URL_PREFIX}/${PROCESS_API_URL_PREFIX}/user/pipelines/${this.pipelineId}/projects/${this.projectId}/yaml/prebuild`,
+                        exportUrl: `${API_URL_PREFIX}/${PROCESS_API_URL_PREFIX}/user/pipelines/${this.pipelineId}/projects/${this.projectId}/yaml/prebuild${queryString}`,
                         tipsLink: `${IWIKI_DOCS_URL}/x/ruhACw`
                     }
                 ]
