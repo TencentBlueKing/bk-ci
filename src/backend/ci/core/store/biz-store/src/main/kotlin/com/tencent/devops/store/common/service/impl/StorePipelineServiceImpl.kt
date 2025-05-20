@@ -239,48 +239,66 @@ class StorePipelineServiceImpl @Autowired constructor(
     ): Boolean {
         executorService.submit {
             logger.info("begin deleteStoreInnerPipeline!!")
-            var offset = 0
-            do {
-                // 查询组件内置流水线信息记录
-                val storePipelineRelRecords = storePipelineRelDao.getStorePipelineRelRecords(
-                    dslContext = dslContext,
-                    offset = offset,
-                    limit = pageSize,
+            try {
+                doDeleteStoreInnerPipelineBus(
                     storeType = storeType,
-                    storeCode = storeCode
+                    storeCode = storeCode,
+                    excludeProjectCode = excludeProjectCode,
+                    userId = userId
                 )
-                storePipelineRelRecords?.forEach { storePipelineRelRecord ->
-                    var initProjectCode = storePipelineRelRecord.projectCode
-                    if (excludeProjectCode == initProjectCode) {
-                        // 如果内置流水线的项目属于要排除的项目，则不删除该内置流水线
-                        return@forEach
-                    }
-                    storePipelineBuildRelDao.deleteStorePipelineBuildRelByPipelineId(
-                        dslContext,
-                        storePipelineRelRecord.pipelineId
-                    )
-                    storePipelineRelDao.deleteStorePipelineRelById(dslContext, storePipelineRelRecord.id)
-                    if (initProjectCode.isNullOrBlank()) {
-                        initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
-                            dslContext = dslContext,
-                            storeCode = storePipelineRelRecord.storeCode,
-                            storeType = storePipelineRelRecord.storeType
-                        )
-                    }
-                    // 调接口删除内置流水线
-                    client.get(ServicePipelineResource::class).delete(
-                        userId = userId,
-                        pipelineId = storePipelineRelRecord.pipelineId,
-                        channelCode = ChannelCode.AM,
-                        projectId = initProjectCode,
-                        checkFlag = false
-                    )
-                }
-                offset += pageSize
-            } while (storePipelineRelRecords?.size == pageSize)
+            } catch (ignored: Throwable) {
+                logger.error("deleteStoreInnerPipeline error", ignored)
+            }
             logger.info("end deleteStoreInnerPipeline!!")
         }
         return true
+    }
+
+    private fun doDeleteStoreInnerPipelineBus(
+        storeType: StoreTypeEnum?,
+        storeCode: String?,
+        excludeProjectCode: String?,
+        userId: String
+    ) {
+        var offset = 0
+        do {
+            // 查询组件内置流水线信息记录
+            val storePipelineRelRecords = storePipelineRelDao.getStorePipelineRelRecords(
+                dslContext = dslContext,
+                offset = offset,
+                limit = pageSize,
+                storeType = storeType,
+                storeCode = storeCode
+            )
+            storePipelineRelRecords?.forEach { storePipelineRelRecord ->
+                var initProjectCode = storePipelineRelRecord.projectCode
+                if (excludeProjectCode == initProjectCode) {
+                    // 如果内置流水线的项目属于要排除的项目，则不删除该内置流水线
+                    return@forEach
+                }
+                storePipelineBuildRelDao.deleteStorePipelineBuildRelByPipelineId(
+                    dslContext,
+                    storePipelineRelRecord.pipelineId
+                )
+                storePipelineRelDao.deleteStorePipelineRelById(dslContext, storePipelineRelRecord.id)
+                if (initProjectCode.isNullOrBlank()) {
+                    initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+                        dslContext = dslContext,
+                        storeCode = storePipelineRelRecord.storeCode,
+                        storeType = storePipelineRelRecord.storeType
+                    )
+                }
+                // 调接口删除内置流水线
+                client.get(ServicePipelineResource::class).delete(
+                    userId = userId,
+                    pipelineId = storePipelineRelRecord.pipelineId,
+                    channelCode = ChannelCode.AM,
+                    projectId = initProjectCode,
+                    checkFlag = false
+                )
+            }
+            offset += pageSize
+        } while (storePipelineRelRecords?.size == pageSize)
     }
 
     private fun handleStorePublicPipelineModel(

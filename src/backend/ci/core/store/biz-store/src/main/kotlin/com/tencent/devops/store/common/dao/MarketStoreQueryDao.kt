@@ -44,6 +44,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record1
+import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.SelectConditionStep
 import org.jooq.SelectJoinStep
@@ -128,15 +129,9 @@ class MarketStoreQueryDao {
         score: Int?
     ) {
         val isDownloadCountSort = sortType == StoreSortTypeEnum.DOWNLOAD_COUNT
-        if (isDownloadCountSort && score == null) {
-            val tStoreStatisticsTotal = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
-            val statsSubquery = dslContext.select(
-                tStoreStatisticsTotal.STORE_CODE,
-                tStoreStatisticsTotal.DOWNLOADS.`as`(sortType.name)
-            )
-                .from(tStoreStatisticsTotal)
-                .where(tStoreStatisticsTotal.STORE_TYPE.eq(storeType.type.toByte()))
-
+        val needStatsJoin = isDownloadCountSort && score == null
+        if (needStatsJoin) {
+            val statsSubquery = buildStatsSubquery(dslContext, sortType, storeType)
             baseStep.leftJoin(statsSubquery)
                 .on(tStoreBase.STORE_CODE.eq(statsSubquery.field(KEY_STORE_CODE, String::class.java)))
         }
@@ -147,6 +142,21 @@ class MarketStoreQueryDao {
             tStoreBase.field(sortType.name) ?: throw IllegalArgumentException("Invalid sort field")
         }
         baseStep.orderBy(sortField.desc())
+    }
+
+    private fun buildStatsSubquery(
+        dslContext: DSLContext,
+        sortType: StoreSortTypeEnum,
+        storeType: StoreTypeEnum
+    ): SelectConditionStep<Record2<String, Int>> {
+        val tStoreStatisticsTotal = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
+        val statsSubquery = dslContext.select(
+            tStoreStatisticsTotal.STORE_CODE,
+            tStoreStatisticsTotal.DOWNLOADS.`as`(sortType.name)
+        )
+            .from(tStoreStatisticsTotal)
+            .where(tStoreStatisticsTotal.STORE_TYPE.eq(storeType.type.toByte()))
+        return statsSubquery
     }
 
     private fun applyConditionFilter(

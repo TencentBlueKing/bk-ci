@@ -167,7 +167,11 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
     override fun asyncUpdateStorePipelineNum(): Boolean {
         asyncExecutor.submit {
             logger.info("begin asyncUpdateStorePipelineNum!!")
-            batchUpdatePipelineNum()
+            try {
+                batchUpdatePipelineNum()
+            } catch (ignored: Throwable) {
+                logger.error("asyncUpdateStorePipelineNum error", ignored)
+            }
             logger.info("end asyncUpdateStorePipelineNum!!")
         }
         return true
@@ -180,7 +184,11 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
     ): Boolean {
         asyncExecutor.submit {
             logger.info("begin asyncAtomDailyStatisticInfo!!")
-            batchUpdateAtomDailyStatisticInfo(storeType, startTime, endTime)
+            try {
+                batchUpdateAtomDailyStatisticInfo(storeType, startTime, endTime)
+            } catch (ignored: Throwable) {
+                logger.error("asyncAtomDailyStatisticInfo error", ignored)
+            }
             logger.info("end asyncAtomDailyStatisticInfo!!")
         }
         return true
