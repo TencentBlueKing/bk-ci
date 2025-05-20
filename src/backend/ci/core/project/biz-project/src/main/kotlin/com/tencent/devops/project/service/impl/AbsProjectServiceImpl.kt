@@ -1026,8 +1026,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 offset = offset,
                 limit = limit,
                 searchName = null,
-                productIds = productIds?.split(",")?.map { it.toInt() }?.toSet() ?: setOf(),
-                channelCodes = channelCodes?.split(",")?.toSet() ?: setOf(),
+                productIds = splitStr(productIds).map { it.toInt() }.toSet(),
+                channelCodes = splitStr(channelCodes).toSet(),
                 sortType = sort
             ).map {
                 list.add(ProjectUtils.packagingBean(it))
@@ -1714,6 +1714,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 )
             }
         }
+    }
+
+    private fun splitStr(str: String?) = if (str.isNullOrBlank()) {
+        listOf()
+    } else {
+        str.split(",")
     }
 
     companion object {
