@@ -8,6 +8,7 @@
         <pac-tag
             v-if="pacEnabled"
             :info="yamlInfo"
+            is-template
         />
     </span>
 </template>
@@ -15,10 +16,10 @@
 <script>
 
     import Logo from '@/components/Logo'
+    import PacTag from '@/components/PacTag'
     import UseInstance from '@/hook/useInstance'
     import { TEMPLATE_TYPE } from '@/utils/pipelineConst'
     import { computed, defineComponent } from 'vue'
-    import PacTag from '@/components/PacTag'
 
     export default defineComponent({
         components: {

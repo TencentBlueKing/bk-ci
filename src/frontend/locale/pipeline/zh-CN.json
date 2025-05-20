@@ -1545,6 +1545,7 @@
   "skipSuc": "已跳过失败的步骤，继续运行",
   "skipFail": "跳过失败",
   "pacEnableTips": "流水线已开启 PAC 模式，可通过代码库管理流水线配置。",
+  "pacTemplaneEnableTips": "流水线模板已开启 PAC 模式，可通过代码库管理流水线配置。",
   "copyBadgeMarkdownLink": "复制Markdown链接",
   "copyBadgePicLink": "复制图片链接",
   "disable": "禁用",

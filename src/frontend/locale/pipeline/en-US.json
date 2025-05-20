@@ -1542,6 +1542,7 @@
   "skipSuc": "Skipped the failed step and continued running",
   "skipFail": "Skip failed",
   "pacEnableTips": "Pipeline has been enabled PAC mode, and pipeline configuration can be managed through code repository.",
+  "pacTemplaneEnableTips": "Template has been enabled PAC mode, and pipeline configuration can be managed through code repository.",
   "copyBadgeMarkdownLink": "Copy Markdown Link",
   "copyBadgePicLink": "Copy Picture Link",
   "disable": "Disable",
