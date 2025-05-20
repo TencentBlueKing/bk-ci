@@ -10,6 +10,7 @@ import com.tencent.devops.repository.pojo.RepoCondition
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryWebhookRequest
 import com.tencent.devops.repository.pojo.credential.AuthRepository
+import com.tencent.devops.repository.pojo.credential.IAuthCred
 import com.tencent.devops.repository.pojo.webhook.WebhookData
 import com.tencent.devops.repository.pojo.webhook.WebhookParseRequest
 import com.tencent.devops.repository.service.code.CodeRepositoryManager
@@ -58,34 +59,31 @@ class RepositoryWebhookService @Autowired constructor(
 
         // 循环查找有权限的代码库,调用接口扩展webhook数据
         var enWebhook = webhook
-        for (repository in sortedRepository(repositories)) {
-            val projectId = repository.projectId!!
-            val authRepository = AuthRepository(repository)
+        val repoList = sortedRepository(repositories).map { AuthRepository(it) }.distinctBy { it.auth }
+        for (repository in repoList) {
             try {
                 enWebhook = webhookApiService.webhookEnrich(
                     webhook = webhook,
-                    authRepo = authRepository
+                    authRepo = repository
                 )
                 break
             } catch (ignored: RemoteServiceException) {
                 when (ignored.errorCode) {
                     401 -> {
                         logger.warn(
-                            "repository auth has expired|$projectId|${repository.repoHashId}|" +
-                                    "${authRepository.auth}", ignored
+                            "repository auth has expired|${repository.auth}", ignored
                         )
                     }
 
                     else -> {
                         logger.warn(
-                            "fail to enrich webhook|$projectId|${repository.repoHashId}|" +
-                                    "${authRepository.auth}", ignored
+                            "fail to enrich webhook|${repository.auth}", ignored
                         )
                     }
                 }
             } catch (ignored: Exception) {
                 logger.warn(
-                    "fail to enrich webhook|$projectId|${repository.repoHashId}|${authRepository.auth}", ignored
+                    "fail to enrich webhook|${repository.auth}", ignored
                 )
             }
         }
