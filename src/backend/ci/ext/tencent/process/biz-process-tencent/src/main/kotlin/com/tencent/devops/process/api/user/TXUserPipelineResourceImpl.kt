@@ -56,7 +56,12 @@ class TXUserPipelineResourceImpl @Autowired constructor(
     ): Response {
         checkParam(userId, projectId)
         checkPipelineId(pipelineId)
-        return pipelineService.exportYaml(userId, projectId, pipelineId)
+        return pipelineService.exportYaml(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            archiveFlag = archiveFlag
+        )
     }
 
     override fun exportPipelineGitCI(
