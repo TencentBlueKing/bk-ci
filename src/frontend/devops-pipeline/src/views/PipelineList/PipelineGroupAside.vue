@@ -149,7 +149,7 @@
                 <logo
                     class="pipeline-group-item-icon"
                     :name="item.logo"
-                    size="16"
+                    size="14"
                 ></logo>
                 <span>{{ item.title }}</span>
             </div>
