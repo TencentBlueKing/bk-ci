@@ -172,6 +172,15 @@ export default function useTemplateActions () {
         const href = `${WEB_URL_PREFIX}/store/editTemplate?templateCode=${row.id}&projectCode=${row.projectId}&templateName=${row.name}&templateVersion=${row.releasedVersion}&hasSourceInfo=true`
         window.open(href, '_blank')
     }
+
+    /**
+     * 到研发商店查看模板
+     * @param row
+     */
+    function toStoreTemplateDetail (id) {
+        const href = `${WEB_URL_PREFIX}/store/manage/template/${id}/releaseManage`
+        window.open(href, '_blank')
+    }
     /**
    * 转为自定义
    * @param row
@@ -232,6 +241,7 @@ export default function useTemplateActions () {
         copyConfirmHandler,
         copyCancelHandler,
         goTemplateOverview,
+        toStoreTemplateDetail,
         toRelativeStore,
         convertToCustom
     }

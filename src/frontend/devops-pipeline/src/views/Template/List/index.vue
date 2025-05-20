@@ -120,6 +120,7 @@
         copyConfirmHandler,
         copyCancelHandler,
         goTemplateOverview,
+        toStoreTemplateDetail,
         toRelativeStore,
         convertToCustom
     } = useTemplateActions()
@@ -216,7 +217,7 @@
                 case row.storeFlag && !row.publishFlag:
                     content = t(i18nPrefix + 'storeFlag')
                     actionLabel = t(i18nPrefix + 'goView')
-                    handler = () => goTemplateOverview(row.overviewParams)
+                    handler = () => toStoreTemplateDetail(row.id)
                     break
                 case row.upgradeFlag:
                     content = t(i18nPrefix + 'upgradeFlag')
