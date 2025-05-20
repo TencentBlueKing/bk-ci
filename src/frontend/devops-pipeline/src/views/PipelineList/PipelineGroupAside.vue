@@ -709,6 +709,7 @@
             font-size: 14px;
             width: 100%;
             flex-shrink: 0;
+            text-align: center;
             &.expended {
                 width: 100%;
             }
