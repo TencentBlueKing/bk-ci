@@ -86,7 +86,7 @@ interface UserProjectServiceResource {
         @Parameter(description = "项目ID", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String?,
-        @Parameter(description = "项目ID", required = false)
+        @Parameter(description = "流水线ID", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String?,
         @Parameter(description = "服务ID", required = true)
