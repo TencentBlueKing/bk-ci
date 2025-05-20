@@ -837,18 +837,19 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         if (storeInfoQuery.getSpecQueryFlag()) {
             handleQueryStoreCodes(storeInfoQuery)
         }
-        val count = marketStoreQueryDao.count(
-            dslContext = dslContext,
-            userDeptList = userDeptList,
-            storeInfoQuery = storeInfoQuery
-        )
-        val storeInfos = marketStoreQueryDao.list(
-            dslContext = dslContext,
-            userDeptList = userDeptList,
-            storeInfoQuery = storeInfoQuery
-        )
-
-        return Pair(count.toLong(), storeInfos)
+        return marketStoreQueryDao.run {
+            val count = count(
+                dslContext = dslContext,
+                userDeptList = userDeptList,
+                storeInfoQuery = storeInfoQuery
+            )
+            val storeList = list(
+                dslContext = dslContext,
+                userDeptList = userDeptList,
+                storeInfoQuery = storeInfoQuery
+            )
+            count.toLong() to storeList
+        }
     }
 
     private fun handleQueryStoreCodes(

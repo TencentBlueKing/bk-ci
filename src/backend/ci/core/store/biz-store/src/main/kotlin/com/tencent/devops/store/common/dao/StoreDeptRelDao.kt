@@ -63,28 +63,14 @@ class StoreDeptRelDao {
 
     fun batchList(
         dslContext: DSLContext,
-        storeType: Byte,
-        storeCodeList: Collection<String>? = null,
-        limit: Int? = null,
-        offset: Int? = null
+        storeCodeList: Collection<String?>,
+        storeType: Byte
     ): Result<TStoreDeptRelRecord>? {
         with(TStoreDeptRel.T_STORE_DEPT_REL) {
-            val conditions = mutableListOf<Condition>().apply {
-                add(STATUS.eq(DeptStatusEnum.APPROVED.status.toByte()))
-                add(STORE_TYPE.eq(storeType))
-                if (!storeCodeList.isNullOrEmpty()) {
-                    add(STORE_CODE.`in`(storeCodeList))
-                }
-            }
             return dslContext.selectFrom(this)
-                .where(conditions)
-                .apply {
-                    when {
-                        limit != null && offset != null -> limit(offset, limit)
-                        limit != null -> limit(limit)
-                        offset != null -> offset(offset)
-                    }
-                }
+                .where(STORE_CODE.`in`(storeCodeList))
+                .and(STATUS.eq(DeptStatusEnum.APPROVED.status.toByte()))
+                .and(STORE_TYPE.eq(storeType))
                 .fetch()
         }
     }
