@@ -55,6 +55,7 @@ data class PipelineBuildNotifyEvent(
     val mentionReceivers: Boolean? = false,
     val position: String?,
     val stageId: String?,
+    val taskId: String? = null,
     override var actionType: ActionType = ActionType.START,
     override var delayMills: Int = 0
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
