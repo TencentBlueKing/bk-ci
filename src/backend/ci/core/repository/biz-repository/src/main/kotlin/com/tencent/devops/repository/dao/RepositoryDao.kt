@@ -706,7 +706,7 @@ class RepositoryDao {
             if (!repoHashId.isNullOrBlank()) {
                 conditions.add(REPOSITORY_HASH_ID.eq(repoHashId))
             }
-            if(nullScmCode == true) {
+            if (nullScmCode == true) {
                 conditions.add(SCM_CODE.isNull())
             }
             dslContext.selectFrom(this)
