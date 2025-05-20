@@ -228,7 +228,6 @@ class MarketStoreQueryDao {
             )
     }
 
-
     private fun formatConditions(
         dslContext: DSLContext,
         storeType: StoreTypeEnum,
