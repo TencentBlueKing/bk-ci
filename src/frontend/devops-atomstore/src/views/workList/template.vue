@@ -132,7 +132,7 @@
                         <p class="last-version">
                             <span :class="row.latestReleasedVersion !== row.latestPublishedVersion ? 'active' : ''">{{ row.latestPublishedVersionName }}</span>
                             <bk-icon
-                                v-if="row.latestReleasedVersion && row.latestReleasedVersion !== row.latestPublishedVersion"
+                                v-if="row.latestReleasedVersion !== row.latestPublishedVersion && row.templateStatus !== 'UNDERCARRIAGED'"
                                 type="arrows-up-shape"
                                 class="arrows-up-shape"
                             />

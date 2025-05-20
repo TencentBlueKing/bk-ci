@@ -169,7 +169,7 @@ export default function useTemplateActions () {
     function toRelativeStore (row) {
         if (!row.canEdit) return
 
-        const href = `${WEB_URL_PREFIX}/store/editTemplate?templateCode=${row.id}&projectCode=${row.projectId}&templateName=${row.name}&templateVersion=${row.releasedVersion}&hasSourceInfo=true`
+        const href = `${WEB_URL_PREFIX}/store/editTemplate?templateCode=${row.id}&templateName=${row.name}&templateVersion=${row.releasedVersion}&hasSourceInfo=true`
         window.open(href, '_blank')
     }
 

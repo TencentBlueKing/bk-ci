@@ -68,8 +68,8 @@
                     >
                         <bk-option
                             v-for="option in templateList"
-                            :key="option.templateId"
-                            :id="option.templateId"
+                            :key="option.id"
+                            :id="option.id"
                             :name="option.name"
                             @click.native="optionChange('templateCodeErrors')"
                         >
@@ -97,10 +97,7 @@
                     </div>
                 </div>
             </div>
-            <div
-                class="bk-form-item is-required"
-                ref="versionErrors"
-            >
+            <div class="bk-form-item">
                 <label class="bk-label"> {{ $t('store.模板版本') }} </label>
                 <div class="bk-form-content template-item-content template-category-content">
                     <bk-select
@@ -119,16 +116,9 @@
                             :key="option.version"
                             :id="option.version"
                             :name="option.versionName"
-                            @click.native="optionChange('versionErrors')"
                         >
                         </bk-option>
                     </bk-select>
-                    <div
-                        v-if="formErrors.versionErrors"
-                        class="error-tips"
-                    >
-                        {{ $t('store.模板版本不能为空') }}
-                    </div>
                 </div>
             </div>
             <div class="bk-form-item is-required">
@@ -377,7 +367,6 @@
                     categoryError: false,
                     descError: false,
                     logoUrlError: false,
-                    versionErrors: false,
                     templateCodeErrors: false,
                     projectCodeErrors: false
                 },
@@ -403,7 +392,7 @@
                 return toolbars
             },
             templateOptionName () {
-                return this.templateList.find(item => item.templateId === this.templateForm.templateCode)?.name
+                return this.templateList.find(item => item.templateId === this.templateForm.templateCode)?.name || this.$route.query.templateName
             }
         },
         watch: {
@@ -421,9 +410,12 @@
                 immediate: true
             },
             'templateForm.templateCode': {
-                handler (newVal) {
+                async handler (newVal) {
                     if (newVal) {
-                        this.getVersionList(1)
+                        await this.getVersionList(1)
+                        this.$emit('updateTemplateForm', {
+                            templateVersion: this.versionList[0]?.version
+                        })
                     }
                 },
                 immediate: true
@@ -496,7 +488,7 @@
                 this.versionList = []
             },
             handleChangeProjectCode (val) {
-                const templateName = this.templateList.find(item => item.templateId === val)?.name
+                const templateName = this.templateList.find(item => item.id === val)?.name
                 this.$emit('updateTemplateForm', {
                     templateVersion: '',
                     templateName
@@ -513,11 +505,14 @@
                         this.bottomLoading = true
                     }
                     const res = await this.requestPipelineTemplate({
-                        projectCode: this.templateForm.projectCode,
+                        projectId: this.templateForm.projectCode,
                         page: nextPage,
-                        pageSize: this.codesPagination.limit
+                        pageSize: this.codesPagination.limit,
+                        mode: 'CUSTOMIZE',
+                        latestVersionStatus: 'RELEASED',
+                        storeStatus: 'NEVER_PUBLISHED'
                     })
-                    const data = res.models.filter(i => i.canEdit)
+                    const data = res.records
                     if (page === 1) {
                         this.templateList = data
                     } else {
@@ -545,8 +540,6 @@
                         templateId: this.templateForm.templateCode,
                         page: nextPage,
                         pageSize: this.versionsPagination.limit,
-                        storeFlag: false,
-                        includeDraft: false,
                         status: 'RELEASED'
                     })
 
@@ -593,10 +586,6 @@
                     {
                         condition: () => !this.templateForm.projectCode,
                         errorKey: 'projectCodeErrors'
-                    },
-                    {
-                        condition: () => !this.templateForm.templateVersion,
-                        errorKey: 'versionErrors'
                     },
                     {
                         condition: () => !this.templateForm.templateCode,
