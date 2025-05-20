@@ -47,11 +47,8 @@ class TxStoreCommonServiceImpl : StoreCommonServiceImpl() {
         visibleList: MutableList<Int>?,
         userDeptList: List<Int>
     ): Boolean {
-        return if (defaultFlag || (members != null && members.contains(userId))) {
-            true
-        } else {
-            visibleList != null && (visibleList.contains(0) || visibleList.intersect(userDeptList.toSet()).isNotEmpty())
-        }
+        return defaultFlag || members?.contains(userId) == true ||
+                visibleList?.any { it == 0 || it in userDeptList } == true
     }
 
     override fun generateStoreVisibleData(
