@@ -29,15 +29,13 @@
 package com.tencent.devops.repository.service.scm
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReflectUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.service.ScmProxy
 import com.tencent.devops.scm.api.ServiceScmApiProxyResource
-import com.tencent.devops.scm.api.exception.NotFoundScmApiException
-import com.tencent.devops.scm.api.exception.UnAuthorizedScmApiException
+import com.tencent.devops.scm.api.exception.ScmApiException
 import com.tencent.devops.scm.pojo.ScmApiParameter
 import com.tencent.devops.scm.pojo.ScmApiRequest
 import com.tencent.devops.scm.spring.properties.ScmProviderProperties
@@ -66,10 +64,21 @@ class ScmApiManagerProxyAspect @Autowired constructor(
         val parameterValues = pjp.args
         val properties = parameterValues.find { it is ScmProviderProperties }?.let { it as ScmProviderProperties }
             ?: throw ErrorCodeException(errorCode = "")
-        return if (properties.proxyEnabled) {
-            proxy(pjp)
-        } else {
-            pjp.proceed()
+        return try {
+            if (properties.proxyEnabled) {
+                proxy(pjp)
+            } else {
+                pjp.proceed()
+            }
+        } catch (ignored: Exception) {
+            throw when (ignored) {
+                is ScmApiException -> RemoteServiceException(
+                    errorCode = ignored.statusCode,
+                    errorMessage = ignored.message ?: ""
+                )
+
+                else -> ignored
+            }
         }
     }
 
@@ -107,31 +116,17 @@ class ScmApiManagerProxyAspect @Autowired constructor(
             parameters = parameters
         )
         logger.info("proxy scm api request|serviceName:$serviceName|method:$methodName")
-        val data = try {
-            client.getScm(ServiceScmApiProxyResource::class).proxy(
-                serviceName = serviceName,
-                methodName = methodName,
-                request = request
-            ).data
-        } catch (ignored: RemoteServiceException) {
-            // 根据errorCode匹配实际异常信息
-            handleException(ignored)
-        }
+        val data = client.getScm(ServiceScmApiProxyResource::class).proxy(
+            serviceName = serviceName,
+            methodName = methodName,
+            request = request
+        ).data
         return data?.let {
             if (ReflectUtil.isPrimitiveOrStringType(method.returnType)) {
                 it
             } else {
                 JsonUtil.toForType(it.toString(), signature.method.genericReturnType)
             }
-        }
-    }
-
-    fun handleException(ignored: RemoteServiceException): RuntimeException {
-        val errorMsg = ignored.message ?: ""
-        throw when (ignored.errorCode) {
-            401 -> UnAuthorizedScmApiException(errorMsg)
-            404 -> NotFoundScmApiException(errorMsg)
-            else -> OperationException(errorMsg)
         }
     }
 
