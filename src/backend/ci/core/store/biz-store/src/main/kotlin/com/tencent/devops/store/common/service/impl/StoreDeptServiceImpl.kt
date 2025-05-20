@@ -27,35 +27,24 @@
 
 package com.tencent.devops.store.common.service.impl
 
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
-import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
 import com.tencent.devops.store.common.dao.StoreDeptRelDao
-import com.tencent.devops.store.pojo.common.visible.DeptInfo
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.StoreDeptService
-import com.tencent.devops.store.common.utils.StoreUtils
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.visible.DeptInfo
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.Executors
 
 @Service
 class StoreDeptServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val storeDeptRelDao: StoreDeptRelDao,
-    private val client: Client
+    private val storeDeptRelDao: StoreDeptRelDao
 ) : StoreDeptService {
-
-    private val refreshExecutor by lazy {
-        Executors.newFixedThreadPool(1).apply {
-            Runtime.getRuntime().addShutdownHook(Thread { shutdown() })
-        }
-    }
 
     override fun getTemplateImageDeptMap(stageList: List<Stage>): Map<String, List<DeptInfo>?> {
         val templateImageCodeSet = mutableSetOf<String>()
@@ -90,43 +79,6 @@ class StoreDeptServiceImpl @Autowired constructor(
             }
         }
         return getStoreDeptRelMap(templateAtomCodeSet, StoreTypeEnum.ATOM.type.toByte())
-    }
-
-    override fun refreshDeptInfo(userId: String, storeType: StoreTypeEnum): Boolean {
-        logger.info("refreshDeptInfo param: userId=$userId, storeType=$storeType")
-        refreshExecutor.submit {
-            logger.info("$storeType begin refreshDeptInfo!!")
-            var offset = 0
-            do {
-                val storeDeptRelRecords = storeDeptRelDao.batchList(
-                    dslContext = dslContext,
-                    storeType = storeType.type.toByte(),
-                    offset = offset,
-                    limit = DEFAULT_PAGE_SIZE
-                )
-                storeDeptRelRecords?.forEach { storeDeptRelRecord ->
-                    val deptId = storeDeptRelRecord.deptId
-                    // 获取父部门层级信息
-                    val parentDeptInfoList = client.get(ServiceProjectOrganizationResource::class)
-                        .getParentDeptInfos(deptId.toString(), 10).data
-                    if (parentDeptInfoList.isNullOrEmpty()) {
-                        return@forEach
-                    }
-                    // 生成标准化的组织机构信息结构
-                    val deptInfoList = StoreUtils.generateStoreDeptInfo(parentDeptInfoList)
-                    storeDeptRelDao.batchAdd(
-                        dslContext = dslContext,
-                        userId = storeDeptRelRecord.creator,
-                        storeCode = storeDeptRelRecord.storeCode,
-                        deptInfoList = deptInfoList,
-                        storeType = storeType.type.toByte()
-                    )
-                }
-                offset += DEFAULT_PAGE_SIZE
-            } while (storeDeptRelRecords?.size == DEFAULT_PAGE_SIZE)
-            logger.info("$storeType end refreshDeptInfo!!")
-        }
-        return true
     }
 
     private fun getStoreDeptRelMap(
