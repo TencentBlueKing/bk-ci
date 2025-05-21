@@ -70,22 +70,23 @@
                     },
                     ...(!this.isArchiveView
                         ? [{
-                            id: PIPELINE_FILTER_VIEWIDS,
-                            name: this.$t('pipelineGroup'),
-                            default: true,
-                            multiable: true,
-                            children: this.allPipelineGroup.filter(item => item.viewType !== -1)
-                        }]
-                        : []),
-                    ...this.tagGroupList.filter(item =>
-                        Array.isArray(item.labels) && item.labels.length > 0
-                    ).map(item => ({
-                        id: item.id,
-                        name: item.name,
-                        default: true,
-                        multiable: true,
-                        children: item.labels
-                    }))
+                               id: PIPELINE_FILTER_VIEWIDS,
+                               name: this.$t('pipelineGroup'),
+                               default: true,
+                               multiable: true,
+                               children: this.allPipelineGroup.filter(item => item.viewType !== -1)
+                           },
+                           ...this.tagGroupList.filter(item =>
+                               Array.isArray(item.labels) && item.labels.length > 0
+                           ).map(item => ({
+                               id: item.id,
+                               name: item.name,
+                               default: true,
+                               multiable: true,
+                               children: item.labels
+                           }))]
+                        : [])
+                    
                 ]
                 return originList.filter(item => !this.value[item.id])
             },

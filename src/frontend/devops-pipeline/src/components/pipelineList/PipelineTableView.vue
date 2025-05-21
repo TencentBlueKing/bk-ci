@@ -46,7 +46,7 @@
             :selectable="checkSelecteable"
         ></bk-table-column>
         <bk-table-column
-            v-if="!isPatchView && !isDeleteView"
+            v-if="!isPatchView && !isDeleteView && !isArchiveView"
             width="30"
             fixed="left"
         >
@@ -554,7 +554,7 @@
             </div>
         </bk-table-column>
         <bk-table-column
-            v-if="!isPatchView && !isDeleteView"
+            v-if="!isPatchView && !isDeleteView && !isArchiveView"
             type="setting"
         >
             <bk-table-setting-content
