@@ -10,7 +10,6 @@ import com.tencent.devops.repository.pojo.RepoCondition
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryWebhookRequest
 import com.tencent.devops.repository.pojo.credential.AuthRepository
-import com.tencent.devops.repository.pojo.credential.IAuthCred
 import com.tencent.devops.repository.pojo.webhook.WebhookData
 import com.tencent.devops.repository.pojo.webhook.WebhookParseRequest
 import com.tencent.devops.repository.service.code.CodeRepositoryManager
