@@ -34,6 +34,7 @@ import com.tencent.devops.project.pojo.user.ProjectUser
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.UserCacheService
 import com.tencent.devops.project.service.UserService
+import java.net.URLDecoder
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -42,14 +43,14 @@ class UserProjectUserResourceImpl @Autowired constructor(
     private val userCacheService: UserCacheService
 ) : UserProjectUserResource {
 
-    override fun get(userId: String): Result<ProjectUser> {
-
+    override fun get(userId: String, username: String?): Result<ProjectUser> {
         val staff = userService.getStaffInfo(userId)
+        val finalUsername = username?.let { URLDecoder.decode(it, "UTF-8") }
         return Result(
             ProjectUser(
-                chineseName = staff.chineseName,
+                chineseName = finalUsername ?: staff.chineseName,
                 avatarUrl = "",
-                username = staff.username
+                username = finalUsername ?: staff.username
             )
         )
     }

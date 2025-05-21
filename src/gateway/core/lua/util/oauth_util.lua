@@ -162,7 +162,7 @@ function _M:verify_bk_token(bk_token)
         {
             method = "GET",
             ssl_verify = false,
-            headers = { ["X-Bkapi-Authorization"] = 'X-Bkapi-Authorization: {"bk_app_code": "' .. config.apigw.app_code .. '", "bk_app_secret": "' .. config.apigw.app_secret .. '"}' }
+            headers = { ["X-Bkapi-Authorization"] = '{"bk_app_code": "' .. config.apigw.app_code .. '", "bk_app_secret": "' .. config.apigw.app_secret .. '"}', ["X-Bk-Tenant-Id"] = 'system' }
         }
     )
     --- 设置HTTP保持连接
@@ -175,8 +175,8 @@ function _M:verify_bk_token(bk_token)
     end
 
     if res.status ~= 200 then
-        ngx.log(ngx.STDERR, "failed to request tenant info, status: ", res.status)
-        ngx.exit(500)
+        ngx.log(ngx.STDERR, "failed to request tenant info, status: ", res.status , " , responseBody:" , res.body)
+        ngx.exit(401)
         return
     end
 
