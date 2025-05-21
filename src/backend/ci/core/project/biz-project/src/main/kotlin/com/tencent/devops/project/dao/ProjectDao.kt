@@ -545,7 +545,8 @@ class ProjectDao {
         enabled: Boolean? = null,
         authSecrecyStatus: ProjectAuthSecrecyStatus? = null,
         sortType: ProjectSortType? = null,
-        collation: ProjectCollation? = ProjectCollation.DEFAULT
+        collation: ProjectCollation? = ProjectCollation.DEFAULT,
+        productIds: Set<Int> = setOf()
     ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this)
@@ -555,6 +556,7 @@ class ProjectDao {
                 .let { if (null == searchName) it else it.and(PROJECT_NAME.like("%$searchName%")) }
                 .let { if (null == enabled) it else it.and(ENABLED.eq(enabled)) }
                 .let { if (null == authSecrecyStatus) it else it.and(AUTH_SECRECY.eq(authSecrecyStatus.value)) }
+                .let { if (productIds.isEmpty()) it else it.and(PRODUCT_ID.`in`(productIds)) }
                 .let {
                     if (sortType != null) {
                         when (sortType) {

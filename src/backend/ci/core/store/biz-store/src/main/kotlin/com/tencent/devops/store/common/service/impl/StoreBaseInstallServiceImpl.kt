@@ -87,7 +87,7 @@ class StoreBaseInstallServiceImpl @Autowired constructor(
                     storeCode = it.storeCode,
                     storeName = it.name,
                     storeType = StoreTypeEnum.getStoreTypeObj(it.storeType.toInt()),
-                    version = it.name,
+                    version = it.version,
                     publicFlag = publicFlag,
                     status = it.status,
                     logoUrl = it.logoUrl,

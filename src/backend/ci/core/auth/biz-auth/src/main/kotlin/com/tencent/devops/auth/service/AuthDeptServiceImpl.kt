@@ -101,8 +101,11 @@ class AuthDeptServiceImpl @Autowired constructor(
         .expireAfterWrite(24, TimeUnit.HOURS)
         .build<String/*userId*/, UserAndDeptInfoVo>()
 
-    // 已离职成员
-    private val departedMembersCache = CopyOnWriteArrayList<String>()
+    // 已离职或不存在成员
+    private val departedMembersCache = CacheBuilder.newBuilder()
+        .maximumSize(10000)
+        .expireAfterWrite(30, TimeUnit.MINUTES)
+        .build<String/*userId*/, Boolean/*是否不存在/离职*/>()
 
 
     override fun getUserParentDept(userId: String, tenantId: String?): Int {
@@ -170,22 +173,26 @@ class AuthDeptServiceImpl @Autowired constructor(
         tenantId: String?
     ): List<UserAndDeptInfoVo> {
         val cacheResult = memberInfoCache.getAllPresent(memberIds)
-        val membersNotInCache = memberIds.filterNot { cacheResult.containsKey(it) || departedMembersCache.contains(it) }
+        val membersNotInCache = memberIds.filterNot { cacheResult.containsKey(it) }
 
         if (membersNotInCache.isNotEmpty()) {
-            val fetchedMembers = fetchMemberInfos(membersNotInCache, memberType)
-            fetchedMembers.forEach {
-                if (it.type == ManagerScopesEnum.USER) {
-                    memberInfoCache.put(it.name, it)
-                    val departedMembers = membersNotInCache.subtract(fetchedMembers.map { it.name }.toSet())
-                    if (departedMembers.isNotEmpty()) {
-                        departedMembersCache.addAll(departedMembers)
-                    }
-                } else {
-                    memberInfoCache.put(it.id.toString(), it)
+            val memberInfos = fetchMemberInfos(membersNotInCache, memberType)
+            membersNotInCache.forEach { memberId ->
+                val memberInfo = when (memberType) {
+                    ManagerScopesEnum.USER -> memberInfos.firstOrNull { it.name == memberId }
+                    else -> memberInfos.firstOrNull { it.id == memberId.toInt() }
+                }
+
+                when {
+                    memberType == ManagerScopesEnum.USER && memberInfo == null ->
+                        departedMembersCache.put(memberId, true)
+
+                    memberInfo != null ->
+                        memberInfoCache.put(memberId, memberInfo)
                 }
             }
         }
+
         return memberInfoCache.getAllPresent(memberIds).values.toList()
     }
 
@@ -194,17 +201,23 @@ class AuthDeptServiceImpl @Autowired constructor(
             memberIds = memberIds,
             memberType = ManagerScopesEnum.USER
         ).map { it.name }
-        return memberIds.subtract(activeMembers.toSet()).toList()
+        return memberIds.subtract(activeMembers.toSet()).toList().also {
+            logger.info("list departed members : $it")
+        }
     }
 
     override fun isUserDeparted(userId: String, tenantId: String?): Boolean {
-        return if (departedMembersCache.contains(userId)) {
+        return if (departedMembersCache.getIfPresent(userId) == true) {
             true
         } else {
             listMemberInfos(
                 memberIds = listOf(userId),
                 memberType = ManagerScopesEnum.USER
             ).isEmpty()
+        }.also {
+            if (it) {
+                logger.info("user departed :$userId")
+            }
         }
     }
 
@@ -406,7 +419,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                 // 请求错误
                 logger.warn(
                     "call user center fail: url = $url | searchEntity = $searchEntity" +
-                            " | response = ($it)"
+                        " | response = ($it)"
                 )
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(
@@ -421,7 +434,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                 // 请求错误
                 logger.warn(
                     "call user center fail: url = $url | searchEntity = $searchEntity" +
-                            " | response = ($it)"
+                        " | response = ($it)"
                 )
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(

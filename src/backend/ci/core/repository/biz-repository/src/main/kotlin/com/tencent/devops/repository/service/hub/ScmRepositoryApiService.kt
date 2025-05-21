@@ -36,12 +36,15 @@ import com.tencent.devops.repository.service.RepositoryService
 import com.tencent.devops.repository.service.ScmApiManager
 import com.tencent.devops.repository.service.oauth2.Oauth2TokenStoreManager
 import com.tencent.devops.scm.api.enums.ScmEventType
+import com.tencent.devops.scm.api.pojo.BranchListOptions
 import com.tencent.devops.scm.api.pojo.Hook
 import com.tencent.devops.scm.api.pojo.HookEvents
 import com.tencent.devops.scm.api.pojo.HookInput
 import com.tencent.devops.scm.api.pojo.ListOptions
 import com.tencent.devops.scm.api.pojo.Perm
+import com.tencent.devops.scm.api.pojo.Reference
 import com.tencent.devops.scm.api.pojo.RepoListOptions
+import com.tencent.devops.scm.api.pojo.TagListOptions
 import com.tencent.devops.scm.api.pojo.auth.AccessTokenScmAuth
 import com.tencent.devops.scm.api.pojo.auth.IScmAuth
 import com.tencent.devops.scm.api.pojo.repository.ScmProviderRepository
@@ -138,6 +141,69 @@ class ScmRepositoryApiService @Autowired constructor(
                 providerProperties = providerProperties,
                 providerRepository = providerRepository,
                 username = username
+            )
+        }
+    }
+
+    fun findBranches(
+        projectId: String,
+        authRepository: AuthRepository,
+        search: String?,
+        page: Int,
+        pageSize: Int
+    ): List<Reference> {
+        return invokeApi(
+            projectId = projectId,
+            authRepository = authRepository
+        ) { providerProperties, providerRepository ->
+            scmApiManager.listBranches(
+                providerProperties = providerProperties,
+                providerRepository = providerRepository,
+                opts = BranchListOptions.builder()
+                        .search(search)
+                        .page(page)
+                        .pageSize(pageSize)
+                        .build()
+            )
+        }
+    }
+
+    fun getBranch(
+        projectId: String,
+        authRepository: AuthRepository,
+        branch: String
+    ): Reference? {
+        return invokeApi(
+            projectId = projectId,
+            authRepository = authRepository
+        ) { providerProperties, providerRepository ->
+            scmApiManager.findBranch(
+                providerProperties = providerProperties,
+                providerRepository = providerRepository,
+                name = branch
+            )
+        }
+    }
+
+    fun findTags(
+        projectId: String,
+        authRepository: AuthRepository,
+        search: String?,
+        page: Int,
+        pageSize: Int
+    ): List<Reference> {
+        return invokeApi(
+            projectId = projectId,
+            authRepository = authRepository
+        ) { providerProperties, providerRepository ->
+            scmApiManager.findTags(
+                providerProperties = providerProperties,
+                providerRepository = providerRepository,
+                opts = TagListOptions.builder()
+                        .search(search)
+                        .page(page)
+                        .pageSize(pageSize)
+                        .build()
             )
         }
     }

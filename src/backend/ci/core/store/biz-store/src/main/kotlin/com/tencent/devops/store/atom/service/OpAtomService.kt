@@ -98,4 +98,9 @@ interface OpAtomService {
      * 将插件设置为默认
      */
     fun setDefault(userId: String, atomCode: String): Boolean
+
+    /**
+     * 更新插件敏感参数配置
+     */
+    fun updateAtomSensitiveCacheConfig(userId: String, atomCode: String?): Result<Boolean>
 }

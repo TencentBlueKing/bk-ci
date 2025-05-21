@@ -48,6 +48,7 @@ import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
+import com.tencent.devops.repository.api.scm.ServiceScmRepositoryApiResource
 import com.tencent.devops.repository.api.scm.ServiceScmResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
@@ -58,8 +59,12 @@ import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.ScmGitRepository
+import com.tencent.devops.repository.pojo.ScmSvnRepository
+import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.pojo.RevisionInfo
@@ -222,6 +227,22 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                     }
                 }
             }
+            is ScmGitRepository, is ScmSvnRepository -> {
+                return client.get(ServiceScmRepositoryApiResource::class).getBranch(
+                    projectId = projectId,
+                    authRepository = AuthRepository(repo),
+                    branch = branchName ?: ""
+                ).data?.let {
+                    Result(
+                        RevisionInfo(
+                            revision = it.sha,
+                            updatedMessage = "",
+                            branchName = it.name,
+                            authorName = ""
+                        )
+                    )
+                } ?: Result(status = -2, message = "can not find branch $branchName")
+            }
             else -> {
                 throw IllegalArgumentException("Unknown repo($repo)")
             }
@@ -251,7 +272,23 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                 ).data?.defaultBranch
             }
 
+            is ScmGitRepository -> {
+                val gitScmServerRepository = client.get(ServiceScmRepositoryApiResource::class).getServerRepository(
+                    projectId = projectId,
+                    authRepository = AuthRepository(repo)
+                ).data as? GitScmServerRepository
+                gitScmServerRepository?.defaultBranch
+            }
+
+            // SVN 仓库直接取关联仓库时的路径，部分用户可能没有根路径的访问权限
+            // eg: http://svn.template.com/svn_group/svn_repo/trank/xxx 有权限
+            //     http://svn.template.com/svn_group/svn_repo 无权限
+            is CodeSvnRepository, is ScmSvnRepository -> {
+                "/"
+            }
+
             else -> {
+                logger.warn("not support get default branch for ${repo.scmCode} repo[${repo.repoHashId}]|$projectId")
                 null
             }
         }
@@ -374,6 +411,17 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                     )
                 }
             }
+            is ScmGitRepository, is ScmSvnRepository -> {
+                return client.get(ServiceScmRepositoryApiResource::class).findBranches(
+                    projectId = projectId,
+                    authRepository = AuthRepository(repo),
+                    search = search,
+                    page = 1,
+                    pageSize = 100
+                ).let {
+                    Result(it.data?.map { ref -> ref.name } ?: listOf())
+                }
+            }
             else -> {
                 throw IllegalArgumentException("Unknown repo($repo)")
             }
@@ -388,7 +436,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig)
         when (repo) {
-            is CodeSvnRepository -> {
+            is CodeSvnRepository, is ScmSvnRepository -> {
                 return Result(emptyList())
             }
             is CodeGitRepository -> {
@@ -461,6 +509,17 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         userName = credInfo.username,
                         search = search
                     )
+                }
+            }
+            is ScmGitRepository -> {
+                return client.get(ServiceScmRepositoryApiResource::class).findTags(
+                    projectId = projectId,
+                    authRepository = AuthRepository(repo),
+                    search = search,
+                    page = 1,
+                    pageSize = 100
+                ).let {
+                    Result(it.data?.map { ref -> ref.name } ?: listOf())
                 }
             }
             else -> {

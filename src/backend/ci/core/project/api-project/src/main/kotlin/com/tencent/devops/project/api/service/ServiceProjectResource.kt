@@ -75,6 +75,9 @@ interface ServiceProjectResource {
         @Parameter(description = "用户ID", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
+        @Parameter(description = "userId", required = false)
+        @QueryParam("productIds")
+        productIds: String? = null,
         @Parameter(description = "租户ID", required = false)
         @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
         tenantId: String?

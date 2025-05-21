@@ -50,7 +50,7 @@ data class AuthRepository(
                 if (repository.authType == RepoAuthType.OAUTH) {
                     UserOauthTokenAuthCred(userId = repository.userName)
                 } else {
-                    CredentialIdAuthCred(credentialId = repository.credentialId)
+                    CredentialIdAuthCred(credentialId = repository.credentialId, projectId = repository.projectId!!)
                 }
             }
 
@@ -62,12 +62,12 @@ data class AuthRepository(
                 if (repository.authType == RepoAuthType.OAUTH) {
                     UserOauthTokenAuthCred(userId = repository.userName)
                 } else {
-                    CredentialIdAuthCred(credentialId = repository.credentialId)
+                    CredentialIdAuthCred(credentialId = repository.credentialId, projectId = repository.projectId!!)
                 }
             }
 
             else -> {
-                CredentialIdAuthCred(credentialId = repository.credentialId)
+                CredentialIdAuthCred(credentialId = repository.credentialId, projectId = repository.projectId!!)
             }
         }
     )

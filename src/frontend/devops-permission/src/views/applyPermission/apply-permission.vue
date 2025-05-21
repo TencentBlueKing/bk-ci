@@ -168,7 +168,9 @@ const getAllProjectList = async (name = '') => {
     return
   }
   const { page, pageSize, projectName } = pageInfo.value;
-  scrollLoading.value = true;
+  if (pageInfo.value.page !== 1) {
+    scrollLoading.value = true;
+  }
   await http.getAllProjectList({
     page: page,
     pageSize: pageSize,

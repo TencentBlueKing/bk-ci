@@ -122,11 +122,13 @@ class ApigwProjectResourceV4Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         tenantId: String?,
-        accessToken: String?
+        accessToken: String?,
+        productIds: String?
     ): Result<List<ProjectVO>> {
         logger.info("OPENAPI_PROJECT_V4|$userId|list")
         return client.get(ServiceProjectResource::class).list(
             userId = userId,
+            productIds = productIds,
             tenantId = tenantId
         )
     }

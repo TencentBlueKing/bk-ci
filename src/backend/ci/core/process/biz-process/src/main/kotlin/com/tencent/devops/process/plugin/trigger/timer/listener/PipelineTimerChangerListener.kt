@@ -64,12 +64,19 @@ class PipelineTimerChangerListener @Autowired constructor(
         try {
             crontabExpressions.forEach { crontab ->
                 val md5 = DigestUtils.md5Hex(crontab)
+                // 旧的定时任务Key,功能发布后残留的job
                 val comboKey = "${pipelineId}_${md5}_${event.projectId}"
                 if (schedulerManager.checkExists(comboKey)) {
+                    logger.info("clear residual scheduled tasks|jobKey=[$comboKey]")
                     schedulerManager.deleteJob(comboKey)
                 }
+                // 新的定时任务Key
+                val taskComboKey = "${pipelineId}_${md5}_${event.projectId}_${event.taskId}"
+                if (schedulerManager.checkExists(taskComboKey)) {
+                    schedulerManager.deleteJob(taskComboKey)
+                }
                 if (ActionType.REFRESH == (event.actionType)) {
-                    val success = schedulerManager.addJob(comboKey, crontab, jobBeanClass)
+                    val success = schedulerManager.addJob(taskComboKey, crontab, jobBeanClass)
                     logger.info("[$pipelineId]|TimerChange|crontab=$crontab|success=$success")
                 }
             }

@@ -75,6 +75,7 @@
                     :label="$t('storeMap.customConditionExp')"
                     :is-error="errors.has('customCondition')"
                     :error-msg="errors.first('customCondition')"
+                    :docs-link="customExpressionsDoc"
                 >
                     <vuex-input
                         :value="customConditionExpress"
@@ -180,6 +181,9 @@
             },
             showCondition () {
                 return ['CUSTOM_CONDITION_MATCH'].indexOf(this.stageCondition) > -1
+            },
+            customExpressionsDoc () {
+                return this.$pipelineDocs.CUSTOM_EXPRESSIONS_DOC
             }
         },
         watch: {

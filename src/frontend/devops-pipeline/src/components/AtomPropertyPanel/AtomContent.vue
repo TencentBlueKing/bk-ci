@@ -268,7 +268,7 @@
     import ReportArchive from './ReportArchive'
     import SendWechatNotify from './SendWechatNotify'
     import SubPipelineCall from './SubPipelineCall'
-    import TimerTrigger from './TimerTrigger'
+    import TimerTrigger from './TimerTrigger/'
     import Unity3dBuild from './Unity3dBuild'
 
     export default {
@@ -562,6 +562,9 @@
                 requestGlobalEnvs()
             }
             this.toggleAtomSelectorPopup(!atomCode)
+            if (!this.isTemplatePanel) {
+                this.requestInterceptAtom()
+            }
         },
 
         methods: {

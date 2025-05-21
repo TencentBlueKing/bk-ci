@@ -295,6 +295,29 @@ class ImageDao {
         }
     }
 
+    fun countImageRelease(
+        dslContext: DSLContext,
+        imageCode: String,
+        version: String,
+        imageStatus: ImageStatusEnum
+    ): Long {
+        val tImage = TImage.T_IMAGE
+        val conditions = mutableSetOf<Condition>()
+        if (VersionUtils.isLatestVersion(version)) {
+            conditions.add(tImage.VERSION.like(VersionUtils.generateQueryVersion(version)))
+        } else {
+            conditions.add(tImage.VERSION.eq(version))
+        }
+        conditions.add(tImage.IMAGE_CODE.eq(imageCode))
+        conditions.add(tImage.IMAGE_STATUS.eq(imageStatus.status.toByte()))
+        return dslContext.selectCount()
+            .from(tImage)
+            .where(
+                conditions
+            )
+            .fetchOne(0, Long::class.java)!!
+    }
+
     fun getJobImageCount(
         dslContext: DSLContext,
         projectCode: String,

@@ -165,7 +165,8 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
                 storeCode = storeCode,
                 version = normalizedVersion,
                 isVersionUpdate = isVersionUpdate,
-                majorVersion = majorVersion
+                majorVersion = majorVersion,
+                releaseType = releaseType
             )
         }
         var latestFlag = false
@@ -272,7 +273,8 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
         storeCode: String,
         version: String,
         isVersionUpdate: Boolean,
-        majorVersion: Int
+        majorVersion: Int,
+        releaseType: ReleaseTypeEnum
     ): Long {
         val count = storeBaseQueryDao.countByCondition(
             dslContext = dslContext,
@@ -280,8 +282,12 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
             storeCode = storeCode,
             version = version
         )
-        val suffix = if (isVersionUpdate) count + 1 else count
-        return CommonUtils.generateNumber(majorVersion, suffix, 6)
+        // 判断是否需要递增序号的条件组合：
+        // 1. 如果是版本更新 或
+        // 2. 新发布且主版本号不是初始版本（1）
+        val shouldIncrement = isVersionUpdate || (releaseType == ReleaseTypeEnum.NEW && majorVersion != 1)
+        val suffix = if (shouldIncrement) count + 1 else count
+        return CommonUtils.generateNumber(majorVersion, suffix, STORE_BUS_NUM_LEN)
     }
 
     private fun getStoreSpecBusService(storeType: StoreTypeEnum): StoreReleaseSpecBusService {

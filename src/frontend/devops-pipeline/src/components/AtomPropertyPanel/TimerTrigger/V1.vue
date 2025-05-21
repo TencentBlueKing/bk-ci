@@ -1,5 +1,5 @@
 <template>
-    <div class="cron-trigger">
+    <div class="bk-form bk-form-vertical">
         <accordion
             show-checkbox
             :show-content="isShowBasicRule"
@@ -111,50 +111,11 @@
                     :required="false"
                     :label="$t('editPage.codelib')"
                 >
-                    <div class="conditional-input-selector">
-                        <bk-select
-                            v-model="repositoryType"
-                            ext-cls="group-box"
-                            :clearable="false"
-                            :disabled="disabled"
-                            @change="(val) => handleChangeRepositoryType(val)"
-                        >
-                            <bk-option
-                                v-for="item in codelibConfigList"
-                                :key="item.value"
-                                :id="item.value"
-                                :name="item.label"
-                            >
-                                <slot
-                                    name="option-item"
-                                    v-bind="item"
-                                ></slot>
-                            </bk-option>
-                        </bk-select>
-                        <request-selector
-                            v-if="repositoryType === 'ID'"
-                            class="input-selector"
-                            v-bind="codelibOption"
-                            :popover-min-width="250"
-                            :disabled="disabled"
-                            :url="getCodeUrl"
-                            name="repoHashId"
-                            :value="element['repoHashId']"
-                            :handle-change="(name, val) => handleChangeRepoHashId(name, val)"
-                        >
-                        </request-selector>
-                        <vuex-input
-                            v-else
-                            :value="element['repoName']"
-                            :disabled="repositoryType === 'SELF'"
-                            :key="repositoryType"
-                            :placeholder="repositoryType === 'SELF' ? '将自动监听所属PAC代码库，无需设置' : '请输入代码库别名'"
-                            class="input-selector"
-                            name="repoName"
-                            :handle-change="handleUpdateElement"
-                        >
-                        </vuex-input>
-                    </div>
+                    <CodelibSelector
+                        :disabled="disabled"
+                        :element="element"
+                        :handle-change="handleUpdateElement"
+                    />
                 </form-field>
     
                 <form-field
@@ -164,12 +125,10 @@
                 >
                     <BranchParameterArray
                         name="branches"
-                        :repository-type="element['repositoryType']"
+                        :element="element"
                         :disabled="disabled"
-                        :repo-hash-id="element['repoHashId']"
                         :value="element['branches']"
                         :handle-change="handleUpdateElement"
-                        :key="element['repoHashId']"
                     >
                     </BranchParameterArray>
                 </form-field>
@@ -188,15 +147,16 @@
 </template>
 
 <script>
-    import { REPOSITORY_API_URL_PREFIX } from '@/store/constants'
-    import BranchParameterArray from '../AtomFormComponent/BranchParameterArray/index'
-    import validMixins from '../validMixins'
-    import atomMixin from './atomMixin'
+    import BranchParameterArray from '../../AtomFormComponent/BranchParameterArray/index'
+    import validMixins from '../../validMixins'
+    import atomMixin from '../atomMixin'
+    import CodelibSelector from './CodelibSelector'
 
     export default {
         name: 'timer-trigger',
         components: {
-            BranchParameterArray
+            BranchParameterArray,
+            CodelibSelector
         },
         mixins: [atomMixin, validMixins],
         data () {
@@ -204,43 +164,7 @@
                 isShowBasicRule: false,
                 advance: false,
                 isShowCodelibConfig: this.element?.repoHashId || this.element?.noScm || this.element?.repoName || this.element?.branches?.length || this.element?.repositoryType === 'SELF',
-                advanceValue: (this.element.advanceExpression && this.element.advanceExpression.join('\n')) || '',
-                repositoryType: this.element.repositoryType || 'ID'
-            }
-        },
-        computed: {
-            getCodeUrl () {
-                return `/${REPOSITORY_API_URL_PREFIX}/user/repositories/{projectId}/hasPermissionList?permission=USE&page=1&pageSize=1000`
-            },
-            codelibOption () {
-                return {
-                    paramId: 'repositoryHashId',
-                    paramName: 'aliasName',
-                    searchable: true
-                }
-            },
-            curComponent () {
-                return this.codelibConfigList.find(i => i.value === this.repositoryType) || {
-                    type: 'request-selector',
-                    key: 'repositoryHashId',
-                    required: false
-                }
-            },
-            codelibConfigList () {
-                return [
-                    {
-                        value: 'ID',
-                        label: '选择代码库'
-                    },
-                    {
-                        value: 'NAME',
-                        label: '输入别名'
-                    },
-                    {
-                        value: 'SELF',
-                        label: '监听PAC'
-                    }
-                ]
+                advanceValue: (this.element.advanceExpression && this.element.advanceExpression.join('\n')) || ''
             }
         },
         watch: {
@@ -310,23 +234,14 @@
                 this.updateProps({
                     [name]: value
                 })
-            },
-            handleChangeRepositoryType (val) {
-                this.handleUpdateElement('branches', [])
-                this.handleUpdateElement('repoHashId', '')
-                this.handleUpdateElement('repositoryType', val)
-            },
-            handleChangeRepoHashId (name, val) {
-                this.handleUpdateElement(name, val)
-                this.handleUpdateElement('branches', [])
             }
         }
     }
 </script>
 
 <style lang="scss">
-    @import '../../scss/conf';
-    .cron-trigger {
+    @import '../../../scss/conf';
+    .timer-trigger {
         .bk-form-checkbox {
             padding-right: 20px;
         }

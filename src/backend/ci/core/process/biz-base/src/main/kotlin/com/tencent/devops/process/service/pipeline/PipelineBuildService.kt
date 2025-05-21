@@ -67,6 +67,7 @@ import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_BUILD_URL
 import com.tencent.devops.process.utils.PIPELINE_CREATE_USER
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
+import com.tencent.devops.process.utils.PIPELINE_FAIL_IF_VARIABLE_INVALID_FLAG
 import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
@@ -84,6 +85,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_UPDATE_USER
+import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_MAX
 import com.tencent.devops.process.utils.PIPELINE_VERSION
 import com.tencent.devops.process.utils.PROJECT_NAME
 import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
@@ -169,6 +171,9 @@ class PipelineBuildService(
                 pipelineVersion = signPipelineVersion
             )
         }
+        if (setting?.failIfVariableInvalid == true) {
+            failIfVariableInvalid(pipelineParamMap)
+        }
         val bucketSize = setting!!.maxConRunningQueueSize
         val lockKey = "PipelineRateLimit:${pipeline.pipelineId}"
         try {
@@ -226,7 +231,8 @@ class PipelineBuildService(
                 } else {
                     null
                 },
-                pipelineDialectType = pipelineDialectType.name
+                pipelineDialectType = pipelineDialectType.name,
+                failIfVariableInvalid = setting.failIfVariableInvalid
             )
 
             val context = StartBuildContext.init(
@@ -291,7 +297,8 @@ class PipelineBuildService(
         isMobile: Boolean,
         debug: Boolean? = false,
         pipelineAuthorizer: String? = null,
-        pipelineDialectType: String
+        pipelineDialectType: String,
+        failIfVariableInvalid: Boolean? = false
     ) {
         val userName = when (startType) {
             StartType.PIPELINE -> pipelineParamMap[PIPELINE_START_PIPELINE_USER_ID]?.value
@@ -383,6 +390,11 @@ class PipelineBuildService(
             readOnly = true
         )
         pipelineParamMap[PIPELINE_DIALECT] = BuildParameters(PIPELINE_DIALECT, pipelineDialectType, readOnly = true)
+        if (failIfVariableInvalid == true) {
+            pipelineParamMap[PIPELINE_FAIL_IF_VARIABLE_INVALID_FLAG] = BuildParameters(
+                PIPELINE_FAIL_IF_VARIABLE_INVALID_FLAG, true, readOnly = true
+            )
+        }
         // 自定义触发源材料信息
         startValues?.get(BK_CI_MATERIAL_ID)?.let {
             pipelineParamMap[BK_CI_MATERIAL_ID] = BuildParameters(
@@ -421,5 +433,16 @@ class PipelineBuildService(
                 BuildParameters(key = TraceTag.TRACE_HEADER_DEVOPS_BIZID, value = bizId)
         }
 //        return originStartParams
+    }
+
+    fun failIfVariableInvalid(pipelineParamMap: MutableMap<String, BuildParameters>) {
+        pipelineParamMap.forEach { (key, value) ->
+            if (value.value.toString().length > PIPELINE_VARIABLES_STRING_LENGTH_MAX) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_FAIL_IF_VARIABLE_INVALID,
+                    params = arrayOf(key)
+                )
+            }
+        }
     }
 }

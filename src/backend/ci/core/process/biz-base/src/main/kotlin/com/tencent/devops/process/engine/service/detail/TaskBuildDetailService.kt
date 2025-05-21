@@ -189,7 +189,12 @@ class TaskBuildDetailService(
                             c.status = BuildStatus.RUNNING.name
                             e.status = BuildStatus.RUNNING.name
                         }
-
+                        // 由于此处task启动的情况同时包含的手动重试和自动重试，并且是互补的。
+                        // 所以可得计算公式[总执行次数-自动重试次数=手动重试次数]
+                        e.retryCount = e.retryCount?.plus(1) ?: 0
+                        e.retryCountManual = e.retryCount
+                            ?.minus(e.retryCountAuto ?: 0)
+                            ?: 0
                         if (e.startEpoch == null) { // 自动重试，startEpoch 不会为null，所以不需要查redis来确认
                             val currentTimeMillis = System.currentTimeMillis()
                             e.startEpoch = currentTimeMillis
@@ -263,6 +268,11 @@ class TaskBuildDetailService(
                         // 判断取消的task任务对应的container是否包含post任务
                         val cancelTaskPostFlag = buildStatus == BuildStatus.CANCELED && c.containPostTaskFlag == true
                         e.status = buildStatus.name
+
+                        // 自动重试时，retryCountAuto + 1
+                        if (buildStatus == BuildStatus.RETRY) {
+                            e.retryCountAuto = (e.retryCountAuto ?: 0) + 1
+                        }
                         if (e.startEpoch == null) {
                             e.elapsed = 0
                         } else {

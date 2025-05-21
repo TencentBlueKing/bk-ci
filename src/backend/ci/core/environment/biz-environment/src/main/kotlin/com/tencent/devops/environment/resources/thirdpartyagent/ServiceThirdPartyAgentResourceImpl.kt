@@ -187,9 +187,17 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     override fun getAgentDetail(
         userId: String,
         projectId: String,
-        agentHashId: String
+        agentHashId: String,
+        checkPermission: Boolean?
     ): Result<ThirdPartyAgentDetail?> {
-        return Result(thirdPartyAgentService.getAgentDetailById(userId, projectId, agentHashId = agentHashId))
+        return Result(
+            thirdPartyAgentService.getAgentDetailById(
+                userId = userId,
+                projectId = projectId,
+                agentHashId = agentHashId,
+                checkPermission = checkPermission ?: false
+            )
+        )
     }
 
     override fun getGateways(): Result<List<SlaveGateway>> {
@@ -205,7 +213,7 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     ): Result<ThirdPartyAgentDetail?> {
         val hashId = when {
             nodeHashId != null -> nodeHashId
-            nodeName != null -> nodeService.getByDisplayName(
+            nodeName != null -> nodeService.getByDisplayNameNotWithPermission(
                 userId,
                 projectId,
                 nodeName,
@@ -230,7 +238,7 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     ): Result<Page<AgentBuildDetail>> {
         val hashId = when {
             nodeHashId != null -> nodeHashId
-            nodeName != null -> nodeService.getByDisplayName(
+            nodeName != null -> nodeService.getByDisplayNameNotWithPermission(
                 userId,
                 projectId,
                 nodeName,

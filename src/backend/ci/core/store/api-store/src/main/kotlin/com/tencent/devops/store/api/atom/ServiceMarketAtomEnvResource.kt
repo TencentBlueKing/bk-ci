@@ -56,4 +56,15 @@ interface ServiceMarketAtomEnvResource {
         @Parameter(description = "插件版本信息", required = true)
         atomVersions: Set<StoreVersion>
     ): Result<Map<String, AtomRunInfo>?>
+
+    @Operation(summary = "批量获取插件敏感入参字段信息")
+    @POST
+    @Path("/project/{projectCode}/sensitive/param/list")
+    fun batchGetAtomSensitiveParamInfos(
+        @Parameter(description = "项目代码", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @Parameter(description = "插件版本信息", required = true)
+        atomVersions: Set<StoreVersion>
+    ): Result<Map<String, String>?>
 }

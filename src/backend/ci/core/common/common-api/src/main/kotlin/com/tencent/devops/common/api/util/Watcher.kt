@@ -29,12 +29,13 @@ package com.tencent.devops.common.api.util
 
 import org.slf4j.LoggerFactory
 import org.springframework.util.StopWatch
+import java.io.Closeable
 
 /**
  * 非线程安全
  * 针对running值导致抛出异常的位置主动做了stop，并增加了一个全部耗时统计
  */
-class Watcher(id: String = "") : StopWatch(id) {
+class Watcher(id: String = "") : StopWatch(id), Closeable {
 
     val createTime: Long = System.currentTimeMillis()
 
@@ -64,6 +65,8 @@ class Watcher(id: String = "") : StopWatch(id) {
         }
         return sb.toString()
     }
+
+    override fun close() = stop()
 
     override fun shortSummary(): String {
         return "watcher|$id|total=$totalTimeMillis|elapsed=${elapsed()}"

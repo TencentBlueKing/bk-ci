@@ -128,21 +128,6 @@ class OpenProjectAuthResourceImpl @Autowired constructor(
     }
 
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
-    override fun checkProjectManager(
-        token: String,
-        type: String?,
-        userId: String,
-        projectCode: String
-    ): Result<Boolean> {
-        return Result(
-            permissionProjectService.checkProjectManager(
-                userId = userId,
-                projectCode = projectCode
-            )
-        )
-    }
-
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun createProjectUser(
         token: String,
         userId: String,
@@ -159,19 +144,16 @@ class OpenProjectAuthResourceImpl @Autowired constructor(
     }
 
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
-    override fun batchCreateProjectUser(
+    override fun checkProjectManager(
         token: String,
+        type: String?,
         userId: String,
-        projectCode: String,
-        roleCode: String,
-        members: List<String>
+        projectCode: String
     ): Result<Boolean> {
         return Result(
-            permissionProjectService.batchCreateProjectUser(
+            permissionProjectService.checkProjectManager(
                 userId = userId,
-                projectCode = projectCode,
-                roleCode = roleCode,
-                members = members
+                projectCode = projectCode
             )
         )
     }

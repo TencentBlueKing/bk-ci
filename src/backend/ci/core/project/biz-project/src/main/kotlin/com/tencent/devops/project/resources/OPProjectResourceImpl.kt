@@ -40,8 +40,8 @@ import com.tencent.devops.project.pojo.enums.SystemEnums
 import com.tencent.devops.project.service.OpProjectService
 import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ProjectTagService
-import org.springframework.beans.factory.annotation.Autowired
 import jakarta.servlet.http.HttpServletRequest
+import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("ALL")
 @RestResource
@@ -52,7 +52,7 @@ class OPProjectResourceImpl @Autowired constructor(
 ) : OPProjectResource {
 
     override fun list(userId: String, tenantId: String?): Result<List<ProjectVO>> {
-        return Result(projectService.list(userId, tenantId))
+        return Result(projectService.list(userId = userId, productIds = null, tenantId = tenantId))
     }
 
     override fun setGrayProject(projectGraySetRequest: OpProjectGraySetRequest): Result<Boolean> {

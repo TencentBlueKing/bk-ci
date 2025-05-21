@@ -31,7 +31,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "代码库鉴权模型-凭证ID")
 data class CredentialIdAuthCred(
-    val credentialId: String
+    val credentialId: String,
+    val projectId: String
 ) : IAuthCred {
     companion object {
         const val classType = "credentialId"

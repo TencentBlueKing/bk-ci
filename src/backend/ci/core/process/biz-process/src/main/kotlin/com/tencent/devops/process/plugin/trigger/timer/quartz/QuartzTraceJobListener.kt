@@ -28,12 +28,20 @@
 package com.tencent.devops.process.plugin.trigger.timer.quartz
 
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.process.constant.MeasureConstant.NAME_PIPELINE_CRON_SCHEDULE_DELAY
+import com.tencent.devops.process.service.TimerScheduleMeasureService
 import org.quartz.JobExecutionContext
 import org.quartz.JobExecutionException
 import org.quartz.listeners.JobListenerSupport
 import org.slf4j.MDC
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-class QuartzTraceJobListener : JobListenerSupport() {
+@Service
+class QuartzTraceJobListener @Autowired constructor(
+    val timerScheduleMeasureService: TimerScheduleMeasureService
+) : JobListenerSupport() {
+
     override fun getName(): String {
         return "quartz-trace"
     }
@@ -48,6 +56,13 @@ class QuartzTraceJobListener : JobListenerSupport() {
     }
 
     override fun jobWasExecuted(context: JobExecutionContext?, jobException: JobExecutionException?) {
+        context?.let {
+            // 记录执行时间
+            timerScheduleMeasureService.recordTaskExecutionTime(
+                name = NAME_PIPELINE_CRON_SCHEDULE_DELAY,
+                timeConsumingMills = it.fireTime.time - it.scheduledFireTime.time
+            )
+        }
         MDC.remove(TraceTag.BIZID)
     }
 }

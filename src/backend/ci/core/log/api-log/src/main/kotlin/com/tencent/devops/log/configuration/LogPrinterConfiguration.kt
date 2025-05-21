@@ -48,18 +48,20 @@ class LogPrinterConfiguration {
         val builder = CircuitBreakerConfig.custom()
         builder.enableAutomaticTransitionFromOpenToHalfOpen()
         builder.writableStackTraceEnabled(false)
-        // 当熔断后等待 300s 放开熔断
-        builder.waitDurationInOpenState(Duration.ofSeconds(300))
+        // 当熔断后等待 5s 放开熔断
+        builder.waitDurationInOpenState(Duration.ofSeconds(5))
         // 熔断放开后，运行通过的请求数，如果达到熔断条件，继续熔断
-        builder.permittedNumberOfCallsInHalfOpenState(100)
-        // 当错误率达到 10% 开启熔断
-        builder.failureRateThreshold(10.0F)
-        // 慢请求超过 10% 开启熔断
-        builder.slowCallRateThreshold(10.0F)
+        builder.permittedNumberOfCallsInHalfOpenState(10)
+        // 当错误率达到 60% 开启熔断
+        builder.failureRateThreshold(60.0F)
+        // 慢请求超过 80% 开启熔断
+        builder.slowCallRateThreshold(80.0F)
         // 请求超过 1s 就是慢请求
-        builder.slowCallDurationThreshold(Duration.ofSeconds(1))
-        // 滑动窗口大小为 100，默认值
-        builder.slidingWindowSize(100)
+        builder.slowCallDurationThreshold(Duration.ofMillis(800))
+        // 滑动窗口大小为 50，默认值
+        builder.slidingWindowSize(50)
+        // 至少需要 20 次调用，这样能避免因调用次数过少导致误判
+        builder.minimumNumberOfCalls(20)
         return BuildLogPrinter(client, CircuitBreakerRegistry.of(builder.build()))
     }
 }

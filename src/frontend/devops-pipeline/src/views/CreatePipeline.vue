@@ -1,28 +1,6 @@
 <template>
     <div class="create-pipeline-page-wrapper">
-        <pipeline-header>
-            <logo
-                size="24"
-                name="pipeline"
-                slot="logo"
-            />
-            <bk-breadcrumb
-                slot="title"
-                separator-class="devops-icon icon-angle-right"
-            >
-                <bk-breadcrumb-item
-                    class="pipeline-breadcrumb-item"
-                    :to="pipelineListRoute"
-                >
-                    {{ $t('pipeline') }}
-                </bk-breadcrumb-item>
-                <bk-breadcrumb-item
-                    class="pipeline-breadcrumb-item"
-                >
-                    {{ $t('newlist.addPipeline') }}
-                </bk-breadcrumb-item>
-            </bk-breadcrumb>
-        </pipeline-header>
+        <pipeline-header :title="$t('newlist.addPipeline')"></pipeline-header>
         <alert-tips
             v-if="enablePipelineNameTips"
             :title="$t('pipelineNameConventions')"
@@ -260,16 +238,16 @@
 </template>
 
 <script>
+    import AlertTips from '@/components/AlertTips.vue'
     import Logo from '@/components/Logo'
+    import PipelineLabelSelector from '@/components/PipelineLabelSelector/'
     import PipelineTemplatePreview from '@/components/PipelineTemplatePreview'
     import pipelineHeader from '@/components/devops/pipeline-header'
+    import SyntaxStyleConfiguration from '@/components/syntaxStyleConfiguration'
     import { TEMPLATE_RESOURCE_ACTION } from '@/utils/permission'
     import { templateTypeEnum } from '@/utils/pipelineConst'
     import { getCacheViewId } from '@/utils/util'
     import { mapActions, mapState } from 'vuex'
-    import SyntaxStyleConfiguration from '@/components/syntaxStyleConfiguration'
-    import AlertTips from '@/components/AlertTips.vue'
-    import PipelineLabelSelector from '@/components/PipelineLabelSelector/'
 
     export default {
         components: {
@@ -671,7 +649,7 @@
             padding: 24px;
             background: white;
             overflow: auto;
-            
+
             .namingConvention {
                 position: relative;
             }

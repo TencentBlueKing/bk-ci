@@ -62,9 +62,7 @@ class VariableTransfer {
         val result = mutableMapOf<String, Variable>()
         model.getTriggerContainer().params.forEach {
             if (it.id in ignoredVariable) return@forEach
-            val props = when {
-                // 不带
-                it.type == BuildFormPropertyType.STRING && it.desc.isNullOrEmpty() -> null
+            var props = when {
                 it.type == BuildFormPropertyType.STRING -> VariableProps(
                     type = VariablePropType.VUEX_INPUT.value
                 )
@@ -92,6 +90,7 @@ class VariableTransfer {
                     type = VariablePropType.GIT_REF.value,
                     repoHashId = it.repoHashId
                 )
+
                 CascadePropertyUtils.supportCascadeParam(it.type) -> {
                     // 级联选择器类型变量
                     VariableProps(
@@ -138,6 +137,26 @@ class VariableTransfer {
                 else -> null
             }
             val const = it.constant.nullIfDefault(false)
+
+            if (it.name?.isNotEmpty() == true) {
+                props = props ?: VariableProps()
+                props.label = it.name
+            }
+
+            if (it.valueNotEmpty.nullIfDefault(false) != null) {
+                props = props ?: VariableProps()
+                props.required = it.valueNotEmpty
+            }
+
+            if (it.desc.nullIfDefault("") != null) {
+                props = props ?: VariableProps()
+                props.description = it.desc
+            }
+
+            if (it.category.nullIfDefault("") != null) {
+                props = props ?: VariableProps()
+                props.group = it.category
+            }
             result[it.id] = Variable(
                 value = if (CascadePropertyUtils.supportCascadeParam(it.type)) {
                     CascadePropertyUtils.parseDefaultValue(it.id, it.defaultValue, it.type)
@@ -147,23 +166,8 @@ class VariableTransfer {
                 readonly = if (const == true) null else it.readOnly.nullIfDefault(false),
                 allowModifyAtStartup = if (const != true) it.required.nullIfDefault(true) else null,
                 const = const,
-                props = props
+                props = if (props?.empty() == false) props else null
             )
-
-            if (it.name?.isNotEmpty() == true) {
-                val p = result[it.id]?.props ?: VariableProps()
-                p.label = it.name
-            }
-
-            if (it.valueNotEmpty.nullIfDefault(false) != null) {
-                val p = result[it.id]?.props ?: VariableProps()
-                p.required = it.valueNotEmpty
-            }
-
-            if (it.desc.nullIfDefault("") != null) {
-                val p = result[it.id]?.props ?: VariableProps()
-                p.description = it.desc
-            }
         }
         return if (result.isEmpty()) {
             null
@@ -231,6 +235,7 @@ class VariableTransfer {
                         BuildFormValue(key = it.id.toString(), value = it.label ?: it.id.toString())
                     },
                     desc = variable.props?.description,
+                    category = variable.props?.group,
                     repoHashId = variable.props?.repoHashId,
                     relativePath = null,
                     scmType = ScmType.parse(variable.props?.scmType),

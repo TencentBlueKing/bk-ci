@@ -1087,7 +1087,7 @@ class RbacPermissionManageFacadeServiceImpl(
                 memberId = handoverMemberDTO.targetMember.id
             )
         // 检查授予人是否有代码库oauth权限
-        if (invalidRepertoryIds.isNotEmpty()) {
+        if (handoverMemberDTO.checkRepertoryAuthorization && invalidRepertoryIds.isNotEmpty()) {
             permissionAuthorizationService.checkRepertoryAuthorizationsHanover(
                 operator = userId,
                 projectCode = projectCode,

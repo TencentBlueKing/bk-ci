@@ -644,14 +644,14 @@ class RbacPermissionService(
         resourceType: String,
         action: String
     ): Boolean {
-        return rbacCommonService.checkProjectManager(
-            userId = userId,
-            projectCode = projectCode
-        ) || superManagerService.projectManagerCheck(
+        return superManagerService.projectManagerCheck(
             userId = userId,
             projectCode = projectCode,
             resourceType = resourceType,
             action = action
+        ) || rbacCommonService.checkProjectManager(
+            userId = userId,
+            projectCode = projectCode
         )
     }
 

@@ -101,14 +101,20 @@ class PermissionAuthorizationServiceImpl(
                 authResourceType = AuthResourceType.PIPELINE_DEFAULT,
                 authPermission = AuthPermission.EXECUTE
             )
-            val isHandoverFromHasExecutePermission = permissionService.validateUserResourcePermissionByRelation(
-                userId = record.handoverFrom,
-                action = action,
-                projectCode = projectCode,
-                resourceCode = resourceCode,
-                resourceType = resourceType,
-                relationResourceType = null
-            )
+            val isHandoverFromHasExecutePermission = try {
+                permissionService.validateUserResourcePermissionByRelation(
+                    userId = record.handoverFrom,
+                    action = action,
+                    projectCode = projectCode,
+                    resourceCode = resourceCode,
+                    resourceType = resourceType,
+                    relationResourceType = null
+                )
+            } catch (ex: Exception) {
+                // 用户账号被冻结或者离职，可能会导致接口异常。
+                logger.warn("get resource authorization | validate permission failed", ex)
+                false
+            }
             return record.copy(executePermission = isHandoverFromHasExecutePermission)
         }
         return record
@@ -273,6 +279,8 @@ class PermissionAuthorizationServiceImpl(
     ): Map<ResourceAuthorizationHandoverStatus, List<ResourceAuthorizationHandoverDTO>> {
         logger.info("user reset resource authorization|$operator|$projectCode|$condition")
         val result = mutableMapOf<ResourceAuthorizationHandoverStatus, List<ResourceAuthorizationHandoverDTO>>()
+        if (!needToHandoverResourceTypes.contains(condition.resourceType))
+            return emptyMap()
         if (condition.checkPermission) {
             validateOperatorPermission(
                 operator = operator,
@@ -280,6 +288,7 @@ class PermissionAuthorizationServiceImpl(
             )
         }
         val resourceAuthorizationList = getResourceAuthorizationList(condition = condition)
+        if (resourceAuthorizationList.isEmpty()) return emptyMap()
         val handoverResult2Records = handoverResourceAuthorizations(
             projectId = projectCode,
             preCheck = condition.preCheck,

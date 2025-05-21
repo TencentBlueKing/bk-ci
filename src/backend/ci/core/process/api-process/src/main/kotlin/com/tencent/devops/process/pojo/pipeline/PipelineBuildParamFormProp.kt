@@ -29,8 +29,9 @@ package com.tencent.devops.process.pojo.pipeline
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "构建模型-ID")
-data class SubPipelineStartUpInfo(
+@SuppressWarnings("LongParameterList")
+@Schema(title = "流水线构建参数属性信息")
+open class PipelineBuildParamFormProp(
     @get:Schema(title = "参数key值", required = true)
     val key: String,
     @get:Schema(title = "key值是否可以更改", required = true)
@@ -62,5 +63,7 @@ data class SubPipelineStartUpInfo(
     @get:Schema(title = "value值获取集合", required = true)
     val valueList: List<StartUpInfo>,
     @get:Schema(title = "value值是否多选", required = true)
-    val valueMultiple: Boolean
+    val valueMultiple: Boolean,
+    @get:Schema(title = "参数类型", required = true)
+    val type: String? = ""
 )

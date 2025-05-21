@@ -42,6 +42,27 @@
                     {{ $t('settings.validatebuildNum') }}
                 </p>
             </bk-form-item>
+            <bk-form-item
+                ext-cls="variable-invalid"
+            >
+                <div class="layout-label">
+                    <label class="ui-inner-label">
+                        <span class="bk-label-text">{{ $t('settings.whenVariableExceedsLength') }}</span>
+                    </label>
+                </div>
+                <bk-radio-group
+                    v-model="proxyFailIfVariableInvalid"
+                    @change="val => handleBaseInfoChange('failIfVariableInvalid', val)"
+                >
+                    <bk-radio :value="false">{{ $t('settings.clearTheValue') }}</bk-radio>
+                    <bk-radio
+                        :value="true"
+                        class="ml20"
+                    >
+                        {{ $t('settings.errorAndHalt') }}
+                    </bk-radio>
+                </bk-radio-group>
+            </bk-form-item>
             <bk-form-item :label="$t('template.parallelSetting')">
                 <bk-radio-group
                     :value="pipelineSetting.runLockType"
@@ -135,7 +156,7 @@
                     <bk-checkbox
                         :disabled="!editable"
                         :checked="pipelineSetting.concurrencyCancelInProgress"
-                        @change="handleConCurrencyCancel"
+                        @change="val => handleBaseInfoChange('concurrencyCancelInProgress', val)"
                     >
                         {{ $t('settings.stopWhenNewCome') }}
                     </bk-checkbox>
@@ -209,6 +230,14 @@
             handleRunningLockChange: Function
         },
         computed: {
+            proxyFailIfVariableInvalid: {
+                get () {
+                    return this.pipelineSetting.failIfVariableInvalid ?? false
+                },
+                set (val) {
+                    this.pipelineSetting.failIfVariableInvalid = val
+                }
+            },
             runTypeMap () {
                 return {
                     MULTIPLE: 'MULTIPLE',
@@ -287,11 +316,6 @@
                     concurrencyGroup: this.pipelineSetting?.concurrencyGroup || '${{ci.pipeline_id}}'
                 })
             },
-            handleConCurrencyCancel (val) {
-                this.handleRunningLockChange({
-                    concurrencyCancelInProgress: val
-                })
-            },
             handleBaseInfoChange (name, val) {
                 this.handleRunningLockChange({
                     [name]: val
@@ -317,6 +341,11 @@
                 font-size: 14px;
                 cursor: pointer;
             }
+        }
+        .variable-invalid {
+            color: #63656E;
+            font-size: 12px;
+            font-weight: 500;
         }
         .single-lock-sub-form {
             margin-bottom: 20px;

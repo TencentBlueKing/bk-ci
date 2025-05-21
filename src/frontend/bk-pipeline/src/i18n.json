@@ -33,7 +33,9 @@
     "open": "展开",
     "openPOST": "展开后置操作",
     "foldPOST": "收起后置操作",
-    "debugConsole": "登录调试"
+    "debugConsole": "登录调试",
+    "retryCountAutoTips": "自动重试 {0} 次",
+    "retryCountManualTips": "手动重试 {0} 次"
   },
   "en-US": {
     "insertStage": "Add Stage",
@@ -69,6 +71,8 @@
     "open": "Open",
     "openPOST": "Expand post-actions",
     "foldPOST": "Fold post-actions",
-    "debugConsole": "Debug"
+    "debugConsole": "Debug",
+    "retryCountAutoTips": "Auto retry {0} times",
+    "retryCountManualTips": "Manual retry {0} times"
   }
 }

@@ -1,231 +1,229 @@
 <template>
-    <article
+    <div
         class="atom-manage-home"
         v-bkloading="{ isLoading }"
     >
-        <h3 class="atom-manage-title">
-            {{ $t('atomManage.installedAtom') }}
-            <span @click="goToStore">{{ $t('atomManage.moreAtom') }}</span>
-        </h3>
-        <bk-tab
-            :active.sync="active"
-            class="atom-manage-main"
-            @tab-change="tabChange"
-        >
-            <bk-tab-panel
-                v-for="(panel, index) in panels"
-                v-bind="panel"
-                :key="index"
+        <pipeline-header :title="$t('pluginManage')"></pipeline-header>
+        <article>
+            <h3 class="atom-manage-title">
+                {{ $t('atomManage.installedAtom') }}
+                <span @click="goToStore">{{ $t('atomManage.moreAtom') }}</span>
+            </h3>
+            <bk-tab
+                :active.sync="active"
+                class="atom-manage-main"
+                @tab-change="tabChange"
             >
-                <template slot="label">
-                    <span>{{ panel.label }}</span>
-                </template>
-                <bk-table
-                    v-bkloading="{ isLoading: tableLoading }"
-                    :data="atomList"
-                    size="large"
-                    :empty-text="$t('noData')"
-                    :show-header="false"
+                <bk-tab-panel
+                    v-for="(panel, index) in panels"
+                    v-bind="panel"
+                    :key="index"
                 >
-                    <bk-table-column
-                        prop="logoUrl"
-                        width="80"
+                    <template slot="label">
+                        <span>{{ panel.label }}</span>
+                    </template>
+                    <bk-table
+                        v-bkloading="{ isLoading: tableLoading }"
+                        :data="atomList"
+                        size="large"
+                        :pagination="defaultPaging"
+                        :empty-text="$t('noData')"
+                        :show-header="false"
+                        @page-change="pageChange"
+                        @page-limit-change="limitChange"
                     >
-                        <template slot-scope="props">
-                            <img
-                                class="atom-logo"
-                                :src="props.row.logoUrl"
-                                v-if="props.row.logoUrl"
-                            >
-                            <logo
-                                class="atom-logo"
-                                v-else
-                                name="placeholder"
-                                size="38"
-                                style="fill:#C3CDD7"
-                            />
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column class-name="atom-manage-des">
-                        <template slot-scope="props">
-                            <h5
-                                class="text-overflow"
-                                :title="props.row.name"
-                            >
-                                {{ props.row.name }}
-                            </h5>
-                            <span
-                                class="text-overflow"
-                                :title="props.row.summary"
-                                v-if="props.row.summary"
-                            >{{ props.row.summary }}</span>
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column
-                        prop="publisher"
-                        width="200"
-                    ></bk-table-column>
-                    <bk-table-column width="400">
-                        <template slot-scope="props">
-                            <span
-                                class="text-overflow"
-                                :title="getInstallInfo(props.row)"
-                            >{{ getInstallInfo(props.row) }}</span>
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column
-                        class-name="primary-color"
-                        width="120"
-                    >
-                        <template slot-scope="props">
-                            <bk-popover
-                                :content="$t('atomManage.relatedNumTips', [props.row.pipelineCnt])"
-                                placement="top"
-                            >
+                        <bk-table-column
+                            prop="logoUrl"
+                            width="80"
+                        >
+                            <template slot-scope="props">
+                                <img
+                                    class="atom-logo"
+                                    :src="props.row.logoUrl"
+                                    v-if="props.row.logoUrl"
+                                >
+                                <logo
+                                    class="atom-logo"
+                                    v-else
+                                    name="placeholder"
+                                    size="38"
+                                    style="fill:#C3CDD7"
+                                />
+                            </template>
+                        </bk-table-column>
+                        <bk-table-column class-name="atom-manage-des">
+                            <template slot-scope="props">
+                                <h5
+                                    class="text-overflow"
+                                    :title="props.row.name"
+                                >
+                                    {{ props.row.name }}
+                                </h5>
                                 <span
-                                    @click="showDetail(props.row)"
+                                    class="text-overflow"
+                                    :title="props.row.summary"
+                                    v-if="props.row.summary"
+                                >{{ props.row.summary }}</span>
+                            </template>
+                        </bk-table-column>
+                        <bk-table-column
+                            prop="publisher"
+                            width="200"
+                        ></bk-table-column>
+                        <bk-table-column width="400">
+                            <template slot-scope="props">
+                                <span
+                                    class="text-overflow"
+                                    :title="getInstallInfo(props.row)"
+                                >{{ getInstallInfo(props.row) }}</span>
+                            </template>
+                        </bk-table-column>
+                        <bk-table-column
+                            class-name="primary-color"
+                            width="120"
+                        >
+                            <template slot-scope="props">
+                                <bk-popover
+                                    :content="$t('atomManage.relatedNumTips', [props.row.pipelineCnt])"
+                                    placement="top"
+                                >
+                                    <span
+                                        @click="showDetail(props.row)"
+                                        class="cursor-pointer"
+                                    >{{ props.row.pipelineCnt }}</span>
+                                </bk-popover>
+                            </template>
+                        </bk-table-column>
+                        <bk-table-column
+                            width="120"
+                            class-name="primary-color"
+                        >
+                            <template slot-scope="props">
+                                <bk-button
+                                    :title="!props.row.hasPermission ? uninstallTipsMap(props.row.installType) : ''"
+                                    :disabled="!props.row.hasPermission"
                                     class="cursor-pointer"
-                                >{{ props.row.pipelineCnt }}</span>
-                            </bk-popover>
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column
-                        width="120"
-                        class-name="primary-color"
-                    >
-                        <template slot-scope="props">
-                            <bk-button
-                                :title="!props.row.hasPermission ? uninstallTipsMap(props.row.installType) : ''"
-                                :disabled="!props.row.hasPermission"
-                                class="cursor-pointer"
-                                theme="primary"
-                                text
-                                @click="showDeletaDialog(props.row)"
-                                v-if="!props.row.default"
-                            >
-                                {{ $t('atomManage.uninstall') }}
-                            </bk-button>
-                        </template>
-                    </bk-table-column>
-                </bk-table>
-            </bk-tab-panel>
-        </bk-tab>
+                                    theme="primary"
+                                    text
+                                    @click="showDeletaDialog(props.row)"
+                                    v-if="!props.row.default"
+                                >
+                                    {{ $t('atomManage.uninstall') }}
+                                </bk-button>
+                            </template>
+                        </bk-table-column>
+                    </bk-table>
+                </bk-tab-panel>
+            </bk-tab>
 
-        <bk-pagination
-            @change="pageChange"
-            @limit-change="limitChange"
-            :current.sync="defaultPaging.current"
-            :count.sync="defaultPaging.count"
-            :limit="defaultPaging.limit"
-            class="atom-pagination"
-        >
-        </bk-pagination>
-
-        <bk-dialog
-            v-model="deleteObj.showDialog"
-            :title="`${$t('atomManage.uninstall')}${deleteObj.detail.name}：`"
-            :close-icon="false"
-            :width="538"
-            @confirm="deleteAtom"
-            @cancel="clearReason"
-        >
-            <span class="choose-reason-title">{{ $t('atomManage.uninstallReason') }}</span>
-            <bk-checkbox-group v-model="deleteObj.reasonList">
-                <bk-checkbox
-                    :value="reason.id"
-                    v-for="reason in deleteReasons"
-                    :key="reason.id"
-                    class="delete-reasons"
-                >
-                    {{ reason.content }}
-                </bk-checkbox>
-            </bk-checkbox-group>
-            <template v-if="showOtherReason">
-                <span class="other-reason">{{ $t('atomManage.otherReason') }}：</span>
-                <textarea
-                    class="reason-text"
-                    v-model="deleteObj.otherStr"
-                ></textarea>
-            </template>
-        </bk-dialog>
-
-        <bk-sideslider
-            :is-show.sync="detailObj.showSlide"
-            :title="detailObj.detail.name"
-            :width="644"
-            :quick-close="true"
-        >
-            <section
-                slot="content"
-                class="atom-slide"
+            <bk-dialog
+                v-model="deleteObj.showDialog"
+                :title="`${$t('atomManage.uninstall')}${deleteObj.detail.name}：`"
+                :close-icon="false"
+                :width="538"
+                @confirm="deleteAtom"
+                @cancel="clearReason"
             >
-                <hgroup class="slide-title">
-                    <h5 class="slide-link">
-                        <span>{{ $t('name') }}：</span>
-                        <span class="text-overflow link-width">{{ detailObj.detail.name }}</span>
-                        <logo
-                            class="logo-link"
-                            name="loadout"
-                            size="14"
-                            style="fill:#3C96FF"
-                            @click.native="goToStoreDetail(detailObj.detail.atomCode)"
-                        />
-                    </h5>
-                    <h5><span>{{ $t('atomManage.publisher') }}：</span>{{ detailObj.detail.publisher }}</h5>
-                    <h5><span>{{ $t('atomManage.installer') }}：</span>{{ detailObj.detail.installer }}</h5>
-                    <h5><span>{{ $t('atomManage.installTime') }}：</span>{{ detailObj.detail.installTime }}</h5>
-                    <h5 class="slide-summary"><span>{{ $t('atomManage.summary') }}：</span><span>{{ detailObj.detail.summary }}</span></h5>
-                </hgroup>
+                <span class="choose-reason-title">{{ $t('atomManage.uninstallReason') }}</span>
+                <bk-checkbox-group v-model="deleteObj.reasonList">
+                    <bk-checkbox
+                        :value="reason.id"
+                        v-for="reason in deleteReasons"
+                        :key="reason.id"
+                        class="delete-reasons"
+                    >
+                        {{ reason.content }}
+                    </bk-checkbox>
+                </bk-checkbox-group>
+                <template v-if="showOtherReason">
+                    <span class="other-reason">{{ $t('atomManage.otherReason') }}：</span>
+                    <textarea
+                        class="reason-text"
+                        v-model="deleteObj.otherStr"
+                    ></textarea>
+                </template>
+            </bk-dialog>
 
-                <h5 class="related-pipeline">{{ $t('atomManage.relatedPipeline') }}（{{ detailObj.list && detailObj.list.length }}）</h5>
-                <bk-table
-                    :data="detailObj.list"
-                    :empty-text="$t('noReleatedPipeline')"
+            <bk-sideslider
+                :is-show.sync="detailObj.showSlide"
+                :title="detailObj.detail.name"
+                :width="644"
+                :quick-close="true"
+            >
+                <section
+                    slot="content"
+                    class="atom-slide"
                 >
-                    <bk-table-column
-                        :label="$t('pipelineName')"
-                        prop="pipelineName"
-                        width="235"
+                    <hgroup class="slide-title">
+                        <h5 class="slide-link">
+                            <span>{{ $t('name') }}：</span>
+                            <span class="text-overflow link-width">{{ detailObj.detail.name }}</span>
+                            <logo
+                                class="logo-link"
+                                name="loadout"
+                                size="14"
+                                style="fill:#3C96FF"
+                                @click.native="goToStoreDetail(detailObj.detail.atomCode)"
+                            />
+                        </h5>
+                        <h5><span>{{ $t('atomManage.publisher') }}：</span>{{ detailObj.detail.publisher }}</h5>
+                        <h5><span>{{ $t('atomManage.installer') }}：</span>{{ detailObj.detail.installer }}</h5>
+                        <h5><span>{{ $t('atomManage.installTime') }}：</span>{{ detailObj.detail.installTime }}</h5>
+                        <h5 class="slide-summary"><span>{{ $t('atomManage.summary') }}：</span><span>{{ detailObj.detail.summary }}</span></h5>
+                    </hgroup>
+
+                    <h5 class="related-pipeline">{{ $t('atomManage.relatedPipeline') }}（{{ detailObj.list && detailObj.list.length }}）</h5>
+                    <bk-table
+                        :data="detailObj.list"
+                        :empty-text="$t('noReleatedPipeline')"
                     >
-                        <template slot-scope="props">
-                            <h3 class="slide-link">
-                                <span
-                                    @click="goToPipeline(props.row.pipelineId)"
-                                    class="link-text text-overflow"
-                                    :title="props.row.pipelineName"
-                                >{{ props.row.pipelineName }}</span>
-                            </h3>
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column
-                        :label="$t('lastExecUser')"
-                        width="180"
-                    >
-                        <template slot-scope="props">
-                            <span>{{ props.row.owner || '-' }}</span>
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column
-                        :label="$t('lastExecTime')"
-                        width="180"
-                    >
-                        <template slot-scope="props">
-                            <span>{{ props.row.latestExecTime || '-' }}</span>
-                        </template>
-                    </bk-table-column>
-                </bk-table>
-            </section>
-        </bk-sideslider>
-    </article>
+                        <bk-table-column
+                            :label="$t('pipelineName')"
+                            prop="pipelineName"
+                            width="235"
+                        >
+                            <template slot-scope="props">
+                                <h3 class="slide-link">
+                                    <span
+                                        @click="goToPipeline(props.row.pipelineId)"
+                                        class="link-text text-overflow"
+                                        :title="props.row.pipelineName"
+                                    >{{ props.row.pipelineName }}</span>
+                                </h3>
+                            </template>
+                        </bk-table-column>
+                        <bk-table-column
+                            :label="$t('lastExecUser')"
+                            width="180"
+                        >
+                            <template slot-scope="props">
+                                <span>{{ props.row.owner || '-' }}</span>
+                            </template>
+                        </bk-table-column>
+                        <bk-table-column
+                            :label="$t('lastExecTime')"
+                            width="180"
+                        >
+                            <template slot-scope="props">
+                                <span>{{ props.row.latestExecTime || '-' }}</span>
+                            </template>
+                        </bk-table-column>
+                    </bk-table>
+                </section>
+            </bk-sideslider>
+        </article>
+    </div>
 </template>
 
 <script>
     import Logo from '@/components/Logo'
+    import pipelineHeader from '@/components/devops/pipeline-header'
     import { mapActions } from 'vuex'
 
     export default {
         components: {
-            Logo
+            Logo,
+            pipelineHeader
         },
 
         data () {
@@ -411,14 +409,19 @@
 </script>
 
 <style lang="scss" scoped>
-    @import './../../scss/conf';
+    @import './../scss/conf';
 
     .atom-manage-home {
-        min-height: calc(100% - 60px);
-        background: #fff;
-        padding-top: 24px;
-        padding-bottom: 30px;
-        width: auto !important;
+        height: 100%;
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        > article {
+            padding: 24px;
+            height: 100%;
+            flex: 1;
+        }
         .atom-manage-title {
             margin: 0 150px 15px;
             margin-right: calc(150px - 100vw + 100%);
@@ -432,14 +435,13 @@
                 cursor: pointer;
             }
         }
-        .atom-pagination {
-            margin: 10px 150px;
-            min-width: 1000px;
-        }
         .atom-manage-main {
             margin: 0 150px;
             margin-right: calc(150px - 100vw + 100%);
             min-width: 1000px;
+            .bk-tab-section {
+                border: 1px solid #dcdee5;
+            }
             .atom-panel-count {
                 line-height: 16px;
                 font-size: 12px;

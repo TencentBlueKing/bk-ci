@@ -80,8 +80,8 @@ class ServiceProjectResourceImpl @Autowired constructor(
         )
     }
 
-    override fun list(userId: String, tenantId: String?): Result<List<ProjectVO>> {
-        return Result(projectService.list(userId, tenantId))
+    override fun list(userId: String, productIds: String?, tenantId: String?): Result<List<ProjectVO>> {
+        return Result(projectService.list(userId = userId, productIds = productIds, tenantId = tenantId))
     }
 
     override fun getAllProject(): Result<List<ProjectVO>> {

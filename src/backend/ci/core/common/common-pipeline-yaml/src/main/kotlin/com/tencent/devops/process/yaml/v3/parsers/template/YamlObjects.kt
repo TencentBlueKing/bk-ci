@@ -126,6 +126,7 @@ object YamlObjects {
             type = getNotNullValue("type", "props", propsMap),
             options = getVarPropOptions(fromPath, propsMap["options"]),
             description = getNullValue("description", propsMap),
+            group = getNullValue("group", propsMap),
             multiple = getNullValue("multiple", propsMap)?.toBoolean(),
             required = getNullValue("required", propsMap)?.toBoolean(),
             repoHashId = getNullValue("repo-id", propsMap),

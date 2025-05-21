@@ -30,18 +30,15 @@ package com.tencent.devops.environment.dao.thirdpartyagent
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.environment.constant.T_ENVIRONMENT_THIRDPARTY_AGENT_MASTER_VERSION
-import com.tencent.devops.environment.constant.T_ENVIRONMENT_THIRDPARTY_AGENT_NODE_ID
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.model.environment.tables.TEnvironmentThirdpartyAgent
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
-import java.time.LocalDateTime
-import jakarta.ws.rs.NotFoundException
 import org.jooq.DSLContext
-import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.UpdateSetMoreStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 @Suppress("ALL")
@@ -54,7 +51,9 @@ class ThirdPartyAgentDao {
         os: OS,
         secretKey: String,
         gateway: String?,
-        fileGateway: String?
+        fileGateway: String?,
+        ip: String? = null,
+        status: AgentStatus = AgentStatus.UN_IMPORT
     ): Long {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.insertInto(
@@ -66,53 +65,19 @@ class ThirdPartyAgentDao {
                 CREATED_USER,
                 CREATED_TIME,
                 GATEWAY,
-                FILE_GATEWAY
+                FILE_GATEWAY,
+                IP
             ).values(
                 projectId,
                 os.name,
-                AgentStatus.UN_IMPORT.status,
+                status.status,
                 secretKey,
                 userId,
                 LocalDateTime.now(),
                 gateway ?: "",
-                fileGateway ?: ""
+                fileGateway ?: "",
+                ip ?: ""
             )
-                .returning(ID)
-                .fetchOne()!!.id
-        }
-    }
-
-    fun createAgent(
-        dslContext: DSLContext,
-        userId: String,
-        projectId: String,
-        os: OS,
-        secretKey: String,
-        gateway: String?,
-        ip: String?
-    ): Long {
-        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
-            return dslContext.insertInto(
-                this,
-                PROJECT_ID,
-                OS,
-                STATUS,
-                SECRET_KEY,
-                CREATED_USER,
-                CREATED_TIME,
-                GATEWAY,
-                IP
-            )
-                .values(
-                    projectId,
-                    os.name,
-                    AgentStatus.IMPORT_EXCEPTION.status,
-                    secretKey,
-                    userId,
-                    LocalDateTime.now(),
-                    gateway ?: "",
-                    ip ?: ""
-                )
                 .returning(ID)
                 .fetchOne()!!.id
         }
@@ -145,26 +110,45 @@ class ThirdPartyAgentDao {
         }
     }
 
-    fun listByStatus(
+    fun listByStatusGtId(
         dslContext: DSLContext,
-        status: Set<AgentStatus>
+        status: Set<AgentStatus>,
+        startId: Long,
+        limit: Int = PageUtil.MAX_PAGE_SIZE
     ): List<TEnvironmentThirdpartyAgentRecord> {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.selectFrom(this)
-                .where(STATUS.`in`(status.map { it.status }))
+                .where(ID.gt(startId)).let { where ->
+                    if (status.isNotEmpty()) {
+                        where.and(STATUS.`in`(status.map { s -> s.status }))
+                    }
+                    where
+                }
+                .orderBy(ID.asc())
+                .limit(limit)
                 .fetch()
         }
     }
 
-    fun listByStatusAndProject(
+    fun listByStatusAndProjectGtId(
         dslContext: DSLContext,
         status: Set<AgentStatus>,
-        projects: Set<String>
+        projects: Set<String>,
+        startId: Long,
+        limit: Int
     ): List<TEnvironmentThirdpartyAgentRecord> {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.selectFrom(this)
-                .where(PROJECT_ID.`in`(projects))
-                .and(STATUS.`in`(status.map { it.status }))
+                .where(ID.gt(startId)).let { where ->
+                    if (projects.isNotEmpty()) {
+                        where.and(PROJECT_ID.`in`(projects))
+                    }
+                    if (status.isNotEmpty()) {
+                        where.and(STATUS.`in`(status.map { s -> s.status }))
+                    }
+                    where
+                }.orderBy(ID.asc())
+                .limit(limit)
                 .fetch()
         }
     }
@@ -176,6 +160,9 @@ class ThirdPartyAgentDao {
         status: AgentStatus,
         os: OS
     ): Int {
+        if (nodeIds.isEmpty()) {
+            throw IllegalArgumentException("Node IDs cannot be empty")
+        }
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.selectCount()
                 .from(this)
@@ -249,25 +236,12 @@ class ThirdPartyAgentDao {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.update(this)
                 .set(STATUS, status.status)
-                .where(ID.`in`(ids))
-                .and(PROJECT_ID.eq(projectId))
-                .execute()
-        }
-    }
-
-    fun updateAgentVersion(
-        dslContext: DSLContext,
-        id: Long,
-        projectId: String,
-        version: String,
-        masterVersion: String
-    ): Int {
-        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
-            val step = dslContext.update(this)
-                .set(VERSION, version)
-                .set(MASTER_VERSION, masterVersion)
-            return step.where(ID.eq(id))
-                .and(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId)).let { where ->
+                    if (ids.isNotEmpty()) {
+                        where.and(ID.`in`(ids))
+                    }
+                    where
+                }
                 .execute()
         }
     }
@@ -277,64 +251,6 @@ class ThirdPartyAgentDao {
         agentRecode: TEnvironmentThirdpartyAgentRecord
     ) {
         dslContext.executeUpdate(agentRecode)
-    }
-
-    fun updateAgentInfo(
-        dslContext: DSLContext,
-        id: Long,
-        remoteIp: String,
-        projectId: String,
-        hostname: String,
-        ip: String,
-        detectOS: String,
-        agentVersion: String?,
-        masterVersion: String?
-    ): Int {
-        return dslContext.transactionResult { configuration ->
-            val context = DSL.using(configuration)
-            with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
-                val agentRecord = context.selectFrom(this)
-                    .where(ID.eq(id))
-                    .fetchOne() ?: throw NotFoundException("The agent is not exist")
-
-                val agentStatus = AgentStatus.fromStatus(agentRecord.status)
-
-                if (AgentStatus.isDelete(agentStatus)) {
-                    // The agent already delete
-                    throw NotFoundException("The agent is already deleted")
-                }
-
-                val step = context.update(this)
-                    .set(HOSTNAME, hostname)
-                    .set(IP, ip)
-                    .set(DETECT_OS, detectOS)
-                    .set(START_REMOTE_IP, remoteIp)
-
-                if (agentVersion.isNullOrBlank()) {
-                    step.set(VERSION, "")
-                } else {
-                    step.set(VERSION, agentVersion)
-                }
-
-                if (masterVersion.isNullOrBlank()) {
-                    step.set(MASTER_VERSION, "")
-                } else {
-                    step.set(MASTER_VERSION, masterVersion)
-                }
-
-                when {
-                    AgentStatus.isUnImport(agentStatus) ->
-                        step.set(STATUS, AgentStatus.UN_IMPORT_OK.status)
-
-                    AgentStatus.isImportException(agentStatus) ->
-                        step.set(STATUS, AgentStatus.IMPORT_OK.status)
-                }
-
-                step.where(ID.eq(id))
-                    .and(PROJECT_ID.eq(projectId))
-                    .execute()
-            }
-        }
     }
 
     fun getAgent(
@@ -366,21 +282,13 @@ class ThirdPartyAgentDao {
         ids: Set<Long>,
         projectId: String
     ): List<TEnvironmentThirdpartyAgentRecord> {
+        if (ids.isEmpty()) {
+            throw IllegalArgumentException("ids cannot be empty")
+        }
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.selectFrom(this)
                 .where(ID.`in`(ids))
                 .and(PROJECT_ID.eq(projectId))
-                .fetch()
-        }
-    }
-
-    fun getAgentByNodeIdAllProj(dslContext: DSLContext, nodeIdList: List<Long>): Result<Record2<Long, String>> {
-        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
-            return dslContext.select(
-                NODE_ID.`as`(T_ENVIRONMENT_THIRDPARTY_AGENT_NODE_ID),
-                MASTER_VERSION.`as`(T_ENVIRONMENT_THIRDPARTY_AGENT_MASTER_VERSION)
-            ).from(this)
-                .where(NODE_ID.`in`(nodeIdList))
                 .fetch()
         }
     }
@@ -403,6 +311,9 @@ class ThirdPartyAgentDao {
         nodeIds: Collection<Long>,
         projectId: String
     ): Result<TEnvironmentThirdpartyAgentRecord> {
+        if (nodeIds.isEmpty()) {
+            throw IllegalArgumentException("The node IDs must be non-empty")
+        }
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.selectFrom(this)
                 .where(NODE_ID.`in`(nodeIds))
@@ -414,7 +325,8 @@ class ThirdPartyAgentDao {
     fun listImportAgent(
         dslContext: DSLContext,
         projectId: String,
-        os: OS?
+        os: OS?,
+        limit: Int = PageUtil.MAX_PAGE_SIZE
     ): List<TEnvironmentThirdpartyAgentRecord> {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.selectFrom(this)
@@ -425,6 +337,7 @@ class ThirdPartyAgentDao {
                         it.and(OS.eq(os.name))
                     }
                 }
+                .limit(limit)
                 .fetch()
         }
     }
@@ -458,6 +371,7 @@ class ThirdPartyAgentDao {
     }
 
     fun saveAgentEnvs(dslContext: DSLContext, agentIds: Set<Long>, envStr: String) {
+        if (agentIds.isEmpty()) { throw IllegalArgumentException("The agent IDs must be non-empty") }
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             dslContext.update(this)
                 .set(AGENT_ENVS, envStr)
@@ -466,21 +380,10 @@ class ThirdPartyAgentDao {
         }
     }
 
-    fun listPreBuildAgent(
-        dslContext: DSLContext,
-        userId: String,
-        projectId: String,
-        os: OS
-    ): List<TEnvironmentThirdpartyAgentRecord> {
-        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(OS.eq(os.name))
-                .fetch()
-        }
-    }
-
     fun refreshGateway(dslContext: DSLContext, oldToNewMap: Map<String, String>) {
+        if (oldToNewMap.isEmpty()) {
+            return
+        }
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             dslContext.transaction { configuration ->
                 val updates = mutableListOf<UpdateSetMoreStep<TEnvironmentThirdpartyAgentRecord>>()
@@ -506,6 +409,17 @@ class ThirdPartyAgentDao {
                 }
                 transactionContext.batch(updates).execute()
             }
+        }
+    }
+
+    fun countAgentByStatus(dslContext: DSLContext, status: Set<AgentStatus>): Long {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            return dslContext.selectCount().from(this).let { from ->
+                if (status.isNotEmpty()) {
+                    from.where(STATUS.`in`(status))
+                }
+                from
+            }.fetchOne(0, Long::class.java)!!
         }
     }
 }

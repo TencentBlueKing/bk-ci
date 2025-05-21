@@ -80,8 +80,23 @@ class UserPipelineTransferResourceImpl @Autowired constructor(
                 )
             )
         }
+        val editPermission = pipelineId?.let {
+            pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = it,
+                permission = AuthPermission.EDIT
+            )
+        }
         val response = try {
-            transferService.transfer(userId, projectId, pipelineId, actionType, data)
+            transferService.transfer(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                actionType = actionType,
+                data = data,
+                editPermission = editPermission
+            )
         } catch (e: PipelineTransferException) {
             val elementMsg = I18nUtil.getCodeLanMessage(
                 messageCode = e.errorCode,

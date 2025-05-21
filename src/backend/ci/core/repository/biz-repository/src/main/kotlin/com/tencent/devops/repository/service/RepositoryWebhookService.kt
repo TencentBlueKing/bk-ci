@@ -13,7 +13,6 @@ import com.tencent.devops.repository.pojo.webhook.WebhookData
 import com.tencent.devops.repository.pojo.webhook.WebhookParseRequest
 import com.tencent.devops.repository.service.code.CodeRepositoryManager
 import com.tencent.devops.repository.service.hub.ScmWebhookApiService
-import com.tencent.devops.scm.api.exception.UnAuthorizedScmApiException
 import com.tencent.devops.scm.api.pojo.HookRequest
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -46,7 +45,8 @@ class RepositoryWebhookService @Autowired constructor(
                 errorCode = ERROR_WEBHOOK_SERVER_REPO_FULL_NAME_IS_EMPTY
             )
         }
-        val condition = RepoCondition(projectName = serverRepo.fullName, gitProjectId = serverRepo.id?.toString())
+        val repoExternalId = serverRepo.id?.toString()
+        val condition = RepoCondition(projectName = serverRepo.fullName, gitProjectId = repoExternalId)
         val repositories =
             codeRepositoryManager.listByCondition(
                 scmCode = scmCode,
@@ -56,26 +56,25 @@ class RepositoryWebhookService @Autowired constructor(
             ) ?: emptyList()
 
         // 循环查找有权限的代码库,调用接口扩展webhook数据
-        var enWebhook = webhook
-        for (repository in sortedRepository(repositories)) {
-            val projectId = repository.projectId!!
-            val authRepository = AuthRepository(repository)
-            try {
-                enWebhook = webhookApiService.webhookEnrich(
-                    projectId = projectId,
-                    webhook = webhook,
-                    authRepository = authRepository
-                )
-                break
-            } catch (ignored: UnAuthorizedScmApiException) {
-                logger.warn(
-                    "repository auth has expired|$projectId|${repository.repoHashId}|${authRepository.auth}", ignored
-                )
-            } catch (ignored: Exception) {
-                logger.warn(
-                    "fail to enrich webhook|$projectId|${repository.repoHashId}|${authRepository.auth}", ignored
-                )
-            }
+        val authRepoList = sortedRepository(repositories)
+                .map { AuthRepository(it) }
+                .distinctBy { it.auth }
+                .let {
+                    if (it.size > MAX_ENRICH_HOOK_REPOSITORY_SIZE) {
+                        it.subList(0, MAX_ENRICH_HOOK_REPOSITORY_SIZE)
+                    } else {
+                        it
+                    }
+                }
+        logger.info("try enrich webhook|repoExternalId: $repoExternalId|auth repo list ${authRepoList.map { it.auth }}")
+        val enWebhook = try {
+            webhookApiService.webhookEnrich(
+                webhook = webhook,
+                authRepoList = authRepoList
+            )
+        } catch (ignored: Exception) {
+            logger.warn("fail to enrich webhook", ignored)
+            webhook
         }
         return WebhookData(
             webhook = enWebhook,
@@ -105,11 +104,11 @@ class RepositoryWebhookService @Autowired constructor(
             val o1CountRefs = pipelineRefCountMap[o1.repoHashId!!] ?: 0
             val o2CountRefs = pipelineRefCountMap[o2.repoHashId!!] ?: 0
             when {
-                o1CountRefs < o2CountRefs -> -1
-                o1CountRefs > o2CountRefs -> 1
+                o1CountRefs < o2CountRefs -> 1
+                o1CountRefs > o2CountRefs -> -1
                 else -> when {
-                    o1.enablePac == true -> 1
-                    o2.enablePac == true -> -1
+                    o1.enablePac == true -> -1
+                    o2.enablePac == true -> 1
                     else -> 0
                 }
             }
@@ -144,5 +143,6 @@ class RepositoryWebhookService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(RepositoryWebhookService::class.java)
+        private const val MAX_ENRICH_HOOK_REPOSITORY_SIZE = 15 // 用于webhook增强的代码库授权信息数上限
     }
 }

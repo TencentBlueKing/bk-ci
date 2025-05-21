@@ -40,6 +40,7 @@ import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TIMING_START
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_HASH_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.process.api.service.ServiceTimerBuildResource
+import com.tencent.devops.process.constant.MeasureConstant.NAME_PIPELINE_CRON_EXECUTE_DELAY
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_IS_EMPTY
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_NOT_FOUND
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_NO_CHANGE
@@ -55,6 +56,7 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
+import com.tencent.devops.process.service.TimerScheduleMeasureService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import org.slf4j.MDC
@@ -74,27 +76,50 @@ class PipelineTimerBuildListener @Autowired constructor(
     private val pipelineTimerService: PipelineTimerService,
     private val scmProxyService: ScmProxyService,
     private val triggerEventService: PipelineTriggerEventService,
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val timerScheduleMeasureService: TimerScheduleMeasureService
 ) : PipelineEventListener<PipelineTimerBuildEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineTimerBuildEvent) {
-        val pipelineTimer =
-            pipelineTimerService.get(projectId = event.projectId, pipelineId = event.pipelineId) ?: return
-        with(pipelineTimer) {
-            when {
-                repoHashId.isNullOrBlank() ->
-                    timerTrigger(event = event)
+        logger.info("Receive PipelineTimerBuildEvent from MQ|[$event]")
+        try {
+            val pipelineTimer =
+                pipelineTimerService.get(
+                    projectId = event.projectId,
+                    pipelineId = event.pipelineId,
+                    taskId = event.taskId
+                ) ?: return
+            with(pipelineTimer) {
+                when {
+                    repoHashId.isNullOrBlank() ->
+                        timerTrigger(
+                            event = event,
+                            params = event.startParam ?: mapOf(),
+                            taskId = pipelineTimer.taskId
+                        )
 
-                else ->
-                    repoTimerTrigger(
-                        event = event,
-                        pipelineTimer = pipelineTimer
-                    )
+                    else ->
+                        repoTimerTrigger(
+                            event = event,
+                            pipelineTimer = pipelineTimer
+                        )
+                }
             }
+        } catch (ignored: Exception) {
+            logger.warn("fail to trigger pipeline|event=$event", ignored)
+        } finally {
+            timerScheduleMeasureService.recordActualExecutionTime(
+                name = NAME_PIPELINE_CRON_EXECUTE_DELAY,
+                event = event
+            )
         }
     }
 
-    private fun timerTrigger(event: PipelineTimerBuildEvent, params: Map<String, String> = emptyMap()): String? {
+    private fun timerTrigger(
+        event: PipelineTimerBuildEvent,
+        params: Map<String, String> = emptyMap(),
+        taskId: String
+    ): String? {
         with(event) {
             try {
                 val buildResult = serviceTimerBuildResource.timerTrigger(
@@ -107,7 +132,7 @@ class PipelineTimerBuildListener @Autowired constructor(
 
                 // 如果是不存在的流水线，则直接删除定时任务，相当于给异常创建失败的定时流水线做清理
                 if (buildResult.data.isNullOrBlank()) {
-                    pipelineTimerService.deleteTimer(projectId, pipelineId, userId)
+                    pipelineTimerService.deleteTimer(projectId, pipelineId, userId, taskId)
                     logger.warn("[$pipelineId]|pipeline not exist!${buildResult.message}")
                 } else {
                     logger.info("[$pipelineId]|TimerTrigger start| buildId=${buildResult.data}")
@@ -134,11 +159,12 @@ class PipelineTimerBuildListener @Autowired constructor(
                         repositoryName = null,
                         repositoryType = RepositoryType.ID
                     )
-                    val defaultBranch = scmProxyService.getDefaultBranch(
+                    scmProxyService.getDefaultBranch(
                         projectId = projectId,
                         repositoryConfig = repositoryConfig
-                    ) ?: return
-                    listOf(defaultBranch)
+                    )?.let {
+                        listOf(it)
+                    }
                 } else {
                     branchs
                 }
@@ -147,21 +173,32 @@ class PipelineTimerBuildListener @Autowired constructor(
                     messages.add(I18nUtil.getCodeLanMessage(ERROR_PIPELINE_TIMER_BRANCH_IS_EMPTY))
                     return
                 }
+                // 填充触发器启动参数
+                val startParams = mutableMapOf<String, String>()
+                event.startParam?.let {
+                    startParams.putAll(it)
+                }
                 finalBranchs.forEach { branch ->
                     if (noScm == true) {
                         branchTimerTrigger(
                             event = event,
                             repoHashId = repoHashId!!,
                             branch = branch,
-                            branchMessages = branchMessages
+                            branchMessages = branchMessages,
+                            startParams = startParams,
+                            taskId = pipelineTimer.taskId
                         )
                     } else {
-                        timerTrigger(
-                            event = event,
-                            params = mapOf(
+                        startParams.putAll(
+                            mapOf(
                                 BK_REPO_WEBHOOK_HASH_ID to repoHashId!!,
                                 PIPELINE_WEBHOOK_BRANCH to branch
                             )
+                        )
+                        timerTrigger(
+                            event = event,
+                            params = startParams,
+                            taskId = pipelineTimer.taskId
                         )
                     }
                 }
@@ -192,7 +229,9 @@ class PipelineTimerBuildListener @Autowired constructor(
         event: PipelineTimerBuildEvent,
         repoHashId: String,
         branch: String,
-        branchMessages: MutableMap<String, MutableSet<String>>
+        branchMessages: MutableMap<String, MutableSet<String>>,
+        startParams: MutableMap<String, String>,
+        taskId: String
     ) {
         val repositoryConfig = RepositoryConfig(
             repositoryHashId = repoHashId,
@@ -217,21 +256,27 @@ class PipelineTimerBuildListener @Autowired constructor(
                 val timerBranch = pipelineTimerService.getTimerBranch(
                     projectId = projectId,
                     pipelineId = pipelineId,
+                    taskId = taskId,
                     repoHashId = repoHashId,
                     branch = branch
                 )
                 if (timerBranch == null || timerBranch.revision != revision) {
-                    val buildId = timerTrigger(
-                        event = event,
-                        params = mapOf(
+                    startParams.putAll(
+                        mapOf(
                             BK_REPO_WEBHOOK_HASH_ID to repoHashId,
                             PIPELINE_WEBHOOK_BRANCH to branch
                         )
+                    )
+                    val buildId = timerTrigger(
+                        event = event,
+                        params = startParams,
+                        taskId = taskId
                     ) ?: return
                     logger.info("success to build by time trigger|$projectId|$pipelineId|$repoHashId|$branch|$buildId")
                     pipelineTimerService.saveTimerBranch(
                         projectId = projectId,
                         pipelineId = pipelineId,
+                        taskId = taskId,
                         repoHashId = repoHashId,
                         branch = branch,
                         revision = revision

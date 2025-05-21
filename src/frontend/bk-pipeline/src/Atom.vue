@@ -47,6 +47,19 @@
                 size="18"
                 class="active-atom-location-icon"
             />
+            <p class="atom-retry-indicate-icon-group">
+                <span
+                    v-for="item in retryIndicateList"
+                    :key="item.retryType"
+                    v-bk-tooltips="item.tips"
+                    class="atom-retry-indicate-icon"
+                >
+                    <Logo
+                        :name="item.retryType"
+                        size="18"
+                    />
+                </span>
+            </p>
             <bk-round-progress
                 v-if="showProgress"
                 ext-cls="atom-progress"
@@ -475,6 +488,18 @@
                         activeColor: '#459fff'
                     }
                 }
+            },
+            retryIndicateList () {
+                return ['retryCountAuto', 'retryCountManual'].reduce((acc, cur) => {
+                    const count = this.atom?.[cur] ?? 0
+                    if (count > 0) {
+                        acc.push({
+                            retryType: cur,
+                            tips: this.t(`${cur}Tips`, [count])
+                        })
+                    }
+                    return acc
+                }, [])
             }
         },
         watch: {
@@ -741,6 +766,21 @@
   .pause-button {
     margin-right: 8px;
     color: $primaryColor;
+  }
+
+  .atom-retry-indicate-icon-group {
+    display: flex;
+    grid-gap: 6px;
+    position: absolute;
+    top: -9px;
+    right: 10px;
+    color: $primaryColor;
+    .atom-retry-indicate-icon {
+        width: 18px;
+        height: 18px;
+        background-color: white;
+        border-radius: 50%;
+    }
   }
 
   .add-plus-icon.close {

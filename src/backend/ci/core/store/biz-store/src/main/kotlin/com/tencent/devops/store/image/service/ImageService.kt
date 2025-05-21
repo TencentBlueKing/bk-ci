@@ -1305,4 +1305,8 @@ abstract class ImageService @Autowired constructor() {
         }
         return Result(true)
     }
+
+    fun isReleasedStatus(imageCode: String, imageVersion: String, imageStatus: ImageStatusEnum): Boolean {
+        return imageDao.countImageRelease(dslContext, imageCode, imageVersion, imageStatus) > 0
+    }
 }

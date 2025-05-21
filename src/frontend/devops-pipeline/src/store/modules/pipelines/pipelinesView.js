@@ -25,7 +25,6 @@ import ajax from '@/utils/request'
 const prefix = `/${PROCESS_API_URL_PREFIX}/user`
 
 const state = {
-    pageLoading: false,
     showViewManage: false,
     showViewCreate: false,
     isManage: false,
@@ -51,9 +50,6 @@ const getters = {
 }
 
 const mutations = {
-    showPageLoading (state, loading) {
-        state.pageLoading = loading
-    },
     // 是否展示视图选择框
     toggleShowViewManage (state, res) {
         state.showViewManage = res

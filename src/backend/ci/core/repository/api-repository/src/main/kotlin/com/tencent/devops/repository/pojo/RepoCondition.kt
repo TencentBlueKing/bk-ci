@@ -44,5 +44,6 @@ data class RepoCondition(
     var oauthUserId: String? = null,
     // 授权类型
     var authType: RepoAuthType? = null,
-    var scmCode: String? = null
+    var scmCode: String? = null,
+    var enablePac: Boolean? = null
 )

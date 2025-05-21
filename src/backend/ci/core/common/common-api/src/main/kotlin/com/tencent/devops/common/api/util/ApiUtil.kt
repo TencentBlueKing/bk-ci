@@ -28,6 +28,8 @@
 package com.tencent.devops.common.api.util
 
 import org.hashids.Hashids
+import java.net.URI
+import java.net.URLEncoder
 import java.util.Random
 
 /**
@@ -51,5 +53,48 @@ object ApiUtil {
             buf.append(secretSeed[num])
         }
         return buf.toString()
+    }
+
+    /**
+    * 向 URL 安全添加或更新 Query 参数
+    * @param originalUrl 原始 URL
+    * @param paramName 参数名
+    * @param paramValue 参数值（自动编码）
+    * @return 处理后的完整 URL
+    */
+    fun appendUrlQueryParam(
+        originalUrl: String,
+        paramName: String,
+        paramValue: String
+    ): String {
+        // 分解原始 URI
+        val uri = URI.create(originalUrl)
+        val encodedName = URLEncoder.encode(paramName, Charsets.UTF_8.name())
+        val encodedValue = URLEncoder.encode(paramValue, Charsets.UTF_8.name())
+
+        // 解析现有参数到 Map
+        val params = uri.query?.split("&")
+            ?.associateTo(mutableMapOf()) {
+                it.split("=", limit = 2).let { parts ->
+                    parts.first() to parts.getOrNull(1)
+                }
+            } ?: mutableMapOf()
+
+        // 更新参数
+        params[encodedName] = encodedValue
+
+        // 构建新 Query
+        val newQuery = params.entries.joinToString("&") { (k, v) ->
+            if (v != null) "$k=$v" else k
+        }
+
+        // 重组 URI
+        return URI(
+            uri.scheme,
+            uri.authority,
+            uri.rawPath,
+            newQuery.ifEmpty { null },
+            uri.fragment
+        ).toString()
     }
 }

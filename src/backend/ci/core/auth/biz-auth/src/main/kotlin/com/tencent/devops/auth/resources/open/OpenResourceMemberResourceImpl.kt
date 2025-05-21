@@ -3,15 +3,11 @@ package com.tencent.devops.auth.resources.open
 import com.tencent.devops.auth.api.open.OpenResourceMemberResource
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.constant.BkApiHandleType
-import com.tencent.devops.project.pojo.ProjectCreateUserInfo
-import com.tencent.devops.project.pojo.ProjectDeleteUserInfo
-import java.util.concurrent.TimeUnit
 
 @RestResource
 class OpenResourceMemberResourceImpl(
@@ -48,74 +44,6 @@ class OpenResourceMemberResourceImpl(
                 resourceType = resourceType,
                 resourceCode = resourceCode
             )
-        )
-    }
-
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
-    override fun batchAddResourceGroupMembers(
-        token: String,
-        projectCode: String,
-        projectCreateUserInfo: ProjectCreateUserInfo
-    ): Result<Boolean> {
-        with(projectCreateUserInfo) {
-            val expiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(365L)
-            return Result(
-                permissionResourceMemberService.batchAddResourceGroupMembers(
-                    projectCode = projectCode,
-                    iamGroupId = getIamGroupId(
-                        groupId = groupId,
-                        projectCode = projectCode,
-                        roleName = roleName,
-                        roleId = roleId,
-                        resourceType = resourceType ?: AuthResourceType.PROJECT.value,
-                        resourceCode = resourceCode ?: projectCode
-                    ),
-                    expiredTime = expiredTime,
-                    members = userIds,
-                    departments = deptIds
-                )
-            )
-        }
-    }
-
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
-    override fun batchDeleteResourceGroupMembers(
-        token: String,
-        projectCode: String,
-        projectDeleteUserInfo: ProjectDeleteUserInfo
-    ): Result<Boolean> {
-        with(projectDeleteUserInfo) {
-            return Result(
-                permissionResourceMemberService.batchDeleteResourceGroupMembers(
-                    projectCode = projectCode,
-                    iamGroupId = getIamGroupId(
-                        groupId = groupId,
-                        projectCode = projectCode,
-                        roleName = roleName,
-                        roleId = roleId,
-                        resourceType = resourceType ?: AuthResourceType.PROJECT.value,
-                        resourceCode = resourceCode ?: projectCode
-                    ),
-                    members = userIds,
-                    departments = deptIds
-                )
-            )
-        }
-    }
-
-    private fun getIamGroupId(
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String,
-        roleName: String?,
-        groupId: Int?,
-        roleId: Int?
-    ): Int {
-        return groupId ?: permissionResourceMemberService.roleCodeToIamGroupId(
-            projectCode = projectCode,
-            roleCode = roleName ?: BkAuthGroup.getByRoleId(roleId!!).value,
-            resourceType = resourceType,
-            resourceCode = resourceCode
         )
     }
 }

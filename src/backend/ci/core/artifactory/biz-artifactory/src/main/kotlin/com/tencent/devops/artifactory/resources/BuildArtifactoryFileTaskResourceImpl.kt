@@ -82,7 +82,7 @@ class BuildArtifactoryFileTaskResourceImpl @Autowired constructor(
 
     fun checkUserPermission(userId: String, projectId: String) {
         val projectSet = client.get(ServiceProjectResource::class)
-            .list(userId, TenantUtils.getTenantIdByEnglishName(projectId)).data!!.map { it.projectCode }.toSet()
+            .list(userId, null, TenantUtils.getTenantIdByEnglishName(projectId)).data!!.map { it.projectCode }.toSet()
         if (!projectSet.contains(projectId)) {
             throw PermissionForbiddenException(
                 message = I18nUtil.getCodeLanMessage(

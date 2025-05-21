@@ -52,6 +52,8 @@ data class BuildFormProperty(
     var options: List<BuildFormValue>?,
     @get:Schema(title = "描述", required = false)
     var desc: String?,
+    @get:Schema(title = "分组信息", required = false)
+    val category: String? = null,
 
     // 针对 SVN_TAG 新增字段
     @get:Schema(title = "repoHashId", required = false)

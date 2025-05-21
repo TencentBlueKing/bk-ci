@@ -864,6 +864,7 @@
                 this.$nextTick(this.requestList)
             },
             handleSort ({ prop, order }) {
+                if (isShallowEqual(this.sortField, { prop, order })) return
                 const sortType = PIPELINE_SORT_FILED[prop]
                 if (sortType) {
                     const collation = prop ? ORDER_ENUM[order] : ORDER_ENUM.descending
@@ -884,8 +885,8 @@
                 try {
                     this.pipelineList = []
                     const { count, page, records } = await this.getPipelines({
-                        page: this.pagination.current,
-                        pageSize: this.pagination.limit,
+                        page: String(this.pagination.current),
+                        pageSize: String(this.pagination.limit),
                         viewId: this.$route.params.viewId,
                         ...this.filterParams,
                         ...query

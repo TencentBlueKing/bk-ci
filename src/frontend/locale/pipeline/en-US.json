@@ -388,7 +388,10 @@
     "concurrentMaxConcurrency": "Maximum Concurrency",
     "concurrentTimeout": "Queue Timeout for Exceeding Limit",
     "maxConRunningQueueSizeTips": "The range of maximum concurrency is between 1 and 200-200之间",
-    "maxConcurrencyPlaceholder": "Default to system settings when not specified"
+    "maxConcurrencyPlaceholder": "Default to system settings when not specified",
+    "whenVariableExceedsLength": "When pipeline variable value exceeds length (>4K)",
+    "clearTheValue": "Clear the value and continue running",
+    "errorAndHalt": "Error and terminate running"
   },
   "template": {
     "addTemplate": "New Template",
@@ -871,7 +874,7 @@
     "addAtom": "Add Plugins",
     "copyAtom": "Duplicate",
     "copyAtomFail": "Duplicate failed",
-    "showAliasName": " Display specific resource name when running",
+    "showAlias": " Display specific resource when running",
     "resourceType": " Build Resources Type",
     "addThirdSlave": " Add Self-Hosted Agent",
     "thirdSlaveTips": " If there are several Agents under the pools, assign the ones used last time; if the agents have not been used before, then assign randomly",
@@ -1605,7 +1608,7 @@
   "versionRuleA": "Additional bits: Modified version of other information of the pipeline, such as name, description, running settings, etc.",
   "willRelease": "To be released",
   "clickToAddStage": "Click to add the first pipeline stage",
-  "buildMsg": "Build Message",
+  "buildMsg": "Build",
   "executeStepPreview": "Preview of steps to be executed",
   "yamlFilePathErrorTip": "File path must end with .yml or .yaml",
   "yamlFilePathPlaceholder": "build.yml or build.yaml",
@@ -1704,5 +1707,23 @@
   "noDraft": "No drafts available for deletion",
   "isTaskTermination": "Are you sure you want to terminate the task execution?",
   "pipelineNameConventions": "Pipeline Naming Conventions:",
-  "addLabels": "Add Label"
+  "addLabels": "Add Label",
+  "cron": {
+    "分": "Minute",
+    "时": "Hour",
+    "日": "Day",
+    "周": "Week",
+    "月": "Month",
+    "下次：": "Next:",
+    "小时": "Hour"
+  },
+  "enterRepoAlias": "Please enter the repository alias",
+  "pacRepoNotSet": "The associated PAC repository will be automatically monitored, no need to set it",
+  "addParam": "Add",
+  "selectRepo": "Select Repository",
+  "enterAlias": "Enter Alias",
+  "monitorPac": "Monitor PAC",
+  "groupLabel": "Group labels",
+  "groupLabelTips": "Variables with the same label will be displayed in the same group in the view and execution preview interface",
+  "notGrouped": "Not grouped"
 }

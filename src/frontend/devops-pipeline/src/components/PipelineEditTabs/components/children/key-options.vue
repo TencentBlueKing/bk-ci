@@ -294,6 +294,7 @@
             color: #3A84FF;
             line-height: 20px;
             cursor: pointer;
+            z-index: 9;
         }
     }
     .param-item {

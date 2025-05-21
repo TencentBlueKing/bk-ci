@@ -53,6 +53,11 @@ class PipelineWebHookEventListener @Autowired constructor(
         if (!webhookGrayService.isGrayRepo(scmCode = repository.scmCode, repository.projectName)) {
             return
         }
+        // 传统流水线需要执行预匹配逻辑
+        if (webhook.skipCi()) {
+            logger.info("skip this webhook request|scmCode:${repository.scmCode}")
+            return
+        }
         val triggerPipelines = if (replayPipelineId != null) {
             // 如果不是流水线ID,说明是重放失败的yaml文件,在pac监听器处理
             if (PipelineUtils.isPipelineId(replayPipelineId)) {

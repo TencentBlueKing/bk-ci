@@ -26,6 +26,7 @@
                     :desc="obj.desc"
                     :required="obj.required"
                     :label="obj.label"
+                    :docs-link="obj.docsLink"
                     :is-error="errors.has(key)"
                     :error-msg="errors.first(key)"
                     :class="obj.extCls"

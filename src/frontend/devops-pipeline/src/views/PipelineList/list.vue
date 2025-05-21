@@ -64,6 +64,7 @@
         flex: 1;
         display: flex;
         overflow: hidden;
+        border: 0;
 
         .flex-row {
             display: flex;
@@ -121,7 +122,7 @@
             .hidden {
                 visibility: hidden;
             }
-            
+
             .pipeline-cell-link {
                 color: $primaryColor;
                 cursor: pointer;

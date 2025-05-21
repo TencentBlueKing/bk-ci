@@ -60,7 +60,6 @@ abstract class AbstractScmApiService(
     ): T {
         val properties = repositoryScmConfigService.getProps(scmCode = authRepository.scmCode)
         val providerRepository = providerRepositoryFactory.create(
-            projectId = projectId,
             properties = properties,
             authRepository = authRepository
         )

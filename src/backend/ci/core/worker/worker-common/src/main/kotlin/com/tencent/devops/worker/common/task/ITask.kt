@@ -30,15 +30,20 @@ package com.tencent.devops.worker.common.task
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
+import com.tencent.devops.process.utils.PIPELINE_FAIL_IF_VARIABLE_INVALID_FLAG
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_VARIABLE_PARAM_MAX_LENGTH
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.task.TaskDaemon.Companion.PARAM_MAX_LENGTH
 import java.io.File
 import java.util.regex.Pattern
 import java.util.stream.Collectors
@@ -57,8 +62,10 @@ abstract class ITask {
 
     /* 存储常量的key */
     private lateinit var constVar: List<String>
+
     /*  */
     private lateinit var dialect: IPipelineDialect
+    private var failIfVariableInvalid: Boolean? = null
 
     companion object {
         // 有的插件输出的变量会带taskId,taskId包含-,所以需要保留
@@ -75,6 +82,8 @@ abstract class ITask {
             .map { it.key }
             .collect(Collectors.toList())
         dialect = PipelineDialectUtil.getPipelineDialect(buildVariables.variables[PIPELINE_DIALECT])
+        failIfVariableInvalid = buildVariables.variables[PIPELINE_FAIL_IF_VARIABLE_INVALID_FLAG]
+            ?.toBooleanStrictOrNull()
         execute(buildTask, buildVariables, workspace)
     }
 
@@ -105,6 +114,7 @@ abstract class ITask {
     protected fun addEnv(env: Map<String, String>) {
         var errReadOnlyFlag = false
         var errChineseVarName = false
+        var errVariableInvalid = false
         val errChineseVars = mutableSetOf<String>()
         env.keys.forEach { key ->
             if (this::constVar.isInitialized && key in constVar) {
@@ -119,7 +129,29 @@ abstract class ITask {
         if (errReadOnlyFlag) {
             throw TaskExecuteException(
                 errorMsg = "[Finish task] status: false, errorType: ${ErrorType.USER.num}, " +
-                        "errorCode: ${ErrorCode.USER_INPUT_INVAILD}, message: read-only cannot be modified.",
+                    "errorCode: ${ErrorCode.USER_INPUT_INVAILD}, message: read-only cannot be modified.",
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_INPUT_INVAILD
+            )
+        }
+        if (failIfVariableInvalid == true) {
+            env.forEach { (key, value) ->
+                if (value.length > PARAM_MAX_LENGTH) {
+                    LoggerService.addErrorLine(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_VARIABLE_PARAM_MAX_LENGTH,
+                            language = AgentEnv.getLocaleLanguage(),
+                            params = arrayOf(key, PARAM_MAX_LENGTH.toString(), value.length.toString())
+                        )
+                    )
+                    errVariableInvalid = true
+                }
+            }
+        }
+        if (errVariableInvalid) {
+            throw TaskExecuteException(
+                errorMsg = "[Finish task] status: false, errorType: ${ErrorType.USER.num}, " +
+                    "errorCode: ${ErrorCode.USER_INPUT_INVAILD}, message: variable length is illegal.",
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_INPUT_INVAILD
             )

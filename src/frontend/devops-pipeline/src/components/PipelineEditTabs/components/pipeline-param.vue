@@ -47,8 +47,8 @@
                 :key="group.key"
                 :title="group.title"
                 :tips="group.tips"
-                :item-num="group.list.length"
-                :list="group.list"
+                :item-num="group.listNum"
+                :list-map="group.listMap"
                 :handle-edit="handleEdit"
                 :handle-update="handleUpdate"
                 :handle-sort="handleSort"
@@ -146,7 +146,10 @@
             },
             globalParams: {
                 get () {
-                    return this.params.filter(p => !allVersionKeyList.includes(p.id) && p.id !== 'BK_CI_BUILD_MSG')
+                    return this.params.filter(p => !allVersionKeyList.includes(p.id) && p.id !== 'BK_CI_BUILD_MSG').map(i => ({
+                        ...i,
+                        category: i.category ?? ''
+                    }))
                 },
                 set (params) {
                     this.updateContainerParams('params', [...params, ...this.versions])
@@ -155,40 +158,84 @@
             renderParams () {
                 return !this.searchStr ? this.globalParams : this.globalParams.filter(item => (item.id.includes(this.searchStr) || item.name.includes(this.searchStr) || item.desc.includes(this.searchStr)))
             },
+            requiredParamList () {
+                return this.renderParams.filter(item => !item.constant && item.required)
+            },
+            constantParamList () {
+                return this.renderParams.filter(item => item.constant === true)
+            },
+            otherParamList () {
+                return this.renderParams.filter(item => !item.constant && !item.required)
+            },
             pipelineParamGroups () {
                 return [
                     {
                         key: 'requiredParam',
                         title: this.$t('newui.pipelineParam.buildParam'),
                         tips: this.$t('newui.pipelineParam.buildParamTips'),
-                        list: this.renderParams.filter(item => !item.constant && item.required)
+                        listNum: this.requiredParamList.length,
+                        listMap: this.getParamsGroupByLabel(this.requiredParamList)
                     },
                     {
                         key: 'constantParam',
                         title: this.$t('newui.pipelineParam.constParam'),
-                        list: this.renderParams.filter(item => item.constant === true)
+                        listNum: this.constantParamList.length,
+                        listMap: this.getParamsGroupByLabel(this.constantParamList)
                     },
                     {
                         key: 'otherParam',
                         title: this.$t('newui.pipelineParam.otherVar'),
-                        list: this.renderParams.filter(item => !item.constant && !item.required)
+                        listNum: this.otherParamList.length,
+                        listMap: this.getParamsGroupByLabel(this.otherParamList)
                     }
                 ]
             },
             sliderTitle () {
                 return `${this.editIndex === -1 ? this.$t('editPage.append') : this.$t('edit')}${this.paramType === 'constant' ? this.$t('newui.pipelineParam.constTitle') : this.$t('newui.pipelineParam.varTitle')}`
+            },
+            sortParamsList () {
+                return [
+                    ...this.flattenMultipleObjects(this.getParamsGroupByLabel(this.requiredParamList)),
+                    ...this.flattenMultipleObjects(this.getParamsGroupByLabel(this.constantParamList)),
+                    ...this.flattenMultipleObjects(this.getParamsGroupByLabel(this.otherParamList))
+                ]
             }
         },
         methods: {
-            handleSort (preEleId, newEleId) {
+            flattenMultipleObjects (objects) {
+                return Object.values(objects).flat()
+            },
+            initParamsSort () {
+                this.updateContainerParams('params', [...this.sortParamsList, ...this.versions])
+            },
+            getParamsGroupByLabel (list) {
+                const key = this.$t('notGrouped')
+                const listMap = list.reduce((acc, item) => {
+                    const categoryKey = item.category || key
+                    if (!acc[categoryKey]) {
+                        acc[categoryKey] = []
+                    }
+                    acc[categoryKey].push(item)
+                    return acc
+                }, {})
+                
+                if (!(key in listMap)) {
+                    return listMap
+                }
+                const { [key]: value, ...rest } = listMap
+                return { [key]: value, ...rest }
+            },
+         
+            handleSort (preEleId, newEleId, isPrefix) {
                 // 从原列表找出被拖拽的element
                 const newEle = this.globalParams.find(item => item.id === newEleId)
                 // 从原列表中删除该element
                 const oldIndex = this.globalParams.findIndex(item => item.id === newEleId)
                 this.globalParams.splice(oldIndex, 1)
-                // 把拖拽的element插入到preEleId对应的element后面
+                // 把拖拽的element插入到preEleId对应的element前面或后面
                 const preEleIndex = this.globalParams.findIndex(item => item.id === preEleId)
-                this.globalParams.splice(preEleIndex + 1, 0, newEle)
+                this.globalParams.splice((isPrefix ? preEleIndex : preEleIndex + 1), 0, newEle)
+                this.initParamsSort()
                 this.updateContainerParams('params', [...this.globalParams, ...this.versions])
             },
             // toTop为true，表示移到最前, 为false为delete操作
@@ -196,8 +243,9 @@
                 if (!this.editable) return
                 const index = this.globalParams.findIndex(item => item.id === paramId)
                 const item = this.globalParams.find(item => item.id === paramId)
+                const preEleIndex = this.globalParams.findIndex(i => i.category === item.category)
                 this.globalParams.splice(index, 1)
-                toTop && this.globalParams.unshift(item)
+                toTop && this.globalParams.splice(preEleIndex, 0, item)
                 this.updateContainerParams('params', [...this.globalParams, ...this.versions])
             },
             handleAdd (type = 'var') {

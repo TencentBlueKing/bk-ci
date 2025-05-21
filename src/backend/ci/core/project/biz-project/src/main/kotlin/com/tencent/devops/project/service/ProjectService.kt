@@ -178,7 +178,7 @@ interface ProjectService {
         tenantId: String?
     ): Pagination<ProjectByConditionDTO>
 
-    fun list(userId: String, tenantId: String?): List<ProjectVO>
+    fun list(userId: String, productIds: String? = null, tenantId: String?): List<ProjectVO>
 
     fun list(projectCodes: Set<String>, enabled: Boolean?): List<ProjectVO>
 

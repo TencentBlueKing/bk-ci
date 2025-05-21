@@ -27,27 +27,47 @@
 
 package com.tencent.devops.store.common.utils
 
-import com.tencent.devops.artifactory.api.ServiceArchiveAtomFileResource
-import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.artifactory.api.ServiceArchiveComponentFileResource
+import com.tencent.devops.artifactory.pojo.ArchiveStorePkgRequest
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID
+import com.tencent.devops.store.pojo.common.BK_STORE_DIR_PATH
+import com.tencent.devops.store.pojo.common.CONFIG_YML_NAME
+import com.tencent.devops.store.pojo.common.KEY_RELEASE_INFO
+import com.tencent.devops.store.pojo.common.StoreReleaseInfo
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import java.io.File
+import java.io.InputStream
+import java.nio.charset.Charset
+import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.regex.Matcher
 import java.util.regex.Pattern
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.slf4j.LoggerFactory
 
-object TextReferenceFileAnalysisUtil {
+object StoreFileAnalysisUtil {
 
-    private const val BK_CI_ATOM_DIR = "bk-atom"
+    private val logger = LoggerFactory.getLogger(StoreFileAnalysisUtil::class.java)
+
+    private const val BK_CI_STORE_DIR = "bk-store"
     private const val BK_CI_PATH_REGEX = "(\\\$\\{\\{indexFile\\()(\"[^\"]*\")"
-    private val fileSeparator: String = System.getProperty("file.separator")
+    private val fileSeparator: String = FileSystems.getDefault().getSeparator()
 
-    fun getAtomBasePath(): String {
+    fun getStoreBasePath(): String {
         return System.getProperty("java.io.tmpdir").removeSuffix(fileSeparator)
     }
 
@@ -118,23 +138,22 @@ object TextReferenceFileAnalysisUtil {
         }
     }
 
-    fun serviceArchiveAtomFile(
+    fun serviceArchiveStoreFile(
         client: Client,
         userId: String,
-        archiveAtomRequest: ArchiveAtomRequest,
+        archiveStorePkgRequest: ArchiveStorePkgRequest,
         file: File
     ): Result<Boolean?> {
-        val serviceUrlPrefix = client.getServiceUrl(ServiceArchiveAtomFileResource::class)
-        val serviceUrl = StringBuilder("$serviceUrlPrefix/service/artifactories/archiveAtom?userId=$userId" +
-                "&projectCode=${archiveAtomRequest.projectCode}&atomCode=${archiveAtomRequest.atomCode}" +
-                "&version=${archiveAtomRequest.version}")
-        archiveAtomRequest.releaseType?.let {
-            serviceUrl.append("&releaseType=${archiveAtomRequest.releaseType!!.name}")
-        }
-        archiveAtomRequest.os?.let {
-            serviceUrl.append("&os=${archiveAtomRequest.os}")
-        }
-        OkhttpUtils.uploadFile(serviceUrl.toString(), file).use { response ->
+        val serviceUrlPrefix = client.getServiceUrl(ServiceArchiveComponentFileResource::class)
+        val serviceUrl = "$serviceUrlPrefix/service/artifactories/store/component/pkg/archive" +
+                "?userId=$userId&storeType=${archiveStorePkgRequest.storeType.name}" +
+                "&storeCode=${archiveStorePkgRequest.storeCode}&version=${archiveStorePkgRequest.version}" +
+                "&releaseType=${archiveStorePkgRequest.releaseType.name}"
+        OkhttpUtils.uploadFile(
+            url = serviceUrl,
+            uploadFile = file,
+            headers = mapOf(AUTH_HEADER_USER_ID to userId)
+        ).use { response ->
             response.body!!.string()
             if (!response.isSuccessful) {
                 return I18nUtil.generateResponseDataObject(
@@ -146,8 +165,8 @@ object TextReferenceFileAnalysisUtil {
         }
     }
 
-    fun buildStoreArchivePath(atomDir: String) =
-        "${getAtomBasePath()}$fileSeparator$BK_CI_ATOM_DIR$fileSeparator$atomDir"
+    fun buildStoreArchivePath(storeDir: String) =
+        "${getStoreBasePath()}$fileSeparator$BK_CI_STORE_DIR$fileSeparator$storeDir"
 
     fun isDirectoryNotEmpty(path: String?): Boolean {
         if (path == null) {
@@ -155,5 +174,65 @@ object TextReferenceFileAnalysisUtil {
         }
         val directory = Paths.get(path)
         return Files.isDirectory(directory) && Files.list(directory).findFirst().isPresent
+    }
+
+    /**
+     * 提取并解压商店组件包
+     * @return Pair<String, File> 第一个元素是解压后的存储路径，第二个元素是临时文件对象
+     */
+    fun extractStorePackage(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Pair<String, File> {
+        try {
+            // 1. 从文件名中提取文件扩展名
+            val fileName = disposition.fileName
+            val index = fileName.lastIndexOf(".")
+            val fileType = fileName.substring(index + 1)
+            if (fileName.isNullOrBlank() || fileType != "zip") {
+                throw ErrorCodeException(errorCode = USER_UPLOAD_PACKAGE_INVALID)
+            }
+
+            // 2. 创建临时文件保存上传的压缩包
+            val uuid = UUIDUtil.generate()
+            val file = Files.createTempFile(uuid, ".$fileType").toFile().apply {
+                outputStream().use { output ->
+                    inputStream.copyTo(output)
+                }
+            }
+
+            // 3. 构建解压目标路径并解压文件
+            val storePath = buildStoreArchivePath("${storeCode}_${storeType.name}") + "$fileSeparator$uuid"
+            if (!File(storePath).exists()) {
+                File(storePath).mkdirs()
+                ZipUtil.unZipFile(file, storePath, true)
+            }
+
+            return Pair(storePath, file)
+        } catch (ignored: Throwable) {
+            logger.warn("extractStorePackage unZipFile fail, message:${ignored.message}")
+            throw ignored
+        }
+    }
+
+    fun getBkConfigMap(storeDirPath: String): MutableMap<String, Any>? {
+        // 从指定路径读取配置文件
+        val bkConfigFile = File(storeDirPath, CONFIG_YML_NAME)
+        return if (bkConfigFile.exists()) {
+            val fileContent = bkConfigFile.readText(Charset.forName(Charsets.UTF_8.name()))
+            val dataMap = YamlUtil.to(fileContent, object : TypeReference<MutableMap<String, Any>>() {})
+            dataMap[BK_STORE_DIR_PATH] = storeDirPath
+            val storeReleaseInfo = dataMap.get(KEY_RELEASE_INFO)?.let {
+                JsonUtil.mapTo(it as Map<String, Any>, StoreReleaseInfo::class.java)
+            }
+            storeReleaseInfo?.let {
+                dataMap[KEY_RELEASE_INFO] = it
+            }
+            dataMap
+        } else {
+            null
+        }
     }
 }
