@@ -721,9 +721,10 @@ class RepositoryDao {
         dslContext: DSLContext,
         repositoryId: Set<Long>
     ) {
+        if (repositoryId.isEmpty()) return
         with(TRepository.T_REPOSITORY) {
             dslContext.update(this)
-                .set(SCM_CODE, TYPE)
+                .set(SCM_CODE, field(TYPE))
                 .where(REPOSITORY_ID.`in`(repositoryId))
                 .execute()
         }
