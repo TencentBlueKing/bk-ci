@@ -50,7 +50,6 @@
                 <span class="label">{{ $t('pipeline') }}：</span>
                 <span class="value">{{ pipelineName }}</span>
             </p>
-
             <div class="active-tip-block">
                 <i18n
                     tag="p"
@@ -82,6 +81,7 @@
             <bk-button
                 theme="warning"
                 :loading="isSubmiting"
+                :disabled="!!unableToArchivePipelines.length"
                 @click="submit"
             >
                 {{ $t('archive.archive') }}
