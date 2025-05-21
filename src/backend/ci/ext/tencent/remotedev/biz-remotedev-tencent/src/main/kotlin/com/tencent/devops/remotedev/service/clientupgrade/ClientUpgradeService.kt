@@ -184,15 +184,12 @@ class ClientUpgradeService @Autowired constructor(
             ClientUpgradeComp.START -> record.startVersion
             ClientUpgradeComp.CLIENT -> record.version
         }.trim()
-        if (version.isBlank() && upgradeComp == ClientUpgradeComp.CLIENT) {
-            return null
-        }
 
         // 根据用户升级版本
         val currentUser = record.currentUser
         val userVersion = props.userVersion(upgradeComp)
         if (currentUser.isNotBlank() && userVersion.containsKey(currentUser)) {
-            return if (!forceUpdate && version != userVersion[currentUser]?.trim()) {
+            return if (forceUpdate || version != userVersion[currentUser]?.trim()) {
                 userVersion[currentUser]
             } else {
                 null
@@ -206,7 +203,7 @@ class ClientUpgradeService @Autowired constructor(
         val workspaceVersion = props.workspaceNames(upgradeComp)
         currentWorkspaceNames.forEach { workspaceName ->
             if (workspaceVersion.containsKey(workspaceName)) {
-                return if (!forceUpdate && version != workspaceVersion[workspaceName]?.trim()) {
+                return if (forceUpdate || version != workspaceVersion[workspaceName]?.trim()) {
                     workspaceVersion[workspaceName]
                 } else {
                     null
@@ -219,7 +216,7 @@ class ClientUpgradeService @Autowired constructor(
         val projectVersion = props.projectVersion(upgradeComp)
         currentProjectIds.forEach { projectId ->
             if (projectVersion.containsKey(projectId)) {
-                return if (!forceUpdate && version != projectVersion[projectId]?.trim()) {
+                return if (forceUpdate || version != projectVersion[projectId]?.trim()) {
                     projectVersion[projectId]
                 } else {
                     null
