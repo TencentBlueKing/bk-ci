@@ -227,7 +227,7 @@
                 case row.publishFlag:
                     content = t(i18nPrefix + 'publishFlag')
                     actionLabel = t(i18nPrefix + 'goRelease')
-                    handler = () => toRelativeStore(row)
+                    handler = () => toRelativeStore(row, row.storeStatus)
                     break
             }
             return {
@@ -336,7 +336,7 @@
                     },
                     {
                         text: t(`template.${item.storeFlag ? 'upgradeOnStore' : 'shelfStore'}`), // 上架研发商店
-                        handler: () => toRelativeStore(item),
+                        handler: () => toRelativeStore(item, item.storeStatus),
                         hasPermission: item.canEdit,
                         disablePermissionApi: true,
                         disable: item.storeFlag && !item.publishFlag,
