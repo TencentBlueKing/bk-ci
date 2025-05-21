@@ -77,7 +77,7 @@ class WebhookGrayCompareService @Autowired constructor(
 
     private val executor = ThreadPoolUtil.getThreadPoolExecutor(
         corePoolSize = 1,
-        maximumPoolSize = 5,
+        maximumPoolSize = 1,
         keepAliveTime = 0L,
         queue = LinkedBlockingQueue(1),
         threadNamePrefix = "webhook-gray-compare-%d"
