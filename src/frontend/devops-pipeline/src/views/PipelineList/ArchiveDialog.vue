@@ -269,7 +269,7 @@
         >li {
             width: 100%;
             height: 40px;
-            padding: 0 8px;
+            padding: 0 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
