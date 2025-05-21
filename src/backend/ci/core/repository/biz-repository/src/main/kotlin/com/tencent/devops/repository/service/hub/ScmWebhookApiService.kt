@@ -58,14 +58,14 @@ class ScmWebhookApiService @Autowired constructor(
     }
 
     fun webhookEnrich(webhook: Webhook, authRepo: AuthRepository): Webhook {
-        val properties = repositoryScmConfigService.getProps(scmCode = authRepo.scmCode)
-        return scmApiManager.webhookEnrich(
-            providerProperties = properties,
-            providerRepository = providerRepositoryFactory.create(
-                properties = properties,
-                authRepository = authRepo
-            ),
-            webhook = webhook
-        )
+        return invokeApi(
+            authRepository = authRepo
+        ) { properties, providerRepository ->
+            scmApiManager.webhookEnrich(
+                providerProperties = properties,
+                providerRepository = providerRepository,
+                webhook = webhook
+            )
+        }
     }
 }

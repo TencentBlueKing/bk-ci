@@ -58,6 +58,7 @@ class RepositoryWebhookService @Autowired constructor(
 
         // 循环查找有权限的代码库,调用接口扩展webhook数据
         var enWebhook = webhook
+        // 去重，相同的auth判断一次即可
         val repoList = sortedRepository(repositories).map { AuthRepository(it) }.distinctBy { it.auth }
         for (repository in repoList) {
             try {
@@ -86,6 +87,11 @@ class RepositoryWebhookService @Autowired constructor(
                 )
             }
         }
+        // 所有代码库都尝试失败,则返回原始数据
+        logger.info(
+            "all repository auth attempts failed, return original webhook data|scmCode:$scmCode|id:${serverRepo.id}|" +
+                    "fullName:${serverRepo.fullName}"
+        )
         return WebhookData(
             webhook = enWebhook,
             repositories = repositories
