@@ -106,6 +106,9 @@
             activeChild () {
                 return this.getNavComponent(this.activeMenuItem)
             },
+            hasAuthSecrecy () {
+                return this.$store.state.curProject.authSecrecy !== 1
+            },
             asideNav () {
                 return [
                     {
@@ -120,15 +123,17 @@
                                 },
                                 name: 'history'
                             },
-                            {
-                                title: this.$t('executionAnalysis'),
-                                disableTooltip: {
-                                    content: this.$refs.disableToolTips?.[4],
-                                    disabled: this.isReleaseVersion || this.isBranchVersion,
-                                    delay: [300, 0]
-                                },
-                                name: 'EplusBoard'
-                            },
+                            this.hasAuthSecrecy
+                                ? {
+                                    title: this.$t('executionAnalysis'),
+                                    disableTooltip: {
+                                        content: this.$refs.disableToolTips?.[4],
+                                        disabled: this.isReleaseVersion || this.isBranchVersion,
+                                        delay: [300, 0]
+                                    },
+                                    name: 'EplusBoard'
+                                }
+                                : {},
                             {
                                 title: this.$t('triggerEvent'),
                                 disableTooltip: {
