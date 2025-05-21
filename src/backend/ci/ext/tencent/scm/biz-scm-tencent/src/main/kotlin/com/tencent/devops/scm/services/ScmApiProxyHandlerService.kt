@@ -29,10 +29,12 @@
 package com.tencent.devops.scm.services
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReflectUtil
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.service.ScmProxy
+import com.tencent.devops.scm.api.exception.ScmApiException
 import com.tencent.devops.scm.pojo.ScmApiRequest
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.config.BeanPostProcessor
@@ -56,6 +58,7 @@ class ScmApiProxyHandlerService : BeanPostProcessor {
         return bean
     }
 
+    @SuppressWarnings("NestedBlockDepth")
     fun invoke(request: ScmApiRequest): Any? {
         with(request) {
             logger.info("handle scm api request|serviceName:$serviceName|methodName:$methodName")
@@ -80,12 +83,19 @@ class ScmApiProxyHandlerService : BeanPostProcessor {
                     }
                 }
             }
-            return ReflectionUtils.invokeMethod(method, handler, *parameterValues.toTypedArray())?.let {
-                if (ReflectUtil.isPrimitiveOrStringType(method.returnType)) {
-                    it
-                } else {
-                    JsonUtil.toJsonForType(it, method.genericReturnType)
+            return try {
+                ReflectionUtils.invokeMethod(method, handler, *parameterValues.toTypedArray())?.let {
+                    if (ReflectUtil.isPrimitiveOrStringType(method.returnType)) {
+                        it
+                    } else {
+                        JsonUtil.toJsonForType(it, method.genericReturnType)
+                    }
                 }
+            } catch (ignored: ScmApiException) {
+                throw RemoteServiceException(
+                    errorCode = ignored.statusCode,
+                    errorMessage = ignored.message ?: ""
+                )
             }
         }
     }

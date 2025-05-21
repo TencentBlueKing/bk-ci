@@ -2,6 +2,7 @@ package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_WEBHOOK_SERVER_REPO_FULL_NAME_IS_EMPTY
 import com.tencent.devops.repository.dao.RepositoryWebhookRequestDao
@@ -56,25 +57,45 @@ class RepositoryWebhookService @Autowired constructor(
             ) ?: emptyList()
 
         // 循环查找有权限的代码库,调用接口扩展webhook数据
-        val authRepoList = sortedRepository(repositories)
-                .map { AuthRepository(it) }
-                .distinctBy { it.auth }
-                .let {
-                    if (it.size > MAX_ENRICH_HOOK_REPOSITORY_SIZE) {
-                        it.subList(0, MAX_ENRICH_HOOK_REPOSITORY_SIZE)
-                    } else {
-                        it
+        var enWebhook = webhook
+        // 去重，相同的auth判断一次即可
+        val repoList = sortedRepository(repositories).map { AuthRepository(it) }.distinctBy { it.auth }
+        // 是否全部过期
+        var allExpired = true
+        for (repository in repoList) {
+            try {
+                enWebhook = webhookApiService.webhookEnrich(
+                    webhook = webhook,
+                    authRepo = repository
+                )
+                allExpired = false
+                break
+            } catch (ignored: RemoteServiceException) {
+                when (ignored.errorCode) {
+                    401 -> {
+                        logger.warn(
+                            "repository auth has expired|${repository.auth}", ignored
+                        )
+                    }
+
+                    else -> {
+                        logger.warn(
+                            "fail to enrich webhook|${repository.auth}", ignored
+                        )
                     }
                 }
-        logger.info("try enrich webhook|repoExternalId: $repoExternalId|auth repo list ${authRepoList.map { it.auth }}")
-        val enWebhook = try {
-            webhookApiService.webhookEnrich(
-                webhook = webhook,
-                authRepoList = authRepoList
+            } catch (ignored: Exception) {
+                logger.warn(
+                    "fail to enrich webhook|${repository.auth}", ignored
+                )
+            }
+        }
+        // 所有代码库都尝试失败,则返回原始数据
+        if (allExpired) {
+            logger.info(
+                "all repository auth attempts failed, return original webhook data|scmCode:$scmCode|id:${serverRepo.id}|" +
+                        "fullName:${serverRepo.fullName}"
             )
-        } catch (ignored: Exception) {
-            logger.warn("fail to enrich webhook", ignored)
-            webhook
         }
         return WebhookData(
             webhook = enWebhook,
@@ -143,6 +164,5 @@ class RepositoryWebhookService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(RepositoryWebhookService::class.java)
-        private const val MAX_ENRICH_HOOK_REPOSITORY_SIZE = 15 // 用于webhook增强的代码库授权信息数上限
     }
 }
