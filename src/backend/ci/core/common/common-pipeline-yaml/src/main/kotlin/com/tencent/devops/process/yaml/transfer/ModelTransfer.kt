@@ -109,7 +109,8 @@ class ModelTransfer @Autowired constructor(
             failSubscriptionList = yamlNotice2Setting(
                 projectId = yamlInput.projectCode,
                 notices = yaml.notices?.filter { it.checkNotifyForFail() }
-            )
+            ),
+            failIfVariableInvalid = yaml.failIfVariableInvalid.nullIfDefault(false),
         )
     }
 
@@ -293,6 +294,7 @@ class ModelTransfer @Autowired constructor(
         yaml.recommendedVersion = variableTransfer.makeRecommendedVersion(modelInput.model)
         yaml.disablePipeline = (modelInput.setting.runLockType == PipelineRunLockType.LOCK ||
             modelInput.pipelineInfo?.locked == true).nullIfDefault(false)
+        yaml.failIfVariableInvalid = modelInput.setting.failIfVariableInvalid.nullIfDefault(false)
         modelInput.aspectWrapper.setYaml4Yaml(yaml, PipelineTransferAspectWrapper.AspectType.AFTER)
         return yaml
     }

@@ -385,7 +385,10 @@
     "concurrentMaxConcurrency": "最大可并发数",
     "concurrentTimeout": "超限时排队，排队超时时间",
     "maxConRunningQueueSizeTips": "最大可并发数范围在1-200之间",
-    "maxConcurrencyPlaceholder": "缺省时以系统设置为准"
+    "maxConcurrencyPlaceholder": "缺省时以系统设置为准",
+    "whenVariableExceedsLength": "流水线变量值超长(>4K)时",
+    "clearTheValue": "值清空，继续运行",
+    "errorAndHalt": "报错，终止运行"
   },
   "template": {
     "addTemplate": "新建模板",
@@ -1728,6 +1731,21 @@
     "unableToArchive": "有 {0} 条流水线无法归档",
     "removeUnarchivablePipelines": "去除无法归档的流水线"
   },
+  "cron": {
+    "分": "分",
+    "时": "时",
+    "日": "日",
+    "周": "周",
+    "月": "月",
+    "下次：": "下次：",
+    "小时": "小时"
+  },
+  "enterRepoAlias": "请输入代码库别名",
+  "pacRepoNotSet": "将自动监听所属PAC代码库，无需设置",
+  "addParam": "添加参数",
+  "selectRepo": "选择代码库",
+  "enterAlias": "输入别名",
+  "monitorPac": "监听PAC",
   "groupLabel": "分组标签",
   "groupLabelTips": "拥有相同标签的变量，在查看和执行预览界面将在同一个分组下展示",
   "notGrouped": "未分组"
