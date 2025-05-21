@@ -588,7 +588,7 @@
     "batchEditInstanceTips": "添加的字段配置将会应用于所有实例，如未填写，则默认为清空该字段值",
     "releaseTaskHeaderTips": "有 {0} 个发布任务进行中",
     "views": "查看",
-    "from": "来自",
+    "from": "源: ",
     "Upgrading": "升级中",
     "UpgradeFailed": "升级失败",
     "goView": "去查看",
