@@ -40,20 +40,33 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_FILE_PATH_ERROR
-import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID
 import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomFeatureDao
 import com.tencent.devops.store.atom.dao.MarketAtomVersionLogDao
+import com.tencent.devops.store.atom.service.AtomNotifyService
+import com.tencent.devops.store.atom.service.AtomQualityService
+import com.tencent.devops.store.atom.service.AtomReleaseService
+import com.tencent.devops.store.atom.service.OpAtomService
 import com.tencent.devops.store.common.dao.LabelDao
+import com.tencent.devops.store.common.service.ClassifyService
+import com.tencent.devops.store.common.service.StoreFileService
+import com.tencent.devops.store.common.service.StoreI18nMessageService
+import com.tencent.devops.store.common.service.StoreLogoService
+import com.tencent.devops.store.common.service.StoreWebsocketService
+import com.tencent.devops.store.common.service.action.StoreDecorateFactory
+import com.tencent.devops.store.common.utils.StoreUtils
+import com.tencent.devops.store.common.utils.TextReferenceFileAnalysisUtil
+import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_FILE_PATH_ERROR
+import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID
 import com.tencent.devops.store.pojo.atom.ApproveReq
 import com.tencent.devops.store.pojo.atom.Atom
 import com.tencent.devops.store.pojo.atom.AtomFeatureUpdateRequest
@@ -66,32 +79,21 @@ import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
-import com.tencent.devops.store.pojo.common.classify.Classify
 import com.tencent.devops.store.pojo.common.KEY_RELEASE_INFO
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
+import com.tencent.devops.store.pojo.common.classify.Classify
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
 import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.atom.service.AtomNotifyService
-import com.tencent.devops.store.atom.service.AtomQualityService
-import com.tencent.devops.store.atom.service.AtomReleaseService
-import com.tencent.devops.store.atom.service.OpAtomService
-import com.tencent.devops.store.common.service.ClassifyService
-import com.tencent.devops.store.common.service.StoreFileService
-import com.tencent.devops.store.common.service.StoreI18nMessageService
-import com.tencent.devops.store.common.service.StoreLogoService
-import com.tencent.devops.store.common.service.action.StoreDecorateFactory
-import com.tencent.devops.store.common.service.StoreWebsocketService
-import com.tencent.devops.store.common.utils.TextReferenceFileAnalysisUtil
-import com.tencent.devops.store.common.utils.StoreUtils
 import java.io.File
 import java.io.InputStream
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.time.LocalDateTime
+import java.util.concurrent.ThreadPoolExecutor
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -99,7 +101,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.util.FileSystemUtils
-import java.util.concurrent.ThreadPoolExecutor
 
 @Service
 @Suppress("LongParameterList", "LongMethod", "ReturnCount", "ComplexMethod", "NestedBlockDepth")
@@ -286,9 +287,14 @@ class OpAtomServiceImpl @Autowired constructor(
     /**
      * 审核插件
      */
-    override fun approveAtom(userId: String, atomId: String, approveReq: ApproveReq): Result<Boolean> {
+    override fun approveAtom(
+        userId: String,
+        atomId: String,
+        approveReq: ApproveReq,
+        tenantId: String?
+    ): Result<Boolean> {
         // 判断插件是否存在
-        val atom = marketAtomDao.getAtomRecordById(dslContext, atomId)
+        val atom = marketAtomDao.getAtomRecordById(dslContext, atomId, tenantId)
             ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomId),
@@ -350,7 +356,8 @@ class OpAtomServiceImpl @Autowired constructor(
                     repositoryHashId = atom.repositoryHashId,
                     branch = atom.branch,
                     publisher = atom.modifier
-                )
+                ),
+                tenantId = tenantId
             )
         } else {
             // 更新质量红线信息
@@ -428,6 +435,7 @@ class OpAtomServiceImpl @Autowired constructor(
             // 如果接口query参数的版本号不为空，发布者以接口query参数的版本号为准
             versionInfo.version = version
         }
+        val tenantId = TenantUtils.getTenantIdByEnglishName(releaseInfo.projectId)
         if (versionInfo.releaseType == ReleaseTypeEnum.NEW && atomDao.getPipelineAtom(
                 dslContext = dslContext,
                 atomCode = atomCode,
@@ -444,7 +452,8 @@ class OpAtomServiceImpl @Autowired constructor(
                     language = releaseInfo.language,
                     frontendType = releaseInfo.configInfo.frontendType,
                     packageSourceType = PackageSourceTypeEnum.UPLOAD
-                )
+                ),
+                tenantId = tenantId
             )
             if (addMarketAtomResult.isNotOk()) {
                 return Result(data = false, message = addMarketAtomResult.message)
@@ -464,7 +473,7 @@ class OpAtomServiceImpl @Autowired constructor(
             val relativePath = logoUrlAnalysisResult.data
             val logoFile = File(
                 "$atomPath${File.separator}file" +
-                    "${File.separator}${relativePath?.removePrefix(File.separator)}"
+                        "${File.separator}${relativePath?.removePrefix(File.separator)}"
             )
             if (logoFile.exists()) {
                 val result = storeLogoService.uploadStoreLogo(
@@ -559,7 +568,8 @@ class OpAtomServiceImpl @Autowired constructor(
                 frontendType = releaseInfo.configInfo.frontendType,
                 logoUrl = releaseInfo.logoUrl,
                 classifyCode = releaseInfo.classifyCode
-            )
+            ),
+            tenantId = tenantId
         )
         if (updateMarketAtomResult.isNotOk()) {
             return Result(
@@ -573,7 +583,7 @@ class OpAtomServiceImpl @Autowired constructor(
         }
         val atomId = updateMarketAtomResult.data!!
         // 确认测试通过
-        return atomReleaseService.passTest(userId, atomId)
+        return atomReleaseService.passTest(userId, atomId, tenantId)
     }
 
     override fun setDefault(userId: String, atomCode: String): Boolean {

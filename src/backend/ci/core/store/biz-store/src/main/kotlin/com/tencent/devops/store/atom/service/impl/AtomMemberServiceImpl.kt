@@ -61,7 +61,7 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
     ): Result<Boolean> {
         logger.info("addAtomMember params:$userId|$storeMemberReq|$storeType|$collaborationFlag|$sendNotify")
         val atomCode = storeMemberReq.storeCode
-        val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)
+        val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, atomCode, tenantId)
             ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomCode)
@@ -114,7 +114,7 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
         tenantId: String?
     ): Result<Boolean> {
         logger.info("deleteAtomMember params:[$userId|$id|$storeCode|$storeType|$checkPermissionFlag]")
-        val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, storeCode)
+        val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, storeCode, tenantId)
             ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(storeCode)
@@ -155,6 +155,6 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
     abstract fun deleteRepoMember(userId: String, username: String, repositoryHashId: String): Result<Boolean>
 
     override fun getStoreName(storeCode: String, storeType: StoreTypeEnum, tenantId: String?): String {
-        return marketAtomDao.getLatestAtomByCode(dslContext, storeCode)?.name ?: ""
+        return marketAtomDao.getLatestAtomByCode(dslContext, storeCode, tenantId)?.name ?: ""
     }
 }

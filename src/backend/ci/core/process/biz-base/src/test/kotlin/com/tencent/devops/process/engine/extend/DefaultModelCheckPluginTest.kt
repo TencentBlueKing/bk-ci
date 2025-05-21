@@ -54,10 +54,10 @@ import com.tencent.devops.store.pojo.common.comment.StoreUserCommentInfo
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import io.mockk.every
 import io.mockk.mockk
+import java.text.MessageFormat
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.text.MessageFormat
 
 class DefaultModelCheckPluginTest : TestBase() {
 
@@ -125,17 +125,18 @@ class DefaultModelCheckPluginTest : TestBase() {
     fun setUp2() {
         every { client.get(ServiceMarketAtomResource::class) } returns serviceMarketAtomResource
         every {
-            client.get(ServiceMarketAtomResource::class).getAtomByCode(atomCode = atomCode, username = "")
+            client.get(ServiceMarketAtomResource::class)
+                .getAtomByCode(tenantId = null, atomCode = atomCode, username = "")
         } returns (
-            Result(genAtomVersion())
-            )
+                Result(genAtomVersion())
+                )
 
         every { client.get(ServiceAtomResource::class) } returns (serviceAtomResource)
         every {
             client.get(ServiceAtomResource::class).getInstalledAtoms(projectId)
         } returns (
-            Result(genInstallAtomInfo())
-            )
+                Result(genInstallAtomInfo())
+                )
         every { client.get(ServiceMarketAtomEnvResource::class) } returns (serviceMarketAtomEnvResource)
         every {
             serviceMarketAtomEnvResource.batchGetAtomRunInfos(
@@ -143,20 +144,20 @@ class DefaultModelCheckPluginTest : TestBase() {
                 atomVersions = any()
             )
         } returns (
-            Result(
-                mapOf(
-                    "manualTrigger:1.*" to AtomRunInfo(
-                        atomCode = "manualTrigger",
-                        atomName = "手动触发",
-                        version = "1.*",
-                        initProjectCode = projectId,
-                        jobType = JobTypeEnum.AGENT,
-                        buildLessRunFlag = false,
-                        inputTypeInfos = null
+                Result(
+                    mapOf(
+                        "manualTrigger:1.*" to AtomRunInfo(
+                            atomCode = "manualTrigger",
+                            atomName = "手动触发",
+                            version = "1.*",
+                            initProjectCode = projectId,
+                            jobType = JobTypeEnum.AGENT,
+                            buildLessRunFlag = false,
+                            inputTypeInfos = null
+                        )
                     )
                 )
-            )
-            )
+                )
         every { pipelineCommonSettingConfig.maxModelSize } returns (16777215)
         every { pipelineCommonSettingConfig.maxStageNum } returns (20)
         every { pipelineCommonSettingConfig.maxPipelineNameSize } returns (255)

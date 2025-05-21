@@ -38,8 +38,8 @@ import com.tencent.devops.store.api.common.ServiceStoreStatisticResource
 import com.tencent.devops.store.pojo.atom.AtomPipeline
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
-import com.tencent.devops.store.pojo.common.statistic.StoreStatistic
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.statistic.StoreStatistic
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -50,10 +50,11 @@ class ApigwAtomResourceV4Impl @Autowired constructor(private val client: Client)
         appCode: String?,
         apigwType: String?,
         atomCode: String,
-        userId: String
+        userId: String,
+        tenantId: String?
     ): Result<AtomVersion?> {
         logger.info("OPENAPI_ATOM_V4|$appCode|$userId|$atomCode|get Atom By Code")
-        return client.get(ServiceMarketAtomResource::class).getAtomByCode(atomCode, userId)
+        return client.get(ServiceMarketAtomResource::class).getAtomByCode(tenantId, atomCode, userId)
     }
 
     override fun getAtomStatisticByCode(

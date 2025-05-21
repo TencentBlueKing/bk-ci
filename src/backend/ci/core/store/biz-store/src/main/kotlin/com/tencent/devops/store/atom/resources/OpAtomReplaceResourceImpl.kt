@@ -30,9 +30,9 @@ package com.tencent.devops.store.atom.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.OpAtomReplaceResource
+import com.tencent.devops.store.atom.service.AtomReplaceService
 import com.tencent.devops.store.pojo.atom.AtomReplaceRequest
 import com.tencent.devops.store.pojo.atom.AtomReplaceRollBack
-import com.tencent.devops.store.atom.service.AtomReplaceService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -42,10 +42,11 @@ class OpAtomReplaceResourceImpl @Autowired constructor(
 
     override fun replacePipelineAtom(
         userId: String,
+        tenantId: String?,
         projectId: String?,
         atomReplaceRequest: AtomReplaceRequest
     ): Result<String> {
-        return atomReplaceService.replacePipelineAtom(userId, projectId, atomReplaceRequest)
+        return atomReplaceService.replacePipelineAtom(userId, projectId, atomReplaceRequest,tenantId)
     }
 
     override fun atomReplaceRollBack(userId: String, atomReplaceRollBack: AtomReplaceRollBack): Result<Boolean> {

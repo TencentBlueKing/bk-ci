@@ -57,9 +57,14 @@ class SampleMarketAtomServiceImpl : SampleMarketAtomService, MarketAtomServiceIm
         projectCode: String,
         atomCode: String,
         content: String,
-        fileName: String
+        fileName: String,
+        tenantId: String?
     ): Result<Boolean> {
-        val atomRecord = atomDao.getMaxVersionAtomByCode(dslContext, atomCode)!!
+        val atomRecord = atomDao.getMaxVersionAtomByCode(
+            dslContext = dslContext,
+            atomCode = atomCode,
+            tenantId = tenantId
+        )!!
         return client.get(ServiceArchiveAtomResource::class)
             .updateArchiveFile(
                 projectCode = projectCode,

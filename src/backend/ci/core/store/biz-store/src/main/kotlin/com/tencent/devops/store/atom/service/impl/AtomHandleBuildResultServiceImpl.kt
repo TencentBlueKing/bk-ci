@@ -67,7 +67,7 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         logger.info("handleStoreBuildResult storeBuildResultRequest is:$storeBuildResultRequest")
         val atomId = storeBuildResultRequest.storeId
-        val atomRecord = marketAtomDao.getAtomRecordById(dslContext, atomId)
+        val atomRecord = marketAtomDao.getAtomRecordById(dslContext, atomId, tenantId)
             ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomId),
@@ -88,7 +88,8 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
             version = version,
             userId = atomRecord.modifier,
             atomStatus = atomStatus,
-            msg = null
+            msg = null,
+            tenantId = tenantId
         )
         if (atomStatus == AtomStatusEnum.TESTING) {
 

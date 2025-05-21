@@ -40,7 +40,7 @@ interface AtomReleaseService {
     /**
      * 添加插件
      */
-    fun addMarketAtom(userId: String, marketAtomCreateRequest: MarketAtomCreateRequest): Result<String>
+    fun addMarketAtom(userId: String, marketAtomCreateRequest: MarketAtomCreateRequest, tenantId: String?): Result<String>
 
     /**
      * 升级插件
@@ -48,23 +48,24 @@ interface AtomReleaseService {
     fun updateMarketAtom(
         userId: String,
         projectCode: String,
-        marketAtomUpdateRequest: MarketAtomUpdateRequest
+        marketAtomUpdateRequest: MarketAtomUpdateRequest,
+        tenantId: String?
     ): Result<String>
 
     /**
      * 获取插件版本发布进度
      */
-    fun getProcessInfo(userId: String, atomId: String): Result<StoreProcessInfo>
+    fun getProcessInfo(userId: String, atomId: String, tenantId: String?): Result<StoreProcessInfo>
 
     /**
      * 取消发布
      */
-    fun cancelRelease(userId: String, atomId: String): Result<Boolean>
+    fun cancelRelease(userId: String, atomId: String, tenantId: String?): Result<Boolean>
 
     /**
      * 确认通过测试，继续发布
      */
-    fun passTest(userId: String, atomId: String): Result<Boolean>
+    fun passTest(userId: String, atomId: String, tenantId: String?): Result<Boolean>
 
     /**
      * 处理用户提交的下架插件请求
@@ -73,7 +74,8 @@ interface AtomReleaseService {
         userId: String,
         atomCode: String,
         atomOfflineReq: AtomOfflineReq,
-        checkPermissionFlag: Boolean = true
+        checkPermissionFlag: Boolean = true,
+        tenantId: String?
     ): Result<Boolean>
 
     /**
@@ -82,7 +84,8 @@ interface AtomReleaseService {
     fun handleAtomRelease(
         userId: String,
         releaseFlag: Boolean,
-        atomReleaseRequest: AtomReleaseRequest
+        atomReleaseRequest: AtomReleaseRequest,
+        tenantId: String?
     ): Result<Boolean>
 
     /**

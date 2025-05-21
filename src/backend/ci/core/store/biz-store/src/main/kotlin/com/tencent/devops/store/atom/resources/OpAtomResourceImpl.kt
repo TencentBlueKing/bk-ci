@@ -30,6 +30,10 @@ package com.tencent.devops.store.atom.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.OpAtomResource
+import com.tencent.devops.store.atom.service.AtomReleaseService
+import com.tencent.devops.store.atom.service.AtomService
+import com.tencent.devops.store.atom.service.MarketAtomService
+import com.tencent.devops.store.atom.service.OpAtomService
 import com.tencent.devops.store.pojo.atom.ApproveReq
 import com.tencent.devops.store.pojo.atom.Atom
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
@@ -40,10 +44,6 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
-import com.tencent.devops.store.atom.service.AtomReleaseService
-import com.tencent.devops.store.atom.service.AtomService
-import com.tencent.devops.store.atom.service.MarketAtomService
-import com.tencent.devops.store.atom.service.OpAtomService
 import java.io.InputStream
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
@@ -56,12 +56,17 @@ class OpAtomResourceImpl @Autowired constructor(
     private val atomReleaseService: AtomReleaseService
 ) : OpAtomResource {
 
-    override fun add(userId: String, atomCreateRequest: AtomCreateRequest): Result<Boolean> {
-        return atomService.savePipelineAtom(userId, atomCreateRequest)
+    override fun add(userId: String, tenantId: String?, atomCreateRequest: AtomCreateRequest): Result<Boolean> {
+        return atomService.savePipelineAtom(userId, atomCreateRequest, tenantId)
     }
 
-    override fun update(userId: String, id: String, atomUpdateRequest: AtomUpdateRequest): Result<Boolean> {
-        return atomService.updatePipelineAtom(userId, id, atomUpdateRequest)
+    override fun update(
+        userId: String,
+        tenantId: String?,
+        id: String,
+        atomUpdateRequest: AtomUpdateRequest
+    ): Result<Boolean> {
+        return atomService.updatePipelineAtom(userId, id, atomUpdateRequest, tenantId)
     }
 
     override fun listAllPipelineAtoms(
@@ -102,25 +107,37 @@ class OpAtomResourceImpl @Autowired constructor(
         return atomService.deletePipelineAtom(id)
     }
 
-    override fun approveAtom(userId: String, atomId: String, approveReq: ApproveReq): Result<Boolean> {
-        return opAtomService.approveAtom(userId, atomId, approveReq)
+    override fun approveAtom(
+        userId: String,
+        tenantId: String?,
+        atomId: String,
+        approveReq: ApproveReq
+    ): Result<Boolean> {
+        return opAtomService.approveAtom(userId, atomId, approveReq, tenantId)
     }
 
     override fun generateCiYaml(
+        tenantId: String?,
         atomCode: String?,
         os: String?,
         classType: String?,
         defaultShowFlag: Boolean?
     ): Result<String> {
-        return Result(marketAtomService.generateCiYaml(atomCode, os, classType, defaultShowFlag))
+        return Result(marketAtomService.generateCiYaml(atomCode, os, classType, defaultShowFlag, tenantId))
     }
 
-    override fun offlineAtom(userId: String, atomCode: String, atomOfflineReq: AtomOfflineReq): Result<Boolean> {
+    override fun offlineAtom(
+        userId: String,
+        tenantId: String?,
+        atomCode: String,
+        atomOfflineReq: AtomOfflineReq
+    ): Result<Boolean> {
         return atomReleaseService.offlineAtom(
             userId = userId,
             atomCode = atomCode,
             atomOfflineReq = atomOfflineReq,
-            checkPermissionFlag = false
+            checkPermissionFlag = false,
+            tenantId = tenantId
         )
     }
 

@@ -75,6 +75,8 @@ import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.ATOM_INPUT
 import com.tencent.devops.store.pojo.common.ATOM_NAMESPACE
 import com.tencent.devops.store.pojo.common.ATOM_OUTPUT
+import jakarta.ws.rs.core.Response
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.slf4j.LoggerFactory
@@ -82,8 +84,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
-import jakarta.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -346,7 +346,11 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                 val toAtomVersion = atomReplaceItem.toAtomVersion
                 try {
                     val toAtomInfo =
-                        client.get(ServiceAtomResource::class).getAtomVersionInfo(toAtomCode, toAtomVersion).data
+                        client.get(ServiceAtomResource::class).getAtomVersionInfo(
+                            tenantId = null,
+                            atomCode = toAtomCode,
+                            version = toAtomVersion
+                        ).data
                             ?: return@nextItem
                     val paramReplaceInfoList = if (atomReplaceItem.paramReplaceInfo != null) JsonUtil.to(
                         atomReplaceItem.paramReplaceInfo,

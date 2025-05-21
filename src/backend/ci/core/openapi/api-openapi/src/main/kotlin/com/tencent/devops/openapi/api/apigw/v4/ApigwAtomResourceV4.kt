@@ -73,7 +73,10 @@ interface ApigwAtomResourceV4 {
         atomCode: String,
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String
+        userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null
     ): Result<AtomVersion?>
 
     @Operation(summary = "根据插件代码获取插件统计信息", tags = ["v4_app_atom_statistic", "v4_user_atom_statistic"])
@@ -94,7 +97,10 @@ interface ApigwAtomResourceV4 {
         userId: String
     ): Result<StoreStatistic>
 
-    @Operation(summary = "根据插件代码获取使用的流水线详情", tags = ["v4_user_atom_pipeline_list", "v4_app_atom_pipeline_list"])
+    @Operation(
+        summary = "根据插件代码获取使用的流水线详情",
+        tags = ["v4_user_atom_pipeline_list", "v4_app_atom_pipeline_list"]
+    )
     @GET
     @Path("/atom_pipelines")
     fun getAtomPipelinesByCode(

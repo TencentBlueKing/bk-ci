@@ -30,11 +30,11 @@ package com.tencent.devops.store.atom.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.UserAtomReleaseResource
+import com.tencent.devops.store.atom.service.AtomReleaseService
 import com.tencent.devops.store.pojo.atom.AtomOfflineReq
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
-import com.tencent.devops.store.atom.service.AtomReleaseService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -44,29 +44,44 @@ class UserAtomReleaseResourceImpl @Autowired constructor(
 
     override fun updateMarketAtom(
         userId: String,
+        tenantId: String?,
         projectCode: String,
         marketAtomUpdateRequest: MarketAtomUpdateRequest
     ): Result<String?> {
-        return atomReleaseService.updateMarketAtom(userId, projectCode, marketAtomUpdateRequest)
+        return atomReleaseService.updateMarketAtom(userId, projectCode, marketAtomUpdateRequest, tenantId)
     }
 
-    override fun addMarketAtom(userId: String, marketAtomCreateRequest: MarketAtomCreateRequest): Result<String> {
-        return atomReleaseService.addMarketAtom(userId, marketAtomCreateRequest)
+    override fun addMarketAtom(
+        userId: String,
+        tenantId: String?,
+        marketAtomCreateRequest: MarketAtomCreateRequest
+    ): Result<String> {
+        return atomReleaseService.addMarketAtom(userId, marketAtomCreateRequest, tenantId)
     }
 
-    override fun getProcessInfo(userId: String, atomId: String): Result<StoreProcessInfo> {
-        return atomReleaseService.getProcessInfo(userId, atomId)
+    override fun getProcessInfo(userId: String, tenantId: String?, atomId: String): Result<StoreProcessInfo> {
+        return atomReleaseService.getProcessInfo(userId, atomId, tenantId)
     }
 
-    override fun cancelRelease(userId: String, atomId: String): Result<Boolean> {
-        return atomReleaseService.cancelRelease(userId, atomId)
+    override fun cancelRelease(userId: String, tenantId: String?, atomId: String): Result<Boolean> {
+        return atomReleaseService.cancelRelease(userId, atomId, tenantId)
     }
 
-    override fun passTest(userId: String, atomId: String): Result<Boolean> {
-        return atomReleaseService.passTest(userId, atomId)
+    override fun passTest(userId: String, tenantId: String?, atomId: String): Result<Boolean> {
+        return atomReleaseService.passTest(userId, atomId, tenantId)
     }
 
-    override fun offlineAtom(userId: String, atomCode: String, atomOfflineReq: AtomOfflineReq): Result<Boolean> {
-        return atomReleaseService.offlineAtom(userId, atomCode, atomOfflineReq)
+    override fun offlineAtom(
+        userId: String,
+        tenantId: String?,
+        atomCode: String,
+        atomOfflineReq: AtomOfflineReq
+    ): Result<Boolean> {
+        return atomReleaseService.offlineAtom(
+            userId = userId,
+            atomCode = atomCode,
+            atomOfflineReq = atomOfflineReq,
+            tenantId = tenantId
+        )
     }
 }

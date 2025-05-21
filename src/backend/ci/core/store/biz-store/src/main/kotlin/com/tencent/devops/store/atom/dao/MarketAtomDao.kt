@@ -48,6 +48,8 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.math.BigDecimal
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -56,8 +58,6 @@ import org.jooq.SelectOnConditionStep
 import org.jooq.UpdateSetFirstStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.math.BigDecimal
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -75,9 +75,10 @@ class MarketAtomDao : AtomBaseDao() {
         rdType: AtomTypeEnum?,
         yamlFlag: Boolean?,
         recommendFlag: Boolean?,
-        qualityFlag: Boolean?
+        qualityFlag: Boolean?,
+        tenantId: String?
     ): Int {
-        val (ta, conditions) = formatConditions(keyword, rdType, classifyCode, dslContext)
+        val (ta, conditions) = formatConditions(keyword, rdType, classifyCode, dslContext, tenantId)
         val taf = TAtomFeature.T_ATOM_FEATURE
         val baseStep = dslContext.select(DSL.countDistinct(ta.ID)).from(ta).leftJoin(taf)
             .on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
@@ -103,7 +104,8 @@ class MarketAtomDao : AtomBaseDao() {
         keyword: String?,
         rdType: AtomTypeEnum?,
         classifyCode: String?,
-        dslContext: DSLContext
+        dslContext: DSLContext,
+        tenantId: String?
     ): Pair<TAtom, MutableList<Condition>> {
         val ta = TAtom.T_ATOM
         val storeType = StoreTypeEnum.ATOM.type.toByte()
@@ -115,6 +117,9 @@ class MarketAtomDao : AtomBaseDao() {
                     .or(ta.SUMMARY.contains(keyword))
                     .or(ta.ATOM_CODE.contains(keyword))
             )
+        }
+        if (useTenantCondition(tenantId)) {
+            conditions.add(ta.TENANT_ID.eq(tenantId))
         }
         if (rdType != null) {
             conditions.add(ta.ATOM_TYPE.eq(rdType.type.toByte()))
@@ -146,9 +151,10 @@ class MarketAtomDao : AtomBaseDao() {
         sortType: MarketAtomSortTypeEnum?,
         desc: Boolean?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        tenantId: String?
     ): Result<out Record>? {
-        val (ta, conditions) = formatConditions(keyword, rdType, classifyCode, dslContext)
+        val (ta, conditions) = formatConditions(keyword, rdType, classifyCode, dslContext, tenantId)
         val taf = TAtomFeature.T_ATOM_FEATURE
         val baseStep = dslContext.select(
             ta.ID,
@@ -276,13 +282,21 @@ class MarketAtomDao : AtomBaseDao() {
         }
     }
 
-    fun countReleaseAtomByCode(dslContext: DSLContext, atomCode: String, version: String? = null): Int {
+    fun countReleaseAtomByCode(
+        dslContext: DSLContext,
+        atomCode: String,
+        version: String? = null,
+        tenantId: String?
+    ): Int {
         with(TAtom.T_ATOM) {
             val conditions = mutableListOf<Condition>()
             conditions.add(ATOM_CODE.eq(atomCode))
             conditions.add(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
             if (version != null) {
                 conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
+            }
+            if (useTenantCondition(tenantId)) {
+                conditions.add(TENANT_ID.eq(tenantId))
             }
             return dslContext.selectCount().from(this)
                 .where(conditions)
@@ -294,7 +308,8 @@ class MarketAtomDao : AtomBaseDao() {
         tAtom: TAtom,
         userId: String,
         tStoreMember: TStoreMember,
-        atomName: String?
+        atomName: String?,
+        tenantId: String?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(tAtom.DELETE_FLAG.eq(false)) // 只查没有被删除的插件
@@ -304,17 +319,21 @@ class MarketAtomDao : AtomBaseDao() {
         if (null != atomName) {
             conditions.add(tAtom.NAME.contains(atomName))
         }
+        if (useTenantCondition(tenantId)) {
+            conditions.add(tAtom.TENANT_ID.eq(tenantId))
+        }
         return conditions
     }
 
     fun countMyAtoms(
         dslContext: DSLContext,
         userId: String,
-        atomName: String?
+        atomName: String?,
+        tenantId: String?
     ): Int {
         val tAtom = TAtom.T_ATOM
         val tStoreMember = TStoreMember.T_STORE_MEMBER
-        val conditions = generateGetMyAtomConditions(tAtom, userId, tStoreMember, atomName)
+        val conditions = generateGetMyAtomConditions(tAtom, userId, tStoreMember, atomName, tenantId)
         return dslContext.select(DSL.countDistinct(tAtom.ATOM_CODE))
             .from(tAtom)
             .leftJoin(tStoreMember)
@@ -328,12 +347,13 @@ class MarketAtomDao : AtomBaseDao() {
         userId: String,
         atomName: String?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        tenantId: String?
     ): Result<out Record>? {
         val tAtom = TAtom.T_ATOM
         val tStoreMember = TStoreMember.T_STORE_MEMBER
         val tAtomEnvInfo = TAtomEnvInfo.T_ATOM_ENV_INFO
-        val conditions = generateGetMyAtomConditions(tAtom, userId, tStoreMember, atomName)
+        val conditions = generateGetMyAtomConditions(tAtom, userId, tStoreMember, atomName, tenantId)
         val baseStep = dslContext.select(
             tAtom.ID,
             tAtom.ATOM_CODE,
@@ -370,7 +390,8 @@ class MarketAtomDao : AtomBaseDao() {
         repositoryHashId: String?,
         codeSrc: String?,
         docsLink: String,
-        marketAtomCreateRequest: MarketAtomCreateRequest
+        marketAtomCreateRequest: MarketAtomCreateRequest,
+        tenantId: String?
     ) {
         with(TAtom.T_ATOM) {
             dslContext.insertInto(
@@ -396,7 +417,8 @@ class MarketAtomDao : AtomBaseDao() {
                 HTML_TEMPLATE_VERSION,
                 PUBLISHER,
                 CREATOR,
-                MODIFIER
+                MODIFIER,
+                TENANT_ID
             )
                 .values(
                     id,
@@ -420,7 +442,8 @@ class MarketAtomDao : AtomBaseDao() {
                     marketAtomCreateRequest.frontendType.typeVersion,
                     userId,
                     userId,
-                    userId
+                    userId,
+                    tenantId
                 )
                 .execute()
         }
@@ -433,7 +456,8 @@ class MarketAtomDao : AtomBaseDao() {
         atomStatus: AtomStatusEnum,
         classType: String,
         props: String,
-        marketAtomUpdateRequest: MarketAtomUpdateRequest
+        marketAtomUpdateRequest: MarketAtomUpdateRequest,
+        tenantId: String?
     ) {
         val a = TClassify.T_CLASSIFY.`as`("a")
         val classifyId = dslContext.select(a.ID)
@@ -462,6 +486,7 @@ class MarketAtomDao : AtomBaseDao() {
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)
                 .where(ID.eq(id))
+                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
                 .execute()
         }
     }
@@ -604,7 +629,8 @@ class MarketAtomDao : AtomBaseDao() {
     fun getAtomsByConditions(
         dslContext: DSLContext,
         atomCodeList: List<String>,
-        atomStatusList: List<Byte>? = null
+        atomStatusList: List<Byte>? = null,
+        tenantId: String?
     ): Result<TAtomRecord>? {
         return with(TAtom.T_ATOM) {
             val conditions = mutableListOf<Condition>()
@@ -612,14 +638,18 @@ class MarketAtomDao : AtomBaseDao() {
             if (atomStatusList != null) {
                 conditions.add(ATOM_STATUS.`in`(atomStatusList))
             }
+            if (useTenantCondition(tenantId)) {
+                conditions.add(TENANT_ID.eq(tenantId))
+            }
             dslContext.selectFrom(this).where(conditions).orderBy(CREATE_TIME.desc()).fetch()
         }
     }
 
-    fun getAtomRecordById(dslContext: DSLContext, atomId: String): TAtomRecord? {
+    fun getAtomRecordById(dslContext: DSLContext, atomId: String, tenantId: String?): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
                 .where(ID.eq(atomId))
+                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
                 .fetchOne()
         }
     }
@@ -639,7 +669,7 @@ class MarketAtomDao : AtomBaseDao() {
         }
     }
 
-    fun getAtomById(dslContext: DSLContext, atomId: String): Record? {
+    fun getAtomById(dslContext: DSLContext, atomId: String, tenantId: String?): Record? {
         val tAtom = TAtom.T_ATOM
         val tAtomVersionLog = TAtomVersionLog.T_ATOM_VERSION_LOG
         val tClassify = TClassify.T_CLASSIFY
@@ -680,6 +710,7 @@ class MarketAtomDao : AtomBaseDao() {
             .leftJoin(tClassify)
             .on(tAtom.CLASSIFY_ID.eq(tClassify.ID))
             .where(tAtom.ID.eq(atomId))
+            .let { if (useTenantCondition(tenantId)) it.and(tAtom.TENANT_ID.eq(tenantId)) else it }
             .limit(1)
             .fetchOne()
     }
@@ -687,7 +718,14 @@ class MarketAtomDao : AtomBaseDao() {
     /**
      * 设置原子状态（单个版本）
      */
-    fun setAtomStatusById(dslContext: DSLContext, atomId: String, atomStatus: Byte, userId: String, msg: String?) {
+    fun setAtomStatusById(
+        dslContext: DSLContext,
+        atomId: String,
+        atomStatus: Byte,
+        userId: String,
+        msg: String?,
+        tenantId: String?
+    ) {
         with(TAtom.T_ATOM) {
             val baseStep = dslContext.update(this)
                 .set(ATOM_STATUS, atomStatus)
@@ -697,6 +735,7 @@ class MarketAtomDao : AtomBaseDao() {
             baseStep.set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(atomId))
+                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
                 .execute()
         }
     }
@@ -711,7 +750,8 @@ class MarketAtomDao : AtomBaseDao() {
         atomNewStatus: Byte,
         userId: String,
         msg: String?,
-        latestFlag: Boolean?
+        latestFlag: Boolean?,
+        tenantId: String?
     ) {
         with(TAtom.T_ATOM) {
             val baseStep = dslContext.update(this)
@@ -726,17 +766,25 @@ class MarketAtomDao : AtomBaseDao() {
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ATOM_CODE.eq(atomCode))
                 .and(ATOM_STATUS.eq(atomOldStatus))
+                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
                 .execute()
         }
     }
 
-    fun updateAtomInfoById(dslContext: DSLContext, userId: String, atomId: String, updateAtomInfo: UpdateAtomInfo) {
+    fun updateAtomInfoById(
+        dslContext: DSLContext,
+        userId: String,
+        atomId: String,
+        updateAtomInfo: UpdateAtomInfo,
+        tenantId: String?
+    ) {
         with(TAtom.T_ATOM) {
             val baseStep = dslContext.update(this)
             setUpdateAtomInfo(updateAtomInfo, baseStep)
             baseStep.set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(atomId))
+                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
                 .execute()
         }
     }
@@ -827,11 +875,12 @@ class MarketAtomDao : AtomBaseDao() {
     /**
      * 清空LATEST_FLAG
      */
-    fun cleanLatestFlag(dslContext: DSLContext, atomCode: String) {
+    fun cleanLatestFlag(dslContext: DSLContext, atomCode: String, tenantId: String?) {
         with(TAtom.T_ATOM) {
             dslContext.update(this)
                 .set(LATEST_FLAG, false)
                 .where(ATOM_CODE.eq(atomCode))
+                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
                 .execute()
         }
     }
@@ -876,11 +925,12 @@ class MarketAtomDao : AtomBaseDao() {
         }
     }
 
-    fun getNewestUndercarriagedAtomsByCode(dslContext: DSLContext, atomCode: String): TAtomRecord? {
+    fun getNewestUndercarriagedAtomsByCode(dslContext: DSLContext, atomCode: String, tenantId: String?): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
                 .where(ATOM_CODE.eq(atomCode))
                 .and(ATOM_STATUS.eq(AtomStatusEnum.UNDERCARRIAGED.status.toByte()))
+                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()

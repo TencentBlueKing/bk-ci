@@ -35,18 +35,22 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomEnvInfoDao
 import com.tencent.devops.store.atom.dao.MarketAtomVersionLogDao
+import com.tencent.devops.store.atom.service.MarketAtomArchiveService
+import com.tencent.devops.store.atom.service.MarketAtomCommonService
 import com.tencent.devops.store.common.dao.StoreMemberDao
+import com.tencent.devops.store.common.service.StoreI18nMessageService
+import com.tencent.devops.store.common.utils.StoreUtils
+import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.pojo.atom.AtomConfigInfo
 import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.atom.ReleaseInfo
-import com.tencent.devops.store.pojo.common.StoreI18nConfig
 import com.tencent.devops.store.pojo.common.KEY_CONFIG
 import com.tencent.devops.store.pojo.common.KEY_EXECUTION
 import com.tencent.devops.store.pojo.common.KEY_INPUT
@@ -54,14 +58,11 @@ import com.tencent.devops.store.pojo.common.KEY_INPUT_GROUPS
 import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
 import com.tencent.devops.store.pojo.common.KEY_OUTPUT
 import com.tencent.devops.store.pojo.common.KEY_RELEASE_INFO
+import com.tencent.devops.store.pojo.common.StoreI18nConfig
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.atom.service.MarketAtomArchiveService
-import com.tencent.devops.store.atom.service.MarketAtomCommonService
-import com.tencent.devops.store.common.service.StoreI18nMessageService
-import com.tencent.devops.store.common.utils.StoreUtils
 import java.io.File
 import java.net.URLEncoder
 import org.jooq.DSLContext
@@ -76,20 +77,28 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
 
     @Autowired
     lateinit var dslContext: DSLContext
+
     @Autowired
     lateinit var atomDao: AtomDao
+
     @Autowired
     lateinit var marketAtomDao: MarketAtomDao
+
     @Autowired
     lateinit var marketAtomEnvInfoDao: MarketAtomEnvInfoDao
+
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
+
     @Autowired
     lateinit var marketAtomVersionLogDao: MarketAtomVersionLogDao
+
     @Autowired
     lateinit var marketAtomCommonService: MarketAtomCommonService
+
     @Autowired
     lateinit var storeI18nMessageService: StoreI18nMessageService
+
     @Autowired
     lateinit var client: Client
 
@@ -136,7 +145,12 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         os: String?
     ): Result<Boolean> {
         logger.info("verifyAtomPackageByUserId params[$userId|$projectCode|$atomCode|$version|$releaseType|$os]")
-        val atomCount = atomDao.countByCode(dslContext, atomCode)
+        val tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
+        val atomCount = atomDao.countByCode(
+            dslContext = dslContext,
+            atomCode = atomCode,
+            tenantId = tenantId
+        )
         if (atomCount < 0) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
@@ -144,7 +158,11 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        val atomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode)!!
+        val atomRecord = atomDao.getNewestAtomByCode(
+            dslContext = dslContext,
+            atomCode = atomCode,
+            tenantId = tenantId
+        )!!
         if (atomRecord.classType != atomCode) {
             // 校验用户是否是该插件的开发成员
             val flag = storeMemberDao.isStoreMember(
@@ -167,7 +185,7 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
                 atomRecord = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
                     atomRecord
                 } else {
-                    atomDao.getMaxVersionAtomByCode(dslContext, atomCode)!!
+                    atomDao.getMaxVersionAtomByCode(dslContext = dslContext, atomCode = atomCode, tenantId = tenantId)!!
                 },
                 releaseType = releaseType,
                 osList = osList,
@@ -247,7 +265,8 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
             version = version,
             releaseType = releaseType,
             taskDataMap = taskDataMap,
-            fieldCheckConfirmFlag = fieldCheckConfirmFlag
+            fieldCheckConfirmFlag = fieldCheckConfirmFlag,
+            tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
         )
         return Result(true)
     }

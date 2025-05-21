@@ -90,9 +90,10 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         userId: String,
         branch: String?,
         validOsNameFlag: Boolean?,
-        validOsArchFlag: Boolean?
+        validOsArchFlag: Boolean?,
+        tenantId: String?
     ) {
-        val record = marketAtomDao.getAtomRecordById(dslContext, atomId)
+        val record = marketAtomDao.getAtomRecordById(dslContext, atomId, tenantId)
         record?.let {
             RedisLock(
                 redisOperation,
@@ -174,10 +175,11 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         userId: String,
         atomId: String,
         status: Byte,
-        isNormalUpgrade: Boolean?
+        isNormalUpgrade: Boolean?,
+        tenantId: String?
     ): Triple<Boolean, String, Array<String>?> {
         val record =
-            marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Triple(
+            marketAtomDao.getAtomRecordById(dslContext, atomId, tenantId) ?: return Triple(
                 false,
                 CommonMessageCode.PARAMETER_IS_INVALID,
                 null

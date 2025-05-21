@@ -134,7 +134,7 @@ class AtomApproveCooperationServiceImpl @Autowired constructor(
             // 给用户发送驳回通知
             executorService.submit<Unit> {
                 val receivers = mutableSetOf(atomApproveRecord!!.applicant)
-                val atomName = marketAtomDao.getLatestAtomByCode(dslContext, storeCode)?.name ?: ""
+                val atomName = marketAtomDao.getLatestAtomByCode(dslContext, storeCode, tenantId)?.name ?: ""
                 val bodyParams = mapOf(
                     "atomAdmin" to userId,
                     "atomName" to atomName,

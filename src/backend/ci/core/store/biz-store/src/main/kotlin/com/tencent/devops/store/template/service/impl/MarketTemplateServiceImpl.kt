@@ -205,7 +205,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                         AtomStatusEnum.RELEASED.status.toByte(),
                         AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
                         AtomStatusEnum.UNDERCARRIAGED.status.toByte()
-                    )
+                    ),
+                    tenantId = null
                 )
                 return if (atomRecord != null) {
                     val storeBaseInfo = StoreBaseInfo(

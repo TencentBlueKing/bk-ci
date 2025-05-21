@@ -32,8 +32,8 @@ import com.tencent.devops.common.websocket.enum.NotityLevel
 import com.tencent.devops.common.websocket.pojo.BuildPageInfo
 import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.common.websocket.pojo.WebSocketType
-import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.atom.dao.AtomDao
+import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -64,10 +64,14 @@ class StoreWebsocketService @Autowired constructor(
         }
     }
 
-    fun sendWebsocketMessageByAtomCodeAndUserId(atomCode: String, userId: String) {
+    fun sendWebsocketMessageByAtomCodeAndUserId(atomCode: String, userId: String, tenantId: String?) {
         logger.info("[sendWebsocketMessageByAtomCodeAndUserId]-atomCode:$atomCode，userId：$userId")
 //        val atomInfo = marketAtomDao.getAtomsByAtomCode(dslContext, atomCode)
-        val atomInfo = atomBaseDao.getNewestAtomByCode(dslContext, atomCode)
+        val atomInfo = atomBaseDao.getNewestAtomByCode(
+            dslContext = dslContext,
+            atomCode = atomCode,
+            tenantId = tenantId
+        )
         if (atomInfo != null) {
             sendWebsocketMessage(userId, atomInfo.id)
         }

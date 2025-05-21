@@ -65,6 +65,9 @@ interface ServiceMarketAtomResource {
     @PUT
     @Path("/atomCodes/{atomCode}/versions/{version}")
     fun setAtomBuildStatusByAtomCode(
+        @Parameter(description = "租户Id", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String? = null,
         @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
@@ -107,6 +110,9 @@ interface ServiceMarketAtomResource {
         keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"]
     )
     fun getAtomByCode(
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String?,
         @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,

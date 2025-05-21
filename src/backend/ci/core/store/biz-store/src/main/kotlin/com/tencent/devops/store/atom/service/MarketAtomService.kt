@@ -58,7 +58,8 @@ interface MarketAtomService {
         userId: String,
         page: Int?,
         pageSize: Int?,
-        urlProtocolTrim: Boolean = false
+        urlProtocolTrim: Boolean = false,
+        tenantId: String?
     ): Result<List<MarketMainItem>>
 
     /**
@@ -77,7 +78,8 @@ interface MarketAtomService {
         sortType: MarketAtomSortTypeEnum?,
         page: Int?,
         pageSize: Int?,
-        urlProtocolTrim: Boolean = false
+        urlProtocolTrim: Boolean = false,
+        tenantId: String?
     ): MarketAtomResp
 
     /**
@@ -87,23 +89,24 @@ interface MarketAtomService {
         userId: String,
         atomName: String?,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        tenantId: String?
     ): Result<MyAtomResp?>
 
     /**
      * 根据插件版本ID获取版本基本信息、发布信息
      */
-    fun getAtomById(atomId: String, userId: String): Result<AtomVersion?>
+    fun getAtomById(atomId: String, userId: String, tenantId: String?): Result<AtomVersion?>
 
     /**
      * 根据插件标识获取插件最新、正式版本息
      */
-    fun getAtomByCode(userId: String, atomCode: String): Result<AtomVersion?>
+    fun getAtomByCode(userId: String, atomCode: String, tenantId: String?): Result<AtomVersion?>
 
     /**
      * 根据标识获取最新版本信息（若最新版本为测试中，取最新版本，否则取最新正式版本）
      */
-    fun getNewestAtomByCode(userId: String, atomCode: String): Result<AtomVersion?>
+    fun getNewestAtomByCode(userId: String, atomCode: String, tenantId: String?): Result<AtomVersion?>
 
     /**
      * 安装插件到项目
@@ -123,7 +126,8 @@ interface MarketAtomService {
         version: String,
         userId: String,
         atomStatus: AtomStatusEnum,
-        msg: String?
+        msg: String?,
+        tenantId: String?
     ): Result<Boolean>
 
     /**
@@ -133,7 +137,8 @@ interface MarketAtomService {
         userId: String,
         atomCode: String,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        tenantId: String?
     ): Result<Page<AtomVersionListItem>>
 
     /**
@@ -144,7 +149,7 @@ interface MarketAtomService {
     /**
      * 删除插件
      */
-    fun deleteAtom(userId: String, atomCode: String): Result<Boolean>
+    fun deleteAtom(userId: String, atomCode: String, tenantId: String?): Result<Boolean>
 
     /**
      * 生成插件yml文件
@@ -153,7 +158,8 @@ interface MarketAtomService {
         atomCode: String?,
         os: String? = null,
         classType: String? = null,
-        defaultShowFlag: Boolean? = true
+        defaultShowFlag: Boolean? = true,
+        tenantId: String?
     ): String
 
     /**
@@ -163,14 +169,16 @@ interface MarketAtomService {
         atomCode: String,
         os: String? = null,
         classType: String? = null,
-        defaultShowFlag: Boolean? = true
+        defaultShowFlag: Boolean? = true,
+        tenantId: String?
     ): String
 
     /**
      * 获取插件output参数列表
      */
     fun getAtomOutput(
-        atomCode: String
+        atomCode: String,
+        tenantId: String?
     ): List<AtomOutput>
 
     /**
@@ -191,7 +199,7 @@ interface MarketAtomService {
     /**
      * 根据插件标识获取插件回显版本信息
      */
-    fun getAtomShowVersionInfo(userId: String, atomCode: String): Result<StoreShowVersionInfo>
+    fun getAtomShowVersionInfo(userId: String, atomCode: String, tenantId: String?): Result<StoreShowVersionInfo>
 
     /**
      * 更新插件自定义错误码信息
@@ -199,6 +207,7 @@ interface MarketAtomService {
     fun updateAtomErrorCodeInfo(
         userId: String,
         projectCode: String,
-        storeErrorCodeInfo: StoreErrorCodeInfo
+        storeErrorCodeInfo: StoreErrorCodeInfo,
+        tenantId: String?
     ): Result<Boolean>
 }

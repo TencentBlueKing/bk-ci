@@ -111,7 +111,8 @@ class AtomDao : AtomBaseDao() {
         userId: String,
         id: String,
         classType: String,
-        atomRequest: AtomCreateRequest
+        atomRequest: AtomCreateRequest,
+        tenantId: String?
     ) {
         with(TAtom.T_ATOM) {
             dslContext.insertInto(
@@ -136,7 +137,8 @@ class AtomDao : AtomBaseDao() {
                 PROPS,
                 DATA,
                 CREATOR,
-                MODIFIER
+                MODIFIER,
+                TENANT_ID
             )
                 .values(
                     id,
@@ -159,7 +161,8 @@ class AtomDao : AtomBaseDao() {
                     atomRequest.props,
                     atomRequest.data,
                     userId,
-                    userId
+                    userId,
+                    tenantId
                 )
                 .execute()
         }
@@ -175,20 +178,26 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
-    fun countByName(dslContext: DSLContext, name: String, atomCode: String? = null): Int {
+    fun countByName(dslContext: DSLContext, name: String, atomCode: String? = null, tenantId: String?): Int {
         with(TAtom.T_ATOM) {
             val conditions = mutableListOf<Condition>()
             conditions.add(NAME.eq(name))
             if (atomCode != null) {
                 conditions.add(ATOM_CODE.eq(atomCode))
             }
+            if (useTenantCondition(tenantId)) {
+                conditions.add(TENANT_ID.eq(tenantId))
+            }
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
         }
     }
 
-    fun countByCode(dslContext: DSLContext, atomCode: String): Int {
+    fun countByCode(dslContext: DSLContext, atomCode: String, tenantId: String?): Int {
         with(TAtom.T_ATOM) {
-            return dslContext.selectCount().from(this).where(ATOM_CODE.eq(atomCode)).fetchOne(0, Int::class.java)!!
+            return dslContext.selectCount().from(this)
+                .where(ATOM_CODE.eq(atomCode))
+                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -278,7 +287,8 @@ class AtomDao : AtomBaseDao() {
         dslContext: DSLContext,
         atomCode: String,
         version: String? = null,
-        atomStatusList: List<Byte>? = null
+        atomStatusList: List<Byte>? = null,
+        tenantId: String?
     ): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             val conditions = mutableListOf<Condition>()
@@ -288,6 +298,9 @@ class AtomDao : AtomBaseDao() {
             }
             if (atomStatusList != null) {
                 conditions.add(ATOM_STATUS.`in`(atomStatusList))
+            }
+            if (useTenantCondition(tenantId)) {
+                conditions.add(TENANT_ID.eq(tenantId))
             }
             dslContext.selectFrom(this)
                 .where(conditions)
@@ -303,7 +316,8 @@ class AtomDao : AtomBaseDao() {
         atomCode: String,
         version: String,
         defaultFlag: Boolean,
-        atomStatusList: List<Byte>? = null
+        atomStatusList: List<Byte>? = null,
+        tenantId: String?
     ): TAtomRecord? {
         val tAtom = TAtom.T_ATOM
         val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
@@ -313,7 +327,8 @@ class AtomDao : AtomBaseDao() {
                 atomCode = atomCode,
                 version = version,
                 defaultFlag = true,
-                atomStatusList = atomStatusList
+                atomStatusList = atomStatusList,
+                tenantId = tenantId
             )
             dslContext.selectFrom(tAtom).where(conditions).orderBy(tAtom.CREATE_TIME.desc()).limit(1).fetchOne()
         } else {
@@ -322,7 +337,8 @@ class AtomDao : AtomBaseDao() {
                 atomCode = atomCode,
                 version = version,
                 defaultFlag = false,
-                atomStatusList = atomStatusList
+                atomStatusList = atomStatusList,
+                tenantId = tenantId
             )
             dslContext.selectFrom(tAtom).where(conditions)
                 .andExists(
@@ -341,7 +357,8 @@ class AtomDao : AtomBaseDao() {
         atomCode: String,
         defaultFlag: Boolean? = null,
         version: String? = null,
-        atomStatusList: List<Byte>? = null
+        atomStatusList: List<Byte>? = null,
+        tenantId: String?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(tAtom.ATOM_CODE.eq(atomCode))
@@ -354,6 +371,9 @@ class AtomDao : AtomBaseDao() {
         }
         if (atomStatusList != null) {
             conditions.add(tAtom.ATOM_STATUS.`in`(atomStatusList))
+        }
+        if (useTenantCondition(tenantId)) {
+            conditions.add(tAtom.TENANT_ID.eq(tenantId))
         }
         return conditions
     }
@@ -458,7 +478,8 @@ class AtomDao : AtomBaseDao() {
     fun getVersionsByAtomCode(
         dslContext: DSLContext,
         atomCode: String,
-        atomStatusList: List<Byte>?
+        atomStatusList: List<Byte>?,
+        tenantId: String?
     ): Result<out Record>? {
         with(TAtom.T_ATOM) {
             return dslContext.select(
@@ -470,7 +491,8 @@ class AtomDao : AtomBaseDao() {
                     generateGetPipelineAtomCondition(
                         tAtom = this,
                         atomCode = atomCode,
-                        atomStatusList = atomStatusList
+                        atomStatusList = atomStatusList,
+                        tenantId = tenantId
                     )
                 )
                 .orderBy(CREATE_TIME.desc()).fetch()
@@ -484,7 +506,8 @@ class AtomDao : AtomBaseDao() {
         atomCode: String,
         defaultFlag: Boolean,
         atomStatusList: List<Byte>? = null,
-        limitNum: Int? = null
+        limitNum: Int? = null,
+        tenantId: String?
     ): Result<out Record>? {
         val tAtom = TAtom.T_ATOM
         val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
@@ -498,7 +521,8 @@ class AtomDao : AtomBaseDao() {
                 tAtom = tAtom,
                 atomCode = atomCode,
                 defaultFlag = true,
-                atomStatusList = atomStatusList
+                atomStatusList = atomStatusList,
+                tenantId = tenantId
             )
             baseStep.where(conditions)
         } else {
@@ -506,7 +530,8 @@ class AtomDao : AtomBaseDao() {
                 tAtom = tAtom,
                 atomCode = atomCode,
                 defaultFlag = false,
-                atomStatusList = atomStatusList
+                atomStatusList = atomStatusList,
+                tenantId = tenantId
             )
             conditions.add(tStoreProjectRel.PROJECT_CODE.eq(projectCode))
             conditions.add(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
@@ -566,7 +591,8 @@ class AtomDao : AtomBaseDao() {
         fitOsFlag: Boolean?,
         queryFitAgentBuildLessAtomFlag: Boolean?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        tenantId: String?
     ): Result<out Record>? {
         val ta = TAtom.T_ATOM
         val tc = TClassify.T_CLASSIFY
@@ -585,7 +611,8 @@ class AtomDao : AtomBaseDao() {
             recommendFlag = recommendFlag,
             keyword = keyword,
             fitOsFlag = fitOsFlag,
-            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
+            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
+            tenantId = tenantId
         ) // 默认插件查询条件组装
         val normalAtomConditions =
             queryNormalAtomCondition(
@@ -602,7 +629,8 @@ class AtomDao : AtomBaseDao() {
                 recommendFlag = recommendFlag,
                 keyword = keyword,
                 fitOsFlag = fitOsFlag,
-                queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
+                queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
+                tenantId = tenantId
             ) // 普通插件查询条件组装
         val queryNormalAtomStep = getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst)
         var queryInitTestAtomStep: SelectOnConditionStep<Record>? = null
@@ -624,7 +652,8 @@ class AtomDao : AtomBaseDao() {
                     recommendFlag = recommendFlag,
                     keyword = keyword,
                     fitOsFlag = fitOsFlag,
-                    queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
+                    queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
+                    tenantId = tenantId
                 ) // 开发者测试插件查询条件组装
             // 默认插件和普通插件需排除初始化项目下面有处于测试中或者审核中的插件
             defaultAtomCondition.add(
@@ -645,6 +674,9 @@ class AtomDao : AtomBaseDao() {
             )
             queryNormalAtomStep.join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
             queryInitTestAtomStep.join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
+        }
+        if (useTenantCondition(tenantId)) {
+
         }
         val queryAtomStep = queryNormalAtomStep
             .where(normalAtomConditions)
@@ -732,7 +764,8 @@ class AtomDao : AtomBaseDao() {
         keyword: String?,
         fitOsFlag: Boolean?,
         queryProjectAtomFlag: Boolean,
-        queryFitAgentBuildLessAtomFlag: Boolean?
+        queryFitAgentBuildLessAtomFlag: Boolean?,
+        tenantId: String?
     ): Long {
         val ta = TAtom.T_ATOM
         val tspr = TStoreProjectRel.T_STORE_PROJECT_REL
@@ -750,7 +783,8 @@ class AtomDao : AtomBaseDao() {
             recommendFlag = recommendFlag,
             keyword = keyword,
             fitOsFlag = fitOsFlag,
-            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
+            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
+            tenantId = tenantId
         ) // 默认插件查询条件组装
         val normalAtomConditions = queryNormalAtomCondition(
             ta = ta,
@@ -766,7 +800,8 @@ class AtomDao : AtomBaseDao() {
             recommendFlag = recommendFlag,
             keyword = keyword,
             fitOsFlag = fitOsFlag,
-            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
+            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
+            tenantId = tenantId
         ) // 普通插件查询条件组装
         val queryNormalAtomStep = getPipelineAtomCountBaseStep(dslContext, ta, taf, tsst)
         var queryInitTestAtomStep: SelectOnConditionStep<Record1<Int>>? = null
@@ -787,7 +822,8 @@ class AtomDao : AtomBaseDao() {
                 recommendFlag = recommendFlag,
                 keyword = keyword,
                 fitOsFlag = fitOsFlag,
-                queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
+                queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
+                tenantId = tenantId
             ) // 开发者测试插件查询条件组装
             // 默认插件和普通插件需排除初始化项目下面有处于测试中或者审核中的插件
             defaultAtomCondition.add(
@@ -848,7 +884,8 @@ class AtomDao : AtomBaseDao() {
         recommendFlag: Boolean?,
         keyword: String?,
         fitOsFlag: Boolean?,
-        queryFitAgentBuildLessAtomFlag: Boolean?
+        queryFitAgentBuildLessAtomFlag: Boolean?,
+        tenantId: String?
     ): MutableList<Condition> {
         val conditions = setQueryAtomBaseCondition(
             serviceScope = serviceScope,
@@ -862,7 +899,8 @@ class AtomDao : AtomBaseDao() {
             recommendFlag = recommendFlag,
             keyword = keyword,
             fitOsFlag = fitOsFlag,
-            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
+            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
+            tenantId = tenantId
         )
         conditions.add(ta.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())) // 只查已发布的
         conditions.add(ta.DEFAULT_FLAG.eq(true)) // 查默认插件（所有项目都可用）
@@ -882,11 +920,15 @@ class AtomDao : AtomBaseDao() {
         recommendFlag: Boolean?,
         keyword: String?,
         fitOsFlag: Boolean?,
-        queryFitAgentBuildLessAtomFlag: Boolean?
+        queryFitAgentBuildLessAtomFlag: Boolean?,
+        tenantId: String?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         if (!serviceScope.isNullOrBlank() && !KEY_ALL.equals(serviceScope, true)) {
             conditions.add(ta.SERVICE_SCOPE.contains(serviceScope))
+        }
+        if (useTenantCondition(tenantId)) {
+            conditions.add(ta.TENANT_ID.eq(tenantId))
         }
         // 当筛选有构建环境的插件时也需加上那些无构建环境插件可以在有构建环境运行的插件
         if (!jobType.isNullOrBlank()) {
@@ -945,7 +987,8 @@ class AtomDao : AtomBaseDao() {
         recommendFlag: Boolean?,
         keyword: String?,
         fitOsFlag: Boolean?,
-        queryFitAgentBuildLessAtomFlag: Boolean?
+        queryFitAgentBuildLessAtomFlag: Boolean?,
+        tenantId: String?
     ): MutableList<Condition> {
         val conditions = setQueryAtomBaseCondition(
             serviceScope = serviceScope,
@@ -959,7 +1002,8 @@ class AtomDao : AtomBaseDao() {
             recommendFlag = recommendFlag,
             keyword = keyword,
             fitOsFlag = fitOsFlag,
-            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
+            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
+            tenantId = tenantId
         )
         conditions.add(ta.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())) // 只查已发布的
         conditions.add(ta.DEFAULT_FLAG.eq(false)) // 查普通插件
@@ -985,7 +1029,8 @@ class AtomDao : AtomBaseDao() {
         recommendFlag: Boolean?,
         keyword: String?,
         fitOsFlag: Boolean?,
-        queryFitAgentBuildLessAtomFlag: Boolean?
+        queryFitAgentBuildLessAtomFlag: Boolean?,
+        tenantId: String?
     ): MutableList<Condition> {
         val conditions = setQueryAtomBaseCondition(
             serviceScope = serviceScope,
@@ -999,7 +1044,8 @@ class AtomDao : AtomBaseDao() {
             recommendFlag = recommendFlag,
             keyword = keyword,
             fitOsFlag = fitOsFlag,
-            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
+            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
+            tenantId = tenantId
         )
         conditions.add(
             ta.ATOM_STATUS.`in`(
@@ -1117,13 +1163,15 @@ class AtomDao : AtomBaseDao() {
         dslContext: DSLContext,
         projectCode: String? = null,
         classifyCode: String? = null,
-        name: String? = null
+        name: String? = null,
+        tenantId: String?
     ): Int {
         val (ta, tspr, conditions) = getInstalledConditions(
             projectCode = projectCode,
             classifyCode = classifyCode,
             name = name,
-            dslContext = dslContext
+            dslContext = dslContext,
+            tenantId = tenantId
         )
 
         val step = dslContext.select(countDistinct(ta.ATOM_CODE)).from(ta)
@@ -1144,14 +1192,16 @@ class AtomDao : AtomBaseDao() {
         classifyCode: String? = null,
         name: String? = null,
         page: Int? = null,
-        pageSize: Int? = null
+        pageSize: Int? = null,
+        tenantId: String?
     ): Result<out Record>? {
 
         val (ta, tspr, conditions) = getInstalledConditions(
             projectCode = projectCode,
             classifyCode = classifyCode,
             name = name,
-            dslContext = dslContext
+            dslContext = dslContext,
+            tenantId = tenantId
         )
         val tc = TClassify.T_CLASSIFY
 
@@ -1188,20 +1238,26 @@ class AtomDao : AtomBaseDao() {
         projectCode: String? = null,
         classifyCode: String?,
         name: String?,
-        dslContext: DSLContext
+        dslContext: DSLContext,
+        tenantId: String?
     ): Triple<TAtom, TStoreProjectRel, MutableList<Condition>> {
         val ta = TAtom.T_ATOM
         val tspr = TStoreProjectRel.T_STORE_PROJECT_REL
         val conditions = mutableListOf<Condition>()
         if (projectCode.isNullOrBlank()) {
+            if (useTenantCondition(tenantId)) {
+                conditions.add(ta.TENANT_ID.eq(tenantId))
+            }
             conditions.add(ta.DEFAULT_FLAG.eq(true))
-            conditions.add(ta.ATOM_STATUS.`in`(
-                listOf(
-                    AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
-                    AtomStatusEnum.UNDERCARRIAGED.status.toByte(),
-                    AtomStatusEnum.RELEASED.status.toByte()
+            conditions.add(
+                ta.ATOM_STATUS.`in`(
+                    listOf(
+                        AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
+                        AtomStatusEnum.UNDERCARRIAGED.status.toByte(),
+                        AtomStatusEnum.RELEASED.status.toByte()
+                    )
                 )
-            ))
+            )
         } else {
             conditions.add(tspr.PROJECT_CODE.eq(projectCode).and(tspr.STORE_TYPE.eq(0)))
             conditions.add(ta.DEFAULT_FLAG.eq(false))
@@ -1226,7 +1282,8 @@ class AtomDao : AtomBaseDao() {
         dslContext: DSLContext,
         userId: String,
         atomIdList: List<String>,
-        atomBaseInfoUpdateRequest: AtomBaseInfoUpdateRequest
+        atomBaseInfoUpdateRequest: AtomBaseInfoUpdateRequest,
+        tenantId: String?
     ) {
         with(TAtom.T_ATOM) {
             val baseStep = dslContext.update(this)
@@ -1273,6 +1330,7 @@ class AtomDao : AtomBaseDao() {
             }
             baseStep.set(MODIFIER, userId)
                 .where(ID.`in`(atomIdList))
+                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
                 .execute()
         }
     }
@@ -1357,7 +1415,8 @@ class AtomDao : AtomBaseDao() {
         atomCode: String,
         version: String,
         defaultFlag: Boolean,
-        atomStatusList: List<Byte>? = null
+        atomStatusList: List<Byte>? = null,
+        tenantId: String?
     ): String? {
         val tAtom = TAtom.T_ATOM
         val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
@@ -1367,7 +1426,8 @@ class AtomDao : AtomBaseDao() {
                 atomCode = atomCode,
                 version = version,
                 defaultFlag = true,
-                atomStatusList = atomStatusList
+                atomStatusList = atomStatusList,
+                tenantId = tenantId
             )
             dslContext.select(tAtom.VERSION).from(tAtom)
                 .where(conditions)
@@ -1378,7 +1438,8 @@ class AtomDao : AtomBaseDao() {
                 atomCode = atomCode,
                 version = version,
                 defaultFlag = false,
-                atomStatusList = atomStatusList
+                atomStatusList = atomStatusList,
+                tenantId = tenantId
             )
             dslContext.select(tAtom.VERSION).from(tAtom)
                 .where(conditions)
@@ -1431,13 +1492,15 @@ class AtomDao : AtomBaseDao() {
         classifyCode: String? = null,
         name: String? = null,
         offset: Int? = null,
-        limit: Int? = null
+        limit: Int? = null,
+        tenantId: String?
     ): Result<out Record>? {
 
         val (ta, _, conditions) = getInstalledConditions(
             classifyCode = classifyCode,
             name = name,
-            dslContext = dslContext
+            dslContext = dslContext,
+            tenantId = tenantId
         )
         val tc = TClassify.T_CLASSIFY
 

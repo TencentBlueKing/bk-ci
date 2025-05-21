@@ -58,13 +58,14 @@ class ServiceMarketAtomResourceImpl @Autowired constructor(
 ) : ServiceMarketAtomResource {
 
     override fun setAtomBuildStatusByAtomCode(
+        tenantId: String?,
         atomCode: String,
         version: String,
         userId: String,
         atomStatus: AtomStatusEnum,
         msg: String?
     ): Result<Boolean> {
-        return marketAtomService.setAtomBuildStatusByAtomCode(atomCode, version, userId, atomStatus, msg)
+        return marketAtomService.setAtomBuildStatusByAtomCode(atomCode, version, userId, atomStatus, msg, tenantId)
     }
 
     override fun getProjectElements(projectCode: String): Result<Map<String, String>> {
@@ -75,8 +76,8 @@ class ServiceMarketAtomResourceImpl @Autowired constructor(
         return atomService.getProjectElementsInfo(projectCode)
     }
 
-    override fun getAtomByCode(atomCode: String, username: String): Result<AtomVersion?> {
-        return marketAtomService.getNewestAtomByCode(username, atomCode)
+    override fun getAtomByCode(tenantId: String?, atomCode: String, username: String): Result<AtomVersion?> {
+        return marketAtomService.getNewestAtomByCode(username, atomCode, tenantId)
     }
 
     override fun getAtomPipelinesByCode(

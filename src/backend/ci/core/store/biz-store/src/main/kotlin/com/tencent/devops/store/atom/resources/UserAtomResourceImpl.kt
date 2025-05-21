@@ -29,9 +29,11 @@ package com.tencent.devops.store.atom.resources
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.UserAtomResource
 import com.tencent.devops.store.atom.service.AtomPropService
+import com.tencent.devops.store.atom.service.AtomService
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
@@ -39,7 +41,6 @@ import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.version.VersionInfo
-import com.tencent.devops.store.atom.service.AtomService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -58,7 +59,8 @@ class UserAtomResourceImpl @Autowired constructor(
             projectCode = projectCode,
             atomCode = atomCode,
             version = version,
-            queryOfflineFlag = queryOfflineFlag ?: true
+            queryOfflineFlag = queryOfflineFlag ?: true,
+            tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
         )
     }
 
@@ -92,12 +94,13 @@ class UserAtomResourceImpl @Autowired constructor(
             queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
             fitOsFlag = fitOsFlag,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
         )
     }
 
     override fun getPipelineAtomVersions(projectCode: String, atomCode: String): Result<List<VersionInfo>> {
-        return atomService.getPipelineAtomVersions(projectCode, atomCode)
+        return atomService.getPipelineAtomVersions(projectCode, atomCode, TenantUtils.getTenantId())
     }
 
     override fun getInstalledAtoms(
@@ -115,17 +118,19 @@ class UserAtomResourceImpl @Autowired constructor(
                 classifyCode = classifyCode,
                 name = name,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                tenantId = TenantUtils.getTenantIdByEnglishName(projectCode)
             )
         )
     }
 
     override fun updateAtomBaseInfo(
         userId: String,
+        tenantId: String?,
         atomCode: String,
         atomBaseInfoUpdateRequest: AtomBaseInfoUpdateRequest
     ): Result<Boolean> {
-        return atomService.updateAtomBaseInfo(userId, atomCode, atomBaseInfoUpdateRequest)
+        return atomService.updateAtomBaseInfo(userId, atomCode, atomBaseInfoUpdateRequest, tenantId)
     }
 
     override fun uninstallAtom(
@@ -134,7 +139,12 @@ class UserAtomResourceImpl @Autowired constructor(
         atomCode: String,
         unInstallReq: UnInstallReq
     ): Result<Boolean> {
-        return atomService.uninstallAtom(userId, projectCode, atomCode, unInstallReq)
+        return atomService.uninstallAtom(
+            userId = userId,
+            projectCode = projectCode,
+            atomCode = atomCode,
+            unInstallReq = unInstallReq
+        )
     }
 
     override fun getAtomOutputInfos(atomInfos: Set<String>): Result<Map<String, String>?> {
