@@ -86,7 +86,7 @@
                     class="bk-form-content template-item-content"
                     v-else
                 >
-                    {{ templateOptionName || templateForm.templateName }}
+                    {{ templateOptionName || templateForm.sourceTemplateName }}
                 </div>
             </div>
             <div class="bk-form-item">
@@ -540,7 +540,8 @@
                         templateId: this.templateForm.templateCode,
                         page: nextPage,
                         pageSize: this.versionsPagination.limit,
-                        status: 'RELEASED'
+                        status: 'RELEASED',
+                        storeFlag: false
                     })
 
                     const versions = res.records

@@ -135,7 +135,7 @@
                             <icon
                                 v-if="row.latestReleasedVersion !== row.latestPublishedVersion && row.templateStatus !== 'UNDERCARRIAGED'"
                                 class="arrows-up-shape"
-                                :name="update"
+                                name="update"
                                 size="14"
                             />
                         </p>
