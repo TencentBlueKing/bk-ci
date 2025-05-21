@@ -406,14 +406,22 @@ const actions = {
         })
     },
     // 流水线操作日志列表
-    requestPipelineChangelogs (_, { projectId, pipelineId, ...params }) {
-        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/operationLog`, {
+    requestPipelineChangelogs (_, { projectId, pipelineId, archiveFlag, ...params }) {
+        let url = `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/operationLog`
+        if (archiveFlag !== undefined && archiveFlag !== null) {
+            url += `?archiveFlag=${encodeURIComponent(archiveFlag)}`
+        }
+        return ajax.get(url, {
             params
         }).then(res => res.data)
     },
     // 流水线操作日志列表
-    requestPipelineOperatorList (_, { projectId, pipelineId, ...params }) {
-        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/operatorList`, {
+    requestPipelineOperatorList (_, { projectId, pipelineId, archiveFlag, ...params }) {
+        let url = `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/operatorList`
+        if (archiveFlag !== undefined && archiveFlag !== null) {
+            url += `?archiveFlag=${encodeURIComponent(archiveFlag)}`
+        }
+        return ajax.get(url, {
             params
         }).then(res => res.data)
     },
