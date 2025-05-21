@@ -127,7 +127,7 @@ interface StoreCommonService {
      * 获取组件可见范围
      */
     fun generateStoreVisibleData(
-        storeCodeList: List<String?>,
+        storeCodeList: List<String>,
         storeType: StoreTypeEnum
     ): HashMap<String, MutableList<Int>>?
 
