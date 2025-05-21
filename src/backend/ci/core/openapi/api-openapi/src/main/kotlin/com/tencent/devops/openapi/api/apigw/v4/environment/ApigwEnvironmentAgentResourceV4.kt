@@ -94,9 +94,15 @@ interface ApigwEnvironmentAgentResourceV4 {
         @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "节点 hashId", required = true)
+        @Parameter(description = "节点 hashId (nodeHashId、nodeName、agentHashId 三个参数任选其一填入即可)", required = false)
         @QueryParam("nodeHashId")
-        nodeHashId: String
+        nodeHashId: String?,
+        @Parameter(description = "节点 别名 (nodeHashId、nodeName、agentHashId 三个参数任选其一填入即可)", required = false)
+        @QueryParam("nodeName")
+        nodeName: String?,
+        @Parameter(description = "节点 agentId (nodeHashId、nodeName、agentHashId 三个参数任选其一填入即可)", required = false)
+        @QueryParam("agentHashId")
+        agentHashId: String?
     ): Result<NodeWithPermission?>
 
     @Operation(
