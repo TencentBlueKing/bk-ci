@@ -151,10 +151,10 @@ interface ApigwProjectResourceV4 {
         sort: ProjectSortType? = null,
         @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
-        page: Int? = null,
+        page: Int? = 1,
         @Parameter(description = "每页条数(默认10)", required = false, example = "10")
         @QueryParam("pageSize")
-        pageSize: Int? = null
+        pageSize: Int? = 10
     ): Result<List<ProjectVO>>
 
     @GET
