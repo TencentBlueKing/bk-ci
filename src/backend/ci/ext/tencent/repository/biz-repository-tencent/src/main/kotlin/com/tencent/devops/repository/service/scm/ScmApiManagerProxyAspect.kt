@@ -69,15 +69,11 @@ class ScmApiManagerProxyAspect @Autowired constructor(
             } else {
                 pjp.proceed()
             }
-        } catch (ignored: Exception) {
-            throw when (ignored) {
-                is ScmApiException -> RemoteServiceException(
-                    errorCode = ignored.statusCode,
-                    errorMessage = ignored.message ?: ""
-                )
-
-                else -> ignored
-            }
+        } catch (ignored: ScmApiException) {
+            throw RemoteServiceException(
+                errorCode = ignored.statusCode,
+                errorMessage = ignored.message ?: ""
+            )
         }
     }
 

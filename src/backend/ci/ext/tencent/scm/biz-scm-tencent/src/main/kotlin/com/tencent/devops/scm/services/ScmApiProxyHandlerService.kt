@@ -96,8 +96,6 @@ class ScmApiProxyHandlerService : BeanPostProcessor {
                     errorCode = ignored.statusCode,
                     errorMessage = ignored.message ?: ""
                 )
-            } catch (ignored: Exception) {
-                throw ignored
             }
         }
     }
