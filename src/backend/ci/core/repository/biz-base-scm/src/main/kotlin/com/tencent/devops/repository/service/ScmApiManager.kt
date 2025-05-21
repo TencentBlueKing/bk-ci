@@ -28,7 +28,6 @@
 package com.tencent.devops.repository.service
 
 import com.tencent.devops.scm.api.exception.NotFoundScmApiException
-import com.tencent.devops.scm.api.exception.UnAuthorizedScmApiException
 import com.tencent.devops.scm.api.pojo.BranchListOptions
 import com.tencent.devops.scm.api.pojo.Change
 import com.tencent.devops.scm.api.pojo.Comment
@@ -470,24 +469,10 @@ class ScmApiManager constructor(
 
     fun webhookEnrich(
         providerProperties: ScmProviderProperties,
-        providerRepositories: List<ScmProviderRepository>,
+        providerRepository: ScmProviderRepository,
         webhook: Webhook
     ): Webhook {
-        var enrichHook = webhook
-        providerRepositories.forEach { providerRepository ->
-            try {
-                enrichHook = scmProviderManager.webhookEnricher(providerProperties).enrich(providerRepository, webhook)
-                return enrichHook
-            } catch (ignored: UnAuthorizedScmApiException) {
-                return@forEach
-            } catch (ignored: Exception) {
-                logger.warn("enrich webhook failed", ignored)
-                return enrichHook
-            }
-        }
-        // 所有仓库都授权失效
-        logger.warn("enrich webhook failed|all provider repository is unAuthorized")
-        return enrichHook
+        return scmProviderManager.webhookEnricher(providerProperties).enrich(providerRepository, webhook)
     }
 
     /*============================================token============================================*/
