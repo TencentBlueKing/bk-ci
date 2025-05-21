@@ -55,11 +55,10 @@
                 try {
                     if (isLoading.value || !vm.proxy.$route?.params?.projectId) return
                     isLoading.value = true
-                    const res = await request.get('/project/api/user/services/61/url/get', {
-                        headers: {
-                            'X-DEVOPS-PIPELINE-ID': pipelineId.value
-                        }
-                    })
+                    const headers = pipelineId.value
+                        ? { 'X-DEVOPS-PIPELINE-ID': pipelineId.value }
+                        : {}
+                    const res = await request.get('/project/api/user/services/61/url/get', { headers })
                     if (isAbsoluteURL(res.data)) {
                         eplusUrl.value = res.data
                     } else {
