@@ -60,12 +60,15 @@ class RepositoryWebhookService @Autowired constructor(
         var enWebhook = webhook
         // 去重，相同的auth判断一次即可
         val repoList = sortedRepository(repositories).map { AuthRepository(it) }.distinctBy { it.auth }
+        // 是否全部过期
+        var allExpired = true
         for (repository in repoList) {
             try {
                 enWebhook = webhookApiService.webhookEnrich(
                     webhook = webhook,
                     authRepo = repository
                 )
+                allExpired = false
                 break
             } catch (ignored: RemoteServiceException) {
                 when (ignored.errorCode) {
@@ -88,10 +91,12 @@ class RepositoryWebhookService @Autowired constructor(
             }
         }
         // 所有代码库都尝试失败,则返回原始数据
-        logger.info(
-            "all repository auth attempts failed, return original webhook data|scmCode:$scmCode|id:${serverRepo.id}|" +
-                    "fullName:${serverRepo.fullName}"
-        )
+        if (allExpired) {
+            logger.info(
+                "all repository auth attempts failed, return original webhook data|scmCode:$scmCode|id:${serverRepo.id}|" +
+                        "fullName:${serverRepo.fullName}"
+            )
+        }
         return WebhookData(
             webhook = enWebhook,
             repositories = repositories
