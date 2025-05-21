@@ -1552,6 +1552,7 @@
   "operationLog": "操作日志",
   "executeInfo": "执行信息",
   "triggerEvent": "触发事件",
+  "executionAnalysis": "执行分析",
   "invalidCodeMode": "切换到Code方式失败",
   "draftExecRecords": "调试记录",
   "draftExecDetail": "调试详情",

@@ -1556,6 +1556,7 @@
   "operationLog": "Operation Log",
   "executeInfo": "Execution Information",
   "triggerEvent": "Trigger Event",
+  "executionAnalysis": "Execution Analysis",
   "invalidCodeMode": "Switch to Code Mode Failed",
   "draftExecRecords": "Debug Records",
   "draftExecDetail": "Debug Details",

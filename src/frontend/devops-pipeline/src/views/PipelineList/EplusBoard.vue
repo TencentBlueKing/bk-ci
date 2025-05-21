@@ -21,6 +21,7 @@
             const eplusIframe = ref(null)
             const vm = getCurrentInstance()
             const projectId = computed(() => vm.proxy?.$route?.params?.projectId)
+            const pipelineId = computed(() => vm.proxy?.$route?.params?.pipelineId)
             const eplusUrl = ref()
             const abort = new AbortController()
             let eventAdded = false
@@ -54,7 +55,11 @@
                 try {
                     if (isLoading.value || !vm.proxy.$route?.params?.projectId) return
                     isLoading.value = true
-                    const res = await request.get('/project/api/user/services/36/url/get')
+                    const res = await request.get('/project/api/user/services/61/url/get', {
+                        headers: {
+                            'X-DEVOPS-PIPELINE-ID': pipelineId.value
+                        }
+                    })
                     if (isAbsoluteURL(res.data)) {
                         eplusUrl.value = res.data
                     } else {
