@@ -27,20 +27,17 @@
 
 package com.tencent.devops.project.service.impl
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.api.*
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
-import com.tencent.devops.common.auth.api.AuthPlatformApi
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TServiceRecord
-import com.tencent.devops.process.api.service.ServicePipelinePermissionResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.constant.ProjectMessageCode.SERVICE_ADD_FAIL
 import com.tencent.devops.project.constant.ProjectMessageCode.T_SERVICE_PREFIX
@@ -49,11 +46,7 @@ import com.tencent.devops.project.dao.FavoriteDao
 import com.tencent.devops.project.dao.ServiceDao
 import com.tencent.devops.project.dao.ServiceTypeDao
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.service.OPPServiceVO
-import com.tencent.devops.project.pojo.service.ServiceCreateInfo
-import com.tencent.devops.project.pojo.service.ServiceListVO
-import com.tencent.devops.project.pojo.service.ServiceUpdateInfo
-import com.tencent.devops.project.pojo.service.ServiceVO
+import com.tencent.devops.project.pojo.service.*
 import com.tencent.devops.project.service.ServiceManageService
 import com.tencent.devops.project.service.UserProjectServiceService
 import org.jooq.DSLContext
@@ -72,7 +65,7 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
     private val authProjectApi: AuthProjectApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val apiPlatformApi: AuthPlatformApi,
-    private val client: Client
+    private val authPermissionApi: AuthPermissionApi
 ) : UserProjectServiceService {
 
     override fun getService(userId: String, serviceId: Long): Result<ServiceVO> {
@@ -328,26 +321,9 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
         serviceId: Long
     ): Result<String> {
         if (!projectId.isNullOrBlank()) {
-            // 检查用户是否有该项目的权限
-            val hasPermission = authProjectApi.isProjectUser(
-                user = userId,
-                serviceCode = pipelineAuthServiceCode,
-                projectCode = projectId,
-                group = null
-            )
-            if (!hasPermission) {
-                throw ErrorCodeException(
-                    errorCode = ProjectMessageCode.USER_NOT_PROJECT_USER,
-                    params = arrayOf(userId, projectId)
-                )
-            }
+            validateProjectPermission(userId, projectId)
             if (!pipelineId.isNullOrBlank()) {
-                client.get(ServicePipelinePermissionResource::class).checkPipelinePermission(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    permission = AuthPermission.VIEW
-                )
+                validatePipelinePermission(userId, projectId, AuthPermission.VIEW)
             }
         }
         val serviceResult = getService(userId, serviceId)
@@ -361,6 +337,49 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
             serviceVO = serviceManageService.doSpecBus(userId, serviceVO, projectId)
         }
         return Result(data = serviceVO.iframeUrl)
+    }
+
+    /**
+     * 验证用户项目权限
+     */
+    private fun validateProjectPermission(userId: String, projectId: String) {
+        val hasPermission = authProjectApi.isProjectUser(
+            user = userId,
+            serviceCode = pipelineAuthServiceCode,
+            projectCode = projectId,
+            group = null
+        )
+        if (!hasPermission) {
+            logger.warn("User $userId has no permission to access project $projectId")
+            throw ErrorCodeException(
+                errorCode = ProjectMessageCode.USER_NOT_PROJECT_USER,
+                params = arrayOf(userId, projectId)
+            )
+        }
+    }
+
+    /**
+     * 验证用户流水线权限
+     */
+    private fun validatePipelinePermission(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission
+    ) {
+        val hasPermission = authPermissionApi.validateUserResourcePermission(
+            user = userId,
+            serviceCode = pipelineAuthServiceCode,
+            resourceType = AuthResourceType.PIPELINE_DEFAULT,
+            projectCode = projectId,
+            permission = permission
+        )
+        if (!hasPermission) {
+            logger.warn("User $userId has no permission to view pipeline in project $projectId")
+            throw ErrorCodeException(
+                errorCode = USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                params = arrayOf(userId, projectId, permission.name)
+            )
+        }
     }
 
     companion object {
