@@ -44,6 +44,7 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.ProjectProperties
+import com.tencent.devops.project.pojo.ProjectSortType
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -80,8 +81,24 @@ class ServiceProjectResourceImpl @Autowired constructor(
         )
     }
 
-    override fun list(userId: String, productIds: String?): Result<List<ProjectVO>> {
-        return Result(projectService.list(userId, productIds))
+    override fun list(
+        userId: String,
+        productIds: String?,
+        channelCodes: String?,
+        sort: ProjectSortType?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<ProjectVO>> {
+        return Result(
+            projectService.list(
+                userId = userId,
+                productIds = productIds,
+                channelCodes = channelCodes,
+                sort = sort,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 
     override fun getAllProject(): Result<List<ProjectVO>> {
