@@ -29,6 +29,7 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.NUM_ZERO
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -741,7 +742,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            version = resource.settingVersion ?: 0, // 历史没有关联过setting版本应该取正式版本
+            version = resource.settingVersion ?: NUM_ZERO, // 历史没有关联过setting版本应该取正式版本
             archiveFlag = archiveFlag
         )
         val model = pipelineInfoFacadeService.getFixedModel(

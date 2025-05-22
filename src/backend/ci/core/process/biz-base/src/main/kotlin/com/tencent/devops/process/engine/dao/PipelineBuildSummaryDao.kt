@@ -91,12 +91,29 @@ class PipelineBuildSummaryDao {
     fun getSummaries(
         dslContext: DSLContext,
         projectId: String,
-        pipelineIds: Set<String>
+        pipelineIds: Set<String>,
+        lockFlag: Boolean = false
     ): Result<TPipelineBuildSummaryRecord> {
-        return with(T_PIPELINE_BUILD_SUMMARY) {
-            dslContext.selectFrom(this)
+        with(T_PIPELINE_BUILD_SUMMARY) {
+            return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.`in`(pipelineIds).and(PROJECT_ID.eq(projectId)))
+                .apply { if (lockFlag) forUpdate() }
                 .fetch()
+        }
+    }
+
+    fun getPipelineRunningCountInfo(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineIds: Set<String>,
+        lockFlag: Boolean = false
+    ): Map<String, Int> {
+        with(T_PIPELINE_BUILD_SUMMARY) {
+            return dslContext.select(PIPELINE_ID, RUNNING_COUNT).from(this)
+                .where(PIPELINE_ID.`in`(pipelineIds).and(PROJECT_ID.eq(projectId)))
+                .apply { if (lockFlag) forUpdate() }
+                .fetch()
+                .associate { it.value1() to it.value2() }
         }
     }
 

@@ -57,8 +57,8 @@ class ArchivePipelineFacadeService @Autowired constructor(
     private val archivePipelineManageService: ArchivePipelineManageService
 ) {
 
-    @Value("\${pipeline.archive.maxNum:500}")
-    private val pipelineArchiveMaxNum: Int = 500
+    @Value("\${pipeline.archive.maxNum:100}")
+    private val pipelineArchiveMaxNum: Int = 100
 
     fun getDownloadAllPipelines(userId: String, projectId: String): List<Map<String, String>> {
         return pipelineListFacadeService.listPermissionPipelineName(projectId, userId)
@@ -119,7 +119,7 @@ class ArchivePipelineFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         cancelFlag: Boolean = false,
-        pipelineIds: List<String>
+        pipelineIds: Set<String>
     ): Boolean {
         // 检查一次迁移的流水线数量是否超过限制
         val size = pipelineIds.size

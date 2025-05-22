@@ -44,7 +44,7 @@ data class PipelineBatchArchiveEvent(
     @get:Schema(title = "项目ID")
     val projectId: String,
     @get:Schema(title = "流水线ID数组")
-    val pipelineIds: List<String>,
+    val pipelineIds: Set<String>,
     @get:Schema(title = "用户ID")
     val userId: String,
     @get:Schema(title = "是否取消正在运行的流水线")
