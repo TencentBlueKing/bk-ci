@@ -2,6 +2,7 @@ package com.tencent.devops.remotedev.service.redis
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.model.remotedev.tables.records.TRemotedevConfigRecord
 import com.tencent.devops.remotedev.dao.ConfigDao
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
 import com.tencent.devops.remotedev.dao.WhiteListDao
@@ -24,6 +25,21 @@ class ConfigCacheService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ConfigCacheService::class.java)
+    }
+
+    fun opFetchAllConfig(): List<TRemotedevConfigRecord> {
+        logger.info("fetch all config")
+        return configDao.fetchAll(dslContext)
+    }
+
+    fun opInsertOrUpdateConfig(key: String, value: String): Boolean {
+        logger.info("insert or update config, key: $key, value: $value")
+        return configDao.insertOrUpdateConfig(dslContext, key, value)
+    }
+
+    fun opDeleteConfig(key: String) : Boolean{
+        logger.info("delete config, key: $key")
+        return configDao.deleteConfig(dslContext, key)
     }
 
     private val redisCache = Caffeine.newBuilder()
@@ -57,7 +73,7 @@ class ConfigCacheService @Autowired constructor(
             expertSupportDao.fetchExpertSupportConfig(dslContext, type).map { it.content }
         }
 
-    fun get(key: String) = redisCache.get(key)
+    fun get(key: String): String? = redisCache.get(key)
 
     fun getSetMembers(key: String) = redisCacheSet.get(key)
 
