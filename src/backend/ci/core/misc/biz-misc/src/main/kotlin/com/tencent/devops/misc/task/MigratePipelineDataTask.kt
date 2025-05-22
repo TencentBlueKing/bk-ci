@@ -1,5 +1,6 @@
 package com.tencent.devops.misc.task
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -51,6 +52,18 @@ class MigratePipelineDataTask constructor(
                     // 2、取消未结束的构建
                     handleUnFinishPipelines(RETRY_NUM)
                     Thread.sleep(DEFAULT_THREAD_SLEEP_TINE)
+                    // 检查构建是否结束
+                    val pipelineRunningCountMap = migratePipelineDataParam.processDao.getPipelineRunningCountInfo(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        pipelineIds = setOf(pipelineId)
+                    )
+                    if (pipelineRunningCountMap.any { it.value > 0 }) {
+                        throw ErrorCodeException(
+                            errorCode = MiscMessageCode.ERROR_MIGRATING_PIPELINE_CANCEL_FAIL,
+                            params = arrayOf(pipelineId)
+                        )
+                    }
                 }
                 // 3、开始迁移流水线的数据
                 // 迁移T_PIPELINE_INFO表数据

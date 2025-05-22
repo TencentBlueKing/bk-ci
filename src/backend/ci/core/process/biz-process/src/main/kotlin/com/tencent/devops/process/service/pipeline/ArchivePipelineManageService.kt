@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.service.pipeline
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
@@ -37,6 +39,7 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBatchArchiveEvent
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
@@ -47,6 +50,7 @@ import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.service.PipelineListQueryParamService
 import com.tencent.devops.process.util.BuildMsgUtils
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
@@ -56,6 +60,7 @@ import org.springframework.stereotype.Service
 class ArchivePipelineManageService @Autowired constructor(
     @Qualifier(ARCHIVE_SHARDING_DSL_CONTEXT)
     private var archiveShardingDslContext: DSLContext,
+    private val dslContext: DSLContext,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineBuildDao: PipelineBuildDao,
     private val pipelineInfoDao: PipelineInfoDao,
@@ -75,16 +80,25 @@ class ArchivePipelineManageService @Autowired constructor(
         pipelineId: String,
         cancelFlag: Boolean = false
     ): Boolean {
-        // 发送迁移归档流水线数据消息
-        pipelineEventDispatcher.dispatch(
-            PipelineArchiveEvent(
-                source = "archive_pipeline",
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            checkMigrateCondition(
+                transactionContext = transactionContext,
+                cancelFlag = cancelFlag,
                 projectId = projectId,
-                pipelineId = pipelineId,
-                userId = userId,
-                cancelFlag = cancelFlag
+                pipelineIds = setOf(pipelineId)
             )
-        )
+            // 发送迁移归档流水线数据消息
+            pipelineEventDispatcher.dispatch(
+                PipelineArchiveEvent(
+                    source = "archive_pipeline",
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    cancelFlag = cancelFlag
+                )
+            )
+        }
         return true
     }
 
@@ -92,19 +106,62 @@ class ArchivePipelineManageService @Autowired constructor(
         userId: String,
         projectId: String,
         cancelFlag: Boolean = false,
-        pipelineIds: List<String>
+        pipelineIds: Set<String>
     ): Boolean {
-        sampleEventDispatcher.dispatch(
-            PipelineBatchArchiveEvent(
-                source = "batch_archive_pipeline",
-                projectId = projectId,
-                pipelineIds = pipelineIds,
-                userId = userId,
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            checkMigrateCondition(
+                transactionContext = transactionContext,
                 cancelFlag = cancelFlag,
-                expiredInHour = PIPELINE_BATCH_ARCHIVE_EXPIRED_IN_HOUR
+                projectId = projectId,
+                pipelineIds = pipelineIds
             )
-        )
+            sampleEventDispatcher.dispatch(
+                PipelineBatchArchiveEvent(
+                    source = "batch_archive_pipeline",
+                    projectId = projectId,
+                    pipelineIds = pipelineIds,
+                    userId = userId,
+                    cancelFlag = cancelFlag,
+                    expiredInHour = PIPELINE_BATCH_ARCHIVE_EXPIRED_IN_HOUR
+                )
+            )
+        }
         return true
+    }
+
+    private fun checkMigrateCondition(
+        transactionContext: DSLContext,
+        cancelFlag: Boolean,
+        projectId: String,
+        pipelineIds: Set<String>
+    ) {
+        if (cancelFlag) {
+            return
+        }
+        // 检查正在运行的流水线（已加锁）
+        val pipelineRunningCountMap = pipelineBuildSummaryDao.getPipelineRunningCountInfo(
+            dslContext = transactionContext,
+            projectId = projectId,
+            pipelineIds = pipelineIds,
+            lockFlag = true
+        )
+        val runningPipelineIds = pipelineRunningCountMap.filter { it.value > 0 }.keys
+        if (runningPipelineIds.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_RUNNING_PIPELINE_ARCHIVE_INVALID,
+                params = arrayOf(runningPipelineIds.joinToString())
+            )
+        }
+        // 二次校验：查询最新状态防止锁失效后的变更
+        val currentPipelineRunningCountMap = pipelineBuildSummaryDao.getPipelineRunningCountInfo(
+            dslContext = transactionContext,
+            projectId = projectId,
+            pipelineIds = pipelineIds
+        )
+        if (currentPipelineRunningCountMap.any { it.value > 0 }) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_REST_EXCEPTION_COMMON_TIP)
+        }
     }
 
     fun getArchivedPipelineList(
