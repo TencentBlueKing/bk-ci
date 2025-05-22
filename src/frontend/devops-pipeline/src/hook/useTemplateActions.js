@@ -168,7 +168,7 @@ export default function useTemplateActions () {
      */
     function toRelativeStore (row, storeStatus) {
         if (!row.canEdit) return
-        let href = `${WEB_URL_PREFIX}/store/editTemplate?templateCode=${row.id}&hasSourceInfo=true`
+        let href = `${WEB_URL_PREFIX}/store/editTemplate/${row.id}?hasSourceInfo=true`
         if (storeStatus === 'NEVER_PUBLISHED') {
             href += `&projectCode=${encodeURIComponent(row.projectId)}`
         }
