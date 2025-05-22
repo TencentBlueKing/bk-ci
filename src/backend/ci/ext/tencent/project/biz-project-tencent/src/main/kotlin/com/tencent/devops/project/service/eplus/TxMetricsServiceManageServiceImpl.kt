@@ -76,7 +76,6 @@ class TxMetricsServiceManageServiceImpl(
         if (pipelineId.isNullOrBlank()) {
             if (project?.authSecrecy != ProjectAuthSecrecyStatus.PUBLIC.value) return serviceVO
         } else {
-            if (performAnalysisPanelPid == null) return serviceVO
             filter.add(Filter(col = "pipeline_id", op = "=", `val` = pipelineId))
         }
         // 非保密项目才跳去eplus页面看统计数据
