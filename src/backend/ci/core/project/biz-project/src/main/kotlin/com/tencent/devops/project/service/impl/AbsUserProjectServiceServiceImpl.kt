@@ -331,7 +331,12 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
         if (!projectId.isNullOrBlank()) {
             validateProjectPermission(userId, projectId)
             if (!pipelineId.isNullOrBlank()) {
-                validatePipelinePermission(userId, projectId, AuthPermission.VIEW)
+                validatePipelinePermission(
+                    userId = userId,
+                    projectId = projectId,
+                    permission = AuthPermission.VIEW,
+                    pipelineId = pipelineId
+                )
             }
         }
         val serviceResult = getService(userId, serviceId)
@@ -372,7 +377,8 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
     private fun validatePipelinePermission(
         userId: String,
         projectId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        pipelineId: String
     ) {
         val hasPermission = authPermissionApi.validateUserResourcePermission(
             user = userId,
@@ -385,7 +391,7 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
             logger.warn("User $userId has no permission to view pipeline in project $projectId")
             throw ErrorCodeException(
                 errorCode = USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                params = arrayOf(userId, projectId, permission.name)
+                params = arrayOf(userId, projectId, permission.alias, pipelineId)
             )
         }
     }
