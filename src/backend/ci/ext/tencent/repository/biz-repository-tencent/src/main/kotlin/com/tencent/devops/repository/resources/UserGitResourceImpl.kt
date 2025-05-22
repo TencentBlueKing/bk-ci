@@ -71,9 +71,18 @@ class UserGitResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         repoHashId: String?,
-        search: String?
+        search: String?,
+        username: String?
     ): Result<AuthorizeResult> {
-        return Result(gitOauthService.getProject(userId, projectId, repoHashId, search))
+        return Result(
+            gitOauthService.getProject(
+                userId = userId,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                search = search,
+                username = username
+            )
+        )
     }
 
     override fun getProjectList(userId: String, page: Int?, pageSize: Int?): Result<List<Project>> {
