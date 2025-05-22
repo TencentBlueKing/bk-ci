@@ -30,14 +30,17 @@ package com.tencent.devops.project.service.impl
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.auth.api.AuthPlatformApi
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TServiceRecord
+import com.tencent.devops.process.api.service.ServicePipelinePermissionResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.constant.ProjectMessageCode.SERVICE_ADD_FAIL
 import com.tencent.devops.project.constant.ProjectMessageCode.T_SERVICE_PREFIX
@@ -68,7 +71,8 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val authProjectApi: AuthProjectApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
-    private val apiPlatformApi: AuthPlatformApi
+    private val apiPlatformApi: AuthPlatformApi,
+    private val client: Client
 ) : UserProjectServiceService {
 
     override fun getService(userId: String, serviceId: Long): Result<ServiceVO> {
@@ -317,7 +321,12 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
         }
     }
 
-    override fun getServiceUrl(userId: String, projectId: String?, serviceId: Long): Result<String> {
+    override fun getServiceUrl(
+        userId: String,
+        projectId: String?,
+        pipelineId: String?,
+        serviceId: Long
+    ): Result<String> {
         if (!projectId.isNullOrBlank()) {
             // 检查用户是否有该项目的权限
             val hasPermission = authProjectApi.isProjectUser(
@@ -330,6 +339,14 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
                 throw ErrorCodeException(
                     errorCode = ProjectMessageCode.USER_NOT_PROJECT_USER,
                     params = arrayOf(userId, projectId)
+                )
+            }
+            if (!pipelineId.isNullOrBlank()) {
+                client.get(ServicePipelinePermissionResource::class).checkPipelinePermission(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    permission = AuthPermission.VIEW
                 )
             }
         }
