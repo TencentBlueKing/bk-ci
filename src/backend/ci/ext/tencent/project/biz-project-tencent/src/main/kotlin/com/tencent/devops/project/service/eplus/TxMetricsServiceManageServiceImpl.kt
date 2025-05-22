@@ -83,7 +83,10 @@ class TxMetricsServiceManageServiceImpl(
         return serviceVO.apply {
             val jsonData = JsonData(
                 nid = panelNid,
-                pid = if (pipelineId.isNullOrBlank()) panelPid else performAnalysisPanelPid!!,
+                pid = when {
+                    pipelineId.isNullOrBlank() -> panelPid
+                    else -> performAnalysisPanelPid ?: return serviceVO
+                },
                 user = userId,
                 filter = filter
             )
