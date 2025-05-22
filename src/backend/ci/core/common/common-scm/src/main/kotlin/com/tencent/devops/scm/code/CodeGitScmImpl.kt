@@ -43,8 +43,10 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.GitTagInfo
 import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.scm.utils.code.git.GitUtils.urlEncode
 import org.eclipse.jgit.api.Git
@@ -393,6 +395,25 @@ class CodeGitScmImpl constructor(
             url = url,
             username = privateKey!!,
             password = passPhrase!!
+        )
+    }
+
+    override fun getTag(tagName: String): GitTagInfo? {
+        val url = "projects/${urlEncode(projectName)}/repository/tags/${urlEncode(tagName)}"
+        return gitApi.getTagInfo(
+            host = apiUrl,
+            url = url,
+            token = token
+        )
+    }
+
+    override fun getTapdWorkItems(refType: String, iid: Long): List<TapdWorkItem> {
+        return gitApi.getTapdWorkitems(
+            host = apiUrl,
+            token = token,
+            id = projectName,
+            type = refType,
+            iid = iid
         )
     }
 
