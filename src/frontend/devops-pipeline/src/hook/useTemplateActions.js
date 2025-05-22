@@ -166,10 +166,12 @@ export default function useTemplateActions () {
      * 上架研发商店-关联商店
      * @param row
      */
-    function toRelativeStore (row) {
+    function toRelativeStore (row, storeStatus) {
         if (!row.canEdit) return
-
-        const href = `${WEB_URL_PREFIX}/store/editTemplate?templateCode=${row.id}&templateName=${row.name}&templateVersion=${row.releasedVersion}&hasSourceInfo=true`
+        let href = `${WEB_URL_PREFIX}/store/editTemplate?templateCode=${row.id}&hasSourceInfo=true`
+        if (storeStatus === 'NEVER_PUBLISHED') {
+            href += `&projectCode=${encodeURIComponent(row.projectId)}`
+        }
         window.open(href, '_blank')
     }
 

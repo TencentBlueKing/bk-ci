@@ -95,7 +95,7 @@
                 return this.$route.query.type
             },
             hasSourceInfo () {
-                return this.$route.query.hasSourceInfo
+                return this.$route.query.hasSourceInfo === 'true'
             },
             templateCode () {
                 return this.$route.params.templateCode || this.$route.query.templateCode
@@ -136,7 +136,11 @@
                 'releaseTemplate'
             ]),
             async init () {
-                if (this.type === 'apply') {
+                if (this.hasSourceInfo && this.$route.query.projectCode) {
+                    // 从未上架过的
+                    Object.assign(this.templateForm, this.$route.query, {})
+                    this.showContent = true
+                } else if (this.type === 'apply') {
                     this.showContent = true
                 } else {
                     await this.getTemplateDetail()
@@ -144,14 +148,12 @@
             },
             async getTemplateDetail () {
                 this.loading.isLoading = true
-
                 try {
                     const res = await this.requestTemplateDetail(this.templateCode)
                     Object.assign(this.templateForm, res, {
                         fullScopeVisible: res.storeVisibleDept.fullScopeVisible,
                         categoryIdList: this.templateForm.categoryList?.map(item => item.id),
-                        labelIdList: this.templateForm.labelList?.map(item => item.id),
-                        version: this.$route.query.version
+                        labelIdList: this.templateForm.labelList?.map(item => item.id)
                     })
                 } catch (err) {
                     const message = err.message ? err.message : err

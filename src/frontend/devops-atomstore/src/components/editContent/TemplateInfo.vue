@@ -86,7 +86,7 @@
                     class="bk-form-content template-item-content"
                     v-else
                 >
-                    {{ templateOptionName || templateForm.templateName }}
+                    {{ templateOptionName }}
                 </div>
             </div>
             <div class="bk-form-item">
@@ -392,7 +392,7 @@
                 return toolbars
             },
             templateOptionName () {
-                return this.templateList.find(item => item.templateId === this.templateForm.templateCode)?.name || this.$route.query.templateName
+                return this.templateList.find(item => item.id === this.templateForm.templateCode)?.name || this.templateForm.sourceTemplateName
             }
         },
         watch: {
@@ -402,9 +402,14 @@
                 }
             },
             'templateForm.projectCode': {
-                handler (newVal) {
+                async handler (newVal) {
                     if (newVal) {
-                        this.selectedTplProject(1)
+                        await this.selectedTplProject(1)
+                        if (!this.templateForm.templateName) {
+                            this.$emit('updateTemplateForm', {
+                                templateName: this.templateOptionName
+                            })
+                        }
                     }
                 },
                 immediate: true
@@ -540,7 +545,8 @@
                         templateId: this.templateForm.templateCode,
                         page: nextPage,
                         pageSize: this.versionsPagination.limit,
-                        status: 'RELEASED'
+                        status: 'RELEASED',
+                        storeFlag: false
                     })
 
                     const versions = res.records
