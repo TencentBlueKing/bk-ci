@@ -30,6 +30,7 @@ package com.tencent.devops.store.common.dao
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreBelongDeptRel
 import com.tencent.devops.store.pojo.common.StoreBelongDeptRel
+import com.tencent.devops.store.pojo.common.StoreDeptInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import java.time.LocalDateTime
 import org.jooq.DSLContext
@@ -37,6 +38,8 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class TxStoreBelongDeptRelDao {
+
+
 
     fun batchAdd(userId: String, dslContext: DSLContext, storeBelongDeptRelList: List<StoreBelongDeptRel>) {
         with(TStoreBelongDeptRel.T_STORE_BELONG_DEPT_REL) {
@@ -101,6 +104,35 @@ class TxStoreBelongDeptRelDao {
             dslContext.deleteFrom(this)
                 .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
                 .execute()
+        }
+    }
+
+    fun getByStoreCodeAndType(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): StoreBelongDeptRel? {
+        return with(TStoreBelongDeptRel.T_STORE_BELONG_DEPT_REL) {
+            dslContext.selectFrom(this)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .fetchOne()?.let { record ->
+                    StoreBelongDeptRel(
+                        storeCode = storeCode,
+                        storeType = storeType,
+                        storeDeptInfo = StoreDeptInfo(
+                            bgId = record.bgId.toInt(),
+                            bgName = record.bgName,
+                            deptId = record.deptId.toInt(),
+                            deptName = record.deptName,
+                            centerId = record.centerId.toInt(),
+                            centerName = record.centerName,
+                            groupId = record.groupId.toInt(),
+                            groupName = record.groupName,
+                            businessLineId = record.businessLineId?.toLong(),
+                            businessLineName = record.businessLineName
+                        )
+                    )
+                }
         }
     }
 }

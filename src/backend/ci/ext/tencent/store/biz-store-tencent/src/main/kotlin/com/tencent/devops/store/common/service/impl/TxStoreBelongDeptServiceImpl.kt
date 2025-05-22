@@ -85,6 +85,10 @@ class TxStoreBelongDeptServiceImpl @Autowired constructor(
         return true
     }
 
+    override fun getStoreBelongDept(userId: String, storeCode: String, storeType: StoreTypeEnum): StoreBelongDeptRel? {
+        return txStoreBelongDeptRelDao.getByStoreCodeAndType(dslContext, storeCode, storeType)
+    }
+
     private fun initStoreBelongDept(storeTypeEnum: StoreTypeEnum) {
         Executors.newFixedThreadPool(1).submit {
             logger.info("begin initAtomBelongDept!!")

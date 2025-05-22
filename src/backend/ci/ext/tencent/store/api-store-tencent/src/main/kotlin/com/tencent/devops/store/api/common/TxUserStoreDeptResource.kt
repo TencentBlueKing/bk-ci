@@ -61,7 +61,7 @@ interface TxUserStoreDeptResource {
         @Parameter(description = "类别", required = true)
         @QueryParam("storeType")
         storeType: StoreTypeEnum
-    ): Result<StoreBelongDeptRel>
+    ): Result<StoreBelongDeptRel?>
 
     @Operation(summary = "更新组件所属组织架构")
     @PUT

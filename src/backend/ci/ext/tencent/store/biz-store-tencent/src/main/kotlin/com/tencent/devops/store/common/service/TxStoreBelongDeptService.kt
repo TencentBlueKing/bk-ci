@@ -28,6 +28,7 @@
 package com.tencent.devops.store.common.service
 
 import com.tencent.devops.store.pojo.common.StoreBelongDeptRel
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 interface TxStoreBelongDeptService {
 
@@ -40,4 +41,10 @@ interface TxStoreBelongDeptService {
      * 初始化存量组件所属组织架构
      */
     fun initStoreBelongDept(): Boolean
+
+    fun getStoreBelongDept(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): StoreBelongDeptRel?
 }

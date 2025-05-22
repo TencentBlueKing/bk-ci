@@ -32,6 +32,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.TxUserStoreDeptResource
 import com.tencent.devops.store.common.service.TxStoreBelongDeptService
 import com.tencent.devops.store.pojo.common.StoreBelongDeptRel
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -46,5 +47,13 @@ class TxUserStoreDeptResourceImpl @Autowired constructor(
         return Result(
             txStoreBelongDeptService.updateStoreBelongDept(userId, storeBelongDeptRel)
         )
+    }
+
+    override fun getStoreBelongDept(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): Result<StoreBelongDeptRel?> {
+        return Result(txStoreBelongDeptService.getStoreBelongDept(userId, storeCode, storeType))
     }
 }
