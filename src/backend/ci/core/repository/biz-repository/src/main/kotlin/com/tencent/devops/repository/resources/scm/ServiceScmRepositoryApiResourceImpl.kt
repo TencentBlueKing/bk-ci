@@ -30,6 +30,7 @@ package com.tencent.devops.repository.resources.scm
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.scm.ServiceScmRepositoryApiResource
+import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.repository.service.hub.ScmRepositoryApiService
 import com.tencent.devops.scm.api.pojo.Perm
@@ -110,6 +111,21 @@ class ServiceScmRepositoryApiResourceImpl @Autowired constructor(
                 page = page,
                 pageSize = pageSize
             )
+        )
+    }
+
+    override fun registerWebhook(
+        projectId: String,
+        eventType: String,
+        repository: Repository
+    ) {
+        repositoryApiService.createHook(
+            projectId = projectId,
+            authRepository = AuthRepository(repository),
+            events = listOf(eventType),
+            secret = null,
+            scmType = repository.getScmType(),
+            scmCode = repository.scmCode
         )
     }
 }
