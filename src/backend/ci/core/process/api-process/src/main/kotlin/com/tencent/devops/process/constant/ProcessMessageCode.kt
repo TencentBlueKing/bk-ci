@@ -565,6 +565,7 @@ object ProcessMessageCode {
     const val BK_BUILD_QUEUE_WAIT_FOR_CONCURRENCY = "bkBuildQueueWaitingForConcurrency" // 并发组配置的排队
     const val BK_BUILD_QUEUE_WAIT = "bkBuildQueueWaiting" // 并发配置的排队
     const val BK_BUILD_CANCEL_BY_CONCURRENCY = "bkBuildCancelByConcurrency" // 并发组配置的取消
+    const val BK_BUILD_TASK_RETRY_NOTICE = "bkBuildTaskRetryNotice" // 插件[{0}]执行失败，即将进行第[{1}]次自动重试。失败原因:{2}
 
     const val BK_PIPELINE_ELEMENT_CHECK_FAILED_MESSAGE = "bkPipelineElementCheckFailedMessage"
     // 没有子流水线执行权限错误标题
