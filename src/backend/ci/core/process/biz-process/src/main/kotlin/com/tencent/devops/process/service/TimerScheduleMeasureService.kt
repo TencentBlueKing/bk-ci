@@ -7,7 +7,6 @@ import io.micrometer.core.instrument.Timer
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.Duration
 import java.util.concurrent.TimeUnit
 
 @Service
@@ -30,8 +29,6 @@ class TimerScheduleMeasureService @Autowired constructor(
         Timer.builder(name)
                 .description("pipeline timer trigger task execution time")
                 .tags(tags)
-                .minimumExpectedValue(Duration.ofMillis(10))
-                .maximumExpectedValue(Duration.ofSeconds(60))
                 .register(meterRegistry)
                 .record(timeConsumingMills, TimeUnit.MILLISECONDS)
     }
@@ -50,8 +47,6 @@ class TimerScheduleMeasureService @Autowired constructor(
             Timer.builder(name)
                     .description("pipeline timer trigger actual execution time")
                     .tags(tags)
-                    .minimumExpectedValue(Duration.ofSeconds(1))
-                    .maximumExpectedValue(Duration.ofSeconds(120))
                     .register(meterRegistry)
                     .record(timeConsumingMills, TimeUnit.MILLISECONDS)
         }
