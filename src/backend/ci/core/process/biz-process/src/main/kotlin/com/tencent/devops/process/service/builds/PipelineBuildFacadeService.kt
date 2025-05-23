@@ -69,6 +69,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamTyp
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
+import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
@@ -2508,7 +2509,11 @@ class PipelineBuildFacadeService(
         val startParameters = buildInfo.buildParameters?.filter {
             it.key != PIPELINE_RETRY_COUNT
         }?.associate {
-            it.key to it.value.toString()
+            it.key to if (CascadePropertyUtils.supportCascadeParam(it.valueType) && it.value is Map<*, *>) {
+                JsonUtil.toJson(it.value)
+            } else {
+                it.value.toString()
+            }
         }?.toMutableMap() ?: mutableMapOf()
         startParameters.putAll(buildVars)
         val startType = StartType.toStartType(buildInfo.trigger)
