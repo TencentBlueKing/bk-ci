@@ -249,7 +249,9 @@
             async fetchProjectList () {
                 try {
                     this.projectListLoading = true
-                    const res = await this.requestProjectList()
+                    const res = await this.requestProjectList({
+                        enabled: true
+                    })
                     res.forEach((item) => {
                         const isInstalled = this.installedProject.some(project => project.projectCode === item.projectCode)
                         if (!isInstalled) this.projectList.push(item)
@@ -311,10 +313,8 @@
                     this.isLoading = true
                 
                     await methods[this.type]({
-                        
                         [`${this.type}Code`]: this.code,
-                        projectCode: this.project
-                        
+                        [this.type === 'atom' ? 'projectCode' : 'projectCodeList']: this.project
                     })
                     this.isINstallSuccess = true
                     this.$bkMessage({ message: this.$t('store.安装成功'), theme: 'success' })
