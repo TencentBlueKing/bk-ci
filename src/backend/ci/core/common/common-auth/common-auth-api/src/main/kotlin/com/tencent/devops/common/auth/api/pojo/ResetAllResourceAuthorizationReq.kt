@@ -8,6 +8,8 @@ data class ResetAllResourceAuthorizationReq(
     val projectCode: String,
     @get:Schema(title = "授予人")
     val handoverFrom: String,
+    @get:Schema(title = "授予人列表")
+    val handoverFroms: List<String>,
     @get:Schema(title = "交接人")
     val handoverTo: String?,
     @get:Schema(title = "是否为预检查，若为true,不做权限交接")

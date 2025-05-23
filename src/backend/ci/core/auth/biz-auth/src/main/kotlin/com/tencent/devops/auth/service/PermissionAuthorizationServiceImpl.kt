@@ -379,6 +379,7 @@ class PermissionAuthorizationServiceImpl(
                     projectCode = projectCode,
                     resourceType = resourceType,
                     handoverFrom = condition.handoverFrom,
+                    handoverFroms = condition.handoverFroms,
                     fullSelection = true,
                     preCheck = condition.preCheck,
                     handoverChannel = HandoverChannelCode.MANAGER,
