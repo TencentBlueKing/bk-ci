@@ -27,12 +27,22 @@
 
 package com.tencent.devops.process.api.user
 
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.MAXIMUM_NUMBER_QUEUES_ILLEGAL
+import com.tencent.devops.process.constant.ProcessMessageCode.MAXIMUM_QUEUE_LENGTH_ILLEGAL
 import com.tencent.devops.process.service.DockerBuildService
 import com.tencent.devops.process.service.TXPipelineService
 import com.tencent.devops.process.service.pipelineExport.TXPipelineExportService
+import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
+import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
+import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
+import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN
 import jakarta.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -93,6 +103,44 @@ class TXUserPipelineResourceImpl @Autowired constructor(
     private fun checkPipelineId(pipelineId: String) {
         if (pipelineId.isBlank()) {
             throw ParamBlankException("Invalid pipelineId")
+        }
+    }
+
+    private fun checkParam(setting: PipelineSetting) {
+        if (setting.runLockType == PipelineRunLockType.SINGLE ||
+                setting.runLockType == PipelineRunLockType.SINGLE_LOCK
+        ) {
+            validateQueueTime(setting.waitQueueTimeMinute)
+            validateQueueSize(setting.maxQueueSize)
+        }
+    }
+
+    /**
+     * 校验等待队列时间是否在有效范围内
+     * @param minutes 等待时间(分钟)
+     * @throws InvalidParamException 当时间不在有效范围内时抛出
+     */
+    private fun validateQueueTime(minutes: Int) {
+        if (
+                minutes !in PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN..
+                PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
+        ) {
+            throw InvalidParamException(
+                I18nUtil.getCodeLanMessage(MAXIMUM_QUEUE_LENGTH_ILLEGAL)
+            )
+        }
+    }
+
+    /**
+     * 校验最大队列大小是否在有效范围内
+     * @param size 队列大小
+     * @throws InvalidParamException 当大小不在有效范围内时抛出
+     */
+    private fun validateQueueSize(size: Int) {
+        if (size !in PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN..PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX) {
+            throw InvalidParamException(
+                I18nUtil.getCodeLanMessage(MAXIMUM_NUMBER_QUEUES_ILLEGAL)
+            )
         }
     }
 }
