@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -118,15 +119,59 @@ class ArchivePipelineFacadeService @Autowired constructor(
     fun batchMigrateArchivePipelineData(
         userId: String,
         projectId: String,
-        cancelFlag: Boolean = false,
-        pipelineIds: Set<String>
+        pipelineIds: Set<String>,
+        cancelFlag: Boolean = false
     ): Boolean {
         // 检查一次迁移的流水线数量是否超过限制
         val size = pipelineIds.size
+        if (size == 0) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                params = arrayOf("pipelineIds")
+            )
+        }
         if (size > pipelineArchiveMaxNum) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_OP_PIPELINE_NUM_INVALID,
                 params = arrayOf(size.toString(), pipelineArchiveMaxNum.toString())
+            )
+        }
+        // 检查流水线是否存在
+        val existPipelineIds = pipelineInfoDao.listInfoByPipelineIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineIds = pipelineIds
+        ).map { it.pipelineId }.toSet()
+        val notExistPipelineIds = pipelineIds.subtract(existPipelineIds)
+        if (notExistPipelineIds.isNotEmpty()) {
+            throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+                params = arrayOf(JsonUtil.toJson(notExistPipelineIds, false))
+            )
+        }
+        // 检查用户是否有迁移归档流水线数据的权限
+        val permission = AuthPermission.ARCHIVE
+        val authorizedPipelineIds = pipelinePermissionService.filterPipelines(
+            userId = userId,
+            projectId = projectId,
+            authPermissions = setOf(permission),
+            pipelineIds = pipelineIds.toList()
+        )[permission].orEmpty()
+        val unauthorizedPipelineIds = pipelineIds.subtract(authorizedPipelineIds.toSet())
+        if (unauthorizedPipelineIds.isNotEmpty()) {
+            val language = I18nUtil.getLanguage()
+            throw PermissionForbiddenException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    language = language,
+                    params = arrayOf(
+                        userId,
+                        projectId,
+                        permission.getI18n(language),
+                        JsonUtil.toJson(unauthorizedPipelineIds, false)
+                    )
+                )
             )
         }
         return archivePipelineManageService.batchMigrateData(
