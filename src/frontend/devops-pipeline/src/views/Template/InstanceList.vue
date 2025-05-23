@@ -301,7 +301,7 @@
                 id: 'templateVersion',
                 remoteMethod:
                     async (search) => {
-                        const res = await proxy.$store.dispatch('pipelines/requestTemplateVersionList', {
+                        const res = await proxy.$store.dispatch('templates/requestTemplateVersionList', {
                             projectId: projectId.value,
                             templateId: templateId.value,
                             versionName: search
