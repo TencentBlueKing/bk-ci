@@ -641,7 +641,9 @@ class RbacPermissionApplyService @Autowired constructor(
                         messageCode = "${resourceGroup.resourceType}.${resourceGroup.groupCode}" +
                             AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
                         defaultMessage = resourceGroup.groupName
-                    )
+                    ),
+                    groupId = resourceGroup.relationId,
+                    groupDesc = resourceGroup.description
                 )
             )
         }
