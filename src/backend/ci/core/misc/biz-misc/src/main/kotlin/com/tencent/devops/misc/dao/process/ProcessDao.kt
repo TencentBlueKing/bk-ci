@@ -30,6 +30,7 @@ package com.tencent.devops.misc.dao.process
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.misc.pojo.project.PipelineVersionSimple
 import com.tencent.devops.model.process.Tables
+import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_SUMMARY
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE_VERSION
 import com.tencent.devops.model.process.tables.TPipelineBuildHisDataClear
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
@@ -336,7 +337,7 @@ class ProcessDao {
         with(T_PIPELINE_RESOURCE_VERSION) {
             val baseStep = dslContext.update(this)
                 .set(REFER_COUNT, referCount)
-                .set(UPDATE_TIME, UPDATE_TIME)
+                .set(UPDATE_TIME, DSL.field(UPDATE_TIME.name, LocalDateTime::class.java))
             referFlag?.let { baseStep.set(REFER_FLAG, referFlag) }
             baseStep.where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)).and(VERSION.eq(version))).execute()
         }
@@ -356,6 +357,23 @@ class ProcessDao {
             dslContext.selectCount().from(this)
                 .where(conditions)
                 .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun getPipelineRunningCountInfo(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineIds: Set<String>,
+        lockFlag: Boolean = false
+    ): Map<String, Int> {
+        with(T_PIPELINE_BUILD_SUMMARY) {
+            return dslContext.select(PIPELINE_ID, RUNNING_COUNT)
+                .from(this)
+                .where(PIPELINE_ID.`in`(pipelineIds).and(PROJECT_ID.eq(projectId)))
+                .takeIf { lockFlag }?.forUpdate()
+                ?.fetch()
+                ?.associate { it[PIPELINE_ID] to it[RUNNING_COUNT] }
+                .orEmpty()
         }
     }
 }

@@ -186,7 +186,7 @@ class TemplateDao {
                 .set(TEMPLATE_NAME, name)
                 .set(CATEGORY, category)
                 .set(LOGO_URL, logoUrl)
-                .set(UPDATE_TIME, UPDATE_TIME)
+                .set(UPDATE_TIME, DSL.field(UPDATE_TIME.name, LocalDateTime::class.java))
                 .where(SRC_TEMPLATE_ID.eq(srcTemplateId))
                 .execute()
         }
@@ -202,7 +202,7 @@ class TemplateDao {
         with(TTemplate.T_TEMPLATE) {
             return dslContext.update(this)
                 .set(STORE_FLAG, storeFlag)
-                .set(UPDATE_TIME, UPDATE_TIME)
+                .set(UPDATE_TIME, DSL.field(UPDATE_TIME.name, LocalDateTime::class.java))
                 .where(ID.eq(templateId).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
@@ -685,7 +685,7 @@ class TemplateDao {
         with(TTemplate.T_TEMPLATE) {
             val dsl = dslContext.update(this)
                 .set(DESC, desc)
-                .set(UPDATE_TIME, UPDATE_TIME)
+                .set(UPDATE_TIME, DSL.field(UPDATE_TIME.name, LocalDateTime::class.java))
             if (!name.isNullOrBlank()) {
                 dsl.set(TEMPLATE_NAME, name)
             }
