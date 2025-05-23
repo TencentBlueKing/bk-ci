@@ -7,7 +7,6 @@ import io.micrometer.core.instrument.Timer
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.Duration
 import java.util.concurrent.TimeUnit
 
 @Service
@@ -17,8 +16,6 @@ class TimerScheduleMeasureService @Autowired constructor(
 ) {
     companion object {
         val logger = LoggerFactory.getLogger(TimerScheduleMeasureService::class.java)
-        // 百分位
-        private val PERCENTILES_ARR = arrayOf(0.5, 0.9, 0.95).toDoubleArray()
     }
 
     /**
@@ -32,10 +29,6 @@ class TimerScheduleMeasureService @Autowired constructor(
         Timer.builder(name)
                 .description("pipeline timer trigger task execution time")
                 .tags(tags)
-                .publishPercentileHistogram(true)
-                .publishPercentiles(*PERCENTILES_ARR)
-                .minimumExpectedValue(Duration.ofMillis(10))
-                .maximumExpectedValue(Duration.ofSeconds(60))
                 .register(meterRegistry)
                 .record(timeConsumingMills, TimeUnit.MILLISECONDS)
     }
@@ -54,10 +47,6 @@ class TimerScheduleMeasureService @Autowired constructor(
             Timer.builder(name)
                     .description("pipeline timer trigger actual execution time")
                     .tags(tags)
-                    .publishPercentileHistogram(true)
-                    .publishPercentiles(*PERCENTILES_ARR)
-                    .minimumExpectedValue(Duration.ofSeconds(1))
-                    .maximumExpectedValue(Duration.ofSeconds(120))
                     .register(meterRegistry)
                     .record(timeConsumingMills, TimeUnit.MILLISECONDS)
         }
