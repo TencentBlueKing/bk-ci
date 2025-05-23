@@ -160,7 +160,10 @@ class ArchivePipelineManageService @Autowired constructor(
             pipelineIds = pipelineIds
         )
         if (currentPipelineRunningCountMap.any { it.value > 0 }) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_REST_EXCEPTION_COMMON_TIP)
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_RUNNING_PIPELINE_ARCHIVE_INVALID,
+                params = arrayOf(currentPipelineRunningCountMap.filter { it.value > 0 }.keys.joinToString())
+            )
         }
     }
 

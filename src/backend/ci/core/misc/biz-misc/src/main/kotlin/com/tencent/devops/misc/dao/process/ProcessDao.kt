@@ -367,11 +367,13 @@ class ProcessDao {
         lockFlag: Boolean = false
     ): Map<String, Int> {
         with(T_PIPELINE_BUILD_SUMMARY) {
-            return dslContext.select(PIPELINE_ID, RUNNING_COUNT).from(this)
+            return dslContext.select(PIPELINE_ID, RUNNING_COUNT)
+                .from(this)
                 .where(PIPELINE_ID.`in`(pipelineIds).and(PROJECT_ID.eq(projectId)))
-                .apply { if (lockFlag) forUpdate() }
-                .fetch()
-                .associate { it.value1() to it.value2() }
+                .takeIf { lockFlag }?.forUpdate()
+                ?.fetch()
+                ?.associate { it[PIPELINE_ID] to it[RUNNING_COUNT] }
+                .orEmpty()
         }
     }
 }
