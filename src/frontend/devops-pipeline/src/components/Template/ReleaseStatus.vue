@@ -11,8 +11,13 @@
                 theme="primary"
                 :size="16"
             />
-           
-            <p class="release-status-title">{{ $t('template.releasing.title', [instanceNum]) }}</p>
+            <i18n
+                class="release-status-title"
+                tag="p"
+                path="template.releasing.title"
+            >
+                <span class="bold">{{ instanceNum }}</span>
+            </i18n>
             <p class="sub-message">{{ $t('template.releasing.tips') }}</p>
 
             <bk-button
@@ -26,21 +31,25 @@
             class="content-wrapper"
             v-if="showPartOfMrPage"
         >
-            <span class="part-of-mr" />
-            <p class="release-status-title">
-                {{ $t('template.partOfMr.title') }}
-            </p>
-            <p
-                class="sub-message pending"
-            >
-                {{ $t('template.partOfMr.tips1') }}
-                <span>
-                    {{ $t('template.partOfMr.tips2') }}
-                </span>
-            </p>
-            <p class="pac-mode-message">
-                {{ $t('template.partOfMr.tips3') }}
-            </p>
+            <template v-if="releaseRes.failItemNum">
+            </template>
+            <template v-else>
+                <span class="part-of-mr" />
+                <p class="release-status-title">
+                    {{ $t('template.partOfMr.title') }}
+                </p>
+                <p
+                    class="sub-message pending"
+                >
+                    {{ $t('template.partOfMr.tips1') }}
+                    <span>
+                        {{ $t('template.partOfMr.tips2') }}
+                    </span>
+                </p>
+                <p class="pac-mode-message">
+                    {{ $t('template.partOfMr.tips3') }}
+                </p>
+            </template>
             <div class="release-status-btn">
                 <bk-button
                     theme="primary"
@@ -59,16 +68,14 @@
             class="content-wrapper"
             v-else-if="showSuccessPage"
         >
-            <Logo
-                size="64"
-                name="success"
-                class="release-status-icon"
-            />
-            <p
+            <i class="bk-icon bk-dialog-mark icon-check-1 release-status-icon success-icon" />
+            <i18n
                 class="release-status-title"
+                tag="p"
+                path="template.releaseSuc.title"
             >
-                {{ $t('template.releaseSuc.title', [releaseRes.successItemNum]) }}
-            </p>
+                <span class="success bold">{{ releaseRes.successItemNum }}</span>
+            </i18n>
             <p class="sub-message">
                 {{ $t('template.releaseSuc.tips') }}
             </p>
@@ -83,14 +90,14 @@
             class="content-wrapper"
             v-else-if="showFailedPage"
         >
-            <Logo
-                size="64"
-                name="failure"
-                class="release-status-icon"
-            />
-            <p class="release-status-title">
-                {{ $t('template.releaseFail.title', [releaseRes.failItemNum]) }}
-            </p>
+            <i class="bk-icon bk-dialog-mark icon-close release-status-icon failed-icon" />
+            <i18n
+                class="release-status-title"
+                tag="p"
+                path="template.releaseFail.title"
+            >
+                <span class="failed bold">{{ releaseRes.failItemNum }}</span>
+            </i18n>
             <p class="sub-message">
                 {{ $t('template.releaseFail.tips') }}
             </p>
@@ -123,10 +130,8 @@
         SET_RELEASE_BASE_ID,
         SET_RELEASE_ING
     } from '@/store/modules/templates/constants'
-    import { TARGET_ACTION_ENUM } from '@/utils/pipelineConst'
-    const props = defineProps({
-        instanceNum: Boolean,
-        targetAction: String
+    defineProps({
+        instanceNum: Boolean
     })
     const { proxy } = UseInstance()
     const releaseRes = ref({})
@@ -137,7 +142,7 @@
     const showReleasePage = computed(() => [RELEASE_STATUS.INIT, RELEASE_STATUS.INSTANCING].includes(releaseStatus.value))
     const showSuccessPage = computed(() => [RELEASE_STATUS.SUCCESS].includes(releaseStatus.value))
     const showFailedPage = computed(() => [RELEASE_STATUS.FAILED].includes(releaseStatus.value))
-    const showPartOfMrPage = computed(() => showSuccessPage.value && props.targetAction === TARGET_ACTION_ENUM.CHECKOUT_BRANCH_AND_REQUEST_MERGE)
+    const showPartOfMrPage = computed(() => !!(releaseRes.value?.pullRequestUrl))
     const currentVersionId = computed(() => proxy?.$route.params?.version)
     const timer = ref(null)
     watch(() => releaseBaseId.value, (val) => {
@@ -163,7 +168,7 @@
             const res = await proxy.$store.dispatch('templates/fetchReleaseTaskStatus', {
                 projectId: projectId.value,
                 templateId: templateId.value,
-                taskId: releaseBaseId.value
+                baseId: releaseBaseId.value
             })
             releaseRes.value = res.data
             releaseStatus.value = res.data.status
@@ -181,11 +186,12 @@
     async function handleRetryRelease () {
         try {
             releaseStatus.value = RELEASE_STATUS.INIT
-            await proxy.$store.dispatch('templates/retryReleaseInstance', {
+            const baseId = await proxy.$store.dispatch('templates/retryReleaseInstance', {
                 projectId: projectId.value,
                 templateId: templateId.value,
-                taskId: releaseBaseId.value
+                baseId: releaseBaseId.value
             })
+            proxy.$store.commit(`templates/${SET_RELEASE_BASE_ID}`, baseId)
         } catch (e) {
             console.error(e)
         }
@@ -196,11 +202,11 @@
             const res = await proxy.$store.dispatch('templates/fetchTaskDetailParams', {
                 projectId: projectId.value,
                 templateId: templateId.value,
-                taskId: releaseBaseId.value,
+                baseId: releaseBaseId.value,
                 status: RELEASE_STATUS.FAILED
             })
-            proxy.$emit('cancel')
             console.log(res, 123)
+            proxy.$emit('cancel')
         } catch (e) {
             console.error(e)
         }
@@ -227,9 +233,19 @@
         display: flex;
         height: 150px;
     }
+    
     .release-status-icon {
         margin-top: 122px;
         margin-bottom: 40px;
+        color: #fff;
+        border-radius: 50%;
+        font-size: 50px;
+        &.success-icon {
+            background: #2caf5e;
+        }
+        &.failed-icon {
+            background: #ea3636;
+        }
     }
 
     .release-status-title {
@@ -237,6 +253,15 @@
         color: #313238;
         line-height: 32px;
         margin-bottom: 16px;
+         .bold {
+            font-weight: bold;
+        }
+         .success {
+            color: #40b771;
+        }
+         .failed {
+            color: #eb3333;
+        }
     }
 
     .sub-message {

@@ -125,7 +125,9 @@ const actions = {
     },
     // 重试发布实例化
     retryReleaseInstance ({ commit }, { projectId, baseId }) {
-        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/task/${baseId}/retry`)
+        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/task/${baseId}/retry`).then(res => {
+            return res.data
+        })
     },
     // 发布失败修改配置，获取发布实例化任务的参数
     fetchTaskDetailParams ({ commit }, { projectId, baseId, status }) {
@@ -139,10 +141,9 @@ const actions = {
         return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}/task`)
     },
     // 获取实例化发布状态（轮询）
-    fetchReleaseTaskStatus ({ commit }, { projectId, taskId }) {
-        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/task/${taskId}`)
+    fetchReleaseTaskStatus ({ commit }, { projectId, baseId }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/task/${baseId}`)
     }
-
 }
 
 export default actions

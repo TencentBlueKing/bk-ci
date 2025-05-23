@@ -115,6 +115,10 @@
                                     <span class="template-version">
                                         {{ $t('template.UpgradeFailed') }}
                                         <logo
+                                            v-bk-tooltips="{
+                                                content: row.instanceErrorInfo
+                                            }"
+                                            class="status-failed-icon"
                                             name="failed-circle-fill"
                                             :size="14"
                                         />
@@ -287,10 +291,6 @@
                         id: TEMPLATE_INSTANCE_PIPELINE_STATUS.UPDATING
                     },
                     {
-                        name: proxy.$t('template.instanceStatus.updated'),
-                        id: TEMPLATE_INSTANCE_PIPELINE_STATUS.UPDATED
-                    },
-                    {
                         name: proxy.$t('template.instanceStatus.failed'),
                         id: TEMPLATE_INSTANCE_PIPELINE_STATUS.FAILED
                     }
@@ -301,7 +301,6 @@
                 id: 'pipelineVersionName'
             },
             {
-                
                 name: proxy.$t('template.codeRepo'),
                 id: 'repoAliasName'
             }
@@ -506,6 +505,9 @@
             .update-icon {
                 position: relative;
                 top: 2px;
+            }
+            .status-failed-icon {
+                cursor: pointer;
             }
             .loading-icon {
                 display: ruby;

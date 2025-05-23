@@ -405,7 +405,6 @@
                     class="release-pipeline-pac-form"
                 >
                     <release-status
-                        :target-action="releaseParams.targetAction"
                         :instance-num="instanceList.length"
                         @cancel="cancelRelease"
                     />
