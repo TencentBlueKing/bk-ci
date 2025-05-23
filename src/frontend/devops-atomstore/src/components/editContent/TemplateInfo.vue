@@ -63,12 +63,13 @@
                         @change="handleChangeProjectCode"
                         enable-scroll-load
                         :scroll-loading="selectLoading"
-                        @scroll-end="handlerScrollEnd('templateCode')"
+                        :loading="codesSelectLoading"
+                        @scroll-end="selectedTplProject()"
                     >
                         <bk-option
                             v-for="option in templateList"
-                            :key="option.templateId"
-                            :id="option.templateId"
+                            :key="option.id"
+                            :id="option.id"
                             :name="option.name"
                             @click.native="optionChange('templateCodeErrors')"
                         >
@@ -85,7 +86,7 @@
                     class="bk-form-content template-item-content"
                     v-else
                 >
-                    {{ templateOptionName || templateForm.templateName }}
+                    {{ templateOptionName }}
                 </div>
             </div>
             <div class="bk-form-item">
@@ -96,38 +97,28 @@
                     </div>
                 </div>
             </div>
-            <div
-                class="bk-form-item is-required"
-                ref="versionErrors"
-            >
+            <div class="bk-form-item">
                 <label class="bk-label"> {{ $t('store.模板版本') }} </label>
                 <div class="bk-form-content template-item-content template-category-content">
                     <bk-select
                         v-model="templateForm.templateVersion"
                         class="fixed-width version"
                         searchable
-                        :disabled="!templateForm.templateCode"
-                        :placeholder="$t('store.请选择模板版本')"
+                        :disabled="!templateForm.templateCode || !versionList.length"
+                        :placeholder="(templateForm.templateCode && !versionList.length) ? $t('store.当前模板的版本已全部上架') : $t('store.请选择模板版本')"
                         enable-scroll-load
-                        :scroll-loading="selectLoading"
-                        @toggle="getVersionList"
-                        @scroll-end="handlerScrollEnd('templateVersion')"
+                        :loading="versionsSelectLoading"
+                        :scroll-loading="bottomLoading"
+                        @scroll-end="getVersionList()"
                     >
                         <bk-option
                             v-for="option in versionList"
                             :key="option.version"
                             :id="option.version"
                             :name="option.versionName"
-                            @click.native="optionChange('versionErrors')"
                         >
                         </bk-option>
                     </bk-select>
-                    <div
-                        v-if="formErrors.versionErrors"
-                        class="error-tips"
-                    >
-                        {{ $t('store.模板版本不能为空') }}
-                    </div>
                 </div>
             </div>
             <div class="bk-form-item is-required">
@@ -376,15 +367,24 @@
                     categoryError: false,
                     descError: false,
                     logoUrlError: false,
-                    versionErrors: false,
                     templateCodeErrors: false,
                     projectCodeErrors: false
                 },
-                page: 1,
-                pageSize: 20,
-                flag: '',
-                total: null,
-                selectLoading: false
+                bottomLoading: false,
+                versionsSelectLoading: false,
+                versionsHasNext: true,
+                versionsPagination: {
+                    page: 1,
+                    count: 0,
+                    limit: 10
+                },
+                codesSelectLoading: false,
+                codesHasNext: false,
+                codesPagination: {
+                    page: 1,
+                    count: 0,
+                    limit: 10
+                }
             }
         },
         computed: {
@@ -392,7 +392,7 @@
                 return toolbars
             },
             templateOptionName () {
-                return this.templateList.find(item => item.templateId === this.templateForm.templateCode)?.name
+                return this.templateList.find(item => item.id === this.templateForm.templateCode)?.name || this.templateForm.sourceTemplateName
             }
         },
         watch: {
@@ -402,9 +402,25 @@
                 }
             },
             'templateForm.projectCode': {
-                handler (newVal) {
+                async handler (newVal) {
                     if (newVal) {
-                        this.selectedTplProject()
+                        await this.selectedTplProject(1)
+                        if (!this.templateForm.templateName) {
+                            this.$emit('updateTemplateForm', {
+                                templateName: this.templateOptionName
+                            })
+                        }
+                    }
+                },
+                immediate: true
+            },
+            'templateForm.templateCode': {
+                async handler (newVal) {
+                    if (newVal) {
+                        await this.getVersionList(1)
+                        this.$emit('updateTemplateForm', {
+                            templateVersion: this.versionList[0]?.version
+                        })
                     }
                 },
                 immediate: true
@@ -475,66 +491,82 @@
                 })
                 this.templateList = []
                 this.versionList = []
-                this.page = 1
             },
             handleChangeProjectCode (val) {
-                const templateName = this.templateList.find(item => item.templateId === val)?.name
+                const templateName = this.templateList.find(item => item.id === val)?.name
                 this.$emit('updateTemplateForm', {
                     templateVersion: '',
                     templateName
                 })
                 this.versionList = []
             },
-            handlerScrollEnd (flag) {
-                const listTypeMap = {
-                    templateCode: {
-                        list: this.templateList,
-                        fetchMethod: this.selectedTplProject
-                    },
-                    templateVersion: {
-                        list: this.versionList,
-                        fetchMethod: this.getVersionList
-                    }
-                }
-
-                const { list, fetchMethod } = listTypeMap[flag] || {}
-                
-                if (list && list.length < this.total) {
-                    this.page++
-                    fetchMethod()
-                }
-            },
-            async selectedTplProject () {
-                this.selectLoading = true
+            async selectedTplProject (page) {
                 try {
+                    const nextPage = page ?? this.codesPagination.page + 1
+                    if (nextPage > 1 && !this.codesHasNext) return
+                    if (nextPage === 1) {
+                        this.codesSelectLoading = true
+                    } else {
+                        this.bottomLoading = true
+                    }
                     const res = await this.requestPipelineTemplate({
-                        projectCode: this.templateForm.projectCode,
-                        page: this.page,
-                        pageSize: this.pageSize
+                        projectId: this.templateForm.projectCode,
+                        page: nextPage,
+                        pageSize: this.codesPagination.limit,
+                        mode: 'CUSTOMIZE',
+                        latestVersionStatus: 'RELEASED',
+                        storeStatus: 'NEVER_PUBLISHED'
                     })
-                    this.total = res.count
-                    
-                    const data = res.models.filter(i => i.canEdit)
-                    this.templateList = [...this.templateList, ...data]
+                    const data = res.records
+                    if (page === 1) {
+                        this.templateList = data
+                    } else {
+                        this.templateList = [...this.templateList, ...data]
+                    }
+                    this.codesHasNext = res.count > this.templateList.length
                 } catch (err) {
                     this.handleError(err)
                 } finally {
-                    this.selectLoading = false
+                    this.codesSelectLoading = false
+                    this.bottomLoading = false
                 }
             },
-            async getVersionList () {
-                this.selectLoading = true
+            async getVersionList (page) {
                 try {
+                    const nextPage = page ?? this.versionsPagination.page + 1
+                    if (nextPage > 1 && !this.versionsHasNext) return
+                    if (nextPage === 1) {
+                        this.versionsSelectLoading = true
+                    } else {
+                        this.bottomLoading = true
+                    }
                     const res = await this.requestTemplateVersionList({
                         projectId: this.templateForm.projectCode,
-                        templateCode: this.templateForm.templateCode
+                        templateId: this.templateForm.templateCode,
+                        page: nextPage,
+                        pageSize: this.versionsPagination.limit,
+                        status: 'RELEASED',
+                        storeFlag: false
                     })
-                    this.total = res.count
-                    this.versionList = [...this.versionList, ...res.records]
+
+                    const versions = res.records
+                    if (page === 1) {
+                        this.versionList = versions
+                    } else {
+                        this.versionList = [...this.versionList, ...versions]
+                    }
+                    this.versionsHasNext = res.count > this.versionList.length
                 } catch (err) {
                     this.handleError(err)
                 } finally {
-                    this.selectLoading = false
+                    this.bottomLoading = false
+                    this.versionsSelectLoading = false
+                }
+            },
+            selectorToggle (status) {
+                if (status) {
+                    this.versionsHasNext = true
+                    this.getVersionList(1)
                 }
             },
             autoFocus () {
@@ -560,10 +592,6 @@
                     {
                         condition: () => !this.templateForm.projectCode,
                         errorKey: 'projectCodeErrors'
-                    },
-                    {
-                        condition: () => !this.templateForm.templateVersion,
-                        errorKey: 'versionErrors'
                     },
                     {
                         condition: () => !this.templateForm.templateCode,

@@ -166,10 +166,21 @@ export default function useTemplateActions () {
      * 上架研发商店-关联商店
      * @param row
      */
-    function toRelativeStore (row) {
+    function toRelativeStore (row, storeStatus) {
         if (!row.canEdit) return
+        let href = `${WEB_URL_PREFIX}/store/editTemplate?templateCode=${row.id}&hasSourceInfo=true`
+        if (storeStatus === 'NEVER_PUBLISHED') {
+            href += `&projectCode=${encodeURIComponent(row.projectId)}`
+        }
+        window.open(href, '_blank')
+    }
 
-        const href = `${WEB_URL_PREFIX}/store/editTemplate?templateCode=${row.id}&projectCode=${row.projectId}&templateName=${row.name}&templateVersion=${row.releasedVersion}&hasSourceInfo=true`
+    /**
+     * 到研发商店查看模板
+     * @param row
+     */
+    function toStoreTemplateDetail (id) {
+        const href = `${WEB_URL_PREFIX}/store/manage/template/${id}/releaseManage`
         window.open(href, '_blank')
     }
     /**
@@ -232,6 +243,7 @@ export default function useTemplateActions () {
         copyConfirmHandler,
         copyCancelHandler,
         goTemplateOverview,
+        toStoreTemplateDetail,
         toRelativeStore,
         convertToCustom
     }

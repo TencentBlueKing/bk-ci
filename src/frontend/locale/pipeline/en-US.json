@@ -323,8 +323,8 @@
     "item": "Items",
     "minutes": "Minutes",
     "itemPlaceholder": "Please enter",
-    "defaultSuc": "【${'{{'}ci.project_name{'}}'}】- 【${'{{'}ci.pipeline_name{'}}'}】#${'{{'}ci.build_num{'}}'} build success, Takes ${'{{'}ci.pipeline_execute_time{'}}'}, Trigger user: ${'{{'}ci.actor}.",
-    "defaultFail": "【${'{{'}ci.project_name{'}}'}】- 【${'{{'}ci.pipeline_name{'}}'}】#${'{{'}ci.build_num{'}}'} build fail, Takes ${'{{'}ci.pipeline_execute_time{'}}'}, Trigger user: ${'{{'}ci.actor{'}}'}.",
+    "defaultSuc": "【${{ci.project_name}}】- 【${{ci.pipeline_name}}】#${{ci.build_num}} build success, Takes ${{ci.pipeline_execute_time}}, Trigger user: ${{ci.actor}.",
+    "defaultFail": "【${{ci.project_name}}】- 【${{ci.pipeline_name}}】#${{ci.build_num}} build fail, Takes ${{ci.pipeline_execute_time}}, Trigger user: ${{ci.actor}}.",
     "runningOption": {
       "multiple": "Can run concurrently",
       "lock": "Disable the pipeline, it cannot be run by any triggering method",
@@ -600,6 +600,8 @@
     "upgradeFlag": "There is a version available for upgrade, ",
     "publishFlag": "There is a new version that can be published to the store, ",
     "upgradeOnStore": "Upgrade on Store",
+    "upgradeTemplate": "Upgrade",
+    "templateUpgradeSuccess": "Upgrade template successfully",
     "instanceStatus": {
       "pendingUpdate": "Pending Update",
       "updating": "Updating",
@@ -1544,6 +1546,7 @@
   "skipSuc": "Skipped the failed step and continued running",
   "skipFail": "Skip failed",
   "pacEnableTips": "Pipeline has been enabled PAC mode, and pipeline configuration can be managed through code repository.",
+  "pacTemplaneEnableTips": "Template has been enabled PAC mode, and pipeline configuration can be managed through code repository.",
   "copyBadgeMarkdownLink": "Copy Markdown Link",
   "copyBadgePicLink": "Copy Picture Link",
   "disable": "Disable",

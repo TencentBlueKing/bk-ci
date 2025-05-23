@@ -655,5 +655,6 @@
   "versionName": "Version Name",
   "onlineTips": "Confirm to release version {0}?",
   "全部可见": "All visible",
-  "部分可见": "Partial visible"
+  "部分可见": "Partial visible",
+  "当前模板的版本已全部上架": "All versions of the current template have been listed"
 }

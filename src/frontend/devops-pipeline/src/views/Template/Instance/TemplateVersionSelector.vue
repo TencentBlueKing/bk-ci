@@ -147,7 +147,7 @@
         .apply-tips {
             border-bottom: 1px dashed #979ba5;
         }
-        
+
     }
     .apply-checkbox {
         margin-left: 15px;

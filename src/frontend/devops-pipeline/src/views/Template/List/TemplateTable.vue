@@ -29,7 +29,7 @@
                 <div
                     v-if="col.id === 'name'"
                     class="template-name select-text"
-                    @click="goTemplateOverview(row, 'instanceList')"
+                    @click="goTemplateOverview(row.overviewParams)"
                 >
                     <span
                         class="template-name-area"
@@ -46,25 +46,39 @@
                     v-else-if="col.id === 'source'"
                 >
                     <span>{{ row.sourceName }}</span>
-                    <bk-badge
+                    <bk-popover
+                        placement="top"
                         v-if="row.upgradeFlag || row.publishFlag || row.storeFlag"
-                        class="store-source-flag"
-                        dot
-                        theme="danger"
-                        :visible="row.upgradeFlag || row.publishFlag"
                     >
-                        <Logo
-                            size="12"
-                            :name="row.storeFlag ? 'is-store' : 'template-upgrade'"
-                        />
-                    </bk-badge>
+                        <bk-badge
+                            class="store-source-flag"
+                            dot
+                            theme="danger"
+                            :visible="row.upgradeFlag || row.publishFlag"
+                        >
+                            <Logo
+                                size="12"
+                                :name="row.storeFlag ? 'is-store' : 'template-upgrade'"
+                            />
+                        </bk-badge>
+                        <div slot="content">
+                            <span>{{ row.sourceTooltip?.content }}</span>
+                            <span
+
+                                class="text-link"
+                                @click="row.sourceTooltip?.handler()"
+                            >
+                                {{ row.sourceTooltip?.actionLabel }}
+                            </span>
+                        </div>
+                    </bk-popover>
                 </div>
 
                 <bk-button
                     v-else-if="col.id === 'instancePipelineCount'"
                     text
                     :disabled="row.instancePipelineCount <= 0"
-                    @click="goTemplateOverview(row, 'instanceList')"
+                    @click="goTemplateOverview(row.overviewParams)"
                 >
                     {{ row.instancePipelineCount }}
                 </bk-button>
@@ -109,10 +123,11 @@
 </template>
 
 <script setup>
+    import TemplateEmpty from '@/components/common/exception'
     import Logo from '@/components/Logo'
     import PacTag from '@/components/PacTag.vue'
-    import TemplateEmpty from '@/components/common/exception'
     import UseInstance from '@/hook/useInstance'
+    import useTemplateActions from '@/hook/useTemplateActions'
     import {
         TEMPLATE_TABLE_COLUMN_CACHE
     } from '@/store/modules/templates/constants'
@@ -120,6 +135,9 @@
     import ExtMenu from './extMenu'
 
     const { proxy, t } = UseInstance()
+    const {
+        goTemplateOverview
+    } = useTemplateActions()
     defineProps({
         data: {
             type: Array,
@@ -201,6 +219,7 @@
         return acc
     }, {})
     const selectedTableColumn = ref([])
+
     onBeforeMount(() => {
         try {
             const columnsCache = JSON.parse(localStorage.getItem(TEMPLATE_TABLE_COLUMN_CACHE))
@@ -225,16 +244,7 @@
     function clearFilter () {
         emit('clear')
     }
-    function goTemplateOverview (row, type) {
-        proxy.$router.push({
-            name: 'TemplateOverview',
-            params: {
-                templateId: row.id,
-                version: row.releasedVersion,
-                type
-            }
-        })
-    }
+
     function goInstanceEntry (row) {
         proxy.$router.push({
             name: 'instanceEntry',

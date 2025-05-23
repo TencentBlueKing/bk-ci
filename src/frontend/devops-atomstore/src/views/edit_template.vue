@@ -84,7 +84,6 @@
                     labelIdList: [],
                     summary: '',
                     description: `#### ${this.$t('store.模板功能')}\n\n#### ${this.$t('store.适用场景')}\n\n#### ${this.$t('store["使用限制和受限解决方案[可选]"]')}\n\n#### ${this.$t('store.常见的失败原因和解决方案')}`,
-                    publisher: '',
                     pubDescription: '',
                     logoUrl: '',
                     iconData: ''
@@ -96,10 +95,10 @@
                 return this.$route.query.type
             },
             hasSourceInfo () {
-                return this.$route.query.hasSourceInfo
+                return this.$route.query.hasSourceInfo === 'true'
             },
             templateCode () {
-                return this.$route.params.templateCode
+                return this.$route.params.templateCode || this.$route.query.templateCode
             },
             navList () {
                 return [
@@ -137,13 +136,9 @@
                 'releaseTemplate'
             ]),
             async init () {
-                if (this.hasSourceInfo) {
-                    const { projectCode, templateCode, templateName } = this.$route.query
-                    Object.assign(this.templateForm, {
-                        projectCode,
-                        templateCode,
-                        templateName
-                    }, {})
+                if (this.hasSourceInfo && this.$route.query.projectCode) {
+                    // 从未上架过的
+                    Object.assign(this.templateForm, this.$route.query, {})
                     this.showContent = true
                 } else if (this.type === 'apply') {
                     this.showContent = true
@@ -153,17 +148,12 @@
             },
             async getTemplateDetail () {
                 this.loading.isLoading = true
-
                 try {
                     const res = await this.requestTemplateDetail(this.templateCode)
                     Object.assign(this.templateForm, res, {
-                        fullScopeVisible: res.storeVisibleDept.fullScopeVisible
-                    })
-                    this.templateForm.categoryIdList = this.templateForm.categoryList.map(item => {
-                        return item.id
-                    })
-                    this.templateForm.labelIdList = (this.templateForm.labelList || []).map(item => {
-                        return item.id
+                        fullScopeVisible: res.storeVisibleDept.fullScopeVisible,
+                        categoryIdList: this.templateForm.categoryList?.map(item => item.id),
+                        labelIdList: this.templateForm.labelList?.map(item => item.id)
                     })
                 } catch (err) {
                     const message = err.message ? err.message : err

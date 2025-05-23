@@ -127,14 +127,16 @@
                     :label="$t('store.最新版本')"
                     prop="latestPublishedVersionName"
                     show-overflow-tooltip
+                    :min-width="120"
                 >
                     <template slot-scope="{ row }">
                         <p class="last-version">
                             <span :class="row.latestReleasedVersion !== row.latestPublishedVersion ? 'active' : ''">{{ row.latestPublishedVersionName }}</span>
-                            <bk-icon
-                                v-if="row.latestReleasedVersion !== row.latestPublishedVersion"
-                                type="arrows-up-shape"
+                            <icon
+                                v-if="row.latestReleasedVersion !== row.latestPublishedVersion && row.templateStatus !== 'UNDERCARRIAGED'"
                                 class="arrows-up-shape"
+                                name="update"
+                                size="14"
                             />
                         </p>
                     </template>
@@ -664,12 +666,7 @@
                     color: #F8B64F;
                 }
                 .arrows-up-shape {
-                    width: 14px;
-                    height: 14px;
-                    background: #F8B64F;
-                    border-radius: 2px;
-                    color: #fff;
-                    padding: 2px;
+                    vertical-align: middle;
                     margin-left: 5px;
                 }
             }

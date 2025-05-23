@@ -254,7 +254,7 @@
             convertTime,
             ...mapActions({
                 requestPipelineVersionList: 'pipelines/requestPipelineVersionList',
-                requestTemplateVersionList: 'pipelines/requestTemplateVersionList',
+                requestTemplateVersionList: 'templates/requestTemplateVersionList',
                 requestPipelineSummary: 'atom/requestPipelineSummary'
             }),
 

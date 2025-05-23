@@ -138,11 +138,12 @@
                     storeType: this.type.toUpperCase()
                 }
                 const res = await api.getMemberView(data)
-                
-                this.updateUserInfo({
-                    isProjectAdmin: res.type === 'ADMIN',
-                    userName: res.userName
-                })
+                if (res) {
+                    this.updateUserInfo({
+                        isProjectAdmin: res.type === 'ADMIN',
+                        userName: res.userName
+                    })
+                }
             }
         }
     }
