@@ -298,11 +298,39 @@
             },
             {
                 name: proxy.$t('versionNum'),
-                id: 'pipelineVersionName'
+                id: 'templateVersion',
+                remoteMethod:
+                    async (search) => {
+                        const res = await proxy.$store.dispatch('pipelines/requestTemplateVersionList', {
+                            projectId: projectId.value,
+                            templateId: templateId.value,
+                            versionName: search
+                        })
+                        return res.records.map(item => ({
+                            name: item.versionName,
+                            id: item.version
+                        }))
+                    }
             },
             {
                 name: proxy.$t('template.codeRepo'),
-                id: 'repoAliasName'
+                id: 'repoHashId',
+                remoteMethod:
+                    async (search) => {
+                        const res = await proxy.$store.dispatch('common/getPACRepoList', {
+                            projectId: projectId.value,
+                            enabledPac: true,
+                            scmType: 'CODE_GIT',
+                            permission: 'USE',
+                            aliasName: search,
+                            page: 1,
+                            pageSize: 50
+                        })
+                        return res.records.map(item => ({
+                            name: item.aliasName,
+                            id: item.repositoryHashId
+                        }))
+                    }
             }
         ]
         return list.filter((data) => {
@@ -409,7 +437,6 @@
             }
         })
     }
-
 </script>
 
 <style lang="scss">

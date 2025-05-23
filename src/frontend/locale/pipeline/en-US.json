@@ -572,9 +572,10 @@
       "tips2": "please handle the merge request in the repository.",
       "tips3": "In PAC mode, merging the YAML file into the default branch is considered the official release.",
       "dealMR": "Handle Merge Request",
-      "failTitle": "Merge request created. {0} pipeline submissions succeeded, {1} failed.",
-      "failTip1": "Please follow the instructions below to complete the respective operations.",
-      "failTip2": "{0} pipeline submissions failed. Please check the failure reasons and resubmit after corrections:"
+      "partialSuccessTitle": "Merge request created. {0} pipeline submissions succeeded, {1} failed.",
+      "partialSuccessTip1": "Please follow the instructions below to complete the respective operations.",
+      "partialSuccessTip2": "{0} pipeline submissions failed. Please check the failure reasons and resubmit after corrections:",
+      "failedRetry": "失败重试"
     },
     "releaseSuc": {
       "title": "{0} pipeline instances successfully released",

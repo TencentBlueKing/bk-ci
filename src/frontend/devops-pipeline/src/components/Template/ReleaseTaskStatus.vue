@@ -1,47 +1,145 @@
 <template>
     <div class="release-status-main">
-        <section
-            class="content-wrapper"
-            v-if="showReleasePage"
-        >
-            <bk-loading
-                class="loading-icon"
-                is-loading
-                mode="spin"
-                theme="primary"
-                :size="16"
-            />
-            <i18n
-                class="release-status-title"
-                tag="p"
-                path="template.releasing.title"
-            >
-                <span class="bold">{{ instanceNum }}</span>
-            </i18n>
-            <p class="sub-message">{{ $t('template.releasing.tips') }}</p>
-
-            <bk-button
-                class="mt20"
-                @click="handleToInstanceList"
-            >
-                {{ $t('template.returnInstanceList') }}
-            </bk-button>
-        </section>
-        <section
-            class="content-wrapper"
-            v-if="showPartOfMrPage"
-        >
-            <template v-if="releaseRes.failItemNum">
-            </template>
-            <template v-else>
-                <span class="part-of-mr" />
-                <p class="release-status-title">
-                    {{ $t('template.partOfMr.title') }}
-                </p>
-                <p
-                    class="sub-message pending"
+        <section class="content-wrapper">
+            <template v-if="showReleasePage">
+                <bk-loading
+                    class="loading-icon"
+                    is-loading
+                    mode="spin"
+                    theme="primary"
+                    :size="16"
+                />
+                <i18n
+                    class="release-status-title"
+                    tag="p"
+                    path="template.releasing.title"
                 >
-                    {{ $t('template.partOfMr.tips1') }}
+                    <span class="bold">{{ instanceNum }}</span>
+                </i18n>
+                <p class="sub-message">{{ $t('template.releasing.tips') }}</p>
+            </template>
+            <template v-else-if="showPartOfMrPage">
+                <template v-if="isPartialSuccess">
+                    <span class="part-of-mr" />
+                    <i18n
+                        class="release-status-title"
+                        tag="p"
+                        path="template.partOfMr.partialSuccessTitle"
+                    >
+                        <span class="success bold">{{ releaseRes.successItemNum }}</span>
+                        <span class="failed bold">{{ releaseRes.failItemNum }}</span>
+                    </i18n>
+                    <span class="sub-message">
+                        {{ $t('template.partOfMr.partialSuccessTip1') }}
+                    </span>
+                </template>
+                <template v-else>
+                    <span class="part-of-mr" />
+                    <p class="release-status-title">
+                        {{ $t('template.partOfMr.title') }}
+                    </p>
+                    <p
+                        class="sub-message pending"
+                    >
+                        {{ $t('template.partOfMr.tips1') }}
+                        <span>
+                            {{ $t('template.partOfMr.tips2') }}
+                        </span>
+                    </p>
+                    <p class="pac-mode-message">
+                        {{ $t('template.partOfMr.tips3') }}
+                    </p>
+                </template>
+            </template>
+            <template v-else-if="showSuccessPage">
+                <i class="bk-icon bk-dialog-mark icon-check-1 release-status-icon success-icon" />
+                <i18n
+                    class="release-status-title"
+                    tag="p"
+                    path="template.releaseSuc.title"
+                >
+                    <span class="success bold">{{ releaseRes.successItemNum }}</span>
+                </i18n>
+                <p class="sub-message">
+                    {{ $t('template.releaseSuc.tips') }}
+                </p>
+            </template>
+            <template v-else-if="showFailedPage">
+                <i class="bk-icon bk-dialog-mark icon-close release-status-icon failed-icon" />
+                <i18n
+                    class="release-status-title"
+                    tag="p"
+                    path="template.releaseFail.title"
+                >
+                    <span class="failed bold">{{ releaseRes.failItemNum }}</span>
+                </i18n>
+                <p class="sub-message">
+                    {{ $t('template.releaseFail.tips') }}
+                </p>
+            </template>
+            <template v-else-if="isPartialSuccess && !showPartOfMrPage">
+                <i class="bk-icon bk-dialog-mark icon-check-1 release-status-icon partial-success-icon" />
+                <i18n
+                    class="release-status-title"
+                    tag="p"
+                    path="template.releasePartialSuccess.title"
+                >
+                    <span class="success bold">{{ releaseRes.successItemNum }}</span>
+                    <span class="failed bold">{{ releaseRes.failItemNum }}</span>
+                </i18n>
+                <p class="sub-message">
+                    {{ $t('template.releasePartialSuccess.tip1') }}
+                </p>
+            </template>
+            <div class="release-status-btn">
+                <template v-if="showFailedPage || (isPartialSuccess && !showPartOfMrPage)">
+                    <!-- 失败 / 部分成功 -->
+                    <bk-button
+                        theme="primary"
+                        @click="handleRetryRelease"
+                    >
+                        {{ $t('retry') }}
+                    </bk-button>
+                    <bk-button
+                        @click="handleModifyConfig"
+                    >
+                        {{ $t('template.modifyConfig') }}
+                    </bk-button>
+                </template>
+                <template v-if="showPartOfMrPage">
+                    <!-- 有 MR 合并连接 -->
+                    <!-- 全部成功 / 部分成功 -->
+                    <bk-button
+                        theme="primary"
+                        class="mr10"
+                        @click="handleClick"
+                    >
+                        {{ $t('template.partOfMr.dealMR') }}
+                    </bk-button>
+                    <bk-button
+                        v-if="isPartialSuccess"
+                        @click="handleModifyConfig"
+                    >
+                        {{ $t('template.modifyConfig') }}
+                    </bk-button>
+                    <bk-button
+                        v-if="isPartialSuccess"
+                        @click="handleRetryRelease"
+                    >
+                        {{ $t('template.partOfMr.failedRetry') }}
+                    </bk-button>
+                </template>
+                
+                <bk-button
+                    @click="handleToInstanceList"
+                >
+                    {{ $t('template.returnInstanceList') }}
+                </bk-button>
+            </div>
+
+            <template v-if="isPartialSuccess && showPartOfMrPage">
+                <p class="sub-message pending">
+                    ( 1 ) {{ $t('template.partOfMr.tips1') }}
                     <span>
                         {{ $t('template.partOfMr.tips2') }}
                     </span>
@@ -49,76 +147,11 @@
                 <p class="pac-mode-message">
                     {{ $t('template.partOfMr.tips3') }}
                 </p>
+                <p class="sub-message pending mt20">
+                    ( 2 ) {{ $t('template.partOfMr.partialSuccessTip2', [releaseRes.failItemNum]) }}
+                </p>
+                <release-failed-message />
             </template>
-            <div class="release-status-btn">
-                <bk-button
-                    theme="primary"
-                    @click="handleClick"
-                >
-                    {{ $t('template.partOfMr.dealMR') }}
-                </bk-button>
-                <bk-button
-                    @click="handleToInstanceList"
-                >
-                    {{ $t('template.returnInstanceList') }}
-                </bk-button>
-            </div>
-        </section>
-        <section
-            class="content-wrapper"
-            v-else-if="showSuccessPage"
-        >
-            <i class="bk-icon bk-dialog-mark icon-check-1 release-status-icon success-icon" />
-            <i18n
-                class="release-status-title"
-                tag="p"
-                path="template.releaseSuc.title"
-            >
-                <span class="success bold">{{ releaseRes.successItemNum }}</span>
-            </i18n>
-            <p class="sub-message">
-                {{ $t('template.releaseSuc.tips') }}
-            </p>
-            <bk-button
-                @click="handleToInstanceList"
-                class="release-status-btn"
-            >
-                {{ $t('template.returnInstanceList') }}
-            </bk-button>
-        </section>
-        <section
-            class="content-wrapper"
-            v-else-if="showFailedPage"
-        >
-            <i class="bk-icon bk-dialog-mark icon-close release-status-icon failed-icon" />
-            <i18n
-                class="release-status-title"
-                tag="p"
-                path="template.releaseFail.title"
-            >
-                <span class="failed bold">{{ releaseRes.failItemNum }}</span>
-            </i18n>
-            <p class="sub-message">
-                {{ $t('template.releaseFail.tips') }}
-            </p>
-            <div class="release-status-btn">
-                <bk-button
-                    theme="primary"
-                    @click="handleRetryRelease"
-                >
-                    {{ $t('retry') }}
-                </bk-button>
-                <bk-button
-                    @click="handleModifyConfig"
-                >
-                    {{ $t('template.modifyConfig') }}
-                </bk-button>
-                <bk-button
-                    @click="handleToInstanceList"
-                >
-                    {{ $t('template.returnInstanceList') }}
-                </bk-button>
-            </div>
         </section>
     </div>
 </template>
@@ -130,6 +163,7 @@
         SET_RELEASE_BASE_ID,
         SET_RELEASE_ING
     } from '@/store/modules/templates/constants'
+    import ReleaseFailedMessage from './ReleaseFailedMessage'
     defineProps({
         instanceNum: Boolean
     })
@@ -139,6 +173,7 @@
     const releaseBaseId = computed(() => proxy?.$store?.state?.templates?.releaseBaseId)
     const projectId = computed(() => proxy.$route.params?.projectId)
     const templateId = computed(() => proxy.$route.params?.templateId)
+    const isPartialSuccess = computed(() => releaseStatus.value === RELEASE_STATUS.PARTIAL_SUCCESS)
     const showReleasePage = computed(() => [RELEASE_STATUS.INIT, RELEASE_STATUS.INSTANCING].includes(releaseStatus.value))
     const showSuccessPage = computed(() => [RELEASE_STATUS.SUCCESS].includes(releaseStatus.value))
     const showFailedPage = computed(() => [RELEASE_STATUS.FAILED].includes(releaseStatus.value))
@@ -245,6 +280,9 @@
         }
         &.failed-icon {
             background: #ea3636;
+        }
+        &.partial-success-icon {
+            background: #F59500;
         }
     }
 

@@ -15,7 +15,7 @@
                     flex
                     click-unfold
                     show-select-all
-                    v-bind="param.componentProps"
+                    v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.id })"
                     :handle-change="handleParamUpdate"
                     :placeholder="param.placeholder"
                     :disabled="disabled || param.isDelete"
@@ -24,7 +24,7 @@
                     :is-diff-param="highlightChangedParam && param.isChanged"
                     v-validate="{ required: param.required, objectRequired: isObject(param.value) }"
                     :class="{
-                        'is-diff-param': highlightChangedParam && param.isChanged,
+                        'is-diff-param': (highlightChangedParam && param.isChanged) || param.affectedChanged,
                         'is-change-param': param.isChange,
                         'is-new-param': param.isNew,
                         'is-delete-param': param.isDelete
@@ -37,6 +37,12 @@
                 :title="param.desc"
             >
                 {{ param.desc }}
+            </span>
+            <span
+                v-if="param.affectTips"
+                class="preview-params-desc affect-warning"
+            >
+                {{ param.affectTips }}
             </span>
         </form-field>
     </section>
@@ -134,6 +140,9 @@
         width: 100%;
         font-size: 12px;
         @include ellipsis();
+         &.affect-warning {
+            color: #FF9C01;
+        }
     }
     .params-desc-styles {
         margin-top: 32px;

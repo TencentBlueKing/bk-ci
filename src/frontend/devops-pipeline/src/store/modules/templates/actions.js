@@ -84,9 +84,6 @@ const actions = {
     rollbackTemplateVersion (_, { projectId, templateId, version }) {
         return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/rollbackDraft?version=${version}`).then(response => response.data)
     },
-    requestTemplateVersionList (_, { projectId, templateId, params }) {
-        return ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/versions`, params).then(response => response.data)
-    },
     fetchTemplateByVersion ({ commit }, { projectId, templateId, version }) {
         return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/${version}/details/`).then(res => {
             commit(SET_TEMPLATE_DETAIL, {
@@ -142,7 +139,7 @@ const actions = {
     },
     // 获取实例化发布状态（轮询）
     fetchReleaseTaskStatus ({ commit }, { projectId, baseId }) {
-        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/task/${baseId}`)
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/task/${baseId}/result`)
     }
 }
 

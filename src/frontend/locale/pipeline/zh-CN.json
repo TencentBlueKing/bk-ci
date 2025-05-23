@@ -574,9 +574,10 @@
       "tips2": "请到代码库处理合并请求",
       "tips3": "PAC模式下，YAML 文件合入默认分支，才视为发布正式版本",
       "dealMR": "处理合并请求",
-      "failTitle": "合并请求创建完成，流水线提交成功 {0} 条，失败 {1} 条",
-      "failTip1": "接下来请按照以下的指示，完成对应操作",
-      "failTip2": "{0} 条流水线提交失败，请检查失败原因，修改后重新提交："
+      "partialSuccessTitle": "合并请求创建完成，流水线提交成功 {0} 条，失败 {1} 条",
+      "partialSuccessTip1": "接下来请按照以下的指示，完成对应操作",
+      "partialSuccessTip2": "{0} 条流水线提交失败，请检查失败原因，修改后重新提交：",
+      "failedRetry": "失败重试"
     },
     "releaseSuc": {
       "title": "流水线发布成功 {0} 条",
@@ -585,6 +586,10 @@
     "releaseFail": {
       "title": " 流水线发布失败 {0} 条",
       "tips": "接下来你可以重试或关闭弹窗"
+    },
+    "releasePartialSuccess": {
+      "title": " 流水线发布成功 {0} 条，失败 {1} 条",
+      "tip1": "接下来你可以重试或修改后提交"
     },
     "modifyConfig": "修改配置",
     "batchEditInstance": "批量编辑实例",

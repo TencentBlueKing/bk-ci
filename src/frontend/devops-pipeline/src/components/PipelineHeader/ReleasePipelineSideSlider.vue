@@ -404,7 +404,7 @@
                     slot="content"
                     class="release-pipeline-pac-form"
                 >
-                    <release-status
+                    <release-task-status
                         :instance-num="instanceList.length"
                         @cancel="cancelRelease"
                     />
@@ -418,7 +418,7 @@
     import Logo from '@/components/Logo'
     import PacTag from '@/components/PacTag.vue'
     import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
-    import ReleaseStatus from '@/components/Template/ReleaseStatus'
+    import ReleaseTaskStatus from '@/components/Template/ReleaseTaskStatus'
     import {
         SET_RELEASE_ING,
         SHOW_TASK_DETAIL
@@ -429,7 +429,7 @@
         components: {
             VersionDiffEntry,
             PacTag,
-            ReleaseStatus
+            ReleaseTaskStatus
         },
         props: {
             value: {
