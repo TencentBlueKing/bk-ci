@@ -380,6 +380,8 @@ object ProcessMessageCode {
     const val ERROR_RETRY_STAGE_NOT_RUNNING = "2101273" // stage非运行中状态，不能进行插件级重试
     const val ERROR_FAIL_IF_VARIABLE_INVALID = "2101274" // 参数[{0}]值超过系统限制(4K)，启动失败
 
+    const val ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH = "2101278" // 流水线分支版本[{0}]不存在
+
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
     const val BK_NO_MATCH_FILE_DISTRIBUTE = "bkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}

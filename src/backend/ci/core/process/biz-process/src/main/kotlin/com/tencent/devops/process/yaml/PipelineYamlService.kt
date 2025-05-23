@@ -627,4 +627,17 @@ class PipelineYamlService(
             branch = branch
         )
     }
+
+    fun getPipelineYamlVersionInfo(
+        projectId: String,
+        pipelineId: String,
+        branch: String
+    ): PipelineYamlVersion? {
+        return pipelineYamlVersionDao.getPipelineYamlVersion(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            ref = branch
+        )
+    }
 }

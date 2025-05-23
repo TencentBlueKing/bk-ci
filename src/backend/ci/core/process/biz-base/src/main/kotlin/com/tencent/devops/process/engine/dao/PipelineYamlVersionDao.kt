@@ -206,4 +206,26 @@ class PipelineYamlVersionDao {
             )
         }
     }
+
+    fun getPipelineYamlVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        ref: String
+    ): PipelineYamlVersion? {
+        with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
+            return dslContext.selectFrom(this)
+                    .where(
+                        PROJECT_ID.eq(projectId)
+                                .and(PIPELINE_ID.eq(pipelineId))
+                                .and(BRANCH_ACTION.eq(BranchVersionAction.ACTIVE.name))
+                                .and(REF.eq(ref))
+                    )
+                    .orderBy(COMMIT_TIME.desc())
+                    .fetchOne()
+                    ?.let {
+                        convert(it)
+                    }
+        }
+    }
 }
