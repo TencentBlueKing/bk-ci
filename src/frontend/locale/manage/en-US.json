@@ -212,7 +212,7 @@
     "人员列表": "User List",
     "移出项目": "Remove",
     "移出用户": "User",
-    "将用户移出项目时需指定移交人，确认后将自动移交有效的权限/授权；已过期权限不交接，将自动清理。": "When removing a user from the project, a transferee must be designated. Upon confirmation, valid permissions/authorizations will be automatically transferred; expired permissions will not be transferred and will be automatically cleaned up.",
+    "将用户移出项目时需指定移交人，确认后将自动移交有效的权限/授权；已过期权限不交接，将自动清理": "When removing a user from the project, a transferee must be designated. Upon confirmation, valid permissions/authorizations will be automatically transferred; expired permissions will not be transferred and will be automatically cleaned up",
     "移交人": "Transferee",
     "刷新": "Refresh",
     "检测到以下授权将无法移交给X，请先前往「授权管理」单独处理": "The following authorizations cannot be transferred to {0}, please go to \"Authorization Management\" to handle it individually",
@@ -344,5 +344,15 @@
     "单个步骤(Step)日志达到阈值时，将压缩并归档到日志仓库。可下载日志文件到本地查看。": "When an individual step's log reaches the threshold, it will be compressed and archived to the log repository. The log file can be downloaded for local viewing.",
     "万行": "10k lines",
     "缺省时默认为10": "Defaults to 10",
-    "构建日志归档阈值": "Build log archival threshold"
+    "构建日志归档阈值": "Build log archival threshold",
+    "组织的权限不交接，将自动清理": "; organizational permissions will not be transferred and will be automatically cleared",
+    "批量移出项目(X)": "Batch remove from project ({0})",
+    "已选择以下X个组织/用户": "Selected the following {0} organizations/users",
+    "X个组织/用户已成功移出本项目": "{0} organizations/users have been successfully removed from this project",
+    "X(X)已成功移出本项目。": "{0}({0}) has been successfully removed from this project.",
+    "X个组织已成功移出本项目": "{0} organizations have been successfully removed from this project",
+    "批量移出项目": "Batch remove from project",
+    "全选": "Select All",
+    "退出批量操作": "Exit Batch Operation",
+    "确认将以下组织移出本项目吗": "Confirm to remove the following organizations from this project?"
 }

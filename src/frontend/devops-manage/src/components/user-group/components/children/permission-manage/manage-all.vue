@@ -19,6 +19,7 @@
           @page-change="getAsidePageChange"
           @get-person-list="handleShowPerson"
           @remove-confirm="asideRemoveConfirm"
+          @handle-select-all="asideSelectAll"
         />
       </div>
       <div class="manage-content">
@@ -517,6 +518,7 @@ const {
   handleShowPerson,
   handleAsideRemoveConfirm,
   getProjectMembers,
+  asideSelectAll,
 } = manageAsideStore;
 
 const {
@@ -852,8 +854,8 @@ function showMessage (theme, message) {
   });
 }
 
-function asideRemoveConfirm (removeUser, handOverForm) {
-  handleAsideRemoveConfirm(removeUser, handOverForm, projectId.value, manageAsideRef.value);
+function asideRemoveConfirm (removeUsers, handOverForm) {
+  handleAsideRemoveConfirm(removeUsers, handOverForm, projectId.value, manageAsideRef.value);
 }
 
 function handleChangeOverFormName ({list, userList}) {

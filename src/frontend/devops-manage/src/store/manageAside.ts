@@ -4,6 +4,7 @@ import { ref } from 'vue';
 import { Message } from 'bkui-vue';
 import userGroupTable, { SearchParamsType, AsideItem } from "@/store/userGroupTable";
 import dayjs from 'dayjs';
+import { useI18n } from 'vue-i18n';
 
 interface Pagination {
   limit: number;
@@ -28,6 +29,7 @@ interface MemberListParamsType {
 }
 
 export default defineStore('manageAside', () => {
+  const { t } = useI18n();
   const groupTableStore = userGroupTable();
 
   const isLoading = ref(false);
@@ -72,10 +74,10 @@ export default defineStore('manageAside', () => {
   /**
    * 组织移出项目
    */
-  async function handleAsideRemoveConfirm(removeUser: AsideItem, handOverMember: AsideItem, projectId: string, manageAsideRef: any) {
+  async function handleAsideRemoveConfirm(removeUsers: any, handOverMember: AsideItem, projectId: string, manageAsideRef: any) {
     showDeptListPermissionDialog.value = false
     const params = {
-      targetMember: removeUser,
+      targetMembers: removeUsers,
       ...(Object.keys(handOverMember).length && {handoverTo: handOverMember})
     }
     try {
@@ -84,14 +86,16 @@ export default defineStore('manageAside', () => {
       
       asideItem.value = undefined;
       if (!res.length) {
+        const allAreGroups = removeUsers.every(member => member.type === 'department');
+        const message = removeUsers.length === 1 ? t('X(X)已成功移出本项目。', [removeUsers[0].id, removeUsers[0].name]) : allAreGroups ? t('X个组织已成功移出本项目', [removeUsers.length]) : t('X个组织/用户已成功移出本项目', [removeUsers.length])
         Message({
           theme: 'success',
-          message: `${removeUser.id}(${removeUser.name}) 已成功移出本项目。`,
+          message
         });
       } else {
         removeUserDeptListMap.value = {
           list: res,
-          removeUser
+          removeUsers
         }
         showDeptListPermissionDialog.value = true
       }
@@ -168,7 +172,10 @@ export default defineStore('manageAside', () => {
 
       const res = await http.getProjectMembersByCondition(projectId, params);
       isLoading.value = false;
-      memberList.value = res.records;
+      memberList.value = res.records.map(item => ({
+        ...item,
+        checked: false
+      }));
 
       const itemToClick = asideItem.value || res.records[0];
       handleAsideClick(itemToClick);
@@ -177,6 +184,12 @@ export default defineStore('manageAside', () => {
     } catch (error) {
       isLoading.value = false;
     }
+  }
+
+  function asideSelectAll(status: boolean) {
+    memberList.value.forEach(item => {
+      item.checked = status
+    })
   }
 
   return {
@@ -196,5 +209,6 @@ export default defineStore('manageAside', () => {
     handleShowPerson,
     handleAsideRemoveConfirm,
     getProjectMembers,
+    asideSelectAll,
   };
 });
