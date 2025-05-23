@@ -25,6 +25,7 @@ import {
     ALL_PIPELINE_VIEW_ID,
     COLLECT_VIEW_ID,
     DELETED_VIEW_ID,
+    ARCHIVE_VIEW_ID,
     MY_PIPELINE_VIEW_ID,
     RECENT_USED_VIEW_ID,
     UNCLASSIFIED_PIPELINE_VIEW_ID
@@ -63,10 +64,12 @@ export default {
         ...mapActions('pipelines', [
             'requestAllPipelinesListByFilter',
             'requestRecyclePipelineList',
+            'requestArchivePipelineList',
             'requestToggleCollect',
             'deletePipeline',
             'copyPipeline',
             'restorePipeline',
+            'deleteMigrateArchive',
             'lockPipeline'
         ]),
         async getPipelines (query = {}) {
@@ -84,6 +87,50 @@ export default {
                         ...queryParams,
                         viewId
                     })
+                } else if (viewId === ARCHIVE_VIEW_ID) {
+                    const { page, count, records } = await this.requestArchivePipelineList({
+                        projectId: this.$route.params.projectId,
+                        ...queryParams,
+                        viewId
+                    })
+                    const pipelineList = records.map((item, index) => Object.assign(item, {
+                        ...item,
+                        latestBuildStartDate: this.getLatestBuildFromNow(item.latestBuildStartTime),
+                        updater: item.lastModifyUser,
+                        updateDate: convertTime(item.updateTime),
+                        duration: this.calcDuration(item),
+                        latestBuildUserId: item.lastModifyUser,
+                        onlyDraftVersion: item.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING,
+                        historyRoute: {
+                            name: 'pipelinesHistory',
+                            params: {
+                                projectId: item.projectId,
+                                pipelineId: item.pipelineId,
+                                type: item.onlyDraftVersion ? pipelineTabIdMap.pipeline : 'history'
+                            },
+                            query: {
+                                archiveFlag: true
+                            }
+                        },
+                        latestBuildRoute: {
+                            name: 'pipelinesDetail',
+                            params: {
+                                type: 'executeDetail',
+                                projectId: item.projectId,
+                                pipelineId: item.pipelineId,
+                                buildNo: item.latestBuildId
+                            },
+                            query: {
+                                archiveFlag: true
+                            }
+                        }
+                    }))
+
+                    return {
+                        page,
+                        count,
+                        records: pipelineList
+                    }
                 } else {
                     if (!isShallowEqual(queryParams, this.$route.query)) {
                         this.$router.replace({
@@ -188,6 +235,8 @@ export default {
                 }
                 : {}
             const isDynamicGroup = this.currentGroup?.viewType === 1
+            const isRunning = pipeline.latestBuildStatus === statusAlias.RUNNING
+            const isDraft = pipeline.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING
 
             return [
                 {
@@ -260,6 +309,20 @@ export default {
                     }]
                     : []),
                 {
+                    text: this.$t('archive.archive'),
+                    disable: isRunning || isDraft,
+                    tooltips: isRunning ? this.$t('archive.unableToFile') : isDraft ? this.$t('archive.onlyDraftVersion') : false,
+                    handler: this.archiveHandler,
+                    hasPermission: pipeline.permissions.canArchive,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId: pipeline.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: pipeline.pipelineId,
+                        action: RESOURCE_ACTION.ARCHIVED
+                    }
+                },
+                {
                     text: this.$t('delete'),
                     handler: this.deleteHandler,
                     hasPermission: pipeline.permissions.canDelete,
@@ -327,6 +390,12 @@ export default {
                 activePipelineList: [pipeline]
             })
         },
+        archiveHandler (pipeline) {
+            this.updatePipelineActionState({
+                isArchiveDialogShow: true,
+                activePipelineList: [pipeline]
+            })
+        },
         deleteHandler (pipeline) {
             this.updatePipelineActionState({
                 confirmType: 'delete',
@@ -363,6 +432,26 @@ export default {
             this.updatePipelineActionState({
                 isSaveAsTemplateShow: false,
                 activePipeline: null
+            })
+        },
+        closeArchiveDialog () {
+            this.updatePipelineActionState({
+                isArchiveDialogShow: false,
+                activePipelineList: []
+            })
+        },
+
+        openDeleteArchivedDialog (pipeline) {
+            this.updatePipelineActionState({
+                isShowDeleteArchivedDialog: true,
+                activePipelineList: [pipeline]
+            })
+        },
+
+        closeDeleteArchiveDialog () {
+            this.updatePipelineActionState({
+                isShowDeleteArchivedDialog: false,
+                activePipelineList: []
             })
         },
 
