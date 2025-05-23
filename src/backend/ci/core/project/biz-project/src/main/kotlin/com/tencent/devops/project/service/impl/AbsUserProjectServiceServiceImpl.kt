@@ -391,7 +391,7 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
             logger.warn("User $userId has no permission to view pipeline in project $projectId")
             throw ErrorCodeException(
                 errorCode = USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                params = arrayOf(userId, projectId, permission.alias, pipelineId)
+                params = arrayOf(userId, projectId, permission.getI18n(I18nUtil.getRequestUserLanguage()), pipelineId)
             )
         }
     }
