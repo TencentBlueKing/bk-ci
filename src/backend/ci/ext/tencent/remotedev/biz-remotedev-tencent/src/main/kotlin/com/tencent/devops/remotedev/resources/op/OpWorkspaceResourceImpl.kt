@@ -97,7 +97,8 @@ class OpWorkspaceResourceImpl @Autowired constructor(
     override fun devxEnvNodeInit(userId: String, workspaceName: String): Result<Boolean> {
         val ws = workspaceService.getWorkspaceDetail(
             userId = userId,
-            workspaceName = workspaceName
+            workspaceName = workspaceName,
+            checkPermission = false
         ) ?: return Result(false)
         val ip = ws.ip?.substringAfter(".") ?: run {
             logger.info("workspace not find ip|$workspaceName")
