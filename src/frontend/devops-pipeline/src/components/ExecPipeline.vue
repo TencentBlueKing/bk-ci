@@ -534,11 +534,14 @@
                 this.initMiniMapScroll()
                 this.expandAllMatrix()
             })
-            const { review_task_id: taskId, review_stage_id: stageIndex } = this.$route.query
-            if (taskId) {
-                this.reviewAtom({ id: taskId })
-            } else if (stageIndex) {
-                this.handleStageCheck({ type: 'checkIn', stageIndex })
+            const { reviewTaskId, reviewStageSeq } = this.$route.query
+            if (reviewTaskId) {
+                this.reviewAtom({ id: reviewTaskId })
+            } else if (reviewStageSeq) {
+                this.handleStageCheck({
+                    type: 'checkIn',
+                    stageIndex: reviewStageSeq
+                })
             }
         },
         beforeDestroy () {
@@ -665,7 +668,6 @@
                 })
             },
             handleStageCheck ({ type, stageIndex }) {
-                console.log('🚀 ~ ~~~~~~~~~~~~~', type, stageIndex)
                 this.toggleStageReviewPanel({
                     showStageReviewPanel: {
                         isShow: true,
@@ -705,7 +707,6 @@
                 this.skipTask = skip
             },
             async reviewAtom (atom) {
-                console.log('🚀 ~ reviewAtom ~ atom:', atom)
                 // 人工审核
                 this.currentAtom = atom
                 this.toggleCheckDialog(true)
