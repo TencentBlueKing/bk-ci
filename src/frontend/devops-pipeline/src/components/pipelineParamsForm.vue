@@ -55,8 +55,8 @@
 </template>
 
 <script>
-    import renderSortCategoryParams from '@/components/renderSortCategoryParams'
     import renderParam from '@/components/renderParam'
+    import renderSortCategoryParams from '@/components/renderSortCategoryParams'
     import {
         BOOLEAN,
         BOOLEAN_LIST,
