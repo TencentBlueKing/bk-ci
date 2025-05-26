@@ -565,7 +565,7 @@
     "disabledReleaseTips": "请选择模板版本",
     "returnInstanceList": "返回列表",
     "releasing": {
-      "title": "{0}个流水线实例正在发布中…",
+      "title": "{0} 条流水线实例正在发布中…",
       "tips": "你可以在当前页等待或关闭弹窗继续其他操作后续可在按钮处查看发布结果"
     },
     "partOfMr": {
@@ -573,22 +573,30 @@
       "tips1": "版本尚未发布成功，下一步",
       "tips2": "请到代码库处理合并请求",
       "tips3": "PAC模式下，YAML 文件合入默认分支，才视为发布正式版本",
-      "dealMR": "处理合并请求"
+      "dealMR": "处理合并请求",
+      "partialSuccessTitle": "合并请求创建完成，流水线提交成功 {0} 条，失败 {1} 条",
+      "partialSuccessTip1": "接下来请按照以下的指示，完成对应操作",
+      "partialSuccessTip2": "{0} 条流水线提交失败，请检查失败原因，修改后重新提交：",
+      "failedRetry": "失败重试"
     },
     "releaseSuc": {
-      "title": "{0}个流水线实例发布成功",
+      "title": "流水线发布成功 {0} 条",
       "tips": "接下来你可以在实例列表中查看已发布的实例"
     },
     "releaseFail": {
-      "title": "{0}个流水线实例发布失败",
+      "title": " 流水线发布失败 {0} 条",
       "tips": "接下来你可以重试或关闭弹窗"
+    },
+    "releasePartialSuccess": {
+      "title": " 流水线发布成功 {0} 条，失败 {1} 条",
+      "tip1": "接下来你可以重试或修改后提交"
     },
     "modifyConfig": "修改配置",
     "batchEditInstance": "批量编辑实例",
     "batchEditInstanceTips": "添加的字段配置将会应用于所有实例，如未填写，则默认为清空该字段值",
     "releaseTaskHeaderTips": "有 {0} 个发布任务进行中",
     "views": "查看",
-    "from": "来自",
+    "from": "源: ",
     "Upgrading": "升级中",
     "UpgradeFailed": "升级失败",
     "goView": "去查看",

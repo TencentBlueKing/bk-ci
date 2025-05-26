@@ -182,11 +182,12 @@
         try {
             const instanceReleaseInfos = instanceList.value.map(item => {
                 return {
-                    ...item,
-                    param: item.param.map(paramItem => ({
-                        ...paramItem,
-                        required: paramItem.isRequiredParam
-                    }))
+                    pipelineId: item.pipelineId,
+                    pipelineName: item.pipelineName,
+                    buildNo: item.buildNo,
+                    param: item.param,
+                    timerTrigger: item.timerTrigger,
+                    filePath: `.ci/${item.filePath}`
                 }
             })
             const res = await proxy.$store.dispatch(fn, {

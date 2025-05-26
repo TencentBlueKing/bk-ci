@@ -3,21 +3,15 @@
         <span class="selector-prepend">
             {{ isInstanceCreateType ? $t('template.templateVersion') : $t('template.upgradedVersion') }}
         </span>
-        <bk-select
-            v-model="versionValue"
+        <VersionSelector
+            v-if="versionValue"
             class="version-selector"
-            :placeholder="$t('template.selectTemplateUpgradedVersion')"
-            :loading="isLoading"
-            :clearable="false"
+            :value="versionValue"
             @change="handleVersionChange"
-        >
-            <bk-option
-                v-for="(option, index) in versionList"
-                :key="index"
-                :id="option.version"
-                :name="option.versionName"
-            />
-        </bk-select>
+            :include-draft="false"
+            refresh-list-on-expand
+            :show-extension="false"
+        />
         <bk-button
             :class="{
                 'preview-btn': versionValue
@@ -67,45 +61,28 @@
 </template>
 
 <script setup>
+    import { ref, defineProps, computed } from 'vue'
     import Logo from '@/components/Logo'
-    import PipelineTemplatePreview from '@/components/PipelineTemplatePreview'
     import UseInstance from '@/hook/useInstance'
+    import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
+    import PipelineTemplatePreview from '@/components/PipelineTemplatePreview'
     import { UPDATE_USE_TEMPLATE_SETTING } from '@/store/modules/templates/constants'
-    import { computed, defineProps, onMounted, ref } from 'vue'
     defineProps({
         isInstanceCreateType: Boolean
     })
-    const versionList = ref([])
-    const versionValue = ref()
-    const isLoading = ref(false)
     const isShowPreview = ref(false)
     const templatePipeline = ref({})
     const { proxy } = UseInstance()
     const projectId = computed(() => proxy.$route.params?.projectId)
     const templateId = computed(() => proxy.$route.params?.templateId)
     const useTemplateSettings = computed(() => proxy.$store?.state?.templates?.useTemplateSettings)
-    async function fetchVersionList () {
-        try {
-            isLoading.value = true
-            const res = await proxy.$store.dispatch('templates/requestTemplateVersionList', {
-                projectId: projectId.value,
-                templateId: templateId.value,
-                includeDraft: false
-            })
-            versionList.value = res.records
-            if (versionList.value.length) {
-                const version = versionList.value[0].version
-                versionValue.value = version
-                handleVersionChange(version)
-            }
-            isLoading.value = false
-        } catch (e) {
-            console.error(e)
-        }
-    }
+    const pipelineInfo = computed(() => proxy.$store?.state?.atom?.pipelineInfo)
+    const versionValue = ref(proxy?.$route.params?.version ?? pipelineInfo.value?.version)
+    
     async function handleVersionChange (value) {
         if (!value) return
         try {
+            versionValue.value = value
             const res = await proxy.$store.dispatch('templates/fetchTemplateByVersion', {
                 projectId: projectId.value,
                 templateId: templateId.value,
@@ -125,16 +102,12 @@
         proxy.$store.commit(`templates/${UPDATE_USE_TEMPLATE_SETTING}`, value)
     }
     function handleToViewDetails () {
-        const version = versionValue.value ?? versionList.value[0].version
-        window.open(`${location.origin}/console/pipeline/${projectId.value}/template/${templateId.value}/${version}/setting`)
+        window.open(`${location.origin}/console/pipeline/${projectId.value}/template/${templateId.value}/${versionValue.value}/setting`)
     }
     function handlePreview () {
         if (!versionValue.value) return
         isShowPreview.value = true
     }
-    onMounted(() => {
-        fetchVersionList()
-    })
 </script>
 
 <style lang="scss">
@@ -156,7 +129,13 @@
         }
         .version-selector {
             width: 260px;
+            height: 32px;
             margin-right: 20px;
+            .pipeline-version-dropmenu-trigger {
+                height: 32px;
+                background: #fff;
+                border: 1px solid #c4c6cc;
+            }
         }
         .preview-btn {
             &:hover {

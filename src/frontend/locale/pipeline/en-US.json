@@ -571,7 +571,11 @@
       "tips1": "The version has not been successfully released. Next step,",
       "tips2": "please handle the merge request in the repository.",
       "tips3": "In PAC mode, merging the YAML file into the default branch is considered the official release.",
-      "dealMR": "Handle Merge Request"
+      "dealMR": "Handle Merge Request",
+      "partialSuccessTitle": "Merge request created. {0} pipeline submissions succeeded, {1} failed.",
+      "partialSuccessTip1": "Please follow the instructions below to complete the respective operations.",
+      "partialSuccessTip2": "{0} pipeline submissions failed. Please check the failure reasons and resubmit after corrections:",
+      "failedRetry": "失败重试"
     },
     "releaseSuc": {
       "title": "{0} pipeline instances successfully released",
@@ -586,7 +590,7 @@
     "batchEditInstanceTips": "The added field configuration will apply to all instances. If left blank, the field value will be cleared by default.", 
     "releaseTaskHeaderTips": "{0} release tasks are in progress.",
     "views": "Views",
-    "from": "From",
+    "from": "From:",
     "Upgrading": "Upgrading",
     "UpgradeFailed": "Upgrade Failed",
     "goView": "View",

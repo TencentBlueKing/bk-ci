@@ -115,6 +115,10 @@
                                     <span class="template-version">
                                         {{ $t('template.UpgradeFailed') }}
                                         <logo
+                                            v-bk-tooltips="{
+                                                content: row.instanceErrorInfo
+                                            }"
+                                            class="status-failed-icon"
                                             name="failed-circle-fill"
                                             :size="14"
                                         />
@@ -287,10 +291,6 @@
                         id: TEMPLATE_INSTANCE_PIPELINE_STATUS.UPDATING
                     },
                     {
-                        name: proxy.$t('template.instanceStatus.updated'),
-                        id: TEMPLATE_INSTANCE_PIPELINE_STATUS.UPDATED
-                    },
-                    {
                         name: proxy.$t('template.instanceStatus.failed'),
                         id: TEMPLATE_INSTANCE_PIPELINE_STATUS.FAILED
                     }
@@ -298,12 +298,39 @@
             },
             {
                 name: proxy.$t('versionNum'),
-                id: 'pipelineVersionName'
+                id: 'templateVersion',
+                remoteMethod:
+                    async (search) => {
+                        const res = await proxy.$store.dispatch('templates/requestTemplateVersionList', {
+                            projectId: projectId.value,
+                            templateId: templateId.value,
+                            versionName: search
+                        })
+                        return res.records.map(item => ({
+                            name: item.versionName,
+                            id: item.version
+                        }))
+                    }
             },
             {
-                
                 name: proxy.$t('template.codeRepo'),
-                id: 'repoAliasName'
+                id: 'repoHashId',
+                remoteMethod:
+                    async (search) => {
+                        const res = await proxy.$store.dispatch('common/getPACRepoList', {
+                            projectId: projectId.value,
+                            enabledPac: true,
+                            scmType: 'CODE_GIT',
+                            permission: 'USE',
+                            aliasName: search,
+                            page: 1,
+                            pageSize: 50
+                        })
+                        return res.records.map(item => ({
+                            name: item.aliasName,
+                            id: item.repositoryHashId
+                        }))
+                    }
             }
         ]
         return list.filter((data) => {
@@ -410,7 +437,6 @@
             }
         })
     }
-
 </script>
 
 <style lang="scss">
@@ -506,6 +532,9 @@
             .update-icon {
                 position: relative;
                 top: 2px;
+            }
+            .status-failed-icon {
+                cursor: pointer;
             }
             .loading-icon {
                 display: ruby;

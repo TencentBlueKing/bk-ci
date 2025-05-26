@@ -2,6 +2,7 @@
     <bk-popover
         theme="light"
         ext-cls="instance-task-menu"
+        :disabled="!taskList.length"
     >
         <bk-badge
             theme="danger"

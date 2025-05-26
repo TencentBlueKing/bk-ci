@@ -84,7 +84,8 @@
                                                 class="mb20"
                                                 ref="versionParamForm"
                                                 :build-no="buildNo"
-                                                is-preview
+                                                is-instance
+                                                is-init-instance
                                                 :version-param-values="versionParamValues"
                                                 :handle-version-change="handleParamChange"
                                                 :handle-build-no-change="handleBuildNoChange"
@@ -175,11 +176,11 @@
                                                 class="mb20"
                                                 ref="versionParamForm"
                                                 :build-no="buildNo"
-                                                is-preview
+                                                is-instance
+                                                is-init-instance
                                                 disabled
                                                 :version-param-values="versionParamValues"
                                                 :handle-version-change="handleParamChange"
-                                                instance
                                                 :handle-build-no-change="handleBuildNoChange"
                                                 :version-param-list="versionParams"
                                             />
@@ -418,31 +419,44 @@
         
         return instanceBuildNo
     }
-    function updateInstanceList () {
+    
+    function handleSetParmaRequired (id) {
         proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
             index: activeIndex.value - 1,
-            value: curInstance.value
+            value: {
+                ...curInstance.value,
+                param: curInstance.value?.param.map(p => ({
+                    ...p,
+                    isRequiredParam: !p.isRequiredParam
+                }))
+            }
         })
-    }
-    function handleSetParmaRequired (id) {
-        curInstance.value?.param?.forEach(i => {
-            if (i.id === id) i.isRequiredParam = !i.isRequiredParam
-        })
-        updateInstanceList()
     }
     
     function handleUseDefaultValue (id) {
         const defaultValue = curTemplateDetail.value?.params?.find(i => i.id === id)?.defaultValue
-        curInstance.value.param.forEach(i => {
-            if (i.id === id) i.defaultValue = defaultValue
+        proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
+            index: activeIndex.value - 1,
+            value: {
+                ...curInstance.value,
+                param: curInstance.value?.param.map(p => ({
+                    ...p,
+                    defaultValue: p.id === id ? defaultValue : p.defaultValue
+                }))
+            }
         })
-        updateInstanceList()
     }
     function handleParamChange (id, value) {
-        curInstance.value?.param?.forEach(i => {
-            if (i.id === id) i.defaultValue = value
+        proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
+            index: activeIndex.value - 1,
+            value: {
+                ...curInstance.value,
+                param: curInstance.value?.param.map(p => ({
+                    ...p,
+                    defaultValue: p.id === id ? value : p.defaultValue
+                }))
+            }
         })
-        updateInstanceList()
     }
     function toggleCollapse (id) {
         if (activeName.value.has(id)) {
@@ -465,6 +479,19 @@
         proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
             index: instanceIndex,
             value: initialInstanceList.value[instanceIndex]
+        })
+    }
+
+    function handleBuildNoChange (name, value) {
+        proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
+            index: activeIndex.value - 1,
+            value: {
+                ...curInstance.value,
+                buildNo: {
+                    ...curInstance.value?.buildNo,
+                    [name]: value
+                }
+            }
         })
     }
     function initData () {

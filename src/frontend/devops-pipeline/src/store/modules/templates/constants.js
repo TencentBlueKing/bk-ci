@@ -73,7 +73,8 @@ export const RELEASE_STATUS = {
     INIT: 'INIT',
     INSTANCING: 'INSTANCING',
     SUCCESS: 'SUCCESS',
-    FAILED: 'FAILED'
+    FAILED: 'FAILED',
+    PARTIAL_SUCCESS: 'PARTIAL_SUCCESS'
 }
 
 // 模板实例化流水线状态
