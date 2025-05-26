@@ -692,7 +692,6 @@ class OPRepositoryService @Autowired constructor(
                     repositoryId = it.map { it.repositoryId }.toSet()
                 )
             }
-            offset += limit
             // 避免限流，增加一秒休眠时间
             Thread.sleep(1 * 1000)
         } while (repoList.size == 100)
