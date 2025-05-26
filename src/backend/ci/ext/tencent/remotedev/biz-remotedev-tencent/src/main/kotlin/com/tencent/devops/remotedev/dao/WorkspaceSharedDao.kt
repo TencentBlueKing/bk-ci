@@ -54,13 +54,14 @@ class WorkspaceSharedDao {
     fun existWorkspaceSharedInfo(
         workspaceName: String,
         sharedUser: String,
-        dslContext: DSLContext
+        dslContext: DSLContext,
+        assignType: WorkspaceShared.AssignType? = WorkspaceShared.AssignType.VIEWER
     ): Boolean {
         return with(TWorkspaceShared.T_WORKSPACE_SHARED) {
             dslContext.selectCount().from(this)
                 .where(WORKSPACE_NAME.eq(workspaceName))
                 .and(SHARED_USER.eq(sharedUser))
-                .and(ASSIGN_TYPE.eq(WorkspaceShared.AssignType.VIEWER.name))
+                .and(ASSIGN_TYPE.eq(assignType?.name))
                 .fetchOne(0, Int::class.java)!! > 0
         }
     }

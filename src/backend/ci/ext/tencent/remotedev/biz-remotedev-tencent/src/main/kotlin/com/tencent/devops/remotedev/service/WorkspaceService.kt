@@ -1469,6 +1469,19 @@ class WorkspaceService @Autowired constructor(
         return taiService.verifyMoa2faRequest(userId = userId, moa2faVerifyReqData = moa2faVerifyReqData)
     }
 
+    fun checkExistWorkspaceSharedInfo(
+        workspaceName: String,
+        sharedUser: String,
+        assignType: WorkspaceShared.AssignType
+    ): Boolean {
+        return workspaceSharedDao.existWorkspaceSharedInfo(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            sharedUser = sharedUser,
+            assignType = assignType
+        )
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
