@@ -99,8 +99,8 @@
                 :handle-change="handleChange"
                 v-validate="'required'"
                 :data-vv-scope="'pipelineParam'"
-                :replace-key="param.replaceKey"
-                :search-url="param.searchUrl"
+                replace-key="{keyword}"
+                :search-url="getSearchUrl('CODE_SVN')"
             >
             </request-selector>
         </form-field>
@@ -202,6 +202,8 @@
                 :data-vv-scope="'pipelineParam'"
                 :value="param.defaultValue"
                 :handle-change="handleChange"
+                replace-key="{keyword}"
+                :search-url="getSearchUrl(param.scmType)"
             >
             </request-selector>
             <request-selector
@@ -292,40 +294,40 @@
 
 <script>
     import FormField from '@/components/AtomPropertyPanel/FormField'
-import EnumInput from '@/components/atomFormField/EnumInput'
-import FileParamInput from '@/components/atomFormField/FileParamInput'
-import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
-import RequestSelector from '@/components/atomFormField/RequestSelector'
-import Selector from '@/components/atomFormField/Selector'
-import VuexInput from '@/components/atomFormField/VuexInput'
-import VuexTextarea from '@/components/atomFormField/VuexTextarea'
-import validMixins from '@/components/validMixins'
-import { ENVIRONMENT_API_URL_PREFIX, PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX } from '@/store/constants'
-import {
-CODE_LIB_OPTION,
-CODE_LIB_TYPE,
-getBranchOption,
-getParamsDefaultValueLabel,
-getParamsDefaultValueLabelTips,
-getRepoOption,
-isArtifactoryParam,
-isBooleanParam,
-isBuildResourceParam,
-isCodelibParam,
-isEnumParam,
-isFileParam,
-isGitParam,
-isMultipleParam,
-isRepoParam,
-isStringParam,
-isSubPipelineParam,
-isSvnParam,
-isTextareaParam,
-SUB_PIPELINE_OPTION
-} from '@/store/modules/atom/paramsConfig'
-import { getParamsValuesMap } from '@/utils/util'
-import { mapGetters } from 'vuex'
-import SelectTypeParam from './select-type-param'
+    import EnumInput from '@/components/atomFormField/EnumInput'
+    import FileParamInput from '@/components/atomFormField/FileParamInput'
+    import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
+    import RequestSelector from '@/components/atomFormField/RequestSelector'
+    import Selector from '@/components/atomFormField/Selector'
+    import VuexInput from '@/components/atomFormField/VuexInput'
+    import VuexTextarea from '@/components/atomFormField/VuexTextarea'
+    import validMixins from '@/components/validMixins'
+    import { ENVIRONMENT_API_URL_PREFIX, PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX } from '@/store/constants'
+    import {
+        CODE_LIB_OPTION,
+        CODE_LIB_TYPE,
+        getBranchOption,
+        getParamsDefaultValueLabel,
+        getParamsDefaultValueLabelTips,
+        getRepoOption,
+        isArtifactoryParam,
+        isBooleanParam,
+        isBuildResourceParam,
+        isCodelibParam,
+        isEnumParam,
+        isFileParam,
+        isGitParam,
+        isMultipleParam,
+        isRepoParam,
+        isStringParam,
+        isSubPipelineParam,
+        isSvnParam,
+        isTextareaParam,
+        SUB_PIPELINE_OPTION
+    } from '@/store/modules/atom/paramsConfig'
+    import { getParamsValuesMap } from '@/utils/util'
+    import { mapGetters } from 'vuex'
+    import SelectTypeParam from './select-type-param'
 
     const BOOLEAN = [
         {
