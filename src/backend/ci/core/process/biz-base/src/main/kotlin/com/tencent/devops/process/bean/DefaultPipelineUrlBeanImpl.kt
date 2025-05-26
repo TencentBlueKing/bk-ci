@@ -58,7 +58,7 @@ class DefaultPipelineUrlBeanImpl constructor(private val commonConfig: CommonCon
         projectCode: String,
         pipelineId: String,
         buildId: String,
-        stageId: String?,
+        stageSeq: Int?,
         taskId: String?,
         needShortUrl: Boolean
     ): String {
@@ -66,8 +66,8 @@ class DefaultPipelineUrlBeanImpl constructor(private val commonConfig: CommonCon
             "/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
 
         val queryParams = mutableListOf<String>()
-        stageId?.let { queryParams.add("review_stage_id=$it") }
-        taskId?.let { queryParams.add("review_task_id=$it") }
+        stageSeq?.let { queryParams.add("reviewStageSeq=$it") }
+        taskId?.let { queryParams.add("reviewTaskId=$it") }
 
         return if (queryParams.isNotEmpty()) {
             "$baseUrl?${queryParams.joinToString("&")}"
