@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.service.pipeline
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.timestampmilli
