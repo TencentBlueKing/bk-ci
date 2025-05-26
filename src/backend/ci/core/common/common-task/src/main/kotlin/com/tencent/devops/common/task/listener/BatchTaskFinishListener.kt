@@ -154,26 +154,28 @@ class BatchTaskFinishListener @Autowired constructor(
     /**
      * 构建错误信息字符串
      * @param failedTasks 失败任务列表
-     * @return 格式化后的错误信息字符串（最多显示前10个错误，每个错误最多500字符，总长度不超过5000字符）
+     * @return 格式化后的错误信息字符串（最多显示前10个错误，每个错误最多500字符）
      */
     private fun buildErrorMessage(failedTasks: List<TaskResult>): String {
         if (failedTasks.isEmpty()) return ""
 
         // 定义错误信息格式限制参数
-        val maxErrorLength = 5000 // 总长度限制5000字符
         val maxErrorsToShow = 10  // 最多显示前10个错误
         val maxCharsPerError = 500 // 每个错误最多显示500字符
 
-        // 处理错误信息：
-        // 1. 取前N个失败任务
-        // 2. 将每个任务序列化为JSON并截取前500个字符
-        // 3. 用[...]包裹，如果超过最大显示数量则添加省略号
-        // 4. 最终截取总长度不超过5000字符
         return failedTasks.take(maxErrorsToShow).joinToString(
-            prefix = "[", postfix = if (failedTasks.size > maxErrorsToShow) "...]" else "]"
+            prefix = "[",
+            postfix = if (failedTasks.size > maxErrorsToShow) "...]" else "]",
+            separator = ", "
         ) { taskResult ->
-            JsonUtil.truncateJson(JsonUtil.toJson(taskResult, false), maxCharsPerError)
-        }.take(maxErrorLength)
+            // 创建临时副本避免修改原始对象
+            val processedResult = taskResult.copy(
+                result = taskResult.result.take(maxCharsPerError).let {
+                    if (it.length < taskResult.result.length) "$it..." else it
+                }
+            )
+            JsonUtil.toJson(processedResult, false)
+        }
     }
 
     companion object {
