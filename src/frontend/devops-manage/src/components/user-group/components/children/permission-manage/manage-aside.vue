@@ -428,8 +428,10 @@ async function handleChangeOverFormName ({list, userList}){
   }
   userListData.value = userList;
   handOverForm.value = userList?.find(i => i.id === list[0]);
+  const checkedMemberFroms = checkedMembers.value.map(item => item.id)
+  const handoverFroms = isBatchOperate.value ? checkedMemberFroms : [removeUser.value?.id]
 
-  if(!isBatchOperate.value && (removeUser.value?.id === handOverForm.value?.id)){
+  if(handoverFroms.includes(handOverForm.value?.id)){
     Message({
       theme: 'error',
       message: t('目标对象和交接人不允许相同。')
@@ -439,8 +441,7 @@ async function handleChangeOverFormName ({list, userList}){
 
   const params = {
     projectCode: projectId.value,
-    // handoverFroms: [removeUser.value?.id],
-    handoverFrom: removeUser.value?.id || checkedMembers.value[0].id,
+    handoverFroms,
     handoverTo: handOverForm.value?.id,
     preCheck: true,
     checkPermission: true
