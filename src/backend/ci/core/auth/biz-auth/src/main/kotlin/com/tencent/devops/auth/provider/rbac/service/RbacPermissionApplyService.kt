@@ -589,7 +589,8 @@ class RbacPermissionApplyService @Autowired constructor(
                             resourceCode = resourceCode,
                             groupCode = it.groupCode,
                             iamResourceCode = iamResourceCode,
-                            iamRelatedResourceType = iamRelatedResourceType
+                            iamRelatedResourceType = iamRelatedResourceType,
+                            groupDesc = it.desc
                         )
                     }
                 }
@@ -603,7 +604,10 @@ class RbacPermissionApplyService @Autowired constructor(
                     resourceCode = resourceCode,
                     groupCode = DefaultGroupType.MANAGER.value,
                     iamResourceCode = iamResourceCode,
-                    iamRelatedResourceType = iamRelatedResourceType
+                    iamRelatedResourceType = iamRelatedResourceType,
+                    groupDesc = rbacCommonService.getGroupConfigAction(finalResourceType).firstOrNull {
+                        it.groupCode == DefaultGroupType.MANAGER.value
+                    }?.desc
                 )
             }
         }
@@ -618,7 +622,8 @@ class RbacPermissionApplyService @Autowired constructor(
         resourceCode: String,
         groupCode: String,
         iamResourceCode: String,
-        iamRelatedResourceType: String
+        iamRelatedResourceType: String,
+        groupDesc: String? = null
     ) {
         val projectId = projectInfo.resourceCode
         val projectName = projectInfo.resourceName
@@ -643,7 +648,7 @@ class RbacPermissionApplyService @Autowired constructor(
                         defaultMessage = resourceGroup.groupName
                     ),
                     groupId = resourceGroup.relationId,
-                    groupDesc = resourceGroup.description
+                    groupDesc = groupDesc
                 )
             )
         }
