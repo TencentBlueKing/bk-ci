@@ -329,36 +329,4 @@ object JsonUtil {
     fun <T> Any.deepCopy(): T {
         return getObjectMapper().readValue(getObjectMapper().writeValueAsString(this), this.javaClass) as T
     }
-
-    /**
-     * 截断JSON字符串并确保格式有效性
-     *
-     * @param json 原始JSON字符串
-     * @param maxChars 允许的最大字符数
-     * @return 截断后的有效JSON字符串（保证以'}'结尾）
-     */
-    fun truncateJson(json: String, maxChars: Int): String {
-        // 截取前maxChars个字符
-        val truncated = json.take(maxChars)
-        return if (truncated.endsWith("}")) {
-            // 如果截断后自然以}结尾，直接返回
-            truncated
-        } else {
-            // 寻找最后一个闭合大括号的位置
-            val lastBraceIndex = truncated.lastIndexOf('}')
-            if (lastBraceIndex != -1) {
-                // 截取到最后一个闭合大括号的位置（包含该括号）
-                truncated.substring(0, lastBraceIndex + 1)
-            } else {
-                // 没有找到任何闭合大括号时的处理
-                if (truncated.length < maxChars) {
-                    // 当原始字符串长度不足时直接追加闭合括号
-                    "$truncated}"
-                } else {
-                    // 替换最后一个字符为闭合括号（避免破坏JSON结构）
-                    truncated.dropLast(1) + "}"
-                }
-            }
-        }
-    }
 }
