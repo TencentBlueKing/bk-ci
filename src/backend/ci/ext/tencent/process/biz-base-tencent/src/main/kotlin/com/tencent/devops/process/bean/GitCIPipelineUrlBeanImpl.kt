@@ -91,7 +91,7 @@ class GitCIPipelineUrlBeanImpl constructor(
         projectCode: String,
         pipelineId: String,
         buildId: String,
-        stageId: String?,
+        stageSeq: Int?,
         taskId: String?,
         needShortUrl: Boolean
     ): String {

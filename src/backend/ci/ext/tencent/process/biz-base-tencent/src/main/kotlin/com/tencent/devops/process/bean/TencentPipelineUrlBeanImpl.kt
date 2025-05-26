@@ -81,7 +81,7 @@ class TencentPipelineUrlBeanImpl constructor(
         projectCode: String,
         pipelineId: String,
         buildId: String,
-        stageId: String?,
+        stageSeq: Int?,
         taskId: String?,
         needShortUrl: Boolean
     ): String {
@@ -90,8 +90,8 @@ class TencentPipelineUrlBeanImpl constructor(
 
         logger.info("[$buildId]|genBuildReviewUrl| baseUrl=$baseUrl")
         val queryParams = mutableListOf<String>()
-        stageId?.let { queryParams.add("review_stage_id=$it") }
-        taskId?.let { queryParams.add("review_task_id=$it") }
+        stageSeq?.let { queryParams.add("reviewStageSeq=$it") }
+        taskId?.let { queryParams.add("reviewTaskId=$it") }
 
         val url = if (queryParams.isNotEmpty()) {
             "$baseUrl?${queryParams.joinToString("&")}"
