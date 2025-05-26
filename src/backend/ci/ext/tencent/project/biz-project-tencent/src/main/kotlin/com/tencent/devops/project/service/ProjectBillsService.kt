@@ -11,11 +11,14 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.metrics.api.ServiceMetricsResource
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
+import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.project.api.pojo.enums.ProjectRelateOBSProductStatusEnum
 import com.tencent.devops.project.pojo.BkBillDTO
 import com.tencent.devops.project.pojo.BkDataSourceBillsDTO
@@ -56,6 +59,7 @@ class ProjectBillsService(
         private const val IEG_BG_ID = 956L
         private const val BILL_DATA_SOURCE_NAME = "蓝盾服务货币化"
         private const val BILL_DATA_SERVICE_TYPE = "流水线服务"
+        private const val BK_REPORT_BILLS_DATA_FAILED_NOTIFY = "BK_REPORT_BILLS_DATA_FAILED_NOTIFY"
     }
 
     private val project2Status = Caffeine.newBuilder()
@@ -75,7 +79,10 @@ class ProjectBillsService(
     private var billKey: String = ""
 
     @Value("\${bill.limit:#{null}}")
-    private var billLimit: Int = 30
+    private var billLimit: Int = 10
+
+    @Value("\${bill.notify.user:#{null}}")
+    private var billNofifyUser: String = ""
     fun checkInactiveProject(projectConditionDTO: ProjectConditionDTO): Boolean {
         logger.info("Checking inactive projects start |$projectConditionDTO")
         val traceId = MDC.get(TraceTag.BIZID)
@@ -376,56 +383,75 @@ class ProjectBillsService(
                 if (projects.isEmpty()) break
                 val bills = mutableListOf<BkBillDTO>()
                 projects.forEach forEach@{
-                    val projectInfo = projectService.getByEnglishName(it.englishName) ?: return@forEach
-                    // 若项目不活跃（无人访问），不上报
-                    val projectActiveUserResponse = client.get(ServiceMetricsResource::class)
-                        .getProjectActiveUserCount(
+                    try {
+                        val projectInfo = projectService.getByEnglishName(it.englishName) ?: return@forEach
+                        // 若项目不活跃（无人访问），不上报
+                        val projectActiveUserResponse = client.get(ServiceMetricsResource::class)
+                            .getProjectActiveUserCount(
+                                BaseQueryReqVO(
+                                    projectId = it.englishName,
+                                    startTime = startTime.format(DATE_FORMATTER),
+                                    endTime = endTime.format(DATE_FORMATTER)
+                                )
+                            ).data ?: return@forEach
+                        // 不活跃项目不上报
+                        if (projectActiveUserResponse.userCount == 0) {
+                            logger.info("This project is inactive and does not need to be reported:${it.englishName}")
+                            return@forEach
+                        }
+
+                        val maxJobConcurrency = client.get(ServiceMetricsResource::class).getMaxJobConcurrency(
                             BaseQueryReqVO(
                                 projectId = it.englishName,
                                 startTime = startTime.format(DATE_FORMATTER),
                                 endTime = endTime.format(DATE_FORMATTER)
                             )
-                        ).data ?: return@forEach
-                    // 不活跃项目不上报
-                    if (projectActiveUserResponse.userCount == 0)
-                        return@forEach
-
-                    val maxJobConcurrency = client.get(ServiceMetricsResource::class).getMaxJobConcurrency(
-                        BaseQueryReqVO(
-                            projectId = it.englishName,
-                            startTime = startTime.format(DATE_FORMATTER),
-                            endTime = endTime.format(DATE_FORMATTER)
+                        ).data
+                        val billKind2Usage = mapOf(
+                            BkBillKind.DOCKER_VM to (maxJobConcurrency?.dockerVm ?: 0),
+                            BkBillKind.DOCKER_DEVCLOUD to (maxJobConcurrency?.dockerDevcloud ?: 0),
+                            BkBillKind.MACOS_DEVCLOUD to (maxJobConcurrency?.macosDevcloud ?: 0),
+                            BkBillKind.WINDOWS_DEVCLOUD to (maxJobConcurrency?.windowsDevcloud ?: 0),
+                            BkBillKind.BUILD_LESS to (maxJobConcurrency?.buildLess ?: 0),
+                            BkBillKind.PRIVATE to (maxJobConcurrency?.other ?: 0),
+                            BkBillKind.PIPELINE_USER_COUNT to projectActiveUserResponse.userCount
                         )
-                    ).data
-                    val billKind2Usage = mapOf(
-                        BkBillKind.DOCKER_VM to (maxJobConcurrency?.dockerVm ?: 0),
-                        BkBillKind.DOCKER_DEVCLOUD to (maxJobConcurrency?.dockerDevcloud ?: 0),
-                        BkBillKind.MACOS_DEVCLOUD to (maxJobConcurrency?.macosDevcloud ?: 0),
-                        BkBillKind.WINDOWS_DEVCLOUD to (maxJobConcurrency?.windowsDevcloud ?: 0),
-                        BkBillKind.BUILD_LESS to (maxJobConcurrency?.buildLess ?: 0),
-                        BkBillKind.PRIVATE to (maxJobConcurrency?.other ?: 0),
-                        BkBillKind.PIPELINE_USER_COUNT to projectActiveUserResponse.userCount
-                    )
-                    billKind2Usage.forEach { (billKind, usage) ->
-                        if (usage != 0) {
-                            val bkBillDTO = BkBillDTO(
-                                costDate = yearAndMonthOfReportStr,
-                                projectId = it.englishName,
-                                projectName = it.projectName,
-                                serviceType = BILL_DATA_SERVICE_TYPE,
-                                kind = billKind.name,
-                                usage = usage,
-                                bgName = projectInfo.bgName ?: "",
-                                flag = projectInfo.productId != null && projectInfo.bgId == IEG_BG_ID.toString()
-                            )
-                            // 若是流水线用户类型，还额外需要上报用户名单
-                            if (billKind == BkBillKind.PIPELINE_USER_COUNT) {
-                                bkBillDTO.users = projectActiveUserResponse.users
+                        billKind2Usage.forEach { (billKind, usage) ->
+                            if (usage != 0) {
+                                val bkBillDTO = BkBillDTO(
+                                    costDate = yearAndMonthOfReportStr,
+                                    projectId = it.englishName,
+                                    projectName = it.projectName,
+                                    serviceType = BILL_DATA_SERVICE_TYPE,
+                                    kind = billKind.name,
+                                    usage = usage,
+                                    bgName = projectInfo.bgName ?: "",
+                                    flag = projectInfo.productId != null && projectInfo.bgId == IEG_BG_ID.toString()
+                                )
+                                // 若是流水线用户类型，还额外需要上报用户名单
+                                if (billKind == BkBillKind.PIPELINE_USER_COUNT) {
+                                    bkBillDTO.users = projectActiveUserResponse.users
+                                }
+                                bills.add(bkBillDTO)
                             }
-                            bills.add(bkBillDTO)
+                        }
+                        count += 1
+                    } catch (ex: Exception) {
+                        logger.error("build bill data failed:${it.englishName}|$ex")
+                        val bodyParams = mapOf("projectCodes" to it.englishName)
+                        val request = SendNotifyMessageTemplateRequest(
+                            templateCode = BK_REPORT_BILLS_DATA_FAILED_NOTIFY,
+                            bodyParams = bodyParams,
+                            titleParams = bodyParams,
+                            notifyType = mutableSetOf(NotifyType.WEWORK.name),
+                            receivers = billNofifyUser.split(",").toMutableSet()
+                        )
+                        kotlin.runCatching {
+                            client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
+                        }.onFailure {
+                            logger.warn("notify email fail ${it.message}|$bodyParams")
                         }
                     }
-                    count += 1
                 }
                 val dataSourceBillsDTO = BkDataSourceBillsDTO(
                     dataSourceName = BILL_DATA_SOURCE_NAME,
@@ -474,7 +500,20 @@ class ProjectBillsService(
                 }
             }
         } catch (ignore: Exception) {
-            logger.warn("request bill data failed!${ignore.message}|$reportProjects")
+            logger.error("request bill data failed!${ignore.message}|$reportProjects")
+            val bodyParams = mapOf("projectCodes" to reportProjects.toString())
+            val request = SendNotifyMessageTemplateRequest(
+                templateCode = BK_REPORT_BILLS_DATA_FAILED_NOTIFY,
+                bodyParams = bodyParams,
+                titleParams = bodyParams,
+                notifyType = mutableSetOf(NotifyType.WEWORK.name),
+                receivers = billNofifyUser.split(",").toMutableSet()
+            )
+            kotlin.runCatching {
+                client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
+            }.onFailure {
+                logger.warn("notify email fail ${it.message}|$bodyParams")
+            }
         }
     }
 }

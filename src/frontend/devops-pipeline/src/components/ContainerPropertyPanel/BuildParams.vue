@@ -243,18 +243,17 @@
                                                     v-if="isBuildResourceParam(param.type)"
                                                     style="max-width: 250px"
                                                     :popover-min-width="250"
-                                                    :url="getBuildResourceUrl"
+                                                    :url="`${buildResourceUrl}&displayName=${param.defaultValue}`"
                                                     param-id="displayName"
                                                     param-name="displayName"
-                                                    setting-key="displayName"
-                                                    display-key="displayName"
+
                                                     :disabled="disabled"
                                                     name="defaultValue"
                                                     :value="param.defaultValue"
                                                     :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                                     :data-vv-scope="`param-${param.id}`"
                                                     replace-key="\{\{__keywords__\}\}"
-                                                    :search-url="getBuildResourceSearchUrl"
+                                                    :search-url="buildResourceSearchUrl"
                                                 ></request-selector>
                                                 <request-selector
                                                     v-if="isSubPipelineParam(param.type)"
@@ -658,11 +657,11 @@
                     disabled: this.disabled
                 }
             },
-            getBuildResourceUrl () {
+            buildResourceUrl () {
                 return `${ENVIRONMENT_API_URL_PREFIX}/user/envnode/${this.$route.params.projectId}/listNew?nodeType=THIRDPARTY&page=1&pageSize=100`
             },
-            getBuildResourceSearchUrl () {
-                return `${this.getBuildResourceUrl}&keywords={{__keywords__}}`
+            buildResourceSearchUrl () {
+                return `${this.buildResourceUrl}&keywords={{__keywords__}}`
             }
         },
 

@@ -24,6 +24,7 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.Environm
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.ListCgsResp
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.ListCgsRespData
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.ResourceEstimateByVmRequest
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.SyncVmReq
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
 import com.tencent.devops.remotedev.pojo.image.ListImagesData
@@ -110,7 +111,7 @@ class WorkspaceBcsClient @Autowired constructor(
                     APP_NOT_BIND_CGS == environmentRsp.code || NO_CGS_CHOOSE == environmentRsp.code
                         -> throw WorkspaceDispatchException(
                         "创建环境接口返回失败: ${environment.basicBody.zoneId}地区${environment.basicBody.machineType}" +
-                            "型云桌面资源不足(${environmentRsp.code})"
+                                "型云桌面资源不足(${environmentRsp.code})"
                     )
 
                     else -> throw WorkspaceDispatchException(
@@ -354,7 +355,7 @@ class WorkspaceBcsClient @Autowired constructor(
                 val responseContent = response.body!!.string()
                 logger.info(
                     "get startGetResourceEstimateByVm response: ${response.rid()}" +
-                        "|${response.code}|$responseContent"
+                            "|${response.code}|$responseContent"
                 )
                 if (!response.isSuccessful) {
                     throw WorkspaceDispatchException(
@@ -446,6 +447,20 @@ class WorkspaceBcsClient @Autowired constructor(
             .get()
             .build()
         return OkhttpUtils.doHttp(request).resolveResponse<BcsResp<List<VmDiskInfo>>>().data
+    }
+
+    fun syncVm(
+        data: SyncVmReq
+    ): EnvironmentCreateRsp.EnvironmentCreateRspData? {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/sync/vm"
+        val body = JsonUtil.toJson(data, false)
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders().toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+        return OkhttpUtils.doHttp(request)
+            .resolveResponse<BcsResp<EnvironmentCreateRsp.EnvironmentCreateRspData>>().data
     }
 
     fun getTaskStatus(

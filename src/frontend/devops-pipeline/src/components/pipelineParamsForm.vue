@@ -210,7 +210,7 @@
                                 affectedChanged,
                                 affectTips: affectedChanged && Object.keys(affected).length > 0 ? this.$t('relyChanged', [Object.keys(affected).join('/')]) : ''
                             }
-                        } else {
+                        } else if (!isBuildResourceParam(param.type)) {
                             restParam = {
                                 ...restParam,
                                 displayKey: 'value',
@@ -230,11 +230,15 @@
                                 })
                             }
                             if (isBuildResourceParam(param.type)) {
-                                restParam.toggleVisible = (isShow) => {
-                                    if (isShow) {
-                                        this.fetchBuildResourceList(param)
-                                    }
-                                }
+                                const url = `environment/api/user/envnode/${this.$route.params.projectId}/listNew?nodeType=THIRDPARTY&page=1&pageSize=100`
+                                const paramId = 'displayName'
+                                Object.assign(restParam, {
+                                    url: `${url}&displayName=${value || ''}`,
+                                    paramId,
+                                    paramName: paramId,
+                                    replaceKey: '{{__keywords__}}',
+                                    searchUrl: `${url}&keywords={{__keywords__}}`
+                                })
                             }
                         }
                     }
@@ -311,7 +315,7 @@
             isObject,
             getBranchOption,
             getParamComponentType (param) {
-                if (isRemoteType(param)) {
+                if (isRemoteType(param) || isBuildResourceParam(param.type)) {
                     return 'request-selector'
                 } else {
                     return ParamComponentMap[param.type]
@@ -366,19 +370,6 @@
             },
             showFileUploader (type) {
                 return isFileParam(type) && this.$route.path.indexOf('preview') > -1
-            },
-            async fetchBuildResourceList (param) {
-                try {
-                    const { data } = await this.$ajax.get(`environment/api/user/envnode/${this.$route.params.projectId}/listNew?nodeType=THIRDPARTY&page=1&pageSize=100`)
-                    const list = data.records.map(item => ({
-                        key: item.displayName,
-                        value: item.displayName
-                    }))
-                    param.list = list
-                    param.options = list
-                } catch (error) {
-                    console.log(error)
-                }
             },
             getAffectedBy (originUrl) {
                 try {

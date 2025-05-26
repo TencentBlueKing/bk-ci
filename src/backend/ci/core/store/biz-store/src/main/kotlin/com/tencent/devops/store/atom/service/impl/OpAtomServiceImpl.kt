@@ -88,13 +88,6 @@ import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
 import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import java.io.File
-import java.io.InputStream
-import java.nio.charset.Charset
-import java.nio.file.FileSystems
-import java.time.LocalDateTime
-import java.util.concurrent.Executors
-import java.util.concurrent.ThreadPoolExecutor
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -102,6 +95,12 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.util.FileSystemUtils
+import java.io.File
+import java.io.InputStream
+import java.nio.charset.Charset
+import java.nio.file.FileSystems
+import java.time.LocalDateTime
+import java.util.concurrent.Executors
 
 @Service
 @Suppress("LongParameterList", "LongMethod", "ReturnCount", "ComplexMethod", "NestedBlockDepth")
@@ -127,6 +126,11 @@ class OpAtomServiceImpl @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(OpAtomServiceImpl::class.java)
     private val fileSeparator: String = FileSystems.getDefault().separator
+    private val executorService by lazy {
+        Executors.newFixedThreadPool(1).apply {
+            Runtime.getRuntime().addShutdownHook(Thread { shutdown() })
+        }
+    }
 
     /**
      * op系统获取插件信息
@@ -590,8 +594,7 @@ class OpAtomServiceImpl @Autowired constructor(
             action = {
                 updateAtomRepoFlagAction(
                     userId = userId,
-                    atomCode = atomCode,
-                    threadPoolExecutor = it
+                    atomCode = atomCode
                 )
             },
             actionTitle = "updateAtomRepoFlag"
@@ -601,8 +604,7 @@ class OpAtomServiceImpl @Autowired constructor(
 
     private fun updateAtomRepoFlagAction(
         userId: String,
-        atomCode: String?,
-        threadPoolExecutor: ThreadPoolExecutor
+        atomCode: String?
     ) {
         val limit = 100
         var offset = 0
@@ -628,13 +630,11 @@ class OpAtomServiceImpl @Autowired constructor(
             } while (recordSize == limit)
         } catch (ignored: Exception) {
             logger.warn("updateAtomRepoFlag failed", ignored)
-        } finally {
-            threadPoolExecutor.shutdown()
         }
     }
 
     override fun updateAtomSensitiveCacheConfig(userId: String, atomCode: String?): Result<Boolean> {
-        Executors.newFixedThreadPool(1).submit {
+        executorService.submit {
             logger.info("begin updateAtomSensitiveCacheConfig!!")
             val statusList = listOf(
                 AtomStatusEnum.TESTING.status.toByte(),

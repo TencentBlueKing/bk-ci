@@ -2,6 +2,7 @@ package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_WEBHOOK_SERVER_REPO_FULL_NAME_IS_EMPTY
 import com.tencent.devops.repository.dao.RepositoryWebhookRequestDao
@@ -13,7 +14,6 @@ import com.tencent.devops.repository.pojo.webhook.WebhookData
 import com.tencent.devops.repository.pojo.webhook.WebhookParseRequest
 import com.tencent.devops.repository.service.code.CodeRepositoryManager
 import com.tencent.devops.repository.service.hub.ScmWebhookApiService
-import com.tencent.devops.scm.api.exception.UnAuthorizedScmApiException
 import com.tencent.devops.scm.api.pojo.HookRequest
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -46,7 +46,8 @@ class RepositoryWebhookService @Autowired constructor(
                 errorCode = ERROR_WEBHOOK_SERVER_REPO_FULL_NAME_IS_EMPTY
             )
         }
-        val condition = RepoCondition(projectName = serverRepo.fullName, gitProjectId = serverRepo.id?.toString())
+        val repoExternalId = serverRepo.id?.toString()
+        val condition = RepoCondition(projectName = serverRepo.fullName, gitProjectId = repoExternalId)
         val repositories =
             codeRepositoryManager.listByCondition(
                 scmCode = scmCode,
@@ -57,25 +58,44 @@ class RepositoryWebhookService @Autowired constructor(
 
         // 循环查找有权限的代码库,调用接口扩展webhook数据
         var enWebhook = webhook
-        for (repository in sortedRepository(repositories)) {
-            val projectId = repository.projectId!!
-            val authRepository = AuthRepository(repository)
+        // 去重，相同的auth判断一次即可
+        val repoList = sortedRepository(repositories).map { AuthRepository(it) }.distinctBy { it.auth }
+        // 是否全部过期
+        var allExpired = true
+        for (repository in repoList) {
             try {
                 enWebhook = webhookApiService.webhookEnrich(
-                    projectId = projectId,
                     webhook = webhook,
-                    authRepository = authRepository
+                    authRepo = repository
                 )
+                allExpired = false
                 break
-            } catch (ignored: UnAuthorizedScmApiException) {
-                logger.warn(
-                    "repository auth has expired|$projectId|${repository.repoHashId}|${authRepository.auth}", ignored
-                )
+            } catch (ignored: RemoteServiceException) {
+                when (ignored.errorCode) {
+                    401 -> {
+                        logger.warn(
+                            "repository auth has expired|${repository.auth}", ignored
+                        )
+                    }
+
+                    else -> {
+                        logger.warn(
+                            "fail to enrich webhook|${repository.auth}", ignored
+                        )
+                    }
+                }
             } catch (ignored: Exception) {
                 logger.warn(
-                    "fail to enrich webhook|$projectId|${repository.repoHashId}|${authRepository.auth}", ignored
+                    "fail to enrich webhook|${repository.auth}", ignored
                 )
             }
+        }
+        // 所有代码库都尝试失败,则返回原始数据
+        if (allExpired) {
+            logger.info(
+                "all repository auth attempts failed, return original webhook data|scmCode:$scmCode|id:${serverRepo.id}|" +
+                        "fullName:${serverRepo.fullName}"
+            )
         }
         return WebhookData(
             webhook = enWebhook,
@@ -105,11 +125,11 @@ class RepositoryWebhookService @Autowired constructor(
             val o1CountRefs = pipelineRefCountMap[o1.repoHashId!!] ?: 0
             val o2CountRefs = pipelineRefCountMap[o2.repoHashId!!] ?: 0
             when {
-                o1CountRefs < o2CountRefs -> -1
-                o1CountRefs > o2CountRefs -> 1
+                o1CountRefs < o2CountRefs -> 1
+                o1CountRefs > o2CountRefs -> -1
                 else -> when {
-                    o1.enablePac == true -> 1
-                    o2.enablePac == true -> -1
+                    o1.enablePac == true -> -1
+                    o2.enablePac == true -> 1
                     else -> 0
                 }
             }

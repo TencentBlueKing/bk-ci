@@ -25,36 +25,55 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.atom
+package com.tencent.devops.process.api.op
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import jakarta.ws.rs.Consumes
-import jakarta.ws.rs.PUT
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
-@Tag(name = "OP_PIPELINE_ATOM", description = "OP-流水线-插件")
-@Path("/op/pipeline/atom")
+@Tag(name = "OP_PIPELINE_TIMER_UPDATE", description = "OP-流水线-更新流水线定时触发信息")
+@Path("/op/pipeline/timer")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface TxOpMigrateAtomResource {
+interface OpPipelineTimerResource {
 
-    @Operation(summary = "迁移插件包")
-    @PUT
-    @Path("/pkg/migrate")
-    fun migrateAtomPkg(
-        @Parameter(description = "结束时间", required = true)
-        @QueryParam("endTime")
-        endTime: String
+    @Operation(summary = "更新定时触发器信息")
+    @POST
+    @Path("/update")
+    fun updatePipelineTimerInfo(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String?,
+        @Parameter(description = "流水线id", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?
     ): Result<Boolean>
 
-    @Operation(summary = "迁移插件静态文件")
-    @PUT
-    @Path("/static/file/migrate")
-    fun migrateAtomStaticFile(): Result<Boolean>
+    @Operation(summary = "更新定时触发器分支版本信息")
+    @POST
+    @Path("/updateBranch")
+    fun updatePipelineTimerBranchInfo(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String?,
+        @Parameter(description = "流水线id", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?
+    ): Result<Boolean>
 }

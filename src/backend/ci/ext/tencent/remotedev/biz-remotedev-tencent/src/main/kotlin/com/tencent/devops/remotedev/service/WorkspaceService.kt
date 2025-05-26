@@ -1041,7 +1041,8 @@ class WorkspaceService @Autowired constructor(
                     params = arrayOf(workspace.hostIp ?: workspaceName)
                 )
             }
-            if (!cgsStatus.userInfos.isNullOrEmpty()) {
+            // 优化：如果当前后台记录的用户，跟进入云桌面人不一致，提示有人在用
+            cgsStatus.userInfos?.firstOrNull()?.takeIf { it.account != userId }?.let {
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.WORKSPACE_LOGGED_IN.errorCode,
                     params = arrayOf(workspace.hostIp ?: workspaceName)
