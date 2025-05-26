@@ -13,8 +13,7 @@
         :searchable="searchable"
         :multi-select="multiSelect"
         :disabled="disabled || isLoading"
-        :search-url="searchUrl"
-        :replace-key="replaceKey"
+        :on-search="handleSearch"
         :data-path="dataPath"
         :setting-key="settingKey"
         :display-key="displayKey"
@@ -118,7 +117,8 @@
             return {
                 isLoading: false,
                 list: [],
-                webUrl: WEB_URL_PREFIX
+                webUrl: WEB_URL_PREFIX,
+                timeId: null
             }
         },
         computed: {
@@ -155,6 +155,9 @@
             } else {
                 this.list = this.options
             }
+        },
+        beforeDestroy () {
+            clearTimeout(this.timeId)
         },
         methods: {
             edit (index) {
@@ -212,11 +215,7 @@
                     const resData = this.getResponseData(res, this.dataPath)
 
                     // 正常情况
-                    this.list = (resData || []).map(item => ({
-                        ...item,
-                        id: item[this.paramId],
-                        name: item[this.paramName]
-                    }))
+                    this.list = this.formatList(resData)
 
                     // 单选selector时处理******
                     if (!this.multiSelect) {
@@ -247,6 +246,41 @@
                 } finally {
                     this.isLoading = false
                 }
+            },
+            handleSearch (name) {
+                if (typeof this.searchUrl !== 'string') {
+                    return Promise.resolve()
+                }
+                return new Promise((resolve, reject) => {
+                    clearTimeout(this.timeId)
+                    this.timeId = setTimeout(async () => {
+                        try {
+                            const regExp = new RegExp(this.replaceKey, 'g')
+                            const url = this.searchUrl.replace(regExp, name)
+                            const data = await this.$ajax.get(url)
+                            const resData = this.getResponseData(data)
+
+                            this.list = this.formatList(resData)
+                            resolve()
+                        } catch (error) {
+                            console.error(error)
+                            reject(error)
+                        }
+                    }, 500)
+                })
+            },
+            formatList (resData = []) {
+                const idKey = this.paramId
+                const nameKey = this.paramName
+                // 正常情况
+                return resData.map(item => {
+                    const id = item[idKey] ?? item.id ?? item
+                    return {
+                        ...item,
+                        id: this.allIdString ? String(id) : id,
+                        name: item[nameKey] ?? item.name ?? item
+                    }
+                })
             }
         }
     }

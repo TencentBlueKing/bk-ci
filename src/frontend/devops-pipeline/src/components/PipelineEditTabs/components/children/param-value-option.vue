@@ -99,8 +99,8 @@
                 :handle-change="handleChange"
                 v-validate="'required'"
                 :data-vv-scope="'pipelineParam'"
-                :replace-key="param.replaceKey"
-                :search-url="param.searchUrl"
+                replace-key="{keyword}"
+                :search-url="getSearchUrl('CODE_SVN')"
             >
             </request-selector>
         </form-field>
@@ -202,6 +202,8 @@
                 :data-vv-scope="'pipelineParam'"
                 :value="param.defaultValue"
                 :handle-change="handleChange"
+                replace-key="{keyword}"
+                :search-url="getSearchUrl(param.scmType)"
             >
             </request-selector>
             <request-selector
@@ -276,22 +278,22 @@
 
 <script>
     import FormField from '@/components/AtomPropertyPanel/FormField'
-    import FileParamInput from '@/components/atomFormField/FileParamInput'
     import EnumInput from '@/components/atomFormField/EnumInput'
+    import FileParamInput from '@/components/atomFormField/FileParamInput'
     import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
     import RequestSelector from '@/components/atomFormField/RequestSelector'
     import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import validMixins from '@/components/validMixins'
-    import { PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX, STORE_API_URL_PREFIX } from '@/store/constants'
+    import { PROCESS_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX } from '@/store/constants'
     import {
         CODE_LIB_OPTION,
         CODE_LIB_TYPE,
+        getBranchOption,
         getParamsDefaultValueLabel,
         getParamsDefaultValueLabelTips,
         getRepoOption,
-        getBranchOption,
         isArtifactoryParam,
         isBooleanParam,
         isCodelibParam,
@@ -299,12 +301,12 @@
         isFileParam,
         isGitParam,
         isMultipleParam,
+        isRepoParam,
         isStringParam,
         isSubPipelineParam,
         isSvnParam,
         isTextareaParam,
-        SUB_PIPELINE_OPTION,
-        isRepoParam
+        SUB_PIPELINE_OPTION
     } from '@/store/modules/atom/paramsConfig'
     import { mapGetters } from 'vuex'
     import SelectTypeParam from './select-type-param'
@@ -361,8 +363,7 @@
         },
         computed: {
             ...mapGetters('atom', [
-                'osList',
-                'getBuildResourceTypeList'
+                'osList'
             ]),
             baseOSList () {
                 return this.osList.filter(os => os.value !== 'NONE').map(os => ({
@@ -430,9 +431,7 @@
             getBranchOption (name) {
                 return getBranchOption(name)
             },
-            getBuildTypeList (os) {
-                return this.getBuildResourceTypeList(os)
-            },
+            
             setSelectorDefaultVal ({ type, defaultValue = '' }) {
                 if (typeof this.param.defaultValue === 'string' && (isMultipleParam(this.param.type) || isEnumParam(this.param.type))) { // 选项清除时，修改对应的默认值
                     const dv = this.param.defaultValue.split(',').filter(v => this.param.options.map(k => k.key).includes(v))
@@ -457,10 +456,6 @@
                     }).map(opt => ({ id: opt.key, name: opt.value }))
                     : []
                 this.optionList = final
-            },
-
-            getBuildResourceUrl ({ os, buildType }) {
-                return `/${STORE_API_URL_PREFIX}/user/pipeline/container/projects/${this.$route.params.projectId}/oss/${os}?buildType=${buildType}`
             },
 
             handleCodeTypeChange (name, value) {
