@@ -245,6 +245,9 @@
                 }
             },
             handleSearch (name) {
+                if (typeof this.searchUrl !== 'string') {
+                    return Promise.resolve()
+                }
                 return new Promise((resolve, reject) => {
                     clearTimeout(this.timeId)
                     this.timeId = setTimeout(async () => {
@@ -268,11 +271,11 @@
                 const nameKey = this.paramName
                 // 正常情况
                 return resData.map(item => {
-                    const id = item[idKey] ?? item
+                    const id = item[idKey] ?? item.id ?? item
                     return {
                         ...item,
                         id: this.allIdString ? String(id) : id,
-                        name: item[nameKey] ?? item
+                        name: item[nameKey] ?? item.name ?? item
                     }
                 })
             }
