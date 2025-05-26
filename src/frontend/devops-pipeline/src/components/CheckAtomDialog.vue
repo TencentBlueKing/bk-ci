@@ -82,7 +82,7 @@
             </bk-button>
             <bk-button
                 :theme="'default'"
-                @click="cancleAtomCheck"
+                @click="cancelAtomCheck"
             >
                 {{ $t('cancel') }}
             </bk-button>
@@ -173,7 +173,7 @@
                 'getCheckAtomInfo',
                 'handleCheckAtom'
             ]),
-            cancleAtomCheck () {
+            cancelAtomCheck () {
                 this.toggleCheck(false)
                 this.$refs.checkForm.clearError()
             },
