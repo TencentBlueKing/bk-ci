@@ -238,6 +238,8 @@
                                                     :value="param.defaultValue"
                                                     :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                                     :data-vv-scope="`param-${param.id}`"
+                                                    replace-key="{keyword}"
+                                                    :search-url="getSearchUrl(param.scmType)"
                                                 ></request-selector>
                                                 <request-selector
                                                     v-if="isBuildResourceParam(param.type)"
@@ -246,7 +248,6 @@
                                                     :url="`${buildResourceUrl}&displayName=${param.defaultValue}`"
                                                     param-id="displayName"
                                                     param-name="displayName"
-
                                                     :disabled="disabled"
                                                     name="defaultValue"
                                                     :value="param.defaultValue"
@@ -319,8 +320,8 @@
                                             :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                             :data-vv-scope="`param-${param.id}`"
                                             v-validate.initial="'required'"
-                                            :replace-key="param.replaceKey"
-                                            :search-url="param.searchUrl"
+                                            replace-key="{keyword}"
+                                            :search-url="getSearchUrl('CODE_SVN')"
                                         ></request-selector>
                                     </bk-form-item>
 
