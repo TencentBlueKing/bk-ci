@@ -31,18 +31,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.notify.enums.NotifyType
-import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.log.constants.Constants.BK_TO_HANDLE
 import com.tencent.devops.log.dao.PipelineMetricsInfoDao
 import com.tencent.devops.model.metrics.tables.records.TEplusPipelineMetricsDataDailyRecord
-import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
-import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.pojo.eplus.PipelineExpirationInfo
-import com.tencent.devops.project.api.service.ServiceUserResource
 import java.time.LocalDate
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -64,12 +58,6 @@ class TxPipelineMetricsCronService @Autowired constructor(
 
     @Value("\${eplus.queryCard.token}")
     private lateinit var token: String
-
-    @Value("\${eplus.ms.process.invalidBuildPipeline.namespace.card.id}")
-    private var cardId: Int = 0
-
-    @Value("\${eplus.ms.process.invalidBuildPipeline.namespace.id}")
-    private var namespaceId: Int = 0
 
     @Value("\${eplus.card.query.url}")
     private val cardQueryUrl: String = ""
@@ -136,30 +124,6 @@ class TxPipelineMetricsCronService @Autowired constructor(
             }
         }
         metricsData(tPipelineMetricsInfoRecords)
-    }
-
-    @Scheduled(cron = "0 0 1 * * ?")
-    fun processInvalidPipelineData() {
-        logger.info("start processInvalidPipelineData")
-
-        try {
-            queryAndProcessCardData(
-                cardId = cardId,
-                namespaceId = namespaceId,
-                assignData = { row ->
-                    this.projectId = row["project_id"] as String
-                    this.pipelineId = row["pipeline_id"] as String
-                    this.url = row["n3"] as String
-                },
-                metricsData = { records ->
-                    pipelineMetricsInfoDao.batchSaveInvalidPipelineData(dslContext, records)
-                }
-            )
-        } catch (e: Exception) {
-            logger.warn("handle process invalid pipeline data fail", e)
-            throw e
-        }
-        logger.info("end processInvalidPipelineData")
     }
 
     @Scheduled(cron = "0 0 1 * * ?")
@@ -234,95 +198,6 @@ class TxPipelineMetricsCronService @Autowired constructor(
         logger.info("end handleScheduledTriggerNoCodeChange")
     }
 
-    /**
-     * 每隔两周周一10点发送项目无效流水线监控报告
-     */
-    @Scheduled(cron = "0 0 10 ? * MON/2")
-    fun sendInvalidPipelineMonitorReport() {
-        logger.info("starts the task of sending a report email")
-        var offset = 0
-        val limit = 100
-        do {
-            val projectIds = fetchInvalidPipelineProjectIds(limit, offset)
-            projectIds.forEach { projectId ->
-                sendReportForProject(projectId)
-            }
-            offset += limit
-        } while (projectIds.size == limit)
-    }
-
-    private fun sendReportForProject(projectId: String) {
-        val invalidPipelineMap = pipelineMetricsInfoDao.listProjectInvalidPipelineInfo(
-            dslContext = dslContext,
-            projectId = projectId,
-            statisticsTime = LocalDate.now().atStartOfDay()
-        ).map { it.value1() to it.value2() }.toMap()
-        val projectPipelineInfo = convertPipelineExpirationInfo(projectId, invalidPipelineMap)
-
-        try {
-            if (projectPipelineInfo != null) {
-                sendProjectReport(projectId, projectPipelineInfo)
-            }
-            logger.info("report email for the project [$projectId] was successfully sent")
-        } catch (e: Exception) {
-            logger.error("Failed to send project [$projectId] report email", e)
-        }
-    }
-
-    /**
-     * 获取所有需要发送报告的项目流水线信息
-     */
-    private fun convertPipelineExpirationInfo(
-        projectId: String,
-        invalidPipelineMap: Map<String, String>
-    ): PipelineExpirationInfo? {
-
-        val projectManagers =
-            client.get(ServiceUserResource::class).getProjectUserRoles(projectId, BkAuthGroup.MANAGER).data
-        if (projectManagers.isNullOrEmpty()) {
-            return null
-        }
-        return PipelineExpirationInfo(
-            receivers = projectManagers,
-            projectId = projectId,
-            pipelineIds = invalidPipelineMap.keys.toList(),
-            linksMap = invalidPipelineMap
-        )
-    }
-
-    /**
-     * 发送单个项目的报告邮件
-     */
-    private fun sendProjectReport(projectId: String, info: PipelineExpirationInfo) {
-        try {
-            // 准备邮件模板请求
-            val request = SendNotifyMessageTemplateRequest(
-                templateCode = "PIPELINE_EXPIRATION_NOTIFICATION",
-                receivers = info.receivers.toMutableSet(),
-                notifyType = mutableSetOf(NotifyType.EMAIL.name),
-                bodyParams = mapOf(
-                    "projectName" to info.projectId,
-                    "pipelineCount" to info.pipelineIds.size.toString(),
-                    "pipelineList" to info.pipelineIds.joinToString("\n") {
-                        "${it}:${info.linksMap[it]}"
-                    },
-                    "table" to buildPipelineTableHtml(info),
-                    "eplusUrl" to "${HomeHostUtil.innerServerHost()}/console/metrics/${projectId}"
-                ),
-                markdownContent = false
-            )
-
-            client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request).let { result ->
-                if (result.isNotOk() || result.data != true) {
-                    throw RemoteServiceException("send email fail: ${result.message}")
-                }
-            }
-        } catch (e: Exception) {
-            logger.warn("send project[${info.projectId}] invalid pipeline email fail", e)
-            throw e
-        }
-    }
-
     private fun buildPipelineTableHtml(info: PipelineExpirationInfo): String {
         val rows = info.pipelineIds.joinToString("") { pipelineId ->
             """
@@ -395,9 +270,5 @@ class TxPipelineMetricsCronService @Autowired constructor(
             token = token,
             requestBody = requestBody
         )
-    }
-
-    private fun fetchInvalidPipelineProjectIds(limit: Int, offset: Int): List<String> {
-        return pipelineMetricsInfoDao.listInvalidPipelineProjectIds(dslContext, limit, offset)
     }
 }
