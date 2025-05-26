@@ -41,6 +41,7 @@ import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.db.utils.skipCheck
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomFeature
 import com.tencent.devops.model.store.tables.TClassify
@@ -187,7 +188,7 @@ class AtomDao : AtomBaseDao() {
                 conditions.add(ATOM_CODE.eq(atomCode))
             }
             if (useTenantCondition(tenantId)) {
-                conditions.add(TENANT_ID.eq(tenantId))
+                conditions.add(TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
             }
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
         }
@@ -197,7 +198,14 @@ class AtomDao : AtomBaseDao() {
         with(TAtom.T_ATOM) {
             return dslContext.selectCount().from(this)
                 .where(ATOM_CODE.eq(atomCode))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -301,7 +309,7 @@ class AtomDao : AtomBaseDao() {
                 conditions.add(ATOM_STATUS.`in`(atomStatusList))
             }
             if (useTenantCondition(tenantId)) {
-                conditions.add(TENANT_ID.eq(tenantId))
+                conditions.add(TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
             }
             dslContext.selectFrom(this)
                 .where(conditions)
@@ -374,7 +382,7 @@ class AtomDao : AtomBaseDao() {
             conditions.add(tAtom.ATOM_STATUS.`in`(atomStatusList))
         }
         if (useTenantCondition(tenantId)) {
-            conditions.add(tAtom.TENANT_ID.eq(tenantId))
+            conditions.add(tAtom.TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
         }
         return conditions
     }
@@ -929,7 +937,7 @@ class AtomDao : AtomBaseDao() {
             conditions.add(ta.SERVICE_SCOPE.contains(serviceScope))
         }
         if (useTenantCondition(tenantId)) {
-            conditions.add(ta.TENANT_ID.eq(tenantId))
+            conditions.add(ta.TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
         }
         // 当筛选有构建环境的插件时也需加上那些无构建环境插件可以在有构建环境运行的插件
         if (!jobType.isNullOrBlank()) {
@@ -1247,7 +1255,7 @@ class AtomDao : AtomBaseDao() {
         val conditions = mutableListOf<Condition>()
         if (projectCode.isNullOrBlank()) {
             if (useTenantCondition(tenantId)) {
-                conditions.add(ta.TENANT_ID.eq(tenantId))
+                conditions.add(ta.TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
             }
             conditions.add(ta.DEFAULT_FLAG.eq(true))
             conditions.add(
@@ -1331,7 +1339,14 @@ class AtomDao : AtomBaseDao() {
             }
             baseStep.set(MODIFIER, userId)
                 .where(ID.`in`(atomIdList))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .execute()
         }
     }

@@ -62,7 +62,14 @@ abstract class AtomBaseDao {
             dslContext.selectFrom(this)
                 .where(ATOM_CODE.eq(atomCode))
                 .and(LATEST_FLAG.eq(true))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .fetchOne()
         }
     }
@@ -86,7 +93,14 @@ abstract class AtomBaseDao {
             dslContext.selectFrom(this)
                 .where(ATOM_CODE.eq(atomCode))
                 .and(BRANCH_TEST_FLAG.eq(branchTestFlag))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
@@ -103,7 +117,7 @@ abstract class AtomBaseDao {
             val conditions = mutableListOf<Condition>()
             conditions.add(ATOM_CODE.eq(atomCode))
             if (useTenantCondition(tenantId)) {
-                conditions.add(TENANT_ID.eq(tenantId))
+                conditions.add(TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
             }
             if (atomStatus != null) {
                 conditions.add(ATOM_STATUS.eq(atomStatus.status.toByte()))
@@ -151,7 +165,7 @@ abstract class AtomBaseDao {
                 conditions.add(CLASS_TYPE.eq(classType))
             }
             if (useTenantCondition(tenantId)) {
-                conditions.add(TENANT_ID.eq(tenantId))
+                conditions.add(TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
             }
             conditions.add(JOB_TYPE.eq(JobTypeEnum.AGENT.name))
             conditions.add(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))

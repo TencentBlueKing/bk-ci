@@ -174,7 +174,7 @@ class MarketImageDao @Autowired constructor() {
         val conditions = mutableListOf<Condition>()
         // 根据租户过滤
         if (useTenantCondition(tenantId)) {
-            conditions.add(tImage.TENANT_ID.eq(tenantId))
+            conditions.add(tImage.TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
         }
         // 隐含条件
         conditions.add(tImage.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte())) // 已发布的
@@ -590,7 +590,14 @@ class MarketImageDao @Autowired constructor() {
             dslContext.selectFrom(this)
                 .where(IMAGE_CODE.eq(imageCode))
                 .and(LATEST_FLAG.eq(true))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .fetchOne()
         }
     }
@@ -629,7 +636,14 @@ class MarketImageDao @Autowired constructor() {
             return dslContext.selectCount().from(this)
                 .where(IMAGE_CODE.eq(imageCode))
                 .and(IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -819,7 +833,14 @@ class MarketImageDao @Autowired constructor() {
             dslContext.selectFrom(this)
                 .where(IMAGE_CODE.eq(imageCode))
                 .and(IMAGE_STATUS.eq(ImageStatusEnum.UNDERCARRIAGED.status.toByte()))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
@@ -881,7 +902,14 @@ class MarketImageDao @Autowired constructor() {
             dslContext.selectFrom(this)
                 .where(IMAGE_CODE.eq(imageCode))
                 .and(IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .orderBy(CREATE_TIME.desc())
                 .fetch()
         }

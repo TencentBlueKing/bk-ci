@@ -37,7 +37,8 @@ class TenantUtils : ApplicationContextAware, InitializingBean {
         private var appCode = ""
         private var appSecret = ""
 
-        private const val DEFAULT_TENANT_ID = "default"
+        private const val DEFAULT_TENANT_ID_FOR_SINGLE = "default"
+        private const val DEFAULT_TENANT_ID_FOR_MULTI = "system"
         private val logger = LoggerFactory.getLogger(TenantUtils::class.java)
 
         /**
@@ -56,7 +57,7 @@ class TenantUtils : ApplicationContextAware, InitializingBean {
             } else if (!tenantId.isNullOrBlank()) {
                 tenantId
             } else {
-                DEFAULT_TENANT_ID
+                DEFAULT_TENANT_ID_FOR_MULTI
             }
         }
 
@@ -82,7 +83,7 @@ class TenantUtils : ApplicationContextAware, InitializingBean {
             return if (tenantEnglishName.contains(".")) {
                 tenantEnglishName.split(".")[0]
             } else if (enableMultiTenantMode) {
-                DEFAULT_TENANT_ID
+                DEFAULT_TENANT_ID_FOR_MULTI
             } else {
                 null
             }
@@ -142,7 +143,7 @@ class TenantUtils : ApplicationContextAware, InitializingBean {
         private fun getHeaders(tenantId: String?): Headers {
             val headers = Headers.Builder()
             headers.add("X-Bkapi-Authorization", "{\"bk_app_code\": \"$appCode\", \"bk_app_secret\": \"$appSecret\"}")
-            headers.add("X-Bk-Tenant-Id", tenantId ?: DEFAULT_TENANT_ID)
+            headers.add("X-Bk-Tenant-Id", getTenantId(tenantId) ?: DEFAULT_TENANT_ID_FOR_SINGLE)
             return headers.build()
         }
 

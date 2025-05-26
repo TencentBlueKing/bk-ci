@@ -154,7 +154,7 @@ class MarketTemplateDao {
         val tTemplate = TTemplate.T_TEMPLATE
         val conditions = mutableListOf<Condition>()
         if (useTenantCondition(tenantId)) {
-            conditions.add(tTemplate.TENANT_ID.eq(tenantId))
+            conditions.add(tTemplate.TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
         }
         conditions.add(tTemplate.TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte())) // 已发布的
         conditions.add(tTemplate.LATEST_FLAG.eq(true)) // 最新版本
@@ -331,7 +331,14 @@ class MarketTemplateDao {
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)
                 .where(ID.eq(templateId))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .execute()
         }
     }
@@ -400,7 +407,14 @@ class MarketTemplateDao {
         with(TTemplate.T_TEMPLATE) {
             return dslContext.deleteFrom(this)
                 .where(TEMPLATE_CODE.eq(templateCode))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .execute()
         }
     }
@@ -418,7 +432,7 @@ class MarketTemplateDao {
                 conditions.add(TEMPLATE_CODE.eq(templateCode))
             }
             if (useTenantCondition(tenantId)) {
-                conditions.add(TENANT_ID.eq(tenantId))
+                conditions.add(TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
             }
             return dslContext.selectCount()
                 .from(this)
@@ -431,7 +445,14 @@ class MarketTemplateDao {
         with(TTemplate.T_TEMPLATE) {
             return dslContext.selectCount().from(this)
                 .where(TEMPLATE_CODE.eq(templateCode))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -454,7 +475,14 @@ class MarketTemplateDao {
                     TEMPLATE_CODE.eq(templateCode)
                         .and(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte()))
                 )
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -464,7 +492,14 @@ class MarketTemplateDao {
             dslContext.selectFrom(this)
                 .where(TEMPLATE_CODE.eq(templateCode))
                 .and(LATEST_FLAG.eq(true))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .fetchOne()
         }
     }
@@ -473,7 +508,14 @@ class MarketTemplateDao {
         return with(TTemplate.T_TEMPLATE) {
             dslContext.selectFrom(this)
                 .where(TEMPLATE_CODE.eq(templateCode))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
@@ -498,7 +540,14 @@ class MarketTemplateDao {
             dslContext.selectFrom(this)
                 .where(TEMPLATE_CODE.eq(templateCode))
                 .and(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte()))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .orderBy(CREATE_TIME.desc())
                 .fetch()
         }
@@ -513,7 +562,14 @@ class MarketTemplateDao {
             dslContext.selectFrom(this)
                 .where(TEMPLATE_CODE.eq(templateCode))
                 .and(TEMPLATE_STATUS.eq(TemplateStatusEnum.UNDERCARRIAGED.status.toByte()))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
@@ -524,7 +580,14 @@ class MarketTemplateDao {
         return with(TTemplate.T_TEMPLATE) {
             dslContext.selectFrom(this)
                 .where(ID.eq(templateId))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .fetchOne()
         }
     }
@@ -539,7 +602,14 @@ class MarketTemplateDao {
             dslContext.selectFrom(this)
                 .where(TEMPLATE_CODE.eq(templateCode))
                 .and(VERSION.eq(version))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .fetchOne()
         }
     }
@@ -578,7 +648,14 @@ class MarketTemplateDao {
                 .set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(templateId))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .execute()
         }
     }
@@ -672,7 +749,7 @@ class MarketTemplateDao {
         val conditions = mutableListOf<Condition>()
         conditions.add(tTemplate.CREATOR.eq(userId).or(tStoreMember.USERNAME.eq(userId)))
         if (useTenantCondition(tenantId)) {
-            conditions.add(tTemplate.TENANT_ID.eq(tenantId))
+            conditions.add(tTemplate.TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
         }
         conditions.add(tStoreProjectRel.TYPE.eq(0))
         conditions.add(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.TEMPLATE.type.toByte()))
@@ -704,7 +781,14 @@ class MarketTemplateDao {
             baseStep.set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(templateId))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .execute()
         }
     }

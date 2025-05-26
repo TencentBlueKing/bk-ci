@@ -170,7 +170,7 @@ class ImageDao {
             conditions.add(tStoreMember.USERNAME.eq(userId))
             conditions.add(DELETE_FLAG.eq(false))
             if (useTenantCondition(tenantId)) {
-                conditions.add(TENANT_ID.eq(tenantId))
+                conditions.add(TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
             }
             conditions.add(tStoreMember.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
             baseStep.where(conditions)
@@ -189,7 +189,14 @@ class ImageDao {
             return dslContext.selectCount()
                 .from(this)
                 .where(IMAGE_CODE.eq(imageCode))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -219,7 +226,14 @@ class ImageDao {
         return with(TImage.T_IMAGE) {
             dslContext.selectFrom(this)
                 .where(ID.eq(imageId))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .fetchOne()
         }
     }
@@ -245,7 +259,14 @@ class ImageDao {
         return with(TImage.T_IMAGE) {
             val query = dslContext.selectFrom(this)
                 .where(IMAGE_CODE.eq(imageCode))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .and(LATEST_FLAG.eq(true))
             query.fetchOne()
         }
@@ -288,7 +309,14 @@ class ImageDao {
             dslContext.selectFrom(this)
                 .where(IMAGE_CODE.eq(imageCode))
                 .and(VERSION.like(VersionUtils.generateQueryVersion(version)))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
@@ -659,7 +687,7 @@ class ImageDao {
         val tStoreMember = TStoreMember.T_STORE_MEMBER
         val conditions = generateGetMyImageConditions(tImage, userId, tStoreMember, imageName)
         if (useTenantCondition(tenantId)) {
-            conditions.add(tImage.TENANT_ID.eq(tenantId))
+            conditions.add(tImage.TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
         }
         val t =
             dslContext.select(tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE), DSL.max(tImage.CREATE_TIME).`as`(KEY_CREATE_TIME))

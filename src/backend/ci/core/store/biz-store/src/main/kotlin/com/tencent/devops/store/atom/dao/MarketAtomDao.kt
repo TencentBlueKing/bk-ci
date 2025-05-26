@@ -29,6 +29,7 @@ package com.tencent.devops.store.atom.dao
 
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomEnvInfo
 import com.tencent.devops.model.store.tables.TAtomFeature
@@ -119,7 +120,7 @@ class MarketAtomDao : AtomBaseDao() {
             )
         }
         if (useTenantCondition(tenantId)) {
-            conditions.add(ta.TENANT_ID.eq(tenantId))
+            conditions.add(ta.TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
         }
         if (rdType != null) {
             conditions.add(ta.ATOM_TYPE.eq(rdType.type.toByte()))
@@ -296,7 +297,7 @@ class MarketAtomDao : AtomBaseDao() {
                 conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
             }
             if (useTenantCondition(tenantId)) {
-                conditions.add(TENANT_ID.eq(tenantId))
+                conditions.add(TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
             }
             return dslContext.selectCount().from(this)
                 .where(conditions)
@@ -320,7 +321,7 @@ class MarketAtomDao : AtomBaseDao() {
             conditions.add(tAtom.NAME.contains(atomName))
         }
         if (useTenantCondition(tenantId)) {
-            conditions.add(tAtom.TENANT_ID.eq(tenantId))
+            conditions.add(tAtom.TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
         }
         return conditions
     }
@@ -486,7 +487,14 @@ class MarketAtomDao : AtomBaseDao() {
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)
                 .where(ID.eq(id))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .execute()
         }
     }
@@ -639,7 +647,7 @@ class MarketAtomDao : AtomBaseDao() {
                 conditions.add(ATOM_STATUS.`in`(atomStatusList))
             }
             if (useTenantCondition(tenantId)) {
-                conditions.add(TENANT_ID.eq(tenantId))
+                conditions.add(TENANT_ID.`in`(tenantId, TenantUtils.getTenantId()))
             }
             dslContext.selectFrom(this).where(conditions).orderBy(CREATE_TIME.desc()).fetch()
         }
@@ -649,7 +657,14 @@ class MarketAtomDao : AtomBaseDao() {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
                 .where(ID.eq(atomId))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .fetchOne()
         }
     }
@@ -710,7 +725,14 @@ class MarketAtomDao : AtomBaseDao() {
             .leftJoin(tClassify)
             .on(tAtom.CLASSIFY_ID.eq(tClassify.ID))
             .where(tAtom.ID.eq(atomId))
-            .let { if (useTenantCondition(tenantId)) it.and(tAtom.TENANT_ID.eq(tenantId)) else it }
+            .let {
+                if (useTenantCondition(tenantId)) it.and(
+                    tAtom.TENANT_ID.`in`(
+                        tenantId,
+                        TenantUtils.getTenantId()
+                    )
+                ) else it
+            }
             .limit(1)
             .fetchOne()
     }
@@ -735,7 +757,14 @@ class MarketAtomDao : AtomBaseDao() {
             baseStep.set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(atomId))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .execute()
         }
     }
@@ -766,7 +795,14 @@ class MarketAtomDao : AtomBaseDao() {
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ATOM_CODE.eq(atomCode))
                 .and(ATOM_STATUS.eq(atomOldStatus))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .execute()
         }
     }
@@ -784,7 +820,14 @@ class MarketAtomDao : AtomBaseDao() {
             baseStep.set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(atomId))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .execute()
         }
     }
@@ -880,7 +923,14 @@ class MarketAtomDao : AtomBaseDao() {
             dslContext.update(this)
                 .set(LATEST_FLAG, false)
                 .where(ATOM_CODE.eq(atomCode))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .execute()
         }
     }
@@ -930,7 +980,14 @@ class MarketAtomDao : AtomBaseDao() {
             dslContext.selectFrom(this)
                 .where(ATOM_CODE.eq(atomCode))
                 .and(ATOM_STATUS.eq(AtomStatusEnum.UNDERCARRIAGED.status.toByte()))
-                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
+                .let {
+                    if (useTenantCondition(tenantId)) it.and(
+                        TENANT_ID.`in`(
+                            tenantId,
+                            TenantUtils.getTenantId()
+                        )
+                    ) else it
+                }
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
