@@ -25,18 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.pojo
+package com.tencent.devops.metrics.api
 
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.metrics.pojo.ProjectPipelineIssueAnalysisInfo
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.core.MediaType
 
-@Schema(title = "项目流水线问题分析统计信息")
-data class ProjectPipelineIssueAnalysisInfo(
-    @get:Schema(title = "项目ID", required = true)
-    val projectId: String,
-    @get:Schema(title = "近 30 天内失败率高于 90% 的流水线数量", required = false)
-    val failureRateCount: Int? = null,
-    @get:Schema(title = "近 90 天内持续失败的流水线数量", required = false)
-    val consecutiveFailuresCount: Int? = null,
-    @get:Schema(title = "定时触发但代码无变更的流水线数量", required = false)
-    val scheduledTriggerNoCodeChangeCount: Int? = null
-)
+@Tag(name = "USER_PIPELINE", description = "用户-流水线资源")
+@Path("/user/pipelines")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface TxUserPipelineMetricsResource {
+
+    @Operation(summary = "获取项目流水线问题分析信息")
+    @GET
+    @Path("/issueAnalysis")
+    fun getPipelineIssueAnalysis(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String
+    ): Result<ProjectPipelineIssueAnalysisInfo?>
+}

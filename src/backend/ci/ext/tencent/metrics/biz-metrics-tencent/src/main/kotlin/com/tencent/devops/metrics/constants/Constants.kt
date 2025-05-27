@@ -25,23 +25,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.api
+package com.tencent.devops.metrics.constants
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.metrics.api.user.TxUserPipelineMetricsResource
-import com.tencent.devops.log.pojo.ProjectPipelineIssueAnalysisInfo
-import com.tencent.devops.process.service.eplus.TxPipelineMetricssService
-import org.springframework.beans.factory.annotation.Autowired
-
-@RestResource
-class TxUserPipelineMetricsResourceImpl @Autowired constructor(
-    private val txPipelineMetricssService: TxPipelineMetricssService
-) : TxUserPipelineMetricsResource {
-    override fun getPipelineIssueAnalysis(
-        userId: String,
-        projectId: String
-    ): Result<ProjectPipelineIssueAnalysisInfo?> {
-        return Result(txPipelineMetricssService.getPipelineIssueAnalysis(userId, projectId))
-    }
+object Constants {
+    const val BK_TO_HANDLE = "bkToHandle"// 去处理
 }

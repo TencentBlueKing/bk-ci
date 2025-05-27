@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.dao
+package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.model.metrics.tables.TEplusPipelineMetricsDataDaily
 import com.tencent.devops.model.metrics.tables.records.TEplusPipelineMetricsDataDailyRecord

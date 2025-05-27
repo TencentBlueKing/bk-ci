@@ -28,8 +28,8 @@
 package com.tencent.devops.process.service.eplus
 
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.log.dao.PipelineMetricsInfoDao
-import com.tencent.devops.log.pojo.ProjectPipelineIssueAnalysisInfo
+import com.tencent.devops.metrics.dao.PipelineMetricsInfoDao
+import com.tencent.devops.metrics.pojo.ProjectPipelineIssueAnalysisInfo
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired

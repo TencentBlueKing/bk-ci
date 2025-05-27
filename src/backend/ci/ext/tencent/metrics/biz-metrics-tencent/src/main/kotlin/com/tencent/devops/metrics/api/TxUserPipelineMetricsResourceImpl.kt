@@ -25,37 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.api.user
+package com.tencent.devops.metrics.api
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.log.pojo.ProjectPipelineIssueAnalysisInfo
-import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.tags.Tag
-import jakarta.ws.rs.Consumes
-import jakarta.ws.rs.GET
-import jakarta.ws.rs.HeaderParam
-import jakarta.ws.rs.Path
-import jakarta.ws.rs.Produces
-import jakarta.ws.rs.core.MediaType
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.metrics.api.TxUserPipelineMetricsResource
+import com.tencent.devops.metrics.pojo.ProjectPipelineIssueAnalysisInfo
+import com.tencent.devops.process.service.eplus.TxPipelineMetricssService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Tag(name = "USER_PIPELINE", description = "用户-流水线资源")
-@Path("/user/pipelines")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface TxUserPipelineMetricsResource {
-
-    @Operation(summary = "获取项目流水线问题分析信息")
-    @GET
-    @Path("/issueAnalysis")
-    fun getPipelineIssueAnalysis(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
+@RestResource
+class TxUserPipelineMetricsResourceImpl @Autowired constructor(
+    private val txPipelineMetricssService: TxPipelineMetricssService
+) : TxUserPipelineMetricsResource {
+    override fun getPipelineIssueAnalysis(
         userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String
-    ): Result<ProjectPipelineIssueAnalysisInfo?>
+    ): Result<ProjectPipelineIssueAnalysisInfo?> {
+        return Result(txPipelineMetricssService.getPipelineIssueAnalysis(userId, projectId))
+    }
 }

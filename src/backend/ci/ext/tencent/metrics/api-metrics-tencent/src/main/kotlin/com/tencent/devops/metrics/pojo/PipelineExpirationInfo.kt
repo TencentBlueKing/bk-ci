@@ -25,8 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.constants
+package com.tencent.devops.metrics.pojo
 
-object Constants {
-    const val BK_TO_HANDLE = "bkToHandle"// 去处理
-}
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(title = "流水线失效提醒通知配置")
+data class PipelineExpirationInfo(
+    @get:Schema(title = "项目管理员", required = true)
+    val receivers: List<String>,
+    @get:Schema(title = "项目ID", required = true)
+    val projectId: String,
+    @get:Schema(title = "流水线ID列表", required = true)
+    val pipelineIds: List<String>,
+    @get:Schema(title = "流水线链接", required = true)
+    val linksMap: Map<String, String>
+)
