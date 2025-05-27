@@ -152,21 +152,21 @@ func Init(isDebug bool) {
 // LoadAgentEnv 加载Agent环境
 func LoadAgentEnv() {
 	GAgentEnv = new(AgentEnv)
+	LoadAgentIp()
+	GAgentEnv.HostName = systemutil.GetHostName()
+	GAgentEnv.OsName = systemutil.GetOsName()
+	GAgentEnv.AgentVersion = DetectAgentVersion()
+	GAgentEnv.WinTask = GetWinTaskType()
+}
 
-	/*
-	   忽略一些在Windows机器上VPN代理软件所产生的虚拟网卡（有Mac地址）的IP，一般这类IP
-	   更像是一些路由器的192开头的IP，属于干扰IP，安装了这类软件的windows机器IP都会变成相同，所以需要忽略掉
-	*/
+// LoadAgentIp 忽略一些在Windows机器上VPN代理软件所产生的虚拟网卡（有Mac地址）的IP，一般这类IP
+// 更像是一些路由器的192开头的IP，属于干扰IP，安装了这类软件的windows机器IP都会变成相同，所以需要忽略掉
+func LoadAgentIp() {
 	var splitIps []string
 	if len(GAgentConfig.IgnoreLocalIps) > 0 {
 		splitIps = util.SplitAndTrimSpace(GAgentConfig.IgnoreLocalIps, ",")
 	}
 	GAgentEnv.SetAgentIp(systemutil.GetAgentIp(splitIps))
-
-	GAgentEnv.HostName = systemutil.GetHostName()
-	GAgentEnv.OsName = systemutil.GetOsName()
-	GAgentEnv.AgentVersion = DetectAgentVersion()
-	GAgentEnv.WinTask = GetWinTaskType()
 }
 
 // DetectAgentVersion 检测Agent版本
