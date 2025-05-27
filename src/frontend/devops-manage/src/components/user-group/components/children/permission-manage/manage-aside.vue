@@ -40,7 +40,6 @@
           class="checkbox"
           v-if="isBatchOperate"
           v-model="item.checked"
-          @change="(value) => handleBatch(value, item)"
         />
         <MemberItem
           :member="item"
@@ -356,7 +355,6 @@ watch(isShowHandOverDialog, (newVal) => {
 })
 
 function handleClick(item) {
-  if (isBatchOperate.value) return
   emit('handleClick', item);
 }
 function pageChange(current) {
@@ -370,16 +368,16 @@ async function handleRemoval(item) {
   } else {
     handOverForm.value && (Object.assign(handOverForm.value, getHandOverForm()));
     isShowHandOverDialog.value = true;
-    await removeMemberFromProjectCheck(item);
+    await removeMemberFromProjectCheck([item]);
     formRef.value?.clearValidate();
   }
 }
 
 async function removeMemberFromProjectCheck (payload) {
-  const targetMembers = isBatchOperate.value ? checkedMembers.value : [payload]
+  const targetMembers = isBatchOperate.value ? checkedMembers.value : payload;
   try {
     removeCheckLoading.value = true;
-    removeMemberChecked.value = await http.removeMemberFromProjectCheck(projectId.value, targetMembers)
+    removeMemberChecked.value = await http.removeMemberFromProjectCheck(projectId.value, targetMembers);
     removeCheckLoading.value = false;
   } catch (e) {
     removeCheckLoading.value = false;
@@ -393,7 +391,7 @@ function handOverClose() {
   isShowHandOverDialog.value = false;
   isShowRemoveDialog.value = false;
   handOverInputClear();
-  tagInput.value?.removeAll()
+  tagInput.value?.removeAll();
 }
 /**
  *  移出项目弹窗提交
@@ -525,25 +523,22 @@ function handlePersonClose () {
 }
 
 function goBatchOperate() {
-  isBatchOperate.value = !isBatchOperate.value
+  isBatchOperate.value = !isBatchOperate.value;
   checkedMembers.value = [];
-  emit('handleSelectAll', false)
-}
-
-function handleBatch(value, id) {
- 
+  emit('handleSelectAll', false);
 }
 
 function handleBatchAll(value) {
-  emit('handleSelectAll', value)
+  emit('handleSelectAll', value);
 }
 
-function handleOpenbatchDialog() {
+async function handleOpenbatchDialog() {
   const allAreGroups = checkedMembers.value.every(member => member.type === 'department');
   if (allAreGroups) {
-    isShowRemoveDialog.value = true
+    isShowRemoveDialog.value = true;
   } else {
-    isShowHandOverDialog.value = true
+    isShowHandOverDialog.value = true;
+    await removeMemberFromProjectCheck();
   }
 }
 
