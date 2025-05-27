@@ -25,18 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.eplus
+package com.tencent.devops.log.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "项目流水线问题分析统计信息")
-data class ProjectPipelineIssueAnalysisInfo(
+@Schema(title = "流水线失效提醒通知配置")
+data class PipelineExpirationInfo(
+    @get:Schema(title = "项目管理员", required = true)
+    val receivers: List<String>,
     @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @get:Schema(title = "近 30 天内失败率高于 90% 的流水线数量", required = false)
-    val failureRateCount: Int? = null,
-    @get:Schema(title = "近 90 天内持续失败的流水线数量", required = false)
-    val consecutiveFailuresCount: Int? = null,
-    @get:Schema(title = "定时触发但代码无变更的流水线数量", required = false)
-    val scheduledTriggerNoCodeChangeCount: Int? = null
+    @get:Schema(title = "流水线ID列表", required = true)
+    val pipelineIds: List<String>,
+    @get:Schema(title = "流水线链接", required = true)
+    val linksMap: Map<String, String>
 )

@@ -30,7 +30,7 @@ package com.tencent.devops.metrics.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.eplus.ProjectPipelineIssueAnalysisInfo
+import com.tencent.devops.log.pojo.ProjectPipelineIssueAnalysisInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag

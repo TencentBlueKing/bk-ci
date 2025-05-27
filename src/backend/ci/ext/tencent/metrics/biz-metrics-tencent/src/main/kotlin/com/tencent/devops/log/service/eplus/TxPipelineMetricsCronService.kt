@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.log.dao.PipelineMetricsInfoDao
 import com.tencent.devops.model.metrics.tables.records.TEplusPipelineMetricsDataDailyRecord
+import com.tencent.devops.log.pojo.PipelineExpirationInfo
 import java.time.LocalDate
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
