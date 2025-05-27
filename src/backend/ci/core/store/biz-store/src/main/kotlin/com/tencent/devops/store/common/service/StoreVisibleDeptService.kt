@@ -53,7 +53,7 @@ interface StoreVisibleDeptService {
      * 批量获取已经审核通过的可见范围
      */
     fun batchGetVisibleDept(
-        storeCodeList: List<String?>,
+        storeCodeList: List<String>,
         storeType: StoreTypeEnum
     ): Result<HashMap<String, MutableList<Int>>>
 
