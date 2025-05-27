@@ -347,7 +347,12 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
         if (SpringContextUtil.isBeanExist(beanName)) {
             // 对服务数据进行特殊处理
             val serviceManageService = SpringContextUtil.getBean(ServiceManageService::class.java, beanName)
-            serviceVO = serviceManageService.doSpecBus(userId, serviceVO, projectId)
+            serviceVO = serviceManageService.doSpecBus(
+                userId = userId,
+                serviceVO = serviceVO,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
         }
         return Result(data = serviceVO.iframeUrl)
     }
