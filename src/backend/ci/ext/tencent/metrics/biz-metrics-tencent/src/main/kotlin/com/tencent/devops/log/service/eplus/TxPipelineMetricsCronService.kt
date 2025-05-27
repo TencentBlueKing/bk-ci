@@ -79,7 +79,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
     }
 
     /**
-     * 查询并处理卡片数据
+     * 查询并处理图卡数据
      */
     private fun queryAndProcessCardData(
         cardId: Int,
@@ -150,7 +150,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
         logger.info("end handleHighFailureRate30d")
     }
 
-    @Scheduled(cron = "0 0 1 * * ?")
+    @Scheduled(cron = "0 0 2 * * ?")
     fun handleConsecutiveFailures90d() {
         logger.info("start handleConsecutiveFailures90d")
 
@@ -174,7 +174,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
         logger.info("end handleConsecutiveFailures90d")
     }
 
-    @Scheduled(cron = "0 0 1 * * ?")
+    @Scheduled(cron = "0 0 3 * * ?")
     fun handleScheduledTriggerNoCodeChange() {
         logger.info("start handleScheduledTriggerNoCodeChange")
 
