@@ -27,6 +27,7 @@
 
 dependencies {
     api(project(":core:common:common-api"))
+    api(project(":core:metrics:api-metrics"))
 }
 
 plugins {
