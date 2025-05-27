@@ -80,7 +80,7 @@ class PipelineBuildNotifyListener @Autowired constructor(
                         projectCode = event.projectId,
                         pipelineId = event.pipelineId,
                         buildId = event.buildId,
-                        stageId = event.stageId,
+                        stageSeq = event.stageSeq,
                         taskId = event.taskId,
                         needShortUrl = true
                     )
