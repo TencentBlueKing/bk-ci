@@ -149,7 +149,7 @@ class PreBuildAgentMgrService @Autowired constructor(
 
     fun listPreBuildAgent(userId: String, projectId: String, os: OS?): List<ThirdPartyAgentStaticInfo> {
         return thirdPartyAgentDao.listImportAgent(
-            dslContext = dslContext, projectId = projectId, os = os ?: OS.LINUX, limit = PageUtil.MAX_PAGE_SIZE
+            dslContext = dslContext, projectId = projectId, os = os ?: OS.LINUX, nodeIds = emptySet()
         ).filter { it.nodeId != null }.map {
             ThirdPartyAgentStaticInfo(
                 agentId = HashUtil.encodeLongId(it.id), // 必须用it.id，不能是it.nodeId
