@@ -99,6 +99,7 @@ class StageControl @Autowired constructor(
                 if (!stageIdLock.tryLock()) {
                     LOG.info("ENGINE|$buildId|$pipelineId|StageIdLock try lock fail")
                     retry()
+                    return
                 }
                 watcher.start("execute")
                 execute(watcher = watcher)
