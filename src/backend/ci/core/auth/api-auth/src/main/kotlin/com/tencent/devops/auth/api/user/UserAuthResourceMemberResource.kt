@@ -4,6 +4,7 @@ import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.enum.BatchOperateType
 import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.pojo.request.BatchRemoveMemberFromProjectReq
+import com.tencent.devops.auth.pojo.request.BatchRemoveMemberFromProjectResponse
 import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRemoveConditionReq
@@ -231,7 +232,7 @@ interface UserAuthResourceMemberResource {
         projectId: String,
         @Parameter(description = "批量将用户移出项目")
         removeMemberFromProjectReq: BatchRemoveMemberFromProjectReq
-    ): Result<List<ResourceMemberInfo>>
+    ): Result<BatchRemoveMemberFromProjectResponse>
 
     @POST
     @Path("/removeMemberFromProjectCheck")

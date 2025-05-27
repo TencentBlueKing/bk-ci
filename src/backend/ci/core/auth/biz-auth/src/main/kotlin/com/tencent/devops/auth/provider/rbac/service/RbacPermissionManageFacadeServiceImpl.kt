@@ -32,6 +32,7 @@ import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.pojo.enum.RemoveMemberButtonControl
 import com.tencent.devops.auth.pojo.request.BatchRemoveMemberFromProjectReq
+import com.tencent.devops.auth.pojo.request.BatchRemoveMemberFromProjectResponse
 import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRemoveConditionReq
@@ -1831,7 +1832,7 @@ class RbacPermissionManageFacadeServiceImpl(
             }
 
             if (memberType == MemberType.USER.type) {
-                // 查询用户还存在那些组织中
+                // 查询用户还存在哪些组织中
                 val userDeptInfos = deptService.getUserInfo(
                     userId = "admin",
                     name = targetMember.id
@@ -1853,8 +1854,10 @@ class RbacPermissionManageFacadeServiceImpl(
         userId: String,
         projectCode: String,
         removeMemberFromProjectReq: BatchRemoveMemberFromProjectReq
-    ): List<ResourceMemberInfo> {
-        return removeMemberFromProjectReq.targetMembers.flatMap { member ->
+    ): BatchRemoveMemberFromProjectResponse {
+        val users = mutableListOf<ResourceMemberInfo>()
+        val departments = mutableListOf<ResourceMemberInfo>()
+        removeMemberFromProjectReq.targetMembers.forEach { member ->
             removeMemberFromProject(
                 userId = userId,
                 projectCode = projectCode,
@@ -1862,8 +1865,12 @@ class RbacPermissionManageFacadeServiceImpl(
                     targetMember = member,
                     handoverTo = removeMemberFromProjectReq.handoverTo
                 )
-            )
-        }.distinct()
+            ).takeIf { it.isNotEmpty() }?.let {
+                departments.addAll(it)
+                users.add(member)
+            }
+        }
+        return BatchRemoveMemberFromProjectResponse(users, departments.distinct())
     }
 
     override fun removeMemberFromProjectCheck(

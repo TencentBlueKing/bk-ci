@@ -5,6 +5,7 @@ import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.enum.BatchOperateType
 import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.pojo.request.BatchRemoveMemberFromProjectReq
+import com.tencent.devops.auth.pojo.request.BatchRemoveMemberFromProjectResponse
 import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRemoveConditionReq
@@ -251,7 +252,7 @@ class UserAuthResourceMemberResourceImpl(
         userId: String,
         projectId: String,
         removeMemberFromProjectReq: BatchRemoveMemberFromProjectReq
-    ): Result<List<ResourceMemberInfo>> {
+    ): Result<BatchRemoveMemberFromProjectResponse> {
         return Result(
             permissionManageFacadeService.batchRemoveMemberFromProject(
                 userId = userId,

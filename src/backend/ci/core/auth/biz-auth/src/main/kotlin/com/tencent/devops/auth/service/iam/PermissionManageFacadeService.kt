@@ -8,6 +8,7 @@ import com.tencent.devops.auth.pojo.enum.BatchOperateType
 import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.pojo.request.BatchRemoveMemberFromProjectReq
+import com.tencent.devops.auth.pojo.request.BatchRemoveMemberFromProjectResponse
 import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRemoveConditionReq
@@ -222,7 +223,7 @@ interface PermissionManageFacadeService {
         userId: String,
         projectCode: String,
         removeMemberFromProjectReq: BatchRemoveMemberFromProjectReq
-    ): List<ResourceMemberInfo>
+    ): BatchRemoveMemberFromProjectResponse
 
     /**
      * 将用户移出项目检查-管理员视角
