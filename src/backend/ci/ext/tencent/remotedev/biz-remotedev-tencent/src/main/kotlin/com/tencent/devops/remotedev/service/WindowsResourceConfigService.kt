@@ -160,7 +160,7 @@ class WindowsResourceConfigService @Autowired constructor(
         val spec = lazy { getAllSpecZoneShortName() }
         val zoneShortName = lazy { getAllZoneShortNameByType(zoneType) }
         val internal = quotaType?.getInternal() ?: zoneType.getInternal()
-        if (searchCustom != true) {
+        if (searchCustom != true && specifyTaints == null) {
             workspaceCommon.realtimeStartCloudResourceList().forEach {
                 if (CommonUtil.zoneIdCheck(
                         quotaType = quotaType,
