@@ -29,7 +29,6 @@ package com.tencent.devops.metrics.api
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.metrics.api.TxUserPipelineMetricsResource
 import com.tencent.devops.metrics.pojo.ProjectPipelineIssueAnalysisInfo
 import com.tencent.devops.process.service.eplus.TxPipelineMetricssService
 import org.springframework.beans.factory.annotation.Autowired
