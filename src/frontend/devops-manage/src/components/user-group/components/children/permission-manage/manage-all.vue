@@ -854,8 +854,8 @@ function showMessage (theme, message) {
   });
 }
 
-function asideRemoveConfirm (removeUsers, handOverForm) {
-  handleAsideRemoveConfirm(removeUsers, handOverForm, projectId.value, manageAsideRef.value);
+function asideRemoveConfirm (isBatchOperate, removeUsers, handOverForm) {
+  handleAsideRemoveConfirm(isBatchOperate, removeUsers, handOverForm, projectId.value, manageAsideRef.value);
 }
 
 function handleChangeOverFormName ({list, userList}) {

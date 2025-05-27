@@ -74,7 +74,7 @@ export default defineStore('manageAside', () => {
   /**
    * 组织移出项目
    */
-  async function handleAsideRemoveConfirm(removeUsers: any, handOverMember: AsideItem, projectId: string, manageAsideRef: any) {
+  async function handleAsideRemoveConfirm(isBatchOperate: boolean, removeUsers: any, handOverMember: AsideItem, projectId: string, manageAsideRef: any) {
     showDeptListPermissionDialog.value = false
     const params = {
       targetMembers: removeUsers,
@@ -87,7 +87,13 @@ export default defineStore('manageAside', () => {
       asideItem.value = undefined;
       if (!res.length) {
         const allAreGroups = removeUsers.every(member => member.type === 'department');
-        const message = removeUsers.length === 1 ? t('X(X)已成功移出本项目。', [removeUsers[0].id, removeUsers[0].name]) : allAreGroups ? t('X个组织已成功移出本项目', [removeUsers.length]) : t('X个组织/用户已成功移出本项目', [removeUsers.length])
+        let message: string;
+        if (isBatchOperate) {
+          message = allAreGroups ? t('X个组织已成功移出本项目', [removeUsers.length]) : t('X个组织/用户已成功移出本项目', [removeUsers.length])
+        } else {
+          message = t('X(X)已成功移出本项目。', [removeUsers[0].id, removeUsers[0].name])
+        }
+        
         Message({
           theme: 'success',
           message

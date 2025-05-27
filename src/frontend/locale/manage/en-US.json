@@ -349,7 +349,7 @@
     "批量移出项目(X)": "Batch remove from project ({0})",
     "已选择以下X个组织/用户": "Selected the following {0} organizations/users",
     "X个组织/用户已成功移出本项目": "{0} organizations/users have been successfully removed from this project",
-    "X(X)已成功移出本项目。": "{0}({0}) has been successfully removed from this project.",
+    "X(X)已成功移出本项目。": "{0}({1}) has been successfully removed from this project.",
     "X个组织已成功移出本项目": "{0} organizations have been successfully removed from this project",
     "批量移出项目": "Batch remove from project",
     "全选": "Select All",

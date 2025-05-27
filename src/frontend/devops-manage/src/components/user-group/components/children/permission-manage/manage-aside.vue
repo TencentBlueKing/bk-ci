@@ -403,14 +403,14 @@ async function handConfirm (flag) {
   try {
     if (flag === 'user') {
       if (removeMemberChecked.value) {
-        emit('removeConfirm', targetMembers, {});
+        emit('removeConfirm', isBatchOperate.value, targetMembers, {});
       } else {
         const isValidate = await formRef.value?.validate();
         if(!isValidate) return;
-        emit('removeConfirm', targetMembers, handOverForm.value);
+        emit('removeConfirm', isBatchOperate.value, targetMembers, handOverForm.value);
       }
     } else {
-      emit('removeConfirm', targetMembers, {});
+      emit('removeConfirm', isBatchOperate.value, targetMembers, {});
     }
   } catch (error) {} finally {
     tagInput.value?.removeAll()
