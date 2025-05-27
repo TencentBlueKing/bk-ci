@@ -81,36 +81,49 @@ export default {
                     ...this.$route.query,
                     ...restQuery
                 }
+                const otherViews = viewId !== DELETED_VIEW_ID && viewId !== ARCHIVE_VIEW_ID
+
+                const requestParams = {
+                    projectId: this.$route.params.projectId,
+                    ...queryParams,
+                    viewId,
+                    ...(otherViews ? { showDelete: true } : {})
+                }
+
                 if (viewId === DELETED_VIEW_ID) {
-                    return this.requestRecyclePipelineList({
-                        projectId: this.$route.params.projectId,
-                        ...queryParams,
-                        viewId
-                    })
-                } else if (viewId === ARCHIVE_VIEW_ID) {
-                    const { page, count, records } = await this.requestArchivePipelineList({
-                        projectId: this.$route.params.projectId,
-                        ...queryParams,
-                        viewId
-                    })
-                    const pipelineList = records.map((item, index) => Object.assign(item, {
+                    return this.requestRecyclePipelineList(requestParams)
+                }
+
+                if (otherViews) {
+                    if (!isShallowEqual(queryParams, this.$route.query)) {
+                        this.$router.replace({ query: queryParams })
+                    }
+                }
+                const apiRequest = viewId === ARCHIVE_VIEW_ID
+                    ? this.requestArchivePipelineList
+                    : this.requestAllPipelinesListByFilter
+                const { page, count, records } = await apiRequest(requestParams)
+                const pipelineList = records.map((item, index) => {
+                    const isArchive = viewId === ARCHIVE_VIEW_ID
+                    const archiveQuery = isArchive ? { archiveFlag: true } : {}
+                    const isDraft = item.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING
+
+                    const archiveObj = {
                         ...item,
                         latestBuildStartDate: this.getLatestBuildFromNow(item.latestBuildStartTime),
                         updater: item.lastModifyUser,
                         updateDate: convertTime(item.updateTime),
                         duration: this.calcDuration(item),
                         latestBuildUserId: item.lastModifyUser,
-                        onlyDraftVersion: item.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING,
+                        onlyDraftVersion: isDraft,
                         historyRoute: {
-                            name: 'pipelinesHistory',
+                            name: isDraft ? 'pipelinesEdit' : 'pipelinesHistory',
                             params: {
                                 projectId: item.projectId,
                                 pipelineId: item.pipelineId,
                                 type: item.onlyDraftVersion ? pipelineTabIdMap.pipeline : 'history'
                             },
-                            query: {
-                                archiveFlag: true
-                            }
+                            query: archiveQuery
                         },
                         latestBuildRoute: {
                             name: 'pipelinesDetail',
@@ -120,69 +133,34 @@ export default {
                                 pipelineId: item.pipelineId,
                                 buildNo: item.latestBuildId
                             },
-                            query: {
-                                archiveFlag: true
-                            }
+                            query: archiveQuery
                         }
-                    }))
+                    }
 
-                    return {
-                        page,
-                        count,
-                        records: pipelineList
-                    }
-                } else {
-                    if (!isShallowEqual(queryParams, this.$route.query)) {
-                        this.$router.replace({
-                            query: queryParams
+                    if (otherViews) {
+                        return Object.assign(archiveObj, {
+                            progress: this.calcProgress(item),
+                            pipelineActions: this.getPipelineActions(item, index),
+                            disabled: this.isDisabledPipeline(item),
+                            tooltips: this.disabledTips(item),
+                            released: item.latestVersionStatus === VERSION_STATUS_ENUM.RELEASED,
+                            onlyBranchVersion: item.latestVersionStatus === VERSION_STATUS_ENUM.BRANCH
                         })
+                    } else {
+                        return archiveObj
                     }
-                    const { page, count, records } = await this.requestAllPipelinesListByFilter({
-                        showDelete: true,
-                        projectId: this.$route.params.projectId,
-                        ...queryParams,
-                        viewId
-                    })
-                    const pipelineList = records.map((item, index) => Object.assign(item, {
-                        latestBuildStartDate: this.getLatestBuildFromNow(item.latestBuildStartTime),
-                        updateDate: convertTime(item.updateTime),
-                        duration: this.calcDuration(item),
-                        progress: this.calcProgress(item),
-                        pipelineActions: this.getPipelineActions(item, index),
-                        disabled: this.isDisabledPipeline(item),
-                        tooltips: this.disabledTips(item),
-                        released: item.latestVersionStatus === VERSION_STATUS_ENUM.RELEASED,
-                        onlyBranchVersion: item.latestVersionStatus === VERSION_STATUS_ENUM.BRANCH,
-                        onlyDraftVersion: item.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING,
-                        historyRoute: {
-                            name: item.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING ? 'pipelinesEdit' : 'pipelinesHistory',
-                            params: {
-                                projectId: item.projectId,
-                                pipelineId: item.pipelineId,
-                                type: item.onlyDraftVersion ? pipelineTabIdMap.pipeline : 'history'
-                            }
-                        },
-                        latestBuildRoute: {
-                            name: 'pipelinesDetail',
-                            params: {
-                                type: 'executeDetail',
-                                projectId: item.projectId,
-                                pipelineId: item.pipelineId,
-                                buildNo: item.latestBuildId
-                            }
-                        }
-                    }))
+                })
+
+                if (otherViews) {
                     this.pipelineMap = pipelineList.reduce((acc, item) => {
-                        return {
-                            ...acc,
-                            [item.pipelineId]: item
-                        }
+                        acc[item.pipelineId] = item
+                        return acc
                     }, {})
-                    return {
-                        page,
-                        count,
-                        records: pipelineList
-                    }
+                }
+                return {
+                    page,
+                    count,
+                    records: pipelineList
                 }
             } catch (e) {
                 this.$showTips({

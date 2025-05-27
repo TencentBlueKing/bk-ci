@@ -179,7 +179,7 @@
             </div>
         </bk-table-column>
         <bk-table-column
-            v-if="allRenderColumnMap.label && !isArchiveView"
+            v-if="allRenderColumnMap.label"
             :label="$t('label')"
             :width="tableWidthMap.groupLabel"
             min-width="200"
@@ -425,7 +425,7 @@
             />
             <bk-table-column
                 v-if="allRenderColumnMap.createTime"
-                :min-width="tableWidthMap.createTime"
+                :width="tableWidthMap.createTime"
                 :label="$t('created')"
                 sortable="custom"
                 prop="createTime"
@@ -551,9 +551,15 @@
                     {{ $t('delete') }}
                 </bk-button>
             </div>
+            <!-- <span
+                v-else
+                slot-scope="props"
+            >
+                归档中
+            </span> -->
         </bk-table-column>
         <bk-table-column
-            v-if="!isPatchView && !isDeleteView && !isArchiveView"
+            v-if="!isPatchView && !isDeleteView"
             type="setting"
         >
             <bk-table-setting-content
@@ -1031,6 +1037,9 @@
                 list.forEach(item => {
                     this.$refs.pipelineTable.toggleRowSelection(item, false)
                 })
+            },
+            updatePipelineData (pipelineIds) {
+                this.pipelineList = this.pipelineList.filter(item => !pipelineIds.includes(item.pipelineId))
             }
         }
     }
