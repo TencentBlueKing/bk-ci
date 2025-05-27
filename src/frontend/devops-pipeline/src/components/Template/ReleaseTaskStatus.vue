@@ -150,7 +150,9 @@
                 <p class="sub-message pending mt20">
                     ( 2 ) {{ $t('template.partOfMr.partialSuccessTip2', [releaseRes.failItemNum]) }}
                 </p>
-                <release-failed-message />
+                <release-failed-message
+                    :data="releaseRes.errorMessages"
+                />
             </template>
         </section>
     </div>

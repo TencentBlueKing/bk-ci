@@ -613,7 +613,8 @@
       "updating": "更新中",
       "updated": "更新成功",
       "failed": "更新失败"
-    }
+    },
+    "failedReason": "失败原因"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",

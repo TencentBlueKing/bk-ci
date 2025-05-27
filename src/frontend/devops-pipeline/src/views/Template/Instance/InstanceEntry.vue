@@ -20,22 +20,6 @@
                         {{ $t('cancel') }}
                     </bk-button>
                     <span
-                        v-if="isInstanceCreateViewType"
-                        v-bk-tooltips="{
-                            disabled: !!templateVersion,
-                            content: $t('template.disabledReleaseTips')
-                        }"
-                    >
-                        <bk-button
-                            :disabled="!templateVersion"
-                            theme="primary"
-                            @click="handleBatchUpgrade"
-                        >
-                            {{ $t('release') }}
-                        </bk-button>
-                    </span>
-                    <span
-                        v-else
                         v-bk-tooltips="{
                             disabled: !!templateVersion,
                             content: $t('template.disabledReleaseTips')
@@ -46,7 +30,7 @@
                             :disabled="!templateVersion"
                             @click="handleBatchUpgrade"
                         >
-                            {{ $t('template.batchUpgrade') }}
+                            {{ releaseBtnText }}
                         </bk-button>
                     </span>
                 </aside>
@@ -129,6 +113,15 @@
     const templateVersion = computed(() => proxy?.$store?.state?.templates?.templateVersion) // 实例化选中的模板版本号
     const isInstanceCreateViewType = computed(() => proxy.$route.params?.type === 'create')
     const useTemplateSettings = computed(() => proxy.$store?.state?.templates?.useTemplateSettings)
+    const releaseBtnText = computed(() => {
+        const type = proxy.$route.params?.type ?? 'create'
+        const textMap = {
+            copy: proxy.$t('release'),
+            create: proxy.$t('release'),
+            upgrade: proxy.$t('template.batchUpgrade')
+        }
+        return textMap[type]
+    })
     watch(() => pipeline.value, () => {
         isLoading.value = false
     }, {
@@ -178,7 +171,12 @@
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, list)
     }
     async function handleReleaseInstance (value) {
-        const fn = !isInstanceCreateViewType.value ? 'templates/updateInstance' : 'templates/releaseInstance'
+        const fnMap = {
+            create: 'templates/releaseInstance',
+            copy: 'templates/releaseInstance',
+            upgrade: 'templates/updateInstance'
+        }
+        const fn = fnMap[proxy.$route.params?.type]
         try {
             const instanceReleaseInfos = instanceList.value.map(item => {
                 return {

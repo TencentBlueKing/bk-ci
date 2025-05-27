@@ -607,7 +607,8 @@
       "updating": "Updating",
       "updated": "Update Successful",
       "failed": "Update Failed"
-    }
+    },
+    "failedReason": "failure reason"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
