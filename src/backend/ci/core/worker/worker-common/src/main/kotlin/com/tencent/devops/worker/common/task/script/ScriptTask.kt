@@ -103,6 +103,7 @@ open class ScriptTask : ITask() {
         }
         val failIfVariableInvalid = runtimeVariables["BK_CI_FAIL_IF_VARIABLE_INVALID_FLAG"]
             ?.toBooleanStrictOrNull() == true
+        var failIfVariableInvalidCheckFlag = true
         val projectId = buildVariables.projectId
 
         ScriptEnvUtils.cleanEnv(buildId, workspace)
@@ -177,7 +178,7 @@ open class ScriptTask : ITask() {
             // 成功失败都写入全局变量
             val envs = ScriptEnvUtils.getEnv(buildId, workspace)
             val context = ScriptEnvUtils.getContext(buildId, workspace)
-            val failIfVariableInvalidCheckFlag = failIfVariableInvalidCheck(failIfVariableInvalid, envs)
+            failIfVariableInvalidCheckFlag = failIfVariableInvalidCheck(failIfVariableInvalid, envs)
                 && failIfVariableInvalidCheck(failIfVariableInvalid, context)
             addEnv(envs)
             addEnv(context)
@@ -190,15 +191,15 @@ open class ScriptTask : ITask() {
 
             // 清理所有执行的中间输出文件
             ScriptEnvUtils.cleanWhenEnd(buildId, workspace)
+        }
 
-            if (!failIfVariableInvalidCheckFlag) {
-                throw TaskExecuteException(
-                    errorMsg = "[Finish task] status: false, errorType: ${ErrorType.USER.num}, " +
-                        "errorCode: ${ErrorCode.USER_INPUT_INVAILD}, message: variable length is illegal.",
-                    errorType = ErrorType.USER,
-                    errorCode = ErrorCode.USER_INPUT_INVAILD
-                )
-            }
+        if (!failIfVariableInvalidCheckFlag) {
+            throw TaskExecuteException(
+                errorMsg = "[Finish task] status: false, errorType: ${ErrorType.USER.num}, " +
+                    "errorCode: ${ErrorCode.USER_INPUT_INVAILD}, message: variable length is illegal.",
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_INPUT_INVAILD
+            )
         }
     }
 
