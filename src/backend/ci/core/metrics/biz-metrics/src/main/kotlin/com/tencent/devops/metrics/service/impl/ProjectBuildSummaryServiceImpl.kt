@@ -29,6 +29,8 @@
 package com.tencent.devops.metrics.service.impl
 
 import com.tencent.devops.common.auth.api.AuthUserAndDeptApi
+import com.tencent.devops.common.db.utils.JooqUtils
+import com.tencent.devops.common.event.pojo.measure.ProjectUserOperateMetricsData
 import com.tencent.devops.common.event.pojo.measure.UserOperateCounterData
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -41,6 +43,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import java.time.LocalDate
 
@@ -122,10 +125,26 @@ class ProjectBuildSummaryServiceImpl @Autowired constructor(
     override fun saveProjectUserOperateMetrics(
         userOperateCounterData: UserOperateCounterData
     ) {
-        projectBuildSummaryDao.saveUserOperateCount(
-            dslContext = dslContext,
-            projectUserOperateMetricsData2OperateCount = userOperateCounterData.getUserOperationCountMap()
-        )
+        userOperateCounterData.getUserOperationCountMap().forEach { (projectUserOperateMetricsDataKey, operateCount) ->
+            val projectUserOperateMetricsData = ProjectUserOperateMetricsData.build(
+                projectUserOperateMetricsKey = projectUserOperateMetricsDataKey
+            )
+            JooqUtils.retryWhenDeadLock {
+                try {
+                    projectBuildSummaryDao.saveUserOperateCount(
+                        dslContext = dslContext,
+                        projectUserOperateMetricsData = projectUserOperateMetricsData,
+                        operateCount = operateCount
+                    )
+                } catch (e: DuplicateKeyException) {
+                    projectBuildSummaryDao.updateUserOperateCount(
+                        dslContext = dslContext,
+                        projectUserOperateMetricsData = projectUserOperateMetricsData,
+                        operateCount = operateCount
+                    )
+                }
+            }
+        }
     }
 
     override fun getProjectActiveUserCount(
