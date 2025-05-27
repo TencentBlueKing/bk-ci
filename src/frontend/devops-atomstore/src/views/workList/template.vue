@@ -131,9 +131,9 @@
                 >
                     <template slot-scope="{ row }">
                         <p class="last-version">
-                            <span :class="row.latestReleasedVersion !== row.latestPublishedVersion ? 'active' : ''">{{ row.latestPublishedVersionName }}</span>
+                            <span :class="row.upgradeFlag ? 'active' : ''">{{ row.latestPublishedVersionName }}</span>
                             <icon
-                                v-if="row.latestReleasedVersion !== row.latestPublishedVersion && row.templateStatus !== 'UNDERCARRIAGED'"
+                                v-if="row.upgradeFlag"
                                 class="arrows-up-shape"
                                 name="update"
                                 size="14"

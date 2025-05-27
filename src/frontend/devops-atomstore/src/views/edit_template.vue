@@ -98,7 +98,7 @@
                 return this.$route.query.hasSourceInfo === 'true'
             },
             templateCode () {
-                return this.$route.params.templateCode || this.$route.query.templateCode
+                return this.$route.params.templateCode
             },
             navList () {
                 return [
@@ -136,9 +136,13 @@
                 'releaseTemplate'
             ]),
             async init () {
-                if (this.hasSourceInfo && this.$route.query.projectCode) {
+                const projectCode = this.$route.query?.projectCode
+                if (this.hasSourceInfo && projectCode) {
                     // 从未上架过的
-                    Object.assign(this.templateForm, this.$route.query, {})
+                    Object.assign(this.templateForm, {
+                        projectCode,
+                        templateCode: this.templateCode
+                    })
                     this.showContent = true
                 } else if (this.type === 'apply') {
                     this.showContent = true
@@ -152,8 +156,8 @@
                     const res = await this.requestTemplateDetail(this.templateCode)
                     Object.assign(this.templateForm, res, {
                         fullScopeVisible: res.storeVisibleDept.fullScopeVisible,
-                        categoryIdList: this.templateForm.categoryList?.map(item => item.id),
-                        labelIdList: this.templateForm.labelList?.map(item => item.id)
+                        categoryIdList: res.categoryList.map(item => item.id),
+                        labelIdList: res.labelList.map(item => item.id)
                     })
                 } catch (err) {
                     const message = err.message ? err.message : err
