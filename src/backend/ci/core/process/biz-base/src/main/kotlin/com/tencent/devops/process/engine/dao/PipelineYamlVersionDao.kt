@@ -221,7 +221,8 @@ class PipelineYamlVersionDao {
                                 .and(BRANCH_ACTION.eq(BranchVersionAction.ACTIVE.name))
                                 .and(REF.eq(ref))
                     )
-                    .orderBy(COMMIT_TIME.desc())
+                    .orderBy(VERSION.desc())
+                    .limit(1)
                     .fetchOne()
                     ?.let {
                         convert(it)
