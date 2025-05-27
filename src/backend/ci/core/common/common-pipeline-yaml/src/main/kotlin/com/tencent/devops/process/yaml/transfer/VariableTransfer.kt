@@ -78,14 +78,25 @@ class VariableTransfer {
                     },
                     payload = it.payload
                 )
+                // not use
+                it.type == BuildFormPropertyType.DATE -> VariableProps(
+                    type = VariablePropType.VUEX_INPUT.value
+                )
 
-                it.type == BuildFormPropertyType.DATE -> null // not use
-                it.type == BuildFormPropertyType.LONG -> null // not use
+                it.type == BuildFormPropertyType.LONG -> VariableProps(
+                    type = VariablePropType.VUEX_INPUT.value
+                )
+                // not use
                 it.type == BuildFormPropertyType.BOOLEAN -> VariableProps(
                     type = VariablePropType.BOOLEAN.value
                 )
 
-                it.type == BuildFormPropertyType.SVN_TAG -> null // not use
+                it.type == BuildFormPropertyType.SVN_TAG -> VariableProps(
+                    type = VariablePropType.SVN_TAG.value,
+                    repoHashId = it.repoHashId,
+                    relativePath = it.relativePath
+                )
+
                 it.type == BuildFormPropertyType.GIT_REF -> VariableProps(
                     type = VariablePropType.GIT_REF.value,
                     repoHashId = it.repoHashId
@@ -132,8 +143,15 @@ class VariableTransfer {
                 it.type == BuildFormPropertyType.CUSTOM_FILE -> VariableProps(
                     type = VariablePropType.CUSTOM_FILE.value
                 ) // 自定义仓库文件
-                it.type == BuildFormPropertyType.PASSWORD -> null // not use
-                it.type == BuildFormPropertyType.TEMPORARY -> null // not use
+                // not use
+                it.type == BuildFormPropertyType.PASSWORD -> VariableProps(
+                    type = VariablePropType.VUEX_INPUT.value
+                )
+                // not use
+                it.type == BuildFormPropertyType.TEMPORARY -> VariableProps(
+                    type = VariablePropType.VUEX_INPUT.value
+                )
+
                 else -> null
             }
             val const = it.constant.nullIfDefault(false)
@@ -237,7 +255,7 @@ class VariableTransfer {
                     desc = variable.props?.description,
                     category = variable.props?.group,
                     repoHashId = variable.props?.repoHashId,
-                    relativePath = null,
+                    relativePath = variable.props?.relativePath,
                     scmType = ScmType.parse(variable.props?.scmType),
                     containerType = with(variable.props?.containerType) {
                         this?.let {

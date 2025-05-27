@@ -123,13 +123,14 @@ object YamlObjects {
         val propsMap = transValue<Map<String, Any?>>(fromPath, "props", props)
         val po = VariableProps(
             label = getNullValue("label", propsMap),
-            type = getNotNullValue("type", "props", propsMap),
+            type = getNullValue("type", propsMap),
             options = getVarPropOptions(fromPath, propsMap["options"]),
             description = getNullValue("description", propsMap),
             group = getNullValue("group", propsMap),
             multiple = getNullValue("multiple", propsMap)?.toBoolean(),
             required = getNullValue("required", propsMap)?.toBoolean(),
             repoHashId = getNullValue("repo-id", propsMap),
+            relativePath = getNullValue("relative-path", propsMap),
             scmType = getNullValue("scm-type", propsMap),
             containerType = getVarPropContainerType(fromPath, propsMap["container-type"]),
             glob = getNullValue("filter-rule", propsMap),
