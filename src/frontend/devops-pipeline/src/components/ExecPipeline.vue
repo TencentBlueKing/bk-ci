@@ -540,7 +540,7 @@
             } else if (reviewStageSeq) {
                 this.handleStageCheck({
                     type: 'checkIn',
-                    stageIndex: reviewStageSeq
+                    stageIndex: Number(reviewStageSeq) - 1
                 })
             }
         },
