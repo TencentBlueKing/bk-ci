@@ -63,6 +63,7 @@ func genHeartInfoAndUpgrade(
 			Arch:              runtime.GOARCH,
 			JdkVersion:        jdkVersion,
 			DockerInitFileMd5: dockerInitFile,
+			OsVersion:         config.GAgentEnv.OsVersion,
 		},
 		DockerParallelTaskCount: config.GAgentConfig.DockerParallelTaskCount,
 		DockerTaskList:          job.GBuildDockerManager.GetInstances(),

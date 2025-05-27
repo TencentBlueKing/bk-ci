@@ -1,4 +1,5 @@
-//go:build linux || darwin
+//go:build windows
+// +build windows
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -27,12 +28,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package config
+package systemutil
 
-func GetWinTaskType() string {
-	return ""
-}
+import (
+	"fmt"
+	"golang.org/x/sys/windows"
+)
 
-func GetOsVersion() (string, error) {
-	return "", nil
+func GetVersion() (*OsVersion, error) {
+	version := windows.RtlGetVersion()
+	if version == nil {
+		return nil, fmt.Errorf("failed to get Windows version is nil")
+	}
+	os := version.MajorVersion
+	if version.MajorVersion == 10 {
+		if version.BuildNumber > 22000 {
+			os = 11
+		}
+	}
+	return &OsVersion{
+		Os:      fmt.Sprintf("%d", os),
+		Version: fmt.Sprintf("%d.%d.%d", version.MajorVersion, version.MinorVersion, version.BuildNumber),
+	}, nil
 }

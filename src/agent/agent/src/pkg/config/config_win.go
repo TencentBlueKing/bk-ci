@@ -30,8 +30,10 @@
 package config
 
 import (
+	"fmt"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/wintask"
 	"github.com/capnspacehook/taskmaster"
+	"golang.org/x/sys/windows"
 )
 
 func GetWinTaskType() string {
@@ -50,4 +52,12 @@ func GetWinTaskType() string {
 		}
 	}
 	return string(wintask.ManualStart)
+}
+
+func GetOsVersion() (string, error) {
+	version := windows.RtlGetVersion()
+	if version == nil {
+		return "", fmt.Errorf("failed to get Windows version is nil")
+	}
+	return fmt.Sprintf("%d.%d.%d", version.MajorVersion, version.MinorVersion, version.BuildNumber), nil
 }

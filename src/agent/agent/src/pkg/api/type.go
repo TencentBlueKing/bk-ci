@@ -142,6 +142,12 @@ type AgentPropsInfo struct {
 	Arch              string             `json:"arch"`
 	JdkVersion        []string           `json:"jdkVersion"`
 	DockerInitFileMd5 DockerInitFileInfo `json:"dockerInitFileMd5"`
+	OsVersion         string             `json:"osVersion"`
+}
+
+type OsVersion struct {
+	Os      string `json:"os"`
+	Version string `json:"version"`
 }
 
 type AgentHeartbeatResponse struct {

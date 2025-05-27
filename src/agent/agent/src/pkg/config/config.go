@@ -113,6 +113,8 @@ type AgentEnv struct {
 	AgentInstallPath string
 	// WinTask 启动windows进程的组件如 服务/执行计划
 	WinTask string
+	// OsVersion 系统版本信息
+	OsVersion string
 }
 
 func (e *AgentEnv) GetAgentIp() string {
@@ -157,6 +159,12 @@ func LoadAgentEnv() {
 	GAgentEnv.OsName = systemutil.GetOsName()
 	GAgentEnv.AgentVersion = DetectAgentVersion()
 	GAgentEnv.WinTask = GetWinTaskType()
+	if osVersion, err := GetOsVersion(); err != nil {
+		logs.WithError(err).Warn("get os version err")
+		GAgentEnv.OsVersion = ""
+	} else {
+		GAgentEnv.OsVersion = osVersion
+	}
 }
 
 // LoadAgentIp 忽略一些在Windows机器上VPN代理软件所产生的虚拟网卡（有Mac地址）的IP，一般这类IP

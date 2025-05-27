@@ -1,4 +1,5 @@
 //go:build linux || darwin
+// +build linux darwin
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -27,12 +28,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package config
+package systemutil
 
-func GetWinTaskType() string {
-	return ""
-}
-
-func GetOsVersion() (string, error) {
-	return "", nil
+func GetVersion() (*OsVersion, error) {
+	return OsVersion{}, nil
 }
