@@ -27,6 +27,8 @@
 
 package com.tencent.devops.store.common.utils
 
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+
 object VersionUtils {
 
     fun convertLatestVersion(version: String): String {
@@ -60,9 +62,11 @@ object VersionUtils {
     /**
      * 获取主版本号
      * @param version 版本号
+     * @param storeType 组件类型
      * @return 主版本号
      */
-    fun getMajorVersion(version: String): Int {
-        return version.substring(0, version.indexOf(".")).toInt()
+    fun getMajorVersion(version: String, storeType: StoreTypeEnum): Int = when (storeType) {
+        StoreTypeEnum.DEVX -> 1
+        else -> version.split(".").first().toIntOrNull() ?: 1
     }
 }

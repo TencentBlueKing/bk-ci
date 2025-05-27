@@ -467,6 +467,19 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
         if (releaseType == ReleaseTypeEnum.NEW && dbStatus !in validStatusList) {
             throw ErrorCodeException(errorCode = StoreMessageCode.STORE_RELEASE_STEPS_ERROR)
         }
+        // 判断最近一个版本的状态，如果不是首次发布，则只有处于终态的组件状态才允许添加新的版本
+        checkAddVersionCondition(dbVersion = dbVersion, releaseType = releaseType, dbStatus = dbStatus, name = name)
+        // 判断版本号是否存在
+        val versionExists = storeBaseQueryDao.getComponentId(dslContext, storeCode, version, storeType) != null
+        if (versionExists) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_EXIST, params = arrayOf(version)
+            )
+        }
+        if (storeType == StoreTypeEnum.DEVX) {
+            // DEVX组件无需执行后续逻辑校验
+            return
+        }
 
         val dbVersionParts = parseVersion(dbVersion)
         val reqVersionParts = parseVersion(version)
@@ -524,8 +537,6 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
                 errorCode = StoreMessageCode.STORE_VERSION_IS_INVALID, params = arrayOf(version)
             )
         }
-        // 判断最近一个版本的状态，如果不是首次发布，则只有处于终态的组件状态才允许添加新的版本
-        checkAddVersionCondition(dbVersion = dbVersion, releaseType = releaseType, dbStatus = dbStatus, name = name)
     }
 
     private fun validatePatchVersion(

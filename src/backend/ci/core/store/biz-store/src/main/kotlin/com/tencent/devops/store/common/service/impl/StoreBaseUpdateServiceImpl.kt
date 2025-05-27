@@ -146,7 +146,7 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
             newestBaseRecord.id // 新发布或取消重新发布时沿用现有ID
         }
 
-        val majorVersion = VersionUtils.getMajorVersion(version)
+        val majorVersion = VersionUtils.getMajorVersion(version, storeType)
         val normalizedVersion = VersionUtils.convertLatestVersion(version)
         // 获取当前大版本下最大序号
         val maxBusNum = storeBaseQueryDao.getMaxBusNumByCode(dslContext, storeCode, storeType, normalizedVersion)

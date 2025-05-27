@@ -40,7 +40,7 @@ data class VersionModel(
     @BkFieldI18n(source = I18nSourceEnum.DB)
     var publisher: String = "",
     @get:Schema(title = "发布类型", required = true)
-    var releaseType: ReleaseTypeEnum = ReleaseTypeEnum.NEW,
+    var releaseType: ReleaseTypeEnum = ReleaseTypeEnum.COMPATIBILITY_FIX,
     @get:Schema(title = "版本号", required = true)
     @field:BkField(patternStyle = BkStyleEnum.VERSION_STYLE)
     var version: String = "",
