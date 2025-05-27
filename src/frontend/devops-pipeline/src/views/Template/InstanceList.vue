@@ -119,7 +119,7 @@
                                                 content: row.instanceErrorInfo
                                             }"
                                             class="status-failed-icon"
-                                            name="failed-circle-fill"
+                                            name="circle-alert-filled"
                                             :size="14"
                                         />
                                     </span>
@@ -555,6 +555,8 @@
             }
             .status-failed-icon {
                 cursor: pointer;
+                position: relative;
+                top: 2px;
             }
             .loading-icon {
                 display: ruby;
