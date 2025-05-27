@@ -132,15 +132,13 @@
                 'batchMigrateArchivePipelineList',
                 'requestGetGroupLists'
             ]),
-            async handleSingleArchive () {
-                const { pipelineId } = this.pipelineList[0]
+            async handleSingleArchive (pipelineIds) {
                 return await this.migrateArchivePipelineList({
                     projectId: this.projectId,
-                    pipelineId
+                    pipelineId: pipelineIds[0]
                 })
             },
-            async handleBatchArchive () {
-                const pipelineIds = this.pipelineList.map(pipeline => pipeline.pipelineId)
+            async handleBatchArchive (pipelineIds) {
                 return await this.batchMigrateArchivePipelineList({
                     projectId: this.projectId,
                     pipelineIds
@@ -151,12 +149,11 @@
 
                 try {
                     this.isSubmiting = true
-                    let res
-                    if (this.isArchiveBatch) {
-                        res = await this.handleBatchArchive()
-                    } else {
-                        res = await this.handleSingleArchive()
-                    }
+                    const pipelineIds = this.pipelineList.map(pipeline => pipeline.pipelineId)
+                    const res = this.isArchiveBatch
+                        ? await this.handleBatchArchive(pipelineIds)
+                        : await this.handleSingleArchive(pipelineIds)
+
                     if (res) {
                         const h = this.$createElement
                         const instance = this.$bkInfo({
@@ -174,9 +171,10 @@
                                     class: 'button',
                                     on: {
                                         click: () => {
+                                            this.$emit('updatePipelineData', pipelineIds)
                                             this.$bkInfo.close(instance.id)
-                                            // this.requestGetGroupLists(this.$route.params)
-                                            // this.$emit('done')
+                                            this.requestGetGroupLists(this.$route.params)
+                                            this.$emit('done')
                                         }
                                     }
                                 }, this.$t('return'))
