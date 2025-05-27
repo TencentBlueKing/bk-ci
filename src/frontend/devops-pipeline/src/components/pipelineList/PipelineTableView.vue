@@ -552,12 +552,6 @@
                     {{ $t('delete') }}
                 </bk-button>
             </div>
-            <!-- <span
-                v-else
-                slot-scope="props"
-            >
-                归档中
-            </span> -->
         </bk-table-column>
         <bk-table-column
             v-if="!isPatchView && !isDeleteView"
