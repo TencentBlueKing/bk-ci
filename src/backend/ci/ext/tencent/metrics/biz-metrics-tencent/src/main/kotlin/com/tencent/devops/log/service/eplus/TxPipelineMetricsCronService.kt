@@ -32,11 +32,8 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.log.constants.Constants.BK_TO_HANDLE
 import com.tencent.devops.log.dao.PipelineMetricsInfoDao
 import com.tencent.devops.model.metrics.tables.records.TEplusPipelineMetricsDataDailyRecord
-import com.tencent.devops.process.pojo.eplus.PipelineExpirationInfo
 import java.time.LocalDate
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -196,22 +193,6 @@ class TxPipelineMetricsCronService @Autowired constructor(
             throw e
         }
         logger.info("end handleScheduledTriggerNoCodeChange")
-    }
-
-    private fun buildPipelineTableHtml(info: PipelineExpirationInfo): String {
-        val rows = info.pipelineIds.joinToString("") { pipelineId ->
-            """
-            <tr>
-                <td style="border-bottom: 1px solid #ddd; padding: 10px;">$pipelineId</td>
-                <td style="border-bottom: 1px solid #ddd; padding: 10px;">
-                    <a href="${info.linksMap[pipelineId]}" style="color: #3A84FF;">${
-                        I18nUtil.getCodeLanMessage(messageCode = BK_TO_HANDLE)
-                    }</a>
-                </td>
-            </tr>
-            """
-        }
-        return rows
     }
 
     private fun postWithToken(
