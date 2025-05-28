@@ -45,6 +45,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import java.util.concurrent.TimeUnit
 
 @Component
 class BatchTaskPublishListener @Autowired constructor(
@@ -71,11 +72,11 @@ class BatchTaskPublishListener @Autowired constructor(
         BatchTaskLock(redisOperation, batchId).use { lock ->
             lock.lock()
             redisOperation.hset(
-                key = batchTaskResultKey, hashKey = taskId, values = JsonUtil.toJson(taskResult)
+                key = batchTaskResultKey, hashKey = taskId, values = JsonUtil.toJson(taskResult, false)
             )
             // 设置Redis key过期时间（单位：小时转秒）
             val expiredInHour = event.expiredInHour
-            redisOperation.expire(key = batchTaskResultKey, expiredInSecond = expiredInHour * 3600L)
+            redisOperation.expire(key = batchTaskResultKey, expiredInSecond = TimeUnit.HOURS.toSeconds(expiredInHour))
             // 更新完成任务计数
             val completedNum = redisOperation.increment(
                 key = BatchTaskUtil.generateBatchTaskCompletedKey(taskType, batchId), incr = 1
