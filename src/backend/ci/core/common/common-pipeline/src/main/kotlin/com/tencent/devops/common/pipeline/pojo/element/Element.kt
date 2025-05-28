@@ -170,7 +170,7 @@ abstract class Element(
     }
 
     open fun genTaskParamsNotSkipEmpty(): MutableMap<String, Any> {
-        return JsonUtil.toMutableMap(bean = this,  skipEmpty = false)
+        return JsonUtil.toMutableMap(bean = this, skipEmpty = false)
     }
     open fun cleanUp() {}
 
