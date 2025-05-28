@@ -105,8 +105,8 @@
             requiredParams () {
                 const requiredParamList = this.container?.params?.filter(item => !item.constant && item.required) || []
                 return requiredParamList.reduce((acc, current) => {
-                    acc[current.id] = current.defaultValue
-                    acc[`variables.${current.id}`] = current.defaultValue
+                    acc[current.id] = isObject(current.defaultValue) ? '' : current.defaultValue
+                    acc[`variables.${current.id}`] = isObject(current.defaultValue) ? '' : current.defaultValue
                     if (isObject(current.defaultValue)) {
                         Object.keys(current.defaultValue).forEach(key => {
                             acc[`${current.id}.${key}`] = current.defaultValue[key]
