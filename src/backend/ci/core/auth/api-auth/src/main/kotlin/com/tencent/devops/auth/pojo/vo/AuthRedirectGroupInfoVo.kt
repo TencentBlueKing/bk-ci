@@ -11,5 +11,5 @@ data class AuthRedirectGroupInfoVo(
     @get:Schema(title = "用户组ID")
     val groupId: String? = null,
     @get:Schema(title = "用户组描述")
-    val groupDesc: String? = null,
+    val groupDesc: String? = null
 )

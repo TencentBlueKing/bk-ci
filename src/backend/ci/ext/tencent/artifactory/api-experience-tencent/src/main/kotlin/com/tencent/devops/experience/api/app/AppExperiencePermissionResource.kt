@@ -1,5 +1,6 @@
 package com.tencent.devops.experience.api.app
 
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.auth.pojo.ApplyJoinGroupInfo
 import com.tencent.devops.auth.pojo.vo.AuthApplyRedirectInfoVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
@@ -35,25 +36,22 @@ interface AppExperiencePermissionResource {
     ): Result<Boolean>
 
     @GET
-    @Path("getRedirectInformation")
-    @Operation(summary = "获取权限申请重定向信息")
-    fun getRedirectInformation(
+    @Path("getApplyPermissionInformation")
+    @Operation(summary = "获取权限申请信息")
+    fun getApplyPermissionInformation(
         @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(description = "资源类型", required = true)
-        @QueryParam("resourceType")
-        resourceType: String,
-        @Parameter(description = "资源实例", required = true)
-        @QueryParam("resourceCode")
-        resourceCode: String,
-        @Parameter(description = "动作", required = false)
-        @QueryParam("action")
-        action: String?
-    ): Result<AuthApplyRedirectInfoVo>
+        @Parameter(description = "制品类型", required = true)
+        @QueryParam("artifactoryType")
+        artifactoryType: ArtifactoryType,
+        @Parameter(description = "制品类型", required = true)
+        @QueryParam("artifactoryPath")
+        artifactoryPath: String,
+    ): Result<AuthApplyRedirectInfoVo?>
 
     @Path("/getResourceGroupUsers")
     @Operation(summary = "获取特定资源下用户组成员")
