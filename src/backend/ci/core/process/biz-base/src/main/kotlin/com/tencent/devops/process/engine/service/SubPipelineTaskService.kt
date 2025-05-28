@@ -368,7 +368,7 @@ class SubPipelineTaskService @Autowired constructor(
     private fun releasedBranchVersion(projectId: String, pipelineId: String, branch: String?): Boolean {
         return if (!branch.isNullOrBlank()) {
             // 保存草稿时，分支版本不校验
-            return pipelineYamlVersionDao.getPipelineYamlVersion(
+            pipelineYamlVersionDao.getPipelineYamlVersion(
                 dslContext  = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
