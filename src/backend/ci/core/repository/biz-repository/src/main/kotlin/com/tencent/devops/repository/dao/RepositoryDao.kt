@@ -687,27 +687,46 @@ class RepositoryDao {
     fun list(
         dslContext: DSLContext,
         projectId: String?,
-        repositoryTypes: List<String>,
+        repositoryTypes: List<String>?,
         repoHashId: String?,
+        nullScmCode: Boolean? = null,
         limit: Int,
         offset: Int
     ): List<TRepositoryRecord> {
         return with(TRepository.T_REPOSITORY) {
             val conditions = mutableListOf(
-                IS_DELETED.eq(false),
-                TYPE.`in`(repositoryTypes)
+                IS_DELETED.eq(false)
             )
+            if (!repositoryTypes.isNullOrEmpty()) {
+                conditions.add(TYPE.`in`(repositoryTypes))
+            }
             if (!projectId.isNullOrBlank()) {
                 conditions.add(PROJECT_ID.eq(projectId))
             }
             if (!repoHashId.isNullOrBlank()) {
                 conditions.add(REPOSITORY_HASH_ID.eq(repoHashId))
             }
+            if (nullScmCode == true) {
+                conditions.add(SCM_CODE.isNull())
+            }
             dslContext.selectFrom(this)
                     .where(conditions)
                     .orderBy(PROJECT_ID, REPOSITORY_ID)
                     .limit(limit).offset(offset)
                     .fetch()
+        }
+    }
+
+    fun updateScmCode(
+        dslContext: DSLContext,
+        repositoryId: Set<Long>
+    ) {
+        if (repositoryId.isEmpty()) return
+        with(TRepository.T_REPOSITORY) {
+            dslContext.update(this)
+                .set(SCM_CODE, field(TYPE))
+                .where(REPOSITORY_ID.`in`(repositoryId))
+                .execute()
         }
     }
 }

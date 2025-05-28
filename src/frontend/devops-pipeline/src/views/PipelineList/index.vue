@@ -1,151 +1,55 @@
 <template>
-    <article
+    <bk-tab
+        :active="activePanel"
+        :label-height="48"
+        type="unborder-card"
         class="pipeline-content"
-        v-bkloading="{
-            isLoading: pageLoading
-        }"
+        :validate-active="false"
     >
-        <pipeline-header>
-            <logo
-                size="24"
-                name="pipeline"
-                slot="logo"
-            />
-            <bk-breadcrumb
-                slot="title"
-                separator-class="devops-icon icon-angle-right"
-            >
-                <bk-breadcrumb-item
-                    class="pipeline-breadcrumb-item"
-                    :to="pipelineListRoute"
-                >
-                    {{ $t('pipeline') }}
-                </bk-breadcrumb-item>
-                <template v-if="routeName === 'PipelineListAuth'">
-                    <bk-breadcrumb-item
-                        class="pipeline-breadcrumb-item"
-                    >
-                        {{ $t('pipelineGroup') }}
-                    </bk-breadcrumb-item>
-                    <bk-breadcrumb-item
-                        class="pipeline-breadcrumb-item"
-                    >
-                        {{ groupName }}
-                    </bk-breadcrumb-item>
-                </template>
-            </bk-breadcrumb>
+        <bk-tab-panel
+            v-for="panel in panels"
+            :label="panel.label"
+            :name="panel.name"
+            :key="panel.name"
+            render-directive="if"
+        >
+            <router-view></router-view>
+        </bk-tab-panel>
 
-            <bk-dropdown-menu
-                slot="right"
-                class="default-link-list"
-                trigger="click"
-            >
-                <div slot="dropdown-trigger">
-                    <span
-                        class="pipeline-dropdown-trigger"
-                        :class="{ 'active': dropTitle !== 'more' }"
-                    >
-                        {{ $t(dropTitle) }}
-                        <i
-                            :class="['devops-icon icon-angle-down', {
-                                'icon-flip': toggleIsMore
-                            }]"
-                        ></i>
-                    </span>
-                </div>
-                <ul
-                    class="bk-dropdown-list"
-                    slot="dropdown-content"
-                >
-                    <li
-                        v-for="menu in dropdownMenus"
-                        :class="{
-                            'active': menu.routeName === routeName
-                        }"
-                        :key="menu.label"
-                        @click="go(menu.routeName)"
-                    >
-                        <a href="javascript:;">
-                            {{ $t(menu.label) }}
-                        </a>
-                    </li>
-                </ul>
-            </bk-dropdown-menu>
-        </pipeline-header>
-        <router-view />
-    </article>
+        <more-route slot="setting" />
+    </bk-tab>
 </template>
 
 <script>
-    import Logo from '@/components/Logo'
-    import pipelineHeader from '@/components/devops/pipeline-header'
-    import { mapState } from 'vuex'
+    import MoreRoute from '@/components/MoreRoute'
+    import { computed, defineComponent, getCurrentInstance } from 'vue'
 
-    export default {
+    export default defineComponent({
         components: {
-            'pipeline-header': pipelineHeader,
-            Logo
+            MoreRoute
         },
-        data () {
-            return {
-                isLoading: false,
-                toggleIsMore: false
-            }
-        },
-        computed: {
-            ...mapState('pipelines', [
-                'currentViewList',
-                'currentViewId',
-                'showViewManage',
-                'pageLoading'
-            ]),
-            projectId () {
-                return this.$route.params.projectId
-            },
-            routeName () {
-                return this.$route.name
-            },
-            groupName () {
-                return this.$route.params.groupName
-            },
-            dropTitle () {
-                return this.dropdownMenus.find(menu => menu.routeName === this.routeName)?.label ?? 'more'
-            },
-            pipelineListRoute () {
-                return {
-                    name: 'PipelineManageList',
-                    params: this.$route.params,
-                    query: this.$route.query
+        setup () {
+            const vm = getCurrentInstance()
+            const activePanel = computed(() => {
+                if (vm.proxy.$route.name === 'PipelineListAuth') {
+                    return 'PipelineManageList'
                 }
-            },
-            dropdownMenus () {
-                return [
-                    {
-                        label: 'labelManage',
-                        routeName: 'pipelinesGroup'
-                    },
-                    {
-                        label: 'templateManage',
-                        routeName: 'pipelinesTemplate'
-                    },
-                    {
-                        label: 'pluginManage',
-                        routeName: 'atomManage'
-                    },
-                    {
-                        label: 'operatorAudit',
-                        routeName: 'pipelinesAudit'
-                    }
-                ]
-            }
+                return vm.proxy.$route.name
+            })
 
-        },
-        methods: {
-            go (name) {
-                this.$router.push({ name })
+            const panels = [
+                {
+                    label: vm.proxy.$t('pipeline'),
+                    name: 'PipelineManageList',
+                    component: 'router-view'
+                }
+            ]
+            return {
+                activePanel,
+                panels
             }
         }
-    }
+    })
 </script>
 <style lang="scss">
     @import './../../scss/conf';
@@ -154,29 +58,18 @@
         display: flex;
         flex-direction: column;
         height: 100%;
-    }
-
-    .pipeline-breadcrumb-item {
-        display: flex;
-        align-items: center;
-    }
-
-    .default-link-list {
-        display: flex;
-        .pipeline-dropdown-trigger {
-            font-size: 14px;
-            cursor: pointer;
-            .devops-icon {
-                display: inline-block;
-                transition: all ease 0.2s;
-                margin-left: 4px;
-                font-size: 12px;
-                &.icon-flip {
-                    transform: rotate(180deg);
-                }
-            }
-            &.active {
-                color: $primaryColor;
+        .bk-tab-label-wrapper {
+            text-align: center;
+        }
+        .bk-tab-section {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            padding: 0;
+            .bk-tab-content {
+                display: flex;
+                flex: 1;
+                overflow: hidden;
             }
         }
     }
