@@ -15,6 +15,7 @@ import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.pipeline.SubPipelineIdAndName
 import com.tencent.devops.process.pojo.pipeline.SubPipelineRef
 import com.tencent.devops.process.engine.service.SubPipelineRefService
+import com.tencent.devops.process.yaml.PipelineYamlService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -29,7 +30,8 @@ import jakarta.ws.rs.core.Response
 class SubPipelineCheckService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val subPipelineRefService: SubPipelineRefService,
-    private val subPipelineTaskService: SubPipelineTaskService
+    private val subPipelineTaskService: SubPipelineTaskService,
+    private val pipelineYamlService: PipelineYamlService
 ) {
 
     /**
@@ -95,7 +97,8 @@ class SubPipelineCheckService @Autowired constructor(
             val subPipeline = SubPipelineIdAndName(
                 projectId = subPipelineTaskParam.projectId,
                 pipelineId = subPipelineTaskParam.pipelineId,
-                pipelineName = subPipelineTaskParam.pipelineName
+                pipelineName = subPipelineTaskParam.pipelineName,
+                branch = subPipelineTaskParam.branch
             )
             subPipelineElementMap.getOrPut(subPipeline) { mutableListOf() }.add(holder)
         }
@@ -175,7 +178,14 @@ class SubPipelineCheckService @Autowired constructor(
     ): Set<String> {
         val errorDetails = mutableSetOf<String>()
         val rootPipelineKey = "$projectId|$pipelineId"
-        subPipelineElementMap.forEach { (subPipeline, elements) ->
+        subPipelineElementMap.filter {
+            // 分支版本子流水线不校验递归引用
+            releasedBranchVersion(
+                projectId = it.key.projectId,
+                pipelineId = it.key.pipelineId,
+                branch = it.key.branch
+            )
+        }.forEach { (subPipeline, elements) ->
             val subProjectId = subPipeline.projectId
             val subPipelineId = subPipeline.pipelineId
             val subPipelineRef = SubPipelineRef(
@@ -348,6 +358,25 @@ class SubPipelineCheckService @Autowired constructor(
         }
         return stringBuilder.toString()
     }
+
+    private fun releasedBranchVersion(projectId: String, pipelineId: String, branch: String?): Boolean {
+        return if (!branch.isNullOrBlank()) {
+            // 保存草稿时，分支版本不校验
+            val released = try {
+                pipelineYamlService.getPipelineYamlVersionInfo(projectId, pipelineId, branch).released
+            } catch (ignored: Exception) {
+                logger.warn(
+                    "check released branch version failed|" +
+                            "projectId:$projectId|pipelineId:$pipelineId|branch:$branch", ignored
+                )
+                false
+            }
+            return released
+        } else {
+            true
+        }
+    }
+
 
     companion object {
         private val logger = LoggerFactory.getLogger(SubPipelineCheckService::class.java)

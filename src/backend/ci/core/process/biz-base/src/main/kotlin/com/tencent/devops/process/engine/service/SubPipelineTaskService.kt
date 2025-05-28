@@ -13,6 +13,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.pojo.pipeline.SubPipelineRef
 import com.tencent.devops.process.pojo.pipeline.SubPipelineTaskParam
@@ -34,7 +35,8 @@ class SubPipelineTaskService @Autowired constructor(
     private val pipelineResDao: PipelineResourceDao,
     @Lazy
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val subPipelineRefService: SubPipelineRefService
+    private val subPipelineRefService: SubPipelineRefService,
+    private val pipelineYamlVersionDao: PipelineYamlVersionDao
 ) {
     /**
      * 支持的元素
@@ -126,6 +128,10 @@ class SubPipelineTaskService @Autowired constructor(
             "NAME" -> SubPipelineType.NAME
             else -> return null
         }
+        // 分支版本
+        val branch = inputMap["branch"]?.toString().let {
+            EnvUtils.parseEnv(it, contextMap)
+        }
         val (finalProjectId, finalPipelineId, finalPipeName) = getSubPipelineParam(
             projectId = projectId,
             subProjectId = subProjectId,
@@ -141,7 +147,8 @@ class SubPipelineTaskService @Autowired constructor(
             taskPipelineName = subPipelineName,
             projectId = finalProjectId,
             pipelineId = finalPipelineId,
-            pipelineName = finalPipeName
+            pipelineName = finalPipeName,
+            branch = branch
         )
     }
 
@@ -248,6 +255,14 @@ class SubPipelineTaskService @Autowired constructor(
                 invalidTaskIds.add(it.taskId)
                 return@forEach
             }
+            // 分支版本的流水线插件无需记录
+            if (
+                    !releasedBranchVersion(
+                        projectId = subPipelineTaskParam.projectId,
+                        pipelineId = subPipelineTaskParam.pipelineId,
+                        branch = subPipelineTaskParam.branch
+                    )
+            ) return@forEach
             validRefList.add(
                 SubPipelineRef(
                     projectId = it.projectId,
@@ -345,6 +360,23 @@ class SubPipelineTaskService @Autowired constructor(
         val elementEnable = (this.stageEnable && this.containerEnable && this.additionalOptions?.enable ?: true)
         val supportElement = supportAtomCode(this.atomCode) || this.taskAtom == SubPipelineCallElement.TASK_ATOM
         return elementEnable && supportElement
+    }
+
+    /**
+     * 是否为最新主干版本
+     */
+    private fun releasedBranchVersion(projectId: String, pipelineId: String, branch: String?): Boolean {
+        return if (!branch.isNullOrBlank()) {
+            // 保存草稿时，分支版本不校验
+            return pipelineYamlVersionDao.getPipelineYamlVersion(
+                dslContext  = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                ref = branch
+            )?.released ?: false
+        } else {
+            true
+        }
     }
 
     companion object {
