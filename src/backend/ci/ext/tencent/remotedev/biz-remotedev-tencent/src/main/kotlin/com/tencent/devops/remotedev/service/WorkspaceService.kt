@@ -1461,7 +1461,19 @@ class WorkspaceService @Autowired constructor(
         return false
     }
 
-    fun createMoa2faRequest(userId: String, moa2faReqData: Moa2faReqData): Moa2faRespData {
+    @ActionAuditRecord(
+        actionId = TencentActionId.CGS_MOA_2FA,
+        instance = AuditInstanceRecord(
+            resourceType = TencentResourceTypeId.CGS,
+            instanceNames = "#workspaceName",
+            instanceIds = "#workspaceName"
+        ),
+        content = TencentActionAuditContent.CGS_MOA_2FA_CONTENT
+    )
+    fun createMoa2faRequest(userId: String, workspaceName: String?, moa2faReqData: Moa2faReqData): Moa2faRespData {
+        ActionAuditContext.current()
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, userId)
+            .scopeId = userId
         return taiService.createMoa2faRequest(userId = userId, moa2faReqData = moa2faReqData)
     }
 
