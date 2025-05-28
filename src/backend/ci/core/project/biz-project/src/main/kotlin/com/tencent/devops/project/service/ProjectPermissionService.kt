@@ -54,7 +54,7 @@ interface ProjectPermissionService {
 
     fun getUserProjects(userId: String, tenantId: String?): List<String>
 
-    fun getUserProjectsAvailable(userId: String): Map<String, String>
+    fun getUserProjectsAvailable(userId: String, tenantId: String?): Map<String, String>
 
     fun filterProjects(
         userId: String,

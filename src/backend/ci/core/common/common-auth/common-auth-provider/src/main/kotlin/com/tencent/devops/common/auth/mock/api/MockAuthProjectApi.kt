@@ -86,6 +86,7 @@ class MockAuthProjectApi constructor(
     override fun getUserProjects(
         serviceCode: AuthServiceCode,
         userId: String,
+        tenantId: String?,
         supplier: (() -> List<String>)?
     ): List<String> {
         val map = bkAuthPermissionApi.getUserResourcesByPermissions(
@@ -114,6 +115,7 @@ class MockAuthProjectApi constructor(
     override fun getUserProjectsAvailable(
         serviceCode: AuthServiceCode,
         userId: String,
+        tenantId: String?,
         supplier: (() -> List<String>)?
     ): Map<String, String> {
         val map = bkAuthPermissionApi.getUserResourcesByPermissions(

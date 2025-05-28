@@ -74,7 +74,7 @@ class StreamProjectPermissionServiceImpl @Autowired constructor(
         return listOf("demo")
     }
 
-    override fun getUserProjectsAvailable(userId: String): Map<String, String> {
+    override fun getUserProjectsAvailable(userId: String, tenantId: String?): Map<String, String> {
         return emptyMap()
     }
 

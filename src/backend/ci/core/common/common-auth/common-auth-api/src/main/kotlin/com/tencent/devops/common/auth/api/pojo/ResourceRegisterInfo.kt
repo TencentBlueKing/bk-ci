@@ -29,5 +29,6 @@ package com.tencent.devops.common.auth.api.pojo
 
 data class ResourceRegisterInfo(
     val resourceCode: String,
-    val resourceName: String
+    val resourceName: String,
+    val tenantId: String?
 )

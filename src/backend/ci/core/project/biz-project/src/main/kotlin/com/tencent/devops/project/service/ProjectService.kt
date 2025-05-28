@@ -201,7 +201,7 @@ interface ProjectService {
     /**
      * 获取用户已的可访问项目列表=
      */
-    fun getProjectByUser(userName: String): List<ProjectVO>
+    fun getProjectByUser(userName: String, tenantId: String?): List<ProjectVO>
 
     fun getNameByCode(projectCodes: String): HashMap<String, String>
 

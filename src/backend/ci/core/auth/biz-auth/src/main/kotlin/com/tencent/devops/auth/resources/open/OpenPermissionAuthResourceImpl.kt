@@ -47,11 +47,12 @@ class OpenPermissionAuthResourceImpl @Autowired constructor(
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun validateUserActionPermission(
         userId: String,
+        tenantId: String?,
         token: String,
         type: String?,
         action: String
     ): Result<Boolean> {
-        return Result(permissionService.validateUserActionPermission(userId, action))
+        return Result(permissionService.validateUserActionPermission(userId, action, tenantId))
     }
 
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])

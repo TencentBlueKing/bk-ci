@@ -37,7 +37,8 @@ import org.slf4j.LoggerFactory
 abstract class StreamPermissionServiceImpl : PermissionService {
     override fun validateUserActionPermission(
         userId: String,
-        action: String
+        action: String,
+        tenantId: String?
     ): Boolean {
         // stream场景下不会使用到此场景. 做默认实现
         return false

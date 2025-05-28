@@ -132,7 +132,10 @@ interface ServiceProjectResource {
     fun getProjectByUser(
         @Parameter(description = "userId", required = true)
         @QueryParam("userId")
-        userName: String
+        userName: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String?
     ): Result<List<ProjectVO>>
 
     @GET

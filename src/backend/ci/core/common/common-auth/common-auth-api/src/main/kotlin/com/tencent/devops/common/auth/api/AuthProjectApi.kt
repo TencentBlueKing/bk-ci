@@ -76,6 +76,7 @@ interface AuthProjectApi {
     fun getUserProjects(
         serviceCode: AuthServiceCode,
         userId: String,
+        tenantId: String?,
         supplier: (() -> List<String>)?
     ): List<String>
 
@@ -104,6 +105,7 @@ interface AuthProjectApi {
     fun getUserProjectsAvailable(
         serviceCode: AuthServiceCode,
         userId: String,
+        tenantId: String?,
         supplier: (() -> List<String>)?
     ): Map<String, String>
 

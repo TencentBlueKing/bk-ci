@@ -259,7 +259,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 projectId = projectPermissionService.createResources(
                     resourceRegisterInfo = ResourceRegisterInfo(
                         resourceCode = projectCreateInfo.englishName,
-                        resourceName = projectCreateInfo.projectName
+                        resourceName = projectCreateInfo.projectName,
+                        tenantId = projectCreateInfo.tenantId
                     ),
                     authProjectCreateInfo = authProjectCreateInfo
                 )
@@ -1156,11 +1157,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     /**
      * 获取用户已的可访问项目列表
      */
-    override fun getProjectByUser(userName: String): List<ProjectVO> {
+    override fun getProjectByUser(userName: String, tenantId: String?): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            val projectList = projectPermissionService.getUserProjectsAvailable(userName)
+            val projectList = projectPermissionService.getUserProjectsAvailable(userName, tenantId)
 
             val list = ArrayList<ProjectVO>()
             val projectCodes = projectList.map { it.key }

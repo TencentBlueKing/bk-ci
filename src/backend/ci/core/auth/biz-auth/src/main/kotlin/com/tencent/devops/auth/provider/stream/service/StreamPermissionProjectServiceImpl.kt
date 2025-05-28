@@ -46,7 +46,7 @@ class StreamPermissionProjectServiceImpl @Autowired constructor(
         return emptyList()
     }
 
-    override fun getUserProjects(userId: String): List<String> {
+    override fun getUserProjects(userId: String, tenantId: String?): List<String> {
         // stream场景下使用不到此接口。占做默认实现
         return emptyList()
     }
@@ -54,7 +54,8 @@ class StreamPermissionProjectServiceImpl @Autowired constructor(
     override fun getUserProjectsByPermission(
         userId: String,
         action: String,
-        resourceType: String?
+        resourceType: String?,
+        tenantId: String?
     ): List<String> {
         return emptyList()
     }

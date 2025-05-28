@@ -29,6 +29,7 @@ package com.tencent.devops.auth.api.service
 
 import com.tencent.devops.auth.pojo.vo.AuthProjectVO
 import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_TENANT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GIT_TYPE
@@ -94,7 +95,10 @@ interface ServiceProjectAuthResource {
         token: String,
         @PathParam("userId")
         @Parameter(description = "用户userId", required = true)
-        userId: String
+        userId: String,
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        @Parameter(description = "租户ID", required = false)
+        tenantId: String?
     ): Result<List<String>>
 
     @GET

@@ -62,8 +62,8 @@ class ServiceProjectResourceImpl @Autowired constructor(
     private val projectPermissionService: ProjectPermissionService
 ) : ServiceProjectResource {
 
-    override fun getProjectByUser(userName: String): Result<List<ProjectVO>> {
-        return Result(projectService.getProjectByUser(userName))
+    override fun getProjectByUser(userName: String, tenantId: String?): Result<List<ProjectVO>> {
+        return Result(projectService.getProjectByUser(userName, tenantId))
     }
 
     override fun verifyUserProjectPermission(

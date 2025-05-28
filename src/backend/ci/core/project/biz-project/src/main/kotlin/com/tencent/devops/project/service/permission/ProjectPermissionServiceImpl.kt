@@ -62,10 +62,11 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         fakeList
     }
 
-    override fun getUserProjectsAvailable(userId: String): Map<String, String> {
+    override fun getUserProjectsAvailable(userId: String, tenantId: String?): Map<String, String> {
         return authProjectApi.getUserProjectsAvailable(
             serviceCode = projectAuthServiceCode,
             userId = userId,
+            tenantId = tenantId,
             supplier = supplierForPermission
         )
     }
@@ -74,8 +75,8 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         return authProjectApi.getUserProjects(
             serviceCode = projectAuthServiceCode,
             userId = userId,
-            supplier = { projectDao.listProjectCodes(dslContext, tenantId) }
-        )
+            tenantId = tenantId
+        ) { projectDao.listProjectCodes(dslContext, tenantId) }
     }
 
     override fun modifyResource(

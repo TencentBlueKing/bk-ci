@@ -33,7 +33,8 @@ import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 interface PermissionService {
     fun validateUserActionPermission(
         userId: String,
-        action: String
+        action: String,
+        tenantId: String?
     ): Boolean
 
     fun validateUserResourcePermission(

@@ -185,14 +185,16 @@ class RbacProjectPermissionService(
         return authProjectApi.getUserProjects(
             serviceCode = projectAuthServiceCode,
             userId = userId,
-            supplier = null
+            supplier = null,
+            tenantId = tenantId
         )
     }
 
-    override fun getUserProjectsAvailable(userId: String): Map<String, String> {
+    override fun getUserProjectsAvailable(userId: String, tenantId: String?): Map<String, String> {
         return authProjectApi.getUserProjectsAvailable(
-            userId = userId,
             serviceCode = projectAuthServiceCode,
+            userId = userId,
+            tenantId = tenantId,
             supplier = null
         )
     }

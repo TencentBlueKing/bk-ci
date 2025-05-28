@@ -74,11 +74,11 @@ class RbacPermissionService(
         private const val PATH_ATTRIBUTE = "_bk_iam_path_"
     }
 
-    override fun validateUserActionPermission(userId: String, action: String): Boolean {
+    override fun validateUserActionPermission(userId: String, action: String, tenantId: String?): Boolean {
         logger.info("[rbac] validateUserActionPermission :  userId = $userId | action = $action")
         val startEpoch = System.currentTimeMillis()
         try {
-            return authHelper.isAllowed(userId, action)
+            return authHelper.isAllowed(userId, action, tenantId)
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to validate user action permission|" +
