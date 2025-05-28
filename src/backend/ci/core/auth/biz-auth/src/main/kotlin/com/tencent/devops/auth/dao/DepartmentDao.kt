@@ -10,12 +10,14 @@ import com.tencent.devops.model.auth.tables.TDepartment
 import com.tencent.devops.model.auth.tables.records.TDepartmentRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class DepartmentDao {
     fun create(
         dslContext: DSLContext,
-        departmentInfo: DepartmentInfo
+        departmentInfo: DepartmentInfo,
+        taskId: String
     ) {
         with(TDepartment.T_DEPARTMENT) {
             dslContext.insertInto(
@@ -24,18 +26,23 @@ class DepartmentDao {
                 DEPARTMENT_NAME,
                 PARENT,
                 LEVEL,
-                HAS_CHILDREN
+                HAS_CHILDREN,
+                TASK_ID,
+                CREATE_TIME
             ).values(
                 departmentInfo.departmentId,
                 departmentInfo.departmentName,
                 departmentInfo.parent,
                 departmentInfo.level,
-                departmentInfo.hasChildren
+                departmentInfo.hasChildren,
+                taskId,
+                LocalDateTime.now()
             ).onDuplicateKeyUpdate()
                 .set(DEPARTMENT_NAME, departmentInfo.departmentName)
                 .set(PARENT, departmentInfo.parent)
                 .set(LEVEL, departmentInfo.level)
                 .set(HAS_CHILDREN, departmentInfo.hasChildren)
+                .set(TASK_ID, taskId)
                 .execute()
         }
     }
@@ -114,6 +121,15 @@ class DepartmentDao {
                     userCount = it.value4()
                 )
             }
+    }
+
+    fun deleteByTaskId(
+        dslContext: DSLContext,
+        taskId: String
+    ) {
+        with(TDepartment.T_DEPARTMENT) {
+            dslContext.deleteFrom(this).where(TASK_ID.eq(taskId))
+        }
     }
 
     fun TDepartmentRecord.convert(): DepartmentInfo {
