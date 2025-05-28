@@ -91,36 +91,36 @@ class PipelineMetricsInfoDao {
         dslContext.batch(steps).execute()
     }
 
-    fun countHighFailureRate30d(dslContext: DSLContext, projectId: String): Int {
+    fun countHighFailureRate30d(dslContext: DSLContext, projectId: String): Int? {
         with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
             return dslContext.selectCount()
                 .from(this)
                 .where(STATISTICS_TIME.eq(LocalDate.now().atStartOfDay()))
                 .and(PROJECT_ID.eq(projectId))
                 .and(FAILURE_RATE_30D.eq(true))
-                .fetchOne(0, Int::class.java) ?: 0
+                .fetchOne(0, Int::class.java)
         }
     }
 
-    fun countConsecutiveFailures90d(dslContext: DSLContext, projectId: String): Int {
+    fun countConsecutiveFailures90d(dslContext: DSLContext, projectId: String): Int? {
         with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
             return dslContext.selectCount()
                 .from(this)
                 .where(STATISTICS_TIME.eq(LocalDate.now().atStartOfDay()))
                 .and(PROJECT_ID.eq(projectId))
                 .and(CONSECUTIVE_FAILURES_90D.eq(true))
-                .fetchOne(0, Int::class.java) ?: 0
+                .fetchOne(0, Int::class.java)
         }
     }
 
-    fun countScheduledTriggerNoCodeChange(dslContext: DSLContext, projectId: String): Int {
+    fun countScheduledTriggerNoCodeChange(dslContext: DSLContext, projectId: String): Int? {
         with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
             return dslContext.selectCount()
                 .from(this)
                 .where(STATISTICS_TIME.eq(LocalDate.now().atStartOfDay()))
                 .and(PROJECT_ID.eq(projectId))
                 .and(SCHEDULED_TRIGGER_NO_CODE_CHANGE.eq(true))
-                .fetchOne(0, Int::class.java) ?: 0
+                .fetchOne(0, Int::class.java)
         }
     }
 }
