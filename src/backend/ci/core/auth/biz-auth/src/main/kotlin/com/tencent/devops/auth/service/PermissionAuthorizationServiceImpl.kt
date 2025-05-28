@@ -387,13 +387,15 @@ class PermissionAuthorizationServiceImpl(
                     checkPermission = condition.checkPermission
                 )
             )
-            if (!handoverResult[ResourceAuthorizationHandoverStatus.FAILED].isNullOrEmpty()) {
+            val handoverFailedResult = handoverResult[ResourceAuthorizationHandoverStatus.FAILED]
+            if (!handoverFailedResult.isNullOrEmpty()) {
                 result.add(
                     ResourceTypeInfoVo(
                         resourceType = resourceType,
                         name = I18nUtil.getCodeLanMessage(
                             messageCode = resourceType + AuthI18nConstants.RESOURCE_TYPE_NAME_SUFFIX
-                        )
+                        ),
+                        memberIds = handoverFailedResult.mapNotNull { it.handoverFrom }.distinct()
                     )
                 )
             }
