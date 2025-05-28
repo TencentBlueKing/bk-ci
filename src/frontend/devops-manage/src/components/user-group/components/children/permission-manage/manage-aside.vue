@@ -155,7 +155,7 @@
                 <p class="hand-over-table-item">
                   {{item.name}}({{ item.resourceType }})
                 </p>
-                <p class="blue-text" @click="goAuthorization(item.resourceType)">
+                <p class="blue-text" @click="goAuthorization(item)">
                   <i class="manage-icon manage-icon-jump"></i>
                   <span>{{t("前往处理")}}</span>
                 </p>
@@ -507,8 +507,9 @@ function refreshHandOverfail () {
   }
   handleChangeOverFormName(param);
 }
-function goAuthorization(resourceType) {
-  window.open(`${location.origin}/console/manage/${projectId.value}/permission?resourceType=${resourceType}&userId=${removeUser.value.id}`, '_blank')
+function goAuthorization(item) {
+  const { resourceType, memberIds} = item
+  window.open(`${location.origin}/console/manage/${projectId.value}/permission?resourceType=${resourceType}&userId=${memberIds}`, '_blank')
 }
 /**
  * 获取人员列表数据

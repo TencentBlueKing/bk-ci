@@ -82,10 +82,10 @@ export default defineStore('manageAside', () => {
     }
     try {
       btnLoading.value = true;
-      const res = await http.removeMemberFromProject(projectId, params);
+      const { users,departments } = await http.removeMemberFromProject(projectId, params);
       
       asideItem.value = undefined;
-      if (!res.length) {
+      if (!users.length) {
         const allAreGroups = removeUsers.every(member => member.type === 'department');
         let message: string;
         if (isBatchOperate) {
@@ -100,8 +100,8 @@ export default defineStore('manageAside', () => {
         });
       } else {
         removeUserDeptListMap.value = {
-          list: res,
-          removeUsers
+          list: departments,
+          removeUsers: users
         }
         showDeptListPermissionDialog.value = true
       }

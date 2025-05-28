@@ -211,10 +211,19 @@
   >
     <template #header>
       <img src="@/css/svg/warninfo.svg" class="manage-icon-tips">
-      <h2 class="dialog-header"> {{t('成功移除XX', [`${removeUserDeptListMap.removeUser.id}(${removeUserDeptListMap.removeUser.name})`])}}</h2>
+      <h2 v-if="!isBatchOperate" class="dialog-header"> {{t('成功移除XX', [`${removeUserDeptListMap.removeUsers[0].id}(${removeUserDeptListMap.removeUsers[0].name})`])}}</h2>
+      <h2 v-else class="dialog-header"> {{t('X个组织/用户已成功移出本项目', [removeUserDeptListMap.removeUsers.length])}}</h2>
     </template>
     <template #default>
-      <p>{{ t('用户XXX已从项目下移除，但其所属的如下组织架构在项目下拥有权限，此用户依然可以进入项目进行操作：', [`${removeUserDeptListMap.removeUser.id} (${removeUserDeptListMap.removeUser.name})`]) }}</p>
+      <i18n-t
+        tag="p"
+        keypath="用户XXX已从项目下移除，但其所属的如下组织架构在项目下拥有权限，此用户依然可以进入项目进行操作："
+      >
+        <span v-for="(item, index) in removeUserDeptListMap.removeUsers">
+          {{ `${item.id} (${item.name})` }}
+          <span v-if="index < removeUserDeptListMap.removeUsers.length - 1">, </span>
+        </span>
+      </i18n-t>
       <p v-for="dept in removeUserDeptListMap.list" :key="dept.id">
         - {{ dept.name }}
       </p>
@@ -473,6 +482,7 @@ const unableText = {
   handover: t('无法移交'),
   remove: t('无法直接移出'),
 }
+const isBatchOperate = ref(false)
 const {
   sourceList,
   isShowRenewal,
@@ -863,8 +873,9 @@ function showMessage (theme, message) {
   });
 }
 
-function asideRemoveConfirm (isBatchOperate, removeUsers, handOverForm) {
-  handleAsideRemoveConfirm(isBatchOperate, removeUsers, handOverForm, projectId.value, manageAsideRef.value);
+function asideRemoveConfirm (isBatch, removeUsers, handOverForm) {
+  isBatchOperate.value = isBatch
+  handleAsideRemoveConfirm(isBatch, removeUsers, handOverForm, projectId.value, manageAsideRef.value);
 }
 
 function handleChangeOverFormName ({list, userList}) {
