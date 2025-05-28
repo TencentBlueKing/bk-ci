@@ -49,7 +49,7 @@ interface TxUserPipelineMetricsResource {
 
     @Operation(summary = "获取项目流水线问题分析信息")
     @GET
-    @Path("/issueAnalysis")
+    @Path("/IssueAnalysis")
     fun getPipelineIssueAnalysis(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
