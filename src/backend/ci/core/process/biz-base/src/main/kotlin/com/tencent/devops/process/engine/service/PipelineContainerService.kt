@@ -938,7 +938,7 @@ class PipelineContainerService @Autowired constructor(
         taskType = atomElement.getClassType(),
         taskAtom = atomElement.getTaskAtom(),
         status = status,
-        taskParams = atomElement.genTaskParams(),
+        taskParams = atomElement.genTaskParamsNotSkipEmpty(),
         // 由于遍历时对内部属性有修改，需要复制一个新对象赋值
         additionalOptions = postParentIdMap[atomElement.id]?.let { self ->
             atomElement.additionalOptions?.copy(

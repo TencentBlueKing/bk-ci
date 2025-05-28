@@ -169,6 +169,9 @@ abstract class Element(
         return JsonUtil.toMutableMap(this)
     }
 
+    open fun genTaskParamsNotSkipEmpty(): MutableMap<String, Any> {
+        return JsonUtil.toMutableMap(bean = this,  skipEmpty = false)
+    }
     open fun cleanUp() {}
 
     open fun transferYaml(defaultValue: JSONObject?): PreStep? = null
