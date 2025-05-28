@@ -55,7 +55,7 @@ class TxPipelineMetricssService@Autowired constructor(
         val consecutiveFailuresCount = pipelineMetricsInfoDao.countConsecutiveFailures90d(dslContext, projectId)
         val scheduledTriggerNoCodeChangeCount
         = pipelineMetricsInfoDao.countScheduledTriggerNoCodeChange(dslContext, projectId)
-        if (failureRateCount == null && consecutiveFailuresCount == null && scheduledTriggerNoCodeChangeCount == null) {
+        if (failureRateCount == 0 && consecutiveFailuresCount == 0 && scheduledTriggerNoCodeChangeCount == 0) {
             return null
         }
 
