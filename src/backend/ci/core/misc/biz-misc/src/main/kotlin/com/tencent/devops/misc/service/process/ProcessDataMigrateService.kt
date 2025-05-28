@@ -104,7 +104,7 @@ class ProcessDataMigrateService @Autowired constructor(
             "MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE"
         private const val MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT_KEY = "MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT"
         private val executorService by lazy {
-            Executors.newFixedThreadPool(30).apply {
+            Executors.newFixedThreadPool(10).apply {
                 Runtime.getRuntime().addShutdownHook(Thread { shutdown() })
             }
         }
@@ -334,6 +334,11 @@ class ProcessDataMigrateService @Autowired constructor(
                 migrationLock = migrationLock,
                 errorMsg = errorMsg
             )
+        } finally {
+            executor.shutdown() // 确保线程池关闭
+            if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
+                executor.shutdownNow()
+            }
         }
     }
 

@@ -9,6 +9,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
 import com.tencent.devops.misc.pojo.constant.MiscMessageCode
 import com.tencent.devops.misc.pojo.process.MigratePipelineDataParam
@@ -16,6 +17,7 @@ import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import org.apache.commons.collections4.ListUtils
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -42,6 +44,7 @@ class MigratePipelineDataTask constructor(
             val dslContext = migratePipelineDataParam.dslContext
             val migratingShardingDslContext = migratePipelineDataParam.migratingShardingDslContext
             val processDbMigrateDao = migratePipelineDataParam.processDataMigrateDao
+            val processDao = migratePipelineDataParam.processDao
             val archiveFlag = migratePipelineDataParam.archiveFlag
             // 1、获取是否允许执行的信号量
             semaphore?.acquire()
@@ -51,19 +54,14 @@ class MigratePipelineDataTask constructor(
                     // 2、取消未结束的构建
                     handleUnFinishPipelines(RETRY_NUM)
                     Thread.sleep(DEFAULT_THREAD_SLEEP_TINE)
-                    // 检查构建是否结束
-                    val pipelineRunningCountMap = migratePipelineDataParam.processDao.getPipelineRunningCountInfo(
-                        dslContext = dslContext,
-                        projectId = projectId,
-                        pipelineIds = setOf(pipelineId)
-                    )
-                    if (pipelineRunningCountMap.any { it.value > 0 }) {
-                        throw ErrorCodeException(
-                            errorCode = MiscMessageCode.ERROR_MIGRATING_PIPELINE_CANCEL_FAIL,
-                            params = arrayOf(pipelineId)
-                        )
-                    }
                 }
+                // 检查构建是否结束
+                isBuildCompleted(
+                    dslContext = dslContext,
+                    processDao = processDao,
+                    projectId = projectId,
+                    pipelineId = pipelineId
+                )
                 // 3、开始迁移流水线的数据
                 // 迁移T_PIPELINE_INFO表数据
                 migratePipelineInfoData(
@@ -375,6 +373,60 @@ class MigratePipelineDataTask constructor(
                 semaphore?.release()
             }
         }
+
+    /**
+     * 校验流水线构建是否已完成（用于数据迁移前的状态校验）
+     *
+     * @param dslContext 数据库操作上下文
+     * @param processDao 流水线构建数据访问对象
+     * @param projectId 项目ID
+     * @param pipelineId 流水线ID
+     *
+     * @throws ErrorCodeException 当存在运行中的构建或已完成的成功阶段时抛出异常
+     */
+    private fun isBuildCompleted(
+        dslContext: DSLContext,
+        processDao: ProcessDao,
+        projectId: String,
+        pipelineId: String
+    ) {
+        // 在事务中执行状态校验
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+
+            // 统计处于运行状态的构建数量
+            val runningCount = processDao.countAllBuildWithStatus(
+                dslContext = transactionContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                status = setOf(
+                    BuildStatus.QUEUE,
+                    BuildStatus.QUEUE_CACHE,
+                    BuildStatus.RUNNING
+                ),
+                lockFlag = true  // 加锁保证数据一致性
+            )
+
+            // 存在运行中的构建时禁止迁移
+            if (runningCount > 0) {
+                throw ErrorCodeException(errorCode = MiscMessageCode.ERROR_MIGRATING_PIPELINE_STATUS_INVALID)
+            }
+
+            // 统计未成功完成的STAGE_SUCCESS状态数量
+            val unCompletedStageSuccessCount = processDao.countUnCompletedStageSuccess(
+                dslContext = transactionContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                lockFlag = true  // 加锁保证数据一致性
+            )
+
+            // 存在未成功完成的STAGE_SUCCESS状态构建时禁止迁移
+            if (unCompletedStageSuccessCount > 0) {
+                throw ErrorCodeException(errorCode = MiscMessageCode.ERROR_MIGRATING_PIPELINE_STATUS_INVALID)
+            }
+        }
+    }
+
 
     private fun migrateBuildLinkedData(
         buildIds: List<String>,
