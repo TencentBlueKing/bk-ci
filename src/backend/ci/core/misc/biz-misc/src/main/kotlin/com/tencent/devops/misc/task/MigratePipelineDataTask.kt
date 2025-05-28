@@ -404,12 +404,17 @@ class MigratePipelineDataTask constructor(
                     BuildStatus.QUEUE_CACHE,
                     BuildStatus.RUNNING
                 ),
-                lockFlag = true  // 加锁保证数据一致性
+                lockFlag = true
             )
 
             // 存在运行中的构建时禁止迁移
             if (runningCount > 0) {
-                throw ErrorCodeException(errorCode = MiscMessageCode.ERROR_MIGRATING_PIPELINE_STATUS_INVALID)
+                throw ErrorCodeException(
+                    errorCode = MiscMessageCode.ERROR_MIGRATING_PIPELINE_STATUS_INVALID,
+                    defaultMessage = I18nUtil.getCodeLanMessage(
+                        messageCode = MiscMessageCode.ERROR_MIGRATING_PIPELINE_STATUS_INVALID
+                    )
+                )
             }
 
             // 统计未成功完成的STAGE_SUCCESS状态数量
@@ -417,16 +422,20 @@ class MigratePipelineDataTask constructor(
                 dslContext = transactionContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                lockFlag = true  // 加锁保证数据一致性
+                lockFlag = true
             )
 
             // 存在未成功完成的STAGE_SUCCESS状态构建时禁止迁移
             if (unCompletedStageSuccessCount > 0) {
-                throw ErrorCodeException(errorCode = MiscMessageCode.ERROR_MIGRATING_PIPELINE_STATUS_INVALID)
+                throw ErrorCodeException(
+                    errorCode = MiscMessageCode.ERROR_MIGRATING_PIPELINE_STATUS_INVALID,
+                    defaultMessage = I18nUtil.getCodeLanMessage(
+                        messageCode = MiscMessageCode.ERROR_MIGRATING_PIPELINE_STATUS_INVALID
+                    )
+                )
             }
         }
     }
-
 
     private fun migrateBuildLinkedData(
         buildIds: List<String>,
