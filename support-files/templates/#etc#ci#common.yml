@@ -365,7 +365,7 @@ codeoa:
 bk:
   paas:
     host: __BK_PAAS_PRIVATE_URL__
-  enableMultiTenantMode: __BK_ENABLE_MULTI_TENANT_MODE__
+  enableMultiTenantMode: __BK_TENANT_ENABLED__
 
 bkci:
   security:

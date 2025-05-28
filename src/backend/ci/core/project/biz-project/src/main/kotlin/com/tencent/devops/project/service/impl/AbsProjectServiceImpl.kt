@@ -259,8 +259,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 projectId = projectPermissionService.createResources(
                     resourceRegisterInfo = ResourceRegisterInfo(
                         resourceCode = projectCreateInfo.englishName,
-                        resourceName = projectCreateInfo.projectName,
-                        tenantId = projectCreateInfo.tenantId
+                        resourceName = projectCreateInfo.projectName
                     ),
                     authProjectCreateInfo = authProjectCreateInfo
                 )
