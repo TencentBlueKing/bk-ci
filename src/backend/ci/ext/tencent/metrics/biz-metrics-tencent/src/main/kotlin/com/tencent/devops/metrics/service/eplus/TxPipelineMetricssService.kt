@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.service.eplus
+package com.tencent.devops.metrics.service.eplus
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.metrics.dao.PipelineMetricsInfoDao
