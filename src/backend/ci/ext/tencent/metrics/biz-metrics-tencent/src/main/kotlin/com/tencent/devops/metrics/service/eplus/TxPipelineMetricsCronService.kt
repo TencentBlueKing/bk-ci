@@ -56,22 +56,22 @@ class TxPipelineMetricsCronService @Autowired constructor(
     private val pipelineMetricsInfoDao: PipelineMetricsInfoDao
 ) {
 
-    @Value("\${eplus.queryCard.token}")
+    @Value("\${eplus.token}")
     private lateinit var token: String
 
-    @Value("\${eplus.card.query.url}")
+    @Value("\${eplus.ms.metrics.queryUrl}")
     private val cardQueryUrl: String = ""
 
-    @Value("\${eplus.ms.process.pipelineGeneral.namespace.id}")
+    @Value("\${eplus.ms.metrics.namespace.bkciNamespaceId}")
     private var pipelineGeneralNamespaceId: Int = 0
 
-    @Value("\${eplus.ms.process.highFailureRate30d.namespace.card.id}")
+    @Value("\${eplus.ms.metrics.namespace.highFailureRate30d.card.id}")
     private var highFailureRate30dCardId: Int = 0
 
-    @Value("\${eplus.ms.process.consecutiveFailures90d.namespace.card.id}")
+    @Value("\${eplus.ms.metrics.namespace.consecutiveFailures90d.card.id}")
     private var consecutiveFailures90dCardId: Int = 0
 
-    @Value("\${eplus.ms.process.scheduledTriggerNoCodeChange.namespace.card.id}")
+    @Value("\${eplus.ms.metrics.namespace.scheduledTriggerNoCodeChange.card.id}")
     private var scheduledTriggerNoCodeChangeCardId: Int = 0
 
     companion object {
