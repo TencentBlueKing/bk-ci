@@ -106,6 +106,7 @@
                 const requiredParamList = this.container?.params?.filter(item => !item.constant && item.required) || []
                 return requiredParamList.reduce((acc, current) => {
                     acc[current.id] = current.defaultValue
+                    acc[`variables.${current.id}`] = current.defaultValue
                     return acc
                 }, {})
             }
@@ -115,7 +116,7 @@
             paramValues: {
                 handler (value, oldValue) {
                     this.pipelineRequiredParams.branch = typeof value.branch === 'string' && value.branch.isBkVar()
-                        ? this.requiredParams[this.extractBkVar(value.branch)]
+                        ? this.requiredParams[value.branch.extractBkVar()]
                         : value.branch
                     if ((value.subPip !== oldValue.subPip) || (value.branch !== oldValue.branch)) {
                         this.atomValue[this.name] = []
@@ -210,9 +211,6 @@
                 this.$ajax.get(url).then((res) => {
                     this.subParamsKeyList = res.data?.properties || res.data || []
                 }).catch(e => this.$showTips({ message: e.message, theme: 'error' })).finally(() => (this.isLoading = false))
-            },
-            extractBkVar (str) {
-                return str.replace(/\$\{([^}]+)\}/g, '$1')
             }
         }
     }
