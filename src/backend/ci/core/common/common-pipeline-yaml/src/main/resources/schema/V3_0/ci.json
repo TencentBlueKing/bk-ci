@@ -1569,6 +1569,9 @@
                   "filter-rule" : {
                     "type" : "string"
                   },
+                  "version-control" : {
+                    "type" : "boolean"
+                  },
                   "metadata" : {
                     "type" : "object"
                   },
@@ -1749,6 +1752,9 @@
                 },
                 "filter-rule" : {
                   "type" : "string"
+                },
+                "version-control" : {
+                  "type" : "boolean"
                 },
                 "metadata" : {
                   "type" : "object"

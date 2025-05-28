@@ -119,6 +119,9 @@ data class VariableProps(
     @get:Schema(title = "自定义仓库通配符", required = false)
     @JsonProperty("filter-rule")
     val glob: String? = null,
+    @JsonProperty("version-control")
+    @get:Schema(title = "version-control")
+    val versionControl: Boolean? = null,
     @get:Schema(title = "文件元数据", required = false)
     @JsonProperty("metadata")
     val properties: Map<String, String>? = null,

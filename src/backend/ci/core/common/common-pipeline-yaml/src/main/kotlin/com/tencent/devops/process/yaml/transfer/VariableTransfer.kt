@@ -137,7 +137,8 @@ class VariableTransfer {
                 )
                 // 文件
                 it.type == BuildFormPropertyType.CUSTOM_FILE -> VariableProps(
-                    type = VariablePropType.CUSTOM_FILE.value
+                    type = VariablePropType.CUSTOM_FILE.value,
+                    versionControl = it.enableVersionControl.nullIfDefault(false)
                 )
                 // not use
                 it.type == BuildFormPropertyType.PASSWORD -> VariableProps(
@@ -268,6 +269,7 @@ class VariableTransfer {
                             )
                         }
                     },
+                    enableVersionControl = variable.props?.versionControl,
                     glob = variable.props?.glob,
                     properties = variable.props?.properties,
                     readOnly = if (variable.const == true) true else {
