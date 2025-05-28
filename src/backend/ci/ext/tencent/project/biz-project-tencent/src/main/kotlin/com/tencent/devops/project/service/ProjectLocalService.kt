@@ -650,7 +650,7 @@ class ProjectLocalService @Autowired constructor(
     private fun TProjectRecord.toAppProjectVO() = AppProjectVO(
         projectCode = this.englishName,
         projectName = this.projectName,
-        logoUrl = if (this.logoAddr?.startsWith(bkRepoConfig.bkrepoStaticRepoPrefixUrl)) {
+        logoUrl = if (this.logoAddr != null && this.logoAddr.startsWith(bkRepoConfig.bkrepoStaticRepoPrefixUrl)) {
             outerImageUrl + this.logoAddr.removePrefix(bkRepoConfig.bkrepoStaticRepoPrefixUrl)
         } else {
             this.logoAddr
