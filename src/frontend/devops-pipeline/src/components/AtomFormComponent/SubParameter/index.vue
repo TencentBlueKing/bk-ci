@@ -107,6 +107,12 @@
                 return requiredParamList.reduce((acc, current) => {
                     acc[current.id] = current.defaultValue
                     acc[`variables.${current.id}`] = current.defaultValue
+                    if (isObject(current.defaultValue)) {
+                        Object.keys(current.defaultValue).forEach(key => {
+                            acc[`${current.id}.${key}`] = current.defaultValue[key]
+                            acc[`variables.${current.id}.${key}`] = current.defaultValue[key]
+                        })
+                    }
                     return acc
                 }, {})
             }
