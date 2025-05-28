@@ -16,5 +16,7 @@ data class UserInfo(
     @get:Schema(title = "用户部门")
     val departments: List<BkUserDeptInfo>?,
     @get:Schema(title = "部门路径")
-    val path: List<Int>?
+    val path: List<Int>?,
+    @get:Schema(title = "是否离职")
+    val departed: Boolean
 )

@@ -39,7 +39,9 @@ import com.tencent.devops.auth.pojo.DepartmentUserCount
 import com.tencent.devops.auth.pojo.UserInfo
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.RetryUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -94,18 +96,35 @@ class UserManageService @Autowired constructor(
             var page = 1
             val pageSize = PageUtil.MAX_PAGE_SIZE
             logger.info("start to sync user info data")
+            val previousUserSyncDataRecord = userInfoDao.getLatestUserSyncDataRecord(
+                dslContext = dslContext,
+                taskType = USER_SYNC_TASK_TYPE
+            )
+            val latestTaskId = UUIDUtil.generate()
+            userInfoDao.recordSyncDataTask(
+                dslContext = dslContext,
+                taskId = latestTaskId,
+                taskType = USER_SYNC_TASK_TYPE
+            )
+            // 同步用户数据
             do {
-                val bkUserInfos = deptService.listUserInfos(
-                    searchUserEntity = SearchUserAndDeptEntity(
-                        lookupField = Constants.USERNAME,
-                        bk_app_code = appCode,
-                        bk_app_secret = appSecret,
-                        fields = Constants.USER_LABEL,
-                        page = page,
-                        pageSize = pageSize
-                    )
-                ).results
-
+                val bkUserInfos = try {
+                    RetryUtils.retryAnyException(retryTime = 3, retryPeriodMills = 100) {
+                        deptService.listUserInfos(
+                            searchUserEntity = SearchUserAndDeptEntity(
+                                lookupField = Constants.USERNAME,
+                                bk_app_code = appCode,
+                                bk_app_secret = appSecret,
+                                fields = Constants.USER_LABEL,
+                                page = page,
+                                pageSize = pageSize
+                            )
+                        ).results
+                    }
+                } catch (ex: Exception) {
+                    logger.warn("list User Infos failed $page|$pageSize|$ex")
+                    emptyList()
+                }
                 bkUserInfos.forEach { bkUserInfo ->
                     logger.info("sync user info data ,{}", bkUserInfo)
                     try {
@@ -119,8 +138,10 @@ class UserManageService @Autowired constructor(
                                 departmentName = deptInfoDTO?.departmentName,
                                 departmentId = deptInfoDTO?.departmentId,
                                 departments = deptInfoDTO?.departments,
-                                path = deptInfoDTO?.path
-                            )
+                                path = deptInfoDTO?.path,
+                                departed = false
+                            ),
+                            taskId = latestTaskId
                         )
                     } catch (ex: Exception) {
                         logger.warn("sync user info data failed $bkUserInfo|$ex")
@@ -128,6 +149,18 @@ class UserManageService @Autowired constructor(
                 }
                 page += 1
             } while (bkUserInfos.size == pageSize)
+            // 标记用户是否离职
+            previousUserSyncDataRecord.takeIf { it != null }?.let {
+                userInfoDao.updateUserDepartedFlag(
+                    dslContext = dslContext,
+                    taskId = it.taskId
+                )
+            }
+            userInfoDao.recordSyncDataTask(
+                dslContext = dslContext,
+                taskId = latestTaskId,
+                taskType = USER_SYNC_TASK_TYPE
+            )
             logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to sync user info data")
         }
     }
@@ -189,16 +222,33 @@ class UserManageService @Autowired constructor(
             var page = 1
             val pageSize = PageUtil.MAX_PAGE_SIZE
             logger.info("start to sync department info data")
+            val previousDepartmentSyncDataRecord = userInfoDao.getLatestUserSyncDataRecord(
+                dslContext = dslContext,
+                taskType = DEPARTMENT_SYNC_TASK_TYPE
+            )
+            val latestTaskId = UUIDUtil.generate()
+            userInfoDao.recordSyncDataTask(
+                dslContext = dslContext,
+                taskId = latestTaskId,
+                taskType = DEPARTMENT_SYNC_TASK_TYPE
+            )
             do {
-                val deptInfos = deptService.listDeptInfos(
-                    searchUserEntity = SearchUserAndDeptEntity(
-                        bk_app_code = appCode,
-                        bk_app_secret = appSecret,
-                        page = page,
-                        pageSize = pageSize
-                    )
-                )
-                deptInfos.results.forEach { deptInfo ->
+                val deptInfos = try {
+                    RetryUtils.retryAnyException(retryTime = 3, retryPeriodMills = 100) {
+                        deptService.listDeptInfos(
+                            searchUserEntity = SearchUserAndDeptEntity(
+                                bk_app_code = appCode,
+                                bk_app_secret = appSecret,
+                                page = page,
+                                pageSize = pageSize
+                            )
+                        ).results
+                    }
+                } catch (ex: Exception) {
+                    logger.warn("list dept infos failed $page|$pageSize|$ex")
+                    emptyList()
+                }
+                deptInfos.forEach { deptInfo ->
                     logger.info("sync department info data {}", deptInfo)
                     departmentDao.create(
                         dslContext = dslContext,
@@ -208,13 +258,25 @@ class UserManageService @Autowired constructor(
                             parent = deptInfo.parent,
                             level = deptInfo.level,
                             hasChildren = deptInfo.hasChildren
-                        )
+                        ),
+                        taskId = latestTaskId
                     )
                 }
                 page += 1
-            } while (deptInfos.results.size == pageSize)
-            logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to sync department info data")
+            } while (deptInfos.size == pageSize)
+            previousDepartmentSyncDataRecord.takeIf { it != null }?.let {
+                departmentDao.deleteByTaskId(
+                    dslContext = dslContext,
+                    taskId = it.taskId
+                )
+            }
             syncDepartmentRelations()
+            userInfoDao.recordSyncDataTask(
+                dslContext = dslContext,
+                taskId = latestTaskId,
+                taskType = DEPARTMENT_SYNC_TASK_TYPE
+            )
+            logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to sync department info data")
         }
     }
 
@@ -252,5 +314,7 @@ class UserManageService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(UserManageService::class.java)
+        private const val USER_SYNC_TASK_TYPE = "USER"
+        private const val DEPARTMENT_SYNC_TASK_TYPE = "DEPARTMENT"
     }
 }
