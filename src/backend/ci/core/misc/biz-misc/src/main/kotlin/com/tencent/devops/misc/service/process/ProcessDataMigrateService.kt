@@ -159,7 +159,7 @@ class ProcessDataMigrateService @Autowired constructor(
             )
             executor = Executors.newFixedThreadPool(1)
             // 开启异步任务迁移项目的数据
-            Executors.newFixedThreadPool(1).submit {
+            executor.submit {
                 logger.info("migrateProjectData begin,params:[$userId|$projectId]")
                 try {
                     doMigrateProjectDataTask(
