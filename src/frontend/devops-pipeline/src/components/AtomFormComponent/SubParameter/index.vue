@@ -72,12 +72,14 @@
             return {
                 isLoading: false,
                 parameters: [],
-                subParamsKeyList: []
+                subParamsKeyList: [],
+                pipelineRequiredParams: {}
             }
         },
         computed: {
             ...mapState('atom', [
-                'pipelineInfo'
+                'pipelineInfo',
+                'pipeline'
             ]),
             paramValues () {
                 const { atomValue = {}, $route: { params = {} } } = this
@@ -96,19 +98,33 @@
                     })
                 })
                 return map
+            },
+            container () {
+                return this.pipeline?.stages[0]?.containers[0] || {}
+            },
+            requiredParams () {
+                const requiredParamList = this.container?.params?.filter(item => !item.constant && item.required) || []
+                return requiredParamList.reduce((acc, current) => {
+                    acc[current.id] = current.defaultValue
+                    return acc
+                }, {})
             }
         },
 
         watch: {
             paramValues: {
                 handler (value, oldValue) {
-                    if (value.subPip !== oldValue.subPip) {
+                    this.pipelineRequiredParams.branch = typeof value.branch === 'string' && value.branch.isBkVar()
+                        ? this.requiredParams[this.extractBkVar(value.branch)]
+                        : value.branch
+                    if ((value.subPip !== oldValue.subPip) || (value.branch !== oldValue.branch)) {
                         this.atomValue[this.name] = []
                         this.getParametersList()
                         this.initData()
                     }
                 },
-                deep: true
+                deep: true,
+                immediate: true
             },
             subParamsKeyList (newVal) {
                 if (newVal) {
@@ -180,7 +196,9 @@
 
                 const urlQuery = this.param.urlQuery || {}
                 Object.keys(urlQuery).forEach((key, index) => {
-                    const value = typeof this.paramValues[key] === 'undefined' ? urlQuery[key] : this.paramValues[key]
+                    const value = typeof this.paramValues[key] === 'undefined'
+                        ? urlQuery[key]
+                        : this.pipelineRequiredParams[key] ?? this.paramValues[key]
                     url += `${index <= 0 ? '?' : '&'}${key}=${value}`
                 })
                 const pipelineInfoQuery = this.param.pipelineInfoQuery || {}
@@ -192,6 +210,9 @@
                 this.$ajax.get(url).then((res) => {
                     this.subParamsKeyList = res.data?.properties || res.data || []
                 }).catch(e => this.$showTips({ message: e.message, theme: 'error' })).finally(() => (this.isLoading = false))
+            },
+            extractBkVar (str) {
+                return str.replace(/\$\{([^}]+)\}/g, '$1')
             }
         }
     }
