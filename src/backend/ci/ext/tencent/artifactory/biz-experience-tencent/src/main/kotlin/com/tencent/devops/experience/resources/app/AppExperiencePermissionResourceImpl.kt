@@ -44,7 +44,7 @@ class AppExperiencePermissionResourceImpl(
     override fun getResourceGroupUsers(
         userId: String,
         projectId: String,
-        resourceType: AuthResourceType,
+        resourceType: String,
         resourceCode: String,
         group: BkAuthGroup?
     ): Result<List<String>> {
@@ -60,7 +60,7 @@ class AppExperiencePermissionResourceImpl(
         return client.get(ServiceResourceMemberResource::class).getResourceGroupMembers(
             token = tokenService.getSystemToken(),
             projectCode = projectId,
-            resourceType = resourceType.value,
+            resourceType = resourceType,
             resourceCode = resourceCode,
             group = group
         )

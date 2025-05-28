@@ -65,7 +65,7 @@ interface AppExperiencePermissionResource {
         projectId: String,
         @QueryParam("resourceType")
         @Parameter(description = "资源类型", required = false)
-        resourceType: AuthResourceType,
+        resourceType: String,
         @QueryParam("resourceCode")
         @Parameter(description = "资源code", required = false)
         resourceCode: String,
