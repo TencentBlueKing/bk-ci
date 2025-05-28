@@ -398,7 +398,7 @@ class ProcessDao {
             val endTimeField = table.field(tPipelineBuildHistory.END_TIME.name, LocalDateTime::class.java)!!
             val timeConditions = DSL.or(
                 startTimeField.isNull,
-                endTimeField.isNull(),
+                endTimeField.isNull,
                 startTimeField.gt(endTimeField)
             )
             // 构造通用查询条件

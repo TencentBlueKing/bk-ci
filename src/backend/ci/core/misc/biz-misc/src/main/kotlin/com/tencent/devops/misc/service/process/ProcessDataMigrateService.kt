@@ -74,6 +74,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import jakarta.annotation.PostConstruct
+import java.util.concurrent.ExecutorService
 
 @Suppress("TooManyFunctions", "LongMethod", "LargeClass", "LongParameterList", "ComplexMethod")
 @Service
@@ -103,11 +104,6 @@ class ProcessDataMigrateService @Autowired constructor(
         private const val MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE =
             "MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE"
         private const val MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT_KEY = "MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT"
-        private val executorService by lazy {
-            Executors.newFixedThreadPool(10).apply {
-                Runtime.getRuntime().addShutdownHook(Thread { shutdown() })
-            }
-        }
     }
 
     @Value("\${sharding.migration.timeout:#{2}}")
@@ -153,6 +149,7 @@ class ProcessDataMigrateService @Autowired constructor(
                 moduleCode = SystemModuleEnum.PROCESS,
                 ruleType = ShardingRuleTypeEnum.DB
             ).data?.dataSourceName ?: return false
+        var executor: ExecutorService? = null
         try {
             // 执行迁移前的逻辑
             val (migrateProjectExecuteCountKey, projectExecuteCount, routingRuleMap) = doPreMigrationBus(
@@ -160,8 +157,9 @@ class ProcessDataMigrateService @Autowired constructor(
                 sourceDataSourceName = sourceDataSourceName,
                 dataTag = dataTag
             )
+            executor = Executors.newFixedThreadPool(1)
             // 开启异步任务迁移项目的数据
-            executorService.submit {
+            Executors.newFixedThreadPool(1).submit {
                 logger.info("migrateProjectData begin,params:[$userId|$projectId]")
                 try {
                     doMigrateProjectDataTask(
@@ -191,6 +189,12 @@ class ProcessDataMigrateService @Autowired constructor(
             redisOperation.increment(MIGRATE_PROCESS_PROJECT_DATA_PROJECT_COUNT_KEY, -1)
             // 解锁项目,允许用户发起新构建等操作
             redisOperation.removeSetMember(BkApiUtil.getApiAccessLimitProjectsKey(), projectId)
+            executor?.let {
+                executor.shutdown() // 确保线程池关闭
+                if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
+                    executor.shutdownNow()
+                }
+            }
         }
         return true
     }
