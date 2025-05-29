@@ -84,7 +84,7 @@
                 // 目录超10Gb 禁用状态
                 if (this.output) {
                     const size = this.output.folder ? this.convertFileSize(this.getFolderSize(this.output), 'B') : this.output.size > 0 ? this.convertFileSize(this.output.size, 'B') : '--'
-                    return this.output.folder ? size.includes('GB') && size.split(' ')[0] > 1 : false
+                    return this.output.folder ? size.includes('GB') && size.split(' ')[0] > 10 : false
                 }
                 return false
             },
