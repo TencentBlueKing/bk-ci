@@ -72,7 +72,7 @@ class GithubTokenService @Autowired constructor(
         operator: String
     ) {
         val encryptedAccessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, accessToken)
-        val githubTokenRecord = githubTokenDao.getOrNull(dslContext, operator, githubTokenType)
+        val githubTokenRecord = githubTokenDao.getOrNull(dslContext, userId, githubTokenType)
         if (githubTokenRecord == null) {
             githubTokenDao.create(
                 dslContext = dslContext,

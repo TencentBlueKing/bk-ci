@@ -60,7 +60,6 @@ class CodeGithubOauth2TokenStoreService @Autowired constructor(
     }
 
     override fun get(userId: String, scmCode: String): OauthTokenInfo? {
-        // 兼容历史数据(user_id 和 operator 都为蓝盾用户名)
         return githubTokenDao.getOrNull(
             dslContext = dslContext,
             userId = userId,
@@ -76,7 +75,7 @@ class CodeGithubOauth2TokenStoreService @Autowired constructor(
             val finalOperator = operator ?: throw InvalidParamException("operator is null")
             val record = githubTokenDao.getOrNull(
                 dslContext = dslContext,
-                userId = finalOperator,
+                userId = userId,
                 githubTokenType = GithubTokenType.GITHUB_APP
             )
             if (record == null) {

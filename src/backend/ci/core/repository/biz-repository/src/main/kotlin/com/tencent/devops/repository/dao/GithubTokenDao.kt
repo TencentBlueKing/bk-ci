@@ -100,37 +100,15 @@ class GithubTokenDao {
         userId: String,
         githubTokenType: GithubTokenType?
     ): TRepositoryGithubTokenRecord? {
-        with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
-            return getByOperator(
-                dslContext = dslContext,
-                operator = userId,
-                githubTokenType = githubTokenType
-            ) ?: dslContext.selectFrom(this).where(USER_ID.eq(userId))
+        return with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
+            dslContext.selectFrom(this)
+                .where(USER_ID.eq(userId))
                 .let {
                     if (githubTokenType != null) {
                         it.and(TYPE.eq(githubTokenType.name))
                     } else it
                 }
                 .fetchOne()
-        }
-    }
-
-    fun getByOperator(
-        dslContext: DSLContext,
-        operator: String,
-        githubTokenType: GithubTokenType?
-    ): TRepositoryGithubTokenRecord? {
-        with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
-            return dslContext.selectFrom(this)
-                .where(OPERATOR.eq(operator))
-                .let {
-                    if (githubTokenType != null) {
-                        it.and(TYPE.eq(githubTokenType.name))
-                    } else it
-                }
-                .orderBy(CREATE_TIME.desc())
-                .fetch()
-                .firstOrNull()
         }
     }
 
