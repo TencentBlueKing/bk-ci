@@ -17,9 +17,9 @@ data class UserProjectPermission(
         if (this === other) return true
         if (other == null || javaClass != other.javaClass) return false
         val otherObj = other as UserProjectPermission
-        return memberId == otherObj.memberId && projectCode == otherObj.projectCode
-            && action == otherObj.action && iamGroupId == otherObj.iamGroupId
-            && expireTime.timestampmilli() == otherObj.expireTime.timestampmilli()
+        return memberId == otherObj.memberId && projectCode == otherObj.projectCode &&
+            action == otherObj.action && iamGroupId == otherObj.iamGroupId &&
+            expireTime.timestampmilli() == otherObj.expireTime.timestampmilli()
     }
 
     override fun hashCode(): Int {

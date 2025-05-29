@@ -219,7 +219,6 @@ class AuthResourceGroupPermissionDao {
         }
     }
 
-
     fun listGroupResourcesWithPermission(
         dslContext: DSLContext,
         projectCode: String,
