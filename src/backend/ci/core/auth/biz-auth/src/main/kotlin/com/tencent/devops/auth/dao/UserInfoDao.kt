@@ -4,9 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.auth.pojo.BkUserDeptInfo
 import com.tencent.devops.auth.pojo.UserInfo
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.model.auth.tables.TUserAndDepartmentSyncRecord
 import com.tencent.devops.model.auth.tables.TUserInfo
-import com.tencent.devops.model.auth.tables.records.TUserAndDepartmentSyncRecordRecord
 import com.tencent.devops.model.auth.tables.records.TUserInfoRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -81,39 +79,6 @@ class UserInfoDao {
             dslContext.selectFrom(this)
                 .where(USER_ID.eq(userId))
                 .fetchOne()?.convert()
-        }
-    }
-
-    fun recordSyncDataTask(
-        dslContext: DSLContext,
-        taskId: String,
-        taskType: String
-    ) {
-        with(TUserAndDepartmentSyncRecord.T_USER_AND_DEPARTMENT_SYNC_RECORD) {
-            dslContext.insertInto(
-                this,
-                TASK_ID,
-                TASK_TYPE,
-                START_TIME
-            ).values(
-                taskId,
-                taskType,
-                LocalDateTime.now()
-            ).onDuplicateKeyUpdate()
-                .set(END_TIME, LocalDateTime.now())
-                .execute()
-        }
-    }
-
-    fun getLatestUserSyncDataRecord(
-        dslContext: DSLContext,
-        taskType: String
-    ): TUserAndDepartmentSyncRecordRecord? {
-        return with(TUserAndDepartmentSyncRecord.T_USER_AND_DEPARTMENT_SYNC_RECORD) {
-            dslContext.selectFrom(this)
-                .where(TASK_TYPE.eq(taskType))
-                .orderBy(END_TIME.desc())
-                .fetchAny()
         }
     }
 

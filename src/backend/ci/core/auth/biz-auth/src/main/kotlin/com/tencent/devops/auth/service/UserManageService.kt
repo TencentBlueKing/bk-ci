@@ -29,6 +29,7 @@ package com.tencent.devops.auth.service
 
 import com.tencent.devops.auth.common.Constants
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.dao.AuthSyncDataTaskDao
 import com.tencent.devops.auth.dao.DepartmentDao
 import com.tencent.devops.auth.dao.DepartmentRelationDao
 import com.tencent.devops.auth.dao.UserInfoDao
@@ -56,7 +57,8 @@ class UserManageService @Autowired constructor(
     val departmentDao: DepartmentDao,
     val departmentRelationDao: DepartmentRelationDao,
     val deptService: DeptService,
-    val client: Client
+    val client: Client,
+    val syncDataTaskDao: AuthSyncDataTaskDao
 ) {
     @Value("\${esb.code:#{null}}")
     val appCode: String = ""
@@ -96,12 +98,12 @@ class UserManageService @Autowired constructor(
             var page = 1
             val pageSize = PageUtil.MAX_PAGE_SIZE
             logger.info("start to sync user info data")
-            val previousUserSyncDataRecord = userInfoDao.getLatestUserSyncDataRecord(
+            val previousUserSyncDataRecord = syncDataTaskDao.getLatestSyncDataTaskRecord(
                 dslContext = dslContext,
                 taskType = USER_SYNC_TASK_TYPE
             )
             val latestTaskId = UUIDUtil.generate()
-            userInfoDao.recordSyncDataTask(
+            syncDataTaskDao.recordSyncDataTask(
                 dslContext = dslContext,
                 taskId = latestTaskId,
                 taskType = USER_SYNC_TASK_TYPE
@@ -156,7 +158,7 @@ class UserManageService @Autowired constructor(
                     taskId = it.taskId
                 )
             }
-            userInfoDao.recordSyncDataTask(
+            syncDataTaskDao.recordSyncDataTask(
                 dslContext = dslContext,
                 taskId = latestTaskId,
                 taskType = USER_SYNC_TASK_TYPE
@@ -222,12 +224,12 @@ class UserManageService @Autowired constructor(
             var page = 1
             val pageSize = PageUtil.MAX_PAGE_SIZE
             logger.info("start to sync department info data")
-            val previousDepartmentSyncDataRecord = userInfoDao.getLatestUserSyncDataRecord(
+            val previousDepartmentSyncDataRecord = syncDataTaskDao.getLatestSyncDataTaskRecord(
                 dslContext = dslContext,
                 taskType = DEPARTMENT_SYNC_TASK_TYPE
             )
             val latestTaskId = UUIDUtil.generate()
-            userInfoDao.recordSyncDataTask(
+            syncDataTaskDao.recordSyncDataTask(
                 dslContext = dslContext,
                 taskId = latestTaskId,
                 taskType = DEPARTMENT_SYNC_TASK_TYPE
@@ -271,7 +273,7 @@ class UserManageService @Autowired constructor(
                 )
             }
             syncDepartmentRelations()
-            userInfoDao.recordSyncDataTask(
+            syncDataTaskDao.recordSyncDataTask(
                 dslContext = dslContext,
                 taskId = latestTaskId,
                 taskType = DEPARTMENT_SYNC_TASK_TYPE
