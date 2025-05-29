@@ -13,7 +13,7 @@
                 target="_blank"
                 href="https://codebuddy.woa.com"
             >
-                <span>{{ $t("CodeBuddy（内网版）") }}</span>
+                <span>{{ $t("codelib.CodeBuddy（内网版）") }}</span>
                 <icon
                     name="tiaozhuan"
                     :size="12"
