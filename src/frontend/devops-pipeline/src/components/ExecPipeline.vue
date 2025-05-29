@@ -327,7 +327,8 @@
                 curPipeline: this.execDetail?.model,
                 pipelineErrorGuideLink: this.$pipelineDocs.PIPELINE_ERROR_GUIDE_DOC,
                 scrollElement: '.pipeline-detail-wrapper.biz-content',
-                isShowCheckDialog: false
+                isShowCheckDialog: false,
+                hasHandledRouteParams: false
             }
         },
         computed: {
@@ -511,6 +512,17 @@
                         this.setShowErrorPopup()
                     }
                 })
+            },
+            curPipelineAllElements: {
+                handler (val) {
+                    if (val && !this.hasHandledRouteParams) {
+                        this.hasHandledRouteParams = true
+                        this.$nextTick(() => {
+                            this.handleRouteParams()
+                        })
+                    }
+                },
+                immediate: true
             }
         },
         updated () {
@@ -540,18 +552,6 @@
                 this.initMiniMapScroll()
                 this.expandAllMatrix()
             })
-            const { reviewTaskId, reviewStageSeq } = this.$route.query
-            if (reviewTaskId) {
-                const targetElement = this.curPipelineAllElements.find(element => element.id === reviewTaskId)
-                if (targetElement && targetElement.status === 'REVIEWING') {
-                    this.reviewAtom({ id: reviewTaskId })
-                }
-            } else if (reviewStageSeq) {
-                this.handleStageCheck({
-                    type: 'checkIn',
-                    stageIndex: Number(reviewStageSeq) - 1
-                })
-            }
         },
         beforeDestroy () {
             this.togglePropertyPanel({
@@ -575,6 +575,21 @@
             ]),
             ...mapActions('common', ['requestInterceptAtom', 'requestMatchTemplateRuleList']),
             ...mapActions('pipelines', ['requestRetryPipeline']),
+            handleRouteParams () {
+                const { reviewTaskId, reviewStageSeq } = this.$route.query
+    
+                if (reviewTaskId) {
+                    const targetElement = this.curPipelineAllElements.find(element => element.id === reviewTaskId)
+                    if (targetElement && targetElement.status === 'REVIEWING') {
+                        this.reviewAtom({ id: reviewTaskId })
+                    }
+                } else if (reviewStageSeq) {
+                    this.handleStageCheck({
+                        type: 'checkIn',
+                        stageIndex: Number(reviewStageSeq) - 1
+                    })
+                }
+            },
             renderLabel (h, name) {
                 const panel = this.panels.find((panel) => panel.name === name)
                 return h('p', {}, [
