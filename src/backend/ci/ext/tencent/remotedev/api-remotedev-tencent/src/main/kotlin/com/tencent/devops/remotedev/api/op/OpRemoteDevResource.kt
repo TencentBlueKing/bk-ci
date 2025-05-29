@@ -241,7 +241,7 @@ interface OpRemoteDevResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
-    ): Result<Any>
+    ): Result<Map<String, String>>
 
     @Operation(summary = "创建or更新服务Config表配置")
     @POST

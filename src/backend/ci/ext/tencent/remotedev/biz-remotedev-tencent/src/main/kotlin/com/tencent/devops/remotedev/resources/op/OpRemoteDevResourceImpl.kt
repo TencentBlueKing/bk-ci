@@ -183,7 +183,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         return makeMoneyService.bills(year, month, push)
     }
 
-    override fun configs(userId: String): Result<Any> {
+    override fun configs(userId: String): Result<Map<String, String>> {
         return Result(configCacheService.opFetchAllConfig())
     }
 
