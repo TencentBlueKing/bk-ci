@@ -41,7 +41,7 @@ import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 
 @Suppress("LongParameterList")
 class RbacPipelineTemplatePermissionService constructor(

@@ -158,6 +158,10 @@
                         value: this.basicInfo?.buildNumRule ?? '--'
                     },
                     {
+                        key: 'settings.whenVariableExceedsLength',
+                        value: this.$t(this.basicInfo?.failIfVariableInvalid ? 'settings.errorAndHalt' : 'settings.clearTheValue')
+                    },
+                    {
                         key: 'parallelSetting',
                         value: this.$t(`settings.runningOption.${runLockType ?? '--'}`)
                     },
@@ -250,8 +254,9 @@
         width: 600px;
         .parallel-conf-detail-row {
             line-height: 32px;
+            align-items: center;
+            grid-template-columns: 150px 1fr;
             > label {
-                line-height: 32px;
                 color: #63656e;
             }
             > span {

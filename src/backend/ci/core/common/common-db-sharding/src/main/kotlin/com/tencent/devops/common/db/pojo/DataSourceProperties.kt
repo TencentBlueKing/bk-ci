@@ -28,9 +28,7 @@
 package com.tencent.devops.common.db.pojo
 
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.context.properties.ConstructorBinding
 
-@ConstructorBinding
 @ConfigurationProperties(prefix = "spring.datasource")
 data class DataSourceProperties(
     val dataSourceConfigs: List<DataSourceConfig>, // 数据源配置

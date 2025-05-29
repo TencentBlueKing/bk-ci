@@ -26,7 +26,8 @@ data class ThirdPartyAgentDispatchData(
     val dispatchType: ThirdPartyAgentDispatch,
     val ignoreEnvAgentIds: Set<String>?,
     val singleNodeConcurrency: Int?,
-    val allNodeConcurrency: Int?
+    val allNodeConcurrency: Int?,
+    val jobTimeoutMinutes: Int?
 ) {
     fun isEnv() = dispatchType.isEnv()
     // 生成环境资源标识，需要添加共享项目信息
@@ -89,7 +90,8 @@ data class ThirdPartyAgentDispatchData(
         dispatchType = dispatchType,
         ignoreEnvAgentIds = dispatchMessage.event.ignoreEnvAgentIds,
         singleNodeConcurrency = dispatchMessage.event.singleNodeConcurrency,
-        allNodeConcurrency = dispatchMessage.event.allNodeConcurrency
+        allNodeConcurrency = dispatchMessage.event.allNodeConcurrency,
+        jobTimeoutMinutes = dispatchMessage.event.jobTimeoutMinutes
     )
 
     constructor(
@@ -119,7 +121,8 @@ data class ThirdPartyAgentDispatchData(
         dispatchType = infoData.dispatchType,
         ignoreEnvAgentIds = infoData.ignoreEnvAgentIds,
         singleNodeConcurrency = infoData.singleNodeConcurrency,
-        allNodeConcurrency = infoData.allNodeConcurrency
+        allNodeConcurrency = infoData.allNodeConcurrency,
+        jobTimeoutMinutes = infoData.jobTimeoutMinutes
     )
 
     fun genSqlJsonData(): ThirdPartyAgentDispatchDataSqlJson {
@@ -140,7 +143,8 @@ data class ThirdPartyAgentDispatchData(
             dispatchType = this.dispatchType,
             ignoreEnvAgentIds = this.ignoreEnvAgentIds,
             singleNodeConcurrency = this.singleNodeConcurrency,
-            allNodeConcurrency = this.allNodeConcurrency
+            allNodeConcurrency = this.allNodeConcurrency,
+            jobTimeoutMinutes = this.jobTimeoutMinutes
         )
     }
 }
@@ -163,7 +167,8 @@ data class ThirdPartyAgentDispatchDataSqlJson(
     val dispatchType: ThirdPartyAgentDispatch,
     val ignoreEnvAgentIds: Set<String>?,
     val singleNodeConcurrency: Int?,
-    val allNodeConcurrency: Int?
+    val allNodeConcurrency: Int?,
+    val jobTimeoutMinutes: Int?
 )
 
 // 数据库使用的排队类型

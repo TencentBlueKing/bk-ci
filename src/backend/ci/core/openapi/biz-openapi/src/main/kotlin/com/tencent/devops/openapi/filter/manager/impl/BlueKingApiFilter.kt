@@ -15,7 +15,7 @@ import io.jsonwebtoken.Jwts
 import java.io.ByteArrayInputStream
 import java.io.InputStreamReader
 import java.security.Security
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.openssl.PEMParser
@@ -127,7 +127,7 @@ class BlueKingApiFilter constructor(
             reader = PEMParser(InputStreamReader(bais))
             val publicKeyInfo = reader.readObject() as SubjectPublicKeyInfo
             val publicKey = JcaPEMKeyConverter().getPublicKey(publicKeyInfo)
-            val jwtParser = Jwts.parserBuilder().setSigningKey(publicKey).build()
+            val jwtParser = Jwts.parser().setSigningKey(publicKey).build()
             val parse = jwtParser.parse(bkApiJwt)
             logger.info("Get the parse body(${parse.body}) and header(${parse.header})")
             return JsonUtil.toMap(parse.body)

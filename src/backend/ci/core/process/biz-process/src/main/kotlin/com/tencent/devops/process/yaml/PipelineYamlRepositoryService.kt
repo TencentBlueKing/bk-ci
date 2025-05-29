@@ -54,10 +54,10 @@ import com.tencent.devops.process.yaml.git.pojo.PacGitPushResult
 import com.tencent.devops.process.yaml.pojo.PipelineYamlTriggerLock
 import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
 import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectLoader
+import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class PipelineYamlRepositoryService @Autowired constructor(
@@ -188,7 +188,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
         blobId: String,
         defaultBranch: String
     ): Boolean {
-        val pipelineYamlVersion = pipelineYamlService.getLatestVersion(
+        val pipelineYamlVersion = pipelineYamlService.getPipelineYamlVersion(
             projectId = projectId,
             repoHashId = repoHashId,
             filePath = filePath,
@@ -197,7 +197,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
         )
         return if (pipelineYamlVersion == null) {
             if (defaultBranch != ref) {
-                pipelineYamlService.getLatestVersion(
+                pipelineYamlService.getPipelineYamlVersion(
                     projectId = projectId,
                     repoHashId = repoHashId,
                     filePath = filePath,
@@ -458,13 +458,13 @@ class PipelineYamlRepositoryService @Autowired constructor(
             else -> {
                 // 如果存在稳定版本,说明yaml在默认分支存在,那么在非默认分支删除,不能关闭PAC,
                 // 否则判断当前流水线最新版本是不是当前分支创建,是-删除,不是-不删
-                pipelineYamlService.getLatestVersion(
+                pipelineYamlService.getPipelineYamlVersion(
                     projectId = projectId,
                     repoHashId = repoHashId,
                     filePath = filePath,
                     ref = defaultBranch
                 )?.let { false } ?: run {
-                    pipelineYamlService.getLatestVersion(
+                    pipelineYamlService.getPipelineYamlVersion(
                         projectId = projectId,
                         repoHashId = repoHashId,
                         filePath = filePath
@@ -488,7 +488,8 @@ class PipelineYamlRepositoryService @Autowired constructor(
         filePath: String,
         content: String,
         commitMessage: String,
-        targetAction: CodeTargetAction
+        targetAction: CodeTargetAction,
+        targetBranch: String?
     ): PacGitPushResult {
         val repoHashId = action.data.setting.repoHashId
         val webhooks = getWebhooks(
@@ -510,7 +511,8 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 content = content,
                 commitMessage = commitMessage,
                 targetAction = targetAction,
-                versionName = versionName
+                versionName = versionName,
+                targetBranch = targetBranch
             )
             createOrUpdateYamlPipeline(
                 userId = userId,

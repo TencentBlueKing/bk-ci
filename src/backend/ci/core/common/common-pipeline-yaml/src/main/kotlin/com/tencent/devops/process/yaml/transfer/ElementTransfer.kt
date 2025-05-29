@@ -182,7 +182,8 @@ class ElementTransfer @Autowired(required = false) constructor(
                         repoName = repoName,
                         branches = element.branches,
                         always = (element.noScm != true).nullIfDefault(false),
-                        enable = element.elementEnabled().nullIfDefault(true)
+                        enable = element.elementEnabled().nullIfDefault(true),
+                        startParams = element.convertStartParams()
                     )
                 )
                 return@forEach

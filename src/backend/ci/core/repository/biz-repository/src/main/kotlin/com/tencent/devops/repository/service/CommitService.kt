@@ -150,4 +150,10 @@ class CommitService @Autowired constructor(
             )
         }
     }
+
+    fun list(
+        buildId: String,
+        pipelineId: String,
+        elementId: String
+    ) = commitDao.list(dslContext, buildId, pipelineId, elementId)
 }

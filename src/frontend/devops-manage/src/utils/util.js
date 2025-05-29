@@ -37,3 +37,21 @@ export function deepEqual(obj1, obj2) {
 
     return true;
 }
+
+export async function copyToClipboard(text) {
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (err) {
+        throw err;
+      }
+    } else {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('Copy');
+      document.body.removeChild(textArea);
+    }
+  }
+  

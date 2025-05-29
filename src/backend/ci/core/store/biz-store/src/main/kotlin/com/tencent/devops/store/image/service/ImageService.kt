@@ -100,9 +100,9 @@ import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.LATEST
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.STORE_IMAGE_STATUS
-import com.tencent.devops.store.pojo.common.version.VersionInfo
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.version.VersionInfo
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
@@ -115,9 +115,6 @@ import com.tencent.devops.store.pojo.image.response.MarketImageItem
 import com.tencent.devops.store.pojo.image.response.MarketImageMain
 import com.tencent.devops.store.pojo.image.response.MarketImageResp
 import com.tencent.devops.store.pojo.image.response.MyImage
-import java.time.LocalDateTime
-import java.util.Date
-import kotlin.math.ceil
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.impl.DSL
@@ -126,6 +123,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
+import java.time.LocalDateTime
+import java.util.Date
+import kotlin.math.ceil
 
 @Suppress("ALL")
 @RefreshScope
@@ -193,21 +193,23 @@ abstract class ImageService @Autowired constructor() {
         imageCode: String,
         page: Int?,
         pageSize: Int?,
-        interfaceName: String? = "Anon interface"
+        interfaceName: String? = "Anon interface",
+        validationFlag: Boolean = true
     ): Result<Page<ImageDetail>> {
         logger.info("$interfaceName:getImageVersionListByCode:Input:($userId,$imageCode,$page,$pageSize)")
-        // 判断当前用户是否是该镜像的成员
-        if (!storeMemberDao.isStoreMember(
-                dslContext = dslContext,
-                userId = userId,
-                storeCode = imageCode,
-                storeType = StoreTypeEnum.IMAGE.type.toByte()
-            )
-        ) {
-            throw ErrorCodeException(
-                errorCode = GET_INFO_NO_PERMISSION,
-                params = arrayOf(imageCode)
-            )
+        if (validationFlag) {
+            if (!storeMemberDao.isStoreMember(
+                    dslContext = dslContext,
+                    userId = userId,
+                    storeCode = imageCode,
+                    storeType = StoreTypeEnum.IMAGE.type.toByte()
+                )
+            ) {
+                throw ErrorCodeException(
+                    errorCode = GET_INFO_NO_PERMISSION,
+                    params = arrayOf(imageCode)
+                )
+            }
         }
         // 参数校验
         val validPage = PageUtil.getValidPage(page)
@@ -1245,5 +1247,9 @@ abstract class ImageService @Autowired constructor() {
             }
         }
         return Result(true)
+    }
+
+    fun isReleasedStatus(imageCode: String, imageVersion: String, imageStatus: ImageStatusEnum): Boolean {
+        return imageDao.countImageRelease(dslContext, imageCode, imageVersion, imageStatus) > 0
     }
 }

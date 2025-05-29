@@ -30,6 +30,7 @@ const projectData = ref({
   authSecrecy: 0,
   properties: {
     pipelineDialect: 'CLASSIC',
+    loggingLineLimit: null
   }
 });
 const projectForm = ref(null);

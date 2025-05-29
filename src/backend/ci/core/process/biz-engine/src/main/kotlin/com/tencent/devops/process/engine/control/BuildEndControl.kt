@@ -36,12 +36,15 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.BuildNo
@@ -53,9 +56,6 @@ import com.tencent.devops.common.redis.RedisLockByValue
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
@@ -260,7 +260,14 @@ class BuildEndControl @Autowired constructor(
                 actionType = ActionType.END,
                 buildStatus = buildStatus.name,
                 executeCount = buildInfo.executeCount,
-                type = PipelineBuildStatusBroadCastEventType.BUILD_END
+                type = PipelineBuildStatusBroadCastEventType.BUILD_END,
+                labels = mapOf(
+                    "startTime" to (buildInfo.startTime?.toString() ?: ""),
+                    "trigger" to buildInfo.trigger,
+                    "triggerUser" to buildInfo.triggerUser,
+                    "pipelineName" to model.name,
+                    "duration" to (checkNotNull(buildInfo.endTime) - buildInfo.queueTime).toString()
+                )
             ),
             PipelineBuildWebSocketPushEvent(
                 source = "pauseTask",

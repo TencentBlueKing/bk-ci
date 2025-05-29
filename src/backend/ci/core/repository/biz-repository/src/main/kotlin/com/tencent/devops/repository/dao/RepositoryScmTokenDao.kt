@@ -85,4 +85,13 @@ class RepositoryScmTokenDao {
                 .execute()
         }
     }
+
+    fun delete(dslContext: DSLContext, userId: String, scmCode: String) {
+        with(TRepositoryScmToken.T_REPOSITORY_SCM_TOKEN) {
+            dslContext.deleteFrom(this)
+                .where(USER_ID.eq(userId))
+                .and(SCM_CODE.eq(scmCode))
+                .execute()
+        }
+    }
 }

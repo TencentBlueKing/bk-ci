@@ -54,7 +54,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.net.URLDecoder
 import java.net.URLEncoder
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @Service
 @Suppress("ALL")
@@ -155,10 +155,8 @@ class GithubOAuthService @Autowired constructor(
         val specRedirectUrl = arrays.getOrNull(6) ?: ""
         // 重定向类型
         val redirectUrlTypeEnum = RedirectUrlTypeEnum.getRedirectUrlType(arrays.getOrNull(7) ?: "")
-        // 获取授权server端用户信息（蓝盾平台用户名可能跟github用户名不一致）
-        val userResponse = getUser(githubToken.accessToken)
         githubTokenService.createAccessToken(
-            userId = userResponse.login,
+            userId = userId,
             accessToken = githubToken.accessToken,
             tokenType = githubToken.tokenType,
             scope = githubToken.scope,
@@ -186,7 +184,7 @@ class GithubOAuthService @Autowired constructor(
         val userResponse = githubUserService.getUser(githubToken.accessToken)
         val stateMap = kotlin.runCatching { JsonUtil.toMap(state ?: "{}") }.getOrDefault(emptyMap())
         githubTokenService.createAccessToken(
-            userId = userResponse.login,
+            userId = stateMap["userId"]?.toString() ?: userResponse.login,
             accessToken = githubToken.accessToken,
             tokenType = githubToken.tokenType,
             scope = githubToken.scope,

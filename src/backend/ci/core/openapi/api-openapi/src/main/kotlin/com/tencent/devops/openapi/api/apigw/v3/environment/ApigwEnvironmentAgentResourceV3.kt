@@ -37,14 +37,14 @@ import com.tencent.devops.environment.pojo.NodeWithPermission
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "OPEN_API_V3_ENVIRONMENT", description = "OPENAPI-环境管理-构建机管理")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/projects/{projectId}/environment")
@@ -71,7 +71,7 @@ interface ApigwEnvironmentAgentResourceV3 {
         projectId: String
     ): Result<List<NodeBaseInfo>>
 
-    @Operation(summary = "获取指定构建机状态", tags = ["v3_user_node_status", "v3_app_node_status"])
+    @Operation(summary = "获取指定第三方构建机状态", tags = ["v3_user_node_status", "v3_app_node_status"])
     @Path("/thirdPartAgent/nodes/status")
     @GET
     fun getNodeStatus(

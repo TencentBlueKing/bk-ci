@@ -40,16 +40,16 @@ import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "SERVICE_CALLBACK", description = "服务-回调")
 @Path("/service/callBacks")
@@ -197,4 +197,22 @@ interface ServiceCallBackResource {
         pipelineId: String,
         callbackInfo: PipelineCallbackEvent
     ): Result<Boolean>
+
+    @Operation(summary = "流水线级别callback")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}")
+    fun getPipelineCallBack(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "pipelineId", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "事件类型", required = false)
+        @QueryParam("event")
+        event: CallBackEvent?
+    ): Result<List<ProjectPipelineCallBack>>
 }

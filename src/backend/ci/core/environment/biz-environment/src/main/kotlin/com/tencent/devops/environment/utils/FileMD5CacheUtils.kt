@@ -33,7 +33,7 @@ import com.google.common.cache.LoadingCache
 import com.tencent.devops.common.api.util.FileUtil
 import org.slf4j.LoggerFactory
 import java.io.File
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 
 object FileMD5CacheUtils {
 

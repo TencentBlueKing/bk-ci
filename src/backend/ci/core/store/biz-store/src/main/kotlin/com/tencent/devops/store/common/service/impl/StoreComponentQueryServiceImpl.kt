@@ -30,7 +30,6 @@ package com.tencent.devops.store.common.service.impl
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.auth.REFERER
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.KEY_OS
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -78,6 +77,7 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.KEY_BUILD_LESS_RUN_FLAG
 import com.tencent.devops.store.pojo.common.KEY_HTML_TEMPLATE_VERSION
+import com.tencent.devops.store.pojo.common.KEY_URL_SCHEME
 import com.tencent.devops.store.pojo.common.KEY_YAML_FLAG
 import com.tencent.devops.store.pojo.common.LATEST
 import com.tencent.devops.store.pojo.common.MarketItem
@@ -95,6 +95,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
+import com.tencent.devops.store.pojo.common.version.VersionInfo
 import com.tencent.devops.store.pojo.common.version.VersionModel
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -355,14 +356,15 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         )
         val processingVersionInfoMap = mutableMapOf<String, MutableList<StoreBaseInfo>>()
         processingStoreRecords.forEach { processingStoreRecord ->
+            val storeId = processingStoreRecord[tStoreBase.ID] as String
             val version = processingStoreRecord[tStoreBase.VERSION] as String
-            if (version == INIT_VERSION || version.isBlank()) {
+            if (version.isBlank() || storeIds.contains(storeId)) {
                 return@forEach
             }
             val storeCode = processingStoreRecord[tStoreBase.STORE_CODE] as String
             val logoUrl = processingStoreRecord[tStoreBase.LOGO_URL]
             val storeBaseInfo = StoreBaseInfo(
-                storeId = processingStoreRecord[tStoreBase.ID] as String,
+                storeId = storeId,
                 storeCode = storeCode,
                 storeName = processingStoreRecord[tStoreBase.NAME] as String,
                 storeType = storeType,
@@ -740,7 +742,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         val showVersion = if (cancelFlag) {
             record.version
         } else {
-            storeBaseQueryDao.getMaxVersionComponentByCode(dslContext, storeCode, storeTypeEnum)?.version
+            storeBaseQueryDao.getNewestComponentByCode(dslContext, storeCode, storeTypeEnum)?.version
         }
         val releaseType = if (record.status == StoreStatusEnum.INIT.name) {
             null
@@ -755,20 +757,125 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         return storeCommonService.getStoreShowVersionInfo(cancelFlag, showReleaseType, showVersion)
     }
 
-    private fun getStoreInfos(storeInfoQuery: StoreInfoQuery): Pair<Long, List<Record>> {
+    override fun getComponentUpgradeVersionInfo(
+        userId: String,
+        storeType: String,
+        storeCode: String,
+        projectCode: String,
+        instanceId: String?,
+        osName: String?,
+        osArch: String?
+    ): VersionInfo? {
+        val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
+
+        // 判断是否需要处理测试中的版本
+        val isTestEnv = storeProjectRelDao.getProjectRelInfo(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeTypeEnum.type.toByte(),
+            storeProjectType = StoreProjectTypeEnum.TEST,
+            projectCode = projectCode,
+            instanceId = instanceId
+        )?.any() ?: false
+
+        // 获取最新可用版本：根据环境状态构建版本状态过滤条件
+        val statusList = mutableListOf(StoreStatusEnum.RELEASED.name).apply {
+            if (isTestEnv) {
+                // 增加测试中的状态
+                addAll(StoreStatusEnum.getTestStatusList())
+            }
+        }
+        // 查询符合条件的最新版本组件
+        val validLatestVersionRecord = storeBaseQueryDao.getMaxVersionComponentByCode(
+            dslContext = dslContext,
+            storeType = storeTypeEnum,
+            storeCode = storeCode,
+            statusList = statusList
+        ) ?: return null
+
+        // 获取已安装组件关系信息：查询项目关联记录
+        val installedRel = storeProjectRelDao.getProjectRelInfo(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeTypeEnum.type.toByte(),
+            storeProjectType = StoreProjectTypeEnum.COMMON,
+            projectCode = projectCode,
+            instanceId = instanceId
+        )?.firstOrNull()
+        val installedVersion = installedRel?.version
+        val validLatestBusNum = validLatestVersionRecord.busNum
+        val validLatestVersion = validLatestVersionRecord.version
+        // 未安装时直接返回最新版本信息
+        if (installedVersion.isNullOrBlank()) {
+            return createVersionInfo(validLatestVersion)
+        }
+
+        // 获取当前安装版本对应的业务号（用于版本比较）
+        val currentBusNum = storeBaseQueryDao.getMaxBusNumByCode(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeTypeEnum,
+            version = installedVersion
+        )
+
+        // 业务号比较逻辑（决定是否需要升级）
+        return when {
+            // 无法获取当前业务号时返回null
+            currentBusNum == null -> null
+            // 最新业务号更大时需要升级
+            validLatestBusNum > currentBusNum -> createVersionInfo(validLatestVersion)
+            // 业务号相同，但是安装时间晚于最新版本发布时间，需要更新
+            validLatestBusNum == currentBusNum && isUpdateRequired(
+                storeId = validLatestVersionRecord.id,
+                installedTime = installedRel.createTime,
+                osName = osName,
+                osArch = osArch
+            ) -> createVersionInfo(validLatestVersion)
+            // 其他情况不需要升级
+            else -> null
+        }
+    }
+
+    private fun isUpdateRequired(
+        storeId: String,
+        installedTime: LocalDateTime,
+        osName: String?,
+        osArch: String?
+    ): Boolean {
+        val envRecord = storeBaseEnvQueryDao.getBaseEnvsByStoreId(
+            dslContext = dslContext,
+            storeId = storeId,
+            osName = osName,
+            osArch = osArch
+        )?.firstOrNull()
+        return envRecord?.updateTime.let { packageTime ->
+            installedTime < packageTime
+        }
+    }
+
+    private fun createVersionInfo(versionValue: String, versionName: String = versionValue) =
+        VersionInfo(
+            versionName = versionName.takeIf { it.isNotBlank() } ?: versionValue,
+            versionValue = versionValue
+        )
+
+    private fun getStoreInfos(userDeptList: List<Int>, storeInfoQuery: StoreInfoQuery): Pair<Long, List<Record>> {
         if (storeInfoQuery.getSpecQueryFlag()) {
             handleQueryStoreCodes(storeInfoQuery)
         }
-        val count = marketStoreQueryDao.count(
-            dslContext = dslContext,
-            storeInfoQuery = storeInfoQuery
-        )
-        val storeInfos = marketStoreQueryDao.list(
-            dslContext = dslContext,
-            storeInfoQuery = storeInfoQuery
-        )
-
-        return Pair(count.toLong(), storeInfos)
+        return marketStoreQueryDao.run {
+            val count = count(
+                dslContext = dslContext,
+                userDeptList = userDeptList,
+                storeInfoQuery = storeInfoQuery
+            )
+            val storeList = list(
+                dslContext = dslContext,
+                userDeptList = userDeptList,
+                storeInfoQuery = storeInfoQuery
+            )
+            count.toLong() to storeList
+        }
     }
 
     private fun handleQueryStoreCodes(
@@ -875,7 +982,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 val results: List<MarketItem>?
                 watcher.start("getStoreInfos")
                 // 分页查询组件信息
-                val (count, storeInfos) = getStoreInfos(storeInfoQuery)
+                val (count, storeInfos) = getStoreInfos(userDeptList, storeInfoQuery)
                 try {
                     watcher.start("handleMarketItem")
                     results = handleMarketItem(
@@ -974,18 +1081,13 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 ) || status in StoreStatusEnum.getTestStatusList()
             }
             val osList = queryComponentOsName(storeCode, storeTypeEnum)
-            val baseExtResult = storeBaseExtQueryDao.getBaseExtByEnvId(
+            // 无构建环境组件是否可以在有构建环境运行
+            val buildLessRunFlag = storeBaseExtQueryDao.getBaseExtByStoreId(
                 dslContext = dslContext,
                 storeId = storeId,
                 fieldName = KEY_BUILD_LESS_RUN_FLAG
-            )
-            // 无构建环境组件是否可以在有构建环境运行
-            val buildLessRunFlag = if (baseExtResult.isNotEmpty) {
-                baseExtResult[0]!!.fieldValue.toBoolean()
-            } else {
-                null
-            }
-            val extData = getBaseFeatureExtData(storeCode, storeTypeEnum)
+            ).firstOrNull()?.fieldValue?.toBoolean()
+            val extData = getBaseExtData(storeId, storeCode, storeTypeEnum)
             val publicFlag = record[tStoreBaseFeature.PUBLIC_FLAG] ?: false
             val marketItem = MarketItem(
                 id = storeId,
@@ -1054,23 +1156,25 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         return logoUrl
     }
 
-    private fun getBaseFeatureExtData(storeCode: String, storeType: StoreTypeEnum): MutableMap<String, Any>? {
+    private fun getBaseExtData(storeId: String, storeCode: String, storeType: StoreTypeEnum): MutableMap<String, Any>? {
         val extDataResult = storeBaseFeatureExtQueryDao.queryStoreBaseFeatureExt(
             dslContext = dslContext,
             storeCode = storeCode,
             storeType = StoreTypeEnum.getStoreTypeObj(storeType.type)
         )
-
-        val extData = if (extDataResult.isEmpty()) {
-            null
-        } else {
-            mutableMapOf<String, Any>()
-        }
-        extData?.let {
-            extDataResult.forEach { record ->
-                extData[record.fieldName] = formatJson(record.fieldValue)
+        val urlScheme = storeBaseExtQueryDao.getBaseExtByStoreId(
+            dslContext = dslContext,
+            storeId = storeId,
+            fieldName = KEY_URL_SCHEME
+        ).firstOrNull()?.fieldValue
+        val extData = if (extDataResult.isNotEmpty || !urlScheme.isNullOrBlank()) {
+            mutableMapOf<String, Any>().apply {
+                urlScheme?.let { put(KEY_URL_SCHEME, it) }
+                extDataResult.forEach { record ->
+                    put(record.fieldName, formatJson(record.fieldValue))
+                }
             }
-        }
+        } else null
         return extData
     }
 

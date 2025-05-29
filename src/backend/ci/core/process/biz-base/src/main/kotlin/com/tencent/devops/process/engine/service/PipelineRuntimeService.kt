@@ -97,6 +97,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
@@ -136,15 +137,15 @@ import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
-import java.time.LocalDateTime
-import java.util.Date
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.Date
+import java.util.concurrent.TimeUnit
 
 /**
  * 流水线运行时相关的服务
@@ -778,6 +779,12 @@ class PipelineRuntimeService @Autowired constructor(
         // #10082 针对构建容器的第三方构建机组装复用互斥信息
         val agentReuseMutexTree = AgentReuseMutexTree(context.executeCount, mutableListOf())
         fullModel.stages.forEachIndexed nextStage@{ index, stage ->
+            // 运行中重试,如果不是重试插件的stage，则不处理
+            if (context.shouldSkipRefreshWhenRetryRunning(stage)) {
+                logger.info("${context.buildId}|EXECUTE|#${stage.id!!}|${stage.status}|NOT_RUNNING_STAGE")
+                context.containerSeq += stage.containers.size // Job跳过计数也需要增加
+                return@nextStage
+            }
             context.needUpdateStage = stage.finally // final stage 每次重试都会参与执行检查
 
             // #2318 如果是stage重试不是当前stage且当前stage已经是完成状态，或者该stage被禁用，则直接跳过
@@ -810,6 +817,14 @@ class PipelineRuntimeService @Autowired constructor(
             DependOnUtils.initDependOn(stage = stage, params = context.variables)
             // --- 第2层循环：Container遍历处理 ---
             stage.containers.forEach nextContainer@{ container ->
+                // 运行中重试,如果不是重试插件的container或者依赖重试插件的container,则不处理
+                if (context.shouldSkipRefreshWhenRetryRunning(container)) {
+                    logger.info(
+                        "${context.buildId}|EXECUTE|#${container.id!!}|${container.status}|NOT_RUNNING_CONTAINER"
+                    )
+                    context.containerSeq++
+                    return@nextContainer
+                }
                 if (container is TriggerContainer) { // 寻找触发点
                     pipelineContainerService.setUpTriggerContainer(
                         stage = stage,
@@ -859,7 +874,7 @@ class PipelineRuntimeService @Autowired constructor(
                     }
 
                     // #10082 针对构建容器的第三方构建机组装复用互斥信息
-                    agentReuseMutexTree.addNode(container, index)
+                    agentReuseMutexTree.addNode(container, index, context.variables)
                 }
 
                 modelCheckPlugin.checkJobCondition(container, stage.finally, context.variables)
@@ -913,6 +928,10 @@ class PipelineRuntimeService @Autowired constructor(
                     lastTimeBuildTasks = lastTimeBuildTasks,
                     lastTimeBuildContainers = lastTimeBuildContainers
                 )
+                // 运行中重试,stage不需要更新
+                if (context.retryOnRunningBuild) {
+                    context.needUpdateStage = false
+                }
                 context.containerSeq++
             }
 
@@ -1016,13 +1035,16 @@ class PipelineRuntimeService @Autowired constructor(
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             if (buildInfo != null) {
-                pipelineBuildDao.updateBuildRetryInfo(
-                    dslContext = transactionContext,
-                    projectId = context.projectId,
-                    pipelineId = context.pipelineId,
-                    buildId = context.buildId,
-                    retryInfo = retryInfo!!
-                )
+                // 运行时的重试不需要刷新重试信息
+                if (!context.retryOnRunningBuild) {
+                    pipelineBuildDao.updateBuildRetryInfo(
+                        dslContext = transactionContext,
+                        projectId = context.projectId,
+                        pipelineId = context.pipelineId,
+                        buildId = context.buildId,
+                        retryInfo = retryInfo!!
+                    )
+                }
             } else {
                 context.watcher.start("updateBuildNum")
                 // 构建号递增
@@ -1043,15 +1065,17 @@ class PipelineRuntimeService @Autowired constructor(
                 key = PIPELINE_BUILD_NUM, value = context.buildNum.toString(), readOnly = true
             )
             if (buildInfo != null) {
-                // 重试构建需要增加锁保护更新VAR表
-                context.watcher.start("startBuildBatchSetVariable")
-                buildVariableService.batchSetVariable(
-                    dslContext = transactionContext,
-                    projectId = context.projectId,
-                    pipelineId = context.pipelineId,
-                    buildId = context.buildId,
-                    variables = context.pipelineParamMap
-                )
+                if (!context.retryOnRunningBuild) {
+                    // 重试构建需要增加锁保护更新VAR表
+                    context.watcher.start("startBuildBatchSetVariable")
+                    buildVariableService.batchSetVariable(
+                        dslContext = transactionContext,
+                        projectId = context.projectId,
+                        pipelineId = context.pipelineId,
+                        buildId = context.buildId,
+                        variables = context.pipelineParamMap
+                    )
+                }
             } else {
                 // 全新构建不需要锁保护更新VAR表
                 context.watcher.start("startBuildBatchSaveWithoutThreadSafety")
@@ -1087,26 +1111,32 @@ class PipelineRuntimeService @Autowired constructor(
             context.watcher.stop()
         }
 
-        // 如果不需要触发审核则直接开始发送开始事件
-        if (context.startBuildStatus.isReadyToRun()) {
-            context.sendBuildStartEvent()
-        } else if (context.triggerReviewers?.isNotEmpty() == true) {
-            prepareTriggerReview(
-                userId = context.userId,
-                triggerUser = context.triggerUser,
-                buildId = context.buildId,
-                pipelineId = context.pipelineId,
-                projectId = context.projectId,
-                triggerReviewers = context.triggerReviewers!!,
-                pipelineName = context.pipelineParamMap[PIPELINE_NAME]?.value?.toString() ?: context.pipelineId,
-                buildNum = context.buildNum.toString()
-            )
-            buildLogPrinter.addYellowLine(
-                buildId = context.buildId, message = "Waiting for the review of ${context.triggerReviewers}",
-                tag = TAG, containerHashId = JOB_ID, executeCount = 1,
-                jobId = null, stepId = TAG
-            )
+        when {
+            context.retryOnRunningBuild -> {
+                context.sendBuildStageEvent()
+            }
+            context.startBuildStatus.isReadyToRun() -> {
+                context.sendBuildStartEvent()
+            }
+            context.triggerReviewers?.isNotEmpty() == true -> {
+                prepareTriggerReview(
+                    userId = context.userId,
+                    triggerUser = context.triggerUser,
+                    buildId = context.buildId,
+                    pipelineId = context.pipelineId,
+                    projectId = context.projectId,
+                    triggerReviewers = context.triggerReviewers!!,
+                    pipelineName = context.pipelineParamMap[PIPELINE_NAME]?.value?.toString() ?: context.pipelineId,
+                    buildNum = context.buildNum.toString()
+                )
+                buildLogPrinter.addYellowLine(
+                    buildId = context.buildId, message = "Waiting for the review of ${context.triggerReviewers}",
+                    tag = TAG, containerHashId = JOB_ID, executeCount = 1,
+                    jobId = null, stepId = TAG
+                )
+            }
         }
+
         LogUtils.printCostTimeWE(context.watcher, warnThreshold = 4000, errorThreshold = 8000)
         return BuildId(
             id = context.buildId,
@@ -1163,17 +1193,21 @@ class PipelineRuntimeService @Autowired constructor(
         containerBuildRecords: MutableList<BuildRecordContainer>,
         taskBuildRecords: MutableList<BuildRecordTask>
     ) {
-        val modelRecord = BuildRecordModel(
-            resourceVersion = context.resourceVersion, startUser = context.triggerUser,
-            startType = context.startType.name, buildNum = context.buildNum,
-            projectId = context.projectId, pipelineId = context.pipelineId,
-            buildId = context.buildId, executeCount = context.executeCount,
-            modelVar = mutableMapOf(), status = context.startBuildStatus.name,
-            timestamps = mapOf(
-                BuildTimestampType.BUILD_CONCURRENCY_QUEUE to
-                    BuildRecordTimeStamp(context.now.timestampmilli(), null)
-            ), queueTime = context.now
-        )
+        val modelRecord = if (context.retryOnRunningBuild) {
+            null
+        } else {
+            BuildRecordModel(
+                resourceVersion = context.resourceVersion, startUser = context.triggerUser,
+                startType = context.startType.name, buildNum = context.buildNum,
+                projectId = context.projectId, pipelineId = context.pipelineId,
+                buildId = context.buildId, executeCount = context.executeCount,
+                modelVar = mutableMapOf(), status = context.startBuildStatus.name,
+                timestamps = mapOf(
+                    BuildTimestampType.BUILD_CONCURRENCY_QUEUE to
+                            BuildRecordTimeStamp(context.now.timestampmilli(), null)
+                ), queueTime = context.now
+            )
+        }
         // #8955 针对单独写入的插件记录可以覆盖根据build数据生成的记录
         val taskBuildRecordResult = mutableListOf<BuildRecordTask>()
         if (updateExistsTask.isNotEmpty()) {
@@ -1416,6 +1450,28 @@ class PipelineRuntimeService @Autowired constructor(
                 actionType = actionType,
                 triggerType = startType.name
             )
+        )
+    }
+
+    private fun StartBuildContext.sendBuildStageEvent() {
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildStageEvent(
+                source = "runningBuildRetry|$buildId|$retryStartTaskId",
+                projectId = projectId, pipelineId = pipelineId, userId = userId,
+                buildId = buildId, stageId = retryTaskInStageId!!, actionType = actionType
+            )
+        )
+        buildLogPrinter.addYellowLine(
+            buildId = buildId,
+            message = if (skipFailedTask) {
+                "$userId skip the fail task"
+            } else {
+                "$userId retry fail task"
+            },
+            tag = retryStartTaskId!!,
+            jobId = retryTaskInContainerId,
+            executeCount = executeCount,
+            stepId = null
         )
     }
 

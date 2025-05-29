@@ -80,6 +80,7 @@ jooq {
                         database.apply {
                             name = "org.jooq.meta.mysql.MySQLDatabase"
                             inputSchema = databaseName
+                            isUnsignedTypes = false
                             withIncludeRoutines(false) // 兼容"denied to user for table 'proc'"错误
                         }
 
@@ -103,7 +104,7 @@ jooq {
     }
 }
 
-tasks.getByName<AbstractCompile>("compileKotlin") {
+tasks.getByName("compileKotlin") {
     tasks.matching { it is JooqGenerate }.forEach {
         dependsOn(it.name)
     }

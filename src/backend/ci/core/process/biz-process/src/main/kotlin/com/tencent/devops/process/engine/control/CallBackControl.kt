@@ -77,7 +77,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.net.URL
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
 import java.time.LocalDateTime
@@ -176,7 +175,8 @@ class CallBackControl @Autowired constructor(
             pipelineId = pipelineInfo.pipelineId,
             pipelineName = pipelineInfo.pipelineName,
             userId = pipelineInfo.lastModifyUser,
-            updateTime = pipelineInfo.updateTime
+            updateTime = pipelineInfo.updateTime,
+            projectId = pipelineInfo.projectId
         )
 
         sendToCallBack(CallBackData(event = callBackEvent, data = pipelineEvent), list)
@@ -226,9 +226,24 @@ class CallBackControl @Autowired constructor(
                 events = callBackEvent.name
             )
         )
-        val pipelineCallback = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)
-            ?.model
-            ?.getPipelineCallBack(projectId, callBackEvent) ?: emptyList()
+        // 流水线级别回调，旧数据存在model中，新数据存在数据库中
+        val pipelineCallback = projectPipelineCallBackService.getPipelineCallback(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            event = callBackEvent.name
+        ).let {
+            if (it.isEmpty()) {
+                pipelineRepositoryService.getPipelineResourceVersion(
+                    projectId = projectId,
+                    pipelineId = pipelineId
+                )?.model?.getPipelineCallBack(
+                    projectId = projectId,
+                    callbackEvent = callBackEvent
+                ) ?: emptyList()
+            } else {
+                it
+            }
+        }
         if (pipelineCallback.isNotEmpty()) {
             list.addAll(pipelineCallback)
         }
@@ -355,7 +370,6 @@ class CallBackControl @Autowired constructor(
             Counter.builder(PIPELINE_CALLBACK_COUNT)
                 .tags(
                     Tags.of("status", status.name)
-                        .and("host", URL(realUrl).host)
                         .and("event", callBack.events)
                 )
                 .register(meterRegistry)

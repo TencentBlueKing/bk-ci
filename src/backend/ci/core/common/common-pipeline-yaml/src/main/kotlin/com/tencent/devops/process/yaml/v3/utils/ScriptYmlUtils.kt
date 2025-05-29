@@ -377,6 +377,7 @@ object ScriptYmlUtils {
                     name = preJob.name,
                     mutex = preJob.mutex,
                     runsOn = formatRunsOn(preJob.runsOn),
+                    showRunsOn = preJob.showRunsOn,
                     services = services,
                     ifField = formatIfField(preJob.ifField),
                     ifModify = preJob.ifModify,

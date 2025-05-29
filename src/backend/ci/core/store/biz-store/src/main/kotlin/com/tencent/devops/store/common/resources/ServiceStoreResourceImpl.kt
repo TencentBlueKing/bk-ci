@@ -38,6 +38,7 @@ import com.tencent.devops.store.common.service.StoreErrorCodeService
 import com.tencent.devops.store.common.service.StoreMemberService
 import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.service.UserSensitiveConfService
+import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.classify.Classify
 import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -121,14 +122,16 @@ class ServiceStoreResourceImpl @Autowired constructor(
         storeType: StoreTypeEnum,
         version: String,
         projectCode: String,
-        userId: String
-    ): Result<Boolean> {
+        userId: String,
+        instanceId: String?
+    ): Result<StoreBaseInfo?> {
         return storeComponentManageService.validateComponentDownloadPermission(
             storeCode = storeCode,
             storeType = storeType,
             version = version,
             projectCode = projectCode,
-            userId = userId
+            userId = userId,
+            instanceId = instanceId
         )
     }
 

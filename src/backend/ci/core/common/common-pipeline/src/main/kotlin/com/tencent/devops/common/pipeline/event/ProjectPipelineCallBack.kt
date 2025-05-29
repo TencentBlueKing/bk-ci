@@ -48,5 +48,7 @@ data class ProjectPipelineCallBack(
     @get:Schema(title = "回调是否启用", required = false)
     val failureTime: LocalDateTime? = null,
     @get:Schema(title = "凭证参数", required = false)
-    val secretParam: ISecretParam? = null
+    val secretParam: ISecretParam? = null,
+    @get:Schema(title = "回调名称", required = false)
+    val name: String? = null
 )

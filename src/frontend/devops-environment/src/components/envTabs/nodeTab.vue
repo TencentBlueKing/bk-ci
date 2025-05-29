@@ -430,12 +430,15 @@
                 try {
                     const res = await this.$store.dispatch('environment/requestNodeList', {
                         projectId: this.projectId,
-                        envHashId: this.envHashId
+                        envHashId: this.envHashId,
+                        params: {
+                            page: -1
+                        }
                     })
 
                     this.importNodeList.splice(0, this.importNodeList.length)
 
-                    res.forEach(item => {
+                    res.records.forEach(item => {
                         item.isChecked = false
                         item.isDisplay = true
                         this.importNodeList.push(item)

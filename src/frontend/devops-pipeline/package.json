@@ -14,7 +14,7 @@
         "public:external": "cross-env NODE_ENV=external npm run public --"
     },
     "dependencies": {
-        "@blueking/log": "2.2.2",
+        "@blueking/log": "2.2.3",
         "@blueking/search-select": "0.0.1-beta.2",
         "@icon-cool/bk-icon-devops": "^0.2.1",
         "axios": "0.28.0",
@@ -45,7 +45,8 @@
         "xterm": "^4.15.0",
         "xterm-addon-attach": "^0.6.0",
         "xterm-addon-fit": "^0.5.0",
-        "yaml": "^2.3.2"
+        "yaml": "^2.3.2",
+        "cron-parser-custom": "2.13.0"
     },
     "devDependencies": {
         "@babel/core": "^7.15.8",

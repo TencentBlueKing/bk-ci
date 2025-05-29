@@ -56,6 +56,7 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.dao.PipelineCallbackDao
 import com.tencent.devops.process.dao.ProjectPipelineCallbackDao
 import com.tencent.devops.process.dao.ProjectPipelineCallbackHistoryDao
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -63,13 +64,13 @@ import com.tencent.devops.process.pojo.CallBackHeader
 import com.tencent.devops.process.pojo.CreateCallBackResult
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
-import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -89,7 +90,8 @@ class ProjectPipelineCallBackService @Autowired constructor(
     private val projectPipelineCallBackUrlGenerator: ProjectPipelineCallBackUrlGenerator,
     private val client: Client,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelinePermissionService: PipelinePermissionService
+    private val pipelinePermissionService: PipelinePermissionService,
+    private val pipelineCallbackDao: PipelineCallbackDao
 ) {
 
     @Value("\${project.callback.secretParam.aes-key:project_callback_aes_key}")
@@ -560,19 +562,37 @@ class ProjectPipelineCallBackService @Autowired constructor(
             // 若key存在会覆盖原来的value,否则就是追加新key
             newEventMap[callbackInfo.callbackName] = callbackInfo
         }
-        model.events = newEventMap
-        val newModel = mutableListOf<PipelineModelVersion>()
-        newModel.add(
-            PipelineModelVersion(
-                pipelineId = pipelineId,
+        dslContext.transaction { transactionContext ->
+            val transaction = DSL.using(transactionContext)
+            pipelineCallbackDao.save(
+                dslContext = transaction,
                 projectId = projectId,
-                model = JsonUtil.toJson(model, formatted = false),
-                creator = model.pipelineCreator ?: userId
+                pipelineId = pipelineId,
+                userId = userId,
+                list = newEventMap.map { (key, value) ->
+                    val encodeToken = value.secretToken?.let { AESUtil.encrypt(aesKey, it) }
+                    value.copy(secretToken = encodeToken)
+                }
             )
-        )
-        pipelineRepositoryService.batchUpdatePipelineModel(
-            userId = userId,
-            pipelineModelVersionList = newModel
+        }
+    }
+
+    fun getPipelineCallback(
+        projectId: String,
+        pipelineId: String,
+        event: String?
+    ) = pipelineCallbackDao.list(
+        dslContext = dslContext,
+        projectId = projectId,
+        pipelineId = pipelineId,
+        event = event
+    ).map {
+        ProjectPipelineCallBack(
+            projectId = it.projectId,
+            callBackUrl = it.url,
+            events = it.eventType,
+            secretToken = it.secretToken?.let { AESUtil.decrypt(aesKey, it) },
+            name = it.name
         )
     }
 

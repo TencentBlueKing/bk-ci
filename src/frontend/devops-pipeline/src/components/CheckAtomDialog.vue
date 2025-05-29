@@ -247,7 +247,7 @@
     }
     .markdown-desc {
         min-height: 50px !important;
-        max-height: 120px !important;
+        max-height: 300px !important;
     }
     ::v-deep .bk-label-text {
         font-weight: bold;

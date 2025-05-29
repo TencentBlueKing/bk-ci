@@ -193,7 +193,9 @@ class RbacPermissionProjectService(
         // 根据roleCode获取到对应的iam组ID
         val iamGroupId = resourceGroupMemberService.roleCodeToIamGroupId(
             projectCode = projectCode,
-            roleCode = roleCode
+            roleCode = roleCode,
+            resourceCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value
         )
         logger.info("batch add project user:$userId|$projectCode|$roleCode|$members")
         val expiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(expiredAt)
