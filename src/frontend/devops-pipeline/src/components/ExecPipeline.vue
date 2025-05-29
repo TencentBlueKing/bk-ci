@@ -292,7 +292,7 @@
     import BkPipeline, { loadI18nMessages } from 'bkui-pipeline'
     import simplebar from 'simplebar-vue'
     import 'simplebar-vue/dist/simplebar.min.css'
-    import { mapActions, mapState } from 'vuex'
+    import { mapActions, mapState, mapGetters } from 'vuex'
     export default {
         components: {
             simplebar,
@@ -339,6 +339,9 @@
                 'hideSkipExecTask',
                 'showPanelType',
                 'isPropertyPanelVisible'
+            ]),
+            ...mapGetters('atom', [
+                'getAllElements'
             ]),
             panels () {
                 return [
@@ -480,6 +483,9 @@
             },
             ruleIds () {
                 return this.curMatchRules?.flatMap(item => item.ruleList.map(rule => rule.ruleHashId)) || []
+            },
+            curPipelineAllElements () {
+                return this.getAllElements(this.execDetail?.model?.stages)
             }
         },
         watch: {
@@ -536,7 +542,10 @@
             })
             const { reviewTaskId, reviewStageSeq } = this.$route.query
             if (reviewTaskId) {
-                this.reviewAtom({ id: reviewTaskId })
+                const targetElement = this.curPipelineAllElements.find(element => element.id === reviewTaskId)
+                if (targetElement && targetElement.status === 'REVIEWING') {
+                    this.reviewAtom({ id: reviewTaskId })
+                }
             } else if (reviewStageSeq) {
                 this.handleStageCheck({
                     type: 'checkIn',
