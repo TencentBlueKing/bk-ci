@@ -57,6 +57,7 @@ import EnumButton from '@/components/atomFormField/EnumButton'
 import TipsSimple from '@/components/AtomFormComponent/TipsSimple'
 import Tips from '@/components/AtomFormComponent/Tips'
 import SubParameter from '@/components/AtomFormComponent/SubParameter'
+import MetadataNormal from '@/components/AtomFormComponent/MetadataNormal'
 
 const atomMixin = {
     props: {
@@ -109,7 +110,8 @@ const atomMixin = {
         EnumButton,
         TipsSimple,
         Tips,
-        SubParameter
+        SubParameter,
+        MetadataNormal
     },
     computed: {
         ...mapGetters('atom', [

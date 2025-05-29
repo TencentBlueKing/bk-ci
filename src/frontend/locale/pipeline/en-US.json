@@ -1725,5 +1725,9 @@
   "monitorPac": "Monitor PAC",
   "groupLabel": "Group labels",
   "groupLabelTips": "Variables with the same label will be displayed in the same group in the view and execution preview interface",
-  "notGrouped": "Not grouped"
+  "notGrouped": "Not grouped",
+  "attributeValue": "Attribute Value",
+  "attributeName": "Attribute Name",
+  "metadataAttributeName": "Metadata Attribute Name",
+  "metadataAttributeValue": "Metadata Attribute Value"
 }

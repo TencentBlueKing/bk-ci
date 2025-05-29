@@ -1723,5 +1723,9 @@
   "monitorPac": "监听PAC",
   "groupLabel": "分组标签",
   "groupLabelTips": "拥有相同标签的变量，在查看和执行预览界面将在同一个分组下展示",
-  "notGrouped": "未分组"
+  "notGrouped": "未分组",
+  "attributeValue": "属性值",
+  "attributeName": "属性名",
+  "metadataAttributeName": "元数据属性名",
+  "metadataAttributeValue": "元数据属性值"
 }
