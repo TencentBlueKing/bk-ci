@@ -23,9 +23,6 @@
 - [新增] feat：变量分组支持 Code 定义 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11698)
 - [新增] feat: Github事件触发支持分支过滤 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11682)
 
-##### 代码库
-- [新增] perf: 重构代码库服务代码结构 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9952)
-
 ##### Agent
 - [新增] Agent依赖升级 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11599)
 - [新增] Agent错误的异常抛出 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11573)
@@ -136,4 +133,3 @@
 
 ##### 环境管理
 - [修复] bug: 环境管理搜索CMDB节点返回为空 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11645)
-
