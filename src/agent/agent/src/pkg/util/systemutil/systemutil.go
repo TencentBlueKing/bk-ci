@@ -281,8 +281,3 @@ func getLocalIp() (string, error) {
 		return "", errors.New("failed to get ip")
 	}
 }
-
-type OsVersion struct {
-	Os      string `json:"os"`
-	Version string `json:"version"`
-}

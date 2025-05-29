@@ -145,11 +145,6 @@ type AgentPropsInfo struct {
 	OsVersion         string             `json:"osVersion"`
 }
 
-type OsVersion struct {
-	Os      string `json:"os"`
-	Version string `json:"version"`
-}
-
 type AgentHeartbeatResponse struct {
 	MasterVersion           string            `json:"masterVersion"`
 	SlaveVersion            string            `json:"slaveVersion"`
