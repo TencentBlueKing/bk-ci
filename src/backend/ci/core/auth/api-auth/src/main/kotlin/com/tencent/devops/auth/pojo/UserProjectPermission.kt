@@ -1,6 +1,5 @@
 package com.tencent.devops.auth.pojo
 
-import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
