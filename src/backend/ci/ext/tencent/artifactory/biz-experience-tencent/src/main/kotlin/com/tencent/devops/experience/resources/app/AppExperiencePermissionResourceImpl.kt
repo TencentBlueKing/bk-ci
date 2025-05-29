@@ -5,15 +5,16 @@ import com.tencent.devops.auth.api.service.ServiceAuthApplyResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.auth.pojo.ApplyJoinGroupInfo
+import com.tencent.devops.auth.pojo.ApplyJoinGroupSimpleInfo
 import com.tencent.devops.auth.pojo.vo.AuthApplyRedirectInfoVo
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.app.AppExperiencePermissionResource
 import com.tencent.devops.experience.service.ExperiencePermissionService
+import java.util.concurrent.TimeUnit
 
 @RestResource
 class AppExperiencePermissionResourceImpl(
@@ -23,9 +24,17 @@ class AppExperiencePermissionResourceImpl(
 ) : AppExperiencePermissionResource {
     override fun applyToJoinGroup(
         userId: String,
-        applyJoinGroupInfo: ApplyJoinGroupInfo
+        applyJoinGroupInfo: ApplyJoinGroupSimpleInfo
     ): Result<Boolean> {
-        return client.get(ServiceAuthApplyResource::class).applyToJoinGroup(userId, applyJoinGroupInfo)
+        val fixExpiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(365L)
+        val groupInfo = ApplyJoinGroupInfo(
+            projectCode = applyJoinGroupInfo.projectCode,
+            groupIds = applyJoinGroupInfo.groupIds,
+            expiredAt = fixExpiredTime.toString(),
+            applicant = userId,
+            reason = applyJoinGroupInfo.reason
+        )
+        return client.get(ServiceAuthApplyResource::class).applyToJoinGroup(userId, groupInfo)
     }
 
     override fun getApplyPermissionInformation(

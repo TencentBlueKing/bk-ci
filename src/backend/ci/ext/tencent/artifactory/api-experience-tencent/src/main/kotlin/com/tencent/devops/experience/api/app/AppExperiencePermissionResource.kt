@@ -2,6 +2,7 @@ package com.tencent.devops.experience.api.app
 
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.auth.pojo.ApplyJoinGroupInfo
+import com.tencent.devops.auth.pojo.ApplyJoinGroupSimpleInfo
 import com.tencent.devops.auth.pojo.vo.AuthApplyRedirectInfoVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
@@ -32,7 +33,7 @@ interface AppExperiencePermissionResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "申请实体", required = true)
-        applyJoinGroupInfo: ApplyJoinGroupInfo
+        applyJoinGroupInfo: ApplyJoinGroupSimpleInfo
     ): Result<Boolean>
 
     @GET
