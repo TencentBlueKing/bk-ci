@@ -27,7 +27,13 @@
 
 package com.tencent.devops.store.common.utils
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_VERSION
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.util.regex.Pattern
 
 object VersionUtils {
 
@@ -68,5 +74,26 @@ object VersionUtils {
     fun getMajorVersion(version: String, storeType: StoreTypeEnum): Int = when (storeType) {
         StoreTypeEnum.DEVX -> 1
         else -> version.split(".").first().toIntOrNull() ?: 1
+    }
+
+    /**
+     * 校验版本号合法性
+     * @param version 版本号
+     * @param storeType 组件类型
+     * @return 布尔值
+     */
+    fun validateVersion(version: String, storeType: StoreTypeEnum) {
+        val patternStyle = when (storeType) {
+            StoreTypeEnum.DEVX -> BkStyleEnum.DEVX_VERSION_STYLE
+            else -> BkStyleEnum.VERSION_STYLE
+        }
+        if (!Pattern.matches(patternStyle.style, version)) {
+            val validateMessage = I18nUtil.getCodeLanMessage(patternStyle.name)
+            val versionFiledName = I18nUtil.getCodeLanMessage(KEY_VERSION)
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_VALIDATE_ERROR,
+                params = arrayOf(versionFiledName, validateMessage)
+            )
+        }
     }
 }

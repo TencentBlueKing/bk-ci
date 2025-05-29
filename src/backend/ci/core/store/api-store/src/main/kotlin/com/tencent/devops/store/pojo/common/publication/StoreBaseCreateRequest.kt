@@ -46,7 +46,6 @@ data class StoreBaseCreateRequest(
     @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
     val name: String,
     @get:Schema(title = "版本号", required = true)
-    @field:BkField(patternStyle = BkStyleEnum.VERSION_STYLE)
     var version: String = INIT_VERSION,
     @get:Schema(title = "基础扩展信息", required = false)
     val extBaseInfo: Map<String, Any>? = null,

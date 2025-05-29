@@ -81,6 +81,9 @@ class StoreBaseCreateServiceImpl @Autowired constructor(
     override fun checkStoreCreateParam(storeCreateRequest: StoreCreateRequest) {
         val storeBaseCreateRequest = storeCreateRequest.baseInfo
         val storeType = storeBaseCreateRequest.storeType
+        val version = storeBaseCreateRequest.version
+        // 判断版本号是否合法
+        VersionUtils.validateVersion(version, storeType)
         val storeCode = storeBaseCreateRequest.storeCode
         // 判断组件标识是否存在
         val codeCount = storeBaseQueryDao.countByCondition(

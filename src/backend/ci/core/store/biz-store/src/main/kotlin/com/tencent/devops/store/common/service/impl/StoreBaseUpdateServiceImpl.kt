@@ -93,9 +93,12 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
     ) {
         val storeBaseUpdateRequest = storeUpdateRequest.baseInfo
         val storeType = storeBaseUpdateRequest.storeType
+        val versionInfo = storeBaseUpdateRequest.versionInfo
+        val version = versionInfo.version
+        // 判断版本号是否合法
+        VersionUtils.validateVersion(version, storeType)
         val storeCode = storeBaseUpdateRequest.storeCode
         val name = storeBaseUpdateRequest.name
-        val versionInfo = storeBaseUpdateRequest.versionInfo
         val classifyCode = storeBaseUpdateRequest.classifyCode
         // 校验分类信息是否准确
         val classifyRecord =
