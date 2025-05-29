@@ -126,10 +126,13 @@ class GithubTokenDao {
 
     fun listToken(
         dslContext: DSLContext,
-        operator: String
+        operator: String,
+        githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP
     ): List<TRepositoryGithubTokenRecord> {
         with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
-            return dslContext.selectFrom(this).where(OPERATOR.eq(operator)).fetch()
+            return dslContext.selectFrom(this)
+                    .where(OPERATOR.eq(operator).or(USER_ID.eq(operator).and(OPERATOR.isNull)))
+                    .fetch()
         }
     }
 }
