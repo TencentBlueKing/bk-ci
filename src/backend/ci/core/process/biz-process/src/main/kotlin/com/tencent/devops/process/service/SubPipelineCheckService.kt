@@ -377,7 +377,6 @@ class SubPipelineCheckService @Autowired constructor(
         }
     }
 
-
     companion object {
         private val logger = LoggerFactory.getLogger(SubPipelineCheckService::class.java)
     }

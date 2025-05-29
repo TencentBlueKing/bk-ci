@@ -369,7 +369,7 @@ class SubPipelineTaskService @Autowired constructor(
         return if (!branch.isNullOrBlank()) {
             // 保存草稿时，分支版本不校验
             pipelineYamlVersionDao.getPipelineYamlVersion(
-                dslContext  = dslContext,
+                dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 ref = branch
