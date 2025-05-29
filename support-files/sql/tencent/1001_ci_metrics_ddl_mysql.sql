@@ -1,0 +1,24 @@
+USE devops_ci_metrics;
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for T_LOG_INDICES_V2
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_EPLUS_PIPELINE_METRICS_DATA_DAILY` (
+                                                                     `PIPELINE_ID` varchar(34) NOT NULL COMMENT '流水线ID',
+    `PROJECT_ID` varchar(64) CHARACTER SET utf8 NOT NULL COMMENT '项目ID',
+    `PIPELINE_NAME` varchar(255) NOT NULL COMMENT '流水线名称',
+    `STATISTICS_TIME` datetime(3) NOT NULL COMMENT '统计时间',
+    `FAILURE_RATE_30D` bit(1) DEFAULT NULL COMMENT '近30天内失败率高于90%',
+    `CONSECUTIVE_FAILURES_90D` bit(1) DEFAULT NULL COMMENT '近90天内持续失败',
+    `SCHEDULED_TRIGGER_NO_CODE_CHANGE` bit(1) DEFAULT NULL COMMENT '定时触发但代码无变更',
+    `CONSECUTIVE_FAILURES_6M` bit(1) DEFAULT NULL COMMENT '近6个月内持续失败',
+    `IS_INVALID_PIPELINE` bit(1) DEFAULT NULL COMMENT '是否是无效流水线（连续90失败并且构建次数大于14）',
+    `URL` varchar(255) DEFAULT NULL COMMENT 'url地址',
+    PRIMARY KEY (`PIPELINE_ID`,`STATISTICS_TIME`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线指标每日信息表';
+
+SET FOREIGN_KEY_CHECKS = 1;

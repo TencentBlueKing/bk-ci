@@ -45,6 +45,10 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 
+/**
+ * 腾讯蓝鲸持续集成平台 - 流水线指标定时任务服务
+ * 负责定时从Eplus平台获取流水线指标数据并存储到数据库
+ */
 @Service
 class TxPipelineMetricsCronService @Autowired constructor(
     private val client: Client,
@@ -63,20 +67,24 @@ class TxPipelineMetricsCronService @Autowired constructor(
     private var pipelineGeneralNamespaceId: Int = 0
 
     @Value("\${eplus.ms.metrics.namespace.highFailureRate30d.card.id}")
-    private var highFailureRate30dCardId: Int = 0
+    private var highFailureRate30dCardId: Int = 0 // 高失败率30天卡片ID
 
     @Value("\${eplus.ms.metrics.namespace.consecutiveFailures90d.card.id}")
-    private var consecutiveFailures90dCardId: Int = 0
+    private var consecutiveFailures90dCardId: Int = 0 // 连续失败90天卡片ID
 
     @Value("\${eplus.ms.metrics.namespace.scheduledTriggerNoCodeChange.card.id}")
-    private var scheduledTriggerNoCodeChangeCardId: Int = 0
+    private var scheduledTriggerNoCodeChangeCardId: Int = 0 // 定时触发无代码变更卡片ID
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxPipelineMetricsCronService::class.java)
     }
 
     /**
-     * 查询并处理图卡数据
+     * 查询并处理卡片数据
+     * @param cardId 卡片ID
+     * @param namespaceId 命名空间ID
+     * @param assignData 数据赋值逻辑
+     * @param metricsData 数据处理逻辑
      */
     private fun queryAndProcessCardData(
         cardId: Int,
@@ -87,41 +95,55 @@ class TxPipelineMetricsCronService @Autowired constructor(
         val tPipelineMetricsInfoRecords = mutableListOf<TEplusPipelineMetricsDataDailyRecord>()
         var pageNum = 1
         val pageSize = 1000
+        var failedBatches = 0
 
         while (true) {
-            val response = queryInvalidPipelineMonitorCardData(
-                token = token,
-                cardId = cardId,
-                namespaceId = namespaceId,
-                pageNum = pageNum,
-                pageSize = pageSize
-            )
-            val data = response["data"] as Map<String, Any>
-            val result = data["result"] as Map<String, Any>
-            val rows = result["rows"] as List<Map<String, Any>>
-
-            if (rows.isEmpty()) break
-
-            rows.forEach { row ->
-                tPipelineMetricsInfoRecords.add(
-                    TEplusPipelineMetricsDataDailyRecord().apply {
-                        assignData(row)
-                        this.statisticsTime = LocalDate.now().atStartOfDay()
-                    }
+            try {
+                val response = queryInvalidPipelineMonitorCardData(
+                    token = token,
+                    cardId = cardId,
+                    namespaceId = namespaceId,
+                    pageNum = pageNum,
+                    pageSize = pageSize
                 )
-            }
+                val data = response["data"] as Map<String, Any>
+                val result = data["result"] as Map<String, Any>
+                val rows = result["rows"] as List<Map<String, Any>>
 
-            if (rows.size < pageSize) break
-            pageNum++
+                if (rows.isEmpty()) break
+
+                rows.forEach { row ->
+                    tPipelineMetricsInfoRecords.add(
+                        TEplusPipelineMetricsDataDailyRecord().apply {
+                            assignData(row)
+                            this.statisticsTime = LocalDate.now().atStartOfDay()
+                        }
+                    )
+                }
+
+                if (rows.size < pageSize) break
+                pageNum++
+            } catch (e: Exception) {
+                failedBatches++
+                logger.error("Process batch $pageNum failed, will continue next batch", e)
+                pageNum++
+                continue
+            }
+        }
+
+        if (failedBatches > 0) {
+            logger.warn("Process completed with $failedBatches failed batches")
         }
 
         metricsData(tPipelineMetricsInfoRecords)
     }
 
+    /**
+     * 处理高失败率30天数据
+     */
     @Scheduled(cron = "0 0 1 * * ?")
     fun handleHighFailureRate30d() {
         logger.info("start handleHighFailureRate30d")
-
         try {
             queryAndProcessCardData(
                 cardId = highFailureRate30dCardId,
@@ -136,16 +158,18 @@ class TxPipelineMetricsCronService @Autowired constructor(
                 }
             )
         } catch (e: Exception) {
-            logger.warn("handle  pipeline high failure rate30d data fail", e)
+            logger.warn("handle pipeline high failure rate30d data fail", e)
             throw e
         }
         logger.info("end handleHighFailureRate30d")
     }
 
+    /**
+     * 处理连续失败90天数据
+     */
     @Scheduled(cron = "0 0 2 * * ?")
     fun handleConsecutiveFailures90d() {
         logger.info("start handleConsecutiveFailures90d")
-
         try {
             queryAndProcessCardData(
                 cardId = consecutiveFailures90dCardId,
@@ -166,6 +190,9 @@ class TxPipelineMetricsCronService @Autowired constructor(
         logger.info("end handleConsecutiveFailures90d")
     }
 
+    /**
+     * 处理定时触发无代码变更数据
+     */
     @Scheduled(cron = "0 0 3 * * ?")
     fun handleScheduledTriggerNoCodeChange() {
         logger.info("start handleScheduledTriggerNoCodeChange")
@@ -212,15 +239,14 @@ class TxPipelineMetricsCronService @Autowired constructor(
     }
 
     /**
-     * 查询无效流水线图卡数据
-     * @param token 认证token
-     * @param dateFrom 开始日期(yyyyMMdd格式)
-     * @param dateTo 结束日期(yyyyMMdd格式)
-     * @param cardId 图卡ID
+     * 查询无效流水线监控卡片数据
+     * @param token 认证Token
+     * @param cardId 卡片ID
      * @param namespaceId 命名空间ID
      * @param queryMode 查询模式
      * @param pageNum 页码
      * @param pageSize 每页大小
+     * @return 响应数据
      */
     fun queryInvalidPipelineMonitorCardData(
         token: String,
