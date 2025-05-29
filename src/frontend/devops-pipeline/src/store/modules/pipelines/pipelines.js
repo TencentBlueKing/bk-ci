@@ -440,7 +440,7 @@ const actions = {
     },
     // 获取流水线问题治理数据
     getPipelineProblemDetail (_, params) {
-        return ajax.get(`${MERTICS_URL_PREFIX}/user/pipelines/IssueAnalysis`, params).then(res => res.data)
+        return ajax.get(`${MERTICS_URL_PREFIX}/user/pipelines/issueAnalysis`, params).then(res => res.data)
     }
 }
 
