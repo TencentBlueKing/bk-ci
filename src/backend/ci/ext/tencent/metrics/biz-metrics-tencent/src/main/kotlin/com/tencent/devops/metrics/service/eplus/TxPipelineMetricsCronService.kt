@@ -111,8 +111,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
                 )
             }
 
-            val total = (result["total"] as? Number)?.toInt() ?: 0
-            if (pageNum * pageSize > total) break
+            if (rows.size < pageSize) break
             pageNum++
         }
 
