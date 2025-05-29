@@ -87,10 +87,8 @@ class TxPipelineMetricsCronService @Autowired constructor(
         val tPipelineMetricsInfoRecords = mutableListOf<TEplusPipelineMetricsDataDailyRecord>()
         var pageNum = 1
         val pageSize = 1000
-        var hasMore = true
 
-        // 分页查询已失效流水线数据
-        while (hasMore) {
+        while (true) {
             val response = queryInvalidPipelineMonitorCardData(
                 token = token,
                 cardId = cardId,
@@ -102,24 +100,22 @@ class TxPipelineMetricsCronService @Autowired constructor(
             val result = data["result"] as Map<String, Any>
             val rows = result["rows"] as List<Map<String, Any>>
 
-            if (rows.isEmpty()) {
-                hasMore = false
-            } else {
-                rows.forEach { row ->
-                    tPipelineMetricsInfoRecords.add(
-                        TEplusPipelineMetricsDataDailyRecord().apply {
-                            assignData(row)
-                            this.statisticsTime = LocalDate.now().atStartOfDay()
-                        }
-                    )
-                }
-                val total = (result["total"] as? Number)?.toInt() ?: 0
-                if (pageNum * pageSize >= total) {
-                    hasMore = false
-                }
-                pageNum++
+            if (rows.isEmpty()) break
+
+            rows.forEach { row ->
+                tPipelineMetricsInfoRecords.add(
+                    TEplusPipelineMetricsDataDailyRecord().apply {
+                        assignData(row)
+                        this.statisticsTime = LocalDate.now().atStartOfDay()
+                    }
+                )
             }
+
+            val total = (result["total"] as? Number)?.toInt() ?: 0
+            if (pageNum * pageSize > total) break
+            pageNum++
         }
+
         metricsData(tPipelineMetricsInfoRecords)
     }
 

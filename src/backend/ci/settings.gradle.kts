@@ -405,5 +405,3 @@ include(":ext:tencent:remotedev:biz-remotedev-tencent")
 include(":ext:tencent:remotedev:biz-remotedev-dispatch-tencent")
 include(":ext:tencent:remotedev:boot-remotedev-tencent")
 include(":ext:tencent:remotedev:model-remotedev-tencent")
-include("ext:tencent:metrics:api-metrics-tencent")
-findProject(":ext:tencent:metrics:api-metrics-tencent")?.name = "api-metrics-tencent"
