@@ -97,7 +97,7 @@ class AuthCronSyncGroupAndMember(
         }
     }
 
-    @Scheduled(cron = "0 0 0 * * ?")
+    @Scheduled(cron = "0 0 1 * * ?")
     fun syncUserAndDepartmentRegularly() {
         if (!enable) {
             return

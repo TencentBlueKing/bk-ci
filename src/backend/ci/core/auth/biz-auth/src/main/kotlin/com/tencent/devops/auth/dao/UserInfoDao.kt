@@ -113,6 +113,7 @@ class UserInfoDao {
             dslContext.selectFrom(this)
                 .where(TASK_TYPE.eq(taskType))
                 .orderBy(END_TIME.desc())
+                .limit(1)
                 .fetchOne()
         }
     }
