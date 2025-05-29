@@ -35,12 +35,12 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class TxUserPipelineMetricsResourceImpl @Autowired constructor(
-    private val txPipelineMetricssService: TxPipelineMetricssService
+    private val txPipelineMetricsService: TxPipelineMetricssService
 ) : TxUserPipelineMetricsResource {
     override fun getPipelineIssueAnalysis(
         userId: String,
         projectId: String
     ): Result<ProjectPipelineIssueAnalysisInfo?> {
-        return Result(txPipelineMetricssService.getPipelineIssueAnalysis(userId, projectId))
+        return Result(txPipelineMetricsService.getPipelineIssueAnalysis(userId, projectId))
     }
 }

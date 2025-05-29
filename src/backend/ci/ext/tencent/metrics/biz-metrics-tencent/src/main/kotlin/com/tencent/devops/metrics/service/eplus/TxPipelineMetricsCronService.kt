@@ -32,10 +32,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.metrics.constants.Constants.BK_TO_HANDLE
 import com.tencent.devops.metrics.dao.PipelineMetricsInfoDao
-import com.tencent.devops.metrics.pojo.PipelineExpirationInfo
 import com.tencent.devops.model.metrics.tables.records.TEplusPipelineMetricsDataDailyRecord
 import java.time.LocalDate
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -177,7 +174,6 @@ class TxPipelineMetricsCronService @Autowired constructor(
     @Scheduled(cron = "0 0 3 * * ?")
     fun handleScheduledTriggerNoCodeChange() {
         logger.info("start handleScheduledTriggerNoCodeChange")
-
         try {
             queryAndProcessCardData(
                 cardId = scheduledTriggerNoCodeChangeCardId,
