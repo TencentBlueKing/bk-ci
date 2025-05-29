@@ -36,6 +36,7 @@ import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.project.constant.ProjectMessageCode.APPROVAL_PROJECT_CANT_UPDATE
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.AuthProjectCreateInfo
@@ -112,7 +113,10 @@ class RbacProjectPermissionService(
             user = authProjectCreateInfo.userId,
             serviceCode = projectAuthServiceCode,
             resourceType = AuthResourceType.PROJECT,
-            projectCode = resourceRegisterInfo.resourceCode,
+            projectCode = TenantUtils.parseEnglishName(
+                tenantId = authProjectCreateInfo.projectCreateInfo.tenantId,
+                tenantEnglishName = resourceRegisterInfo.resourceCode
+            ),
             resourceCode = resourceRegisterInfo.resourceCode,
             resourceName = resourceRegisterInfo.resourceName
         )
@@ -174,7 +178,7 @@ class RbacProjectPermissionService(
         } catch (ignore: Exception) {
             logger.warn(
                 "update auth resource failed, " +
-                    "rollback project($englishName) approval|$beforeUpdateProjectApprovalInfo"
+                        "rollback project($englishName) approval|$beforeUpdateProjectApprovalInfo"
             )
             projectApprovalService.rollBack(projectApprovalInfo = beforeUpdateProjectApprovalInfo!!)
             throw ignore

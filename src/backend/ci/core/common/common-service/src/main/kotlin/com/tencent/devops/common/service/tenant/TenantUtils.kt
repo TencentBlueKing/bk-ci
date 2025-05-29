@@ -64,11 +64,11 @@ class TenantUtils : ApplicationContextAware, InitializingBean {
         /**
          * 生成英文名称
          */
-        fun parseEnglishName(tenantId: String? = null, tenantEnglishName: String): String? {
+        fun parseEnglishName(tenantId: String? = null, tenantEnglishName: String): String {
             return if (tenantEnglishName.contains(".")) {
                 tenantEnglishName
             } else if (!enableMultiTenantMode) {
-                null
+                tenantEnglishName
             } else if (!tenantId.isNullOrBlank()) {
                 "$tenantId.$tenantEnglishName"
             } else {
