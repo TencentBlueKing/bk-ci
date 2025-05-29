@@ -321,9 +321,9 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
         logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to sync members of apply")
     }
 
-    override fun syncGroupAndMember(projectCode: String) {
+    override fun syncGroupAndMember(projectCode: String, async: Boolean) {
         val traceId = MDC.get(TraceTag.BIZID)
-        syncProjectsExecutorService.submit {
+        val task = {
             MDC.put(TraceTag.BIZID, traceId)
             SyncGroupAndMemberLock(redisOperation, projectCode).use { lock ->
                 if (!lock.tryLock()) {
@@ -363,6 +363,11 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                     )
                 }
             }
+        }
+        if (async) {
+            syncProjectsExecutorService.submit(task)
+        } else {
+            task()
         }
     }
 

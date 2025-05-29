@@ -121,7 +121,8 @@ class SamplePermissionResourceGroupPermissionService : PermissionResourceGroupPe
     ): Boolean = true
 
     override fun syncProjectPermissions(
-        projectCode: String
+        projectCode: String,
+        async: Boolean
     ): Boolean = true
 
     override fun syncPermissionsByCondition(

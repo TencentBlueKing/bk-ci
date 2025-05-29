@@ -584,9 +584,9 @@ class RbacPermissionResourceGroupPermissionService(
         }
     }
 
-    override fun syncProjectPermissions(projectCode: String): Boolean {
+    override fun syncProjectPermissions(projectCode: String, async: Boolean): Boolean {
         val traceId = MDC.get(TraceTag.BIZID)
-        syncProjectsExecutorService.submit {
+        val task = {
             MDC.put(TraceTag.BIZID, traceId)
             logger.info("sync project group permissions:$projectCode")
             val iamGroupIds = authResourceGroupDao.listIamGroupIdsByConditions(
@@ -609,6 +609,11 @@ class RbacPermissionResourceGroupPermissionService(
                 projectCode = projectCode,
                 iamGroupIds = toDeleteGroupIds
             )
+        }
+        if (async) {
+            syncProjectsExecutorService.submit(task)
+        } else {
+            task()
         }
         return true
     }

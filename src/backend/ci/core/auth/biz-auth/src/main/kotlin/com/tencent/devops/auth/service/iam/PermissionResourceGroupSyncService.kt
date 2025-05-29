@@ -52,7 +52,7 @@ interface PermissionResourceGroupSyncService {
     /**
      * 同步项目下组和成员
      */
-    fun syncGroupAndMember(projectCode: String)
+    fun syncGroupAndMember(projectCode: String, async: Boolean = true)
 
     /**
      * 同步项目下组

@@ -45,8 +45,8 @@ class SyncGroupAndMemberListener @Autowired constructor(
         if (event.enabled) {
             // 项目启用时，同步用户组/用户组成员/用户组权限/项目级权限
             resourceGroupSyncService.syncProjectGroup(projectCode = event.projectId)
-            resourceGroupSyncService.syncGroupAndMember(projectCode = event.projectId)
-            resourceGroupPermissionService.syncProjectPermissions(projectCode = event.projectId)
+            resourceGroupSyncService.syncGroupAndMember(projectCode = event.projectId, async = false)
+            resourceGroupPermissionService.syncProjectPermissions(projectCode = event.projectId, async = false)
             resourceGroupPermissionService.syncProjectLevelPermissions(projectCode = event.projectId)
         }
     }
