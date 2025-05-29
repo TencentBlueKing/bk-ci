@@ -50,13 +50,12 @@ class PipelineMetricsInfoDao {
     }
 
     fun batchSaveHighFailureRate30dData(dslContext: DSLContext, records: List<TEplusPipelineMetricsDataDailyRecord>) {
-        val steps = records.map { record ->
+        val steps = records.map {
             with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
-                val newRecord = dslContext.newRecord(this, record)
                 dslContext.insertInto(this)
-                    .set(newRecord)
+                    .set(it)
                     .onDuplicateKeyUpdate()
-                    .set(FAILURE_RATE_30D, record.failureRate_30d)
+                    .set(FAILURE_RATE_30D, it.failureRate_30d)
             }
         }
         dslContext.batch(steps).execute()
@@ -66,13 +65,12 @@ class PipelineMetricsInfoDao {
         dslContext: DSLContext,
         records: List<TEplusPipelineMetricsDataDailyRecord>
     ) {
-        val steps = records.map { record ->
+        val steps = records.map {
             with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
-                val newRecord = dslContext.newRecord(this, record)
                 dslContext.insertInto(this)
-                    .set(newRecord)
+                    .set(it)
                     .onDuplicateKeyUpdate()
-                    .set(CONSECUTIVE_FAILURES_90D, record.consecutiveFailures_90d)
+                    .set(CONSECUTIVE_FAILURES_90D, it.consecutiveFailures_90d)
             }
         }
         dslContext.batch(steps).execute()
@@ -82,13 +80,12 @@ class PipelineMetricsInfoDao {
         dslContext: DSLContext,
         records: List<TEplusPipelineMetricsDataDailyRecord>
     ) {
-        val steps = records.map { record ->
+        val steps = records.map {
             with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
-                val newRecord = dslContext.newRecord(this, record)
                 dslContext.insertInto(this)
-                    .set(newRecord)
+                    .set(it)
                     .onDuplicateKeyUpdate()
-                    .set(SCHEDULED_TRIGGER_NO_CODE_CHANGE, record.scheduledTriggerNoCodeChange)
+                    .set(SCHEDULED_TRIGGER_NO_CODE_CHANGE, it.scheduledTriggerNoCodeChange)
             }
         }
         dslContext.batch(steps).execute()
