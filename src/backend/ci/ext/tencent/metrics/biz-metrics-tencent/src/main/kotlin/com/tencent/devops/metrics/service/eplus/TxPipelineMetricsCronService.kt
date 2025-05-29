@@ -125,8 +125,8 @@ class TxPipelineMetricsCronService @Autowired constructor(
                 pageNum++
             } catch (e: Exception) {
                 failedBatches++
-                logger.error("Process batch $pageNum failed, will continue next batch", e)
-                pageNum++
+                logger.warn("Process batch failed (pageNum: $pageNum), will retry next page", e)
+                pageNum++ // 递增页码，跳过当前失败页
                 continue
             }
         }
@@ -184,7 +184,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
                 }
             )
         } catch (e: Exception) {
-            logger.error("handle consecutive failures90d data fail", e)
+            logger.warn("handle consecutive failures90d data fail", e)
             throw e
         }
         logger.info("end handleConsecutiveFailures90d")
@@ -210,7 +210,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
                 }
             )
         } catch (e: Exception) {
-            logger.error("handle scheduled trigger no code change data fail", e)
+            logger.warn("handle scheduled trigger no code change data fail", e)
             throw e
         }
         logger.info("end handleScheduledTriggerNoCodeChange")

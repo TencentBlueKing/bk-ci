@@ -8,7 +8,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ----------------------------
 
 CREATE TABLE IF NOT EXISTS `T_EPLUS_PIPELINE_METRICS_DATA_DAILY` (
-                                                                     `PIPELINE_ID` varchar(34) NOT NULL COMMENT '流水线ID',
+    `PIPELINE_ID` varchar(34) NOT NULL COMMENT '流水线ID',
     `PROJECT_ID` varchar(64) CHARACTER SET utf8 NOT NULL COMMENT '项目ID',
     `PIPELINE_NAME` varchar(255) NOT NULL COMMENT '流水线名称',
     `STATISTICS_TIME` datetime(3) NOT NULL COMMENT '统计时间',
