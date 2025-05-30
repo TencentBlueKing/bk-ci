@@ -131,7 +131,10 @@ class GithubTokenDao {
     ): List<TRepositoryGithubTokenRecord> {
         with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
             return dslContext.selectFrom(this)
-                    .where(OPERATOR.eq(operator).or(USER_ID.eq(operator).and(OPERATOR.isNull)))
+                    .where(
+                        (OPERATOR.eq(operator).or(USER_ID.eq(operator).and(OPERATOR.isNull)))
+                                .and(TYPE.eq(githubTokenType.name))
+                    )
                     .fetch()
         }
     }
