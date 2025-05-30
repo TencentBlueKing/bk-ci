@@ -230,7 +230,7 @@
                                             </thead>
                                             <tbody>
                                                 <tr
-                                                    v-for="(item, index) in instanceList"
+                                                    v-for="(item, index) in renderInstanceList"
                                                     :key="item.pipelineName"
                                                 >
                                                     <td class="instance-name">{{ item.pipelineName }}</td>
@@ -627,6 +627,12 @@
             },
             disabledYamlCodeLib () {
                 return this.isTemplateInstanceMode ? this.templateInstanceEnablePac : this.pacEnabled
+            },
+            renderInstanceList () {
+                return this.instanceList.map(i => ({
+                    ...i,
+                    filePath: this.trimCIPrefix(i?.filePath)
+                }))
             }
         },
         watch: {
@@ -1198,8 +1204,8 @@
                 }
             },
             trimCIPrefix (filePath) {
-                return filePath.startsWith(this.filePathDir)
-                    ? filePath.replace(this.filePathDir, '')
+                return filePath?.startsWith(this.filePathDir)
+                    ? filePath?.replace(this.filePathDir, '')
                     : filePath
             }
         }

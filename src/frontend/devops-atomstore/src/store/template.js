@@ -226,7 +226,7 @@ export const actions = {
      * 安装模板
      */
     installTemplate ({ commit }, params) {
-        return vue.$ajax.post(`${prefix}/user/market/template/install`, params)
+        return vue.$ajax.post(`${prefix}/user/market/template/install/v2`, params)
     },
 
     /**

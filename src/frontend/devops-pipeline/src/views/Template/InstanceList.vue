@@ -119,7 +119,7 @@
                                                 content: row.instanceErrorInfo
                                             }"
                                             class="status-failed-icon"
-                                            name="failed-circle-fill"
+                                            name="circle-alert-filled"
                                             :size="14"
                                         />
                                     </span>
@@ -412,15 +412,35 @@
     function HandleMR (row) {
         window.open(row.pullRequestUrl, '_blank')
     }
-    function copyAsTemplateInstance (row) {
-        const route = {
-            name: 'instanceEntry',
-            params: {
-                version: currentVersion.value,
-                instanceName: (row.pipelineName + '_copy').substring(0, 128)
-            }
+    
+    async function copyAsTemplateInstance (row) {
+        try {
+            const res = await proxy.$store.dispatch('templates/fetchPipelineDetailById', {
+                pipelineIds: [row.pipelineId],
+                projectId: projectId.value,
+                templateId: templateId.value
+            })
+            proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, [
+                {
+                    ...row,
+                    ...res[row.pipelineId],
+                    isRequiredParam: row.required,
+                    pipelineName: (row.pipelineName + '_copy').substring(0, 128),
+                    pipelineId: ''
+                }
+            ])
+    
+            proxy.$router.push({
+                name: 'instanceEntry',
+                params: {
+                    ...proxy.$route.params,
+                    version: pipelineInfo.value?.releaseVersion,
+                    type: 'copy'
+                }
+            })
+        } catch (e) {
+            console.err(e)
         }
-        proxy.$router.push(route)
     }
     function toPipelineHistory (pipelineId) {
         const url = `${WEB_URL_PREFIX}/pipeline/${projectId.value}/${pipelineId}/history`
@@ -535,6 +555,8 @@
             }
             .status-failed-icon {
                 cursor: pointer;
+                position: relative;
+                top: 2px;
             }
             .loading-icon {
                 display: ruby;

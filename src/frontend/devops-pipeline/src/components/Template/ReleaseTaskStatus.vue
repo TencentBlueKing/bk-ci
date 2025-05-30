@@ -150,7 +150,11 @@
                 <p class="sub-message pending mt20">
                     ( 2 ) {{ $t('template.partOfMr.partialSuccessTip2', [releaseRes.failItemNum]) }}
                 </p>
-                <release-failed-message />
+                <release-failed-message
+                    class="mt20"
+                    v-if="Object.keys(releaseRes.errorMessages).length"
+                    :data="releaseRes.errorMessages"
+                />
             </template>
         </section>
     </div>
@@ -206,7 +210,6 @@
                 baseId: releaseBaseId.value
             })
             releaseRes.value = res.data
-            releaseStatus.value = res.data.status
             if ([RELEASE_STATUS.INIT, RELEASE_STATUS.INSTANCING].includes(releaseStatus.value)) {
                 timer.value = setTimeout(() => {
                     fetchReleaseTaskStatus()
