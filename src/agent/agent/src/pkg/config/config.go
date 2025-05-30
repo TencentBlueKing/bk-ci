@@ -122,8 +122,11 @@ func (e *AgentEnv) GetAgentIp() string {
 }
 
 func (e *AgentEnv) SetAgentIp(ip string) {
+	if e.agentIp == ip {
+		return
+	}
 	// IP变更时发送事件
-	if e.agentIp != "" && e.agentIp != ip && ip != "127.0.0.1" {
+	if e.agentIp != "" && ip != "127.0.0.1" {
 		EBus.Publish(IpEvent, ip)
 	}
 	e.agentIp = ip
