@@ -132,9 +132,6 @@ class PreBuildAgentMgrService @Autowired constructor(
                 masterVersion = agentRecord.masterVersion
             )
 
-            // 同步更新T_NODE表中记录的agent版本信息
-            nodeDao.updateDevopsAgentVersionByNodeId(context, nodeId, agentVersion = agentRecord.masterVersion)
-
             thirdPartyAgentDao.updateStatus(context, agentId, nodeId, projectId, AgentStatus.IMPORT_EXCEPTION)
             environmentPermissionService.createNode(
                 userId = userId,
