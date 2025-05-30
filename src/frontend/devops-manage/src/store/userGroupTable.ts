@@ -49,6 +49,7 @@ interface CollapseListType {
 export interface AsideItem {
   id: string,
   name: string,
+  checked: boolean,
   type: "department" | "user"
 }
 export interface SearchParamsType {
