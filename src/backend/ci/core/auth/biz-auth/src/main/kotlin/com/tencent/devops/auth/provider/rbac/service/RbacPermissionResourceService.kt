@@ -73,7 +73,8 @@ class RbacPermissionResourceService(
         tenantId: String?,
         async: Boolean
     ): Boolean {
-        logger.info("resource create relation|$userId|$projectCode|$resourceType|$resourceCode|$resourceName")
+        val finalProjectCode = TenantUtils.parseEnglishName(tenantId, projectCode)
+        logger.info("resource create relation|$userId|$finalProjectCode|$resourceType|$resourceCode|$resourceName")
         val iamResourceCode = authResourceCodeConverter.generateIamCode(
             resourceType = resourceType,
             resourceCode = resourceCode
@@ -82,25 +83,24 @@ class RbacPermissionResourceService(
         val managerId = if (resourceType == AuthResourceType.PROJECT.value) {
             permissionGradeManagerService.createGradeManager(
                 userId = userId,
-                projectCode = projectCode,
+                projectCode = finalProjectCode,
                 projectName = resourceName,
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = resourceCode,
-                resourceName = resourceName,
-                tenantId = tenantId
+                resourceName = resourceName
             )
         } else {
             // 获取分级管理员信息
             val projectInfo = authResourceService.get(
-                projectCode = projectCode,
+                projectCode = finalProjectCode,
                 resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectCode
+                resourceCode = finalProjectCode
             )
             projectName = projectInfo.resourceName
             permissionSubsetManagerService.createSubsetManager(
                 gradeManagerId = projectInfo.relationId,
                 userId = userId,
-                projectCode = projectCode,
+                projectCode = finalProjectCode,
                 projectName = projectInfo.resourceName,
                 resourceType = resourceType,
                 resourceCode = resourceCode,
@@ -113,7 +113,7 @@ class RbacPermissionResourceService(
         if (isCreateResourceAndGroup) {
             createResource(
                 userId = userId,
-                projectCode = projectCode,
+                projectCode = finalProjectCode,
                 resourceType = resourceType,
                 resourceName = resourceName,
                 resourceCode = resourceCode,
@@ -122,7 +122,7 @@ class RbacPermissionResourceService(
             )
             createResourceDefaultGroup(
                 userId = userId,
-                projectCode = projectCode,
+                projectCode = finalProjectCode,
                 projectName = projectName,
                 resourceType = resourceType,
                 resourceName = resourceName,

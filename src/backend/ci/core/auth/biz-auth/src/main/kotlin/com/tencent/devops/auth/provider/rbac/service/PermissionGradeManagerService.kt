@@ -112,8 +112,7 @@ class PermissionGradeManagerService @Autowired constructor(
         projectName: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String,
-        tenantId: String?
+        resourceName: String
     ): Int {
         val projectApprovalInfo = client.get(ServiceProjectApprovalResource::class).get(projectId = projectCode).data
             ?: throw ErrorCodeException(
@@ -174,7 +173,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 .build()
             val gradeManagerId = iamV2ManagerService.createManagerV2(
                 createManagerDTO,
-                tenantId
+                TenantUtils.getTenantIdByEnglishName(projectCode)
             )
             logger.info("create iam grade manager success|$name|$projectCode|$userId|$gradeManagerId")
             gradeManagerId
