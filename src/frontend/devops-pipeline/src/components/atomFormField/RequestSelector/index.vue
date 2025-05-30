@@ -13,10 +13,10 @@
         :searchable="searchable"
         :multi-select="multiSelect"
         :disabled="disabled || isLoading"
-        :on-search="handleSearch"
         :data-path="dataPath"
         :setting-key="settingKey"
         :display-key="displayKey"
+        v-bind="remoteSearchObj"
     >
         <template v-if="hasAddItem">
             <div class="bk-selector-create-item">
@@ -139,6 +139,15 @@
                     console.log(error)
                     return this.url
                 }
+            },
+            remoteSearchObj () {
+                return typeof this.searchUrl === 'string' && !!this.searchUrl
+                    ? {
+                        onSearch: this.handleRemoteSearch
+                    }
+                    : {
+                    
+                    }
             }
         },
         watch: {
@@ -247,10 +256,7 @@
                     this.isLoading = false
                 }
             },
-            handleSearch (name) {
-                if (typeof this.searchUrl !== 'string') {
-                    return Promise.resolve()
-                }
+            handleRemoteSearch (name) {
                 return new Promise((resolve, reject) => {
                     clearTimeout(this.timeId)
                     this.timeId = setTimeout(async () => {
