@@ -30,7 +30,9 @@ package com.tencent.devops.metrics.dao
 import com.tencent.devops.model.metrics.tables.TEplusPipelineMetricsDataDaily
 import com.tencent.devops.model.metrics.tables.records.TEplusPipelineMetricsDataDailyRecord
 import java.time.LocalDate
+import java.time.LocalDateTime
 import org.jooq.DSLContext
+import org.jooq.Record2
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
@@ -121,6 +123,32 @@ class PipelineMetricsInfoDao {
                 .and(PROJECT_ID.eq(projectId))
                 .and(SCHEDULED_TRIGGER_NO_CODE_CHANGE.eq(true))
                 .fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+
+    fun listInvalidPipelineProjectIds(dslContext: DSLContext, limit: Int, offset: Int): List<String> {
+        with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
+            return dslContext.select(PROJECT_ID).from(this)
+                .where(IS_INVALID_PIPELINE.eq(true))
+                .groupBy(PROJECT_ID)
+                .orderBy(PROJECT_ID.desc())
+                .limit(limit).offset(offset)
+                .fetchInto(String::class.java)
+        }
+    }
+
+    fun listProjectInvalidPipelineInfo(
+        dslContext: DSLContext,
+        projectId: String,
+        statisticsTime: LocalDateTime
+    ): Result<Record2<String, String>> {
+        with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
+            return dslContext.select(PIPELINE_ID, URL)
+                .from(this)
+                .where(STATISTICS_TIME.eq(LocalDate.now().atStartOfDay()))
+                .and(PROJECT_ID.eq(projectId))
+                .and(IS_INVALID_PIPELINE.eq(true))
+                .fetch()
         }
     }
 }
