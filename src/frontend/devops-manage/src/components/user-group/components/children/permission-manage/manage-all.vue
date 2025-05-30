@@ -592,16 +592,6 @@ onMounted(() => {
 watch(projectId, () => {
   init(true);
 });
-const value = ref();
-function abc(params) {
-  console.log("🚀 ~ abc ~ params:", params)
-  
-}
-function ccc(params) {
-  console.log("🚀 ~ ccc ~ params:", params)
-  
-}
-
 function init (flag, searchValue) {
   searchGroup.value = searchValue
   memberPagination.value.current = 1;

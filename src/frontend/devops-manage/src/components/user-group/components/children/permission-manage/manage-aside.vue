@@ -79,8 +79,9 @@
     </template>
     <bk-loading :loading="removeCheckLoading">
       <template #default>
-        <template v-if="removeMemberChecked && !isBatchOperate">
-          <p class="remove-tips">{{ t('XXX拥有的权限均已过期，无需交接，确定移出用户并清理过期权限吗？', [`${removeUser.id} (${removeUser.name})`]) }}</p>
+        <template v-if="removeMemberChecked">
+          <p v-if="!isBatchOperate" class="remove-tips">{{ t('XXX拥有的权限均已过期，无需交接，确定移出用户并清理过期权限吗？', [`${removeUser.id} (${removeUser.name})`]) }}</p>
+          <p v-else class="remove-tips">{{ t('用户拥有的权限均已过期，无需交接，确定移出用户并清理过期权限吗？') }}</p>
         </template>
         <template v-else>
           <div class="dialog">
@@ -534,6 +535,13 @@ function handleBatchAll(value) {
 }
 
 async function handleOpenbatchDialog() {
+  if (!checkedMembers.value.length) {
+    Message({
+      theme: 'error',
+      message: t('请选择组织/用户')
+    });
+    return
+  }
   const allAreGroups = checkedMembers.value.every(member => member.type === 'department');
   if (allAreGroups) {
     isShowRemoveDialog.value = true;
