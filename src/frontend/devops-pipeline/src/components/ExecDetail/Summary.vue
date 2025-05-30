@@ -123,30 +123,32 @@
             <div class="exec-remark-block">
                 <span class="exec-detail-summary-info-block-title">
                     {{ $t("history.remark") }}
-                    <i
-                        v-if="!remarkEditable"
-                        @click="showRemarkEdit"
-                        class="devops-icon icon-edit exec-remark-edit-icon pointer"
-                    />
-                    <span
-                        v-else
-                        class="pipeline-exec-remark-actions"
-                    >
-                        <bk-button
-                            text
-                            theme="primary"
-                            @click="handleRemarkChange"
-                        >{{
-                            $t("save")
-                        }}</bk-button>
-                        <bk-button
-                            text
-                            theme="primary"
-                            @click="hideRemarkEdit"
-                        >{{
-                            $t("cancel")
-                        }}</bk-button>
-                    </span>
+                    <template v-if="!archiveFlag">
+                        <i
+                            v-if="!remarkEditable"
+                            @click="showRemarkEdit"
+                            class="devops-icon icon-edit exec-remark-edit-icon pointer"
+                        />
+                        <span
+                            v-else
+                            class="pipeline-exec-remark-actions"
+                        >
+                            <bk-button
+                                text
+                                theme="primary"
+                                @click="handleRemarkChange"
+                            >{{
+                                $t("save")
+                            }}</bk-button>
+                            <bk-button
+                                text
+                                theme="primary"
+                                @click="hideRemarkEdit"
+                            >{{
+                                $t("cancel")
+                            }}</bk-button>
+                        </span>
+                    </template>
                 </span>
                 <div class="exec-detail-summary-info-block-content">
                     <bk-input
@@ -238,8 +240,10 @@
                             }
                         }
                     }]
+            },
+            archiveFlag () {
+                return this.$route.query.archiveFlag
             }
-
         },
         watch: {
             execDetail: {
@@ -264,7 +268,8 @@
                 try {
                     const result = await this.fetchVersionDetail({
                         version: this.execDetail.curVersion,
-                        ...this.$route.params
+                        ...this.$route.params,
+                        ...this.$route.query
                     })
                     this.curVersionDesc = result.data.description
                 } catch (error) {
@@ -329,8 +334,8 @@
   .instance-template-info {
     display: inline-flex;
     margin-right: 6px;
-    line-height: 1;
-    margin-right: 6px;
+    line-height: 52px;
+    height: 100%;
   }
   .template-info-entry {
     color: #979ba5;

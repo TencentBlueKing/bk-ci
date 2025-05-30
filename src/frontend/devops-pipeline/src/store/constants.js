@@ -40,6 +40,7 @@ export const MY_PIPELINE_VIEW_ID = 'myPipeline'
 export const COLLECT_VIEW_ID_NAME = 'myCollect'
 export const COLLECT_VIEW_ID = 'collect'
 export const DELETED_VIEW_ID = 'recycleBin'
+export const ARCHIVE_VIEW_ID = 'archiveLibrary'
 export const UNCLASSIFIED_PIPELINE_VIEW_ID = 'unclassified'
 export const RECENT_USED_VIEW_ID = 'recentUse'
 
