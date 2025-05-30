@@ -42,7 +42,7 @@
                     {{ $t('settings.validatebuildNum') }}
                 </p>
             </bk-form-item>
-            <bk-form-item
+            <!-- <bk-form-item
                 ext-cls="variable-invalid"
             >
                 <div class="layout-label">
@@ -62,7 +62,7 @@
                         {{ $t('settings.errorAndHalt') }}
                     </bk-radio>
                 </bk-radio-group>
-            </bk-form-item>
+            </bk-form-item> -->
             <bk-form-item :label="$t('template.parallelSetting')">
                 <bk-radio-group
                     :value="pipelineSetting.runLockType"
@@ -230,14 +230,14 @@
             handleRunningLockChange: Function
         },
         computed: {
-            proxyFailIfVariableInvalid: {
-                get () {
-                    return this.pipelineSetting.failIfVariableInvalid ?? false
-                },
-                set (val) {
-                    this.pipelineSetting.failIfVariableInvalid = val
-                }
-            },
+            // proxyFailIfVariableInvalid: {
+            //     get () {
+            //         return this.pipelineSetting.failIfVariableInvalid ?? false
+            //     },
+            //     set (val) {
+            //         this.pipelineSetting.failIfVariableInvalid = val
+            //     }
+            // },
             runTypeMap () {
                 return {
                     MULTIPLE: 'MULTIPLE',
