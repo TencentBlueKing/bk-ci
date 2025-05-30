@@ -110,9 +110,10 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         authResourceApi.batchCreateResource(
             serviceCode = projectAuthServiceCode,
             resourceType = AuthResourceType.PROJECT,
-            resourceList = projectList,
             projectCode = BK_DEVOPS_SCOPE,
-            user = authProjectCreateInfo.userId
+            user = authProjectCreateInfo.userId,
+            resourceList = projectList,
+            tenantId = authProjectCreateInfo.projectCreateInfo.tenantId
         )
         return ""
     }

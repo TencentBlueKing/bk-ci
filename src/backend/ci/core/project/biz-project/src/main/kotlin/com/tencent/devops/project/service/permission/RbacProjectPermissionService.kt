@@ -111,6 +111,7 @@ class RbacProjectPermissionService(
         }
         authResourceApi.createResource(
             user = authProjectCreateInfo.userId,
+            tenantId = authProjectCreateInfo.projectCreateInfo.tenantId,
             serviceCode = projectAuthServiceCode,
             resourceType = AuthResourceType.PROJECT,
             projectCode = TenantUtils.parseEnglishName(
@@ -158,11 +159,13 @@ class RbacProjectPermissionService(
         try {
             // 如果创建时被拒绝,修改后再创建,需要重新发起创建申请单
             if (approvalStatus == ProjectApproveStatus.CREATE_REJECT.status) {
+                val tenantId = resourceUpdateInfo.projectUpdateInfo.tenantId
                 authResourceApi.createResource(
                     user = resourceUpdateInfo.userId,
+                    tenantId = tenantId,
                     serviceCode = projectAuthServiceCode,
                     resourceType = AuthResourceType.PROJECT,
-                    projectCode = englishName,
+                    projectCode = TenantUtils.parseEnglishName(tenantId, englishName),
                     resourceCode = englishName,
                     resourceName = resourceUpdateInfo.projectUpdateInfo.projectName
                 )

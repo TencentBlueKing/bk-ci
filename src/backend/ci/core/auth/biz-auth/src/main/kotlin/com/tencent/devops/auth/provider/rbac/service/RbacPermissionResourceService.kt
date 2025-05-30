@@ -70,6 +70,7 @@ class RbacPermissionResourceService(
         resourceType: String,
         resourceCode: String,
         resourceName: String,
+        tenantId: String?,
         async: Boolean
     ): Boolean {
         logger.info("resource create relation|$userId|$projectCode|$resourceType|$resourceCode|$resourceName")
@@ -85,7 +86,8 @@ class RbacPermissionResourceService(
                 projectName = resourceName,
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = resourceCode,
-                resourceName = resourceName
+                resourceName = resourceName,
+                tenantId = tenantId
             )
         } else {
             // 获取分级管理员信息

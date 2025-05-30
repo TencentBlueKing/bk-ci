@@ -155,9 +155,9 @@ class RbacPipelineTemplatePermissionService constructor(
         if (enableTemplatePermissionManage(projectId)) {
             authResourceApi.createResource(
                 user = userId,
-                projectCode = projectId,
                 serviceCode = pipelineAuthServiceCode,
                 resourceType = resourceType,
+                projectCode = projectId,
                 resourceCode = templateId,
                 resourceName = templateName
             )

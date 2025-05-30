@@ -574,7 +574,8 @@ class RbacPermissionMigrateService(
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectCode,
             resourceName = projectInfo.projectName,
-            async = false
+            async = false,
+            tenantId = projectInfo.tenantId
         )
         return authResourceService.getOrNull(
             projectCode = projectCode,

@@ -219,6 +219,7 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun resourceCreateRelation(
         userId: String,
+        tenantId: String?,
         token: String,
         type: String?,
         projectCode: String,
@@ -232,7 +233,8 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
                 projectCode = projectCode,
                 resourceType = resourceType,
                 resourceCode = resourceCode,
-                resourceName = resourceName
+                resourceName = resourceName,
+                tenantId = tenantId
             )
         )
     }
