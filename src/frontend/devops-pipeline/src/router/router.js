@@ -31,9 +31,9 @@ const AtomDebug = () => import(/* webpackChunkName: "atomDebug" */'../views/Atom
 const AtomManage = () => import(/* webpackChunkName: "atomManage" */'../views/AtomManage.vue')
 
 // 流水线模板
-const TemplateEntry = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/Template/')
+const TemplateListEntry = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/Template/')
 const TemplateList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/Template/List/')
-const templateEntry = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/TemplateEntry')
+const TemplateEntry = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/TemplateEntry')
 const TemplateOverview = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/TemplateOverview')
 const templateEdit = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/edit.vue')
 const InstanceEntry = () => import(/* webpackChunkName: "pipelinesTemplate" */'../views/Template/Instance/InstanceEntry.vue')
@@ -99,7 +99,7 @@ const routes = [
                 children: [
                     {
                         path: 'template',
-                        component: TemplateEntry,
+                        component: TemplateListEntry,
                         children: [
                             {
                                 path: ':templateViewId',
@@ -140,7 +140,7 @@ const routes = [
             },
             {
                 path: 'template/:templateId/:version?',
-                component: templateEntry,
+                component: TemplateEntry,
                 children: [
                     {
                         path: 'edit',
