@@ -38,5 +38,7 @@ data class WorkspaceCloneReq(
     @get:Schema(title = "机型，默认和原机器一致")
     val machineType: String?,
     @get:Schema(title = "是否开机备份，默认false")
-    val live: Boolean?
+    val live: Boolean?,
+    @get:Schema(title = "克隆时指定污点")
+    val specifyTaints: String? = null
 )

@@ -29,11 +29,15 @@ package com.tencent.devops.auth.service
 
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.auth.api.manager.ServiceManagerUserResource
+import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_USER_CONTRACT_NOT_SIGNED
 import com.tencent.devops.auth.pojo.ProjectOrgInfo
 import com.tencent.devops.auth.pojo.UserPermissionInfo
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -42,6 +46,13 @@ import java.util.concurrent.TimeUnit
 class ManagerService @Autowired constructor(
     val client: Client
 ) {
+
+    @Autowired
+    private lateinit var redisOperation: RedisOperation
+
+    @Autowired
+    private lateinit var config: CommonConfig
+
     private val userPermissionMap = CacheBuilder.newBuilder()
         .maximumSize(50000)
         .expireAfterWrite(5, TimeUnit.MINUTES)
@@ -59,8 +70,13 @@ class ManagerService @Autowired constructor(
         resourceType: AuthResourceType,
         authPermission: AuthPermission
     ): Boolean {
-
         logger.info("isManagerPermission $userId| $projectId| ${resourceType.value} | ${authPermission.value}")
+        // 需要签订保密协议的项目，不允许超管和reporter直接查看，需要走正常权限校验逻辑
+        val projectsOfSignature = redisOperation.get(PROJECTS_OF_SIGNATURE)?.split(",") ?: emptyList()
+        if (projectsOfSignature.contains(projectId)) {
+            logger.info("This project requires a contract to be signed before visit. $userId|$projectId")
+            return false
+        }
         // 从缓存内获取用户管理员信息，若缓存击穿，调用auth服务获取源数据，并刷入内存
         val manageInfo = if (userPermissionMap.getIfPresent(userId) == null) {
             val remoteManagerInfo = client.get(ServiceManagerUserResource::class).getManagerInfo(userId)
@@ -113,12 +129,12 @@ class ManagerService @Autowired constructor(
             manageInfo.keys.forEach orgForEach@{ orgId ->
                 val managerPermission = manageInfo[orgId] ?: return@orgForEach
                 val isOrgEqual =
-                when (managerPermission.organizationLevel) {
-                    1 -> projectOrgInfo!!.bgId == managerPermission.organizationId.toString()
-                    2 -> projectOrgInfo!!.deptId == managerPermission.organizationId.toString()
-                    3 -> projectOrgInfo!!.centerId == managerPermission.organizationId.toString()
-                    else -> false
-                }
+                    when (managerPermission.organizationLevel) {
+                        1 -> projectOrgInfo!!.bgId == managerPermission.organizationId.toString()
+                        2 -> projectOrgInfo!!.deptId == managerPermission.organizationId.toString()
+                        3 -> projectOrgInfo!!.centerId == managerPermission.organizationId.toString()
+                        else -> false
+                    }
                 if (!isOrgEqual) {
                     // 组织信息未匹配
                     return@orgForEach
@@ -137,7 +153,7 @@ class ManagerService @Autowired constructor(
                         if (orgManagerPermissionList.contains(authPermission)) {
                             logger.info(
                                 "$userId has $projectId ${resourceType.value} ${authPermission.value} " +
-                                        "$projectOrgInfo manager permission"
+                                    "$projectOrgInfo manager permission"
                             )
                             isManagerPermission = true
                             return@managerPermissionFor
@@ -149,7 +165,29 @@ class ManagerService @Autowired constructor(
         return isManagerPermission
     }
 
+    fun checkUserSignatureStatus(
+        projectId: String,
+        userId: String
+    ) {
+        val projectsOfSignature = redisOperation.get(PROJECTS_OF_SIGNATURE)?.split(",") ?: emptyList()
+        // 未签署保密合同的用户不允许访问
+        if (projectsOfSignature.contains(projectId)) {
+            val isUserSigned = redisOperation.get(USER_SIGNATURE_STATUS_CHECK.plus(userId))?.toBoolean()
+            if (isUserSigned != true) {
+                logger.warn(
+                    "The user cannot access the project because the contract has not been signed.$projectId|$userId"
+                )
+                throw ErrorCodeException(
+                    errorCode = ERROR_USER_CONTRACT_NOT_SIGNED,
+                    params = arrayOf("${config.devopsHostGateway}/console/pipeline/$projectId")
+                )
+            }
+        }
+    }
+
     companion object {
         val logger = LoggerFactory.getLogger(ManagerService::class.java)
+        private const val PROJECTS_OF_SIGNATURE = "projects.signature.check"
+        private const val USER_SIGNATURE_STATUS_CHECK = "user.signature.status.check."
     }
 }

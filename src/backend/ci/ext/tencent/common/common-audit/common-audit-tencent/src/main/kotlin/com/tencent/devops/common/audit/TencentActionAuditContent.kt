@@ -28,6 +28,7 @@ object TencentActionAuditContent {
         "in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val CGS_MAKE_IMAGE_CONTENT = "make workspace image  $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val CGS_EXPAND_DISK_CONTENT = "expand workspace disk $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val CGS_DELETE_DISK_CONTENT = "delete workspace disk $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val CGS_DELETE_CONTENT = "delete workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val CGS_SHARE_CONTENT = "share workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val CGS_EDIT_CONTENT = "edit workspace $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"

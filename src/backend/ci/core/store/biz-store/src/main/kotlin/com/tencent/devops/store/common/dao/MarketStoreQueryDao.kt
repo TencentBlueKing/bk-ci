@@ -32,6 +32,7 @@ import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseFeature
 import com.tencent.devops.model.store.tables.TStoreCategoryRel
+import com.tencent.devops.model.store.tables.TStoreDeptRel
 import com.tencent.devops.model.store.tables.TStoreLabelRel
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
@@ -43,6 +44,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record1
+import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.SelectConditionStep
 import org.jooq.SelectJoinStep
@@ -57,25 +59,27 @@ class MarketStoreQueryDao {
      */
     fun count(
         dslContext: DSLContext,
+        userDeptList: List<Int>,
         storeInfoQuery: StoreInfoQuery
     ): Int {
         val tStoreBase = TStoreBase.T_STORE_BASE
         val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
-        val baseStep = dslContext.select(DSL.countDistinct(tStoreBase.STORE_CODE)).from(tStoreBase)
-        if (storeInfoQuery.recommendFlag != null || storeInfoQuery.rdType != null) {
-            baseStep.leftJoin(tStoreBaseFeature)
+        val tStoreDeptRel = TStoreDeptRel.T_STORE_DEPT_REL
+        val baseStep =
+            dslContext.select(DSL.countDistinct(tStoreBase.STORE_CODE)).from(tStoreBase).leftJoin(tStoreBaseFeature)
                 .on(
                     tStoreBase.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
                         .and(tStoreBase.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE))
                 )
-        }
-        val conditions = formatConditions(
+        applyConditionFilter(
             dslContext = dslContext,
-            storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType),
-            storeInfoQuery = storeInfoQuery,
-            baseStep = baseStep
+            baseStep = baseStep,
+            tStoreBase = tStoreBase,
+            tStoreDeptRel = tStoreDeptRel,
+            userDeptList = userDeptList,
+            storeInfoQuery = storeInfoQuery
         )
-        return baseStep.where(conditions).fetchOne(0, Int::class.java) ?: 0
+        return baseStep.fetchOne(0, Int::class.java) ?: 0
     }
 
     /**
@@ -83,40 +87,113 @@ class MarketStoreQueryDao {
      */
     fun list(
         dslContext: DSLContext,
+        userDeptList: List<Int>,
         storeInfoQuery: StoreInfoQuery
     ): Result<out Record> {
         val tStoreBase = TStoreBase.T_STORE_BASE
+        val tStoreDeptRel = TStoreDeptRel.T_STORE_DEPT_REL
         val baseStep = createBaseStep(dslContext)
         val storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
-        val sortType = storeInfoQuery.sortType
+
+        storeInfoQuery.sortType?.let { sortType ->
+            applySorting(
+                dslContext = dslContext,
+                baseStep = baseStep,
+                tStoreBase = tStoreBase,
+                storeType = storeType,
+                sortType = sortType,
+                score = storeInfoQuery.score
+            )
+        }
+
+        applyConditionFilter(
+            dslContext = dslContext,
+            baseStep = baseStep,
+            tStoreBase = tStoreBase,
+            tStoreDeptRel = tStoreDeptRel,
+            userDeptList = userDeptList,
+            storeInfoQuery = storeInfoQuery
+        )
+        val offset = (storeInfoQuery.page - 1) * storeInfoQuery.pageSize
+        return baseStep.limit(offset, storeInfoQuery.pageSize)
+            .skipCheck()
+            .fetch()
+    }
+
+    private fun applySorting(
+        dslContext: DSLContext,
+        baseStep: SelectJoinStep<out Record>,
+        tStoreBase: TStoreBase,
+        storeType: StoreTypeEnum,
+        sortType: StoreSortTypeEnum,
+        score: Int?
+    ) {
+        val isDownloadCountSort = sortType == StoreSortTypeEnum.DOWNLOAD_COUNT
+        val needStatsJoin = isDownloadCountSort && score == null
+        if (needStatsJoin) {
+            val statsSubquery = buildStatsSubquery(dslContext, sortType, storeType)
+            baseStep.leftJoin(statsSubquery)
+                .on(tStoreBase.STORE_CODE.eq(statsSubquery.field(KEY_STORE_CODE, String::class.java)))
+        }
+
+        val sortField = if (isDownloadCountSort) {
+            DSL.field(sortType.name)
+        } else {
+            tStoreBase.field(sortType.name) ?: throw IllegalArgumentException("Invalid sort field")
+        }
+        baseStep.orderBy(sortField.desc())
+    }
+
+    private fun buildStatsSubquery(
+        dslContext: DSLContext,
+        sortType: StoreSortTypeEnum,
+        storeType: StoreTypeEnum
+    ): SelectConditionStep<Record2<String, Int>> {
+        val tStoreStatisticsTotal = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
+        val statsSubquery = dslContext.select(
+            tStoreStatisticsTotal.STORE_CODE,
+            tStoreStatisticsTotal.DOWNLOADS.`as`(sortType.name)
+        )
+            .from(tStoreStatisticsTotal)
+            .where(tStoreStatisticsTotal.STORE_TYPE.eq(storeType.type.toByte()))
+        return statsSubquery
+    }
+
+    private fun applyConditionFilter(
+        dslContext: DSLContext,
+        baseStep: SelectJoinStep<out Record>,
+        tStoreBase: TStoreBase,
+        tStoreDeptRel: TStoreDeptRel,
+        userDeptList: List<Int>,
+        storeInfoQuery: StoreInfoQuery
+    ) {
+        val storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
         val conditions = formatConditions(
             dslContext = dslContext,
             storeType = storeType,
             storeInfoQuery = storeInfoQuery,
             baseStep = baseStep
         )
-        if (null != sortType) {
-            val flag = sortType == StoreSortTypeEnum.DOWNLOAD_COUNT
-            if (flag && storeInfoQuery.score == null) {
-                val tStoreStatisticsTotal = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
-                val t =
-                    dslContext.select(
-                        tStoreStatisticsTotal.STORE_CODE,
-                        tStoreStatisticsTotal.DOWNLOADS.`as`(StoreSortTypeEnum.DOWNLOAD_COUNT.name)
-                    )
-                        .from(tStoreStatisticsTotal)
-                        .where(tStoreStatisticsTotal.STORE_TYPE.eq(storeType.type.toByte())).asTable("t")
-                baseStep.leftJoin(t).on(tStoreBase.STORE_CODE.eq(t.field(KEY_STORE_CODE, String::class.java)))
-            }
 
-            val realSortType = if (flag) { DSL.field(sortType.name) } else { tStoreBase.field(sortType.name) }
-            baseStep.orderBy(realSortType!!.desc())
+        val finalConditions = if (storeType == StoreTypeEnum.DEVX) {
+            val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
+            val deptCondition = tStoreDeptRel.STORE_CODE.eq(tStoreBase.STORE_CODE)
+                .and(tStoreDeptRel.STORE_TYPE.eq(tStoreBase.STORE_TYPE))
+                .and(tStoreDeptRel.DEPT_ID.`in`(userDeptList))
+            val existsCondition = DSL.exists(
+                dslContext.selectOne()
+                    .from(tStoreDeptRel)
+                    .where(deptCondition)
+            )
+            val publicFlagCondition = tStoreBaseFeature.PUBLIC_FLAG.eq(true)
+            val combinedCondition = DSL.or(publicFlagCondition, existsCondition)
+
+            conditions.plus(combinedCondition)
+        } else {
+            conditions
         }
-        return baseStep.where(conditions)
-            .limit(
-                (storeInfoQuery.page - 1) * storeInfoQuery.pageSize,
-                storeInfoQuery.pageSize
-            ).skipCheck().fetch()
+
+        baseStep.where(finalConditions)
     }
 
     private fun createBaseStep(dslContext: DSLContext): SelectJoinStep<out Record> {
@@ -178,6 +255,7 @@ class MarketStoreQueryDao {
             conditions.add(tStoreBase.STATUS.eq(StoreStatusEnum.RELEASED.name))
             conditions.add(tStoreBase.LATEST_FLAG.eq(true))
         }
+        conditions.add(tStoreBaseFeature.SHOW_FLAG.eq(true))
         storeInfoQuery.recommendFlag?.let {
             conditions.add(tStoreBaseFeature.RECOMMEND_FLAG.eq(it))
         }

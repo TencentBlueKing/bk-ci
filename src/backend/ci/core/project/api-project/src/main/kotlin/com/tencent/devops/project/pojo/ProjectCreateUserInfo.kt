@@ -47,5 +47,7 @@ data class ProjectCreateUserInfo(
     @get:Schema(title = "资源类型")
     val resourceType: String?,
     @get:Schema(title = "资源ID")
-    val resourceCode: String?
+    val resourceCode: String?,
+    @get:Schema(title = "过期天数")
+    val expiredTime: Long? = null
 )

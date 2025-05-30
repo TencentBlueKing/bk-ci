@@ -62,6 +62,7 @@ import com.tencent.devops.scm.api.pojo.repository.ScmServerRepository
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import com.tencent.devops.scm.spring.manager.ScmProviderManager
 import com.tencent.devops.scm.spring.properties.ScmProviderProperties
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 /**
@@ -199,6 +200,14 @@ class ScmApiManager constructor(
         name: String
     ): Reference {
         return scmProviderManager.refs(providerProperties).findTag(providerRepository, name)
+    }
+
+    fun findTags(
+        providerProperties: ScmProviderProperties,
+        providerRepository: ScmProviderRepository,
+        opts: TagListOptions
+    ): List<Reference> {
+        return scmProviderManager.refs(providerProperties).listTags(providerRepository, opts)
     }
 
     fun listTags(
@@ -502,5 +511,9 @@ class ScmApiManager constructor(
         providerRepository: ScmProviderRepository
     ) {
         scmProviderManager.command(providerProperties).remoteInfo(providerRepository)
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(ScmApiManager::class.java)
     }
 }

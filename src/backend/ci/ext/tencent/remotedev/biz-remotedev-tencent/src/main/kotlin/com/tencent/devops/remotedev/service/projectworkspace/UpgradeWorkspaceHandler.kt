@@ -116,7 +116,8 @@ class UpgradeWorkspaceHandler @Autowired constructor(
             }
             createCheckWhenUpgrade(
                 old = workspace,
-                machineType = rebuildReq.machineType
+                machineType = rebuildReq.machineType,
+                specifyTaints = rebuildReq.specifyTaints
             )
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
@@ -230,7 +231,8 @@ class UpgradeWorkspaceHandler @Autowired constructor(
 
     private fun createCheckWhenUpgrade(
         old: WorkspaceRecordWithWindows,
-        machineType: String
+        machineType: String,
+        specifyTaints: String? = null
     ) {
         val zoneId = checkNotNull(old.zoneId)
         val winConfigId = checkNotNull(old.winConfigId)
@@ -274,7 +276,8 @@ class UpgradeWorkspaceHandler @Autowired constructor(
             windowsZone = windowsZone,
             windowsConfig = windowsConfig,
             newNum = 1,
-            quotaType = QuotaType.parse(windowsZone.type)
+            quotaType = QuotaType.parse(windowsZone.type),
+            specifyTaints = specifyTaints
         )
     }
 

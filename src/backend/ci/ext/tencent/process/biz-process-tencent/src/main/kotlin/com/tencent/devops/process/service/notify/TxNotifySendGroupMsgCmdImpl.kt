@@ -39,6 +39,7 @@ import com.tencent.devops.process.notify.command.impl.BluekingNotifySendCmd
 import com.tencent.devops.process.notify.command.impl.NotifySendCmd
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 
 @Suppress("ComplexMethod", "NestedBlockDepth")
 class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
@@ -46,6 +47,13 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
     val authProjectApi: AuthProjectApi,
     val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) : NotifySendCmd(client) {
+
+    @Value("\${bkci.logo.iconUrl:}")
+    private lateinit var logoIconUrl: String
+
+    @Value("\${bkci.logo.textUrl:}")
+    private lateinit var logoTextUrl: String
+
     override fun canExecute(commandContext: BuildNotifyContext): Boolean {
         return true
     }
@@ -73,6 +81,8 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                     )
                     commandContext.notifyValue["successContent"] = successContent
                     commandContext.notifyValue["emailSuccessContent"] = successContent
+                    commandContext.notifyValue["logoIconUrl"] = logoIconUrl
+                    commandContext.notifyValue["logoTextUrl"] = logoTextUrl
                     commandContext.notifyValue[NotifyUtils.WEWORK_GROUP_KEY] = group
                     val receivers = parseReceiver(successSubscription.users, commandContext.variables)
                     if (!emptyGroup(successSubscription.groups)) {

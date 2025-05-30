@@ -54,6 +54,7 @@ class StoreProjectRelDao {
         type: Byte,
         storeType: Byte,
         instanceId: String? = null,
+        instanceName: String? = null,
         version: String? = null
     ): Int {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
@@ -65,6 +66,7 @@ class StoreProjectRelDao {
                 TYPE,
                 STORE_TYPE,
                 INSTANCE_ID,
+                INSTANCE_NAME,
                 VERSION,
                 CREATOR,
                 MODIFIER
@@ -75,6 +77,7 @@ class StoreProjectRelDao {
                 type,
                 storeType,
                 instanceId,
+                instanceName,
                 version,
                 userId,
                 userId
@@ -84,6 +87,9 @@ class StoreProjectRelDao {
                 .set(UPDATE_TIME, LocalDateTime.now())
             instanceId?.let {
                 baseStep.set(INSTANCE_ID, instanceId)
+            }
+            instanceName?.let {
+                baseStep.set(INSTANCE_NAME, instanceName)
             }
             version?.let {
                 baseStep.set(VERSION, version)
@@ -330,13 +336,25 @@ class StoreProjectRelDao {
      * 判断组件是否被项目安装
      * 无论初始化项目、调试项目还是协作项目，均视为已安装
      */
-    fun isInstalledByProject(dslContext: DSLContext, projectCode: String, storeCode: String, storeType: Byte): Boolean {
+    fun isInstalledByProject(
+        dslContext: DSLContext,
+        projectCode: String,
+        storeCode: String,
+        storeType: Byte,
+        instanceId: String? = null
+    ): Boolean {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            val conditions = mutableListOf<Condition>().apply {
+                add(STORE_CODE.eq(storeCode))
+                add(STORE_TYPE.eq(storeType))
+                add(PROJECT_CODE.eq(projectCode))
+                if (!instanceId.isNullOrBlank()) {
+                    add(INSTANCE_ID.eq(instanceId))
+                }
+            }
             return dslContext.selectCount()
                 .from(this)
-                .where(PROJECT_CODE.eq(projectCode))
-                .and(STORE_CODE.eq(storeCode))
-                .and(STORE_TYPE.eq(storeType))
+                .where(conditions)
                 .fetchOne(0, Long::class.java) != 0L
         }
     }
@@ -582,20 +600,25 @@ class StoreProjectRelDao {
         }
     }
 
-    fun getProjectInfoByStoreCode(
+    fun getProjectRelInfo(
         dslContext: DSLContext,
         storeCode: String,
         storeType: Byte,
-        storeProjectType: StoreProjectTypeEnum? = null
+        storeProjectType: StoreProjectTypeEnum? = null,
+        projectCode: String? = null,
+        instanceId: String? = null
     ): Result<TStoreProjectRelRecord>? {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(STORE_CODE.eq(storeCode))
-            conditions.add(STORE_TYPE.eq(storeType))
-            if (storeProjectType != null) {
-                conditions.add(TYPE.eq(storeProjectType.type.toByte()))
+            val conditions = mutableListOf<Condition>().apply {
+                add(STORE_CODE.eq(storeCode))
+                add(STORE_TYPE.eq(storeType))
+                storeProjectType?.let { add(TYPE.eq(it.type.toByte())) }
+                projectCode?.let { add(PROJECT_CODE.eq(it)) }
+                instanceId?.takeIf { it.isNotBlank() }?.let { add(INSTANCE_ID.eq(it)) }
             }
-            return dslContext.selectFrom(this).where(conditions).fetch()
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .fetch()
         }
     }
 
@@ -617,26 +640,6 @@ class StoreProjectRelDao {
                 .where(conditions)
                 .limit(1)
                 .fetchOne()
-        }
-    }
-
-    /**
-     * 判断组件是否被用户安装
-     */
-    fun isInstalledByUser(
-        dslContext: DSLContext,
-        userId: String,
-        storeCode: String,
-        storeType: Byte
-    ): Boolean {
-        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
-            return dslContext.selectCount()
-                .from(this)
-                .where(CREATOR.eq(userId))
-                .and(STORE_CODE.eq(storeCode))
-                .and(STORE_TYPE.eq(storeType))
-                .and(TYPE.eq(StoreProjectTypeEnum.COMMON.type.toByte()))
-                .fetchOne(0, Long::class.java) != 0L
         }
     }
 }

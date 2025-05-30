@@ -344,6 +344,8 @@ class PipelineContextService @Autowired constructor(
                 contextMap["step.status"] = statusStr
                 e.status?.let { contextMap["step.outcome"] = it }
                 contextMap["step.atom_version"] = e.version
+                e.retryCountManual?.takeIf { it > 0 }?.let { contextMap["step.retry-count-manual"] = it.toString() }
+                e.retryCountAuto?.let { contextMap["step.retry-count-auto"] = it.toString() }
                 contextMap["step.atom_code"] = e.getAtomCode()
             }
             val stepId = if (e.stepId.isNullOrBlank()) return@forEach else e.stepId!!
@@ -353,12 +355,20 @@ class PipelineContextService @Autowired constructor(
                 e.id?.let { contextMap["steps.$stepId.id"] = it }
                 contextMap["steps.$stepId.status"] = statusStr
                 e.status?.let { contextMap["steps.$stepId.outcome"] = it }
+                e.retryCountManual?.takeIf { it > 0 }?.let {
+                    contextMap["steps.$stepId.retry-count-manual"] = it.toString()
+                }
+                e.retryCountAuto?.let { contextMap["steps.$stepId.retry-count-auto"] = it.toString() }
             }
             val jobId = if (c.jobId.isNullOrBlank()) return else c.jobId!!
             contextMap["jobs.$jobId.steps.$stepId.name"] = e.name
             e.id?.let { contextMap["jobs.$jobId.steps.$stepId.id"] = it }
             contextMap["jobs.$jobId.steps.$stepId.status"] = statusStr
             e.status?.let { contextMap["jobs.$jobId.steps.$stepId.outcome"] = it }
+            e.retryCountManual?.takeIf { it > 0 }?.let {
+                contextMap["jobs.$jobId.steps.$stepId.retry-count-manual"] = it.toString()
+            }
+            e.retryCountAuto?.let { contextMap["jobs.$jobId.steps.$stepId.retry-count-auto"] = it.toString() }
             outputArrayMap?.let { self ->
                 fillStepOutputArray(
                     jobPrefix = "jobs.$jobId.",
@@ -410,9 +420,11 @@ class PipelineContextService @Autowired constructor(
                 GatewayType.IDC.name
             }
         }
+
         is NormalContainer -> {
             GatewayType.IDC.name
         }
+
         else -> null
     }
 

@@ -12,16 +12,16 @@ data class CreateDiskResp(
     val taskId: String?
 )
 
-/**
- * 创建数据盘相关
- * @param uid 环境id
- * @param pvcSize 数据盘扩容大小单位Gi
- * @param pvcClass PVC类型 ssd or hdd
- */
-data class CreateDiskData(
-    val uid: String,
-    val pvcSize: String,
-    val pvcClass: String
+@Schema(title = "删除磁盘详情")
+data class DeleteDiskData(
+    @get:Schema(title = "工作空间名称")
+    val workspaceName: String,
+    @get:Schema(title = "数据盘唯一名称")
+    val pvcName: String,
+    @get:Schema(title = "是否强制重启")
+    val forceRestart: Boolean?,
+    @get:Schema(title = "延迟删除时间，秒")
+    val delaySeconds: Int?
 )
 
 enum class CreateDiskDataClass(val data: String) {

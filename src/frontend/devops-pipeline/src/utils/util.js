@@ -20,8 +20,8 @@
 import {
     ALL_PIPELINE_VIEW_ID
 } from '@/store/constants'
-import { v4 as uuidv4 } from 'uuid'
 import { isFileParam } from '@/store/modules/atom/paramsConfig'
+import { v4 as uuidv4 } from 'uuid'
 
 export function isVNode (node) {
     return typeof node === 'object' && Object.prototype.hasOwnProperty.call(node, 'componentOptions')

@@ -99,8 +99,8 @@
                 :handle-change="handleChange"
                 v-validate="'required'"
                 :data-vv-scope="'pipelineParam'"
-                :replace-key="param.replaceKey"
-                :search-url="param.searchUrl"
+                replace-key="{keyword}"
+                :search-url="getSearchUrl('CODE_SVN')"
             >
             </request-selector>
         </form-field>
@@ -202,12 +202,14 @@
                 :data-vv-scope="'pipelineParam'"
                 :value="param.defaultValue"
                 :handle-change="handleChange"
+                replace-key="{keyword}"
+                :search-url="getSearchUrl(param.scmType)"
             >
             </request-selector>
             <request-selector
                 v-if="isBuildResourceParam(param.type)"
                 :popover-min-width="250"
-                :url="getBuildResourceUrl"
+                :url="`${buildResourceUrl}&displayName=${param.defaultValue ?? ''}`"
                 param-id="displayName"
                 param-name="displayName"
                 :disabled="disabled"
@@ -216,8 +218,8 @@
                 :data-vv-scope="'pipelineParam'"
                 :value="param.defaultValue"
                 :handle-change="handleChange"
-                :replace-key="param.replaceKey"
-                :search-url="param.searchUrl"
+                replace-key="\{\{__keywords__\}\}"
+                :search-url="buildResourceSearchUrl"
             >
             </request-selector>
             <request-selector
@@ -404,8 +406,11 @@
             isRemoteSelect () {
                 return this.param?.payload?.type === 'remote'
             },
-            getBuildResourceUrl () {
+            buildResourceUrl () {
                 return `${ENVIRONMENT_API_URL_PREFIX}/user/envnode/${this.$route.params.projectId}/listNew?nodeType=THIRDPARTY&page=1&pageSize=100`
+            },
+            buildResourceSearchUrl () {
+                return `${this.buildResourceUrl}&keywords={{__keywords__}}`
             }
         },
         created () {

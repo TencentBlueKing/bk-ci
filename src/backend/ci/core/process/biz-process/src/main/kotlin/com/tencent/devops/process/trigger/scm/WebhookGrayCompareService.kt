@@ -28,6 +28,7 @@
 package com.tencent.devops.process.trigger.scm
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
@@ -39,6 +40,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_MANUAL_UNLOCK
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_PREFIX
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_SOURCE_WEBHOOK
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
@@ -52,6 +54,8 @@ import com.tencent.devops.repository.api.ServiceRepositoryWebhookResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.webhook.WebhookParseRequest
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
+import com.tencent.devops.scm.api.pojo.webhook.git.GitPushHook
+import com.tencent.devops.scm.api.pojo.webhook.git.PullRequestHook
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
@@ -70,23 +74,24 @@ class WebhookGrayCompareService @Autowired constructor(
     private val pipelineYamlService: PipelineYamlService,
     private val webhookTriggerMatcher: WebhookTriggerMatcher
 ) {
+
+    private val executor = ThreadPoolUtil.getThreadPoolExecutor(
+        corePoolSize = 1,
+        maximumPoolSize = 1,
+        keepAliveTime = 0L,
+        queue = LinkedBlockingQueue(1),
+        threadNamePrefix = "webhook-gray-compare-%d"
+    )
+
     fun asyncCompareWebhook(
         scmType: ScmType,
         request: WebhookRequest,
         matcher: ScmWebhookMatcher
     ) {
-        val bizId = MDC.get(TraceTag.BIZID)
         ThreadPoolUtil.submitAction(
-            corePoolSize = 5,
-            maximumPoolSize = 10,
-            keepAliveTime = 0L,
-            queue = LinkedBlockingQueue(100),
-            action = {
-                MDC.put(TraceTag.BIZID, bizId)
-                compareWebhook(scmType, request, matcher)
-                MDC.remove(TraceTag.BIZID)
-            },
-            actionTitle = "async compare webhook|scmType: $scmType|repoName: ${matcher.getRepoName()}"
+            executor = executor,
+            actionTitle = "async compare webhook|scmType: $scmType|repoName: ${matcher.getRepoName()}",
+            action = { compareWebhook(scmType, request, matcher) }
         )
     }
 
@@ -208,6 +213,10 @@ class WebhookGrayCompareService @Autowired constructor(
         val pipelineAndParamsMap = mutableMapOf<String, Map<String, Any>>()
         triggerPipelines.forEach { (projectId, pipelineId) ->
             try {
+                // 预匹配不过，忽略对比
+                if (!matcher.preMatch().isMatch) {
+                    return@forEach
+                }
                 oldWebhookTrigger(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -294,6 +303,11 @@ class WebhookGrayCompareService @Autowired constructor(
                 body = request.body
             )
         ).data ?: return emptyMap()
+        // 填充原始事件体[第三方过滤器有用到]
+        fillSourceWebhook(webhookData.webhook, request.body)
+        logger.info(
+            "webhook request body parsed|webhookData:${JsonUtil.toJson(webhookData.webhook, false)}"
+        )
         val pipelineAndParamsMap = mutableMapOf<String, Map<String, Any>>()
         with(webhookData) {
             repositories.forEach { repository ->
@@ -372,6 +386,21 @@ class WebhookGrayCompareService @Autowired constructor(
             )
             if (atomResponse.matchStatus == MatchStatus.SUCCESS) {
                 pipelineAndParamsMap[pipelineId] = atomResponse.outputVars
+            }
+        }
+    }
+
+    private fun fillSourceWebhook(
+        webhook: Webhook,
+        sourceWebhook: String
+    ) {
+        when (webhook) {
+            is GitPushHook -> {
+                webhook.extras[BK_REPO_SOURCE_WEBHOOK] = sourceWebhook
+            }
+
+            is PullRequestHook -> {
+                webhook.extras[BK_REPO_SOURCE_WEBHOOK] = sourceWebhook
             }
         }
     }

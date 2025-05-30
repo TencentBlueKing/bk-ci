@@ -201,26 +201,6 @@ interface OpenProjectAuthResource {
         roleCode: String
     ): Result<Boolean>
 
-    @POST
-    @Path("/{projectCode}/batchCreateProjectUser/{roleCode}")
-    @Operation(summary = "批量添加用户到指定项目指定分组")
-    fun batchCreateProjectUser(
-        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @Parameter(description = "认证token", required = true)
-        token: String,
-        @Parameter(description = "用户名", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目Code", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
-        @Parameter(description = "用户组Code", required = true)
-        @PathParam("roleCode")
-        roleCode: String,
-        @Parameter(description = "添加用户集合", required = true)
-        members: List<String>
-    ): Result<Boolean>
-
     @GET
     @Path("/{projectCode}/roles")
     @Operation(summary = "获取项目角色")

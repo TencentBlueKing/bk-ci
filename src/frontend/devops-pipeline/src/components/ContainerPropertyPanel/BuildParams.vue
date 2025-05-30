@@ -238,12 +238,14 @@
                                                     :value="param.defaultValue"
                                                     :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                                     :data-vv-scope="`param-${param.id}`"
+                                                    replace-key="{keyword}"
+                                                    :search-url="getSearchUrl(param.scmType)"
                                                 ></request-selector>
                                                 <request-selector
                                                     v-if="isBuildResourceParam(param.type)"
                                                     style="max-width: 250px"
                                                     :popover-min-width="250"
-                                                    :url="getBuildResourceUrl"
+                                                    :url="`${buildResourceUrl}&displayName=${param.defaultValue}`"
                                                     param-id="displayName"
                                                     param-name="displayName"
                                                     :disabled="disabled"
@@ -251,8 +253,8 @@
                                                     :value="param.defaultValue"
                                                     :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                                     :data-vv-scope="`param-${param.id}`"
-                                                    :replace-key="param.replaceKey"
-                                                    :search-url="param.searchUrl"
+                                                    replace-key="\{\{__keywords__\}\}"
+                                                    :search-url="buildResourceSearchUrl"
                                                 ></request-selector>
                                                 <request-selector
                                                     v-if="isSubPipelineParam(param.type)"
@@ -318,8 +320,8 @@
                                             :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                             :data-vv-scope="`param-${param.id}`"
                                             v-validate.initial="'required'"
-                                            :replace-key="param.replaceKey"
-                                            :search-url="param.searchUrl"
+                                            replace-key="{keyword}"
+                                            :search-url="getSearchUrl('CODE_SVN')"
                                         ></request-selector>
                                     </bk-form-item>
 
@@ -489,30 +491,30 @@
 </template>
 
 <script>
-    import FileParamInput from '@/components/atomFormField/FileParamInput'
     import Accordion from '@/components/atomFormField/Accordion'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import EnumInput from '@/components/atomFormField/EnumInput'
+    import FileParamInput from '@/components/atomFormField/FileParamInput'
     import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
     import RequestSelector from '@/components/atomFormField/RequestSelector'
     import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
-    import {
-        PROCESS_API_URL_PREFIX,
-        REPOSITORY_API_URL_PREFIX,
-        ENVIRONMENT_API_URL_PREFIX
-    } from '@/store/constants'
     import SelectTypeParam from '@/components/PipelineEditTabs/components/children/select-type-param'
+    import {
+        ENVIRONMENT_API_URL_PREFIX,
+        PROCESS_API_URL_PREFIX,
+        REPOSITORY_API_URL_PREFIX
+    } from '@/store/constants'
     import {
         CODE_LIB_OPTION,
         CODE_LIB_TYPE,
         DEFAULT_PARAM,
+        getBranchOption,
         getParamsDefaultValueLabel,
         getParamsDefaultValueLabelTips,
         getRepoOption,
         isArtifactoryParam,
-        getBranchOption,
         isBooleanParam,
         isBuildResourceParam,
         isCodelibParam,
@@ -520,14 +522,14 @@
         isFileParam,
         isGitParam,
         isMultipleParam,
+        isRepoParam,
         isStringParam,
         isSubPipelineParam,
         isSvnParam,
         isTextareaParam,
         PARAM_LIST,
         STRING,
-        SUB_PIPELINE_OPTION,
-        isRepoParam
+        SUB_PIPELINE_OPTION
     } from '@/store/modules/atom/paramsConfig'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { deepCopy } from '@/utils/util'
@@ -656,8 +658,11 @@
                     disabled: this.disabled
                 }
             },
-            getBuildResourceUrl () {
+            buildResourceUrl () {
                 return `${ENVIRONMENT_API_URL_PREFIX}/user/envnode/${this.$route.params.projectId}/listNew?nodeType=THIRDPARTY&page=1&pageSize=100`
+            },
+            buildResourceSearchUrl () {
+                return `${this.buildResourceUrl}&keywords={{__keywords__}}`
             }
         },
 

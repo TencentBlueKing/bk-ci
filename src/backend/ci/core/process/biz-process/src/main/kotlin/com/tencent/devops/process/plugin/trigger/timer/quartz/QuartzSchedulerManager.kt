@@ -34,7 +34,8 @@ import org.springframework.boot.autoconfigure.quartz.QuartzProperties
 import java.util.Properties
 
 class QuartzSchedulerManager(
-    private val quartzProperties: QuartzProperties
+    private val quartzProperties: QuartzProperties,
+    private val quartzTraceJobListener: QuartzTraceJobListener
 ) : SchedulerManager() {
 
     private var scheduler: Scheduler = initSchedulerFactory().scheduler
@@ -44,7 +45,7 @@ class QuartzSchedulerManager(
     private val jobGroup = "bkJobGroup"
 
     init {
-        scheduler.listenerManager.addJobListener(QuartzTraceJobListener())
+        scheduler.listenerManager.addJobListener(quartzTraceJobListener)
         scheduler.start()
     }
 

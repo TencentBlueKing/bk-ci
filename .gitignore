@@ -56,3 +56,6 @@ src/backend/turbo/release/
 pre-*-bkcodeai
 
 CHANGELOG/bundledVersionLog*.json
+
+
+pre-*-bkcodeai

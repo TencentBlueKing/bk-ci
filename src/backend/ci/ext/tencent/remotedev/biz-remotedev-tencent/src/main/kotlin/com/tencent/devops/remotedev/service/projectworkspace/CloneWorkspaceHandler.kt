@@ -11,11 +11,13 @@ import com.tencent.devops.common.auth.api.TencentResourceTypeId
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
+import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.remotedev.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
@@ -143,6 +145,10 @@ class CloneWorkspaceHandler @Autowired constructor(
             )
 
             val (appName, _) = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
+            // 发起克隆的管理员也创建CDS后台用户
+            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
+                .createStartCloudUser(userId, appName)
+
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
                     userId = userId,
@@ -154,7 +160,8 @@ class CloneWorkspaceHandler @Autowired constructor(
                     machineType = rebuildReq.machineType,
                     appName = appName,
                     projectId = projectId,
-                    live = rebuildReq.live
+                    live = rebuildReq.live,
+                    specifyTaints = rebuildReq.specifyTaints
                 )
             )
 
@@ -269,7 +276,8 @@ class CloneWorkspaceHandler @Autowired constructor(
                 pipelineId = orderId,
                 machineType = rebuildReq.machineType,
                 zoneId = zoneId,
-                live = rebuildReq.live
+                live = rebuildReq.live,
+                specifyTaints = rebuildReq.specifyTaints
             )
 
             notifyControl.dispatchWebsocketPushEvent(
@@ -380,7 +388,8 @@ class CloneWorkspaceHandler @Autowired constructor(
             windowsZone = windowsZone,
             windowsConfig = windowsConfig,
             newNum = 1,
-            quotaType = QuotaType.parse(windowsZone.type)
+            quotaType = QuotaType.parse(windowsZone.type),
+            specifyTaints = req.specifyTaints
         ).first()
     }
 

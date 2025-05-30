@@ -35,6 +35,7 @@ import com.tencent.devops.remotedev.pojo.async.AsyncNotify
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
+import com.tencent.devops.remotedev.pojo.expert.DeleteDiskData
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
@@ -56,15 +57,21 @@ import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmData
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmResp
 import com.tencent.devops.remotedev.pojo.remotedev.TaskResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyInfo
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.resources.op.OpProjectWorkspaceResourceImpl
 import com.tencent.devops.remotedev.service.BKItsmService
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.ProjectStrategyService
 import com.tencent.devops.remotedev.service.RemotedevProjectService
 import com.tencent.devops.remotedev.service.StartWorkspaceService
 import com.tencent.devops.remotedev.service.WhiteListService
@@ -127,7 +134,8 @@ class ServiceRemoteDevResourceImpl(
     private val workspaceHookService: WorkspaceHookService,
     private val configCacheService: ConfigCacheService,
     private val remotedevProjectService: RemotedevProjectService,
-    private val bkItsmService: BKItsmService
+    private val bkItsmService: BKItsmService,
+    private val projectStrategyService: ProjectStrategyService
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -492,14 +500,16 @@ class ServiceRemoteDevResourceImpl(
     override fun getWindowsQuota(
         userId: String,
         type: QuotaType?,
-        zoneType: WindowsResourceZoneConfigType
+        zoneType: WindowsResourceZoneConfigType,
+        specifyTaints: String?
     ): Result<Map<String, Map<String, Int>>> {
         return Result(
             windowsResourceConfigService.allWindowsQuota(
                 searchCustom = false,
                 quotaType = type,
                 zoneType = zoneType,
-                withProjectLimit = null
+                withProjectLimit = null,
+                specifyTaints = specifyTaints
             )
         )
     }
@@ -756,19 +766,30 @@ class ServiceRemoteDevResourceImpl(
     override fun createDisk(
         userId: String,
         workspaceName: String,
-        size: String
+        size: String,
+        forceRestart: Boolean?
     ): Result<CreateDiskResp> {
         return Result(
             expertSupportService.createDisk(
                 workspaceName = workspaceName,
                 userId = userId,
-                size = size
+                size = size,
+                forceRestart = forceRestart
             )
         )
     }
 
     override fun fetchDiskList(userId: String, workspaceName: String): Result<List<VmDiskInfo>> {
         return Result(expertSupportService.fetchDiskList(userId, workspaceName))
+    }
+
+    override fun deleteDisk(userId: String, data: DeleteDiskData): Result<CreateDiskResp> {
+        return Result(
+            expertSupportService.deleteDisk(
+                userId = userId,
+                data = data
+            )
+        )
     }
 
     override fun upgradeWorkspace(
@@ -897,12 +918,28 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
-    override fun createItsmTicket(userId: String, createReq: BKItsmCreateTicketReq): Result<BKItsmCreateTicketRespData> {
+    override fun createItsmTicket(
+        userId: String,
+        createReq: BKItsmCreateTicketReq
+    ): Result<BKItsmCreateTicketRespData> {
         return Result(
             bkItsmService.createDirectTicket(
                 createReq = createReq,
                 errorParam = userId
             )
         )
+    }
+
+    override fun getProjectStrategy(userId: String, data: ProjectStrategyFetchInfo): Result<ProjectStrategyResp> {
+        return Result(projectStrategyService.getStrategy(data))
+    }
+
+    override fun updateProjectStrategy(userId: String, data: ProjectStrategyInfo): Result<Boolean> {
+        projectStrategyService.createOrUpdateStrategy(data)
+        return Result(true)
+    }
+
+    override fun syncVm(userId: String, data: SyncVmData): Result<SyncVmResp?> {
+        return Result(expertSupportService.syncVm(data))
     }
 }

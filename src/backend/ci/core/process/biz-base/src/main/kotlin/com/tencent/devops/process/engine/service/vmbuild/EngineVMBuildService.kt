@@ -680,18 +680,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             }
 
             else -> {
-                val allVariable = buildVariableService.getAllVariable(task.projectId, task.pipelineId, buildId)
-                // 构造扩展变量
-                val extMap = buildExtService.buildExt(task, allVariable)
-                val buildVariable = mutableMapOf(
-                    PIPELINE_VMSEQ_ID to vmSeqId,
-                    PIPELINE_ELEMENT_ID to task.taskId
-                )
-
-                PipelineVarUtil.fillOldVar(buildVariable)
-                buildVariable.putAll(allVariable)
-                buildVariable.putAll(extMap)
-
                 // 如果状态未改变，则做认领任务动作
                 if (!task.status.isRunning()) {
                     pipelineRuntimeService.claimBuildTask(task, userId)
@@ -704,6 +692,19 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     )
                     jmxElements.execute(task.taskType)
                 }
+
+                val allVariable = buildVariableService.getAllVariable(task.projectId, task.pipelineId, buildId)
+                // 构造扩展变量
+                val extMap = buildExtService.buildExt(task, allVariable)
+                val buildVariable = mutableMapOf(
+                    PIPELINE_VMSEQ_ID to vmSeqId,
+                    PIPELINE_ELEMENT_ID to task.taskId
+                )
+
+                PipelineVarUtil.fillOldVar(buildVariable)
+                buildVariable.putAll(allVariable)
+                buildVariable.putAll(extMap)
+
                 pipelineEventDispatcher.dispatch(
                     // market task 启动
                     PipelineBuildStatusBroadCastEvent(
@@ -1102,6 +1103,25 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             vmSeqId = vmSeqId,
             cancelTaskIds = cancelTaskIds
         )
+    }
+
+    fun getBuildContainer(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String
+    ): VMBuildContainer? {
+        val startTask = pipelineTaskService.getBuildTask(
+            projectId = projectId,
+            buildId = buildId,
+            taskId = VMUtils.genStartVMTaskId(vmSeqId)
+        ) ?: return null
+        return try {
+            JsonUtil.mapTo(startTask.taskParams, VMBuildContainer::class.java)
+        } catch (ignore: Throwable) {
+            LOG.warn("ENGINE|$buildId|GET_CONTAINER|${startTask.taskId} is not VMBuildContainer", ignore)
+            null
+        }
     }
 
     @Suppress("UNCHECKED_CAST")

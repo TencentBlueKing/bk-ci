@@ -77,6 +77,7 @@ class StageControl @Autowired constructor(
     companion object {
         private val LOG = LoggerFactory.getLogger(StageControl::class.java)
         private const val CACHE_SIZE = 500L
+        private const val DEFAULT_DELAY = 1000
     }
 
     private val commandCache: LoadingCache<Class<out StageCmd>, StageCmd> = CacheBuilder.newBuilder()
@@ -95,7 +96,11 @@ class StageControl @Autowired constructor(
             val stageIdLock = StageIdLock(redisOperation, buildId, stageId)
             try {
                 watcher.start("lock")
-                stageIdLock.lock()
+                if (!stageIdLock.tryLock()) {
+                    LOG.info("ENGINE|$buildId|$pipelineId|$stageId|$source|StageIdLock try lock fail")
+                    retry()
+                    return
+                }
                 watcher.start("execute")
                 execute(watcher = watcher)
                 watcher.start("finish")
@@ -105,6 +110,12 @@ class StageControl @Autowired constructor(
                 LogUtils.printCostTimeWE(watcher)
             }
         }
+    }
+
+    private fun PipelineBuildStageEvent.retry() {
+        LOG.info("ENGINE|$buildId|$source|$pipelineId|RETRY_TO_STAGE_LOCK")
+        this.delayMills = DEFAULT_DELAY
+        pipelineEventDispatcher.dispatch(this)
     }
 
     private fun PipelineBuildStageEvent.execute(watcher: Watcher) {

@@ -318,7 +318,8 @@ class CreateControl @Autowired constructor(
                 windowsZone = availableZone,
                 windowsConfig = windowsConfig,
                 newNum = newNum,
-                quotaType = QuotaType.parse(zoneType)
+                quotaType = QuotaType.parse(zoneType),
+                specifyTaints = workspaceCreate.specifyTaints
             )
         )
         repeat(generateWorkspaceName.size) { i ->
@@ -539,7 +540,11 @@ class CreateControl @Autowired constructor(
 
                 // 个人云桌面创建成功后做异步设置，团队项目改到分配时做L盘挂载
                 if (ws.ownerType.personalUse()) {
-                    workspaceCommon.makeDiskMount(ip, event.userId)
+                    workspaceCommon.makeDiskMount(
+                        ip = ip,
+                        user = event.userId,
+                        owner = ws.createUserId
+                    )
                 }
 
                 if (ws.ownerType.projectPublicUse()) {

@@ -79,6 +79,7 @@ import com.tencent.devops.process.dao.PipelineCallbackDao
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.dao.label.PipelineViewGroupDao
+import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
@@ -114,7 +115,6 @@ import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineOperationLogService
-import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
@@ -126,14 +126,14 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import jakarta.ws.rs.core.Response
+import java.time.LocalDateTime
+import java.util.concurrent.atomic.AtomicInteger
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.concurrent.atomic.AtomicInteger
-import jakarta.ws.rs.core.Response
 
 @Suppress(
     "LongParameterList",
@@ -171,10 +171,10 @@ class PipelineRepositoryService constructor(
     private val transferService: PipelineTransferYamlService,
     private val redisOperation: RedisOperation,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
-    private val pipelineGroupService: PipelineGroupService,
     private val pipelineAsCodeService: PipelineAsCodeService,
     private val pipelineCallbackDao: PipelineCallbackDao,
-    private val subPipelineTaskService: SubPipelineTaskService
+    private val subPipelineTaskService: SubPipelineTaskService,
+    private val pipelineInfoService: PipelineInfoService
 ) {
 
     companion object {
@@ -1418,6 +1418,17 @@ class PipelineRepositoryService constructor(
     }
 
     /**
+     * 批量获取model
+     */
+    fun getModel(projectId: String, pipelineId: String): Model? {
+        return pipelineResourceDao.getLatestVersionModelString(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )?.let { str2model(it, pipelineId) }
+    }
+
+    /**
      * 获取编排版本的通用方法
      * 1 如果指定了[version]则一定按照version号查询版本
      * 2 如果没有指定版本，则通过[includeDraft]控制是否过滤掉草稿，获得最新版本流水线
@@ -1428,7 +1439,8 @@ class PipelineRepositoryService constructor(
         pipelineId: String,
         version: Int? = null,
         includeDraft: Boolean? = false,
-        queryDslContext: DSLContext? = null
+        queryDslContext: DSLContext? = null,
+        encryptedFlag: Boolean? = false
     ): PipelineResourceVersion? {
         // TODO 取不到则直接从旧版本表读，待下架
         val resource = if (version == null) {
@@ -1456,6 +1468,11 @@ class PipelineRepositoryService constructor(
         // 3 所有插件ENV配置合并历史值，并过滤掉默认值
         var randomSeed = 1
         val jobIdSet = mutableSetOf<String>()
+        val elementSensitiveParamInfos = if (encryptedFlag == true && resource?.model != null) {
+            AtomUtils.getModelElementSensitiveParamInfos(projectId, resource.model, client)
+        } else {
+            null
+        }
         resource?.model?.stages?.forEachIndexed { index, s ->
             if (index == 0) (s.containers[0] as TriggerContainer).params.forEach { param ->
                 param.name = param.name ?: param.id
@@ -1472,6 +1489,9 @@ class PipelineRepositoryService constructor(
                             e.customEnv = (e.customEnv ?: emptyList()).plus(oldCustomEnv)
                         }
                         e.additionalOptions?.customEnv = null
+                        elementSensitiveParamInfos?.let {
+                            pipelineInfoService.transferSensitiveParam(e, elementSensitiveParamInfos)
+                        }
                     }
                 }
             }
@@ -1641,6 +1661,9 @@ class PipelineRepositoryService constructor(
             ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
+        val pipelineVersionSimple = pipelineResourceVersionDao.getPipelineVersionSimple(
+            dslContext, projectId, pipelineId, record.version
+        )
 
         val pipelineResult = DeletePipelineResult(pipelineId, record.pipelineName, record.version)
         val lock = PipelineModelLock(redisOperation, pipelineId)
@@ -1681,6 +1704,18 @@ class PipelineRepositoryService constructor(
                         name = deleteName,
                         desc = "DELETE BY $userId in $deleteTime"
                     )
+                    // 同时要对对应setting version中的name做设置,不然恢复时流水线详情展示的名称不对
+                    pipelineVersionSimple?.settingVersion?.let {
+                        pipelineSettingVersionDao.updateSetting(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            version = it,
+                            name = deleteName,
+                            desc = "DELETE BY $userId in $deleteTime"
+                        )
+                    }
+
                     // #4201 标志关联模板为删除
                     templatePipelineDao.softDelete(
                         dslContext = transactionContext,
@@ -1982,8 +2017,6 @@ class PipelineRepositoryService constructor(
                 errorCode = ProcessMessageCode.ERROR_RESTORE_PIPELINE_NOT_FOUND
             )
 
-            existModel.name = pipeline.pipelineName
-
             if (pipeline.channel != channelCode.name) {
                 throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -1992,16 +2025,55 @@ class PipelineRepositoryService constructor(
                 )
             }
 
+            // 如果流水线名称已经重复,则使用含有日期的流水线名,否则使用原来的流水线名
+            val existPipelineName = isPipelineExist(
+                projectId = projectId,
+                pipelineName = existModel.name,
+                channelCode = channelCode,
+                excludePipelineId = pipelineId
+            )
+            val pipelineName = if (existPipelineName) {
+                existModel.name = pipeline.pipelineName
+                pipeline.pipelineName
+            } else {
+                existModel.name
+            }
+
             pipelineInfoDao.restore(
                 dslContext = transactionContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
+                pipelineName = pipelineName,
                 userId = userId,
                 channelCode = channelCode
             )
+            val restoreTime = org.joda.time.LocalDateTime.now().toString("yyMMddHHmmSS")
+            // 恢复setting中的名称和描述
+            pipelineSettingDao.updateSetting(
+                dslContext = transactionContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                name = pipelineName,
+                desc = "RESTORE BY $userId in $restoreTime"
+            )
+            // 恢复对应setting version中的流水线名称和描述
+            existResource.settingVersion?.let {
+                pipelineSettingVersionDao.updateSetting(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    version = it,
+                    name = pipelineName,
+                    desc = "RESTORE BY $userId in $restoreTime"
+                )
+            }
 
             // #4012 还原与模板的绑定关系
-            templatePipelineDao.restore(dslContext = transactionContext, projectId = projectId, pipelineId = pipelineId)
+            templatePipelineDao.restore(
+                dslContext = transactionContext,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
 
             // 只初始化相关信息
             val tasks = initModel(

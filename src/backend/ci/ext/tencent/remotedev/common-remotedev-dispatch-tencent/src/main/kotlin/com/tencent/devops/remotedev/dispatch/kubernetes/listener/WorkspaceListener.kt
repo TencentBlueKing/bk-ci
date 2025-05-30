@@ -123,7 +123,8 @@ class WorkspaceListener @Autowired constructor(
                         pipelineId = orderId,
                         machineType = event.machineType,
                         zoneId = event.zoneId,
-                        live = event.live
+                        live = event.live,
+                        specifyTaints = event.specifyTaints
                     )
                 }
                 else -> {

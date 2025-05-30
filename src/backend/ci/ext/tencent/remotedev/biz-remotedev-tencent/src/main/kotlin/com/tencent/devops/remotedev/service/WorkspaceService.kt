@@ -1041,6 +1041,13 @@ class WorkspaceService @Autowired constructor(
                     params = arrayOf(workspace.hostIp ?: workspaceName)
                 )
             }
+            // 优化：如果当前后台记录的用户，跟进入云桌面人不一致，提示有人在用
+            cgsStatus.userInfos?.firstOrNull()?.takeIf { it.account != userId }?.let {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_LOGGED_IN.errorCode,
+                    params = arrayOf(workspace.hostIp ?: workspaceName)
+                )
+            }
             return startCloudWorkspaceDetail(userId, workspace)
         }
         if (envId != null) {
@@ -1460,6 +1467,19 @@ class WorkspaceService @Autowired constructor(
 
     fun verifyMoa2faResult(userId: String, moa2faVerifyReqData: Moa2faVerifyReqData): Moa2faVerifyRespData {
         return taiService.verifyMoa2faRequest(userId = userId, moa2faVerifyReqData = moa2faVerifyReqData)
+    }
+
+    fun checkExistWorkspaceSharedInfo(
+        workspaceName: String,
+        sharedUser: String,
+        assignType: WorkspaceShared.AssignType
+    ): Boolean {
+        return workspaceSharedDao.existWorkspaceSharedInfo(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            sharedUser = sharedUser,
+            assignType = assignType
+        )
     }
 
     companion object {

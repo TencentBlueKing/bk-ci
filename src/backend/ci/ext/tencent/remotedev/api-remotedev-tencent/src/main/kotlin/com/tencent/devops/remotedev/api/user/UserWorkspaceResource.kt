@@ -43,6 +43,8 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
 import com.tencent.devops.remotedev.pojo.tai.Moa2faReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faRespData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyReqData
@@ -340,4 +342,14 @@ interface UserWorkspaceResource {
         @QueryParam("type")
         type: RemoteDevNotifyType
     ): Result<Boolean>
+
+    @Operation(summary = "获取项目策略")
+    @POST
+    @Path("/get_project_strategy")
+    fun getProjectStrategy(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: ProjectStrategyFetchInfo
+    ): Result<ProjectStrategyResp>
 }

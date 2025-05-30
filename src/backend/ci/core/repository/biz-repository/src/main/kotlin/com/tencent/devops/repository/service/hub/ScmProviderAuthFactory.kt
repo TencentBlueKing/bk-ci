@@ -56,14 +56,14 @@ class ScmProviderAuthFactory @Autowired constructor(
     private val credentialService: RepoCredentialService
 ) {
 
-    fun createScmAuth(projectId: String, authRepository: AuthRepository): IScmAuth {
+    fun createScmAuth(authRepository: AuthRepository): IScmAuth {
         return when (val auth = authRepository.auth) {
             is UserOauthTokenAuthCred -> {
                 createAuthFromOauthToken(userId = auth.userId, scmCode = authRepository.scmCode)
             }
 
             is CredentialIdAuthCred -> {
-                createAuthFromCredential(projectId = projectId, credentialId = auth.credentialId)
+                createAuthFromCredential(projectId = auth.projectId, credentialId = auth.credentialId)
             }
 
             else ->

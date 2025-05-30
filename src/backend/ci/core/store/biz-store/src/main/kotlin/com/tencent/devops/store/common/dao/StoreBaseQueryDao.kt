@@ -60,6 +60,26 @@ import java.time.LocalDateTime
 @Repository
 class StoreBaseQueryDao {
 
+    fun getMaxVersionComponentByCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        statusList: List<String>? = null
+    ): TStoreBaseRecord? {
+        return with(TStoreBase.T_STORE_BASE) {
+            val conditions = mutableListOf<Condition>().apply {
+                add(STORE_TYPE.eq(storeType.type.toByte()))
+                add(STORE_CODE.eq(storeCode))
+                statusList?.takeIf { it.isNotEmpty() }?.let { add(STATUS.`in`(it)) }
+            }
+            dslContext.selectFrom(this)
+                .where(conditions)
+                .orderBy(BUS_NUM.desc())
+                .limit(1)
+                .fetchOne()
+        }
+    }
+
     fun getNewestComponentByCode(
         dslContext: DSLContext,
         storeCode: String,

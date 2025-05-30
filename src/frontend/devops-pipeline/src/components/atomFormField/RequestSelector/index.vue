@@ -13,8 +13,7 @@
         :searchable="searchable"
         :multi-select="multiSelect"
         :disabled="disabled || isLoading"
-        :search-url="searchUrl"
-        :replace-key="replaceKey"
+        :on-search="handleSearch"
         :data-path="dataPath"
         :setting-key="settingKey"
         :display-key="displayKey"
@@ -89,12 +88,10 @@
             replaceKey: String,
             dataPath: String,
             displayKey: {
-                type: String,
-                default: 'name'
+                type: String
             },
             settingKey: {
-                type: String,
-                default: 'id'
+                type: String
             },
             initRequest: {
                 type: Boolean,
@@ -109,19 +106,47 @@
                 default: () => ({})
             },
             // TODO: 历史遗留问题，将ID转为String, 否则对于数字ID,无法选中
-            allIdString: Boolean
+            allIdString: Boolean,
+            affected: {
+                type: Array,
+                default: []
+            }
         },
         data () {
             return {
                 isLoading: false,
                 list: [],
-                webUrl: WEB_URL_PREFIX
+                webUrl: WEB_URL_PREFIX,
+                timeId: null
             }
         },
         computed: {
             projectId () {
                 return this.$route.params.projectId
+            },
+            parsedUrl () {
+                try {
+                    const { url, element } = this
+                    const query = this.$route.params
+                    return this.urlParse(url, {
+                        bkPoolType: this?.container?.dispatchType?.buildType,
+                        ...query,
+                        ...(this.paramValues || {}),
+                        ...element
+                    })
+                } catch (error) {
+                    console.log(error)
+                    return this.url
+                }
             }
+        },
+        watch: {
+            parsedUrl () {
+                this.$nextTick(() => {
+                    this.freshList()
+                })
+            }
+
         },
         created () {
             if (this.initRequest) {
@@ -129,6 +154,9 @@
             } else {
                 this.list = this.options
             }
+        },
+        beforeDestroy () {
+            clearTimeout(this.timeId)
         },
         methods: {
             edit (index) {
@@ -180,29 +208,12 @@
             },
             async freshList () {
                 try {
-                    const { url, element } = this
-                    const query = this.$route.params
-                    const changeUrl = this.urlParse(url, {
-                        bkPoolType: this?.container?.dispatchType?.buildType,
-                        ...query,
-                        ...(this.paramValues || {}),
-                        ...element
-                    })
                     this.isLoading = true
-                    const res = await this.$ajax.get(changeUrl)
-
+                    const res = await this.$ajax.get(this.parsedUrl)
                     const resData = this.getResponseData(res, this.dataPath)
+
                     // 正常情况
-                    this.list = (resData || []).map(item => {
-                        const idKey = this.paramId || 'id'
-                        const nameKey = this.paramName || 'name'
-                        const id = item[idKey] ?? item
-                        return {
-                            ...item,
-                            id: this.allIdString ? String(id) : id,
-                            name: item[nameKey] ?? item
-                        }
-                    })
+                    this.list = this.formatList(resData)
                     // 单选selector时处理******
                     if (!this.multiSelect) {
                         if (this.value !== '' && !findItemById(this.list, this.value)) {
@@ -232,6 +243,41 @@
                 } finally {
                     this.isLoading = false
                 }
+            },
+            handleSearch (name) {
+                if (typeof this.searchUrl !== 'string') {
+                    return Promise.resolve()
+                }
+                return new Promise((resolve, reject) => {
+                    clearTimeout(this.timeId)
+                    this.timeId = setTimeout(async () => {
+                        try {
+                            const regExp = new RegExp(this.replaceKey, 'g')
+                            const url = this.searchUrl.replace(regExp, name)
+                            const data = await this.$ajax.get(url)
+                            const resData = this.getResponseData(data)
+
+                            this.list = this.formatList(resData)
+                            resolve()
+                        } catch (error) {
+                            console.error(error)
+                            reject(error)
+                        }
+                    }, 500)
+                })
+            },
+            formatList (resData = []) {
+                const idKey = this.paramId
+                const nameKey = this.paramName
+                // 正常情况
+                return resData.map(item => {
+                    const id = item[idKey] ?? item.id ?? item
+                    return {
+                        ...item,
+                        id: this.allIdString ? String(id) : id,
+                        name: item[nameKey] ?? item.name ?? item
+                    }
+                })
             }
         }
     }

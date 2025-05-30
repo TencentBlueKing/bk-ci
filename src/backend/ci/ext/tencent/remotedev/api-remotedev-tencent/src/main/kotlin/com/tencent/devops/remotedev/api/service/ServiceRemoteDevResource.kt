@@ -19,6 +19,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
+import com.tencent.devops.remotedev.pojo.expert.DeleteDiskData
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
@@ -40,9 +41,14 @@ import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmData
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmResp
 import com.tencent.devops.remotedev.pojo.remotedev.TaskResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyInfo
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -365,7 +371,10 @@ interface ServiceRemoteDevResource {
         type: QuotaType?,
         @Parameter(description = "地域类型", required = true)
         @QueryParam("zoneType")
-        zoneType: WindowsResourceZoneConfigType
+        zoneType: WindowsResourceZoneConfigType,
+        @Parameter(description = "创建时指定污点标签", required = true)
+        @QueryParam("specifyTaints")
+        specifyTaints: String?
     ): Result<Map<String, Map<String, Int>>>
 
     @Operation(summary = "更新项目/个人在使用云桌面上的配额")
@@ -639,7 +648,9 @@ interface ServiceRemoteDevResource {
         @QueryParam("workspaceName")
         workspaceName: String,
         @QueryParam("size")
-        size: String
+        size: String,
+        @QueryParam("forceRestart")
+        forceRestart: Boolean?
     ): Result<CreateDiskResp>
 
     @Operation(summary = "获取磁盘列表")
@@ -652,6 +663,16 @@ interface ServiceRemoteDevResource {
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<List<VmDiskInfo>>
+
+    @Operation(summary = "卸载并回收磁盘")
+    @POST
+    @Path("/deletedisk")
+    fun deleteDisk(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: DeleteDiskData
+    ): Result<CreateDiskResp>
 
     @Operation(summary = "云桌面调整配置")
     @POST
@@ -859,4 +880,34 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "请求参数", required = true)
         createReq: BKItsmCreateTicketReq
     ): Result<BKItsmCreateTicketRespData>
+
+    @Operation(summary = "获取项目策略")
+    @POST
+    @Path("/get_project_strategy")
+    fun getProjectStrategy(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: ProjectStrategyFetchInfo
+    ): Result<ProjectStrategyResp>
+
+    @Operation(summary = "修改项目策略")
+    @POST
+    @Path("/update_project_strategy")
+    fun updateProjectStrategy(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: ProjectStrategyInfo
+    ): Result<Boolean>
+
+    @Operation(summary = "同步Vm数据盘")
+    @POST
+    @Path("/sync_vm")
+    fun syncVm(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: SyncVmData
+    ): Result<SyncVmResp?>
 }

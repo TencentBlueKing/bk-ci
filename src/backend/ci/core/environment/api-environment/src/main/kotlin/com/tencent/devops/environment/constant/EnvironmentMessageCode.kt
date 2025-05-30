@@ -105,6 +105,7 @@ object EnvironmentMessageCode {
     const val ERROR_FAIL_TO_CREATE_AGENT_INSTALL_TASK = "2105055" // 环境管理: 创建Agent安装任务失败：{0}
     const val ERROR_INPUT_TOO_MANY_IP = "2105056" // 环境管理: 输入的IP数量不可超过{0}
     const val ERROR_NODE_NOT_BELONG_TO_PROJECT = "2105057" // 环境管理: IP {0} 未被作为节点导入项目 {1}，请到【环境管理-节点】导入测试机后重试
+    const val ERROR_AGENT_ALREADY_INSTALL = "2105058" // 环境管理: Agent重复安装报错
 
     const val BK_NORMAL_VERSION = "bkNormalVersion" // 8核16G（普通版）
     const val BK_INTEL_XEON_SKYLAKE_PROCESSOR = "bkIntelXeonSkylakeProcessor" // 2.5GHz 64核 Intel Xeon Skylake 6133处理器

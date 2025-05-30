@@ -25,7 +25,7 @@ import {
 } from '@/utils/permission'
 
 import { statusAlias } from '@/utils/pipelineStatus'
-import { convertMStoStringByRule, convertTime, navConfirm } from '@/utils/util'
+import { convertMStoStringByRule, convertTime, isShallowEqual, navConfirm } from '@/utils/util'
 import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
 
 import {
@@ -36,9 +36,7 @@ import {
     RECENT_USED_VIEW_ID,
     UNCLASSIFIED_PIPELINE_VIEW_ID
 } from '@/store/constants'
-
-import { ORDER_ENUM, PIPELINE_SORT_FILED, pipelineTabIdMap } from '@/utils/pipelineConst'
-import { VERSION_STATUS_ENUM } from '../utils/pipelineConst'
+import { ORDER_ENUM, PIPELINE_SORT_FILED, VERSION_STATUS_ENUM, pipelineTabIdMap } from '@/utils/pipelineConst'
 
 export default {
     data () {
@@ -87,9 +85,11 @@ export default {
                         viewId
                     })
                 } else {
-                    this.$router.replace({
-                        query: queryParams
-                    })
+                    if (!isShallowEqual(queryParams, this.$route.query)) {
+                        this.$router.replace({
+                            query: queryParams
+                        })
+                    }
                     const { page, count, records } = await this.requestAllPipelinesListByFilter({
                         showDelete: true,
                         projectId: this.$route.params.projectId,
