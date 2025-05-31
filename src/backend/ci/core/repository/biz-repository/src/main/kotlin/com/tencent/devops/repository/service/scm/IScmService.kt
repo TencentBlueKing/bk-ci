@@ -38,8 +38,10 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.GitTagInfo
 import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.scm.pojo.TokenCheckResult
 
 @Suppress("ALL")
@@ -271,4 +273,27 @@ interface IScmService {
         password: String,
         url: String
     ): LoginSession?
+
+    /**
+     * 获取指定 TAG
+     */
+    fun getTag(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        tagName: String
+    ): GitTagInfo?
+
+    /**
+     * 获取mr关联的tapd单
+     */
+    fun getTapdWorkItems(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        refType: String,
+        iid: Long
+    ): List<TapdWorkItem>
 }
