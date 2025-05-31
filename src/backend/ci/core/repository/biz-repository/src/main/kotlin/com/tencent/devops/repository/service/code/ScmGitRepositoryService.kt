@@ -483,7 +483,24 @@ class ScmGitRepositoryService @Autowired constructor(
             repoCondition = repoCondition,
             limit = limit,
             offset = offset
-        )
+        ).map {
+            ScmGitRepository(
+                aliasName = it.aliasName,
+                url = it.url,
+                credentialId = it.credentialId,
+                projectName = it.projectName,
+                userName = it.userName,
+                authType = it.authType,
+                projectId = it.projectId,
+                repoHashId = it.repoHashId,
+                gitProjectId = it.gitProjectId,
+                atom = it.atom,
+                enablePac = it.enablePac,
+                yamlSyncStatus = it.yamlSyncStatus,
+                scmCode = it.scmCode,
+                credentialType = it.credentialType
+            )
+        }
     }
 
     override fun countByCondition(repoCondition: RepoCondition): Long {
