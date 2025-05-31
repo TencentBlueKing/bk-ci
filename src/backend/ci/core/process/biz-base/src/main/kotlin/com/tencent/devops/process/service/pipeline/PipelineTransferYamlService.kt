@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.transfer.ElementInsertBody
@@ -46,6 +47,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferMark
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferResponse
 import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
@@ -116,7 +118,8 @@ class PipelineTransferYamlService @Autowired constructor(
         actionType: TransferActionType,
         data: TransferBody,
         aspects: LinkedList<IPipelineTransferAspect> = LinkedList(),
-        editPermission: Boolean? = null
+        editPermission: Boolean? = null,
+        archiveFlag: Boolean? = false
     ): TransferResponse {
         val watcher = Watcher(id = "yaml and model transfer watcher")
         // #8161 蓝盾PAC默认使用V3版本的YAML语言
@@ -148,7 +151,7 @@ class PipelineTransferYamlService @Autowired constructor(
             val pipelineInfo = pipelineId?.let {
                 pipelineInfoDao.convert(
                     t = pipelineInfoDao.getPipelineInfo(
-                        dslContext = dslContext,
+                        dslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT),
                         projectId = projectId,
                         pipelineId = pipelineId
                     ),
@@ -269,14 +272,16 @@ class PipelineTransferYamlService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         resource: PipelineResourceVersion,
-        editPermission: Boolean? = null
+        editPermission: Boolean? = null,
+        archiveFlag: Boolean? = false
     ): PreviewResponse {
         val setting = pipelineSettingVersionService.getPipelineSetting(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             detailInfo = null,
-            version = resource.settingVersion ?: 1
+            version = resource.settingVersion ?: 1,
+            archiveFlag = archiveFlag
         )
         val modelAndSetting = PipelineModelAndSetting(
             setting = setting,
@@ -293,7 +298,8 @@ class PipelineTransferYamlService @Autowired constructor(
                 pipelineId = pipelineId,
                 actionType = TransferActionType.FULL_MODEL2YAML,
                 data = TransferBody(modelAndSetting),
-                editPermission = editPermission
+                editPermission = editPermission,
+                archiveFlag = archiveFlag
             ).yamlWithVersion?.yamlStr ?: return PreviewResponse("")
         } else {
             resource.yaml
