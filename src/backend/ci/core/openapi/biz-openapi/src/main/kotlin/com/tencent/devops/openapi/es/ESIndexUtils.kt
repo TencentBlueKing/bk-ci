@@ -40,6 +40,7 @@ object ESIndexUtils {
             .put("index.refresh_interval", "3s")
             .put("index.queries.cache.enabled", false)
             .put("index.routing.allocation.total_shards_per_node", shardsPerNode)
+            .put("index.lifecycle.name", "1_year_delete")
     }
 
     fun getTypeMappings(): XContentBuilder {
