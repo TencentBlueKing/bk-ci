@@ -42,6 +42,7 @@ import com.tencent.devops.common.api.util.ThreadLocalUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.util.RegexUtils
 import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -59,11 +60,13 @@ import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.dao.StoreVersionLogDao
+import com.tencent.devops.store.common.service.AbstractStoreComponentPkgSizeHandleService
 import com.tencent.devops.store.common.service.CategoryService
 import com.tencent.devops.store.common.service.ClassifyService
 import com.tencent.devops.store.common.service.StoreCommentService
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreComponentQueryService
+import com.tencent.devops.store.common.service.StoreComponentVersionLogService
 import com.tencent.devops.store.common.service.StoreHonorService
 import com.tencent.devops.store.common.service.StoreIndexManageService
 import com.tencent.devops.store.common.service.StoreLabelService
@@ -95,6 +98,8 @@ import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
+import com.tencent.devops.store.pojo.common.version.StoreVersionLogInfo
+import com.tencent.devops.store.pojo.common.version.StoreVersionSizeInfo
 import com.tencent.devops.store.pojo.common.version.VersionInfo
 import com.tencent.devops.store.pojo.common.version.VersionModel
 import org.jooq.DSLContext
@@ -184,6 +189,9 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
 
     @Autowired
     lateinit var labelDao: LabelDao
+
+    @Autowired
+    lateinit var storeComponentVersionLogService: StoreComponentVersionLogService
 
     companion object {
         private val executor = Executors.newFixedThreadPool(30)
@@ -1189,5 +1197,39 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             }
             else -> str
         }
+    }
+
+    /**
+     * 根据组件id获取组件版本日志
+     */
+    override fun getStoreVersionLogs(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<StoreVersionLogInfo>> {
+        return storeComponentVersionLogService.getStoreComponentVersionLogs(
+            storeCode = storeCode,
+            storeType = storeType,
+            page = page,
+            pageSize = pageSize
+        )
+    }
+
+    override fun getStoreVersionSize(
+        storeCode: String, storeType: StoreTypeEnum,
+        version: String,
+        osName: String?,
+        osArch: String?
+    ): StoreVersionSizeInfo {
+        return SpringContextUtil.getBean(
+            AbstractStoreComponentPkgSizeHandleService::class.java,
+            "${storeType}_PKG_SIZE_HANDLE_SERVICE"
+        ).getComponentVersionSize(
+            version = version,
+            storeCode = storeCode,
+            osName = osName,
+            osArch = osArch
+        )
     }
 }
