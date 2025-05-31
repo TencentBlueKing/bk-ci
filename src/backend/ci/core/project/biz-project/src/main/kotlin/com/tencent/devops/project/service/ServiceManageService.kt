@@ -38,5 +38,10 @@ abstract class ServiceManageService {
      * @param projectId 项目ID
      * @return ServiceVO
      */
-    abstract fun doSpecBus(userId: String, serviceVO: ServiceVO, projectId: String? = null): ServiceVO
+    abstract fun doSpecBus(
+        userId: String,
+        serviceVO: ServiceVO,
+        projectId: String? = null,
+        pipelineId: String? = null
+    ): ServiceVO
 }
