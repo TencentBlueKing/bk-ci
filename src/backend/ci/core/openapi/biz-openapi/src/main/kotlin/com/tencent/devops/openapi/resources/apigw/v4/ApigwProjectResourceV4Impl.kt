@@ -37,6 +37,7 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
+import com.tencent.devops.project.pojo.ProjectSortType
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -116,12 +117,20 @@ class ApigwProjectResourceV4Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         accessToken: String?,
-        productIds: String?
+        productIds: String?,
+        channelCodes: String?,
+        sort: ProjectSortType?,
+        page: Int?,
+        pageSize: Int?
     ): Result<List<ProjectVO>> {
         logger.info("OPENAPI_PROJECT_V4|$userId|list")
         return client.get(ServiceProjectResource::class).list(
             userId = userId,
-            productIds = productIds
+            productIds = productIds,
+            channelCodes = channelCodes,
+            sort = sort,
+            page = page,
+            pageSize = pageSize
         )
     }
 
