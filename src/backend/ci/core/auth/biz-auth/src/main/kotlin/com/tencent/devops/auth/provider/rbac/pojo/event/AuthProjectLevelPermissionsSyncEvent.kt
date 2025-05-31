@@ -23,37 +23,17 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.auth.provider.sample.service
+package com.tencent.devops.auth.provider.rbac.pojo.event
 
-import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
-import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
-import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.pojo.trace.ITraceEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
 
-class SamplePermissionResourceGroupSyncService : PermissionResourceGroupSyncService {
-
-    override fun syncByCondition(projectConditionDTO: ProjectConditionDTO) = Unit
-
-    override fun syncGroupMemberExpiredTime(projectConditionDTO: ProjectConditionDTO) = Unit
-
-    override fun batchSyncGroupAndMember(projectCodes: List<String>) = Unit
-
-    override fun syncGroupAndMember(projectCode: String, async: Boolean) = Unit
-
-    override fun syncProjectGroup(projectCode: String) = Unit
-
-    override fun getStatusOfSync(projectCode: String): AuthMigrateStatus = AuthMigrateStatus.SUCCEED
-
-    override fun batchSyncProjectGroup(projectCodes: List<String>) = Unit
-
-    override fun batchSyncAllMember(projectCodes: List<String>) = Unit
-
-    override fun syncResourceMember(projectCode: String, resourceType: String, resourceCode: String) = Unit
-
-    override fun syncIamGroupMember(projectCode: String, iamGroupId: Int) = Unit
-
-    override fun syncIamGroupMembersOfApply() = Unit
-
-    override fun fixResourceGroupMember(projectCode: String) = Unit
-}
+@Event(StreamBinding.AUTH_PROJECT_LEVEL_GROUP_PERMISSIONS_SYNC)
+data class AuthProjectLevelPermissionsSyncEvent(
+    val projectCode: String,
+    val iamGroupIds: List<Int>
+) : ITraceEvent()

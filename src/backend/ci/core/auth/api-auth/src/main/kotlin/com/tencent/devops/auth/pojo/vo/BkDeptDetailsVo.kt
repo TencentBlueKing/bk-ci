@@ -25,35 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.provider.sample.service
+package com.tencent.devops.auth.pojo.vo
 
-import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
-import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
-import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
+import com.tencent.devops.auth.pojo.BkUserDeptInfo
+import io.swagger.v3.oas.annotations.media.Schema
 
-class SamplePermissionResourceGroupSyncService : PermissionResourceGroupSyncService {
-
-    override fun syncByCondition(projectConditionDTO: ProjectConditionDTO) = Unit
-
-    override fun syncGroupMemberExpiredTime(projectConditionDTO: ProjectConditionDTO) = Unit
-
-    override fun batchSyncGroupAndMember(projectCodes: List<String>) = Unit
-
-    override fun syncGroupAndMember(projectCode: String, async: Boolean) = Unit
-
-    override fun syncProjectGroup(projectCode: String) = Unit
-
-    override fun getStatusOfSync(projectCode: String): AuthMigrateStatus = AuthMigrateStatus.SUCCEED
-
-    override fun batchSyncProjectGroup(projectCodes: List<String>) = Unit
-
-    override fun batchSyncAllMember(projectCodes: List<String>) = Unit
-
-    override fun syncResourceMember(projectCode: String, resourceType: String, resourceCode: String) = Unit
-
-    override fun syncIamGroupMember(projectCode: String, iamGroupId: Int) = Unit
-
-    override fun syncIamGroupMembersOfApply() = Unit
-
-    override fun fixResourceGroupMember(projectCode: String) = Unit
-}
+@Schema(title = "用户列表返回")
+data class BkDeptDetailsVo(
+    @get:Schema(title = "部门ID")
+    val id: Int,
+    @get:Schema(title = "部门名称")
+    val name: String,
+    @get:Schema(title = "详细信息")
+    val family: List<BkUserDeptInfo>?
+)

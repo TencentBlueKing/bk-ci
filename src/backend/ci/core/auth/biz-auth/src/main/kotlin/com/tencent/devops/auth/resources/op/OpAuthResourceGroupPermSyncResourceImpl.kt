@@ -58,4 +58,9 @@ class OpAuthResourceGroupPermSyncResourceImpl @Autowired constructor(
         permissionResourceGroupPermissionService.syncPermissionsByCondition(projectConditionDTO)
         return Result(true)
     }
+
+    override fun syncUserProjectPermissionsByCondition(projectConditionDTO: ProjectConditionDTO): Result<Boolean> {
+        permissionResourceGroupPermissionService.syncProjectLevelPermissionsByCondition(projectConditionDTO)
+        return Result(true)
+    }
 }

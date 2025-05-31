@@ -23,37 +23,29 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.auth.provider.sample.service
+package com.tencent.devops.auth.provider.rbac.listener
 
-import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
-import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
-import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
+import com.tencent.devops.auth.provider.rbac.pojo.event.AuthProjectLevelPermissionsSyncEvent
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
+import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
+import com.tencent.devops.common.event.listener.trace.BaseTraceListener
 
-class SamplePermissionResourceGroupSyncService : PermissionResourceGroupSyncService {
-
-    override fun syncByCondition(projectConditionDTO: ProjectConditionDTO) = Unit
-
-    override fun syncGroupMemberExpiredTime(projectConditionDTO: ProjectConditionDTO) = Unit
-
-    override fun batchSyncGroupAndMember(projectCodes: List<String>) = Unit
-
-    override fun syncGroupAndMember(projectCode: String, async: Boolean) = Unit
-
-    override fun syncProjectGroup(projectCode: String) = Unit
-
-    override fun getStatusOfSync(projectCode: String): AuthMigrateStatus = AuthMigrateStatus.SUCCEED
-
-    override fun batchSyncProjectGroup(projectCodes: List<String>) = Unit
-
-    override fun batchSyncAllMember(projectCodes: List<String>) = Unit
-
-    override fun syncResourceMember(projectCode: String, resourceType: String, resourceCode: String) = Unit
-
-    override fun syncIamGroupMember(projectCode: String, iamGroupId: Int) = Unit
-
-    override fun syncIamGroupMembersOfApply() = Unit
-
-    override fun fixResourceGroupMember(projectCode: String) = Unit
+class AuthProjectLevelPermissionsSyncListener(
+    private val permissionService: PermissionResourceGroupPermissionService,
+    traceEventDispatcher: TraceEventDispatcher
+) : BaseTraceListener<AuthProjectLevelPermissionsSyncEvent>(traceEventDispatcher) {
+    override fun run(event: AuthProjectLevelPermissionsSyncEvent) {
+        with(event) {
+            logger.info("receive project level permission sync event|$event")
+            event.iamGroupIds.forEach {
+                permissionService.syncProjectLevelPermissions(
+                    projectCode = projectCode,
+                    iamGroupId = it
+                )
+            }
+        }
+    }
 }

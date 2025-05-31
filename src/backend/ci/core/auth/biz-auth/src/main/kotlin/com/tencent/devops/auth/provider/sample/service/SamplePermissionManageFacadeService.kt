@@ -1,6 +1,7 @@
 package com.tencent.devops.auth.provider.sample.service
 
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
+import com.tencent.devops.auth.pojo.DepartmentUserCount
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.IamGroupIdsQueryConditionDTO
 import com.tencent.devops.auth.pojo.dto.InvalidAuthorizationsDTO
@@ -190,5 +191,12 @@ class SamplePermissionManageFacadeService : PermissionManageFacadeService {
         request: RemoveMemberFromProjectReq
     ): String {
         return ""
+    }
+
+    override fun getProjectUserDepartmentDistribution(
+        projectCode: String,
+        parentDepartmentId: Int
+    ): List<DepartmentUserCount> {
+        return emptyList()
     }
 }
