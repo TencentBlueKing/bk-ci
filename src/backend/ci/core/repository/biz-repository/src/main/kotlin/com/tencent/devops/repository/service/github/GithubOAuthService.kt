@@ -176,7 +176,7 @@ class GithubOAuthService @Autowired constructor(
                 specRedirectUrl
             } else {
                 "${gitConfig.githubRedirectUrl}/$projectId$popupTag$repoHashId?" +
-                        "resetType=$resetType&userId=$userId"
+                        "resetType=$resetType&userId=${userResponse.login}"
             }
         )
     }
