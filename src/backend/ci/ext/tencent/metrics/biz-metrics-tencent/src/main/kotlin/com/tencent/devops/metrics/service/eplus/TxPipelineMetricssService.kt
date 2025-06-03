@@ -32,6 +32,7 @@ import com.tencent.devops.metrics.dao.PipelineMetricsInfoDao
 import com.tencent.devops.metrics.pojo.ProjectPipelineIssueAnalysisInfo
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -41,6 +42,10 @@ class TxPipelineMetricssService@Autowired constructor(
     private val client: Client,
     private val pipelineMetricsInfoDao: PipelineMetricsInfoDao
 ) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(TxPipelineMetricssService::class.java)
+    }
 
     fun getPipelineIssueAnalysis(userId: String, projectId: String): ProjectPipelineIssueAnalysisInfo? {
         val verifyUserProjectPermission = client.get(ServiceProjectResource::class).verifyUserProjectPermission(
