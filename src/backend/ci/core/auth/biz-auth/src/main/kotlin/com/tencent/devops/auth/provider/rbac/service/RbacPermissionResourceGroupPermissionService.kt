@@ -823,4 +823,15 @@ class RbacPermissionResourceGroupPermissionService(
         }
         return true
     }
+
+    override fun listProjectsWithPermission(
+        memberIds: List<String>,
+        action: String
+    ): List<String> {
+        return authUserProjectPermissionDao.list(
+            dslContext = dslContext,
+            memberIds = memberIds,
+            action = action
+        )
+    }
 }

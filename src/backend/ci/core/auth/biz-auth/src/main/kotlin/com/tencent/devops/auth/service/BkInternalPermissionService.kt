@@ -4,10 +4,14 @@ import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import org.springframework.stereotype.Service
 
+/**
+ * 蓝盾内部权限类，非第三方接口。
+ * */
 @Service
-class BkPermissionService(
+class BkInternalPermissionService(
     private val permissionManageFacadeService: PermissionManageFacadeService,
-    private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService
+    private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService,
+    private val userManageService: UserManageService
 ) {
     fun validateUserResourcePermission(
         userId: String,
@@ -87,5 +91,17 @@ class BkPermissionService(
                 resourceType = resourceType
             )
         }
+    }
+
+    fun getUserProjectsByAction(
+        userId: String,
+        action: String
+    ): List<String> {
+        // 获取用户的所属组织
+        val memberDeptInfos = userManageService.getUserInfo(userId).path?.map { it.toString() } ?: emptyList()
+        return permissionResourceGroupPermissionService.listProjectsWithPermission(
+            memberIds = memberDeptInfos.toMutableList().plus(userId),
+            action = action
+        )
     }
 }

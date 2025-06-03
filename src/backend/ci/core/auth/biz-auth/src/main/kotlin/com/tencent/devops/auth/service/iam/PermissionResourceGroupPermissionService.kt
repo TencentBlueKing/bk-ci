@@ -160,4 +160,9 @@ interface PermissionResourceGroupPermissionService {
     fun syncProjectLevelPermissionsByCondition(
         projectConditionDTO: ProjectConditionDTO
     ): Boolean
+
+    fun listProjectsWithPermission(
+        memberIds: List<String>,
+        action: String
+    ): List<String>
 }
