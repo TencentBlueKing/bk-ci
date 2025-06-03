@@ -50,7 +50,8 @@ class UserInfoResourceImpl @Autowired constructor(
                     userId = userId,
                     deviceId = deviceId,
                     token = token
-                   )) {
+            )
+            ) {
                 return Result(res.copy(moa = UserInfoMoaCheckConfig(false)))
             }
         }
