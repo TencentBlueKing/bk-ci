@@ -48,6 +48,7 @@ class TxPipelineMetricssService@Autowired constructor(
             projectCode = projectId
         ).data
         if (verifyUserProjectPermission != true) {
+            logger.info("user ${userId} does not have the permission to view pipeline management information")
             return null
         }
 
