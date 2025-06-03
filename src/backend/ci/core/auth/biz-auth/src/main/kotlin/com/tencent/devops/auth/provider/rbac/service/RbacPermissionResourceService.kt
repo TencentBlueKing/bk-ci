@@ -42,6 +42,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationDTO
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.service.tenant.TenantUtils
@@ -74,10 +75,12 @@ class RbacPermissionResourceService(
         async: Boolean
     ): Boolean {
         val finalProjectCode = TenantUtils.parseEnglishName(tenantId, projectCode)
+        val finalResourceCode =
+            if (resourceType == ResourceTypeId.PROJECT && TenantUtils.isMultiTenantMode()) finalProjectCode else resourceCode
         logger.info("resource create relation|$userId|$finalProjectCode|$resourceType|$resourceCode|$resourceName")
         val iamResourceCode = authResourceCodeConverter.generateIamCode(
             resourceType = resourceType,
-            resourceCode = resourceCode
+            resourceCode = finalResourceCode
         )
         var projectName = resourceName
         val managerId = if (resourceType == AuthResourceType.PROJECT.value) {
@@ -86,7 +89,7 @@ class RbacPermissionResourceService(
                 projectCode = finalProjectCode,
                 projectName = resourceName,
                 resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = resourceCode,
+                resourceCode = finalResourceCode,
                 resourceName = resourceName
             )
         } else {
@@ -103,7 +106,7 @@ class RbacPermissionResourceService(
                 projectCode = finalProjectCode,
                 projectName = projectInfo.resourceName,
                 resourceType = resourceType,
-                resourceCode = resourceCode,
+                resourceCode = finalResourceCode,
                 resourceName = resourceName,
                 iamResourceCode = iamResourceCode
             )
@@ -116,7 +119,7 @@ class RbacPermissionResourceService(
                 projectCode = finalProjectCode,
                 resourceType = resourceType,
                 resourceName = resourceName,
-                resourceCode = resourceCode,
+                resourceCode = finalResourceCode,
                 iamResourceCode = iamResourceCode,
                 managerId = managerId
             )
@@ -126,7 +129,7 @@ class RbacPermissionResourceService(
                 projectName = projectName,
                 resourceType = resourceType,
                 resourceName = resourceName,
-                resourceCode = resourceCode,
+                resourceCode = finalResourceCode,
                 iamResourceCode = iamResourceCode,
                 async = async,
                 managerId = managerId
