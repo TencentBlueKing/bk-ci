@@ -105,6 +105,7 @@ class MockAuthProjectApi constructor(
     override fun getUserProjectsByPermission(
         serviceCode: AuthServiceCode,
         userId: String,
+        tenantId: String?,
         permission: AuthPermission,
         supplier: (() -> List<String>)?,
         resourceType: String?

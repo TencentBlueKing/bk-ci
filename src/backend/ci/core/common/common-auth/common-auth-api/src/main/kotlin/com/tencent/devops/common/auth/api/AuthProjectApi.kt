@@ -90,6 +90,7 @@ interface AuthProjectApi {
     fun getUserProjectsByPermission(
         serviceCode: AuthServiceCode,
         userId: String,
+        tenantId: String?,
         permission: AuthPermission,
         supplier: (() -> List<String>)?,
         resourceType: String? = null

@@ -111,12 +111,15 @@ interface ServiceProjectAuthResource {
         @PathParam("userId")
         @Parameter(description = "用户userId", required = true)
         userId: String,
+        @Parameter(description = "租户ID", required = false)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String?,
         @PathParam("action")
         @Parameter(description = "项目资源类型action", required = true)
         action: String,
         @QueryParam("resourceType")
         @Parameter(description = "资源类型", required = true)
-        resourceType: String? = null
+        resourceType: String? = null,
     ): Result<List<String>>
 
     @GET

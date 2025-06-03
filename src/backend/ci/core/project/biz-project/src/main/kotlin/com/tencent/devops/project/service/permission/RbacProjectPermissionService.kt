@@ -247,6 +247,7 @@ class RbacProjectPermissionService(
         return authProjectApi.getUserProjectsByPermission(
             serviceCode = projectAuthServiceCode,
             userId = userId,
+            tenantId = tenantId,
             permission = permission,
             supplier = null,
             resourceType = resourceType
