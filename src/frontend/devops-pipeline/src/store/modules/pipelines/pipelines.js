@@ -211,11 +211,14 @@ const actions = {
         })
     },
     searchPipelineList ({ commit, state, dispatch }, { projectId, searchName = '', archiveFlag }) {
-        let url = `/${PROCESS_API_URL_PREFIX}/user/pipelineInfos/${projectId}/searchByName?pipelineName=${encodeURIComponent(searchName)}`
-        if (archiveFlag !== undefined && archiveFlag !== null) {
-            url += `?archiveFlag=${encodeURIComponent(archiveFlag)}`
-        }
+        const params = new URLSearchParams()
+        params.append('pipelineName', searchName)
 
+        if (archiveFlag !== undefined && archiveFlag !== null) {
+            params.append('archiveFlag', archiveFlag)
+        }
+        
+        const url = `/${PROCESS_API_URL_PREFIX}/user/pipelineInfos/${projectId}/searchByName?${params.toString()}`
         return ajax.get(url).then(response => {
             return response.data
         })
