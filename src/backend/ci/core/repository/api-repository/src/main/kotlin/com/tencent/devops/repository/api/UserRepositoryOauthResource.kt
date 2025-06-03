@@ -44,7 +44,6 @@ import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
-import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
@@ -88,7 +87,7 @@ interface UserRepositoryOauthResource {
     ): Result<Page<RepoOauthRefVo>>
 
     @DELETE
-    @Path("/delete/{username}")
+    @Path("/delete")
     @Operation(summary = "删除oauth授权")
     fun delete(
         @Parameter(description = "用户名", required = true)
@@ -98,12 +97,12 @@ interface UserRepositoryOauthResource {
         @QueryParam("scmCode")
         scmCode: String,
         @Parameter(description = "需要删除的用户名", required = true)
-        @PathParam("username")
+        @QueryParam("username")
         username: String
     ): Result<Boolean>
 
     @POST
-    @Path("/reset/{username}")
+    @Path("/reset")
     @Operation(summary = "重置授权")
     fun reset(
         @Parameter(description = "用户名", required = true)
@@ -116,7 +115,7 @@ interface UserRepositoryOauthResource {
         @QueryParam("redirectUrl")
         redirectUrl: String,
         @Parameter(description = "需要重置的用户名", required = true)
-        @PathParam("username")
+        @QueryParam("username")
         username: String
     ): Result<Oauth2Url>
 

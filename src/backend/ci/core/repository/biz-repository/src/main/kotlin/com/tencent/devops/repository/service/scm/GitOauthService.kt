@@ -201,7 +201,7 @@ class GitOauthService @Autowired constructor(
             throw OperationException("TGIT call back contain invalid parameter: $state")
         }
         val authParamDecodeJsonStr = URLDecoder.decode(state, "UTF-8")
-        val authParams = JsonUtil.toMap(authParamDecodeJsonStr)
+        val authParams = JsonUtil.toMap(authParamDecodeJsonStr).toMutableMap()
         logger.info("gitCallback authParams is: $authParams")
         val userId = authParams["userId"] as String
         val gitProjectId = authParams["gitProjectId"] as String?
@@ -212,7 +212,14 @@ class GitOauthService @Autowired constructor(
         val oauthUserId = gitService.getUserInfoByToken(token.accessToken).username ?: userId
         logger.info("save the git access token for user $oauthUserId, operated by $userId")
         saveAccessToken(oauthUserId, token)
-        val redirectUrl = gitService.getRedirectUrl(state)
+        // 保存当前授权用户
+        authParams["username"] = oauthUserId
+        val redirectUrl = gitService.getRedirectUrl(
+            URLEncoder.encode(
+                JsonUtil.toJson(authParams, false),
+                "UTF-8"
+            )
+        )
         logger.info("gitCallback redirectUrl is: $redirectUrl")
         return GitOauthCallback(
             gitProjectId = gitProjectId?.toLong(),
