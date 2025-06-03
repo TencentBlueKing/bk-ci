@@ -43,10 +43,6 @@ class TxPipelineMetricssService@Autowired constructor(
     private val pipelineMetricsInfoDao: PipelineMetricsInfoDao
 ) {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(TxPipelineMetricssService::class.java)
-    }
-
     fun getPipelineIssueAnalysis(userId: String, projectId: String): ProjectPipelineIssueAnalysisInfo? {
         val verifyUserProjectPermission = client.get(ServiceProjectResource::class).verifyUserProjectPermission(
             userId = userId,
@@ -71,5 +67,9 @@ class TxPipelineMetricssService@Autowired constructor(
             consecutiveFailuresCount = consecutiveFailuresCount,
             scheduledTriggerNoCodeChangeCount = scheduledTriggerNoCodeChangeCount
         )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(TxPipelineMetricssService::class.java)
     }
 }
