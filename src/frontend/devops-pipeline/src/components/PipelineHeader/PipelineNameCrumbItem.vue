@@ -126,6 +126,9 @@
                         params: {
                             projectId: $route.params.projectId,
                             pipelineId
+                        },
+                        query: {
+                            archiveFlag: this.$route.query.archiveFlag
                         }
                     })
                     // 清空搜索
