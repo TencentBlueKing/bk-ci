@@ -115,6 +115,4 @@ class PipelineMetricsInfoDao {
 
     fun countScheduledTriggerNoCodeChange(dslContext: DSLContext, projectId: String) =
         countByField(dslContext, projectId, table.SCHEDULED_TRIGGER_NO_CODE_CHANGE)
-
-
 }
