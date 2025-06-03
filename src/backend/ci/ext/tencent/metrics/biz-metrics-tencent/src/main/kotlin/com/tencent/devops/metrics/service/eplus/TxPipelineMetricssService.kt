@@ -32,6 +32,7 @@ import com.tencent.devops.metrics.dao.PipelineMetricsInfoDao
 import com.tencent.devops.metrics.pojo.ProjectPipelineIssueAnalysisInfo
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -48,6 +49,7 @@ class TxPipelineMetricssService@Autowired constructor(
             projectCode = projectId
         ).data
         if (verifyUserProjectPermission != true) {
+            logger.info("user ${userId} does not have the permission to view pipeline management information")
             return null
         }
 
@@ -65,5 +67,9 @@ class TxPipelineMetricssService@Autowired constructor(
             consecutiveFailuresCount = consecutiveFailuresCount,
             scheduledTriggerNoCodeChangeCount = scheduledTriggerNoCodeChangeCount
         )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(TxPipelineMetricssService::class.java)
     }
 }
