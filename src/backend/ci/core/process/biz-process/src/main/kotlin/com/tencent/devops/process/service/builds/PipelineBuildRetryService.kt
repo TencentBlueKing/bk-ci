@@ -47,7 +47,6 @@ import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.StageIdLock
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineInfo
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
