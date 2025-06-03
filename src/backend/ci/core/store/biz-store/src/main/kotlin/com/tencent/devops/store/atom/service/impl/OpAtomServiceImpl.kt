@@ -386,7 +386,8 @@ class OpAtomServiceImpl @Autowired constructor(
         disposition: FormDataContentDisposition,
         publisher: String?,
         releaseType: ReleaseTypeEnum?,
-        version: String?
+        version: String?,
+        tenantId: String?
     ): Result<Boolean> {
         val (atomPath, file) = StoreFileAnalysisUtil.extractStorePackage(
             storeCode = atomCode,
@@ -422,6 +423,7 @@ class OpAtomServiceImpl @Autowired constructor(
             // 如果接口query参数的发布者不为空，发布者以接口query参数的发布者为准
             versionInfo.publisher = publisher
         }
+        releaseInfo.projectId = TenantUtils.parseEnglishName(tenantId, releaseInfo.projectId)
         releaseType?.let {
             // 如果接口query参数的发布类型不为空，发布类型以接口query参数的发布类型为准
             versionInfo.releaseType = releaseType

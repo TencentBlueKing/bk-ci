@@ -83,7 +83,8 @@ interface OpAtomService {
         disposition: FormDataContentDisposition,
         publisher: String? = null,
         releaseType: ReleaseTypeEnum? = null,
-        version: String? = null
+        version: String? = null,
+        tenantId: String?
     ): Result<Boolean>
 
     /**

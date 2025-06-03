@@ -143,6 +143,7 @@ class OpAtomResourceImpl @Autowired constructor(
 
     override fun releaseAtom(
         userId: String,
+        tenantId: String?,
         atomCode: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition,
@@ -157,7 +158,8 @@ class OpAtomResourceImpl @Autowired constructor(
             disposition = disposition,
             publisher = publisher,
             releaseType = releaseType,
-            version = version
+            version = version,
+            tenantId = tenantId
         )
     }
 
