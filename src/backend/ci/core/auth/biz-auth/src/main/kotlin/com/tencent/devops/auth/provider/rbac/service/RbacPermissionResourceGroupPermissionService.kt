@@ -44,10 +44,12 @@ import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.dao.AuthResourceGroupPermissionDao
+import com.tencent.devops.auth.dao.AuthSyncDataTaskDao
 import com.tencent.devops.auth.dao.AuthUserProjectPermissionDao
 import com.tencent.devops.auth.pojo.RelatedResourceInfo
 import com.tencent.devops.auth.pojo.UserProjectPermission
 import com.tencent.devops.auth.pojo.dto.ResourceGroupPermissionDTO
+import com.tencent.devops.auth.pojo.enum.AuthSyncDataType
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthProjectLevelPermissionsSyncEvent
@@ -58,6 +60,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.ResourceTypeId
@@ -75,6 +78,7 @@ import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Value
 import java.time.LocalDateTime
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 
 @Suppress("LongParameterList")
@@ -95,7 +99,8 @@ class RbacPermissionResourceGroupPermissionService(
     private val authResourceDao: AuthResourceDao,
     private val authUserProjectPermissionDao: AuthUserProjectPermissionDao,
     private val authResourceMemberDao: AuthResourceGroupMemberDao,
-    private val traceEventDispatcher: TraceEventDispatcher
+    private val traceEventDispatcher: TraceEventDispatcher,
+    private val syncDataTaskDao: AuthSyncDataTaskDao
 ) : PermissionResourceGroupPermissionService {
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
@@ -584,37 +589,28 @@ class RbacPermissionResourceGroupPermissionService(
         }
     }
 
-    override fun syncProjectPermissions(projectCode: String, async: Boolean): Boolean {
-        val traceId = MDC.get(TraceTag.BIZID)
-        val task = {
-            MDC.put(TraceTag.BIZID, traceId)
-            logger.info("sync project group permissions:$projectCode")
-            val iamGroupIds = authResourceGroupDao.listIamGroupIdsByConditions(
-                dslContext = dslContext,
-                projectCode = projectCode
-            )
-            logger.debug("sync project group permissions iamGroupIds:{}", iamGroupIds)
-            iamGroupIds.forEach {
-                syncGroupPermissions(
-                    projectCode = projectCode,
-                    iamGroupId = it
-                )
-            }
-            val groupsWithPermissions = resourceGroupPermissionDao.listGroupsWithPermissions(
-                dslContext = dslContext,
-                projectCode = projectCode
-            )
-            val toDeleteGroupIds = groupsWithPermissions.filter { it !in iamGroupIds }
-            deleteByGroupIds(
+    override fun syncProjectPermissions(projectCode: String): Boolean {
+        logger.info("sync project group permissions:$projectCode")
+        val iamGroupIds = authResourceGroupDao.listIamGroupIdsByConditions(
+            dslContext = dslContext,
+            projectCode = projectCode
+        )
+        logger.debug("sync project group permissions iamGroupIds:{}", iamGroupIds)
+        iamGroupIds.forEach {
+            syncGroupPermissions(
                 projectCode = projectCode,
-                iamGroupIds = toDeleteGroupIds
+                iamGroupId = it
             )
         }
-        if (async) {
-            syncProjectsExecutorService.submit(task)
-        } else {
-            task()
-        }
+        val groupsWithPermissions = resourceGroupPermissionDao.listGroupsWithPermissions(
+            dslContext = dslContext,
+            projectCode = projectCode
+        )
+        val toDeleteGroupIds = groupsWithPermissions.filter { it !in iamGroupIds }
+        deleteByGroupIds(
+            projectCode = projectCode,
+            iamGroupIds = toDeleteGroupIds
+        )
         return true
     }
 
@@ -622,9 +618,15 @@ class RbacPermissionResourceGroupPermissionService(
         logger.info("start to sync group permissions by condition by condition|$projectConditionDTO")
         val traceId = MDC.get(TraceTag.BIZID)
         syncExecutorService.submit {
-            MDC.put(TraceTag.BIZID, traceId)
             var offset = 0
             val limit = PageUtil.MAX_PAGE_SIZE / 2
+            val uuid = UUIDUtil.generate()
+            syncDataTaskDao.recordSyncDataTask(
+                dslContext = dslContext,
+                taskId = uuid,
+                taskType = AuthSyncDataType.GROUP_AND_MEMBER_SYNC_TASK_TYPE.type
+            )
+            val result = mutableListOf<CompletableFuture<*>>()
             do {
                 val projectCodes = client.get(ServiceProjectResource::class).listProjectsByCondition(
                     projectConditionDTO = projectConditionDTO,
@@ -632,10 +634,22 @@ class RbacPermissionResourceGroupPermissionService(
                     offset = offset
                 ).data ?: break
                 projectCodes.forEach {
-                    syncProjectPermissions(it.englishName)
+                    CompletableFuture.supplyAsync(
+                        {
+                            MDC.put(TraceTag.BIZID, traceId)
+                            syncProjectPermissions(it.englishName)
+                        },
+                        syncProjectsExecutorService
+                    )
                 }
                 offset += limit
             } while (projectCodes.size == limit)
+            CompletableFuture.allOf(*result.toTypedArray()).join()
+            syncDataTaskDao.recordSyncDataTask(
+                dslContext = dslContext,
+                taskId = uuid,
+                taskType = AuthSyncDataType.GROUP_AND_MEMBER_SYNC_TASK_TYPE.type
+            )
         }
         return true
     }
@@ -800,7 +814,9 @@ class RbacPermissionResourceGroupPermissionService(
                     offset = offset
                 ).data ?: break
                 projectCodes.forEach {
-                    syncProjectLevelPermissions(it.englishName)
+                    syncProjectsExecutorService.submit {
+                        syncProjectLevelPermissions(it.englishName)
+                    }
                 }
                 offset += limit
             } while (projectCodes.size == limit)

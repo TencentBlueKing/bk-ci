@@ -25,35 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.provider.sample.service
+package com.tencent.devops.auth.pojo.enum
 
-import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
-import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
-import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
-
-class SamplePermissionResourceGroupSyncService : PermissionResourceGroupSyncService {
-
-    override fun syncByCondition(projectConditionDTO: ProjectConditionDTO) = Unit
-
-    override fun syncGroupMemberExpiredTime(projectConditionDTO: ProjectConditionDTO) = Unit
-
-    override fun batchSyncGroupAndMember(projectCodes: List<String>) = Unit
-
-    override fun syncGroupAndMember(projectCode: String) = Unit
-
-    override fun syncProjectGroup(projectCode: String) = Unit
-
-    override fun getStatusOfSync(projectCode: String): AuthMigrateStatus = AuthMigrateStatus.SUCCEED
-
-    override fun batchSyncProjectGroup(projectCodes: List<String>) = Unit
-
-    override fun batchSyncAllMember(projectCodes: List<String>) = Unit
-
-    override fun syncResourceMember(projectCode: String, resourceType: String, resourceCode: String) = Unit
-
-    override fun syncIamGroupMember(projectCode: String, iamGroupId: Int) = Unit
-
-    override fun syncIamGroupMembersOfApply() = Unit
-
-    override fun fixResourceGroupMember(projectCode: String) = Unit
+enum class AuthSyncDataType(val type: String) {
+    USER_SYNC_TASK_TYPE("USER"),
+    DEPARTMENT_SYNC_TASK_TYPE("DEPARTMENT"),
+    GROUP_AND_MEMBER_SYNC_TASK_TYPE("GROUP_AND_MEMBER"),
+    GROUP_PERMISSIONS_SYNC_TASK_TYPE("GROUP_PERMISSIONS")
 }

@@ -42,12 +42,13 @@ class SyncGroupAndMemberListener @Autowired constructor(
 
     override fun execute(event: ProjectEnableStatusBroadCastEvent) {
         logger.info("sync group,group member and group permissions when enabled project $event")
-        if (event.enabled) {
-            // 项目启用时，同步用户组/用户组成员/用户组权限/项目级权限
-            resourceGroupSyncService.syncProjectGroup(projectCode = event.projectId)
-            resourceGroupSyncService.syncGroupAndMember(projectCode = event.projectId, async = false)
-            resourceGroupPermissionService.syncProjectPermissions(projectCode = event.projectId, async = false)
-            resourceGroupPermissionService.syncProjectLevelPermissions(projectCode = event.projectId)
+        with(event) {
+            if (enabled) {
+                // 项目启用时，同步用户组/用户组成员/用户组权限
+                resourceGroupSyncService.syncProjectGroup(projectId)
+                resourceGroupSyncService.syncGroupAndMember(projectId)
+                resourceGroupPermissionService.syncProjectPermissions(projectId)
+            }
         }
     }
 

@@ -1,6 +1,8 @@
 package com.tencent.devops.auth.cron
 
+import com.tencent.devops.auth.pojo.enum.AuthSyncDataType
 import com.tencent.devops.auth.service.UserManageService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.auth.service.lock.CronSyncGroupMembersExpiredTimeLock
 import com.tencent.devops.auth.service.lock.CronSyncGroupPermissionsLock
@@ -16,15 +18,13 @@ import org.springframework.stereotype.Component
 class AuthCronSyncGroupAndMember(
     private val redisOperation: RedisOperation,
     private val permissionResourceGroupSyncService: PermissionResourceGroupSyncService,
-    private val userManageService: UserManageService
+    private val userManageService: UserManageService,
+    private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService
 ) {
     @Value("\${sync.cron.enabled:#{false}}")
     private var enable: Boolean = false
 
-    private val redisLock = RedisLock(redisOperation, SYNC_CRON_KEY, 10)
-
     companion object {
-        private const val SYNC_CRON_KEY = "sync_cron_key"
         private val logger = LoggerFactory.getLogger(AuthCronSyncGroupAndMember::class.java)
     }
 
@@ -35,8 +35,12 @@ class AuthCronSyncGroupAndMember(
         }
         try {
             logger.info("sync group and member regularly |start")
-            val lockSuccess = redisLock.tryLock()
-            if (lockSuccess) {
+            val redisLock = RedisLock(
+                redisOperation = redisOperation,
+                lockKey = "sync_${AuthSyncDataType.GROUP_AND_MEMBER_SYNC_TASK_TYPE}_cron_key",
+                expiredTimeInSeconds = 10
+            )
+            if (redisLock.tryLock()) {
                 permissionResourceGroupSyncService.syncByCondition(
                     ProjectConditionDTO(enabled = true)
                 )
@@ -46,6 +50,31 @@ class AuthCronSyncGroupAndMember(
             }
         } catch (e: Exception) {
             logger.warn("sync group and member regularly |error", e)
+        }
+    }
+
+    @Scheduled(cron = "0 0 0 1,15 * ?")
+    fun syncGroupPermissionsRegularly() {
+        if (!enable) {
+            return
+        }
+        try {
+            logger.info("sync group permissions regularly |start")
+            val redisLock = RedisLock(
+                redisOperation = redisOperation,
+                lockKey = "sync_${AuthSyncDataType.GROUP_PERMISSIONS_SYNC_TASK_TYPE}_cron_key",
+                expiredTimeInSeconds = 10
+            )
+            if (redisLock.tryLock()) {
+                permissionResourceGroupPermissionService.syncPermissionsByCondition(
+                    ProjectConditionDTO(enabled = true)
+                )
+                logger.info("sync group permissions regularly |finish")
+            } else {
+                logger.info("sync group permissions regularly |running")
+            }
+        } catch (e: Exception) {
+            logger.warn("sync group permissions regularly |error", e)
         }
     }
 
@@ -104,8 +133,12 @@ class AuthCronSyncGroupAndMember(
         }
         try {
             logger.info("sync user and department regularly |start")
-            val lockSuccess = redisLock.tryLock()
-            if (lockSuccess) {
+            val redisLock = RedisLock(
+                redisOperation = redisOperation,
+                lockKey = "sync_${AuthSyncDataType.USER_SYNC_TASK_TYPE}_cron_key",
+                expiredTimeInSeconds = 10
+            )
+            if (redisLock.tryLock()) {
                 userManageService.syncUserInfoData()
                 userManageService.syncDepartmentInfoData()
                 logger.info("sync user and department regularly |finish")

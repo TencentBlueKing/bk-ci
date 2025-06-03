@@ -38,6 +38,7 @@ import com.tencent.devops.auth.pojo.BkUserDeptInfo
 import com.tencent.devops.auth.pojo.DepartmentInfo
 import com.tencent.devops.auth.pojo.DepartmentUserCount
 import com.tencent.devops.auth.pojo.UserInfo
+import com.tencent.devops.auth.pojo.enum.AuthSyncDataType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -100,13 +101,13 @@ class UserManageService @Autowired constructor(
             logger.info("start to sync user info data")
             val previousUserSyncDataRecord = syncDataTaskDao.getLatestSyncDataTaskRecord(
                 dslContext = dslContext,
-                taskType = USER_SYNC_TASK_TYPE
+                taskType = AuthSyncDataType.USER_SYNC_TASK_TYPE.type
             )
             val latestTaskId = UUIDUtil.generate()
             syncDataTaskDao.recordSyncDataTask(
                 dslContext = dslContext,
                 taskId = latestTaskId,
-                taskType = USER_SYNC_TASK_TYPE
+                taskType = AuthSyncDataType.USER_SYNC_TASK_TYPE.type
             )
             // 同步用户数据
             do {
@@ -161,7 +162,7 @@ class UserManageService @Autowired constructor(
             syncDataTaskDao.recordSyncDataTask(
                 dslContext = dslContext,
                 taskId = latestTaskId,
-                taskType = USER_SYNC_TASK_TYPE
+                taskType = AuthSyncDataType.USER_SYNC_TASK_TYPE.type
             )
             logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to sync user info data")
         }
@@ -226,13 +227,13 @@ class UserManageService @Autowired constructor(
             logger.info("start to sync department info data")
             val previousDepartmentSyncDataRecord = syncDataTaskDao.getLatestSyncDataTaskRecord(
                 dslContext = dslContext,
-                taskType = DEPARTMENT_SYNC_TASK_TYPE
+                taskType = AuthSyncDataType.DEPARTMENT_SYNC_TASK_TYPE.type
             )
             val latestTaskId = UUIDUtil.generate()
             syncDataTaskDao.recordSyncDataTask(
                 dslContext = dslContext,
                 taskId = latestTaskId,
-                taskType = DEPARTMENT_SYNC_TASK_TYPE
+                taskType = AuthSyncDataType.DEPARTMENT_SYNC_TASK_TYPE.type
             )
             do {
                 val deptInfos = try {
@@ -276,7 +277,7 @@ class UserManageService @Autowired constructor(
             syncDataTaskDao.recordSyncDataTask(
                 dslContext = dslContext,
                 taskId = latestTaskId,
-                taskType = DEPARTMENT_SYNC_TASK_TYPE
+                taskType = AuthSyncDataType.DEPARTMENT_SYNC_TASK_TYPE.type
             )
             logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to sync department info data")
         }
@@ -316,7 +317,5 @@ class UserManageService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(UserManageService::class.java)
-        private const val USER_SYNC_TASK_TYPE = "USER"
-        private const val DEPARTMENT_SYNC_TASK_TYPE = "DEPARTMENT"
     }
 }
