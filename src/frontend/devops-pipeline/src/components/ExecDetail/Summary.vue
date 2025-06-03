@@ -1,9 +1,9 @@
 <template>
-    <header class="exec-detail-summary">
-        <div
-            v-if="visible"
-            class="exec-detail-summary-info"
-        >
+    <header
+        v-if="visible"
+        class="exec-detail-summary"
+    >
+        <div class="exec-detail-summary-info">
             <div class="exec-detail-summary-info-material">
                 <span class="exec-detail-summary-info-block-title">
                     {{ $t("details.triggerRepo") }}
@@ -171,6 +171,31 @@
                 </div>
             </div>
         </div>
+        <div class="part-quality-block">
+            <span class="part-quality-block-title">
+                {{ $t("artifactQuality") }}
+            </span>
+            <ul>
+                <li
+                    class="quality-tags"
+                    v-for="item in qualityList"
+                    :key="item.id"
+                    @click="goOutputs(item.id)"
+                >
+                    <span class="tag-label">{{ item.title }}</span>
+                    <div
+                        v-for="(tag, index) in item.colorNumberList"
+                        :key="index"
+                        class="color-item"
+                    >
+                        <span
+                            :style="{ backgroundColor: tag.color }"
+                            class="color-block"
+                        >{{ tag.number }}</span>
+                    </div>
+                </li>
+            </ul>
+        </div>
     </header>
 </template>
 
@@ -200,7 +225,27 @@
                 remark: this.execDetail.remark,
                 isChangeRemark: false,
                 isShowMoreMaterial: false,
-                curVersionDesc: ''
+                curVersionDesc: '',
+                qualityList: [
+                    {
+                        id: 1,
+                        title: '自动化测试',
+                        colorNumberList: [
+                            { color: '#65C389', number: '5' },
+                            { color: '#FF5656', number: '2' }
+                        ]
+                    },
+                    {
+                        id: 2,
+                        title: '制品成分分析',
+                        colorNumberList: [
+                            { color: '#65C389', number: '10' },
+                            { color: '#FF5656', number: '4' },
+                            { color: '#F8B64F', number: '10' },
+                            { color: '#C4C6CC', number: '4' }
+                        ]
+                    }
+                ]
             }
         },
         computed: {
@@ -312,6 +357,18 @@
                     this.isChangeRemark = false
                     this.hideRemarkEdit()
                 }
+            },
+            goOutputs (id) {
+                this.$router.push({
+                    name: 'pipelinesDetail',
+                    params: {
+                        ...this.routerParams,
+                        type: 'outputs'
+                    },
+                    query: {
+                        id
+                    }
+                })
             }
         }
     }
@@ -477,6 +534,61 @@
             > span {
                 font-weight: bold;
                 @include ellipsis();
+            }
+        }
+    }
+}
+.part-quality-block {
+    display: flex;
+    flex-wrap: wrap;
+    padding-top: 18px;
+    padding-bottom: 10px;
+    font-size: 12px;
+    
+    .part-quality-block-title {
+        color: #979ba5;
+        margin-right: 24px;
+        padding-top: 4px;
+        flex-shrink: 0;
+    }
+    ul {
+        flex: 1;
+        display: flex;
+        flex-wrap: wrap;
+        margin: 0;
+        padding: 0;
+        list-style-type: none;
+        .quality-tags {
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 12px;
+            margin-right: 12px;
+            padding: 4px 8px;
+            background: #FAFBFD;
+            border: 1px solid #DCDEE5;
+            border-radius: 2px;
+            cursor: pointer;
+            .tag-label {
+                color: #4D4F56;
+            }
+            .color-item {
+                margin-left: 6px;
+                position: relative;
+            }
+            .color-block {
+                display: inline-block;
+                padding: 0 4px;
+                height: 16px;
+                color: #FFF;
+                border-radius: 11px;
+
+                transition: background-color 0.3s ease;
+                &:hover {
+                    opacity: 0.8;
+                }
+            }
+            &:hover {
+                background-color: #F0F1F5;
             }
         }
     }

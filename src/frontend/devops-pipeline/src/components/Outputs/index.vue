@@ -15,7 +15,22 @@
                 class="pipeline-exec-outputs-aside"
             >
                 <div class="pipeline-exec-outputs-filter-input">
+                    <div
+                        class="artifact-search"
+                        v-if="isOutputPage"
+                    >
+                        <p>{{ $t('metaData') }}</p>
+                        <SearchSelect
+                            class="select-search"
+                            unique-select
+                            :data="artifactFilterData"
+                            v-model="artifactValue"
+                            @change="updateSearchKey"
+                        >
+                        </SearchSelect>
+                    </div>
                     <bk-input
+                        class="input-search"
                         clearable
                         right-icon="bk-icon icon-search"
                         :placeholder="filterPlaceholder"
@@ -246,6 +261,8 @@
     import { extForFile, repoTypeMap, repoTypeNameMap } from '@/utils/pipelineConst'
     import { convertFileSize, convertTime } from '@/utils/util'
     import { mapActions } from 'vuex'
+    import SearchSelect from '@blueking/search-select'
+    import '@blueking/search-select/dist/styles/index.css'
 
     export default {
         components: {
@@ -255,7 +272,8 @@
             ExtMenu,
             CopyToCustomRepoDialog,
             // ArtifactsList
-            ArtifactDownloadButton
+            ArtifactDownloadButton,
+            SearchSelect
         },
         props: {
             currentTab: {
@@ -272,15 +290,69 @@
                 activeOutput: '',
                 activeOutputDetail: null,
                 hasPermission: false,
-                isLoading: false
+                isLoading: false,
+                artifactValue: []
             }
         },
         computed: {
+            isOutputPage () {
+                return this.currentTab === 'artifacts'
+            },
             initWidth () {
-                return this.currentTab === 'reports' ? '300px' : '40%'
+                return !this.isOutputPage ? '300px' : '40%'
             },
             filterPlaceholder () {
                 return this.$t(`${this.currentTab}FilterPlaceholder`)
+            },
+            artifactFilterData () {
+                return [
+                    {
+                        name: '自动化测试质量',
+                        id: '1-2',
+                        multiable: true,
+                        children: [
+                            {
+                                id: 'Critical',
+                                name: 'Critical'
+                            },
+                            {
+                                id: 'High',
+                                name: 'High'
+                            },
+                            {
+                                id: 'Medium',
+                                name: 'Medium'
+                            },
+                            {
+                                id: 'Low',
+                                name: 'Low'
+                            }
+                        ]
+                    },
+                    {
+                        name: '制品签名',
+                        id: '1-3',
+                        multiable: true,
+                        children: [
+                            {
+                                id: 'Critical',
+                                name: 'Critical'
+                            },
+                            {
+                                id: 'High',
+                                name: 'High'
+                            },
+                            {
+                                id: 'Medium',
+                                name: 'Medium'
+                            },
+                            {
+                                id: 'Low',
+                                name: 'Low'
+                            }
+                        ]
+                    }
+                ]
             },
             thirdPartyReportList () {
                 return this.outputs.filter((report) => this.isThirdReport(report.reportType))
@@ -541,6 +613,7 @@
                 }
             },
             currentTab: function () {
+                this.keyWord = ''
                 this.$nextTick(this.init)
             },
             '$route.params.buildNo' () {
@@ -795,7 +868,48 @@
         flex-direction: column;
 
         .pipeline-exec-outputs-filter-input {
+            display: flex;
+            width: 100%;
             margin: 12px 0;
+            flex-shrink: 0;
+
+            .artifact-search {
+                display: flex;
+                height: 32px;
+                margin-right: 4px;
+                flex: 0 0 60%;
+
+                p {
+                    width: 50px;
+                    text-align: center;
+                    height: 32px;
+                    line-height: 32px;
+                    background-color: #fafbfd;
+                    font-size: 12px;
+                    border: 1px solid #c4c6cc;
+                    border-radius: 2px;
+                    border-right: none;
+                }
+
+                .select-search {
+                    flex: 1;
+                    ::placeholder {
+                        font-size: 12px;
+                        color: #c4c6cc;
+                    }
+                    .search-tag-box {
+                        white-space: break-spaces;
+                    }
+                    .search-select-wrap {
+                        overflow-y: auto;
+                    }
+                }
+            }
+
+            .input-search {
+                flex-shrink: 0;
+                flex: 1;
+            }
         }
 
         .pipeline-exec-outputs-filter {
