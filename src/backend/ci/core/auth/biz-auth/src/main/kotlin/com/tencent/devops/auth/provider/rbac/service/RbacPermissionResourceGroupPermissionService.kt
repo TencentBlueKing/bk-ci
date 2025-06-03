@@ -624,7 +624,7 @@ class RbacPermissionResourceGroupPermissionService(
             syncDataTaskDao.recordSyncDataTask(
                 dslContext = dslContext,
                 taskId = uuid,
-                taskType = AuthSyncDataType.GROUP_AND_MEMBER_SYNC_TASK_TYPE.type
+                taskType = AuthSyncDataType.GROUP_PERMISSIONS_SYNC_TASK_TYPE.type
             )
             val result = mutableListOf<CompletableFuture<*>>()
             do {
@@ -648,7 +648,7 @@ class RbacPermissionResourceGroupPermissionService(
             syncDataTaskDao.recordSyncDataTask(
                 dslContext = dslContext,
                 taskId = uuid,
-                taskType = AuthSyncDataType.GROUP_AND_MEMBER_SYNC_TASK_TYPE.type
+                taskType = AuthSyncDataType.GROUP_PERMISSIONS_SYNC_TASK_TYPE.type
             )
         }
         return true
