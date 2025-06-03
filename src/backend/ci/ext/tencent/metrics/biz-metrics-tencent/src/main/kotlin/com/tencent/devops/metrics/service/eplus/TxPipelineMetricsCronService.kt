@@ -240,6 +240,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
                     this.projectId = row["project_id"] as String
                     this.pipelineId = row["pipeline_id"] as String
                     this.url = row["n3"] as String
+                    this.pipelineName = row["n1"] as String
                 },
                 metricsData = { records ->
                     pipelineMetricsInfoDao.batchSaveInvalidPipelineData(dslContext, records)
