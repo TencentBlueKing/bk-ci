@@ -84,6 +84,9 @@ class TxPipelineMetricsCronService @Autowired constructor(
     @Value("\${eplus.ms.metrics.namespace.scheduledTriggerNoCodeChange.card.id}")
     private var scheduledTriggerNoCodeChangeCardId: Int = 0 // 定时触发无代码变更卡片ID
 
+    @Value("\${eplus.ms.metrics.namespace.invalidBuildPipeline.card.id}")
+    private var invalidBuildPipeline: Int = 0 // 高失败率30天卡片ID
+
     companion object {
         private val logger = LoggerFactory.getLogger(TxPipelineMetricsCronService::class.java)
     }
@@ -223,6 +226,30 @@ class TxPipelineMetricsCronService @Autowired constructor(
             throw e
         }
         logger.info("end handleScheduledTriggerNoCodeChange")
+    }
+
+    @Scheduled(cron = "0 0 1 * * ?")
+    fun processInvalidPipelineData() {
+        logger.info("start processInvalidPipelineData")
+
+        try {
+            queryAndProcessCardData(
+                cardId = invalidBuildPipeline,
+                namespaceId = pipelineGeneralNamespaceId,
+                assignData = { row ->
+                    this.projectId = row["project_id"] as String
+                    this.pipelineId = row["pipeline_id"] as String
+                    this.url = row["n3"] as String
+                },
+                metricsData = { records ->
+                    pipelineMetricsInfoDao.batchSaveInvalidPipelineData(dslContext, records)
+                }
+            )
+        } catch (e: Exception) {
+            logger.warn("handle process invalid pipeline data fail", e)
+            throw e
+        }
+        logger.info("end processInvalidPipelineData")
     }
 
     private fun postWithToken(

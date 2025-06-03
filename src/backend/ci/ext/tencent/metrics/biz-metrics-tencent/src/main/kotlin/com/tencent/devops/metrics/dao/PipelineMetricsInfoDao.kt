@@ -142,4 +142,29 @@ class PipelineMetricsInfoDao {
                 .fetch()
         }
     }
+
+    fun listInvalidPipelineProjectIds(dslContext: DSLContext, limit: Int, offset: Int): List<String> {
+        with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
+            return dslContext.select(PROJECT_ID).from(this)
+                .where(IS_INVALID_PIPELINE.eq(true))
+                .groupBy(PROJECT_ID)
+                .orderBy(PROJECT_ID.desc())
+                .limit(limit).offset(offset)
+                .fetchInto(String::class.java)
+        }
+    }
+
+    fun batchSaveInvalidPipelineData(dslContext: DSLContext, records: List<TEplusPipelineMetricsDataDailyRecord>){
+        val steps = records.map {
+            with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
+                dslContext.insertInto(this)
+                    .set(it)
+                    .onDuplicateKeyUpdate()
+                    .set(IS_INVALID_PIPELINE, it.isInvalidPipeline)
+                    .set(URL, it.url)
+                    .set(PIPELINE_NAME, it.pipelineName)
+            }
+        }
+        dslContext.batch(steps).execute()
+    }
 }
