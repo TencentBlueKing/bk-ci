@@ -55,6 +55,7 @@ import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.dao.AuthResourceGroupPermissionDao
 import com.tencent.devops.auth.dao.AuthResourceSyncDao
+import com.tencent.devops.auth.dao.AuthSyncDataTaskDao
 import com.tencent.devops.auth.dao.AuthUserProjectPermissionDao
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
@@ -267,7 +268,8 @@ class RbacAuthConfiguration {
         authResourceDao: AuthResourceDao,
         authUserProjectPermissionDao: AuthUserProjectPermissionDao,
         authResourceMemberDao: AuthResourceGroupMemberDao,
-        traceEventDispatcher: TraceEventDispatcher
+        traceEventDispatcher: TraceEventDispatcher,
+        syncDataTaskDao: AuthSyncDataTaskDao
     ) = RbacPermissionResourceGroupPermissionService(
         v2ManagerService = v2ManagerService,
         rbacCommonService = rbacCommonService,
@@ -285,7 +287,8 @@ class RbacAuthConfiguration {
         authResourceDao = authResourceDao,
         authUserProjectPermissionDao = authUserProjectPermissionDao,
         authResourceMemberDao = authResourceMemberDao,
-        traceEventDispatcher = traceEventDispatcher
+        traceEventDispatcher = traceEventDispatcher,
+        syncDataTaskDao = syncDataTaskDao
     )
 
     @Bean
@@ -709,7 +712,8 @@ class RbacAuthConfiguration {
         authResourceGroupApplyDao: AuthResourceGroupApplyDao,
         resourceGroupPermissionService: PermissionResourceGroupPermissionService,
         deptService: DeptService,
-        traceEventDispatcher: TraceEventDispatcher
+        traceEventDispatcher: TraceEventDispatcher,
+        syncDataTaskDao: AuthSyncDataTaskDao
     ) = RbacPermissionResourceGroupSyncService(
         client = client,
         dslContext = dslContext,
@@ -723,6 +727,7 @@ class RbacAuthConfiguration {
         authResourceGroupApplyDao = authResourceGroupApplyDao,
         resourceGroupPermissionService = resourceGroupPermissionService,
         deptService = deptService,
-        traceEventDispatcher = traceEventDispatcher
+        traceEventDispatcher = traceEventDispatcher,
+        syncDataTaskDao = syncDataTaskDao
     )
 }
