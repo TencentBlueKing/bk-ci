@@ -149,6 +149,21 @@ class GithubTokenService @Autowired constructor(
             ?: throw CustomException(status = Response.Status.NOT_FOUND, message = "$userId githubToken not exist")
     }
 
+    fun getAccessTokenByOperator(
+        operator: String,
+        tokenType: GithubTokenType = GithubTokenType.GITHUB_APP
+    ): GithubToken? {
+        val githubTokenRecord = githubTokenDao.getByOperator(dslContext, operator, tokenType) ?: return null
+        return GithubToken(
+            BkCryptoUtil.decryptSm4OrAes(aesKey, githubTokenRecord.accessToken),
+            githubTokenRecord.tokenType,
+            githubTokenRecord.scope,
+            githubTokenRecord.createTime.timestampmilli(),
+            githubTokenRecord.userId,
+            githubTokenRecord.operator
+        )
+    }
+
     companion object {
         val logger = LoggerFactory.getLogger(GithubTokenService::class.java)
     }

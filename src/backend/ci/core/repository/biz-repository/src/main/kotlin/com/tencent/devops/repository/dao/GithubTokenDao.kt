@@ -112,6 +112,25 @@ class GithubTokenDao {
         }
     }
 
+    fun getByOperator(
+        dslContext: DSLContext,
+        operator: String,
+        githubTokenType: GithubTokenType?
+    ): TRepositoryGithubTokenRecord? {
+        with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
+            return dslContext.selectFrom(this)
+                    .where(OPERATOR.eq(operator))
+                    .let {
+                        if (githubTokenType != null) {
+                            it.and(TYPE.eq(githubTokenType.name))
+                        } else it
+                    }
+                    .orderBy(CREATE_TIME.desc())
+                    .fetch()
+                    .firstOrNull()
+        }
+    }
+
     /**
      * 删除token
      */
