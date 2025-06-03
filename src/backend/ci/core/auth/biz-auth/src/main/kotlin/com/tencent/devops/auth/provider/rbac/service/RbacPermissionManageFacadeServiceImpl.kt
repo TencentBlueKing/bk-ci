@@ -465,7 +465,7 @@ class RbacPermissionManageFacadeServiceImpl(
             memberId = memberId
         )
         // 获取用户的所属组织
-        val memberDeptInfos = userManageService.getUserInfo(memberId).path?.map { it.toString() } ?: emptyList()
+        val memberDeptInfos = userManageService.getUserDepartmentPath(memberId)
         return authResourceGroupMemberDao.listMemberGroupIdsInProject(
             dslContext = dslContext,
             projectCode = projectCode,

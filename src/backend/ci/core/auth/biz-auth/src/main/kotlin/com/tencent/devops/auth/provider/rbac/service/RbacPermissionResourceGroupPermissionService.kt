@@ -30,6 +30,7 @@ package com.tencent.devops.auth.provider.rbac.service
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.bk.sdk.iam.dto.InstancesDTO
 import com.tencent.bk.sdk.iam.dto.manager.Action
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
@@ -72,6 +73,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineViewResource
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -80,6 +82,7 @@ import org.springframework.beans.factory.annotation.Value
 import java.time.LocalDateTime
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList")
 class RbacPermissionResourceGroupPermissionService(
@@ -122,6 +125,11 @@ class RbacPermissionResourceGroupPermissionService(
             ActionId.PIPELINE_TEMPLATE_CREATE, ActionId.PROJECT_VIEW
         )
     }
+
+    private val projectCodeAndPipelineId2ViewIds = Caffeine.newBuilder()
+        .maximumSize(50000) // 最大Key数量
+        .expireAfterWrite(10, TimeUnit.MINUTES)
+        .build<String, List<String>>()
 
     override fun grantGroupPermission(
         authorizationScopesStr: String,
@@ -409,11 +417,13 @@ class RbacPermissionResourceGroupPermissionService(
         relatedResourceCode: String?
     ): List<String> {
         return if (relatedResourceCode != null && resourceType == AuthResourceType.PIPELINE_DEFAULT.value) {
-            val viewIds = client.get(ServicePipelineViewResource::class).listViewIdsByPipelineId(
-                projectId = projectCode,
-                pipelineId = relatedResourceCode
-            ).data ?: emptyList()
-            viewIds.map { HashUtil.encodeLongId(it) }
+            val cacheKey = DigestUtils.md5Hex(projectCode.plus("_").plus(relatedResourceCode))
+            projectCodeAndPipelineId2ViewIds.get(cacheKey) {
+                client.get(ServicePipelineViewResource::class).listViewIdsByPipelineId(
+                    projectId = projectCode,
+                    pipelineId = relatedResourceCode
+                ).data?.map { HashUtil.encodeLongId(it) } ?: emptyList()
+            }
         } else {
             emptyList()
         }
@@ -822,5 +832,16 @@ class RbacPermissionResourceGroupPermissionService(
             } while (projectCodes.size == limit)
         }
         return true
+    }
+
+    override fun listProjectsWithPermission(
+        memberIds: List<String>,
+        action: String
+    ): List<String> {
+        return authUserProjectPermissionDao.list(
+            dslContext = dslContext,
+            memberIds = memberIds,
+            action = action
+        )
     }
 }

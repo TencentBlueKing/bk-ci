@@ -144,4 +144,9 @@ class SamplePermissionResourceGroupPermissionService : PermissionResourceGroupPe
     ): Boolean = true
 
     override fun syncProjectLevelPermissionsByCondition(projectConditionDTO: ProjectConditionDTO): Boolean = true
+
+    override fun listProjectsWithPermission(
+        memberIds: List<String>,
+        action: String
+    ): List<String> = emptyList()
 }

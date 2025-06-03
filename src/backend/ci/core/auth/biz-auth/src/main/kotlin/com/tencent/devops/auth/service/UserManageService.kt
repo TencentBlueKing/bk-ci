@@ -27,6 +27,7 @@
 
 package com.tencent.devops.auth.service
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.auth.common.Constants
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthSyncDataTaskDao
@@ -50,6 +51,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 @Service
 class UserManageService @Autowired constructor(
@@ -66,6 +68,11 @@ class UserManageService @Autowired constructor(
 
     @Value("\${esb.secret:#{null}}")
     val appSecret: String = ""
+
+    private val user2DepartmentPath = Caffeine.newBuilder()
+        .maximumSize(50000)
+        .expireAfterWrite(1, TimeUnit.DAYS)
+        .build<String, List<String>>()
 
     fun getUserDepartmentDistribution(
         userIds: List<String>,
@@ -91,6 +98,12 @@ class UserManageService @Autowired constructor(
             params = arrayOf(userId),
             defaultMessage = "user $userId not exist"
         )
+    }
+
+    fun getUserDepartmentPath(userId: String): List<String> {
+        return user2DepartmentPath.get(userId) {
+            getUserInfo(userId).path?.map { it.toString() } ?: emptyList()
+        }
     }
 
     fun syncUserInfoData() {

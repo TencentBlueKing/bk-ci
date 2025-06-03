@@ -85,15 +85,14 @@ class AuthUserProjectPermissionDao {
 
     fun list(
         dslContext: DSLContext,
-        memberId: String,
-        actionId: String
+        memberIds: List<String>,
+        action: String
     ): List<String> {
         return with(TAuthMemberProjectPermission.T_AUTH_MEMBER_PROJECT_PERMISSION) {
             dslContext.select(PROJECT_CODE).from()
-                .where(MEMBER_ID.eq(memberId))
-                .fetch().map {
-                    it.value1()
-                }
+                .where(MEMBER_ID.`in`(memberIds))
+                .and(ACTION.eq(action))
+                .fetch().map { it.value1() }
         }
     }
 }
