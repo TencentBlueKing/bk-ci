@@ -40,6 +40,7 @@
           class="checkbox"
           v-if="isBatchOperate"
           v-model="item.checked"
+          @change="handleCheckChange(item)"
         />
         <MemberItem
           :member="item"
@@ -285,7 +286,7 @@ const props = defineProps({
   tableLoading: Boolean,
   activeTab: String,
 });
-const emit = defineEmits(['handleClick', 'pageChange', 'getPersonList', 'removeConfirm', 'refresh', 'handleSelectAll']);
+const emit = defineEmits(['handleClick', 'pageChange', 'getPersonList', 'removeConfirm', 'refresh', 'handleSelectAll', 'updateMemberList']);
 defineExpose({
   handOverClose,
 });
@@ -331,19 +332,25 @@ const isBatchOperate = ref(false);
 const dialogTopOffset = ref();
 const ulMaxHeight = computed(() => window.innerHeight * 0.8 - 256);
 const tagInput = ref(null);
+const checkedMembers = ref();
+const selectAll = ref(false);
 
-const checkedMembers = computed(() => 
-  props.memberList.filter(member => member.checked)
-);
-const selectAll = computed({
-  get() {
-    return checkedMembers.value.length === props.memberList.length;
+watch(
+  [
+    () => props.memberList,
+    () => checkedMembers.value
+  ],
+  ([memberList, checkedMembers]) => {
+    const currentPageIds = new Set(memberList?.map(member => member.id));
+    const current = checkedMembers?.filter(item => currentPageIds.has(item.id));
+
+    selectAll.value = memberList.length === current?.length
   },
-  set(value) {
-    props.memberList.forEach(member => member.checked = value);
-    emit('handleSelectAll', value);
+  {
+    immediate: true,
+    deep: true
   }
-});
+);
 
 watch(isShowHandOverDialog, (newVal) => {
   if (newVal) {
@@ -360,7 +367,7 @@ function handleClick(item) {
 }
 function pageChange(current) {
   groupWrapperRef.value?.scrollTo(0, 0)
-  emit('pageChange', current, projectId.value);
+  emit('pageChange', current, projectId.value, checkedMembers.value);
 }
 async function handleRemoval(item) {
   removeUser.value = item;
@@ -531,6 +538,14 @@ function goBatchOperate() {
 }
 
 function handleBatchAll(value) {
+  if (value) {
+    const memberIds = new Set(checkedMembers.value.map(item => item.id));
+    const newMembers = props.memberList.filter(item => !memberIds.has(item.id));
+    checkedMembers.value = [...checkedMembers.value, ...newMembers];
+  } else {
+    const memberIds = props.memberList.map(m => m.id);
+    checkedMembers.value = checkedMembers.value.filter(m =>!memberIds.includes(m.id));
+  }
   emit('handleSelectAll', value);
 }
 
@@ -549,6 +564,16 @@ async function handleOpenbatchDialog() {
     isShowHandOverDialog.value = true;
     await removeMemberFromProjectCheck();
   }
+}
+function handleCheckChange(item) {
+  if (item.checked) {
+    if (!checkedMembers.value.find(m => m.id === item.id)) {
+      checkedMembers.value.push(item);
+    }
+  } else {
+    checkedMembers.value = checkedMembers.value.filter(m => m.id !== item.id);
+  }
+  emit('updateMemberList', item)
 }
 
 onMounted(() => {

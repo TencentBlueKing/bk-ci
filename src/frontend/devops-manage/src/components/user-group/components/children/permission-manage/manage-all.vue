@@ -20,6 +20,7 @@
           @get-person-list="handleShowPerson"
           @remove-confirm="asideRemoveConfirm"
           @handle-select-all="asideSelectAll"
+          @update-member-list="updateMemberList"
         />
       </div>
       <div class="manage-content">
@@ -529,6 +530,7 @@ const {
   handleAsideRemoveConfirm,
   getProjectMembers,
   asideSelectAll,
+  updateMemberList,
 } = manageAsideStore;
 
 const {
@@ -601,8 +603,8 @@ function init (flag, searchValue) {
 function asideClick (item) {
   handleAsideClick(item, projectId.value);
 }
-function getAsidePageChange (current, projectId) {
-  handleAsidePageChange(current, projectId, searchGroup.value)
+function getAsidePageChange (current, projectId, selected) {
+  handleAsidePageChange(current, projectId, selected, searchGroup.value)
 }
 async function refresh () {
   manageSearchRef.value?.clearSearch();

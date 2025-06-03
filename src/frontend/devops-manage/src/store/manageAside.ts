@@ -44,6 +44,8 @@ export default defineStore('manageAside', () => {
   const removeUserDeptListMap = ref({});
   const showDeptListPermissionDialog = ref(false);
   const searchObj = ref<SearchParamsType>({});
+  const checkedMemberList = ref();
+
   /**
    * 人员组织侧边栏点击事件
    */
@@ -55,7 +57,8 @@ export default defineStore('manageAside', () => {
   /**
    * 人员组织侧边栏页码切换
    */
-  async function handleAsidePageChange(current: number, projectId: string, searchGroup?: any) {
+  async function handleAsidePageChange(current: number, projectId: string, selected: AsideItem[], searchGroup?: any) {
+    checkedMemberList.value = selected
     asideItem.value = undefined;
     if (memberPagination.value.current !== current) {
       memberPagination.value.current = current;
@@ -180,7 +183,7 @@ export default defineStore('manageAside', () => {
       isLoading.value = false;
       memberList.value = res.records.map(item => ({
         ...item,
-        checked: false
+        checked: checkedMemberList.value?.some(checkedItem => checkedItem.id === item.id)
       }));
 
       const itemToClick = asideItem.value || res.records[0];
@@ -196,6 +199,13 @@ export default defineStore('manageAside', () => {
     memberList.value.forEach(item => {
       item.checked = status
     })
+  }
+
+  function updateMemberList(item: AsideItem) {
+    const index = memberList.value.findIndex(member => member.id === item.id);
+    if (index !== -1) {
+      memberList.value[index] = item;
+    }
   }
 
   return {
@@ -216,5 +226,6 @@ export default defineStore('manageAside', () => {
     handleAsideRemoveConfirm,
     getProjectMembers,
     asideSelectAll,
+    updateMemberList
   };
 });
