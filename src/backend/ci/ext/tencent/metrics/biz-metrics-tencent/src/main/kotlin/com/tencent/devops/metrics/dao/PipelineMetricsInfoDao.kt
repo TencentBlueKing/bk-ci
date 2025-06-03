@@ -30,97 +30,91 @@ package com.tencent.devops.metrics.dao
 import com.tencent.devops.model.metrics.tables.TEplusPipelineMetricsDataDaily
 import com.tencent.devops.model.metrics.tables.records.TEplusPipelineMetricsDataDailyRecord
 import java.time.LocalDate
+import java.time.LocalDateTime
 import org.jooq.DSLContext
+import org.jooq.Field
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
 class PipelineMetricsInfoDao {
 
+    private val table = TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY
+    private val fields = table.fields().toList()
+
+    // 获取当前统计时间（凌晨0点）
+    private val currentStatisticsTime: LocalDateTime
+        get() = LocalDate.now().atStartOfDay()
+
     fun getPipelineIssueAnalysis(
         dslContext: DSLContext,
         projectId: String
     ): Result<TEplusPipelineMetricsDataDailyRecord> {
-        with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
-            return dslContext.selectFrom(this)
-                .where(STATISTICS_TIME.eq(LocalDate.now().atStartOfDay()))
-                .and(PROJECT_ID.eq(projectId))
-                .fetch()
+        return dslContext.selectFrom(table)
+            .where(table.STATISTICS_TIME.eq(currentStatisticsTime))
+            .and(table.PROJECT_ID.eq(projectId))
+            .fetch()
+    }
+
+    // 统一的批量保存方法
+    private fun batchSaveData(
+        dslContext: DSLContext,
+        records: List<TEplusPipelineMetricsDataDailyRecord>,
+        updateField: Field<Boolean>
+    ) {
+        if (records.isEmpty()) return
+
+        // 分批次处理，每批1000条
+        records.chunked(1000).forEach { batch ->
+            // 为每个批次创建单独的插入操作
+            val queries = batch.map { record ->
+                dslContext.insertInto(table)
+                    .set(record)
+                    .onDuplicateKeyUpdate()
+                    .set(updateField, record.get(updateField))
+            }
+
+            // 批量执行
+            dslContext.batch(queries).execute()
         }
     }
 
-    fun batchSaveHighFailureRate30dData(dslContext: DSLContext, records: List<TEplusPipelineMetricsDataDailyRecord>) {
-        val steps = records.map {
-            with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
-                dslContext.insertInto(this)
-                    .set(it)
-                    .onDuplicateKeyUpdate()
-                    .set(FAILURE_RATE_30D, it.failureRate_30d)
-            }
-        }
-        dslContext.batch(steps).execute()
-    }
+    fun batchSaveHighFailureRate30dData(
+        dslContext: DSLContext, records: List<TEplusPipelineMetricsDataDailyRecord>
+    ) = batchSaveData(dslContext, records, table.FAILURE_RATE_30D)
 
     fun batchSaveConsecutiveFailures90dData(
-        dslContext: DSLContext,
-        records: List<TEplusPipelineMetricsDataDailyRecord>
-    ) {
-        val steps = records.map {
-            with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
-                dslContext.insertInto(this)
-                    .set(it)
-                    .onDuplicateKeyUpdate()
-                    .set(CONSECUTIVE_FAILURES_90D, it.consecutiveFailures_90d)
-            }
-        }
-        dslContext.batch(steps).execute()
-    }
+        dslContext: DSLContext, records: List<TEplusPipelineMetricsDataDailyRecord>
+    ) = batchSaveData(dslContext, records, table.CONSECUTIVE_FAILURES_90D)
 
     fun batchSaveScheduledTriggerNoCodeChangeData(
+        dslContext: DSLContext, records: List<TEplusPipelineMetricsDataDailyRecord>
+    ) = batchSaveData(
+        dslContext, records, table.SCHEDULED_TRIGGER_NO_CODE_CHANGE
+    )
+
+    // 统一的计数方法
+    private fun countByField(
         dslContext: DSLContext,
-        records: List<TEplusPipelineMetricsDataDailyRecord>
-    ) {
-        val steps = records.map {
-            with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
-                dslContext.insertInto(this)
-                    .set(it)
-                    .onDuplicateKeyUpdate()
-                    .set(SCHEDULED_TRIGGER_NO_CODE_CHANGE, it.scheduledTriggerNoCodeChange)
-            }
-        }
-        dslContext.batch(steps).execute()
+        projectId: String,
+        field: Field<Boolean>
+    ): Int {
+        return dslContext.selectCount()
+            .from(table)
+            .where(table.STATISTICS_TIME.eq(currentStatisticsTime))
+            .and(table.PROJECT_ID.eq(projectId))
+            .and(field.eq(true))
+            .fetchOne(0, Int::class.java) ?: 0
     }
 
-    fun countHighFailureRate30d(dslContext: DSLContext, projectId: String): Int {
-        with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
-            return dslContext.selectCount()
-                .from(this)
-                .where(STATISTICS_TIME.eq(LocalDate.now().atStartOfDay()))
-                .and(PROJECT_ID.eq(projectId))
-                .and(FAILURE_RATE_30D.eq(true))
-                .fetchOne(0, Int::class.java) ?: 0
-        }
-    }
+    fun countHighFailureRate30d(dslContext: DSLContext, projectId: String) =
+        countByField(dslContext, projectId, table.FAILURE_RATE_30D)
 
-    fun countConsecutiveFailures90d(dslContext: DSLContext, projectId: String): Int {
-        with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
-            return dslContext.selectCount()
-                .from(this)
-                .where(STATISTICS_TIME.eq(LocalDate.now().atStartOfDay()))
-                .and(PROJECT_ID.eq(projectId))
-                .and(CONSECUTIVE_FAILURES_90D.eq(true))
-                .fetchOne(0, Int::class.java) ?: 0
-        }
-    }
+    fun countConsecutiveFailures90d(dslContext: DSLContext, projectId: String) =
+        countByField(dslContext, projectId, table.CONSECUTIVE_FAILURES_90D)
 
-    fun countScheduledTriggerNoCodeChange(dslContext: DSLContext, projectId: String): Int {
-        with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
-            return dslContext.selectCount()
-                .from(this)
-                .where(STATISTICS_TIME.eq(LocalDate.now().atStartOfDay()))
-                .and(PROJECT_ID.eq(projectId))
-                .and(SCHEDULED_TRIGGER_NO_CODE_CHANGE.eq(true))
-                .fetchOne(0, Int::class.java) ?: 0
-        }
-    }
+    fun countScheduledTriggerNoCodeChange(dslContext: DSLContext, projectId: String) =
+        countByField(dslContext, projectId, table.SCHEDULED_TRIGGER_NO_CODE_CHANGE)
+
+
 }
