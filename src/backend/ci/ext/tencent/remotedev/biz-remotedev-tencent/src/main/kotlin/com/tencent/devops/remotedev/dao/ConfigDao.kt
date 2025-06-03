@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.model.remotedev.tables.TRemotedevConfig
+import com.tencent.devops.model.remotedev.tables.records.TRemotedevConfigRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -41,6 +42,43 @@ class ConfigDao {
             return dslContext.selectFrom(this)
                 .where(KEY.eq(configKey))
                 .fetchAny()?.value
+        }
+    }
+
+    fun fetchAll(
+        dslContext: DSLContext
+    ): List<TRemotedevConfigRecord> {
+        with(TRemotedevConfig.T_REMOTEDEV_CONFIG) {
+            return dslContext.selectFrom(this)
+                .orderBy(UPDATE_TIME.desc())
+                .fetch()
+        }
+    }
+
+    fun insertOrUpdateConfig(
+        dslContext: DSLContext,
+        configKey: String,
+        configValue: String
+    ): Boolean {
+        with(TRemotedevConfig.T_REMOTEDEV_CONFIG) {
+            return dslContext.insertInto(this)
+                .set(KEY, configKey)
+                .set(VALUE, configValue)
+                .onDuplicateKeyUpdate()
+                .set(VALUE, configValue)
+                .execute() == 1
+        }
+    }
+
+    fun deleteConfig(
+        dslContext: DSLContext,
+        configKey: String
+    ): Boolean {
+        with(TRemotedevConfig.T_REMOTEDEV_CONFIG) {
+            return dslContext.deleteFrom(this)
+                .where(KEY.eq(configKey))
+                .limit(1)
+                .execute() == 1
         }
     }
 }

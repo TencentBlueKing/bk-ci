@@ -153,7 +153,8 @@ class WorkspaceService @Autowired constructor(
     private val taiClient: TaiClient,
     private val taiService: TaiService,
     private val startCloudClient: StartCloudClient,
-    private val windowsGpuResourceDao: WindowsGpuResourceDao
+    private val windowsGpuResourceDao: WindowsGpuResourceDao,
+    private val whiteListService: WhiteListService
 ) {
     @Value("\${remoteDev.projectMonitorUrl:}")
     val projectMonitorUrl = ""
@@ -1269,6 +1270,8 @@ class WorkspaceService @Autowired constructor(
             owner = owner,
             resourceId = resourceId,
             displayName = workspace.displayName,
+            cdsMesh = whiteListService.checkInCdsMeshWhiteList(workspace.projectId, workspace.workspaceName),
+            cdsDomain = whiteListService.getCdsDomain(workspace.projectId, workspace.workspaceName),
             zoneConfig = zone,
             winConfig = allConfig[workspace.winConfigId?.toLong()]
         )
