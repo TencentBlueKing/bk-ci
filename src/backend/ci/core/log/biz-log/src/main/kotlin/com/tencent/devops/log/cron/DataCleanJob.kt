@@ -62,10 +62,11 @@ class DataCleanJob @Autowired constructor(
 
     @Scheduled(cron = "0 0 3 * * ?")
     fun cleanBuilds() {
-        logger.info("[cleanBuilds] Start to clean builds")
+        val podNamespace = KubernetesUtils.getNamespace()
+        logger.info("[cleanBuilds] Start to clean builds in $podNamespace")
         val redisLock = RedisLock(
             redisOperation = redisOperation,
-            lockKey = getCleanBuildJobRedisKey(KubernetesUtils.getNamespace()),
+            lockKey = getCleanBuildJobRedisKey(podNamespace),
             expiredTimeInSeconds = 20
         )
         try {
@@ -97,6 +98,7 @@ class DataCleanJob @Autowired constructor(
     private fun clean() {
         logger.info("[cleanBuilds] Cleaning the builds")
         while (true) {
+            Thread.sleep(500)
             val records = indexDao.listOldestBuilds(dslContext, 100)
             if (records.isEmpty()) {
                 logger.info("[cleanBuilds] The record is empty")
