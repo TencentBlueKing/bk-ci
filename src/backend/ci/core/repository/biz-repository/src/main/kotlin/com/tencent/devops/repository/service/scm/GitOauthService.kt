@@ -41,6 +41,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
@@ -234,7 +235,23 @@ class GitOauthService @Autowired constructor(
         if (buildBasicInfoResult.isNotOk()) {
             throw RemoteServiceException("Failed to get the basic information based on the buildId: $buildId")
         }
-        return getAccessToken(userId)
+        val accessToken = getAccessToken(userId) ?: return null
+        // 授权代持人
+        val operator = (accessToken.operator ?: "").ifBlank { userId }
+        val buildBasicInfo = buildBasicInfoResult.data
+            ?: throw RemoteServiceException("Failed to get the basic information based on the buildId: $buildId")
+        val projectUserCheck = authProjectApi.checkProjectUser(
+            user = operator,
+            serviceCode = repoAuthServiceCode,
+            projectCode = buildBasicInfo.projectId
+        )
+        if (!projectUserCheck) {
+            throw ErrorCodeException(
+                errorCode = RepositoryMessageCode.USER_NEED_PROJECT_X_PERMISSION,
+                params = arrayOf(operator, buildBasicInfo.projectId)
+            )
+        }
+        return accessToken
     }
 
     override fun getAccessToken(userId: String): GitToken? {

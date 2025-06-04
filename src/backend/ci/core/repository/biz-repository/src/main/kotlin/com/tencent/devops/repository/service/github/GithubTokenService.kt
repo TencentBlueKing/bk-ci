@@ -127,20 +127,22 @@ class GithubTokenService @Autowired constructor(
         if (buildBasicInfoResult.isNotOk()) {
             throw RemoteServiceException("Failed to get the basic information based on the buildId: $buildId")
         }
+        val accessToken = getAccessToken(userId) ?: return null
+        val operator = (accessToken.operator ?: "").ifBlank { userId }
         val buildBasicInfo = buildBasicInfoResult.data
             ?: throw RemoteServiceException("Failed to get the basic information based on the buildId: $buildId")
         val projectUserCheck = authProjectApi.checkProjectUser(
-            user = userId,
+            user = operator,
             serviceCode = repoAuthServiceCode,
             projectCode = buildBasicInfo.projectId
         )
         if (!projectUserCheck) {
             throw ErrorCodeException(
                 errorCode = RepositoryMessageCode.USER_NEED_PROJECT_X_PERMISSION,
-                params = arrayOf(userId, buildBasicInfo.projectId)
+                params = arrayOf(operator, buildBasicInfo.projectId)
             )
         }
-        return getAccessToken(userId)
+        return accessToken
     }
 
     @Throws(CustomException::class)

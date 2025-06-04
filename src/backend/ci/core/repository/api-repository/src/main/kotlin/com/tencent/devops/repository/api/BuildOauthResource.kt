@@ -115,4 +115,42 @@ interface BuildOauthResource {
         @QueryParam("userId")
         userId: String
     ): Result<String>
+
+    @Operation(summary = "获取accessToken信息[SCM_REPO]")
+    @GET
+    @Path("/{scmCode}/token/{username}")
+    fun scmRepoOauthToken(
+        @Parameter(description = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_BUILD_ID)
+        buildId: String,
+        @Parameter(description = "代码库标识", required = true)
+        @PathParam("scmCode")
+        scmCode: String,
+        @Parameter(description = "username", required = true)
+        @PathParam("username")
+        username: String
+    ): Result<GitToken?>
+
+    @Operation(summary = "获取授权链接[SCM_REPO]")
+    @GET
+    @Path("/{scmCode}/oauthUrl")
+    fun scmRepoOauthUrl(
+        @Parameter(description = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String,
+        @Parameter(description = "代码库标识", required = true)
+        @PathParam("scmCode")
+        scmCode: String,
+        @QueryParam("userId")
+        userId: String
+    ): Result<String>
 }

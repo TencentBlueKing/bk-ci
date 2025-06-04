@@ -38,13 +38,15 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.repository.service.github.GithubOAuthService
 import com.tencent.devops.repository.service.github.GithubTokenService
 import com.tencent.devops.repository.service.scm.IGitOauthService
+import com.tencent.devops.repository.service.scm.ScmTokenService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildOauthResourceImpl @Autowired constructor(
     private val gitOauthService: IGitOauthService,
     private val githubTokenService: GithubTokenService,
-    private val githubOAuthService: GithubOAuthService
+    private val githubOAuthService: GithubOAuthService,
+    private val scmTokenService: ScmTokenService
 ) : BuildOauthResource {
 
     @SensitiveApiPermission("get_oauth_token")
@@ -84,6 +86,41 @@ class BuildOauthResourceImpl @Autowired constructor(
                 specRedirectUrl = getBuildUrl(projectId, pipelineId, buildId),
                 repoHashId = null
             ).redirectUrl
+        )
+    }
+
+    override fun scmRepoOauthToken(
+        projectId: String,
+        buildId: String,
+        scmCode: String,
+        username: String
+    ): Result<GitToken?> {
+        return Result(
+            scmTokenService.checkAndGetAccessToken(
+                projectId = projectId,
+                buildId = buildId,
+                userId = username
+            )
+        )
+    }
+
+    override fun scmRepoOauthUrl(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        scmCode: String,
+        userId: String
+    ): Result<String> {
+        return Result(
+            scmTokenService.getRedirectUrl(
+                scmCode = scmCode,
+                userId = userId,
+                redirectUrl = getBuildUrl(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId
+                )
+            )
         )
     }
 
