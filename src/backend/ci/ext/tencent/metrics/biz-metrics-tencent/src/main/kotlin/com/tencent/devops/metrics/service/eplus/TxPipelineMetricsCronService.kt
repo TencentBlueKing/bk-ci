@@ -35,8 +35,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.metrics.dao.PipelineMetricsInfoDao
 import com.tencent.devops.model.metrics.tables.records.TEplusPipelineMetricsDataDailyRecord
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -256,15 +254,8 @@ class TxPipelineMetricsCronService @Autowired constructor(
         namespaceId: Int,
         queryMode: Int = 2,
         pageNum: Int = 1,
-        pageSize: Int = 10
+        pageSize: Int = 1000
     ): Map<String, Any> {
-        val dateFrom = LocalDate.now().minusMonths(1).format(DateTimeFormatter.BASIC_ISO_DATE)
-        val dateTo = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)
-        val dateTimeFrom = LocalDateTime.now()
-            .minusMonths(1)
-            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-        val dateTimeTo = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-
         val requestBody = mapOf(
             "card_id" to cardId,
             "namespace_id" to namespaceId,
@@ -272,20 +263,6 @@ class TxPipelineMetricsCronService @Autowired constructor(
             "page" to mapOf(
                 "num" to pageNum,
                 "size" to pageSize
-            ),
-            "bindings" to mapOf(
-                "dateFrom" to dateFrom,
-                "dateTo" to dateTo
-            ),
-            "input" to listOf(
-                mapOf(
-                    "type" to 2,
-                    "value" to mapOf(
-                        "op" to "day_between",
-                        "value" to "$dateTimeFrom,$dateTimeTo"
-                    ),
-                    "name" to "date_64e403"
-                )
             )
         )
 
