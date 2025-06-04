@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.KubernetesUtils
 import com.tencent.devops.log.configuration.StorageProperties
 import com.tencent.devops.log.dao.IndexDao
 import com.tencent.devops.log.dao.LogStatusDao
@@ -62,7 +63,11 @@ class DataCleanJob @Autowired constructor(
     @Scheduled(cron = "0 0 3 * * ?")
     fun cleanBuilds() {
         logger.info("[cleanBuilds] Start to clean builds")
-        val redisLock = RedisLock(redisOperation, CLEAN_BUILD_JOB_REDIS_KEY, 20)
+        val redisLock = RedisLock(
+            redisOperation = redisOperation,
+            lockKey = getCleanBuildJobRedisKey(KubernetesUtils.getNamespace()),
+            expiredTimeInSeconds = 20
+        )
         try {
             val lockSuccess = redisLock.tryLock()
             if (!lockSuccess) {
@@ -92,7 +97,7 @@ class DataCleanJob @Autowired constructor(
     private fun clean() {
         logger.info("[cleanBuilds] Cleaning the builds")
         while (true) {
-            val records = indexDao.listOldestBuilds(dslContext, 10)
+            val records = indexDao.listOldestBuilds(dslContext, 100)
             if (records.isEmpty()) {
                 logger.info("[cleanBuilds] The record is empty")
                 return
@@ -134,5 +139,8 @@ class DataCleanJob @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(DataCleanJob::class.java)
         private const val CLEAN_BUILD_JOB_REDIS_KEY = "log:clean:build:job:lock:key"
+        private fun getCleanBuildJobRedisKey(namespace: String): String {
+            return "$CLEAN_BUILD_JOB_REDIS_KEY:$namespace"
+        }
     }
 }
