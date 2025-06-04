@@ -1857,7 +1857,7 @@ class RbacPermissionManageFacadeServiceImpl(
     ): BatchRemoveMemberFromProjectResponse {
         val users = mutableListOf<ResourceMemberInfo>()
         val departments = mutableListOf<ResourceMemberInfo>()
-        removeMemberFromProjectReq.targetMembers.forEach { member ->
+        removeMemberFromProjectReq.targetMembers.sortedBy { it.type }.forEach { member ->
             removeMemberFromProject(
                 userId = userId,
                 projectCode = projectCode,
