@@ -40,7 +40,8 @@ import org.springframework.stereotype.Service
 class TxPipelineMetricssService@Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
-    private val pipelineMetricsInfoDao: PipelineMetricsInfoDao
+    private val pipelineMetricsInfoDao: PipelineMetricsInfoDao,
+    private val txPipelineMetricsCronService: TxPipelineMetricsCronService
 ) {
 
     fun getPipelineIssueAnalysis(userId: String, projectId: String): ProjectPipelineIssueAnalysisInfo? {
@@ -67,6 +68,10 @@ class TxPipelineMetricssService@Autowired constructor(
             consecutiveFailuresCount = consecutiveFailuresCount,
             scheduledTriggerNoCodeChangeCount = scheduledTriggerNoCodeChangeCount
         )
+    }
+
+    fun runAllSyncDataTasks() {
+        txPipelineMetricsCronService.runAllSyncDataTasks()
     }
 
     companion object {
