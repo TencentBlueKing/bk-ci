@@ -98,8 +98,7 @@ class DataCleanJob @Autowired constructor(
     private fun clean() {
         logger.info("[cleanBuilds] Cleaning the builds")
         while (true) {
-            Thread.sleep(500)
-            val records = indexDao.listOldestBuilds(dslContext, 100)
+            val records = indexDao.listOldestBuilds(dslContext, 10)
             if (records.isEmpty()) {
                 logger.info("[cleanBuilds] The record is empty")
                 return
