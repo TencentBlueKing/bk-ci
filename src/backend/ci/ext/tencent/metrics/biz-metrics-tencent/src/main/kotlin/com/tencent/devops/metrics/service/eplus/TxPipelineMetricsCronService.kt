@@ -272,6 +272,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
             handleHighFailureRate30d()
             handleConsecutiveFailures90d()
             handleScheduledTriggerNoCodeChange()
+            processInvalidPipelineData()
             logger.info("end runAllSyncDataTasks")
         }
     }
