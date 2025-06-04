@@ -178,8 +178,8 @@ open class ScriptTask : ITask() {
             // 成功失败都写入全局变量
             val envs = ScriptEnvUtils.getEnv(buildId, workspace)
             val context = ScriptEnvUtils.getContext(buildId, workspace)
-            failIfVariableInvalidCheckFlag = failIfVariableInvalidCheck(failIfVariableInvalid, envs)
-                && failIfVariableInvalidCheck(failIfVariableInvalid, context)
+            failIfVariableInvalidCheckFlag = failIfVariableInvalidCheck(failIfVariableInvalid, envs) &&
+                failIfVariableInvalidCheck(failIfVariableInvalid, context)
             addEnv(envs)
             addEnv(context)
 
