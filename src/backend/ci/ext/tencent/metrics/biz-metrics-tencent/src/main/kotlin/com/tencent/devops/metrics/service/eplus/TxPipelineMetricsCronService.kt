@@ -34,11 +34,11 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.metrics.constants.Constants.BK_TO_HANDLE
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.metrics.dao.PipelineMetricsInfoDao
 import com.tencent.devops.metrics.pojo.PipelineExpirationInfo
 import com.tencent.devops.model.metrics.tables.records.TEplusPipelineMetricsDataDailyRecord
@@ -90,7 +90,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
     private var scheduledTriggerNoCodeChangeCardId: Int = 0 // 定时触发无代码变更卡片ID
 
     @Value("\${eplus.ms.metrics.namespace.invalidBuildPipeline.card.id}")
-    private var invalidBuildPipeline: Int = 0 // 高失败率30天卡片ID
+    private var invalidBuildPipeline: Int = 0 // 无效流水线卡片ID
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxPipelineMetricsCronService::class.java)
@@ -276,7 +276,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
         }
     }
 
-    @Scheduled(cron = "0 0 1 * * ?")
+    @Scheduled(cron = "0 0 9 * * ?")
     fun processInvalidPipelineData() {
         logger.info("start processInvalidPipelineData")
 
