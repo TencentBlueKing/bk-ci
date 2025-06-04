@@ -32,12 +32,13 @@ package command
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"os/exec"
 	"os/user"
 	"strconv"
 	"strings"
 	"syscall"
+
+	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
