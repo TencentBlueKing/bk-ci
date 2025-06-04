@@ -299,7 +299,13 @@
                             >
                                 {{ $t('store.兼容式功能更新') }}
                             </bk-radio>
-                            <bk-radio value="COMPATIBILITY_FIX"> {{ $t('store.兼容式问题修正') }} </bk-radio>
+                            <bk-radio
+                                value="COMPATIBILITY_FIX"
+                                class="mr12"
+                            >
+                                {{ $t('store.兼容式问题修正') }}
+                            </bk-radio>
+                            <bk-radio value="HIS_VERSION_UPGRADE">{{ $t('store.历史大版本下的小版本更新') }}</bk-radio>
                         </template>
                     </bk-radio-group>
                 </bk-form-item>
@@ -308,13 +314,22 @@
                     property="version"
                     class="lh30"
                     :required="true"
+                    :rules="[requireRule]"
+                    ref="version"
+                    error-display-type="normal"
                 >
-                    <span>{{ $t('store.semverType', [form.version]) }}</span>
-                    <span
-                        class="version-modify"
-                        @click="form.releaseType = 'COMPATIBILITY_FIX'"
-                        v-if="form.releaseType === 'CANCEL_RE_RELEASE'"
-                    > {{ $t('store.修改') }} </span>
+                    <bk-input
+                        v-model="form.version"
+                        v-if="form.releaseType === 'HIS_VERSION_UPGRADE'"
+                    ></bk-input>
+                    <template v-else>
+                        <span>{{ $t('store.semverType', [form.version]) }}</span>
+                        <span
+                            class="version-modify"
+                            @click="form.releaseType = 'COMPATIBILITY_FIX'"
+                            v-if="form.releaseType === 'CANCEL_RE_RELEASE'"
+                        > {{ $t('store.修改') }} </span>
+                    </template>
                 </bk-form-item>
                 <bk-form-item
                     :label="$t('store.发布者')"
@@ -466,6 +481,9 @@
                             break
                         case 'COMPATIBILITY_FIX':
                             this.form.version = this.originVersion.replace(/(.+)\.(.+)\.(.+)/, (a, b, c, d) => (`${b}.${c}.${+d + 1}`))
+                            break
+                        case 'HIS_VERSION_UPGRADE':
+                            this.form.version = ''
                             break
                         default:
                             break
