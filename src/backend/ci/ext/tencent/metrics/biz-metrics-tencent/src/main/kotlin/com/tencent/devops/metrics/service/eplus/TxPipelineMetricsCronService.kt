@@ -32,9 +32,13 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.metrics.dao.PipelineMetricsInfoDao
 import com.tencent.devops.model.metrics.tables.records.TEplusPipelineMetricsDataDailyRecord
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.concurrent.Executors
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -54,7 +58,8 @@ class TxPipelineMetricsCronService @Autowired constructor(
     private val client: Client,
     private val objectMapper: ObjectMapper,
     private val dslContext: DSLContext,
-    private val pipelineMetricsInfoDao: PipelineMetricsInfoDao
+    private val pipelineMetricsInfoDao: PipelineMetricsInfoDao,
+    private val redisOperation: RedisOperation
 ) {
 
     @Value("\${eplus.token}")
@@ -77,7 +82,11 @@ class TxPipelineMetricsCronService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxPipelineMetricsCronService::class.java)
+        private const val LOCK_KEY = "tx_pipeline_metrics_cron_service"
+        private val syncExecutorService = Executors.newFixedThreadPool(5)
     }
+
+
 
     /**
      * 查询并处理卡片数据
@@ -90,7 +99,8 @@ class TxPipelineMetricsCronService @Autowired constructor(
         cardId: Int,
         namespaceId: Int,
         assignData: TEplusPipelineMetricsDataDailyRecord.(Map<String, Any>) -> Unit,
-        metricsData: (List<TEplusPipelineMetricsDataDailyRecord>) -> Unit
+        metricsData: (List<TEplusPipelineMetricsDataDailyRecord>) -> Unit,
+        input: Map<String, Any>? = null
     ) {
         val tPipelineMetricsInfoRecords = mutableListOf<TEplusPipelineMetricsDataDailyRecord>()
         var pageNum = 1
@@ -98,13 +108,15 @@ class TxPipelineMetricsCronService @Autowired constructor(
         var failedBatches = 0
 
         while (true) {
+            val redisLock = RedisLock(redisOperation, LOCK_KEY, 30)
             try {
                 val response = queryInvalidPipelineMonitorCardData(
                     token = token,
                     cardId = cardId,
                     namespaceId = namespaceId,
                     pageNum = pageNum,
-                    pageSize = pageSize
+                    pageSize = pageSize,
+                    input = input
                 )
                 val data = response["data"] as Map<String, Any>
                 val result = data["result"] as Map<String, Any>
@@ -120,6 +132,8 @@ class TxPipelineMetricsCronService @Autowired constructor(
                         }
                     )
                 }
+                redisLock.lock()
+                metricsData(tPipelineMetricsInfoRecords)
 
                 if (rows.size < pageSize) break
                 pageNum++
@@ -128,23 +142,32 @@ class TxPipelineMetricsCronService @Autowired constructor(
                 logger.warn("Process batch failed (pageNum: $pageNum), will retry next page", e)
                 pageNum++ // 递增页码，跳过当前失败页
                 continue
+            } finally {
+                redisLock.unlock()
             }
         }
 
         if (failedBatches > 0) {
             logger.warn("Process completed with $failedBatches failed batches")
         }
-
-        metricsData(tPipelineMetricsInfoRecords)
     }
 
     /**
      * 处理高失败率30天数据
      */
-    @Scheduled(cron = "0 0 1 * * ?")
+    @Scheduled(cron = "0 0 9 * * ?")
     fun handleHighFailureRate30d() {
         logger.info("start handleHighFailureRate30d")
         try {
+            val dateTimeFrom = LocalDate.now()
+                .minusDays(30)
+                .atStartOfDay()
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+            val dateTimeTo = LocalDate.now()
+                .minusDays(1)
+                .atTime(23, 59, 59)
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+
             queryAndProcessCardData(
                 cardId = highFailureRate30dCardId,
                 namespaceId = pipelineGeneralNamespaceId,
@@ -155,7 +178,19 @@ class TxPipelineMetricsCronService @Autowired constructor(
                 },
                 metricsData = { records ->
                     pipelineMetricsInfoDao.batchSaveHighFailureRate30dData(dslContext, records)
-                }
+                },
+                input = mapOf(
+                    "input" to listOf(
+                        mapOf(
+                            "type" to 2,
+                            "value" to mapOf(
+                                "op" to "day_between",
+                                "value" to "$dateTimeFrom,$dateTimeTo"
+                            ),
+                            "name" to "date_64e403"
+                        )
+                    )
+                )
             )
         } catch (e: Exception) {
             logger.warn("handle pipeline high failure rate30d data fail", e)
@@ -167,7 +202,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
     /**
      * 处理连续失败90天数据
      */
-    @Scheduled(cron = "0 0 2 * * ?")
+    @Scheduled(cron = "0 0 9 * * ?")
     fun handleConsecutiveFailures90d() {
         logger.info("start handleConsecutiveFailures90d")
         try {
@@ -193,7 +228,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
     /**
      * 处理定时触发无代码变更数据
      */
-    @Scheduled(cron = "0 0 3 * * ?")
+    @Scheduled(cron = "0 0 9 * * ?")
     fun handleScheduledTriggerNoCodeChange() {
         logger.info("start handleScheduledTriggerNoCodeChange")
         try {
@@ -214,6 +249,19 @@ class TxPipelineMetricsCronService @Autowired constructor(
             throw e
         }
         logger.info("end handleScheduledTriggerNoCodeChange")
+    }
+
+    /**
+     * 调用所有同步数据方法
+     */
+    fun runAllSyncDataTasks() {
+        syncExecutorService.submit {
+            logger.info("start runAllSyncDataTasks")
+            handleHighFailureRate30d()
+            handleConsecutiveFailures90d()
+            handleScheduledTriggerNoCodeChange()
+            logger.info("end runAllSyncDataTasks")
+        }
     }
 
     private fun postWithToken(
@@ -254,9 +302,11 @@ class TxPipelineMetricsCronService @Autowired constructor(
         namespaceId: Int,
         queryMode: Int = 2,
         pageNum: Int = 1,
-        pageSize: Int = 1000
+        pageSize: Int = 1000,
+        input: Map<String, Any>? = null
     ): Map<String, Any> {
-        val requestBody = mapOf(
+        val requestBody = mutableMapOf(
+            "bindings" to {},
             "card_id" to cardId,
             "namespace_id" to namespaceId,
             "query_mode" to queryMode,
@@ -265,6 +315,9 @@ class TxPipelineMetricsCronService @Autowired constructor(
                 "size" to pageSize
             )
         )
+        if (input != null) {
+            requestBody.putAll(input)
+        }
 
         return postWithToken(
             url = cardQueryUrl,
