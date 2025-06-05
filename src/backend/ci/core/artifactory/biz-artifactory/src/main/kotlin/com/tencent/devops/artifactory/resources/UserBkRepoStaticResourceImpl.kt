@@ -35,9 +35,9 @@ import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.web.RestResource
+import java.io.InputStream
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
-import java.io.InputStream
 
 @RestResource
 class UserBkRepoStaticResourceImpl @Autowired constructor(
@@ -64,7 +64,7 @@ class UserBkRepoStaticResourceImpl @Autowired constructor(
             userId = userId,
             inputStream = inputStream,
             disposition = disposition,
-            projectId = BKREPO_STATIC_PROJECT_ID,
+            projectId = BKREPO_STATIC_PROJECT_ID(),
             filePath = filePath.toString(),
             fileType = FileTypeEnum.BK_STATIC,
             fileChannelType = FileChannelTypeEnum.WEB_SHOW

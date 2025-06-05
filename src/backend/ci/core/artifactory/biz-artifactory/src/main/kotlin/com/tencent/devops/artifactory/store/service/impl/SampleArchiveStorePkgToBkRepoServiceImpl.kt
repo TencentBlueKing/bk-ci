@@ -42,7 +42,7 @@ import org.springframework.stereotype.Service
 class SampleArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgToBkRepoServiceImpl() {
 
     override fun getBkRepoProjectId(storeType: StoreTypeEnum): String {
-        return BKREPO_STORE_PROJECT_ID
+        return BKREPO_STORE_PROJECT_ID()
     }
 
     override fun getBkRepoName(storeType: StoreTypeEnum): String {

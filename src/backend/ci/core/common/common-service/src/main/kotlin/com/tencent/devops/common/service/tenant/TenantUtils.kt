@@ -38,7 +38,7 @@ class TenantUtils : ApplicationContextAware, InitializingBean {
         private var appSecret = ""
 
         private const val DEFAULT_TENANT_ID_FOR_SINGLE = "default"
-        private const val DEFAULT_TENANT_ID_FOR_MULTI = "system"
+        public const val DEFAULT_TENANT_ID_FOR_MULTI = "system"
         private val logger = LoggerFactory.getLogger(TenantUtils::class.java)
 
         /**

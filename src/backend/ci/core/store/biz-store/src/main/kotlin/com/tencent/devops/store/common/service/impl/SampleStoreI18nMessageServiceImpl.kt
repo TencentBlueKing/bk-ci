@@ -48,7 +48,7 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
             URLEncoder.encode("$projectCode/$fileDir/$fileName", Charsets.UTF_8.name())
         return client.get(ServiceArtifactoryResource::class).getFileContent(
             userId = BKREPO_DEFAULT_USER,
-            projectId = BKREPO_STORE_PROJECT_ID,
+            projectId = BKREPO_STORE_PROJECT_ID(),
             repoName = REPO_NAME_PLUGIN,
             filePath = filePath
         ).data

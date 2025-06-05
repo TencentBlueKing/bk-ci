@@ -39,7 +39,7 @@ import org.springframework.stereotype.Service
 class SampleArchiveAtomToBkRepoServiceImpl : ArchiveAtomToBkRepoServiceImpl() {
 
     override fun getBkRepoProjectId(): String {
-        return BKREPO_STORE_PROJECT_ID
+        return BKREPO_STORE_PROJECT_ID()
     }
 
     override fun getBkRepoName(): String {
@@ -47,6 +47,6 @@ class SampleArchiveAtomToBkRepoServiceImpl : ArchiveAtomToBkRepoServiceImpl() {
     }
 
     override fun deleteAtom(userId: String, projectCode: String, atomCode: String) {
-        bkRepoClient.delete(userId, BKREPO_STORE_PROJECT_ID, REPO_NAME_PLUGIN, "$projectCode/$atomCode")
+        bkRepoClient.delete(userId, BKREPO_STORE_PROJECT_ID(), REPO_NAME_PLUGIN, "$projectCode/$atomCode")
     }
 }

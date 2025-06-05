@@ -82,7 +82,7 @@ class SampleStoreFileServiceImpl : StoreFileService() {
         logger.info("getFileNames by filePath:$filePath")
         return client.get(ServiceArtifactoryResource::class).listFileNamesByPath(
             userId = BKREPO_DEFAULT_USER,
-            projectId = BKREPO_STORE_PROJECT_ID,
+            projectId = BKREPO_STORE_PROJECT_ID(),
             repoName = REPO_NAME_PLUGIN,
             filePath = URLEncoder.encode(filePath, Charsets.UTF_8.name())
         ).data

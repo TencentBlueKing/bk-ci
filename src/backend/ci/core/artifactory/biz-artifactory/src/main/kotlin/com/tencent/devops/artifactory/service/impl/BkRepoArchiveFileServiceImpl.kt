@@ -66,13 +66,8 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.stereotype.Service
-import org.springframework.web.context.request.RequestContextHolder
-import org.springframework.web.context.request.ServletRequestAttributes
+import jakarta.servlet.http.HttpServletResponse
+import jakarta.ws.rs.NotFoundException
 import java.io.File
 import java.io.OutputStream
 import java.net.URLDecoder
@@ -80,8 +75,13 @@ import java.net.URLEncoder
 import java.text.MessageFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import jakarta.servlet.http.HttpServletResponse
-import jakarta.ws.rs.NotFoundException
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.stereotype.Service
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 
 @Service
 @Suppress("TooManyFunctions", "MagicNumber", "ComplexMethod")
@@ -123,7 +123,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             metadata[it.key] = it.value!!
         }
         val repoProjectId = if (filePath == null) {
-            BKREPO_DEVOPS_PROJECT_ID
+            BKREPO_DEVOPS_PROJECT_ID()
         } else {
             projectId!!
         }
@@ -131,7 +131,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         return if (fileType == FileTypeEnum.BK_STATIC) {
             bkRepoClient.uploadLocalFile(
                 userId = userId,
-                projectId = BKREPO_STATIC_PROJECT_ID,
+                projectId = BKREPO_STATIC_PROJECT_ID(),
                 repoName = REPO_NAME_STATIC,
                 path = destPath,
                 file = file,
@@ -142,7 +142,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
                 properties = metadata
             )
             val configUrl = bkRepoClientConfig.bkRepoStaticRepoPrefixUrl
-            val staticRepoPrefixUrl = MessageFormat.format(configUrl, BKREPO_STATIC_PROJECT_ID, REPO_NAME_STATIC)
+            val staticRepoPrefixUrl = MessageFormat.format(configUrl, BKREPO_STATIC_PROJECT_ID(), REPO_NAME_STATIC)
             val defaultUrl = "$staticRepoPrefixUrl/$destPath?v=${System.currentTimeMillis() / 1000}"
             if (fileChannelType == FileChannelTypeEnum.WEB_SHOW) {
                 "$defaultUrl&preview=true"
@@ -152,13 +152,13 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         } else if (staticFlag == true) {
             bkRepoClient.uploadLocalFile(
                 userId = BKREPO_DEFAULT_USER,
-                projectId = BKREPO_STORE_PROJECT_ID,
+                projectId = BKREPO_STORE_PROJECT_ID(),
                 repoName = REPO_NAME_STATIC,
                 path = destPath,
                 file = file,
                 properties = metadata
             )
-            generateFileDownloadUrl(fileChannelType, destPath = "$BKREPO_STORE_PROJECT_ID/$REPO_NAME_STATIC/$destPath")
+            generateFileDownloadUrl(fileChannelType, destPath = "${BKREPO_STORE_PROJECT_ID()}/$REPO_NAME_STATIC/$destPath")
         } else {
             bkRepoClient.uploadLocalFile(userId, repoProjectId, repoName, destPath, file, properties = metadata)
             generateFileDownloadUrl(fileChannelType, "$repoProjectId/$repoName/$destPath")
@@ -203,7 +203,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
     ) {
         response.contentType = MimeUtil.mediaType(filePath)
         val path = if (logo == true) {
-            "$BKREPO_STORE_PROJECT_ID/$REPO_NAME_STATIC/" +
+            "${BKREPO_STORE_PROJECT_ID()}/$REPO_NAME_STATIC/" +
                 URLDecoder.decode(filePath, Charsets.UTF_8.name()).removePrefix("/")
         } else {
             filePath

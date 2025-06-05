@@ -23,8 +23,10 @@ spec:
           imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
           workingDir: /data/workspace/support-files/file/
           {{ $tenantId := "default" }}
+          {{ $projectHead := "" }}
           {{- if .Values.config.bkTenantEnabled }}
             {{ $tenantId = "system" }}
+            {{ $projectHead = "system." }}
           {{- end }}
           command:
             - "/bin/bash"
@@ -33,24 +35,24 @@ spec:
               # 定义通用函数
               function check_repo_project_exists() {
                 local project_name=$1
-                curl -s -XGET "$REPO_QUERY_PROJECT_PATH" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H "X-BK-TENANT-ID: $tenantId" | grep -q "displayName.*$project_name"
+                curl -s -XGET "$REPO_QUERY_PROJECT_PATH" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H "X-BK-TENANT-ID: {{ $tenantId }}" | grep -q "displayName.*$project_name"
               }
 
               function check_repo_generic_exists() {
                 local project_name=$1
                 local repo_name=$2
-                curl -s -XGET "$REPO_QUERY_GENERIC_PATH/$project_name/$repo_name/generic" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H "X-BK-TENANT-ID: $tenantId" | grep -q "projectId"
+                curl -s -XGET "$REPO_QUERY_GENERIC_PATH/{{ $projectHead }}$project_name/$repo_name/generic" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H "X-BK-TENANT-ID: {{ $tenantId }}" | grep -q "projectId"
               }
 
               function create_repo_project() {
                 local project_name=$1
-                curl -X POST "$REPO_CREATE_PROJECT_PATH" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H "X-BKREPO-UID: {{ .Values.config.bkRepoUsername }}" -H "Content-Type: application/json" -H "X-BK-TENANT-ID: $tenantId" -d '{"name": "'$project_name'", "displayName": "'$project_name'", "description": "'$project_name'"}'
+                curl -X POST "$REPO_CREATE_PROJECT_PATH" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H "X-BKREPO-UID: {{ .Values.config.bkRepoUsername }}" -H "Content-Type: application/json" -H "X-BK-TENANT-ID: {{ $tenantId }}" -d '{"name": "'$project_name'", "displayName": "'$project_name'", "description": "'$project_name'"}'
               }
 
               function create_repo_generic() {
                 local project_name=$1
                 local repo_name=$2
-                curl -X POST "$REPO_CREATE_GENERIC_PATH" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H "X-BKREPO-UID: {{ .Values.config.bkRepoUsername }}" -H "Content-Type: application/json" -H "X-BK-TENANT-ID: $tenantId" -d '{"projectId": "'$project_name'", "name": "'$repo_name'", "type":"GENERIC", "category":"LOCAL", "public":true, "configuration": {"type":"local"}, "description":"storage for devops ci '$repo_name'"}'
+                curl -X POST "$REPO_CREATE_GENERIC_PATH" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H "X-BKREPO-UID: {{ .Values.config.bkRepoUsername }}" -H "Content-Type: application/json" -H "X-BK-TENANT-ID: {{ $tenantId }}" -d '{"projectId": "'{{ $projectHead }}$project_name'", "name": "'$repo_name'", "type":"GENERIC", "category":"LOCAL", "public":true, "configuration": {"type":"local"}, "description":"storage for devops ci '$repo_name'"}'
               }
 
               # 初始化路径变量
@@ -85,7 +87,7 @@ spec:
 
               # 迁移图片到制品库
               for image in $(find ./png -maxdepth 1 -type f); do
-                curl -s -X PUT "$REPO_INIT_GENERIC_METADATA_PATH/bk-store/static/file/$image" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H "X-BKREPO-UID: {{ .Values.config.bkRepoUsername }}" -H "X-BKREPO-OVERWRITE: true" -H "X-BK-TENANT-ID: $tenantId" --upload-file "$image"
+                curl -s -X PUT "$REPO_INIT_GENERIC_METADATA_PATH/{{ $projectHead }}bk-store/static/file/$image" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H "X-BKREPO-UID: {{ .Values.config.bkRepoUsername }}" -H "X-BKREPO-OVERWRITE: true" -H "X-BK-TENANT-ID: {{ $tenantId }}" --upload-file "$image"
               done
 
               # 等待服务可用
@@ -99,7 +101,7 @@ spec:
               done
 
               # 更新制品库入口
-              curl -X PUT --header 'Content-Type: application/json' --header 'Accept: application/json' --header 'X-DEVOPS-UID: admin' -H "X-BK-TENANT-ID: $tenantId" -d '{"showProjectList": true,"showNav": true,"status": "ok","deleted": false,"iframeUrl": "{{ .Values.config.bkHttpSchema }}://{{ .Values.config.bkRepoHost }}/ui/"}' "http://{{ include "bkci.names.fullname" . }}-project.{{ .Release.Namespace }}/api/op/services/update/Repo"
+              curl -X PUT --header 'Content-Type: application/json' --header 'Accept: application/json' --header 'X-DEVOPS-UID: admin' -H "X-BK-TENANT-ID: {{ $tenantId }}" -d '{"showProjectList": true,"showNav": true,"status": "ok","deleted": false,"iframeUrl": "{{ .Values.config.bkHttpSchema }}://{{ .Values.config.bkRepoHost }}/ui/"}' "http://{{ include "bkci.names.fullname" . }}-project.{{ .Release.Namespace }}/api/op/services/update/Repo"
       restartPolicy: Never
 {{- end -}}
 {{- end -}}
