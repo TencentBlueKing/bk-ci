@@ -53,7 +53,7 @@ data class SvnCommitEvent(
 data class SvnCommitRepository(
     val name: String,
     val url: String,
-    val desc: String,
+    val desc: String?,
     @JsonProperty("git_http_url")
     val gitHttpUrl: String?,
     @JsonProperty("git_ssh_url")
