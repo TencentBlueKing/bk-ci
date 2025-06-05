@@ -43,6 +43,7 @@ import com.tencent.devops.project.dispatch.ShardingRoutingRuleDispatcher
 import com.tencent.devops.project.service.ShardingRoutingRuleService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
 
@@ -54,6 +55,7 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
 ) : ShardingRoutingRuleService {
     companion object {
         private val DEFAULT_RULE_REDIS_CACHE_TIME = TimeUnit.DAYS.toSeconds(14) // 分片规则在redis默认缓存时间
+        private val logger = LoggerFactory.getLogger(AbsShardingRoutingRuleServiceImpl::class.java)
     }
 
     /**
@@ -74,6 +76,7 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
         val lock = RedisLock(redisOperation, "$key:add", 30)
         try {
             lock.lock()
+            var isAdded = false
             dslContext.transaction { t ->
                 val context = DSL.using(t)
                 val nameCount = shardingRoutingRuleDao.countByName(
@@ -86,25 +89,28 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
                 )
                 if (nameCount > 0) {
                     // 已添加则无需重复添加
+                    logger.warn("Sharding routing rule($key) already exists")
                     return@transaction
                 }
                 // 规则入库
                 shardingRoutingRuleDao.add(context, userId, shardingRoutingRule)
+                isAdded = true // 事务提交成功后标记
+            }
+            if (isAdded) {
+                // 事务提交后再操作缓存和事件（避免事务回滚导致缓存脏数据）
                 // 规则写入redis缓存
                 redisOperation.set(
-                    key = key,
-                    value = shardingRoutingRule.routingRule,
-                    expiredInSecond = DEFAULT_RULE_REDIS_CACHE_TIME
+                    key = key, value = shardingRoutingRule.routingRule, expiredInSecond = DEFAULT_RULE_REDIS_CACHE_TIME
                 )
                 // 发送规则新增事件消息
                 shardingRoutingRuleDispatcher.dispatch(
                     ShardingRoutingRuleBroadCastEvent(routingName = key, actionType = CrudEnum.CREATAE)
                 )
             }
+            return isAdded
         } finally {
             lock.unlock()
         }
-        return true
     }
 
     /**
