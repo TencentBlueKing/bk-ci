@@ -52,11 +52,9 @@ data class SvnCommitEvent(
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class SvnCommitRepository(
     val name: String,
-    val url: String,
     val description: String?,
     @JsonProperty("svn_http_url")
     val svnHttpUrl: String?,
     @JsonProperty("svn_ssh_url")
-    val svnSshUrl: String?,
-    val homepage: String
+    val svnSshUrl: String?
 )
