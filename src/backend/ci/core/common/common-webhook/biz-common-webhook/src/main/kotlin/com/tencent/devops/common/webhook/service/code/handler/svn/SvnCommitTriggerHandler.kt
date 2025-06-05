@@ -98,7 +98,7 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
     }
 
     override fun getCompatibilityRepoName(event: SvnCommitEvent): Set<String> {
-        return event.repository?.gitHttpUrl?.let {
+        return event.repository?.svnHttpUrl?.let {
             val svnProjectName = SvnUtils.getSvnProjectName(it)
             if (svnProjectName != getRepoName(event)) {
                 setOf(svnProjectName)

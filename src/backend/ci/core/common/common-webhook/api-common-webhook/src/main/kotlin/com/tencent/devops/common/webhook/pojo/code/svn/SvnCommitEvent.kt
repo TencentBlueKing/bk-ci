@@ -54,9 +54,9 @@ data class SvnCommitRepository(
     val name: String,
     val url: String,
     val description: String?,
-    @JsonProperty("git_http_url")
-    val gitHttpUrl: String?,
-    @JsonProperty("git_ssh_url")
-    val gitSshUrl: String?,
+    @JsonProperty("svn_http_url")
+    val svnHttpUrl: String?,
+    @JsonProperty("svn_ssh_url")
+    val svnSshUrl: String?,
     val homepage: String
 )
