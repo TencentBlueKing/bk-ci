@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
@@ -133,9 +132,6 @@ class PreBuildAgentMgrService @Autowired constructor(
                 masterVersion = agentRecord.masterVersion
             )
 
-            // 同步更新T_NODE表中记录的agent版本信息
-            nodeDao.updateDevopsAgentVersionByNodeId(context, nodeId, agentVersion = agentRecord.masterVersion)
-
             thirdPartyAgentDao.updateStatus(context, agentId, nodeId, projectId, AgentStatus.IMPORT_EXCEPTION)
             environmentPermissionService.createNode(
                 userId = userId,
@@ -149,7 +145,7 @@ class PreBuildAgentMgrService @Autowired constructor(
 
     fun listPreBuildAgent(userId: String, projectId: String, os: OS?): List<ThirdPartyAgentStaticInfo> {
         return thirdPartyAgentDao.listImportAgent(
-            dslContext = dslContext, projectId = projectId, os = os ?: OS.LINUX, limit = PageUtil.MAX_PAGE_SIZE
+            dslContext = dslContext, projectId = projectId, os = os ?: OS.LINUX, nodeIds = emptySet()
         ).filter { it.nodeId != null }.map {
             ThirdPartyAgentStaticInfo(
                 agentId = HashUtil.encodeLongId(it.id), // 必须用it.id，不能是it.nodeId

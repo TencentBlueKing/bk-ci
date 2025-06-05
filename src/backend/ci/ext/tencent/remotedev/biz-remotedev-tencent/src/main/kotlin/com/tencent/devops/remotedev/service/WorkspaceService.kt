@@ -153,7 +153,8 @@ class WorkspaceService @Autowired constructor(
     private val taiClient: TaiClient,
     private val taiService: TaiService,
     private val startCloudClient: StartCloudClient,
-    private val windowsGpuResourceDao: WindowsGpuResourceDao
+    private val windowsGpuResourceDao: WindowsGpuResourceDao,
+    private val whiteListService: WhiteListService
 ) {
     @Value("\${remoteDev.projectMonitorUrl:}")
     val projectMonitorUrl = ""
@@ -1269,6 +1270,8 @@ class WorkspaceService @Autowired constructor(
             owner = owner,
             resourceId = resourceId,
             displayName = workspace.displayName,
+            cdsMesh = whiteListService.checkInCdsMeshWhiteList(workspace.projectId, workspace.workspaceName),
+            cdsDomain = whiteListService.getCdsDomain(workspace.projectId, workspace.workspaceName),
             zoneConfig = zone,
             winConfig = allConfig[workspace.winConfigId?.toLong()]
         )
@@ -1461,12 +1464,37 @@ class WorkspaceService @Autowired constructor(
         return false
     }
 
-    fun createMoa2faRequest(userId: String, moa2faReqData: Moa2faReqData): Moa2faRespData {
+    @ActionAuditRecord(
+        actionId = TencentActionId.CGS_MOA_2FA,
+        instance = AuditInstanceRecord(
+            resourceType = TencentResourceTypeId.CGS,
+            instanceNames = "#workspaceName",
+            instanceIds = "#workspaceName"
+        ),
+        content = TencentActionAuditContent.CGS_MOA_2FA_CONTENT
+    )
+    fun createMoa2faRequest(userId: String, workspaceName: String?, moa2faReqData: Moa2faReqData): Moa2faRespData {
+        ActionAuditContext.current()
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, userId)
+            .scopeId = userId
         return taiService.createMoa2faRequest(userId = userId, moa2faReqData = moa2faReqData)
     }
 
     fun verifyMoa2faResult(userId: String, moa2faVerifyReqData: Moa2faVerifyReqData): Moa2faVerifyRespData {
         return taiService.verifyMoa2faRequest(userId = userId, moa2faVerifyReqData = moa2faVerifyReqData)
+    }
+
+    fun checkExistWorkspaceSharedInfo(
+        workspaceName: String,
+        sharedUser: String,
+        assignType: WorkspaceShared.AssignType
+    ): Boolean {
+        return workspaceSharedDao.existWorkspaceSharedInfo(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            sharedUser = sharedUser,
+            assignType = assignType
+        )
     }
 
     companion object {

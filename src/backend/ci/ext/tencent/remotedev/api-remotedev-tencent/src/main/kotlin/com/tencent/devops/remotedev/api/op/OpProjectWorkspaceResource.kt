@@ -157,4 +157,19 @@ interface OpProjectWorkspaceResource {
         @Parameter(description = "工作空间描述", required = true)
         assigns: List<ProjectWorkspaceAssign>
     ): Result<Boolean>
+
+    @Operation(summary = "修改实例别名")
+    @POST
+    @Path("/edit")
+    fun editWorkspace(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "备注名称", required = true)
+        @QueryParam("displayName")
+        displayName: String
+    ): Result<Boolean>
 }

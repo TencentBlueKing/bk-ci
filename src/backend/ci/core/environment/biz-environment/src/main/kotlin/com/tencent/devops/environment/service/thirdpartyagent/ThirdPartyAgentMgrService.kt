@@ -594,17 +594,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         projectId: String,
         os: OS?
     ): List<ThirdPartyAgentInfo> {
-        val agents = thirdPartyAgentDao.listImportAgent(dslContext = dslContext, projectId = projectId, os = os)
-        if (agents.isEmpty()) {
-            return arrayListOf()
-        }
-
-        val nodeIds = agents.filter { it.nodeId != null }.map { it.nodeId }
-        val nodes = nodeDao.listByIds(dslContext, projectId, nodeIds)
-        if (nodes.isEmpty()) {
-            return emptyList()
-        }
-        val nodeMap = nodes.associateBy { it.nodeId }
 
         val canUseNodeIds = environmentPermissionService.listNodeByPermission(
             userId = userId,
@@ -618,17 +607,26 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
 
         logger.debug("Get the user can use node ids {}", canUseNodeIds)
 
+        val agents = thirdPartyAgentDao.listImportAgent(
+            dslContext = dslContext,
+            projectId = projectId,
+            nodeIds = canUseNodeIds,
+            os = os
+        )
+        if (agents.isEmpty()) {
+            return emptyList()
+        }
+
+        val nodeIds = agents.map { it.nodeId }
+        val nodes = nodeDao.listByIds(dslContext, projectId, nodeIds)
+        if (nodes.isEmpty()) {
+            return emptyList()
+        }
+        val nodeMap = nodes.associateBy { it.nodeId }
+
         val agentInfo = ArrayList<ThirdPartyAgentInfo>()
 
         agents.forEach { agent ->
-            if (agent.nodeId == null) {
-                logger.debug("The agent(${agent.id}) node id is empty")
-                return@forEach
-            }
-
-            if (!canUseNodeIds.contains(agent.nodeId)) {
-                return@forEach
-            }
             val node = nodeMap[agent.nodeId]
             if (node == null || node.nodeStatus.isNullOrBlank()) {
                 logger.warn("Fail to find the node status of agent(${agent.id})")

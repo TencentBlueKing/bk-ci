@@ -51,9 +51,8 @@ function _M:isSafe()
             "/experience/api/open/experiences/outerLogin", -- 外部用户登录
             "/ms/artifactory/api/open/experiences/appstore/redirect", -- 跳转到AppStore
             "/ms/artifactory/api/open/experiences/outerLogin", -- 外部用户登录
-            "/process/api/external/scm/codetgit/commit", -- 仓库的external/generic路径
+            "/process/api/external/scm/.+/commit", -- 通用代码仓库回调
             "/repository/api/external/github", -- Github回调
-            "/process/api/external/scm/p4/commit", -- p4回调
             "/process/api/external/pipelines/projects/.+/.+/badge", -- 勋章
             "/artifactory/api/external/url/visit", -- 短链接
             "/bkrepo/bkci%-desktop", -- 蓝盾桌面端

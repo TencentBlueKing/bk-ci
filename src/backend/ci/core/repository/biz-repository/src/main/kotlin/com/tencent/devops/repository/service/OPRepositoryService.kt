@@ -671,6 +671,33 @@ class OPRepositoryService @Autowired constructor(
         logger.info("OPRepositoryService:end updateRepoCredentialType")
     }
 
+    fun updateRepoScmCode(projectId: String?, repoHashId: String?) {
+        var offset = 0
+        val limit = 100
+        logger.info("OPRepositoryService:begin updateRepoScmCode")
+        do {
+            // 获取仓库列表
+            val repoList = repositoryDao.list(
+                dslContext = dslContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                repositoryTypes = null,
+                nullScmCode = true,
+                limit = limit,
+                offset = offset
+            )
+            repoList.chunked(25) {
+                repositoryDao.updateScmCode(
+                    dslContext = dslContext,
+                    repositoryId = it.map { it.repositoryId }.toSet()
+                )
+            }
+            // 避免限流，增加一秒休眠时间
+            Thread.sleep(1 * 1000)
+        } while (repoList.size == 100)
+        logger.info("OPRepositoryService:end updateRepoCredentialType")
+    }
+
     private fun getCredentialType(projectId: String, credentialIds: Set<String>): Map<String, String> {
         val credentialInfos = try {
             client.get(ServiceCredentialResource::class)

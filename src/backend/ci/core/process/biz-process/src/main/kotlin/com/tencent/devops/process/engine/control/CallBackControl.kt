@@ -77,7 +77,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.net.URL
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
 import java.time.LocalDateTime
@@ -370,7 +369,6 @@ class CallBackControl @Autowired constructor(
             Counter.builder(PIPELINE_CALLBACK_COUNT)
                 .tags(
                     Tags.of("status", status.name)
-                        .and("host", URL(realUrl).host)
                         .and("event", callBack.events)
                 )
                 .register(meterRegistry)

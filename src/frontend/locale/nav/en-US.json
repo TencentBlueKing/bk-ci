@@ -263,7 +263,7 @@
     "资源唯一拥有者": "Sole owner of the resource",
     "输入交接人，选中回车进行校验": "Enter the handover person, and press enter to validate",
     "存在需清理或交接的权限/授权": "There are permissions/authorizations that need to be cleared or handed over",
-    "disclosureTitle": "<b>{0}</b> The project information is highly confidential. You have not signed the NDA and cannot access this site. Please scan the QR code to sign the agreement:",
+    "disclosureTitle": "<b>{0}</b> The project information is <b>highly confidential</b>. You have not signed the NDA and cannot access this site. Please scan the QR code to sign the agreement:",
     "signed": "Signed",
     "scanSign": "Scan to sign",
     "noticeTitle": "Please note the following instructions (very important):",

@@ -314,6 +314,10 @@ class WorkspaceCommon @Autowired constructor(
                 workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.EXPANDING)
                 return WorkspaceStatus.EXPANDING
             }
+            workspaceInfo.status == EnvStatusEnum.operating -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.OPERATING)
+                return WorkspaceStatus.OPERATING
+            }
 
             else -> logger.warn(
                 "wait workspace change over $DEFAULT_WAIT_TIME second |" +
