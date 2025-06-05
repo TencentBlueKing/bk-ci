@@ -32,10 +32,11 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.store.common.dao.StoreDeptRelDao
-import com.tencent.devops.store.pojo.common.visible.DeptInfo
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.StoreDeptService
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.visible.DeptInfo
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -106,5 +107,10 @@ class StoreDeptServiceImpl @Autowired constructor(
             storeDeptRelMap[storeCode] = null
         }
         return storeDeptRelMap
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(StoreDeptServiceImpl::class.java)
+        private const val DEFAULT_PAGE_SIZE = 100
     }
 }

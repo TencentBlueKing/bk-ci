@@ -25,36 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.atom
+package com.tencent.devops.metrics.api
 
-import com.tencent.devops.common.api.pojo.Result
-import io.swagger.v3.oas.annotations.tags.Tag
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
-import jakarta.ws.rs.PUT
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
-import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
-@Tag(name = "OP_PIPELINE_ATOM", description = "OP-流水线-插件")
-@Path("/op/pipeline/atom")
+@Tag(name = "OP_PIPELINE", description = "OP-流水线资源")
+@Path("/op/pipelines")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface TxOpMigrateAtomResource {
+interface TxOpPipelineMetricsResource {
 
-    @Operation(summary = "迁移插件包")
-    @PUT
-    @Path("/pkg/migrate")
-    fun migrateAtomPkg(
-        @Parameter(description = "结束时间", required = true)
-        @QueryParam("endTime")
-        endTime: String
-    ): Result<Boolean>
-
-    @Operation(summary = "迁移插件静态文件")
-    @PUT
-    @Path("/static/file/migrate")
-    fun migrateAtomStaticFile(): Result<Boolean>
+    @Operation(summary = "同步所有项目流水线问题分析信息")
+    @GET
+    @Path("/runAll")
+    fun runAllSyncDataTasks(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    )
 }

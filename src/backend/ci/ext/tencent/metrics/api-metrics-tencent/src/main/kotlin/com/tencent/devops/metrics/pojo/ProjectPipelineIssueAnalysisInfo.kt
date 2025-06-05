@@ -25,35 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.common
+package com.tencent.devops.metrics.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.tags.Tag
-import jakarta.ws.rs.Consumes
-import jakarta.ws.rs.PUT
-import jakarta.ws.rs.Path
-import jakarta.ws.rs.Produces
-import jakarta.ws.rs.core.MediaType
+import io.swagger.v3.oas.annotations.media.Schema
 
-@Tag(name = "OP_STORE", description = "OP-商店")
-@Path("/op/store/migrate")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface TxOpMigrateStoreResource {
-
-    @Operation(summary = "迁移logo")
-    @PUT
-    @Path("/logo")
-    fun migrateStoreLogo(): Result<Boolean>
-
-    @Operation(summary = "迁移组件描述引用文件")
-    @PUT
-    @Path("/description")
-    fun migrateStoreDescription(): Result<Boolean>
-
-    @Operation(summary = "从组件特性到组件扩展迁移组件urlScheme数据")
-    @PUT
-    @Path("/scheme")
-    fun migrateStoreUrlScheme(): Result<Boolean>
-}
+@Schema(title = "项目流水线问题分析统计信息")
+data class ProjectPipelineIssueAnalysisInfo(
+    @get:Schema(title = "项目ID", required = true)
+    val projectId: String,
+    @get:Schema(title = "近 30 天内失败率高于 90% 的流水线数量", required = false)
+    val failureRateCount: Int? = null,
+    @get:Schema(title = "近 90 天内持续失败的流水线数量", required = false)
+    val consecutiveFailuresCount: Int? = null,
+    @get:Schema(title = "定时触发但代码无变更的流水线数量", required = false)
+    val scheduledTriggerNoCodeChangeCount: Int? = null
+)

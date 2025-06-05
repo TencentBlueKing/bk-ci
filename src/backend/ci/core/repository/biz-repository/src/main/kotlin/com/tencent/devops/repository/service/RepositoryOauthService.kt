@@ -9,8 +9,8 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.pojo.Oauth2State
 import com.tencent.devops.repository.pojo.RepoCondition
 import com.tencent.devops.repository.pojo.RepoOauthRefVo
-import com.tencent.devops.repository.pojo.RepositoryScmConfig
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
+import com.tencent.devops.repository.pojo.RepositoryScmConfigVo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.ScmConfigStatus
 import com.tencent.devops.repository.pojo.oauth.Oauth2Url
@@ -46,14 +46,13 @@ class RepositoryOauthService @Autowired constructor(
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: PageUtil.DEFAULT_PAGE_SIZE
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-        val scmConfigList = scmConfigService.listConfig(
+        val scmConfigList = scmConfigService.listConfigVo(
             userId = userId,
             status = ScmConfigStatus.SUCCESS,
             oauth2Enabled = true,
             limit = limit.limit,
             offset = limit.offset
-
-        )
+        ).records
         return scmConfigList.map { scmConfig ->
             oauth2TokenStoreManager.get(
                 userId = userId,
@@ -182,7 +181,7 @@ class RepositoryOauthService @Autowired constructor(
         return JsonUtil.to(String(Base64.getDecoder().decode(state)), Oauth2State::class.java)
     }
 
-    private fun convertOauthVo(scmConfig: RepositoryScmConfig, oauthInfo: OauthTokenInfo): OauthTokenVo {
+    private fun convertOauthVo(scmConfig: RepositoryScmConfigVo, oauthInfo: OauthTokenInfo): OauthTokenVo {
         with(oauthInfo) {
             val scmCode = scmConfig.scmCode
             val repoCondition = RepoCondition(
@@ -211,7 +210,7 @@ class RepositoryOauthService @Autowired constructor(
         }
     }
 
-    private fun convertEmptyOauthVo(userId: String, scmConfig: RepositoryScmConfig): OauthTokenVo {
+    private fun convertEmptyOauthVo(userId: String, scmConfig: RepositoryScmConfigVo): OauthTokenVo {
         with(scmConfig) {
             return OauthTokenVo(
                 username = userId,

@@ -25,30 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.resources
+package com.tencent.devops.metrics.api
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.common.TxOpMigrateStoreResource
-import com.tencent.devops.store.common.service.TxOpMigrateStoreInfoService
-import com.tencent.devops.store.common.service.TxOpMigrateStoreLogoService
+import com.tencent.devops.metrics.pojo.ProjectPipelineIssueAnalysisInfo
+import com.tencent.devops.metrics.service.eplus.TxPipelineMetricssService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class TxOpMigrateStoreResourceImpl @Autowired constructor(
-    private val txOpMigrateStoreLogoService: TxOpMigrateStoreLogoService,
-    private val txOpMigrateStoreInfoService: TxOpMigrateStoreInfoService
-) : TxOpMigrateStoreResource {
-
-    override fun migrateStoreLogo(): Result<Boolean> {
-        return Result(txOpMigrateStoreLogoService.migrateStoreLogo())
-    }
-
-    override fun migrateStoreDescription(): Result<Boolean> {
-        return Result(txOpMigrateStoreInfoService.migrateStoreDescription())
-    }
-
-    override fun migrateStoreUrlScheme(): Result<Boolean> {
-        return Result(txOpMigrateStoreInfoService.migrateStoreUrlScheme())
+class TxUserPipelineMetricsResourceImpl @Autowired constructor(
+    private val txPipelineMetricsService: TxPipelineMetricssService
+) : TxUserPipelineMetricsResource {
+    override fun getPipelineIssueAnalysis(
+        userId: String,
+        projectId: String
+    ): Result<ProjectPipelineIssueAnalysisInfo?> {
+        return Result(txPipelineMetricsService.getPipelineIssueAnalysis(userId, projectId))
     }
 }

@@ -25,12 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.service
+package com.tencent.devops.metrics.api
 
-interface TxOpMigrateStoreLogoService {
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.metrics.service.eplus.TxPipelineMetricssService
+import org.springframework.beans.factory.annotation.Autowired
 
-    /**
-     * 迁移logo
-     */
-    fun migrateStoreLogo(): Boolean
+@RestResource
+class TxOpPipelineMetricsResourceImpl @Autowired constructor(
+    private val txPipelineMetricsService: TxPipelineMetricssService
+) : TxOpPipelineMetricsResource {
+
+    override fun runAllSyncDataTasks(userId: String) {
+        txPipelineMetricsService.runAllSyncDataTasks()
+    }
 }

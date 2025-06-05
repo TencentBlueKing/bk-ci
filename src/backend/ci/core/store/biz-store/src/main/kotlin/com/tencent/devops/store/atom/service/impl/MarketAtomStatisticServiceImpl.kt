@@ -66,6 +66,11 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(MarketAtomStatisticServiceImpl::class.java)
         private const val DEFAULT_PAGE_SIZE = 10
+        private val asyncExecutor by lazy {
+            Executors.newFixedThreadPool(2).apply {
+                Runtime.getRuntime().addShutdownHook(Thread { shutdown() })
+            }
+        }
     }
 
     /**
@@ -160,9 +165,13 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
      * 同步使用插件流水线数量到汇总数据统计表
      */
     override fun asyncUpdateStorePipelineNum(): Boolean {
-        Executors.newFixedThreadPool(1).submit {
+        asyncExecutor.execute {
             logger.info("begin asyncUpdateStorePipelineNum!!")
-            batchUpdatePipelineNum()
+            try {
+                batchUpdatePipelineNum()
+            } catch (ignored: Throwable) {
+                logger.error("asyncUpdateStorePipelineNum error", ignored)
+            }
             logger.info("end asyncUpdateStorePipelineNum!!")
         }
         return true
@@ -173,9 +182,13 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
         startTime: LocalDateTime,
         endTime: LocalDateTime
     ): Boolean {
-        Executors.newFixedThreadPool(1).submit {
+        asyncExecutor.execute {
             logger.info("begin asyncAtomDailyStatisticInfo!!")
-            batchUpdateAtomDailyStatisticInfo(storeType, startTime, endTime)
+            try {
+                batchUpdateAtomDailyStatisticInfo(storeType, startTime, endTime)
+            } catch (ignored: Throwable) {
+                logger.error("asyncAtomDailyStatisticInfo error | storeType=$storeType", ignored)
+            }
             logger.info("end asyncAtomDailyStatisticInfo!!")
         }
         return true

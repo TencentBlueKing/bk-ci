@@ -20,12 +20,12 @@
             const isLoading = ref(false)
             const eplusIframe = ref(null)
             const vm = getCurrentInstance()
+            const cardId = computed(() => vm.proxy.$route?.query.cardId)
             const projectId = computed(() => vm.proxy?.$route?.params?.projectId)
             const pipelineId = computed(() => vm.proxy?.$route?.params?.pipelineId)
             const eplusUrl = ref()
             const abort = new AbortController()
             let eventAdded = false
-
             watch(projectId, () => {
                 nextTick(fetchEplusUrl)
             })
@@ -60,7 +60,7 @@
                         : {}
                     const res = await request.get('/project/api/user/services/36/url/get', { headers })
                     if (isAbsoluteURL(res.data)) {
-                        eplusUrl.value = res.data
+                        eplusUrl.value = cardId.value ? `${res.data}&cardId=${cardId.value}` : res.data
                     } else {
                         eplusUrl.value = `${window.location.origin}${res.data}${vm.proxy.$route.params.projectId}`
                     }
