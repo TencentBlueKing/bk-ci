@@ -287,7 +287,6 @@
                 })
             },
             switchToReleaseVersion () {
-                console.log(11111)
                 this.$router.push({
                     params: {
                         ...this.$route.params,
