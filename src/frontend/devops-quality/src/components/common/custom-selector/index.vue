@@ -200,22 +200,7 @@
                             }
                         })
 
-                        const validationPromises = temp.map(async (item) => {
-                            if (item.isBkVar()) {
-                                return { item, valid: true }
-                            }
-                            
-                            const inInitData = this.config.initData.indexOf(item) >= 0
-                            if (inInitData) {
-                                return { item, valid: true }
-                            }
-
-                            const isValid = await this.verifyUser(item)
-                            return { item, valid: isValid }
-                        })
-
-                        const results = await Promise.all(validationPromises)
-
+                        const results = await this.processValues(temp)
                         results.forEach(({ item, valid }) => {
                             if (valid) {
                                 const indexInData = this.config.data.indexOf(item)
@@ -251,13 +236,28 @@
                 // 为了让blur方法异步执行，以便能够成功执行click方法
                 setTimeout(async () => {
                     const errList = []
-                    let temp = []
+                    const temp = []
+                    const duplicateList = [] // 重复项
                     const value = e.target.value
-                    const isValid = await this.verifyUser(value) // 调用校验接口
-    
-                    if (!isValid) {
+
+                    if (!value) {
+                        this.config.onChange(this.name, '')
+                        this.isEdit = false
+                        return
+                    }
+
+                    const resList = value.split(',').filter(item => item.trim())
+
+                    resList.forEach((item) => {
+                        if (this.selectedList.includes(item)) {
+                            duplicateList.push(item)
+                        }
+                    })
+
+                    if (duplicateList.length > 0) {
+                        const uniqueDuplicates = [...new Set(duplicateList)]
                         this.$bkMessage({
-                            message: `${value} 不是项目组成员`,
+                            message: `${uniqueDuplicates.join(';')} 已存在`,
                             theme: 'error'
                         })
                         this.config.onChange(this.name, '')
@@ -265,18 +265,10 @@
                         return
                     }
 
-                    const resList = value.split(',').filter(item => item.trim())
-
-                    resList.forEach(item => {
-                        item = item.trim()
-                        if (item.isBkVar() || isValid) {
-                            temp.push(item)
-                        } else {
-                            errList.push(item)
-                        }
+                    const results = await this.processValues(resList)
+                    results.forEach(({ item, valid }) => {
+                        valid ? temp.push(item) : errList.push(item)
                     })
-
-                    temp = temp.filter(item => this.selectedList.indexOf(item) === -1)
 
                     if (temp.length) this.selectList(temp, 'batch')
 
@@ -294,9 +286,25 @@
 
                     this.config.onChange(this.name, '')
                     this.isEdit = false
-
-                    if (this.$refs.staffInput) this.$refs.staffInput.style.width = 10 + 'px'
+                    if (this.$refs.staffInput) this.$refs.staffInput.style.width = '10px'
                 }, 100)
+            },
+            async processValues (list) {
+                const validationPromises = list.map(async (item) => {
+                    if (item.isBkVar()) {
+                        return { item, valid: true }
+                    }
+
+                    const inInitData = this.config.initData.includes(item)
+                    if (inInitData) {
+                        return { item, valid: true }
+                    }
+
+                    const isValid = await this.verifyUser(item)
+                    return { item, valid: isValid }
+                })
+                const results = await Promise.all(validationPromises)
+                return results
             },
             mousedown (e) {
                 this.focusList = 0
