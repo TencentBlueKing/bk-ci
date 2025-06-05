@@ -41,6 +41,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_UPDATE_FAILE
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.websocket.service.PipelineWebsocketService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -97,15 +98,20 @@ class ServicePipelineRuntimeResourceImpl @Autowired constructor(
         )
     }
 
-    fun getArtifactoryAnalyticsList(
+    private fun getArtifactoryAnalyticsList(
         userId: String,
         projectId: String,
         artifactoryFileList: List<FileInfo>
     ): List<ArtifactQualityMetadataAnalytics> {
-        val metadataLabels = client.get(ServiceArtifactQualityMetadataResource::class).listArtifactQualityMetadataLabel(
-            userId = userId,
-            projectId = projectId
-        ).data.orEmpty()
+        val metadataLabels = try {
+            client.get(ServiceArtifactQualityMetadataResource::class).listArtifactQualityMetadataLabel(
+                userId = userId,
+                projectId = projectId
+            ).data.orEmpty()
+        } catch (ex: Exception) {
+            logger.warn("list artifact quality metadata label failed $userId|$projectId|$ex")
+            emptyList()
+        }
         if (metadataLabels.isEmpty() || artifactoryFileList.isEmpty())
             return emptyList()
 
@@ -137,5 +143,9 @@ class ServicePipelineRuntimeResourceImpl @Autowired constructor(
                 count = count
             )
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ServicePipelineRuntimeResourceImpl::class.java)
     }
 }
