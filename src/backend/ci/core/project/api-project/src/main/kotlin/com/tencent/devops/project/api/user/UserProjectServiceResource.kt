@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.api.user
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.project.pojo.Result
@@ -85,6 +86,9 @@ interface UserProjectServiceResource {
         @Parameter(description = "项目ID", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String?,
+        @Parameter(description = "流水线ID", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String?,
         @Parameter(description = "服务ID", required = true)
         @PathParam("serviceId")
         serviceId: Long
