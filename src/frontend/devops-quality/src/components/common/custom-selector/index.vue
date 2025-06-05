@@ -102,6 +102,10 @@
                 type: Array,
                 default: []
             },
+            projectId: {
+                type: String,
+                required: true
+            },
             setVaule: Function,
             deleteItem: Function
         },
@@ -137,6 +141,21 @@
             this.getData()
         },
         methods: {
+            async verifyUser (value) {
+                if (!value || value.isBkVar()) return true
+
+                const url = `/project/api/user/projects/${this.projectId}/users/${encodeURIComponent(value)}/verify`
+                try {
+                    const res = await this.$ajax.get(url)
+                    return res
+                } catch (error) {
+                    this.$bkMessage({
+                        message: '校验失败，请重试',
+                        theme: 'error'
+                    })
+                    return false
+                }
+            },
             input (e) {
                 e.preventDefault()
 
@@ -152,7 +171,7 @@
 
                 if (value.length) this.filterData(value)
             },
-            paste (e) {
+            async paste (e) {
                 e.preventDefault()
 
                 const value = e.clipboardData.getData('text')
@@ -169,25 +188,45 @@
                         const temp = []
                         const tagList = []
                         const errList = []
-                        let resList = value.split(';')
-
-                        resList = resList.filter(item => item)
+                        const resList = value.split(';').filter(item => item.trim())
 
                         resList.forEach(item => {
-                            if (item.match(/^[a-zA-Z][a-zA-Z_]+/g)) {
-                                temp.push(item.match(/^[a-zA-Z][a-zA-Z_]+/g).join(''))
+                            const varMatch = item.match(/^[a-zA-Z][a-zA-Z_]+/g)
+                            if (varMatch) {
+                                const varItem = varMatch.join('')
+                                temp.push(varItem)
                             } else {
-                                errList.push(item)
+                                temp.push(item)
                             }
                         })
 
-                        temp.forEach(item => {
-                            if (this.config.initData.indexOf(item) < 0) errList.push(item)
-                            for (let i = this.config.data.length - 1; i >= 0; i--) {
-                                if (this.config.data[i] === item) {
+                        const validationPromises = temp.map(async (item) => {
+                            if (item.isBkVar()) {
+                                return { item, valid: true }
+                            }
+                            
+                            const inInitData = this.config.initData.indexOf(item) >= 0
+                            if (inInitData) {
+                                return { item, valid: true }
+                            }
+
+                            const isValid = await this.verifyUser(item)
+                            return { item, valid: isValid }
+                        })
+
+                        const results = await Promise.all(validationPromises)
+
+                        results.forEach(({ item, valid }) => {
+                            if (valid) {
+                                const indexInData = this.config.data.indexOf(item)
+                                if (indexInData !== -1) {
                                     tagList.push(item)
-                                    this.config.data.splice(i, 1)
+                                    this.config.data.splice(indexInData, 1)
+                                } else {
+                                    tagList.push(item)
                                 }
+                            } else {
+                                errList.push(item)
                             }
                         })
 
@@ -210,19 +249,27 @@
             hideAll (e) {
                 e.preventDefault()
                 // 为了让blur方法异步执行，以便能够成功执行click方法
-                setTimeout(() => {
+                setTimeout(async () => {
                     const errList = []
                     let temp = []
                     const value = e.target.value
-                    let resList = value.split(',')
+                    const isValid = await this.verifyUser(value) // 调用校验接口
+    
+                    if (!isValid) {
+                        this.$bkMessage({
+                            message: `${value} 不是项目组成员`,
+                            theme: 'error'
+                        })
+                        this.config.onChange(this.name, '')
+                        this.resetInput()
+                        return
+                    }
 
-                    resList = resList.filter(item => {
-                        return item && item.trim()
-                    })
+                    const resList = value.split(',').filter(item => item.trim())
 
                     resList.forEach(item => {
                         item = item.trim()
-                        if (item.isBkVar()) {
+                        if (item.isBkVar() || isValid) {
                             temp.push(item)
                         } else {
                             errList.push(item)
@@ -244,7 +291,7 @@
                         this.config.onChange(this.name, '')
                         this.resetInput()
                     }
-                    // this.value = ''
+
                     this.config.onChange(this.name, '')
                     this.isEdit = false
 
