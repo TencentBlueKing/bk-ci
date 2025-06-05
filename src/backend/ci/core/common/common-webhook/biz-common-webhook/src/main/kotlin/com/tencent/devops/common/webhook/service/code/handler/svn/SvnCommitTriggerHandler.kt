@@ -45,6 +45,7 @@ import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import org.slf4j.LoggerFactory
 
 @CodeWebhookHandler
@@ -94,6 +95,17 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
 
     override fun getExternalId(event: SvnCommitEvent): String {
         return event.rep_name
+    }
+
+    override fun getCompatibilityRepoName(event: SvnCommitEvent): Set<String> {
+        return event.repository?.gitHttpUrl?.let {
+            val svnProjectName = SvnUtils.getSvnProjectName(it)
+            if (svnProjectName != getRepoName(event)) {
+                setOf(svnProjectName)
+            } else {
+                setOf()
+            }
+        } ?: setOf()
     }
 
     override fun getWebhookFilters(

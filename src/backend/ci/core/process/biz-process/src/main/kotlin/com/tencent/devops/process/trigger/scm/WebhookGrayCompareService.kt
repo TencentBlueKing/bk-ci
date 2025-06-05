@@ -208,7 +208,8 @@ class WebhookGrayCompareService @Autowired constructor(
         val triggerPipelines = pipelineWebhookService.getTriggerPipelines(
             name = matcher.getRepoName(),
             repositoryType = scmType,
-            yamlPipelineIds = yamlPipelineIds
+            yamlPipelineIds = yamlPipelineIds,
+            compatibilityRepoNames = matcher.getCompatibilityRepoName()
         )
         val pipelineAndParamsMap = mutableMapOf<String, Map<String, Any>>()
         triggerPipelines.forEach { (projectId, pipelineId) ->

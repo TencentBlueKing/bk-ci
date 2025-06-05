@@ -43,5 +43,20 @@ data class SvnCommitEvent(
     val files: List<SvnCommitEventFile>,
     val commitTime: Long?,
     @JsonProperty("total_files_count")
-    val totalFilesCount: Int?
+    val totalFilesCount: Int?,
+    @JsonProperty("repository")
+    val repository: SvnCommitRepository?
 ) : CodeWebhookEvent
+
+@Suppress("ConstructorParameterNaming")
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class SvnCommitRepository(
+    val name: String,
+    val url: String,
+    val desc: String,
+    @JsonProperty("git_http_url")
+    val gitHttpUrl: String?,
+    @JsonProperty("git_ssh_url")
+    val gitSshUrl: String?,
+    val homepage: String
+)
