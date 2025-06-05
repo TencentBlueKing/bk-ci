@@ -33,7 +33,6 @@ import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.store.atom.dao.TxAtomDao
 import com.tencent.devops.store.common.dao.TxStoreBaseQueryDao
 import com.tencent.devops.store.common.dao.TxStoreBelongDeptRelDao
-import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.TxStoreBelongDeptService
 import com.tencent.devops.store.ideatom.dao.IdeAtomDao
 import com.tencent.devops.store.image.dao.OpImageDao
@@ -60,7 +59,6 @@ class TxStoreBelongDeptServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val txStoreBelongDeptRelDao: TxStoreBelongDeptRelDao,
     private val txAtomDao: TxAtomDao,
-    private val storeUserService: StoreUserService,
     private val client: Client,
     private val ideAtomDao: IdeAtomDao,
     private val extServiceDao: ExtServiceDao,
@@ -79,11 +77,11 @@ class TxStoreBelongDeptServiceImpl @Autowired constructor(
     }
 
     override fun initStoreBelongDept(): Boolean {
-        initStoreBelongDept(StoreTypeEnum.ATOM)
-        initStoreBelongDept(StoreTypeEnum.SERVICE)
-        initStoreBelongDept(StoreTypeEnum.IMAGE)
-        initStoreBelongDept(StoreTypeEnum.IDE_ATOM)
-        initStoreBelongDept(StoreTypeEnum.DEVX)
+        initStoreBelongDept(ATOM)
+        initStoreBelongDept(SERVICE)
+        initStoreBelongDept(IMAGE)
+        initStoreBelongDept(IDE_ATOM)
+        initStoreBelongDept(DEVX)
         return true
     }
 
@@ -107,7 +105,7 @@ class TxStoreBelongDeptServiceImpl @Autowired constructor(
                         storeBelongDeptRelList.add(
                             StoreBelongDeptRel(
                                 storeCode = atomCode,
-                                storeType = StoreTypeEnum.ATOM,
+                                storeType = ATOM,
                                 storeDeptInfo = it
                             )
                         )
