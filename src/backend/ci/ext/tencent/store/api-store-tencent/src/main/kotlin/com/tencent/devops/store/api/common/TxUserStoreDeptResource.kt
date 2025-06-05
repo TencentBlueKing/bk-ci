@@ -57,6 +57,7 @@ interface TxUserStoreDeptResource {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "storeCode", required = true)
         @PathParam("storeCode")
         storeCode: String,
         @Parameter(description = "类别", required = true)
