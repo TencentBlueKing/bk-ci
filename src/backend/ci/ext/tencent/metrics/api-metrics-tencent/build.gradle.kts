@@ -26,6 +26,9 @@
  */
 
 dependencies {
-    api(project(":core:metrics:biz-metrics"))
-    api(project(":ext:tencent:metrics:api-metrics-tencent"))
+    api(project(":core:metrics:api-metrics"))
+}
+
+plugins {
+    `task-deploy-to-maven`
 }

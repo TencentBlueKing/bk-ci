@@ -25,7 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:metrics:biz-metrics"))
-    api(project(":ext:tencent:metrics:api-metrics-tencent"))
+package com.tencent.devops.metrics.api
+
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.core.MediaType
+
+@Tag(name = "OP_PIPELINE", description = "OP-流水线资源")
+@Path("/op/pipelines")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface TxOpPipelineMetricsResource {
+
+    @Operation(summary = "同步所有项目流水线问题分析信息")
+    @GET
+    @Path("/runAll")
+    fun runAllSyncDataTasks(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    )
 }

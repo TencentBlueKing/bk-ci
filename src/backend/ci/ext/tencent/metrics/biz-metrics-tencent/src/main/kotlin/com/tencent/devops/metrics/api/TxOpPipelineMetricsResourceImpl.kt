@@ -25,7 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:metrics:biz-metrics"))
-    api(project(":ext:tencent:metrics:api-metrics-tencent"))
+package com.tencent.devops.metrics.api
+
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.metrics.service.eplus.TxPipelineMetricssService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class TxOpPipelineMetricsResourceImpl @Autowired constructor(
+    private val txPipelineMetricsService: TxPipelineMetricssService
+) : TxOpPipelineMetricsResource {
+
+    override fun runAllSyncDataTasks(userId: String) {
+        txPipelineMetricsService.runAllSyncDataTasks()
+    }
 }

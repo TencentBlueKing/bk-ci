@@ -25,7 +25,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:metrics:biz-metrics"))
-    api(project(":ext:tencent:metrics:api-metrics-tencent"))
+package com.tencent.devops.metrics.constants
+
+object Constants {
+    const val BK_TO_HANDLE = "bkToHandle"// 去处理
 }
