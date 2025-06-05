@@ -31,8 +31,8 @@ import org.slf4j.LoggerFactory
 
 class ProjectNameFilter(
     private val pipelineId: String,
-    private val projectNames: Set<String>,
-    private val triggerOnProjectName: String
+    private val projectName: String,
+    private val triggerOnProjectNames: Set<String>
 ) : WebhookFilter {
 
     companion object {
@@ -41,9 +41,9 @@ class ProjectNameFilter(
 
     override fun doFilter(response: WebhookFilterResponse): Boolean {
         logger.info(
-            "$pipelineId|triggerOnProjectName:$triggerOnProjectName|projectNames:$projectNames|project name filter"
+            "$pipelineId|triggerOnProjectNames:$triggerOnProjectNames|projectNames:$projectName|project name filter"
         )
-        return projectNames.find { projectName ->
+        return triggerOnProjectNames.find { triggerOnProjectName ->
             projectName == triggerOnProjectName || getProjectName(projectName) == triggerOnProjectName
         } != null
     }

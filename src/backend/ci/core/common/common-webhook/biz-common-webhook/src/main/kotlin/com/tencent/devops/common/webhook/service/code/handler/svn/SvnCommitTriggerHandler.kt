@@ -118,8 +118,8 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
         with(webHookParams) {
             val projectNameFilter = ProjectNameFilter(
                 pipelineId = pipelineId,
-                projectNames = getCompatibilityRepoName(event).toMutableSet().plus(repository.projectName),
-                triggerOnProjectName = event.rep_name
+                projectName = repository.projectName,
+                triggerOnProjectNames = getCompatibilityRepoName(event).plus(getRepoName(event))
             )
             val userId = getUsername(event)
             val userFilter = UserFilter(
