@@ -149,8 +149,6 @@ interface BuildOauthResource {
         buildId: String,
         @Parameter(description = "代码库标识", required = true)
         @PathParam("scmCode")
-        scmCode: String,
-        @QueryParam("userId")
-        userId: String
+        scmCode: String
     ): Result<String>
 }

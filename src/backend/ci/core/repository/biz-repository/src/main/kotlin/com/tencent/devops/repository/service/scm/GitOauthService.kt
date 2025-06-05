@@ -212,7 +212,7 @@ class GitOauthService @Autowired constructor(
         val oauthUserId = gitService.getUserInfoByToken(token.accessToken).username ?: userId
         logger.info("save the git access token for user $oauthUserId, operated by $userId")
         saveAccessToken(oauthUserId, token)
-        // 保存当前授权用户
+        // 保存当前授权用户，用于代码库重置授权时，将OAUTH用户设置为当前授权用户
         authParams["username"] = oauthUserId
         val redirectUrl = gitService.getRedirectUrl(
             URLEncoder.encode(

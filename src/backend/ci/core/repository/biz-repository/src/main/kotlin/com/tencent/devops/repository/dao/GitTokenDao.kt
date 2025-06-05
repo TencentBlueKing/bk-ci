@@ -97,6 +97,7 @@ class GitTokenDao {
         with(TRepositoryGitToken.T_REPOSITORY_GIT_TOKEN) {
             return dslContext.selectFrom(this)
                 .where(OPERATOR.eq(operator))
+                .orderBy(CREATE_TIME.desc())
                 .fetch()
         }
     }

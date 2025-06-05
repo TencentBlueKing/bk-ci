@@ -85,7 +85,13 @@ class RepositoryScmTokenDao {
                 .set(REFRESH_TOKEN, scmToken.refreshToken)
                 .set(EXPIRES_IN, scmToken.expiresIn)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .set(OPERATOR, scmToken.operator)
+                .let {
+                    if (scmToken.operator.isNotBlank()) {
+                        it.set(OPERATOR, scmToken.operator)
+                    } else {
+                        it
+                    }
+                }
                 .execute()
         }
     }

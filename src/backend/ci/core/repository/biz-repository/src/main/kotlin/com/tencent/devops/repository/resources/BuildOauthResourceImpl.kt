@@ -108,13 +108,12 @@ class BuildOauthResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        scmCode: String,
-        userId: String
+        scmCode: String
     ): Result<String> {
         return Result(
             scmTokenService.getRedirectUrl(
                 scmCode = scmCode,
-                userId = userId,
+                userId = "",
                 redirectUrl = getBuildUrl(
                     projectId = projectId,
                     pipelineId = pipelineId,
