@@ -171,7 +171,7 @@ class ProcessDataClearService @Autowired constructor(
                     pipelineId = pipelineId,
                     buildId = buildId
                 )
-                // 无版本信息无需更新计数
+                // 无版本信息则无需更新计数
                 if (version == null) return@transaction
                 // 查询流水线版本记录
                 val pipelineVersionInfo = processDao.getPipelineVersionSimple(
