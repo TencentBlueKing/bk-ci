@@ -791,7 +791,7 @@
     "triggerMismatch": "触发器不匹配",
     "aiSummary": "AI摘要",
     "aiSummaryLoadingTips": "正在生成AI摘要，请稍等......",
-    "copilotTips": "以上摘要由工蜂 Copilot 生成",
+    "copilotTips": "以上摘要由 工蜂AI 生成",
     "regenerate": "重新生成",
     "getAiSummaryErr": "获取AI摘要失败，请重新生成"
   },
@@ -1552,6 +1552,7 @@
   "operationLog": "操作日志",
   "executeInfo": "执行信息",
   "triggerEvent": "触发事件",
+  "executionAnalysis": "执行分析",
   "invalidCodeMode": "切换到Code方式失败",
   "draftExecRecords": "调试记录",
   "draftExecDetail": "调试详情",

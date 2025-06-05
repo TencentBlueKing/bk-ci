@@ -22,6 +22,7 @@
             const vm = getCurrentInstance()
             const cardId = computed(() => vm.proxy.$route?.query.cardId)
             const projectId = computed(() => vm.proxy?.$route?.params?.projectId)
+            const pipelineId = computed(() => vm.proxy?.$route?.params?.pipelineId)
             const eplusUrl = ref()
             const abort = new AbortController()
             let eventAdded = false
@@ -54,7 +55,10 @@
                 try {
                     if (isLoading.value || !vm.proxy.$route?.params?.projectId) return
                     isLoading.value = true
-                    const res = await request.get('/project/api/user/services/36/url/get')
+                    const headers = pipelineId.value
+                        ? { 'X-DEVOPS-PIPELINE-ID': pipelineId.value }
+                        : {}
+                    const res = await request.get('/project/api/user/services/61/url/get', { headers })
                     if (isAbsoluteURL(res.data)) {
                         eplusUrl.value = cardId.value ? `${res.data}&cardId=${cardId.value}` : res.data
                     } else {
