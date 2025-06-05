@@ -48,6 +48,6 @@ interface OpLogResource {
 
     @Parameter(description = "执行搬冷任务")
     @PUT
-    @Path("/es/index/cold")
-    fun makeIndexCold(): Result<Boolean>
+    @Path("/clean/data")
+    fun cleanBuildData(): Result<Boolean>
 }

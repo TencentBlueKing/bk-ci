@@ -297,11 +297,11 @@ class ProcessDao {
         projectId: String,
         pipelineId: String,
         buildId: String
-    ): Int {
+    ): Int? {
         with(T_PIPELINE_BUILD_HISTORY) {
             return dslContext.select(VERSION).from(this)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId).and(BUILD_ID.eq(buildId))))
-                .fetchOne(0, Int::class.java)!!
+                .fetchOne(0, Int::class.java)
         }
     }
 

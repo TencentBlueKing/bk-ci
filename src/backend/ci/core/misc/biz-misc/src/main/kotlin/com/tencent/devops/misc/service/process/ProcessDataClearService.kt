@@ -184,14 +184,23 @@ class ProcessDataClearService @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = buildId
             )
-            val pipelineVersionLock = PipelineVersionLock(redisOperation, pipelineId, version)
+            val pipelineVersionLock = version?.let { PipelineVersionLock(redisOperation, pipelineId, it) }
             try {
-                pipelineVersionLock.lock()
+                pipelineVersionLock?.lock()
                 val deleteResult = processDataDeleteDao.deletePipelineBuildHistory(context, projectId, buildId)
                 if (deleteResult == 0) {
                     // 如果删除的记录数为0则无需执行后面的逻辑
                     return@transaction
                 }
+                // 添加删除记录，插入要实现幂等
+                processDao.addBuildHisDataClear(
+                    dslContext = context,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId
+                )
+                // 无版本信息则无需更新计数
+                if (version == null) return@transaction
                 // 查询流水线版本记录
                 val pipelineVersionInfo = processDao.getPipelineVersionSimple(
                     dslContext = context,
@@ -222,7 +231,7 @@ class ProcessDataClearService @Autowired constructor(
                     referFlag = referFlag
                 )
             } finally {
-                pipelineVersionLock.unlock()
+                pipelineVersionLock?.unlock()
             }
         }
     }
