@@ -2081,14 +2081,16 @@ class PipelineRuntimeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        artifactListJsonString: String
+        artifactListJsonString: String,
+        artifactAnalyticsList: String
     ): Boolean {
         return pipelineBuildDao.updateArtifactList(
             dslContext = dslContext,
             artifactList = artifactListJsonString,
             projectId = projectId,
             pipelineId = pipelineId,
-            buildId = buildId
+            buildId = buildId,
+            artifactAnalyticsList = artifactAnalyticsList
         ) == 1
     }
 

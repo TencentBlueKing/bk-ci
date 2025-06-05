@@ -71,6 +71,8 @@ import com.tencent.devops.common.archive.constant.REPO_REPORT
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.BKRepoProjectUpdateRequest
 import com.tencent.devops.common.archive.pojo.BkRepoFile
+import com.tencent.devops.common.archive.pojo.MetadataLabelDetail
+import com.tencent.devops.common.archive.pojo.MetadataLabelDetailUpdate
 import com.tencent.devops.common.archive.pojo.PackageVersionInfo
 import com.tencent.devops.common.archive.pojo.ProjectMetadata
 import com.tencent.devops.common.archive.pojo.QueryData
@@ -91,6 +93,7 @@ import com.tencent.devops.common.archive.util.closeQuietly
 import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import jakarta.ws.rs.NotFoundException
 import okhttp3.Credentials
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType
@@ -112,7 +115,6 @@ import java.net.URLEncoder
 import java.nio.file.FileSystems
 import java.nio.file.Paths
 import java.util.UUID
-import jakarta.ws.rs.NotFoundException
 
 @Component
 class BkRepoClient constructor(
@@ -1181,6 +1183,57 @@ class BkRepoClient constructor(
             .post(requestBody.toRequestBody(JSON_MEDIA_TYPE))
             .build()
         return doRequest(request).resolveResponse<Response<QueryData>>()!!.data!!
+    }
+
+    fun listArtifactQualityMetadataLabel(
+        userId: String,
+        projectId: String
+    ): List<MetadataLabelDetail> {
+        logger.info("list artifact quality metadata label, userId: $userId, projectId: $projectId")
+        val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/metadata/label/$projectId"
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
+            .get()
+            .build()
+        return doRequest(request).resolveResponse<Response<List<MetadataLabelDetail>>>()!!.data!!
+    }
+
+    fun createArtifactQualityMetadataLabel(
+        userId: String,
+        projectId: String,
+        metadataLabel: MetadataLabelDetail
+    ) {
+        val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/metadata/label/$projectId"
+        val request = Request.Builder().url(url).headers(getCommonHeaders(userId, projectId).toHeaders())
+            .post(metadataLabel.toJsonString().toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        doRequest(request).resolveResponse<Response<Void>>()
+    }
+
+    fun updateArtifactQualityMetadataLabel(
+        userId: String,
+        projectId: String,
+        labelKey: String,
+        metadataLabelUpdate: MetadataLabelDetailUpdate
+    ) {
+        val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/metadata/label/$projectId/$labelKey"
+        val request = Request.Builder().url(url).headers(getCommonHeaders(userId, projectId).toHeaders())
+            .put(metadataLabelUpdate.toJsonString().toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        doRequest(request).resolveResponse<Response<Void>>()
+    }
+
+    fun deleteArtifactQualityMetadataLabel(
+        userId: String,
+        projectId: String,
+        labelKey: String
+    ) {
+        val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/metadata/label/$projectId/$labelKey"
+        val request = Request.Builder().url(url).headers(getCommonHeaders(userId, projectId).toHeaders())
+            .delete()
+            .build()
+        doRequest(request).resolveResponse<Response<Void>>()
     }
 
     private fun getCommonHeaders(userId: String, projectId: String): MutableMap<String, String> {
