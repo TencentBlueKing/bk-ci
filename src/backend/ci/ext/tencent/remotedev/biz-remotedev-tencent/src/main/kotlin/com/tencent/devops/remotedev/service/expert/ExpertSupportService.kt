@@ -997,10 +997,75 @@ class ExpertSupportService @Autowired constructor(
         return remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.BCS).taskStatus(taskId)
     }
 
+    @ActionAuditRecord(
+        actionId = TencentActionId.CGS_SYNC_VM,
+        instance = AuditInstanceRecord(
+            resourceType = TencentResourceTypeId.CGS,
+            instanceNames = "#data.sourceWorkspaceName",
+            instanceIds = "#data.targetWorkspaceName"
+        ),
+        content = TencentActionAuditContent.CGS_SYNC_VM_CONTENT
+    )
     fun syncVm(
+        userId: String,
         data: SyncVmData
     ): SyncVmResp? {
-        return remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.BCS).syncVm(data)
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = data.sourceWorkspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(data.sourceWorkspaceName)
+            )
+        // 校验权限要涉及两个机器
+        if (!permissionService.hasManagerOrOwnerPermission(
+                userId = userId,
+                projectId = workspace.projectId,
+                workspaceName = workspace.workspaceName,
+                ownerType = workspace.ownerType
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You do not have permission to sync vm in source ${data.sourceWorkspaceName}")
+            )
+        }
+        if (!permissionService.hasManagerOrOwnerPermission(
+                userId = userId,
+                projectId = workspace.projectId,
+                workspaceName = data.targetWorkspaceName,
+                ownerType = workspace.ownerType
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf("You do not have permission to sync vm in target ${data.targetWorkspaceName}")
+            )
+        }
+
+        ActionAuditContext.current()
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .scopeId = workspace.projectId
+
+        val res = remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.BCS).syncVm(data) ?: return null
+
+        workspaceDao.updateWorkspaceStatus(
+            dslContext = dslContext,
+            workspaceName = data.sourceWorkspaceName,
+            status = WorkspaceStatus.EXPANDING
+        )
+
+        workspaceOpHistoryDao.createWorkspaceHistory(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            operator = userId,
+            action = WorkspaceAction.EXPAND_DISK,
+            actionMessage = if (pvcId != null) {
+                "$pvcId: $size"
+            } else {
+                size
+            }
+        )
+
+        return res
     }
 
     companion object {
