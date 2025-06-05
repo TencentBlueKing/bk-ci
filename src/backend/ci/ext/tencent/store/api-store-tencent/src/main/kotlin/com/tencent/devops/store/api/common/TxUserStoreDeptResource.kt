@@ -52,7 +52,7 @@ interface TxUserStoreDeptResource {
 
     @Operation(summary = "获取组件所属组织架构")
     @GET
-    @Path("codes/{storeCode}/get")
+    @Path("/codes/{storeCode}/get")
     fun getStoreBelongDept(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
