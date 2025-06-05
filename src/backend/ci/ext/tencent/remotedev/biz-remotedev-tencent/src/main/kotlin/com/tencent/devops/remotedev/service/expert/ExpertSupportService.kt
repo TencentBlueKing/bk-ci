@@ -1047,25 +1047,63 @@ class ExpertSupportService @Autowired constructor(
 
         val res = remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.BCS).syncVm(data) ?: return null
 
+        // 状态和记录也是两台机器都要
         workspaceDao.updateWorkspaceStatus(
             dslContext = dslContext,
             workspaceName = data.sourceWorkspaceName,
-            status = WorkspaceStatus.EXPANDING
+            status = WorkspaceStatus.OPERATING
+        )
+        workspaceDao.updateWorkspaceStatus(
+            dslContext = dslContext,
+            workspaceName = data.targetWorkspaceName,
+            status = WorkspaceStatus.OPERATING
         )
 
         workspaceOpHistoryDao.createWorkspaceHistory(
             dslContext = dslContext,
-            workspaceName = workspaceName,
+            workspaceName = data.sourceWorkspaceName,
             operator = userId,
-            action = WorkspaceAction.EXPAND_DISK,
-            actionMessage = if (pvcId != null) {
-                "$pvcId: $size"
-            } else {
-                size
-            }
+            action = WorkspaceAction.SYNC_VM,
+            actionMessage = "sync vm target workspace: ${data.targetWorkspaceName}"
+        )
+
+        workspaceOpHistoryDao.createWorkspaceHistory(
+            dslContext = dslContext,
+            workspaceName = data.targetWorkspaceName,
+            operator = userId,
+            action = WorkspaceAction.SYNC_VM,
+            actionMessage = "sync vm source workspace: ${data.sourceWorkspaceName}"
         )
 
         return res
+    }
+
+    fun syncVmCallback(
+        taskId: String,
+        workspaceName: String,
+        operator: String
+    ) {
+        val targetWorkspace = workspaceOpHistoryDao.fetchLastOp(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            action = WorkspaceAction.SYNC_VM
+        )?.actionMsg?.split(":")?.last()?.trim() ?: run {
+            logger.error("syncVmCallback $taskId|$workspaceName|$operator targetWorkspace not found")
+            ""
+        }
+
+        workspaceDao.updateWorkspaceStatus(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            status = WorkspaceStatus.RUNNING
+        )
+        if (targetWorkspace.isNotBlank()) {
+            workspaceDao.updateWorkspaceStatus(
+                dslContext = dslContext,
+                workspaceName = targetWorkspace,
+                status = WorkspaceStatus.RUNNING
+            )
+        }
     }
 
     companion object {
