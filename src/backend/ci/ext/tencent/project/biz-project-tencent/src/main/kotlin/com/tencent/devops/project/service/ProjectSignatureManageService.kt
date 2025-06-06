@@ -171,7 +171,7 @@ class ProjectSignatureManageService(
             val firstName = "《${projectNames.first()}》"
             val otherNames = "《".plus(displayedNames.drop(1).joinToString("》/《 ")).plus("》") +
                 if (projectNames.size > 3) {
-                    " ... "
+                    "... "
                 } else {
                     ""
                 }
