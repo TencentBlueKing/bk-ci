@@ -56,7 +56,8 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         taskId: String,
         runMode: String,
         values: Map<String, String>,
-        executeCount: Int?
+        executeCount: Int?,
+        branch: String?
     ): Result<ProjectBuildId> {
         return subPipeService.callPipelineStartup(
             projectId = projectId,
@@ -68,7 +69,8 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
             taskId = taskId,
             runMode = runMode,
             values = values,
-            executeCount = executeCount
+            executeCount = executeCount,
+            branch = branch
         )
     }
 
@@ -82,7 +84,8 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         runMode: String,
         channelCode: ChannelCode?,
         values: Map<String, String>,
-        executeCount: Int?
+        executeCount: Int?,
+        branch: String?
     ): Result<ProjectBuildId> {
         return subPipeService.callPipelineStartup(
             projectId = projectId,
@@ -94,7 +97,8 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
             runMode = runMode,
             channelCode = channelCode,
             values = values,
-            executeCount = executeCount
+            executeCount = executeCount,
+            branch = branch
         )
     }
 
@@ -113,7 +117,8 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         includeConst: Boolean?,
         includeNotRequired: Boolean?,
         parentProjectId: String,
-        parentPipelineId: String
+        parentPipelineId: String,
+        branch: String?
     ): Result<List<PipelineBuildParamFormProp>> {
         checkParam(userId)
         return subPipeService.subPipelineManualStartupInfo(
@@ -123,7 +128,8 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
             includeConst = includeConst,
             includeNotRequired = includeNotRequired,
             parentPipelineId = parentPipelineId,
-            parentProjectId = parentProjectId
+            parentProjectId = parentProjectId,
+            branch = branch
         )
     }
 
