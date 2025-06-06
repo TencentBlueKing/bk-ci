@@ -167,8 +167,14 @@ class ProjectSignatureManageService(
                 params = arrayOf("《${projectNames.first()}》")
             )
         } else {
+            val displayedNames = if (projectNames.size > 3) projectNames.take(3) else projectNames
             val firstName = "《${projectNames.first()}》"
-            val otherNames = "《".plus(projectNames.drop(1).joinToString("》/《 ")).plus("》")
+            val otherNames = "《".plus(displayedNames.drop(1).joinToString("》/《 ")).plus("》") +
+                if (projectNames.size > 3) {
+                    " ... "
+                } else {
+                    ""
+                }
             I18nUtil.getCodeLanMessage(
                 messageCode = ProjectMessageCode.BK_SIGNATURE_PROJECTS_INFORMATION,
                 params = arrayOf(firstName, otherNames)
