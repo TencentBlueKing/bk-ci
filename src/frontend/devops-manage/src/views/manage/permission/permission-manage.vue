@@ -233,7 +233,7 @@ const isResetSuccess = ref(false);
 const isChecking = ref(false);
 const canLoading = ref(true);
 const projectId = computed(() => route.params?.projectCode || route.query?.projectCode);
-const userId = computed(() => route.query?.userId);
+const userIds = computed(() => route.query?.userId);
 const initialResourceType  = computed(() => route.query?.resourceType || 'repertory');
 const resourceType = ref(initialResourceType.value);
 const isSelectAll = ref(false);  // 选择全量数据
@@ -353,7 +353,11 @@ const resetFormData = ref({
 })
 const filterQuery = computed(() => {
   return searchValue.value.reduce((query, item) => {
-      query[item.id] = item.values?.map(value => value.id).join(',');
+      if (item.id === 'handoverFroms') {
+        query[item.id] = item.values?.map(value => value.id);
+      } else {
+        query[item.id] = item.values?.map(value => value.id).join(',');
+      }
       return query;
   }, {})
 });
@@ -362,8 +366,9 @@ const searchData = computed(() => {
   const data = [
     {
       name: t('授权人'),
-      id: 'handoverFrom',
+      id: 'handoverFroms',
       default: true,
+      multiple: true
     },
     {
       name: searchName.value,
@@ -393,14 +398,12 @@ function init () {
   isSelectAll.value = false;
   selectList.value = [];
   dateTimeRange.value = [];
-  if (userId.value) {
+  if (userIds.value) {
     searchValue.value = [
       {
-        id: 'handoverFrom',
+        id: 'handoverFroms',
         name: t('授权人'),
-        values: [
-          { id: userId.value, name: userId.value }
-        ]
+        values: userIds.value.split(",").map(item=>({id:item,name:item}))
       },
     ]
   } else {
@@ -615,13 +618,13 @@ function handlePageLimitChange (limit) {
 }
 
 async function getMenuList (item, keyword) {
-  if (item.id !== 'handoverFrom') return []
+  if (item.id !== 'handoverFroms') return []
   const query = {
     memberType: 'user',
     page: 1,
     pageSize: 400
   }
-  if (item.id === 'handoverFrom' && keyword) {
+  if (item.id === 'handoverFroms' && keyword) {
     query.userName = keyword
   }
   const res = await http.getProjectMembers(projectId.value, query)
