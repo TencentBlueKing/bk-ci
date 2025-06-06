@@ -791,7 +791,7 @@
     "triggerMismatch": "触发器不匹配",
     "aiSummary": "AI摘要",
     "aiSummaryLoadingTips": "正在生成AI摘要，请稍等......",
-    "copilotTips": "以上摘要由工蜂 Copilot 生成",
+    "copilotTips": "以上摘要由 工蜂AI 生成",
     "regenerate": "重新生成",
     "getAiSummaryErr": "获取AI摘要失败，请重新生成"
   },
@@ -1552,6 +1552,7 @@
   "operationLog": "操作日志",
   "executeInfo": "执行信息",
   "triggerEvent": "触发事件",
+  "executionAnalysis": "执行分析",
   "invalidCodeMode": "切换到Code方式失败",
   "draftExecRecords": "调试记录",
   "draftExecDetail": "调试详情",
@@ -1741,5 +1742,14 @@
   "monitorPac": "监听PAC",
   "groupLabel": "分组标签",
   "groupLabelTips": "拥有相同标签的变量，在查看和执行预览界面将在同一个分组下展示",
-  "notGrouped": "未分组"
+  "notGrouped": "未分组",
+  "pipelineProblemTips": {
+    "observing": "观察到",
+    "failureRateTips": " {0} 条流水线近30天内失败率高于 {1}，",
+    "consecutiveFailuresTips": "{0} 条流水线近90天内{1}，",
+    "scheduledTriggerNoCodeChangeTips": "{0} 条流水线定时触发但代码无变更，可能存在异常，请关注。",
+    "continuousFailure": "持续失败",
+    "views": "点击查看",
+    "dataUpdateT1": "（数据T+1更新)"
+  }
 }

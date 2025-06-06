@@ -6,6 +6,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserInfoResource
 import com.tencent.devops.remotedev.pojo.TrustDeviceInfo
 import com.tencent.devops.remotedev.pojo.TrustDeviceTokenGetData
+import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.userinfo.FaceRecognition
 import com.tencent.devops.remotedev.pojo.userinfo.FaceRecognitionData
 import com.tencent.devops.remotedev.pojo.userinfo.FaceRecognitionResult
@@ -15,12 +16,14 @@ import com.tencent.devops.remotedev.pojo.userinfo.UserInfoCheckResult
 import com.tencent.devops.remotedev.pojo.userinfo.UserInfoMoaCheckConfig
 import com.tencent.devops.remotedev.service.TrustDeviceService
 import com.tencent.devops.remotedev.service.UserInfoCertService
+import com.tencent.devops.remotedev.service.WorkspaceService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserInfoResourceImpl @Autowired constructor(
     private val userInfoCertService: UserInfoCertService,
-    private val trustDeviceService: TrustDeviceService
+    private val trustDeviceService: TrustDeviceService,
+    private val workspaceService: WorkspaceService
 ) : UserInfoResource {
     override fun realNameCert(name: String): Result<Boolean> {
         return Result(userInfoCertService.needRealNameCert(name))
@@ -38,7 +41,17 @@ class UserInfoResourceImpl @Autowired constructor(
             res.faceRecognition = FaceRecognition(0, "", false)
         }
         if (userId != null && deviceId != null && token != null) {
-            if (trustDeviceService.checkTrustDevice(userId, deviceId, token)) {
+            // 如果是云桌面拥有者 + token有效，才豁免ioa认证。
+            if (workspaceService.checkExistWorkspaceSharedInfo(
+                workspaceName = data.workspaceName,
+                sharedUser = userId,
+                assignType = WorkspaceShared.AssignType.OWNER
+            ) && trustDeviceService.checkTrustDevice(
+                    userId = userId,
+                    deviceId = deviceId,
+                    token = token
+            )
+            ) {
                 return Result(res.copy(moa = UserInfoMoaCheckConfig(false)))
             }
         }

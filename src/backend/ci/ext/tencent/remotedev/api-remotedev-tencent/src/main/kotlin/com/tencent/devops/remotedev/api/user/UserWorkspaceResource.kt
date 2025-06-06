@@ -316,6 +316,9 @@ interface UserWorkspaceResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "实例ID", required = false)
+        @QueryParam("workspaceName")
+        workspaceName: String?,
         @Parameter(description = "发起的验证数据", required = true)
         moa2faReqData: Moa2faReqData
     ): Result<Moa2faRespData>

@@ -11,9 +11,9 @@
             <a
                 class="devops-codelib-header-copilot"
                 target="_blank"
-                href="https://git.woa.com/help/menu/solutions/copilot.html"
+                href="https://codebuddy.woa.com"
             >
-                <span>{{ $t("体验工蜂 Copilot") }}</span>
+                <span>{{ $t("codelib.CodeBuddy（内网版）") }}</span>
                 <icon
                     name="tiaozhuan"
                     :size="12"

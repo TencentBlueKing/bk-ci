@@ -51,7 +51,7 @@ if x_ckey ~= nil then
 elseif x_credentialKey ~= nil then
     local staff_info_new = itloginUtil:get_staff_info_new(x_credentialKey)
     if staff_info_new.IsOuter then
-        ngx.header["X-DEVOPS-UID"] = staff_info_new.EnglishName .. "@bkci"
+        ngx.header["X-DEVOPS-UID"] = staff_info_new.EnglishName .. "@tai"
         ngx.header["X-DEVOPS-ORGANIZATION-NAME"] = "outer"
     else
         ngx.header["X-DEVOPS-UID"] = staff_info_new.EnglishName

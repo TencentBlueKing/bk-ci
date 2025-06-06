@@ -27,4 +27,5 @@
 
 dependencies {
     api(project(":core:metrics:biz-metrics"))
+    api(project(":ext:tencent:metrics:api-metrics-tencent"))
 }
