@@ -91,6 +91,7 @@ import com.tencent.devops.common.archive.util.STREAM_BUFFER_SIZE
 import com.tencent.devops.common.archive.util.closeQuietly
 import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import jakarta.ws.rs.NotFoundException
 import java.io.File
@@ -137,10 +138,11 @@ class BkRepoClient constructor(
         val logRepoCredentialsKey = bkRepoClientConfig.logRepoCredentialsKey.ifBlank { null }
         return try {
             createProject(userId, projectId, tenantId)
-            createGenericRepo(userId, projectId, REPO_PIPELINE)
-            createGenericRepo(userId, projectId, REPO_CUSTOM)
-            createGenericRepo(userId, projectId, REPO_REPORT, display = false)
-            createGenericRepo(userId, projectId, REPO_LOG, logRepoCredentialsKey, display = false)
+            val finalProjectId = TenantUtils.parseEnglishName(tenantId, projectId)
+            createGenericRepo(userId, finalProjectId, REPO_PIPELINE)
+            createGenericRepo(userId, finalProjectId, REPO_CUSTOM)
+            createGenericRepo(userId, finalProjectId, REPO_REPORT, display = false)
+            createGenericRepo(userId, finalProjectId, REPO_LOG, logRepoCredentialsKey, display = false)
             true
         } catch (e: Exception) {
             logger.error("BKSystemErrorMonitor|BK_REPO|create repo resource error", e)
