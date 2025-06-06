@@ -158,9 +158,8 @@ class BatchTaskFinishListener @Autowired constructor(
      */
     private fun buildErrorMessage(failedTasks: List<TaskResult>): String {
         if (failedTasks.isEmpty()) return ""
-
         // 定义错误信息格式限制参数
-        val maxErrorsToShow = 10  // 最多显示前10个错误
+        val maxErrorsToShow = 10 // 最多显示前10个错误
         val maxCharsPerError = 500 // 每个错误最多显示500字符
 
         return failedTasks.take(maxErrorsToShow).joinToString(

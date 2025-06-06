@@ -30,16 +30,16 @@ package com.tencent.devops.log.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.OpLogResource
-import com.tencent.devops.log.cron.impl.IndexCleanJobESImpl
+import com.tencent.devops.log.cron.DataCleanJob
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpLogResourceImpl @Autowired constructor(
-    val indexCleanJobES: IndexCleanJobESImpl
+    val dataCleanJob: DataCleanJob
 ) : OpLogResource {
 
-    override fun makeIndexCold(): Result<Boolean> {
-        indexCleanJobES.cleanIndex()
+    override fun cleanBuildData(): Result<Boolean> {
+        dataCleanJob.cleanBuilds()
         return Result(true)
     }
 }
