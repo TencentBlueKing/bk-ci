@@ -208,9 +208,9 @@ object StoreFileAnalysisUtil {
             if (!File(storePath).exists()) {
                 File(storePath).mkdirs()
                 ZipUtil.unZipFile(
-                    file,
-                    storePath,
-                    false // 解压时去掉根目录
+                    srcFile = file,
+                    destDirPath = storePath,
+                    createRootDirFlag = false // 解压时去掉根目录
                 )
             }
 
