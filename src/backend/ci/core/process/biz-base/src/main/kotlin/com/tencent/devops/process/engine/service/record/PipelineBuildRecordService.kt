@@ -387,7 +387,7 @@ class PipelineBuildRecordService @Autowired constructor(
             webhookInfo = buildInfo.webhookInfo,
             templateInfo = pipelineInfo.templateInfo,
             recordList = recordList,
-            artifactQualityList = buildInfo.artifactQualityList
+            artifactQuality = buildInfo.artifactQuality
         )
     }
 

@@ -1986,9 +1986,9 @@ class PipelineBuildDao {
                     artifactList = t.artifactInfo?.let { self ->
                         JsonUtil.getObjectMapper().readValue(self) as List<FileInfo>
                     },
-                    artifactQualityList = t.artifactQualityInfo?.let { self ->
+                    artifactQuality = t.artifactQualityInfo?.let { self ->
                         JsonUtil.getObjectMapper().readValue(self) as List<ArtifactQualityMetadataAnalytics>
-                    },
+                    }?.groupBy { it.labelKey },
                     retryFlag = t.isRetry,
                     executeCount = t.executeCount ?: 1,
                     executeTime = t.executeTime ?: 0,
@@ -2057,9 +2057,9 @@ class PipelineBuildDao {
                     artifactList = t.artifactInfo?.let { self ->
                         JsonUtil.to(self, object : TypeReference<List<FileInfo>?>() {})
                     },
-                    artifactQualityList = t.artifactQualityInfo?.let { self ->
+                    artifactQuality = t.artifactQualityInfo?.let { self ->
                         JsonUtil.getObjectMapper().readValue(self) as List<ArtifactQualityMetadataAnalytics>
-                    },
+                    }?.groupBy { it.labelKey },
                     buildMsg = t.buildMsg,
                     errorType = t.errorType,
                     errorCode = t.errorCode,

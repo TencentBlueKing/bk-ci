@@ -66,8 +66,8 @@ data class BuildHistory(
     val queueTime: Long?,
     @get:Schema(title = "构件列表", required = false)
     val artifactList: List<FileInfo>?,
-    @get:Schema(title = "制品质量分析列表", required = false)
-    val artifactQualityList: List<ArtifactQualityMetadataAnalytics>? = null,
+    @get:Schema(title = "制品质量分析", required = false)
+    val artifactQuality: Map<String, List<ArtifactQualityMetadataAnalytics>>? = null,
     @get:Schema(title = "备注", required = false)
     val remark: String?,
     @get:Schema(title = "总耗时(毫秒)", required = false)

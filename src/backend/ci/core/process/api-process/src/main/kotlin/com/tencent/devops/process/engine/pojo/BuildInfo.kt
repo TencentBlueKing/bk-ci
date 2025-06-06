@@ -71,7 +71,7 @@ data class BuildInfo(
     val buildMsg: String? = null,
     val material: List<PipelineBuildMaterial>? = null,
     val artifactList: List<FileInfo>? = null,
-    val artifactQualityList: List<ArtifactQualityMetadataAnalytics>? = null,
+    val artifactQuality: Map<String, List<ArtifactQualityMetadataAnalytics>>? = null,
     val remark: String? = null,
     val recommendVersion: String?,
     val buildNumAlias: String?,

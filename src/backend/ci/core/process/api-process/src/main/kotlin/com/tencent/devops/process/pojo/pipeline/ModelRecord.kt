@@ -105,6 +105,6 @@ data class ModelRecord(
     val webhookInfo: WebhookInfo?,
     @get:Schema(title = "约束模式下的模板信息", required = false)
     var templateInfo: TemplateInfo? = null,
-    @get:Schema(title = "制品质量分析列表", required = false)
-    val artifactQualityList: List<ArtifactQualityMetadataAnalytics>? = null
+    @get:Schema(title = "制品质量分析", required = false)
+    val artifactQuality: Map<String, List<ArtifactQualityMetadataAnalytics>>? = null
 )
