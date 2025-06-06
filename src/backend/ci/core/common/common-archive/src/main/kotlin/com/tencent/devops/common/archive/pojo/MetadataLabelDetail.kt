@@ -6,7 +6,7 @@ import java.time.LocalDateTime
 @Schema(title = "制品质量元数据标签")
 data class MetadataLabelDetail(
     val labelKey: String,
-    val labelColorMap: Map<String, String>,
+    val labelColorMap: Map<String, String>? = emptyMap(),
     val enumType: Boolean,
     val display: Boolean,
     val category: String?,

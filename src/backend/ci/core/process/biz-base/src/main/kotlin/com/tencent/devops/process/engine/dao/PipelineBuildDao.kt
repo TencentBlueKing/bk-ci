@@ -1677,7 +1677,7 @@ class PipelineBuildDao {
     fun updateArtifactList(
         dslContext: DSLContext,
         artifactList: String?,
-        artifactAnalyticsList: String?,
+        artifactQualityList: String?,
         projectId: String,
         pipelineId: String,
         buildId: String
@@ -1685,7 +1685,7 @@ class PipelineBuildDao {
         val success = with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(ARTIFACT_INFO, artifactList)
-                .set(ARTIFACT_ANALYTICS_INFO, artifactAnalyticsList)
+                .set(ARTIFACT_QUALITY_INFO, artifactQualityList)
                 .where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
@@ -1694,7 +1694,7 @@ class PipelineBuildDao {
         return if (!success) with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
             dslContext.update(this)
                 .set(ARTIFACT_INFO, artifactList)
-                .set(ARTIFACT_ANALYTICS_INFO, artifactAnalyticsList)
+                .set(ARTIFACT_QUALITY_INFO, artifactQualityList)
                 .where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))

@@ -2082,7 +2082,7 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         artifactListJsonString: String,
-        artifactAnalyticsList: String
+        artifactQualityList: String
     ): Boolean {
         return pipelineBuildDao.updateArtifactList(
             dslContext = dslContext,
@@ -2090,7 +2090,7 @@ class PipelineRuntimeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            artifactAnalyticsList = artifactAnalyticsList
+            artifactQualityList = artifactQualityList
         ) == 1
     }
 

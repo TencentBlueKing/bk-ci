@@ -59,7 +59,7 @@ class ServicePipelineRuntimeResourceImpl @Autowired constructor(
         buildId: String,
         artifactoryFileList: List<FileInfo>
     ): Result<BuildHistory> {
-        val artifactAnalyticsList = getArtifactoryAnalyticsList(
+        val artifactQualityList = getArtifactQualityList(
             userId = userId,
             projectId = projectId,
             artifactoryFileList = artifactoryFileList
@@ -70,7 +70,7 @@ class ServicePipelineRuntimeResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             artifactListJsonString = JsonUtil.toJson(artifactoryFileList, formatted = false),
-            artifactAnalyticsList = JsonUtil.toJson(artifactAnalyticsList, formatted = false),
+            artifactQualityList = JsonUtil.toJson(artifactQualityList, formatted = false),
         )
 
         if (success) {
@@ -98,7 +98,7 @@ class ServicePipelineRuntimeResourceImpl @Autowired constructor(
         )
     }
 
-    private fun getArtifactoryAnalyticsList(
+    private fun getArtifactQualityList(
         userId: String,
         projectId: String,
         artifactoryFileList: List<FileInfo>
@@ -136,10 +136,11 @@ class ServicePipelineRuntimeResourceImpl @Autowired constructor(
         return analyticsMap.map { (pair, count) ->
             val (labelKey, value) = pair
             val labelDetail = labelMap[labelKey]!!
+            logger.debug("artifact quality result:{}|{}|{}|{}", labelKey, value, labelDetail, count)
             ArtifactQualityMetadataAnalytics(
                 labelKey = labelKey,
                 value = value,
-                color = labelDetail.labelColorMap[value],
+                color = labelDetail.labelColorMap?.get(value) ?: "#C4C6CC",
                 count = count
             )
         }
