@@ -32,3 +32,7 @@ package config
 func GetWinTaskType() string {
 	return ""
 }
+
+func GetOsVersion() (string, error) {
+	return "", nil
+}

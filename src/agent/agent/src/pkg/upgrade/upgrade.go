@@ -28,10 +28,11 @@
 package upgrade
 
 import (
-	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
-	"github.com/pkg/errors"
 	"os"
 	"time"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
+	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade/download"
