@@ -171,13 +171,6 @@ class ProcessDataClearService @Autowired constructor(
                 )
             }
             processDataDeleteDao.deletePipelineWebhookBuildParameter(context, projectId, buildIds)
-            // 添加删除记录，插入要实现幂等
-            processDao.addBuildHisDataClear(
-                dslContext = context,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId
-            )
             val version = processDao.getPipelineVersionByBuildId(
                 dslContext = context,
                 projectId = projectId,
