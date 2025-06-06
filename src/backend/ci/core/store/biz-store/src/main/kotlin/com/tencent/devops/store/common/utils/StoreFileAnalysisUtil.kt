@@ -207,7 +207,11 @@ object StoreFileAnalysisUtil {
             val storePath = buildStoreArchivePath("${storeCode}_${storeType.name}") + "$fileSeparator$uuid"
             if (!File(storePath).exists()) {
                 File(storePath).mkdirs()
-                ZipUtil.unZipFile(file, storePath, true)
+                ZipUtil.unZipFile(
+                    file,
+                    storePath,
+                    false // 解压时去掉根目录
+                )
             }
 
             return Pair(storePath, file)
