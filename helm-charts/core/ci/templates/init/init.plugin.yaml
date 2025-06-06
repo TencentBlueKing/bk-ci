@@ -22,6 +22,10 @@ spec:
           imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
           workingDir: /data/workspace/
           {{ $mysqlData := split ":" (include "bkci.mysqlAddr" .) }}
+          {{ $tenantId := "default" }}
+          {{- if .Values.config.bkTenantEnabled }}
+            {{ $tenantId = "system" }}
+          {{- end }}
           command:
             - "/bin/bash"
             - "-c"
@@ -40,7 +44,7 @@ spec:
               {{ range .Values.init.plugin.atoms }}
               atom_code={{ .code }}
               check_atom_url=http://{{ include "bkci.names.fullname" $ }}-store.{{ $.Release.Namespace }}.svc.cluster.local/api/service/pipeline/atom/codes/$atom_code/versions/1.0.0
-              check_atom_response=$(curl -s $check_atom_url)
+              check_atom_response=$(curl -s $check_atom_url -H "X-TENANT-ID: {{ $tenantId }}")
               if [ -z $(echo $check_atom_response | grep -o "atomCode") ]; then
                 atom_url={{ .url }}
                 atom_file=${atom_code}.zip
@@ -51,7 +55,7 @@ spec:
               else
                   echo "atomCode exists"
               fi
-              curl -XPOST "http://{{ include "bkci.names.fullname" $ }}-store.{{ $.Release.Namespace }}.svc.cluster.local/api/op/pipeline/atom/default/atomCodes/$atom_code" -H "X-DEVOPS-UID: admin"
+              curl -XPOST "http://{{ include "bkci.names.fullname" $ }}-store.{{ $.Release.Namespace }}.svc.cluster.local/api/op/pipeline/atom/default/atomCodes/$atom_code" -H "X-DEVOPS-UID: admin" -H "X-TENANT-ID: {{ $tenantId }}"
               {{ end }}
       restartPolicy: OnFailure
 {{- end -}}

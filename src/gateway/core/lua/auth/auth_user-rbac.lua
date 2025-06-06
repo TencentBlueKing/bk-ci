@@ -23,11 +23,8 @@ end
 
 -- 获取租户ID
 local tenant_id = nil
-local username = nil
 if config.tenant.enabled then
-    local user_info = oauthUtil:verify_bk_token(bk_token)
-    tenant_id = user_info.tenant_id
-    username = user_info.display_name
+    tenant_id = oauthUtil:verify_bk_token(bk_token).tenant_id
 end
 
 local ticket = oauthUtil:get_ticket(bk_token)
@@ -37,5 +34,4 @@ ngx.header["x-devops-uid"] = ticket.identity.username
 ngx.header["x-devops-bk-token"] = bk_token
 ngx.header["x-devops-access-token"] = ticket.access_token
 ngx.header["x-bk-tenant-id"] = tenant_id
-ngx.header["x-devops-username"] = ngx.escape_uri(username)
 ngx.exit(200)

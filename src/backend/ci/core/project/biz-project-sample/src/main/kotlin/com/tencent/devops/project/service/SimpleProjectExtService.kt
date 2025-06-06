@@ -30,6 +30,7 @@ package com.tencent.devops.project.service
 
 import com.tencent.devops.artifactory.api.service.ServiceBkRepoResource
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.service.impl.AbsProjectExtServiceImpl
@@ -48,7 +49,13 @@ class SimpleProjectExtService @Autowired constructor(
         createExtInfo: ProjectCreateExtInfo,
         logoAddress: String?
     ) {
-        client.get(ServiceBkRepoResource::class).createProjectResource(userId, projectCreateInfo.englishName)
+        client.get(ServiceBkRepoResource::class).createProjectResource(
+            userId,
+            TenantUtils.parseEnglishName(
+                tenantId = projectCreateInfo.tenantId,
+                tenantEnglishName = projectCreateInfo.englishName
+            )
+        )
     }
 
     override fun createOldAuthProject(
