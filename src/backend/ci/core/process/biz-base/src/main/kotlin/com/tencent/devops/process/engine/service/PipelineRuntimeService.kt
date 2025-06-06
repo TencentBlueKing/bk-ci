@@ -579,6 +579,7 @@ class PipelineRuntimeService @Autowired constructor(
                 material = material,
                 queueTime = queueTime,
                 artifactList = artifactList,
+                artifactQualityList = artifactQualityList,
                 remark = remark,
                 totalTime = if (startTime != null && endTime != null) {
                     (endTime!! - startTime!!).takeIf { it > 0 }
