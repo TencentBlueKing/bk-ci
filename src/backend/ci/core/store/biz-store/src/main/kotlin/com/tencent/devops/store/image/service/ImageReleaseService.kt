@@ -95,7 +95,7 @@ import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
 import com.tencent.devops.store.pojo.image.response.ImageAgentTypeInfo
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import java.time.LocalDateTime
-import java.util.Base64
+import java.util.*
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -178,6 +178,12 @@ abstract class ImageReleaseService {
     @Value("\${store.imageAgentTypes:DOCKER}")
     protected lateinit var imageAgentTypes: String
 
+    abstract fun handleImageExtend(
+        userId: String,
+        imageCode: String,
+        marketImageRelRequest: MarketImageRelRequest
+    )
+
     fun addMarketImage(
         userId: String,
         imageCode: String,
@@ -233,6 +239,7 @@ abstract class ImageReleaseService {
             }
         }
         val imageId = addMarketImageToDB(userId, imageCode, marketImageRelRequest)
+        handleImageExtend(userId, imageCode, marketImageRelRequest)
         return if (null != imageId) {
             Result(imageId)
         } else {

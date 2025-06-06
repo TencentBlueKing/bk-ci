@@ -173,6 +173,12 @@ class StoreBaseCreateServiceImpl @Autowired constructor(
         }
     }
 
+    override fun handlePostCreateBus(storeCreateRequest: StoreCreateRequest) {
+        val storeBaseCreateRequest = storeCreateRequest.baseInfo
+        val storeType = storeBaseCreateRequest.storeType
+        getStoreSpecBusService(storeType).doStoreCreatePreBus(storeCreateRequest)
+    }
+
     private fun getStoreSpecBusService(storeType: StoreTypeEnum): StoreReleaseSpecBusService {
         return SpringContextUtil.getBean(
             StoreReleaseSpecBusService::class.java,
