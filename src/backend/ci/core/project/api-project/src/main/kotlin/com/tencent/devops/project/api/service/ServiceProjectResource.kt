@@ -41,6 +41,7 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.ProjectProperties
+import com.tencent.devops.project.pojo.ProjectSortType
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -76,7 +77,19 @@ interface ServiceProjectResource {
         userId: String,
         @Parameter(description = "userId", required = false)
         @QueryParam("productIds")
-        productIds: String? = null
+        productIds: String? = null,
+        @Parameter(description = "渠道号,多个Id之间以,分隔", required = true)
+        @QueryParam("channelCodes")
+        channelCodes: String? = null,
+        @Parameter(description = "排序字段(支持PROJECT_NAME、ENGLISH_NAME，默认ENGLISH_NAME)", required = true)
+        @QueryParam("sort")
+        sort: ProjectSortType? = null,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int? = null,
+        @Parameter(description = "每页条数(默认10)", required = false, example = "10")
+        @QueryParam("pageSize")
+        pageSize: Int? = null
     ): Result<List<ProjectVO>>
 
     @GET
