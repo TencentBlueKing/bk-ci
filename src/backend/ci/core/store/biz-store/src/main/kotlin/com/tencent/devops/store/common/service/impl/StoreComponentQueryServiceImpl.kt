@@ -754,7 +754,12 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         } else {
             null
         }
-        return storeCommonService.getStoreShowVersionInfo(cancelFlag, showReleaseType, showVersion)
+        return storeCommonService.getStoreShowVersionInfo(
+            storeType = storeTypeEnum,
+            cancelFlag = cancelFlag,
+            releaseType = showReleaseType,
+            version = showVersion
+        )
     }
 
     override fun getComponentUpgradeVersionInfo(
