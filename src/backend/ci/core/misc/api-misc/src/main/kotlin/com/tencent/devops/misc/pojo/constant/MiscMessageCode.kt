@@ -51,4 +51,5 @@ object MiscMessageCode {
     const val ERROR_PROJECT_DATA_REPEAT_MIGRATE = "2135003" // 项目[{0}]的数据正在迁移或者已经迁移完成，无需重复迁移
     const val ERROR_MIGRATING_PROJECT_NO_VALID_DB_ASSIGN = "2135004" // 无可用的迁移库，请确认项目数据是否已经成功迁移、迁移库配置等
     const val ERROR_MIGRATING_PIPELINE_DATA_FAIL = "2135005" // 迁移流水线[{0}]数据失败，请稍后再试
+    const val ERROR_MIGRATING_PIPELINE_STATUS_INVALID = "2135006" // 存在构建未结束的流水线，请稍后再试
 }

@@ -81,6 +81,22 @@ class UserArchivePipelineResourceImpl @Autowired constructor(
         )
     }
 
+    override fun batchMigrateArchivePipelineData(
+        userId: String,
+        projectId: String,
+        cancelFlag: Boolean,
+        pipelineIds: Set<String>
+    ): Result<Boolean> {
+        return Result(
+            archivePipelineFacadeService.batchMigrateArchivePipelineData(
+                userId = userId,
+                projectId = projectId,
+                cancelFlag = cancelFlag,
+                pipelineIds = pipelineIds
+            )
+        )
+    }
+
     override fun getArchivedPipelineList(
         userId: String,
         projectId: String,
