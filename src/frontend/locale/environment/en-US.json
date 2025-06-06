@@ -247,9 +247,11 @@
         "cloudLogoutHook": "Cloud Desktop Logout Hook",
         "loginHookTips": "When logging into the cloud desktop, the following selected actions will be executed",
         "logoutHookTips": "When logging out of the cloud desktop, the following selected actions will be executed",
-        "cleanCredentialsLabel": "Clean credentials, including Git/SVN credentials and browser cache credentials (Chrome, Microsoft Edge)",
+        "cleanCredentialsLabel": "Clean credentials, including Git/SVN credentials, browser cached credentials (Chrome, Microsoft Edge), WeCom login state",
         "ioaLoginLabel": "Login to IOA",
-        "ioaLogoutLabel": "Logout from IOA"
+        "ioaLogoutLabel": "Logout from IOA",
+        "lastRunPipeline": "Last Run Pipeline",
+        "lastRunAs": "Last Run As"
     },
     "nodeTypeMap": {
         "CC": "CC",
@@ -452,7 +454,10 @@
     "正在生成手动安装命令": "Generating manual installation command",
     "已加载X条": "{0} items loaded",
     "共X个节点": "Total: {0} items",
-    "authManage": "Permission Manage",
     "advancedSetting": "Advanced Setting",
-    "saveChange": "Save"
+    "saveChange": "Save",
+    "authManage": "Permission Manage",
+    "可以尝试 调整关键词 或": "You can try adjusting keywords or ",
+    "选择最近执行时间范围": "Select the recent execution time range",
+    "导出": "Export"
 }

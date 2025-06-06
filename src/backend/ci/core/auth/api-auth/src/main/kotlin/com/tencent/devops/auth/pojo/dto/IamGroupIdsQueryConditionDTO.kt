@@ -15,7 +15,9 @@ data class IamGroupIdsQueryConditionDTO(
     @get:Schema(title = "资源ID")
     val relatedResourceCode: String? = null,
     @get:Schema(title = "操作")
-    val action: String? = null
+    val action: String? = null,
+    @get:Schema(title = "唯一管理员组查询标识")
+    val uniqueManagerGroupsQueryFlag: Boolean? = null
 ) {
     fun isQueryByGroupPermissions(): Boolean {
         return relatedResourceType != null

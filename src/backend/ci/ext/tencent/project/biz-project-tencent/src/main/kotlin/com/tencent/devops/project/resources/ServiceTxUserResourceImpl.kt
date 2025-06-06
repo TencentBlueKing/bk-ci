@@ -59,7 +59,13 @@ class ServiceTxUserResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @Deprecated(
+        message = "待无调用时废弃",
+        replaceWith = ReplaceWith(
+            "Result(emptyMap())", "com.tencent.devops.common.api.pojo.Result"
+        )
+    )
     override fun getRemoteDevAdmin(data: FetchRemoteDevData): Result<Map<String, Set<String>?>> {
-        return Result(projectUserService.getRemoteDevAdmin(data.projectIds))
+        return Result(emptyMap())
     }
 }

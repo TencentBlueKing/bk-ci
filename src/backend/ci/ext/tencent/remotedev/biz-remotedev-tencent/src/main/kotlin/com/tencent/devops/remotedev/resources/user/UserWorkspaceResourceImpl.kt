@@ -30,7 +30,7 @@ package com.tencent.devops.remotedev.resources.user
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserWorkspaceResource
 import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
@@ -45,11 +45,14 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
 import com.tencent.devops.remotedev.pojo.tai.Moa2faReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faRespData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyRespData
 import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.ProjectStrategyService
 import com.tencent.devops.remotedev.service.RepositoryService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
@@ -69,6 +72,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     private val workspaceService: WorkspaceService,
     private val permissionService: PermissionService,
     private val repositoryService: RepositoryService,
+    private val projectStrategyService: ProjectStrategyService,
     private val createControl: CreateControl,
     private val startControl: StartControl,
     private val sleepControl: SleepControl,
@@ -76,7 +80,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     private val notifyControl: NotifyControl
 ) : UserWorkspaceResource {
 
-    @AuditEntry(actionId = ActionId.CGS_START)
+    @AuditEntry(actionId = TencentActionId.CGS_START)
     override fun startWorkspace(
         userId: String,
         bkTicket: String,
@@ -85,12 +89,12 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(startControl.startWorkspace(userId, workspaceName))
     }
 
-    @AuditEntry(actionId = ActionId.CGS_STOP)
+    @AuditEntry(actionId = TencentActionId.CGS_STOP)
     override fun stopWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         return Result(sleepControl.stopWorkspace(userId, workspaceName))
     }
 
-    @AuditEntry(actionId = ActionId.CGS_EDIT)
+    @AuditEntry(actionId = TencentActionId.CGS_EDIT)
     override fun editWorkspace(userId: String, workspaceName: String, displayName: String): Result<Boolean> {
         return Result(
             workspaceService.modifyWorkspaceProperty(
@@ -117,7 +121,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.CGS_DELETE)
+    @AuditEntry(actionId = TencentActionId.CGS_DELETE)
     override fun deleteWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         return Result(deleteControl.deleteWorkspace(userId, workspaceName))
     }
@@ -210,7 +214,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(permissionService.checkUserPermission(userId, workspaceName))
     }
 
-    @AuditEntry(actionId = ActionId.CGS_VIEW)
+    @AuditEntry(actionId = TencentActionId.CGS_VIEW)
     override fun startCloudWorkspaceDetail(
         userId: String,
         workspaceName: String?,
@@ -230,8 +234,9 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(workspaceService.checkMoa2fa(userId, workspaceName))
     }
 
-    override fun createMoa2faRequest(userId: String, moa2faReqData: Moa2faReqData): Result<Moa2faRespData> {
-        return Result(workspaceService.createMoa2faRequest(userId = userId, moa2faReqData = moa2faReqData))
+    @AuditEntry(actionId = TencentActionId.CGS_MOA_2FA)
+    override fun createMoa2faRequest(userId: String, workspaceName: String?, moa2faReqData: Moa2faReqData): Result<Moa2faRespData> {
+        return Result(workspaceService.createMoa2faRequest(userId = userId, workspaceName, moa2faReqData = moa2faReqData))
     }
 
     override fun verifyMoa2faResult(
@@ -244,5 +249,9 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     override fun messageResend(userId: String, type: RemoteDevNotifyType): Result<Boolean> {
         notifyControl.resendByUserId(userId, type)
         return Result(true)
+    }
+
+    override fun getProjectStrategy(userId: String, data: ProjectStrategyFetchInfo): Result<ProjectStrategyResp> {
+        return Result(projectStrategyService.getStrategy(data))
     }
 }

@@ -32,9 +32,9 @@ import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.audit.ActionAuditContent
-import com.tencent.devops.common.auth.api.ActionId
-import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.audit.TencentActionAuditContent
+import com.tencent.devops.common.auth.api.TencentActionId
+import com.tencent.devops.common.auth.api.TencentResourceTypeId
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
@@ -86,13 +86,13 @@ class RestartWorkspaceHandler @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.CGS_RESTART,
+        actionId = TencentActionId.CGS_RESTART,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS,
+            resourceType = TencentResourceTypeId.CGS,
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
-        content = ActionAuditContent.CGS_RESTART_CONTENT
+        content = TencentActionAuditContent.CGS_RESTART_CONTENT
     )
     fun restartWorkspace(userId: String, workspaceName: String): WorkspaceResponse {
         logger.info("$userId restart project workspace $workspaceName")
@@ -115,7 +115,7 @@ class RestartWorkspaceHandler @Autowired constructor(
         }
 
         ActionAuditContext.current()
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
             .setScopeId(workspace.projectId)
 
         RedisCallLimit(
@@ -210,6 +210,7 @@ class RestartWorkspaceHandler @Autowired constructor(
             errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
             params = arrayOf(event.workspaceName)
         )
+        val owners = permissionService.getWorkspaceOwner(workspace.workspaceName).toMutableSet()
         if (event.status) {
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
@@ -229,9 +230,10 @@ class RestartWorkspaceHandler @Autowired constructor(
                         WorkspaceStatus.RUNNING.name
                     )
                 )
+
                 notifyControl.notify4User(
-                    userIds = permissionService.getWorkspaceOwner(workspace.workspaceName).toMutableSet(),
-                    notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.CLIENT_PUSH),
+                    userIds = owners,
+                    notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
                     bodyParams = mutableMapOf(
                         "workspaceName" to workspace.workspaceName,
                         "projectId" to workspace.projectId,
@@ -245,7 +247,11 @@ class RestartWorkspaceHandler @Autowired constructor(
             // 重装成功后做异步设置(L盘挂载)
             val ip = event.environmentIp
             ip?.let {
-                workspaceCommon.makeDiskMount(it, event.userId)
+                workspaceCommon.makeDiskMount(
+                    ip = it,
+                    user = event.userId,
+                    owner = owners.firstOrNull()
+                )
             }
         } else {
             // 启动失败,记录为EXCEPTION

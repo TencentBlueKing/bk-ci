@@ -30,7 +30,11 @@ package com.tencent.devops.remotedev.service
 import com.fasterxml.jackson.core.type.TypeReference
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
+import com.tencent.devops.auth.api.oauth2.Oauth2ServiceEndpointResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
+import com.tencent.devops.auth.pojo.Oauth2PassWordRequest
+import com.tencent.devops.auth.pojo.enum.Oauth2GrantType
+import com.tencent.devops.auth.pojo.vo.Oauth2AccessTokenVo
 import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OauthForbiddenException
@@ -39,11 +43,12 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
@@ -86,8 +91,14 @@ class PermissionService @Autowired constructor(
     @Value("\${remoteDev.aes.iv:}")
     private val aesIV: String = ""
 
+    @Value("\${remoteDev.cdi.clientId:}")
+    private val clientId: String = ""
+
+    @Value("\${remoteDev.cdi.clientSecret:}")
+    private val clientSecret: String = ""
+
     private val workspaceOwnerCache = CacheBuilder.newBuilder()
-        .maximumSize(1000)
+        .maximumSize(10000)
         .expireAfterWrite(1, TimeUnit.MINUTES)
         .build(
             object : CacheLoader<String, List<String>>() {
@@ -107,12 +118,23 @@ class PermissionService @Autowired constructor(
         )
 
     private val workspaceViewerCache = CacheBuilder.newBuilder()
-        .maximumSize(1000)
+        .maximumSize(10000)
         .expireAfterWrite(1, TimeUnit.MINUTES)
         .build(
             object : CacheLoader<String, List<String>>() {
                 override fun load(name: String): List<String> {
                     return workspaceDao.fetchWorkspaceUser(dslContext, name)
+                }
+            }
+        )
+
+    private val projectManagerCache = CacheBuilder.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build(
+            object : CacheLoader<String, List<String>>() {
+                override fun load(projectId: String): List<String> {
+                    return managers(projectId).ifEmpty { managersOld(projectId) }
                 }
             }
         )
@@ -202,24 +224,38 @@ class PermissionService @Autowired constructor(
     }
 
     fun checkUserManager(userId: String, projectId: String) {
-        val projectInfo = kotlin.runCatching {
-            client.get(ServiceProjectResource::class).get(projectId)
-        }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
-            .getOrElse { null }?.data ?: throw ErrorCodeException(
-            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
-        )
+        val managers = managers(projectId).ifEmpty { managersOld(projectId) }
         val checkProjectManager = client.get(ServiceProjectAuthResource::class).checkProjectManager(
             token = checkTokenService.getSystemToken(),
             userId = userId,
             projectCode = projectId
         ).data ?: false
 
-        if (!checkProjectManager && projectInfo.properties?.remotedevManager?.split(";")?.contains(userId) != true) {
+        if (!checkProjectManager && userId !in managers) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("You need permission to access project $projectId")
             )
         }
+    }
+
+    @Deprecated("use managers instead, 暂时保留")
+    fun managersOld(projectId: String): List<String> {
+        logger.warn("use managersOld instead, 暂时保留|$projectId")
+        val projectInfo = kotlin.runCatching {
+            client.get(ServiceProjectResource::class).get(projectId)
+        }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
+            .getOrElse { null }?.data
+        return projectInfo?.properties?.remotedevManager?.split(";") ?: emptyList()
+    }
+
+    fun managers(projectId: String): List<String> {
+        return client.get(ServiceUserResource::class)
+            .getProjectUserRoles(projectId, BkAuthGroup.CGS_MANAGER).data ?: emptyList()
+    }
+
+    fun getCacheManager(projectId: String): List<String> {
+        return projectManagerCache.get(projectId)
     }
 
     fun hasUserManager(userId: String, projectId: String): Boolean {
@@ -323,6 +359,39 @@ class PermissionService @Autowired constructor(
             return false
         }
         return true
+    }
+
+    fun getCDIOauth(workspaceName: String, appId: String): Oauth2AccessTokenVo {
+        val key = "$workspaceName@@$appId"
+        return client.get(Oauth2ServiceEndpointResource::class).getAccessToken(
+            clientId,
+            clientSecret,
+            Oauth2PassWordRequest(
+                Oauth2GrantType.PASS_WORD,
+                userName = key,
+                passWord = key
+            )
+        ).data!!
+    }
+
+    fun checkCDIOauth(cdiToken: String): Pair<String, String>? {
+        kotlin.runCatching {
+            checkNotNull(
+                client.get(Oauth2ServiceEndpointResource::class).verifyAccessToken(
+                    clientId = clientId,
+                    clientSecret = clientSecret,
+                    accessToken = cdiToken
+                ).data
+            ).split("@@")
+        }.fold(
+            {
+                return it[0] to it[1]
+            },
+            {
+                logger.warn("checkCDIOauth fail|$cdiToken", it)
+                return null
+            }
+        )
     }
 
     /**

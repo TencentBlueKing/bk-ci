@@ -8,9 +8,9 @@ import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.audit.ActionAuditContent
-import com.tencent.devops.common.auth.api.ActionId
-import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.audit.TencentActionAuditContent
+import com.tencent.devops.common.auth.api.TencentActionId
+import com.tencent.devops.common.auth.api.TencentResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
@@ -19,6 +19,7 @@ import com.tencent.devops.remotedev.api.op.OpProjectWorkspaceResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
@@ -28,8 +29,8 @@ import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
 import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyListData
+import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
-import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminData
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceRecordService
@@ -38,9 +39,10 @@ import com.tencent.devops.remotedev.service.WorkspaceXlsxExportService
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_CONFIG_INFO
 import com.tencent.devops.remotedev.service.workspace.CreateControl
+import com.tencent.devops.remotedev.service.workspace.DeliverControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.function.StreamBridge
@@ -58,18 +60,19 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     private val client: Client,
     private val notifyControl: NotifyControl,
     private val streamBridge: StreamBridge,
-    private val configCacheService: ConfigCacheService
+    private val configCacheService: ConfigCacheService,
+    private val deliverControl: DeliverControl
 ) : OpProjectWorkspaceResource {
     @AuditEntry(
-        actionId = ActionId.CGS_ASSIGN,
-        subActionIds = [ActionId.CGS_CREATE]
+        actionId = TencentActionId.CGS_ASSIGN,
+        subActionIds = [TencentActionId.CGS_CREATE]
     )
     @ActionAuditRecord(
-        actionId = ActionId.CGS_ASSIGN,
+        actionId = TencentActionId.CGS_ASSIGN,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS
+            resourceType = TencentResourceTypeId.CGS
         ),
-        content = ActionAuditContent.CGS_ASSIGN_PROJECT_CONTENT
+        content = TencentActionAuditContent.CGS_ASSIGN_PROJECT_CONTENT
     )
     override fun assignWorkspace(
         userId: String,
@@ -178,7 +181,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                     null,
                     null
                 )
-                .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
+                .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
                 .scopeId = data.projectId
             // 再根据机型和地域获取硬件资源配置
             val windowsResourceConfigId = windowsResourceConfigService.getTypeConfig(
@@ -218,7 +221,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                     null,
                     null
                 )
-                .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
+                .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
                 .scopeId = data.projectId
             // 再根据机型和地域获取硬件资源配置
             val windowsResourceConfigId = windowsResourceConfigService.getTypeConfig(
@@ -243,13 +246,6 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         data: ProjectWorkspaceFetchData
     ): Result<Page<ProjectWorkspace>> {
         return Result(workspaceService.getProjectWorkspaceList4Op(userId, data))
-    }
-
-    override fun fetchOwnerAndAdmin(
-        userId: String,
-        data: FetchOwnerAndAdminData
-    ): Result<Set<String>> {
-        return Result(desktopWorkspaceService.fetchOwnerAndAdmin(data))
     }
 
     override fun updateCCHost(userId: String, data: OpUpdateCCHostData): Result<Boolean> {
@@ -277,6 +273,28 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
             projectId = projectId,
             userId = userId,
             workspaceName = workspaceName
+        )
+    }
+
+    override fun assignUser(userId: String, workspaceName: String, assigns: List<ProjectWorkspaceAssign>): Result<Boolean> {
+        deliverControl.assignUser2Workspace(
+            userId = userId,
+            workspaceName = workspaceName,
+            assigns = assigns,
+            checkPermission = false
+        )
+
+        return Result(true)
+    }
+
+    override fun editWorkspace(userId: String, workspaceName: String, displayName: String): Result<Boolean> {
+        return Result(
+            workspaceService.modifyWorkspaceProperty(
+                userId = userId,
+                workspaceName = workspaceName,
+                ip = null,
+                workspaceProperty = WorkspaceProperty(displayName)
+            )
         )
     }
 

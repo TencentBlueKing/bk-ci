@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v3.0.13](#v3013)
+   - [Changelog since v3.0.12](#changelog-since-v3012)
+
 - [v3.0.12](#v3012)
    - [Changelog since v3.0.11](#changelog-since-v3011)
 
@@ -16,6 +19,14 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v3.0.13
+## 2025-02-12
+### Changelog since v3.0.12
+#### 新增
+
+##### 未分类
+- [新增] feat: 需要修复的chart包问题 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11105)
+
 # v3.0.12
 ## 2025-01-08
 ### Changelog since v3.0.11

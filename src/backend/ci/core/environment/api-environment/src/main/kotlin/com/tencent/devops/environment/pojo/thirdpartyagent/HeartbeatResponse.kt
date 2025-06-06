@@ -33,23 +33,23 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "Agent心跳上报模型")
 data class HeartbeatResponse(
     @get:Schema(title = "主版本")
-    val masterVersion: String,
+    val masterVersion: String = "",
     @get:Schema(title = "从属版本")
-    val slaveVersion: String,
+    val slaveVersion: String = "",
     @get:Schema(title = "构建机状态")
     val AgentStatus: String,
     @get:Schema(title = "通道数量")
-    val ParallelTaskCount: Int,
+    val ParallelTaskCount: Int = -1,
     @get:Schema(title = "环境变量")
-    val envs: Map<String, String>,
+    val envs: Map<String, String> = emptyMap(),
     @get:Schema(title = "网关地址")
     val gateway: String? = "",
     @get:Schema(title = "文件网关路径")
     val fileGateway: String? = "",
     @get:Schema(title = "Agent的一些属性配置")
-    val props: Map<String, Any>,
+    val props: Map<String, Any> = emptyMap(),
     @get:Schema(title = "docker最大任务数量")
-    val dockerParallelTaskCount: Int,
+    val dockerParallelTaskCount: Int = -1,
     @get:Schema(title = "用户国际化语言")
     val language: String
 )

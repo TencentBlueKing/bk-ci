@@ -43,17 +43,19 @@ import com.tencent.devops.store.pojo.common.media.StoreMediaInfo
 import com.tencent.devops.store.pojo.common.test.StoreTestItem
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
+import com.tencent.devops.store.pojo.common.version.VersionInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DefaultValue
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "USER_STORE_COMPONENT", description = "研发商店-组件查询")
 @Path("/user/store/components")
@@ -319,4 +321,34 @@ interface UserStoreComponentQueryResource {
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeCode: String
     ): Result<List<StoreMediaInfo>?>
+
+    @Operation(summary = "获取组件升级版本信息")
+    @Path("/types/{storeType}/codes/{storeCode}/component/upgrade/version/info/get")
+    @GET
+    fun getStoreUpgradeVersionInfo(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: String,
+        @Parameter(description = "组件代码", required = true)
+        @PathParam("storeCode")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeCode: String,
+        @Parameter(description = "项目代码", required = true)
+        @QueryParam("projectCode")
+        @DefaultValue("")
+        projectCode: String = "",
+        @Parameter(description = "实例ID", required = false)
+        @QueryParam("instanceId")
+        instanceId: String? = null,
+        @Parameter(description = "操作系统名称", required = false)
+        @QueryParam("osName")
+        osName: String? = null,
+        @Parameter(description = "操作系统架构", required = false)
+        @QueryParam("osArch")
+        osArch: String? = null
+    ): Result<VersionInfo?>
 }

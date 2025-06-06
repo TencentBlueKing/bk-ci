@@ -282,6 +282,7 @@
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { mapGetters } from 'vuex'
     import { getParamsValuesMap, isObject } from '@/utils/util'
+    import { isFileParam, isMultipleParam } from '@/store/modules/atom/paramsConfig'
 
     export default {
         components: {
@@ -482,8 +483,8 @@
                         pipelineItem.initBuildNo = item.buildNo.buildNo
                     }
                     if (item.param.length) {
-                        const paramValues = getParamsValuesMap(item.param)
                         pipelineItem.params = this.deepCopyParams(item.param)
+                        const paramValues = getParamsValuesMap(pipelineItem.params)
                         pipelineItem.pipelineParams = pipelineItem.params.filter(sub => this.buildNoParams.indexOf(sub.id) === -1)
                         pipelineItem.versionParams = pipelineItem.params.filter(sub => this.buildNoParams.indexOf(sub.id) > -1)
                         pipelineItem.paramValues = paramValues
@@ -536,7 +537,12 @@
                         item.paramValues[name] = value
                         item.params.forEach((i) => {
                             if (i.id === name) {
-                                i.defaultValue = value
+                                if (isFileParam(i.type) && typeof value === 'object') {
+                                    i.defaultValue = value.directory
+                                    i.randomStringInPath = value.latestRandomStringInPath
+                                } else {
+                                    i.defaultValue = value
+                                }
                             }
                         })
                     }
@@ -600,7 +606,8 @@
                     pipelineParams,
                     versionParams,
                     buildParams: this.buildParams && this.buildParams.buildNoType ? this.deepCopy(this.buildParams) : false,
-                    paramValues: this.deepCopy(this.paramValues)
+                    paramValues: getParamsValuesMap(pipelineParams)
+
                 }
 
                 this.pipelineNameList.push(newPipeline)
@@ -623,10 +630,13 @@
                 return JSON.parse(JSON.stringify(value))
             },
             deepCopyParams (params) {
-                return [].concat(this.deepCopy(params)).map(p => ({
-                    ...p,
-                    readOnly: false
-                }))
+                return [].concat(this.deepCopy(params)).map(p => {
+                    return {
+                        ...p,
+                        defaultValue: isMultipleParam(p.type) && Array.isArray(p.defaultValue) ? p.defaultValue.join(',') : p.defaultValue,
+                        readOnly: false
+                    }
+                })
             },
             async handleInstance (params) {
                 let message, theme

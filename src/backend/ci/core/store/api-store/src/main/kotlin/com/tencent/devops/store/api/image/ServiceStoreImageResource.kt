@@ -34,14 +34,14 @@ import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "SERVICE_MARKET_IMAGE", description = "SERVICE-研发商店-镜像")
 @Path("/service/market")
@@ -118,4 +118,16 @@ interface ServiceStoreImageResource {
         @PathParam("imageVersion")
         imageVersion: String
     ): Result<String>
+
+    @Operation(summary = "根据code和版本号判断镜像是否发布")
+    @GET
+    @Path("/image/imageCodes/{imageCode}/imageVersions/{imageVersion}/isReleasedStatus")
+    fun isReleasedStatus(
+        @Parameter(description = "镜像标识", required = true)
+        @PathParam("imageCode")
+        imageCode: String,
+        @Parameter(description = "镜像版本", required = false)
+        @PathParam("imageVersion")
+        imageVersion: String
+    ): Result<Boolean>
 }

@@ -34,7 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
-    val client: Client,
+    val client: Client
 ) : ApigwTXEnvironmentJobResourceV4 {
 
     override fun executeScript(

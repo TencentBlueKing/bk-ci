@@ -44,7 +44,6 @@ import com.tencent.devops.environment.pojo.dto.CmdbNodeStatusDTO
 import com.tencent.devops.environment.pojo.dto.NodeUpdateAttrDTO
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
-import com.tencent.devops.environment.pojo.job.AgentVersionInfo
 import com.tencent.devops.environment.pojo.job.UpdateTNodeInfo
 import com.tencent.devops.environment.pojo.job.jobreq.Host
 import com.tencent.devops.environment.pojo.job.jobresp.NodeAttr
@@ -88,19 +87,9 @@ class CmdbNodeDao @Autowired constructor(
         }
     }
 
-    fun batchUpdateBuildAgentVersionByNodeId(
-        dslContext: DSLContext,
-        buildNodeAgentVersionInfoList: List<AgentVersionInfo>
-    ) {
+    fun updateVersionByNodeId(dslContext: DSLContext, nodeId: Long, version:String) {
         with(TNode.T_NODE) {
-            val batchUpdate = dslContext.batch(
-                buildNodeAgentVersionInfoList.map {
-                    dslContext.update(this)
-                        .set(AGENT_VERSION, it.agentVersion)
-                        .where(NODE_ID.eq(it.nodeId))
-                }
-            )
-            batchUpdate.execute()
+            dslContext.update(this).set(AGENT_VERSION, version).where(NODE_ID.eq(nodeId)).execute()
         }
     }
 
@@ -502,12 +491,12 @@ class CmdbNodeDao @Autowired constructor(
      */
     fun listNotInCmdbIps(nodeIps: Collection<String>): List<String> {
         with(TNode.T_NODE) {
-            val conditons = buildBasicNodeIpConditions(nodeIps)
-            conditons.add(NODE_STATUS.eq(NodeStatus.NOT_IN_CMDB.name))
+            val conditions = buildBasicNodeIpConditions(nodeIps)
+            conditions.add(NODE_STATUS.eq(NodeStatus.NOT_IN_CMDB.name))
             val records = defaultDSLContext.select(
                 NODE_IP
             ).from(this)
-                .where(conditons)
+                .where(conditions)
                 .orderBy(NODE_ID.desc())
                 .fetch()
             return records.map { record -> record.get(NODE_IP) }
@@ -519,12 +508,12 @@ class CmdbNodeDao @Autowired constructor(
      */
     fun listInCmdbIps(nodeIps: Collection<String>): List<String> {
         with(TNode.T_NODE) {
-            val conditons = buildBasicNodeIpConditions(nodeIps)
-            conditons.add(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
+            val conditions = buildBasicNodeIpConditions(nodeIps)
+            conditions.add(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
             val records = defaultDSLContext.select(
                 NODE_IP
             ).from(this)
-                .where(conditons)
+                .where(conditions)
                 .orderBy(NODE_ID.desc())
                 .fetch()
             return records.map { record -> record.get(NODE_IP) }
@@ -532,16 +521,13 @@ class CmdbNodeDao @Autowired constructor(
     }
 
     private fun buildBasicNodeIpConditions(nodeIps: Collection<String>): MutableList<Condition> {
-        val conditons = mutableListOf<Condition>()
-        conditons.add(buildCmdbNodeTypeCondition())
-        conditons.add(table.NODE_IP.`in`(nodeIps))
-        return conditons
+        val conditions = mutableListOf<Condition>()
+        conditions.add(buildCmdbNodeTypeCondition())
+        conditions.add(table.NODE_IP.`in`(nodeIps))
+        return conditions
     }
 
-    fun listCmdbNodes(
-        page: Int,
-        pageSize: Int
-    ): List<CmdbNodeDTO> {
+    fun listCmdbNodesGTNodeId(startNodeId: Long, pageSize: Int): List<CmdbNodeDTO> {
         with(TNode.T_NODE) {
             val records = defaultDSLContext.select(
                 NODE_ID,
@@ -552,8 +538,9 @@ class CmdbNodeDao @Autowired constructor(
                 OS_NAME
             ).from(this)
                 .where(buildCmdbNodeTypeCondition())
-                .orderBy(NODE_ID.desc())
-                .limit(pageSize).offset((page - 1) * pageSize)
+                .and(NODE_ID.gt(startNodeId))
+                .orderBy(NODE_ID.asc())
+                .limit(pageSize)
                 .fetch()
             return records.map { record ->
                 CmdbNodeDTO(
@@ -574,7 +561,7 @@ class CmdbNodeDao @Autowired constructor(
 
     fun getDeployNodesInCmdbLimit(
         dslContext: DSLContext,
-        page: Int,
+        nodeId: Long,
         pageSize: Int
     ): Result<Record7<Long, String, String, Long, Long, String, Long>> {
         with(TNode.T_NODE) {
@@ -589,8 +576,9 @@ class CmdbNodeDao @Autowired constructor(
             ).from(this)
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
-                .orderBy(NODE_ID.desc())
-                .limit(pageSize).offset((page - 1) * pageSize)
+                .and(NODE_ID.gt(nodeId))
+                .orderBy(NODE_ID.asc())
+                .limit(pageSize)
                 .fetch()
         }
     }
@@ -615,7 +603,7 @@ class CmdbNodeDao @Autowired constructor(
 
     fun getDeployNodesServerIdNullLimit(
         dslContext: DSLContext,
-        page: Int,
+        nodeId: Long,
         pageSize: Int
     ): Result<Record2<Long, String>> {
         with(TNode.T_NODE) {
@@ -626,8 +614,9 @@ class CmdbNodeDao @Autowired constructor(
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .and(SERVER_ID.isNull)
                 .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
-                .orderBy(NODE_ID.desc())
-                .limit(pageSize).offset((page - 1) * pageSize)
+                .and(NODE_ID.gt(nodeId))
+                .orderBy(NODE_ID.asc())
+                .limit(pageSize)
                 .fetch()
         }
     }
@@ -660,9 +649,9 @@ class CmdbNodeDao @Autowired constructor(
         }
     }
 
-    fun getCmdbNodes(
+    fun getCmdbNodesGTNodeId(
         dslContext: DSLContext,
-        page: Int,
+        nodeId: Long,
         pageSize: Int
     ): Result<Record7<String, Long, String, String, String, Long, Long>> {
         with(TNode.T_NODE) {
@@ -676,7 +665,9 @@ class CmdbNodeDao @Autowired constructor(
                 SERVER_ID.`as`(T_NODE_SERVER_ID)
             ).from(this)
                 .where(NODE_TYPE.eq(NodeType.CMDB.name))
-                .limit(pageSize).offset((page - 1) * pageSize)
+                .and(NODE_ID.gt(nodeId))
+                .orderBy(NODE_ID.asc())
+                .limit(pageSize)
                 .fetch()
         }
     }

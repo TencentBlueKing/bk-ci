@@ -5,7 +5,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.audit.TencentActionAuditContent
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.BkApiPermission
@@ -35,6 +35,7 @@ import com.tencent.devops.remotedev.pojo.async.AsyncNotify
 import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
+import com.tencent.devops.remotedev.pojo.expert.DeleteDiskData
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
@@ -42,27 +43,35 @@ import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
 import com.tencent.devops.remotedev.pojo.image.ListImagesData
 import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
+import com.tencent.devops.remotedev.pojo.itsm.BKItsmCreateTicketReq
+import com.tencent.devops.remotedev.pojo.itsm.BKItsmCreateTicketRespData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.EnableRemotedevData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
-import com.tencent.devops.remotedev.pojo.project.UpdateRemotedevDataManagers
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmData
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmResp
 import com.tencent.devops.remotedev.pojo.remotedev.TaskResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyInfo
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.resources.op.OpProjectWorkspaceResourceImpl
+import com.tencent.devops.remotedev.service.BKItsmService
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.ProjectStrategyService
 import com.tencent.devops.remotedev.service.RemotedevProjectService
 import com.tencent.devops.remotedev.service.StartWorkspaceService
 import com.tencent.devops.remotedev.service.WhiteListService
@@ -124,7 +133,9 @@ class ServiceRemoteDevResourceImpl(
     private val cloneWorkspaceHandler: CloneWorkspaceHandler,
     private val workspaceHookService: WorkspaceHookService,
     private val configCacheService: ConfigCacheService,
-    private val remotedevProjectService: RemotedevProjectService
+    private val remotedevProjectService: RemotedevProjectService,
+    private val bkItsmService: BKItsmService,
+    private val projectStrategyService: ProjectStrategyService
 ) : ServiceRemoteDevResource {
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
@@ -235,7 +246,7 @@ class ServiceRemoteDevResourceImpl(
                     null,
                     null
                 )
-                .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
+                .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
                 .scopeId = data.projectId
             // 再根据机型和地域获取硬件资源配置
             val windowsResourceConfigId = windowsResourceConfigService.getTypeConfig(
@@ -480,7 +491,8 @@ class ServiceRemoteDevResourceImpl(
             workspaceService.getWorkspaceList4WeSec(
                 workspaceName = workspace.workspaceName,
                 notStatus = null,
-                hasCurrentUser = true
+                hasCurrentUser = true,
+                userId = userId
             ).firstOrNull()
         )
     }
@@ -488,14 +500,16 @@ class ServiceRemoteDevResourceImpl(
     override fun getWindowsQuota(
         userId: String,
         type: QuotaType?,
-        zoneType: WindowsResourceZoneConfigType
+        zoneType: WindowsResourceZoneConfigType,
+        specifyTaints: String?
     ): Result<Map<String, Map<String, Int>>> {
         return Result(
             windowsResourceConfigService.allWindowsQuota(
                 searchCustom = false,
                 quotaType = type,
                 zoneType = zoneType,
-                withProjectLimit = null
+                withProjectLimit = null,
+                specifyTaints = specifyTaints
             )
         )
     }
@@ -752,19 +766,30 @@ class ServiceRemoteDevResourceImpl(
     override fun createDisk(
         userId: String,
         workspaceName: String,
-        size: String
+        size: String,
+        forceRestart: Boolean?
     ): Result<CreateDiskResp> {
         return Result(
             expertSupportService.createDisk(
                 workspaceName = workspaceName,
                 userId = userId,
-                size = size
+                size = size,
+                forceRestart = forceRestart
             )
         )
     }
 
     override fun fetchDiskList(userId: String, workspaceName: String): Result<List<VmDiskInfo>> {
         return Result(expertSupportService.fetchDiskList(userId, workspaceName))
+    }
+
+    override fun deleteDisk(userId: String, data: DeleteDiskData): Result<CreateDiskResp> {
+        return Result(
+            expertSupportService.deleteDisk(
+                userId = userId,
+                data = data
+            )
+        )
     }
 
     override fun upgradeWorkspace(
@@ -873,17 +898,6 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
-    override fun updateProjectRemotedevManager(userId: String, data: UpdateRemotedevDataManagers): Result<Boolean> {
-        return Result(
-            windowsResourceConfigService.addProjectRemotedevManagerWithPermission(
-                userId = userId,
-                projectId = data.projectId,
-                manager = data.managers.joinToString(";"),
-                delete = !data.add
-            )
-        )
-    }
-
     override fun fetchImages(userId: String, data: ListImagesData): Result<ListImagesResp?> {
         return Result(imageManageService.fetchImages(userId, data))
     }
@@ -902,5 +916,30 @@ class ServiceRemoteDevResourceImpl(
                 delaySeconds = delaySeconds
             )
         )
+    }
+
+    override fun createItsmTicket(
+        userId: String,
+        createReq: BKItsmCreateTicketReq
+    ): Result<BKItsmCreateTicketRespData> {
+        return Result(
+            bkItsmService.createDirectTicket(
+                createReq = createReq,
+                errorParam = userId
+            )
+        )
+    }
+
+    override fun getProjectStrategy(userId: String, data: ProjectStrategyFetchInfo): Result<ProjectStrategyResp> {
+        return Result(projectStrategyService.getStrategy(data))
+    }
+
+    override fun updateProjectStrategy(userId: String, data: ProjectStrategyInfo): Result<Boolean> {
+        projectStrategyService.createOrUpdateStrategy(data)
+        return Result(true)
+    }
+
+    override fun syncVm(userId: String, data: SyncVmData): Result<SyncVmResp?> {
+        return Result(expertSupportService.syncVm(data))
     }
 }

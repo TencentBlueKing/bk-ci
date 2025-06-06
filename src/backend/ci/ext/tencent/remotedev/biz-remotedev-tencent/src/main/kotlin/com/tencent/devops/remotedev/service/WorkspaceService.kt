@@ -40,9 +40,9 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
-import com.tencent.devops.common.audit.ActionAuditContent
-import com.tencent.devops.common.auth.api.ActionId
-import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.audit.TencentActionAuditContent
+import com.tencent.devops.common.auth.api.TencentActionId
+import com.tencent.devops.common.auth.api.TencentResourceTypeId
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.client.Client
@@ -153,19 +153,20 @@ class WorkspaceService @Autowired constructor(
     private val taiClient: TaiClient,
     private val taiService: TaiService,
     private val startCloudClient: StartCloudClient,
-    private val windowsGpuResourceDao: WindowsGpuResourceDao
+    private val windowsGpuResourceDao: WindowsGpuResourceDao,
+    private val whiteListService: WhiteListService
 ) {
     @Value("\${remoteDev.projectMonitorUrl:}")
     val projectMonitorUrl = ""
 
     @ActionAuditRecord(
-        actionId = ActionId.CGS_EDIT,
+        actionId = TencentActionId.CGS_EDIT,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS,
+            resourceType = TencentResourceTypeId.CGS,
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
-        content = ActionAuditContent.CGS_EDIT_CONTENT
+        content = TencentActionAuditContent.CGS_EDIT_CONTENT
     )
     @Deprecated("不要新增功能，希望废弃该方法")
     // 修改workspace备注名称
@@ -184,7 +185,7 @@ class WorkspaceService @Autowired constructor(
             )
         // 审计
         ActionAuditContext.current()
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, ws.projectId)
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, ws.projectId)
             .scopeId = ws.projectId
 
         if (checkPermission && !permissionService.hasUserManager(userId, ws.projectId)) {
@@ -213,10 +214,10 @@ class WorkspaceService @Autowired constructor(
             workspaceName != null -> workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ip != null -> workspaceJoinDao.fetchWindowsWorkspacesSimple(
                 dslContext, sip = ip, notStatus = listOf(
-                WorkspaceStatus.PREPARING,
-                WorkspaceStatus.DELETED,
-                WorkspaceStatus.DELIVERING_FAILED
-            ),
+                    WorkspaceStatus.PREPARING,
+                    WorkspaceStatus.DELETED,
+                    WorkspaceStatus.DELIVERING_FAILED
+                ),
                 checkField = listOf(TWorkspace.T_WORKSPACE.PROJECT_ID)
             ).firstOrNull()
 
@@ -230,7 +231,7 @@ class WorkspaceService @Autowired constructor(
         )
         // 审计
         ActionAuditContext.current()
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, ws.projectId)
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, ws.projectId)
             .scopeId = ws.projectId
 
         if (!permissionService.hasManagerOrViewerPermission(userId, ws.projectId, ws.workspaceName)) {
@@ -251,7 +252,7 @@ class WorkspaceService @Autowired constructor(
         return true
     }
 
-    @AuditEntry(actionId = ActionId.CGS_SHARE)
+    @AuditEntry(actionId = TencentActionId.CGS_SHARE)
     fun shareWorkspace4OP(
         userId: String,
         shareWorkspace: ShareWorkspace
@@ -281,13 +282,13 @@ class WorkspaceService @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.CGS_SHARE,
+        actionId = TencentActionId.CGS_SHARE,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS,
+            resourceType = TencentResourceTypeId.CGS,
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
-        content = ActionAuditContent.CGS_SHARE_CONTENT
+        content = TencentActionAuditContent.CGS_SHARE_CONTENT
     )
     fun shareWorkspace(
         userId: String,
@@ -303,7 +304,7 @@ class WorkspaceService @Autowired constructor(
             )
         // 审计
         ActionAuditContext.current()
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
             .scopeId = workspace.projectId
 
         if (needPermission) {
@@ -461,6 +462,8 @@ class WorkspaceService @Autowired constructor(
                 WorkspaceShared.AssignType.VIEWER -> {
                     viewers.putIfAbsent(it.workspaceName, mutableListOf(it.sharedUser))?.add(it.sharedUser)
                 }
+
+                else -> {}
             }
             if (UserUtil.isTaiUser(it.sharedUser)) {
                 taiUsers.add(it.sharedUser)
@@ -548,7 +551,8 @@ class WorkspaceService @Autowired constructor(
                     labels = it.labels,
                     createTime = it.createTime.timestamp(),
                     imageId = detail?.imageId ?: "",
-                    recordEnabled = !allWindows[it.workspaceName]?.enableRecordUser.isNullOrBlank()
+                    recordEnabled = !allWindows[it.workspaceName]?.enableRecordUser.isNullOrBlank(),
+                    vmName = allWindows[it.workspaceName]?.vmName
                 )
             )
         }
@@ -567,11 +571,13 @@ class WorkspaceService @Autowired constructor(
             WorkspaceStatus.DELETED,
             WorkspaceStatus.PREPARING,
             WorkspaceStatus.DELIVERING_FAILED
-        )
+        ),
+        userId: String? = null
     ): List<WeSecProjectWorkspace> {
         val startTime = System.currentTimeMillis()
         val owners = mutableMapOf<String, String>()
         val viewers = mutableMapOf<String, MutableList<String>>()
+        val projectGameIds = mutableMapOf<String, Int>()
 
         val result = workspaceJoinDao.fetchWindowsWorkspacesSimple(
             dslContext = dslContext,
@@ -595,6 +601,8 @@ class WorkspaceService @Autowired constructor(
                 WorkspaceShared.AssignType.OWNER -> {
                     owners.putIfAbsent(it.workspaceName, it.sharedUser)
                 }
+
+                else -> {}
             }
         }
 
@@ -657,6 +665,19 @@ class WorkspaceService @Autowired constructor(
             } else {
                 null
             }
+
+            projectGameIds.getOrPut(res.projectId) {
+                workspaceCommon.getGameIdAndAppId(res.projectId, res.ownerType).second.toInt()
+            }
+            val resourceId = if (userId != null && userId != res.createUserId) {
+                workspaceSharedDao.fetchWorkspaceSharedInfo(
+                    dslContext = dslContext,
+                    workspaceName = res.workspaceName,
+                    sharedUsers = listOf(userId)
+                ).firstOrNull()?.resourceId
+            } else {
+                workspaceWindows[name]?.resourceId
+            }
             WeSecProjectWorkspace(
                 workspaceName = name,
                 projectId = res.projectId,
@@ -675,7 +696,9 @@ class WorkspaceService @Autowired constructor(
                 zoneType = specZoneConfig[res.zoneId]?.type?.name
                     ?: defaultZoneConfig[res.zoneId?.removeSuffixNumb()]?.type?.name,
                 viewers = viewers[name],
-                nodeIp = cdsInfo[res.hostIp]?.node
+                nodeIp = cdsInfo[res.hostIp]?.node,
+                curLaunchId = res.curLaunchId ?: projectGameIds[res.projectId],
+                resourceId = resourceId
             )
         }
 
@@ -710,7 +733,7 @@ class WorkspaceService @Autowired constructor(
             RemotedevProject(
                 projectId = it.value1(),
                 projectName = detailMap[it.value1()]?.projectName ?: "",
-                remotedevManager = detailMap[it.value1()]?.properties?.remotedevManager ?: ""
+                remotedevManager = permissionService.getCacheManager(it.value1()).joinToString(";")
             )
         }
     }
@@ -739,7 +762,7 @@ class WorkspaceService @Autowired constructor(
             RemotedevProjectNew(
                 projectId = it.englishName,
                 projectName = it.projectName,
-                remotedevManager = it.remotedevManager ?: "",
+                remotedevManager = permissionService.getCacheManager(it.englishName).joinToString(";"),
                 monitorUrl = "$projectMonitorUrl?orgName=${projectAndBizs[it.englishName] ?: ""}"
             )
         }
@@ -918,13 +941,13 @@ class WorkspaceService @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.CGS_VIEW,
+        actionId = TencentActionId.CGS_VIEW,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS,
+            resourceType = TencentResourceTypeId.CGS,
             instanceNames = "#workspaceName",
             instanceIds = "#workspaceName"
         ),
-        content = ActionAuditContent.CGS_VIEW_CONTENT
+        content = TencentActionAuditContent.CGS_VIEW_CONTENT
     )
     fun getWorkspaceDetail(userId: String, workspaceName: String, checkPermission: Boolean = true): WorkspaceDetail? {
         logger.info("$userId get workspace from id $workspaceName")
@@ -933,7 +956,7 @@ class WorkspaceService @Autowired constructor(
             permissionService.checkViewerPermission(userId, workspaceName, workspace.projectId)
         }
         ActionAuditContext.current()
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
             .scopeId = workspace.projectId
 
         val winInfo = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)
@@ -986,11 +1009,11 @@ class WorkspaceService @Autowired constructor(
     }
 
     @ActionAuditRecord(
-        actionId = ActionId.CGS_VIEW,
+        actionId = TencentActionId.CGS_VIEW,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS
+            resourceType = TencentResourceTypeId.CGS
         ),
-        content = ActionAuditContent.CGS_VIEW_CONTENT
+        content = TencentActionAuditContent.CGS_VIEW_CONTENT
     )
     fun startCloudWorkspaceDetail(userId: String, workspaceName: String?, envId: String?): WorkspaceStartCloudDetail {
         if (workspaceName != null) {
@@ -1016,7 +1039,14 @@ class WorkspaceService @Autowired constructor(
             if (cgsStatus?.state != ComputerStatusEnum.NORMAL.status) {
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.WORKSPACE_CDS_ERROR.errorCode,
-                    params = arrayOf(workspaceName)
+                    params = arrayOf(workspace.hostIp ?: workspaceName)
+                )
+            }
+            // 优化：如果当前后台记录的用户，跟进入云桌面人不一致，提示有人在用
+            cgsStatus.userInfos?.firstOrNull()?.takeIf { it.account != userId }?.let {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_LOGGED_IN.errorCode,
+                    params = arrayOf(workspace.hostIp ?: workspaceName)
                 )
             }
             return startCloudWorkspaceDetail(userId, workspace)
@@ -1131,18 +1161,26 @@ class WorkspaceService @Autowired constructor(
             null
         }
         val normalStatuses = setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.DISTRIBUTING)
-        return data.map { it ->
-            val normalNodeCount = it.nodeHashIds?.count { workspaceStatus[it] in normalStatuses && cgsStatus?.get(node2HostMap[it]) == ComputerStatusEnum.NORMAL.status }
-                ?: 0
-            val abnormalNodeCount = (it.nodeHashIds?.size ?: 0) - normalNodeCount
+        return data.map { env ->
+            val normalNodeCount =
+                env.nodeHashIds?.count { workspaceStatus[it] in normalStatuses && cgsStatus?.get(node2HostMap[it]) == ComputerStatusEnum.NORMAL.status }
+                    ?: 0
+            val abnormalNodeCount = (env.nodeHashIds?.size ?: 0) - normalNodeCount
+            val currentLoginUsers = env.nodeHashIds?.flatMap { nodeHashId ->
+                nodeLoginMap[nodeHashId] ?: emptyList()
+            } ?: emptyList()
             WorkspaceEnv(
-                projectId = it.projectId,
-                envHashId = it.envHashId,
-                name = it.name,
+                projectId = env.projectId,
+                envHashId = env.envHashId,
+                name = env.name,
                 normalNodeCount = normalNodeCount,
                 abnormalNodeCount = max(abnormalNodeCount, 0),
-                inUseNodeCount = it.nodeHashIds?.count { !nodeLoginMap[it].isNullOrEmpty() } ?: 0,
-                nodeHashIds = it.nodeHashIds
+                inUseNodeCount = env.nodeHashIds?.count { nodeHashId -> !nodeLoginMap[nodeHashId].isNullOrEmpty() }
+                    ?: 0,
+                nodeHashIds = env.nodeHashIds,
+                currentLoginUsers = currentLoginUsers.mapIndexed { index, user ->
+                    if (index >= 3) user.take(1) + "*****" else user
+                }
             )
         }
     }
@@ -1185,13 +1223,12 @@ class WorkspaceService @Autowired constructor(
 
         // 审计
         ActionAuditContext.current()
-            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
             .setScopeId(workspace.projectId)
             .setInstanceId(workspace.workspaceName)
             .setInstanceName(workspace.workspaceName)
-
         permissionService.checkViewerPermission(userId, workspace.workspaceName, workspace.projectId)
-        ActionAuditContext.current().addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+        ActionAuditContext.current().addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
         val resourceId = if (userId != workspace.createUserId) {
             workspaceSharedDao.fetchWorkspaceSharedInfo(
                 dslContext = dslContext,
@@ -1211,6 +1248,18 @@ class WorkspaceService @Autowired constructor(
             workspace.createUserId
         }
         val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
+        val allConfig = windowsResourceConfigService.getAllType(true, null).associateBy { it.id!! }
+        val defaultZoneConfig = windowsResourceConfigService.getAllZone()
+            .associateBy { it.zoneShortName }
+        val specZoneConfig = windowsResourceConfigService.getAllSpecZone().associateBy { it.zoneShortName }
+        val zone = if (workspace.hostIp != null) {
+            /*后续直接取windows表中的zoneId，不通过ip进行解析*/
+            val zoneId = workspace.hostIp?.substringBefore(".")
+            specZoneConfig[zoneId] ?: defaultZoneConfig[zoneId?.removeSuffixNumb()]
+        } else {
+            null
+        }
+
         return WorkspaceStartCloudDetail(
             ip = workspace.hostIp ?: "",
             curLaunchId = workspace.curLaunchId ?: gameId.second.toInt(),
@@ -1220,7 +1269,11 @@ class WorkspaceService @Autowired constructor(
             creator = workspace.createUserId,
             owner = owner,
             resourceId = resourceId,
-            displayName = workspace.displayName
+            displayName = workspace.displayName,
+            cdsMesh = whiteListService.checkInCdsMeshWhiteList(workspace.projectId, workspace.workspaceName),
+            cdsDomain = whiteListService.getCdsDomain(workspace.projectId, workspace.workspaceName),
+            zoneConfig = zone,
+            winConfig = allConfig[workspace.winConfigId?.toLong()]
         )
     }
 
@@ -1363,10 +1416,10 @@ class WorkspaceService @Autowired constructor(
         logger.info("$userId modifyWorkspaceDisplayName $ip|$displayName")
         val record = workspaceJoinDao.fetchWindowsWorkspacesSimple(
             dslContext, sip = ip, notStatus = listOf(
-            WorkspaceStatus.PREPARING,
-            WorkspaceStatus.DELETED,
-            WorkspaceStatus.DELIVERING_FAILED
-        ),
+                WorkspaceStatus.PREPARING,
+                WorkspaceStatus.DELETED,
+                WorkspaceStatus.DELIVERING_FAILED
+            ),
             checkField = listOf(TWorkspace.T_WORKSPACE.NAME)
         ).ifEmpty {
             logger.warn("$ip fetchWorkspaceByIp not found")
@@ -1411,12 +1464,37 @@ class WorkspaceService @Autowired constructor(
         return false
     }
 
-    fun createMoa2faRequest(userId: String, moa2faReqData: Moa2faReqData): Moa2faRespData {
+    @ActionAuditRecord(
+        actionId = TencentActionId.CGS_MOA_2FA,
+        instance = AuditInstanceRecord(
+            resourceType = TencentResourceTypeId.CGS,
+            instanceNames = "#workspaceName",
+            instanceIds = "#workspaceName"
+        ),
+        content = TencentActionAuditContent.CGS_MOA_2FA_CONTENT
+    )
+    fun createMoa2faRequest(userId: String, workspaceName: String?, moa2faReqData: Moa2faReqData): Moa2faRespData {
+        ActionAuditContext.current()
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, userId)
+            .scopeId = userId
         return taiService.createMoa2faRequest(userId = userId, moa2faReqData = moa2faReqData)
     }
 
     fun verifyMoa2faResult(userId: String, moa2faVerifyReqData: Moa2faVerifyReqData): Moa2faVerifyRespData {
         return taiService.verifyMoa2faRequest(userId = userId, moa2faVerifyReqData = moa2faVerifyReqData)
+    }
+
+    fun checkExistWorkspaceSharedInfo(
+        workspaceName: String,
+        sharedUser: String,
+        assignType: WorkspaceShared.AssignType
+    ): Boolean {
+        return workspaceSharedDao.existWorkspaceSharedInfo(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            sharedUser = sharedUser,
+            assignType = assignType
+        )
     }
 
     companion object {

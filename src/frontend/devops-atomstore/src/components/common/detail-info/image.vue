@@ -127,9 +127,9 @@
                     case 'THIRD':
                         res = local.$t('store.第三方源')
                         break
-                    case 'BKDEVOPS':
-                        res = local.$t('store.蓝盾源')
-                        break
+                    // case 'BKDEVOPS':
+                    //     res = local.$t('store.蓝盾源')
+                    //     break
                 }
                 return res
             }

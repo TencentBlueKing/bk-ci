@@ -113,7 +113,8 @@ class UserRemoteDevResourceImpl @Autowired constructor(
                 searchCustom = searchCustom,
                 quotaType = null,
                 zoneType = WindowsResourceZoneConfigType.DEFAULT,
-                withProjectLimit = projectId
+                withProjectLimit = projectId,
+                specifyTaints = null
             )
         )
     }
@@ -153,6 +154,10 @@ class UserRemoteDevResourceImpl @Autowired constructor(
 
     override fun clientTips(userId: String, projectId: String?): Result<List<ClientTips>> {
         return Result(clientTipsService.fetchTips(projectId = projectId, userId = userId))
+    }
+
+    override fun remoteManagers(userId: String, projectId: String): Result<List<String>> {
+        return Result(permissionService.managers(projectId))
     }
 
     override fun getTxcToken(userId: String, openId: String, nickName: String, avatar: String): Result<String> {

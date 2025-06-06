@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.dao
 
+import com.tencent.devops.common.db.utils.fetchCountFix
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TWindowsResourceType
 import com.tencent.devops.model.remotedev.tables.TWorkspace
@@ -66,12 +67,14 @@ class WorkspaceWindowsDao {
         dslContext: DSLContext,
         launchId: Int?,
         regionId: Int?,
+        vmName: String? = "",
         workspaceName: String
     ): Int {
         with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
             return dslContext.update(this)
                 .set(CUR_LAUNCH_ID, launchId)
                 .set(REGION_ID, regionId)
+                .set(VM_NAME, vmName)
                 .where(WORKSPACE_NAME.equal(workspaceName)).execute()
         }
     }
@@ -88,12 +91,24 @@ class WorkspaceWindowsDao {
         }
     }
 
+    fun updateVmName(
+        dslContext: DSLContext,
+        vmName: String?,
+        workspaceName: String
+    ): Int {
+        with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
+            return dslContext.update(this)
+                .set(VM_NAME, vmName)
+                .where(WORKSPACE_NAME.equal(workspaceName)).limit(1).execute()
+        }
+    }
+
     fun countProjectIp(
         dslContext: DSLContext,
         projectId: String,
         ip: String
     ): Int {
-        return dslContext.fetchCount(
+        return dslContext.fetchCountFix(
             dslContext.select(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP)
                 .from(TWorkspace.T_WORKSPACE)
                 .leftJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
@@ -109,7 +124,7 @@ class WorkspaceWindowsDao {
         user: String,
         ip: String
     ): Int {
-        return dslContext.fetchCount(
+        return dslContext.fetchCountFix(
             dslContext.select(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP)
                 .from(TWorkspace.T_WORKSPACE)
                 .leftJoin(TWorkspaceWindows.T_WORKSPACE_WINDOWS)

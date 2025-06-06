@@ -152,14 +152,15 @@ class WindowsResourceConfigService @Autowired constructor(
         searchCustom: Boolean?,
         quotaType: QuotaType?,
         zoneType: WindowsResourceZoneConfigType,
-        withProjectLimit: String?
+        withProjectLimit: String?,
+        specifyTaints: String?
     ): Map<String, Map<String, Int>> {
         // 自定义镜像为显卡配额，固定镜像为资源池中的配额加上显卡配额
         val res = mutableMapOf<String, MutableMap<String, Int>>()
         val spec = lazy { getAllSpecZoneShortName() }
         val zoneShortName = lazy { getAllZoneShortNameByType(zoneType) }
         val internal = quotaType?.getInternal() ?: zoneType.getInternal()
-        if (searchCustom != true) {
+        if (searchCustom != true && specifyTaints == null) {
             workspaceCommon.realtimeStartCloudResourceList().forEach {
                 if (CommonUtil.zoneIdCheck(
                         quotaType = quotaType,
@@ -178,7 +179,7 @@ class WindowsResourceConfigService @Autowired constructor(
         }
 
         SpringContextUtil.getBean(ServiceStartCloudInterface::class.java).getResourceVm(
-            ResourceVmReq(null, null, internal)
+            ResourceVmReq(zoneId = null, machineType = null, internal = internal, specifyTaints = specifyTaints)
         ).data?.forEach { resource ->
             if (CommonUtil.zoneIdCheck(
                     quotaType = quotaType,
@@ -242,14 +243,16 @@ class WindowsResourceConfigService @Autowired constructor(
         windowsZone: WindowsResourceZoneConfig,
         windowsConfig: WindowsResourceTypeConfig,
         newNum: Int,
-        quotaType: QuotaType
+        quotaType: QuotaType,
+        specifyTaints: String? = null
     ): List<String> {
         val data = kotlin.runCatching {
             SpringContextUtil.getBean(ServiceStartCloudInterface::class.java).getResourceVm(
                 ResourceVmReq(
                     zoneId = windowsZone.zoneShortName.replace(Regex("\\d+"), ""),
                     machineType = windowsConfig.size,
-                    internal = quotaType.getInternal()
+                    internal = quotaType.getInternal(),
+                    specifyTaints = specifyTaints
                 )
             ).data
         }.getOrElse {
@@ -534,49 +537,6 @@ class WindowsResourceConfigService @Autowired constructor(
             )
         }
         return curQuota + quota
-    }
-
-    fun addProjectRemotedevManagerWithPermission(
-        userId: String,
-        projectId: String,
-        manager: String,
-        delete: Boolean?
-    ): Boolean {
-        permissionService.checkUserProjectManager(userId, projectId)
-        return addProjectRemotedevManager(userId, projectId, manager, delete)
-    }
-
-    fun addProjectRemotedevManager(
-        userId: String,
-        projectId: String,
-        manager: String,
-        delete: Boolean?
-    ): Boolean {
-        logger.info("addProjectTotalQuota|projectId|$projectId|manager|$manager|delete=$delete")
-        // 先获取当前项目的properties配置获取当前配额，再追加申请的配额，更新
-        val projectInfo = kotlin.runCatching {
-            client.get(ServiceProjectResource::class).get(projectId)
-        }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
-            .getOrElse { null }?.data ?: throw RemoteServiceException(
-            "not find project $projectId", HTTP_400
-        )
-        val projectProperties = projectInfo.properties
-        if (projectProperties?.remotedev == null || projectProperties.remotedev == false) {
-            logger.info("addProjectRemotedevManager|$projectId|not open remotedev")
-            return false
-        }
-        val oldManagers = projectProperties.remotedevManager?.split(";")
-            ?.filter { it.isNotBlank() }?.toMutableSet() ?: mutableSetOf()
-        if (delete == true) {
-            oldManagers.removeAll(manager.split(",").toSet())
-        } else {
-            oldManagers.addAll(manager.split(",").toSet())
-        }
-        return client.get(OPProjectResource::class).setProjectProperties(
-            userId = userId,
-            projectCode = projectId,
-            properties = projectProperties.copy(remotedevManager = oldManagers.joinToString(";"))
-        ).data == true
     }
 
     fun createCheckSpecLimit(

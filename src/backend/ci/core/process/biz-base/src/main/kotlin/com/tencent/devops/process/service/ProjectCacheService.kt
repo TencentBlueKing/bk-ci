@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 
 @Service
 class ProjectCacheService @Autowired constructor(private val client: Client) {
@@ -70,6 +70,10 @@ class ProjectCacheService @Autowired constructor(private val client: Client) {
 
     fun getProjectDialect(projectId: String): String? {
         return getProject(projectId = projectId)?.properties?.pipelineDialect
+    }
+
+    fun getLoggingLineLimit(projectId: String): Int? {
+        return getProject(projectId = projectId)?.properties?.loggingLineLimit
     }
 
     private fun getProjectInner(projectId: String): ProjectVO {

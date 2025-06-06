@@ -182,8 +182,11 @@ class RemoteDevService @Autowired constructor(
         workspaceName: String,
         userId: String,
         size: String,
-        mountType: WorkspaceMountType
+        mountType: WorkspaceMountType,
+        forceRestart: Boolean?
     ): CreateDiskResp {
-        return remoteDevServiceFactory.loadRemoteDevService(mountType).createDisk(workspaceName, userId, size)
+        return remoteDevServiceFactory.loadRemoteDevService(mountType).createDisk(
+            workspaceName = workspaceName, userId = userId, size = size, forceRestart = forceRestart
+        )
     }
 }

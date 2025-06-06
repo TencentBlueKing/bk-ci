@@ -26,6 +26,21 @@ class ConfigCacheService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ConfigCacheService::class.java)
     }
 
+    fun opFetchAllConfig(): Map<String, String> {
+        logger.info("fetch all config")
+        return configDao.fetchAll(dslContext).associateBy({ it.key }, { it.value })
+    }
+
+    fun opInsertOrUpdateConfig(key: String, value: String): Boolean {
+        logger.info("insert or update config, key: $key, value: $value")
+        return configDao.insertOrUpdateConfig(dslContext, key, value)
+    }
+
+    fun opDeleteConfig(key: String): Boolean {
+        logger.info("delete config, key: $key")
+        return configDao.deleteConfig(dslContext, key)
+    }
+
     private val redisCache = Caffeine.newBuilder()
         .maximumSize(200)
         .expireAfterWrite(1, TimeUnit.MINUTES)
@@ -57,7 +72,7 @@ class ConfigCacheService @Autowired constructor(
             expertSupportDao.fetchExpertSupportConfig(dslContext, type).map { it.content }
         }
 
-    fun get(key: String) = redisCache.get(key)
+    fun get(key: String): String? = redisCache.get(key)
 
     fun getSetMembers(key: String) = redisCacheSet.get(key)
 

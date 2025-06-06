@@ -332,7 +332,7 @@ class RemoteDevSettingDao {
     private fun userNameAndCompany(userId: String) = lazy {
         if (UserUtil.isTaiUser(userId)) {
             val taiClient = SpringContextUtil.getBean(TaiClient::class.java)
-            taiClient.taiUserInfo(TaiUserInfoRequest(setOf(userId))).first()
+            taiClient.taiUserInfo(TaiUserInfoRequest(setOf(userId))).firstOrNull()
         } else {
             null
         }

@@ -38,6 +38,6 @@ class ServiceDispatchJobResourceImpl @Autowired constructor(
     val thirdPartyAgentMonitorService: ThirdPartyAgentMonitorService
 ) : ServiceDispatchJobResource {
     override fun monitor(agentStartMonitor: AgentStartMonitor) {
-        thirdPartyAgentMonitorService.monitor(agentStartMonitor)
+        thirdPartyAgentMonitorService.tryRollBackQueueMonitor(agentStartMonitor)
     }
 }

@@ -12,7 +12,6 @@ import com.tencent.devops.remotedev.pojo.DesktopTokenSign
 import com.tencent.devops.remotedev.pojo.DesktopTokenSignBody
 import com.tencent.devops.remotedev.pojo.op.WorkspaceDesktopNotifyData
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
-import com.tencent.devops.remotedev.pojo.sdk.SdkReportData
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -93,32 +92,28 @@ class ApigwDeskTopResourceImpl @Autowired constructor(private val client: Client
         storeCode: String,
         storeType: String,
         storeVersion: String,
+        new: Boolean?,
         sign: DesktopTokenSignBody
     ): Result<Oauth2AccessTokenVo> {
         logger.info(
             "$apigwType|$appCode|sdkGetAccessToken|sign=$sign|sha1=$sha1|" +
-                    "storeCode=$storeCode|storeVersion=$storeVersion"
+                "storeCode=$storeCode|storeVersion=$storeVersion"
         )
-        return client.get(ServiceSDKResource::class).sdkGetAccessToken(desktopIP = desktopIP, sign = with(sign) {
-            DesktopTokenSign(
-                fingerprint = fingerprint,
-                appId = storeCode,
-                fileName = fileName,
-                fileVersion = fileVersion,
-                fileUpdateTime = fileUpdateTime,
-                productName = productName,
-                productVersion = storeVersion,
-                sha1 = sha1,
-                timestamp = timestamp,
-                publicKey = publicKey,
-                sign = this.sign
-            )
-        })
-    }
-
-    @SensitiveApiPermission("desktop_post_report")
-    override fun sdkReportData(data: SdkReportData): Result<Boolean> {
-        logger.info("sdkReportData|type=${data.reportType}")
-        return client.get(ServiceSDKResource::class).sdkReportData(data)
+        return client.get(ServiceSDKResource::class)
+            .sdkGetAccessToken(desktopIP = desktopIP, new = new, sign = with(sign) {
+                DesktopTokenSign(
+                    fingerprint = fingerprint,
+                    appId = storeCode,
+                    fileName = fileName,
+                    fileVersion = fileVersion,
+                    fileUpdateTime = fileUpdateTime,
+                    productName = productName,
+                    productVersion = storeVersion,
+                    sha1 = sha1,
+                    timestamp = timestamp,
+                    publicKey = publicKey,
+                    sign = this.sign
+                )
+            })
     }
 }

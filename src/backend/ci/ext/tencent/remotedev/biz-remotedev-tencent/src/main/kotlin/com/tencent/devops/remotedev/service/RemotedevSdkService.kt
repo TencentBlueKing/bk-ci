@@ -11,9 +11,9 @@ import com.tencent.devops.auth.pojo.enum.Oauth2GrantType
 import com.tencent.devops.auth.pojo.vo.Oauth2AccessTokenVo
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.ShaUtils
-import com.tencent.devops.common.audit.ActionAuditContent
-import com.tencent.devops.common.auth.api.ActionId
-import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.audit.TencentActionAuditContent
+import com.tencent.devops.common.auth.api.TencentActionId
+import com.tencent.devops.common.auth.api.TencentResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.remotedev.config.BkConfig
@@ -25,7 +25,7 @@ import com.tencent.devops.remotedev.utils.RsaUtil
 import java.util.Base64
 import java.util.UUID
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.impl.DefaultDSLContext
 import org.slf4j.LoggerFactory
@@ -68,11 +68,22 @@ class RemotedevSdkService @Autowired constructor(
         return RsaUtil.rsaEncrypt(dToken, rsaPublicKey)
     }
 
-    fun getAccessToken(desktopIP: String, sign: DesktopTokenSign): Oauth2AccessTokenVo {
+    fun getAccessToken(desktopIP: String, new: Boolean?, sign: DesktopTokenSign): Oauth2AccessTokenVo {
         val ws = workspaceService.getWorkspaceList4WeSec(
             ip = desktopIP
         ).firstOrNull() ?: throwTokenFail(desktopIP, "unknown ip", "not find $desktopIP")
         check(ws, sign, desktopIP)
+        return if (new == true) {
+            permissionService.getCDIOauth(ws.workspaceName, sign.appId)
+        } else old(ws, desktopIP, sign)
+    }
+
+    @Deprecated("晚点下掉换新的oauth生成逻辑")
+    private fun old(
+        ws: WeSecProjectWorkspace,
+        desktopIP: String,
+        sign: DesktopTokenSign
+    ): Oauth2AccessTokenVo {
         val userId = ws.owner ?: throwTokenFail(desktopIP, "unknown owner", "${ws.workspaceName} not has owner")
         val clientDetail = workspaceAppOauth2MaterialsDao.fetchAny(
             dslContext = dslContext,
@@ -181,13 +192,13 @@ class RemotedevSdkService @Autowired constructor(
     ) = "remotedev-$appId-$workspaceName"
 
     @ActionAuditRecord(
-        actionId = ActionId.CGS_TOKEN_GENERATE,
+        actionId = TencentActionId.CGS_TOKEN_GENERATE,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS
+            resourceType = TencentResourceTypeId.CGS
         ),
-        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#ws?.projectId")],
+        attributes = [AuditAttribute(name = TencentActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#ws?.projectId")],
         scopeId = "#ws?.projectId",
-        content = ActionAuditContent.CGS_TOKEN_GENERATE_CONTENT
+        content = TencentActionAuditContent.CGS_TOKEN_GENERATE_CONTENT
     )
     fun check(
         ws: WeSecProjectWorkspace,

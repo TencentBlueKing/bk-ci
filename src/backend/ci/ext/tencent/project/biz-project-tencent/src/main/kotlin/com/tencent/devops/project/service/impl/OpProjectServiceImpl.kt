@@ -174,23 +174,6 @@ class OpProjectServiceImpl @Autowired constructor(
             throw OperationException("开启或关闭云研发项目需要在Remotedev服务接口操作")
         }
 
-        // 已经开启的项目管理员新增时发送通知
-        if (dbProperties?.remotedev == true && projectInfoRequest.properties?.remotedev == true) {
-            val newManager = projectInfoRequest.properties?.remotedevManager
-                ?.split(";")?.filter { it.isNotBlank() }?.toSet()
-                ?: emptySet()
-            val oldManager = dbProperties.remotedevManager?.split(";")?.filter { it.isNotBlank() }?.toSet()
-                ?: emptySet()
-            val subManager = newManager.subtract(oldManager)
-            if (subManager.isNotEmpty()) {
-                projectRemoteDevService.sendEnableRemoteDevNotify(
-                    sendNotifyUser = subManager,
-                    projectCode = dbProjectRecord.englishName,
-                    projectName = dbProjectRecord.projectName,
-                    cloudDesktopNum = projectInfoRequest.properties?.cloudDesktopNum ?: 0
-                )
-            }
-        }
         // 项目启用状态变更时，发送广播事件
         if (dbProjectRecord.enabled != projectInfoRequest.enabled) {
             projectDispatcher.dispatch(

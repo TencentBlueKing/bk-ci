@@ -32,15 +32,11 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.SecurityUtil
-import com.tencent.devops.environment.constant.T_ENVIRONMENT_THIRDPARTY_AGENT_MASTER_VERSION
-import com.tencent.devops.environment.constant.T_ENVIRONMENT_THIRDPARTY_AGENT_NODE_ID
 import com.tencent.devops.environment.dao.NodeDao
-import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
-import com.tencent.devops.environment.pojo.job.AgentVersionInfo
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
@@ -56,7 +52,6 @@ class PreBuildAgentMgrService @Autowired constructor(
     private val dslContext: DSLContext,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val nodeDao: NodeDao,
-    private val cmdbNodeDao: CmdbNodeDao,
     private val slaveGatewayService: SlaveGatewayService,
     private val agentUrlService: AgentUrlService,
     private val environmentPermissionService: EnvironmentPermissionService
@@ -73,6 +68,7 @@ class PreBuildAgentMgrService @Autowired constructor(
         nodeStingId: String?
     ): ThirdPartyAgentStaticInfo {
         val gateway = slaveGatewayService.getGateway(zoneName)?.removePrefix("http://")
+        val fileGateway = slaveGatewayService.getFileGateway(zoneName)
         val secretKey = generateSecretKey()
 
         var result: ThirdPartyAgentStaticInfo? = null
@@ -104,14 +100,16 @@ class PreBuildAgentMgrService @Autowired constructor(
             )
 
             // agent
-            val agentId = thirdPartyAgentDao.createAgent(
+            val agentId = thirdPartyAgentDao.add(
                 dslContext = context,
                 userId = userId,
                 projectId = projectId,
                 os = os,
                 secretKey = SecurityUtil.encrypt(secretKey),
                 gateway = gateway,
-                ip = initIp ?: ""
+                ip = initIp ?: "",
+                status = AgentStatus.IMPORT_EXCEPTION,
+                fileGateway = fileGateway
             )
             val agentRecord = thirdPartyAgentDao.getAgent(context, agentId)!!
             val agentHashId = HashUtil.encodeLongId(agentId)
@@ -134,18 +132,6 @@ class PreBuildAgentMgrService @Autowired constructor(
                 masterVersion = agentRecord.masterVersion
             )
 
-            // 同步更新T_NODE表中记录的agent版本信息
-            val buildNodesAgentVersionRecords = thirdPartyAgentDao.getAgentByNodeIdAllProj(
-                dslContext = dslContext, nodeIdList = listOf(nodeId)
-            )
-            val buildNodeUpdateInfo = buildNodesAgentVersionRecords.map {
-                AgentVersionInfo(
-                    nodeId = it[T_ENVIRONMENT_THIRDPARTY_AGENT_NODE_ID] as Long,
-                    agentVersion = it[T_ENVIRONMENT_THIRDPARTY_AGENT_MASTER_VERSION] as? String
-                )
-            }
-            cmdbNodeDao.batchUpdateBuildAgentVersionByNodeId(dslContext, buildNodeUpdateInfo)
-
             thirdPartyAgentDao.updateStatus(context, agentId, nodeId, projectId, AgentStatus.IMPORT_EXCEPTION)
             environmentPermissionService.createNode(
                 userId = userId,
@@ -158,15 +144,15 @@ class PreBuildAgentMgrService @Autowired constructor(
     }
 
     fun listPreBuildAgent(userId: String, projectId: String, os: OS?): List<ThirdPartyAgentStaticInfo> {
-        return thirdPartyAgentDao.listPreBuildAgent(
-            dslContext, userId, projectId, os ?: OS.LINUX
+        return thirdPartyAgentDao.listImportAgent(
+            dslContext = dslContext, projectId = projectId, os = os ?: OS.LINUX, nodeIds = emptySet()
         ).filter { it.nodeId != null }.map {
             ThirdPartyAgentStaticInfo(
                 agentId = HashUtil.encodeLongId(it.id), // 必须用it.id，不能是it.nodeId
                 projectId = it.projectId,
                 os = it.os,
                 secretKey = SecurityUtil.decrypt(it.secretKey),
-                createdUser = it.createdUser,
+                createdUser = userId,
                 gateway = it.gateway,
                 link = if (os == OS.WINDOWS) {
                     agentUrlService.genAgentUrl(it)

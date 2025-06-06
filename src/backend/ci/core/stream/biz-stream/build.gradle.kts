@@ -54,11 +54,11 @@ dependencies {
     api("org.quartz-scheduler:quartz")
     api("org.springframework.boot:spring-boot-starter-websocket")
     api("com.github.ben-manes.caffeine:caffeine")
-    api(group = "javax.websocket", name = "javax.websocket-api")
+    api("jakarta.websocket:jakarta.websocket-api")
     api("io.undertow:undertow-servlet")
     api("io.undertow:undertow-websockets-jsr")
     api("org.json:json")
-    api(group = "org.apache.ant", name = "ant")
+    api("org.apache.ant:ant")
 
     // jsonschema
     api("com.networknt:json-schema-validator")

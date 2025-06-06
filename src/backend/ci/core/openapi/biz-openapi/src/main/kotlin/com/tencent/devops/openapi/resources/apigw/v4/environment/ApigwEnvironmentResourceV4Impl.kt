@@ -48,7 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class ApigwEnvironmentResourceV4Impl @Autowired constructor(
     private val client: Client
 ) : ApigwEnvironmentResourceV4 {
-    override fun listUsableServerNodes(
+    override fun listUsableServerCMDBNodes(
         appCode: String?,
         apigwType: String?,
         userId: String,

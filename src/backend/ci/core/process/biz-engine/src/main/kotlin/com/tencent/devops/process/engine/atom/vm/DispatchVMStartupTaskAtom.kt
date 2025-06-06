@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -56,6 +55,7 @@ import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
 import com.tencent.devops.process.engine.atom.parser.DispatchTypeBuilder
+import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineInfo
@@ -69,8 +69,8 @@ import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.utils.BK_CI_AUTHORIZER
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
+import com.tencent.devops.process.yaml.transfer.VariableDefault
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
-import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
@@ -228,7 +228,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         )
         dispatch(task, pipelineInfo!!, param, vmNames, container!!, ignoreEnvAgentIds, pipelineAuthorizer)
         logger.info("[$buildId]|STARTUP_VM|VM=${param.baseOS}-$vmNames($vmSeqId)|Dispatch startup")
-        return AtomResponse(BuildStatus.CALL_WAITING)
+        return AtomResponse(BuildStatus.RUNNING)
     }
 
     private fun dispatch(
@@ -279,7 +279,9 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 jobId = container.jobId,
                 ignoreEnvAgentIds = ignoreEnvAgentIds,
                 singleNodeConcurrency = param.jobControlOption?.singleNodeConcurrency,
-                allNodeConcurrency = param.jobControlOption?.allNodeConcurrency
+                allNodeConcurrency = param.jobControlOption?.allNodeConcurrency,
+                jobTimeoutMinutes = param.jobControlOption?.timeoutVar?.toIntOrNull() ?: param.jobControlOption?.timeout
+                ?: VariableDefault.DEFAULT_JOB_MAX_RUNNING_MINUTES
             )
         )
     }
@@ -395,7 +397,9 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 }
 
                 try {
-                    thirdPartyAgentMonitorPrint(task)
+                    thirdPartyAgentRollBackMonitor(task)
+                    // 修改轮训时间,3m30s方便命中dispath的3分钟频率
+                    task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = (3.5 * 60 * 1000).toInt()
                 } catch (ignore: Exception) {
                     // 忽略掉因调用打印接口出错而导致调度失败的问题
                 }
@@ -410,27 +414,17 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         }
     }
 
-    private fun thirdPartyAgentMonitorPrint(task: PipelineBuildTask) {
-        // #5806 超过10秒，开始查询调度情况，并Log出来
-        val timePasses = System.currentTimeMillis() - (task.startTime?.timestampmilli() ?: 0L)
-        val modSeconds = TimeUnit.MILLISECONDS.toSeconds(timePasses) % 20
-
-        /*
-            此处说明： 在每20秒的前5秒内会执行一下以下逻辑。每5秒一次的本方法调用，在取4秒是防5秒在不断累计延迟可能会产生的最大限度不精准
-         */
-        if (modSeconds < 5) {
-
-            val agentMonitor = AgentStartMonitor(
-                projectId = task.projectId,
-                pipelineId = task.pipelineId,
-                buildId = task.buildId,
-                vmSeqId = task.containerId,
-                containerHashId = task.containerHashId,
-                userId = task.starter,
-                executeCount = task.executeCount,
-                stepId = task.stepId
-            )
-            client.get(ServiceDispatchJobResource::class).monitor(agentStartMonitor = agentMonitor)
-        }
+    private fun thirdPartyAgentRollBackMonitor(task: PipelineBuildTask) {
+        val agentMonitor = AgentStartMonitor(
+            projectId = task.projectId,
+            pipelineId = task.pipelineId,
+            buildId = task.buildId,
+            vmSeqId = task.containerId,
+            containerHashId = task.containerHashId,
+            userId = task.starter,
+            executeCount = task.executeCount,
+            stepId = task.stepId
+        )
+        client.get(ServiceDispatchJobResource::class).monitor(agentStartMonitor = agentMonitor)
     }
 }

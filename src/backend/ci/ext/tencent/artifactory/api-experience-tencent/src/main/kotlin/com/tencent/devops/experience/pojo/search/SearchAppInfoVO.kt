@@ -58,5 +58,7 @@ data class SearchAppInfoVO(
     @get:Schema(title = "外部链接", required = false)
     val externalUrl: String? = null,
     @get:Schema(title = "下载次数", required = false)
-    val downloadTime: Int? = null
+    val downloadTime: Int? = null,
+    @get:Schema(title = "分类", required = false)
+    val classify: String? = null
 )

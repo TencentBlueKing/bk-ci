@@ -15,6 +15,8 @@ repository:
     devopsGroupName: __BK_CI_REPOSITORY_GIT_PLUGIN_GROUP_NAME__
 
 scm:
+  oauth:
+    callbackUrl: __BK_CI_PUBLIC_URL__/repository/api/external/repo/%s/oauth/callback
   #svn open api url，如果不需要则放着即可
   svn:
     apiKey: __BK_CI_REPOSITORY_SVN_API_KEY__
@@ -66,3 +68,6 @@ tapd:
 
 aes:
   git: __BK_CI_REPOSITORY_AES_GIT__
+  aes:
+    scm:
+      props: __BK_CI_REPOSITORY_AES_SCM_PROPS__

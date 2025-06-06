@@ -283,13 +283,14 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
         projectId: String,
         atomFilePath: String,
         file: File,
-        authFlag: Boolean
+        authFlag: Boolean,
+        queryCacheFlag: Boolean
     ) {
         val envType = AgentEnv.getEnv().name.lowercase()
         val bkrepoProjectNameKey = "bkrepo.store.project.name.$envType"
         val bkrepoProjectName = PropertyUtil.getPropertyValue(bkrepoProjectNameKey, AGENT_PROPERTIES_FILE_NAME)
         val bkrepoUrl = "${HomeHostUtil.getHost(AgentEnv.getGateway())}/repo/storge/build/atom/$bkrepoProjectName/" +
-            "bk-plugin/$atomFilePath?authFlag=$authFlag"
+            "bk-plugin/$atomFilePath?authFlag=$authFlag&queryCacheFlag=$queryCacheFlag"
         val headers = mutableMapOf(
             AUTH_HEADER_PROJECT_ID to projectId,
             AUTH_HEADER_BKREPO_MODE to "dl"

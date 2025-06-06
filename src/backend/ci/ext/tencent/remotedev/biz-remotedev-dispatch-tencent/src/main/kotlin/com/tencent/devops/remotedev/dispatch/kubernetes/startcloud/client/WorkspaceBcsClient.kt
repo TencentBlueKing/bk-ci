@@ -23,6 +23,8 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.Environm
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateRsp
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.ListCgsResp
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.ListCgsRespData
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.ResourceEstimateByVmRequest
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.SyncVmReq
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
 import com.tencent.devops.remotedev.pojo.image.ListImagesData
@@ -31,6 +33,7 @@ import com.tencent.devops.remotedev.pojo.image.ListVmImagesResp
 import com.tencent.devops.remotedev.pojo.image.StandardVmImage
 import com.tencent.devops.remotedev.pojo.remotedev.BcsResp
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
+import com.tencent.devops.remotedev.pojo.remotedev.ResourceEstimateByVmResponse
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmResp
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmRespData
@@ -91,7 +94,7 @@ class WorkspaceBcsClient @Autowired constructor(
                 val responseContent = response.body!!.string()
                 logger.info(
                     "$id|User $userId create environment response: " +
-                            "${response.rid()}|${response.code}|$responseContent"
+                        "${response.rid()}|${response.code}|$responseContent"
                 )
                 if (!response.isSuccessful) {
                     throw WorkspaceDispatchException(
@@ -337,6 +340,53 @@ class WorkspaceBcsClient @Autowired constructor(
         }
     }
 
+    fun startGetResourceEstimateByVm(requestBody: ResourceEstimateByVmRequest): ResourceEstimateByVmResponse {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/resource/vm/estimate"
+        val body = JsonUtil.toJson(requestBody, false)
+        logger.info("request url: $url")
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders().toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info(
+                    "get startGetResourceEstimateByVm response: ${response.rid()}" +
+                            "|${response.code}|$responseContent"
+                )
+                if (!response.isSuccessful) {
+                    throw WorkspaceDispatchException(
+                        " 获取startGetResourceEstimateByVm接口异常: ${response.code}"
+                    )
+                }
+
+                val resp: BcsResp<ResourceEstimateByVmResponse> = jacksonObjectMapper().readValue(responseContent)
+                when (resp.code) {
+                    WorkspaceStartCloudClient.OK -> {
+                        if (resp.data == null) {
+                            throw WorkspaceDispatchException(
+                                " 获取startGetResourceEstimateByVm接口异常: data is null"
+                            )
+                        }
+                        return resp.data!!
+                    }
+
+                    else -> throw WorkspaceDispatchException(
+                        " 获取startGetResourceEstimateByVm接口异常: ${resp.code}-${resp.message}"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("get startGetResourceEstimateByVm SocketTimeoutException", e)
+            throw WorkspaceDispatchException(
+                errorMessage = " 获取startGetResourceEstimateByVm接口超时, url: $url"
+            )
+        }
+    }
+
     // 获取基础镜像列表
     fun startGetVmStandardImages(): List<StandardVmImage>? {
         val url = "$bcsCloudUrl/api/v1/remotedevenv/list/image"
@@ -397,6 +447,20 @@ class WorkspaceBcsClient @Autowired constructor(
             .get()
             .build()
         return OkhttpUtils.doHttp(request).resolveResponse<BcsResp<List<VmDiskInfo>>>().data
+    }
+
+    fun syncVm(
+        data: SyncVmReq
+    ): EnvironmentCreateRsp.EnvironmentCreateRspData? {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/sync/vm"
+        val body = JsonUtil.toJson(data, false)
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders().toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+        return OkhttpUtils.doHttp(request)
+            .resolveResponse<BcsResp<EnvironmentCreateRsp.EnvironmentCreateRspData>>().data
     }
 
     fun getTaskStatus(

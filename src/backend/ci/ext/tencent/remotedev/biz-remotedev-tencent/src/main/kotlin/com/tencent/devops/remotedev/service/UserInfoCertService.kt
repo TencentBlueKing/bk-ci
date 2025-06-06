@@ -19,7 +19,6 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
-import com.tencent.devops.project.pojo.FetchRemoteDevData
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.dao.UserAuthApplyDao
@@ -54,7 +53,8 @@ class UserInfoCertService @Autowired constructor(
     private val userAuthApplyDao: UserAuthApplyDao,
     private val taiClient: TaiClient,
     private val apiGwService: ApiGwService,
-    private val bkItsmService: BKItsmService
+    private val bkItsmService: BKItsmService,
+    private val permissionService: PermissionService
 ) {
     fun needRealNameCert(username: String): Boolean {
         val res = try {
@@ -154,14 +154,7 @@ class UserInfoCertService @Autowired constructor(
 
             // 太湖用户发送给云研发管理员；集团用户发送给项目管理员
             val admins = if (UserUtil.isTaiUser(data.userId)) {
-                    client.get(ServiceTxUserResource::class).getRemoteDevAdmin(
-                    FetchRemoteDevData(
-                        setOf(data.projectId)
-                    )
-                ).data?.get(data.projectId) ?: run {
-                    logger.warn("$USER_CERT_LOG_PREFIX|doAsyncAuthCheck|getRemoteDevAdmin|${data.projectId} is null")
-                    return
-                }
+                permissionService.managers(data.projectId).toSet()
             } else {
                 client.get(ServiceTxUserResource::class).getProjectUserRoles(
                     projectCode = data.projectId,

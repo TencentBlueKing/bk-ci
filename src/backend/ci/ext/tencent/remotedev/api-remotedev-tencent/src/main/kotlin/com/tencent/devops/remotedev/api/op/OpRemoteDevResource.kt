@@ -34,20 +34,22 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
+import com.tencent.devops.remotedev.pojo.WhiteList
+import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.windows.WindowsPoolListFetchData
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
 
 @Tag(name = "OP_REMOTE_DEV", description = "OP-REMOTE-DEV")
 @Path("/op")
@@ -231,4 +233,68 @@ interface OpRemoteDevResource {
         @QueryParam("push")
         push: Boolean
     ): Response
+
+    @Operation(summary = "获取服务Config表配置")
+    @GET
+    @Path("/configs")
+    fun configs(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<Map<String, String>>
+
+    @Operation(summary = "创建or更新服务Config表配置")
+    @POST
+    @Path("/configs")
+    fun updateConfigs(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("key")
+        key: String,
+        @QueryParam("value")
+        value: String
+    ): Result<Boolean>
+
+    @Operation(summary = "删除服务Config表配置")
+    @DELETE
+    @Path("/configs")
+    fun deleteConfigs(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("key")
+        key: String
+    ): Result<Boolean>
+
+    @Operation(summary = "获取服务white_list表配置")
+    @GET
+    @Path("/white_list")
+    fun whiteList(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("whiteListType")
+        whiteListType: WhiteListType
+    ): Result<List<WhiteList>>
+
+    @Operation(summary = "创建or更新服务white_list表配置")
+    @POST
+    @Path("/white_list")
+    fun updateWhiteList(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        whiteList: WhiteList
+    ): Result<Boolean>
+
+    @Operation(summary = "删除服务white_list表配置")
+    @DELETE
+    @Path("/white_list")
+    fun deleteWhiteList(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        whiteList: WhiteList
+    ): Result<Boolean>
 }

@@ -30,7 +30,7 @@ package com.tencent.devops.remotedev.resources.user
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserProjectWorkspaceImageResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -63,7 +63,7 @@ class UserProjectWorkspaceImageResourceImpl @Autowired constructor(
         return Result(projectImageManageService.getProjectImageList(projectId, null))
     }
 
-    @AuditEntry(actionId = ActionId.IMAGE_DELETE)
+    @AuditEntry(actionId = TencentActionId.IMAGE_DELETE)
     override fun deleteProjectImage(userId: String, projectId: String, imageId: String): Result<Boolean> {
         return Result(projectImageManageService.deleteProjectImage(userId, projectId, imageId))
     }

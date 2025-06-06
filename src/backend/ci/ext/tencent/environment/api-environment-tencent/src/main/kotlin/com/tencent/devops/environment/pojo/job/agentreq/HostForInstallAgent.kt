@@ -27,6 +27,7 @@
 
 package com.tencent.devops.environment.pojo.job.agentreq
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "安装agent的请求信息中的 host信息")
@@ -37,12 +38,10 @@ data class HostForInstallAgent(
     val bkCloudId: Int?,
     @get:Schema(title = "寻址方式，1: 0，静态 2: 1，动态")
     val bkAddressing: String?,
-    @get:Schema(title = "是否自动选择安装通道，true-自动选择，false-读取installChannelId字段", required = true)
-    val isAutoChooseInstallChannelId: Boolean = true,
     @get:Schema(title = "接入点ID")
     val apId: Int? = null,
     @get:Schema(title = "安装通道ID")
-    val installChannelId: Int?,
+    val installChannelId: Int = -1,
     @get:Schema(title = "内网IPV4地址，inner_ip和inner_ipv6必选其一")
     val innerIp: String?,
     @get:Schema(title = "登录IP")
@@ -62,6 +61,7 @@ data class HostForInstallAgent(
     @get:Schema(title = "端口")
     val port: String?,
     @get:Schema(title = "是否手动模式")
+    @JsonProperty("isManual")
     val isManual: Boolean?,
     @get:Schema(title = "加速设置，默认为0")
     val peerExchangeSwitchForAgent: Int? = null,

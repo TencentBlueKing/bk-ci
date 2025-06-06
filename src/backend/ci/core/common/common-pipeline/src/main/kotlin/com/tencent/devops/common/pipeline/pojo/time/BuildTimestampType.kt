@@ -54,7 +54,8 @@ enum class BuildTimestampType(
     fun taskCheckWait() = this == TASK_REVIEW_PAUSE_WAITING
 
     /*使container处于排队的类型*/
-    fun containerCheckQueue() = this == JOB_MUTEX_QUEUE || this == JOB_THIRD_PARTY_QUEUE
+    fun containerCheckQueue() = this == JOB_MUTEX_QUEUE ||
+        this == JOB_THIRD_PARTY_QUEUE || this == JOB_AGENT_REUSE_MUTEX_QUEUE
 
     /*使stage处于等待的类型*/
     fun stageCheckWait() = this == STAGE_CHECK_IN_WAITING || this == STAGE_CHECK_OUT_WAITING

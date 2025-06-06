@@ -220,12 +220,12 @@
                             v-model="relateImageData.form.imageSourceType"
                             @change="handleChangeForm"
                         >
-                            <bk-radio
+                            <!-- <bk-radio
                                 value="BKDEVOPS"
                                 class="mr12"
                             >
                                 {{ $t('store.蓝盾源') }}
-                            </bk-radio>
+                            </bk-radio> -->
                             <bk-radio value="THIRD"> {{ $t('store.第三方源') }} </bk-radio>
                         </bk-radio-group>
                     </bk-form-item>
@@ -405,7 +405,7 @@
                         imageCode: '',
                         projectCode: '',
                         imageName: '',
-                        imageSourceType: 'BKDEVOPS',
+                        imageSourceType: 'THIRD',
                         ticketId: ''
                     }
                 },
@@ -573,7 +573,7 @@
                             this.relateImageData.form = {
                                 projectCode: '',
                                 imageName: '',
-                                imageSourceType: 'BKDEVOPS',
+                                imageSourceType: 'THIRD',
                                 ticketId: ''
                             }
                             setTimeout(() => {
@@ -603,7 +603,7 @@
                             this.relateImageData.form = {
                                 projectCode: '',
                                 imageName: '',
-                                imageSourceType: 'BKDEVOPS',
+                                imageSourceType: 'THIRD',
                                 ticketId: ''
                             }
                             setTimeout(() => {
@@ -617,7 +617,7 @@
                     this.relateImageData.form = {
                         projectCode: '',
                         imageName: '',
-                        imageSourceType: 'BKDEVOPS',
+                        imageSourceType: 'THIRD',
                         ticketId: ''
                     }
                 }

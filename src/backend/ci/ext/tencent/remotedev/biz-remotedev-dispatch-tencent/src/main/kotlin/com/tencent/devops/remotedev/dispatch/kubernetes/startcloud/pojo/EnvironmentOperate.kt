@@ -1,5 +1,7 @@
 package com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo
 
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentCreateBasicBody.Toleration
+
 abstract class EnvironmentOperateInf(
     open val uid: String
 )
@@ -17,7 +19,9 @@ data class EnvironmentOperate(
     val formatDataDisk: Boolean? = null,
     val size: String? = null,
     val live: Boolean? = null,
-    val imageName: String? = null
+    val imageName: String? = null,
+    val tolerations: List<Toleration>? = null,
+    val nodeSelector: Map<String, String>? = null
 ) : EnvironmentOperateInf(uid)
 
 /**
@@ -37,9 +41,25 @@ data class EnvironmentOperateExpandDisk(
  * @param uid 环境id
  * @param pvcSize 数据盘扩容大小单位Gi
  * @param pvcClass PVC类型 ssd or hdd
+ * @param forceRestart 是否强制重启
  */
 data class EnvironmentOperateCreateDisk(
     override val uid: String,
     val pvcSize: String,
-    val pvcClass: String
+    val pvcClass: String,
+    val forceRestart: Boolean?
+) : EnvironmentOperateInf(uid)
+
+/**
+ * 删除数据盘相关
+ * @param uid 环境id
+ * @param pvcName 磁盘唯一名称
+ * @param forceRestart 是否强制重启
+ * @param delaySeconds 延迟删除时间，秒
+ */
+data class EnvironmentOperateDeleteDisk(
+    override val uid: String,
+    val pvcName: String,
+    val forceRestart: Boolean?,
+    val delaySeconds: Int?
 ) : EnvironmentOperateInf(uid)

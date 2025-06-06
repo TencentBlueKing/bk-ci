@@ -42,7 +42,7 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import com.tencent.devops.repository.service.CredentialService
+import com.tencent.devops.repository.service.RepoCredentialService
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
@@ -58,7 +58,7 @@ class CodeP4RepositoryService @Autowired constructor(
     private val repositoryCodeP4Dao: RepositoryCodeP4Dao,
     private val dslContext: DSLContext,
     private val scmService: IScmService,
-    private val credentialService: CredentialService
+    private val credentialService: RepoCredentialService
 ) : CodeRepositoryService<CodeP4Repository> {
     override fun repositoryType(): String {
         return CodeP4Repository::class.java.name
@@ -77,7 +77,8 @@ class CodeP4RepositoryService @Autowired constructor(
                 aliasName = repository.aliasName,
                 url = repository.getFormatURL(),
                 type = ScmType.CODE_P4,
-                enablePac = repository.enablePac
+                enablePac = repository.enablePac,
+                scmCode = ScmType.CODE_P4.name
             )
             repositoryCodeP4Dao.create(
                 dslContext = transactionContext,
@@ -143,7 +144,8 @@ class CodeP4RepositoryService @Autowired constructor(
             projectId = repository.projectId,
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
             enablePac = repository.enablePac,
-            yamlSyncStatus = repository.yamlSyncStatus
+            yamlSyncStatus = repository.yamlSyncStatus,
+            scmCode = repository.scmCode ?: ScmType.CODE_P4.name
         )
     }
 

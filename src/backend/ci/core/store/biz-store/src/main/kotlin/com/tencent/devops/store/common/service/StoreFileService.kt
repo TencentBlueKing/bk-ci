@@ -29,7 +29,7 @@ package com.tencent.devops.store.common.service
 import com.tencent.devops.artifactory.pojo.LocalDirectoryInfo
 import com.tencent.devops.artifactory.pojo.LocalFileInfo
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.store.common.utils.TextReferenceFileAnalysisUtil
+import com.tencent.devops.store.common.utils.StoreFileAnalysisUtil
 import com.tencent.devops.store.pojo.common.TextReferenceFileDownloadRequest
 import java.io.File
 import java.io.FileOutputStream
@@ -65,10 +65,10 @@ abstract class StoreFileService {
         version: String,
         request: TextReferenceFileDownloadRequest
     ): String? {
-        val fileDirPath = TextReferenceFileAnalysisUtil.buildStoreArchivePath(
-            atomDir = "${request.storeCode}$fileSeparator$version${fileSeparator}file"
+        val fileDirPath = StoreFileAnalysisUtil.buildStoreArchivePath(
+            storeDir = "${request.storeCode}$fileSeparator$version${fileSeparator}file"
         )
-        if (!TextReferenceFileAnalysisUtil.isDirectoryNotEmpty(fileDirPath)) {
+        if (!StoreFileAnalysisUtil.isDirectoryNotEmpty(fileDirPath)) {
             textReferenceFileDownload(
                 userId = userId,
                 fileDirPath = fileDirPath,
@@ -124,7 +124,7 @@ abstract class StoreFileService {
             }
         }
         // 解析获取文件引用路径
-        text = TextReferenceFileAnalysisUtil.regexAnalysis(
+        text = StoreFileAnalysisUtil.regexAnalysis(
             input = text,
             fileDirPath = fileDirPath,
             pathList = pathList
@@ -138,7 +138,7 @@ abstract class StoreFileService {
                 pathList = pathList.map { LocalFileInfo(it) }
             )
         )
-        return TextReferenceFileAnalysisUtil.filePathReplace(uploadFileToPathResult.toMutableMap(), text)
+        return StoreFileAnalysisUtil.filePathReplace(uploadFileToPathResult.toMutableMap(), text)
     }
 
     fun getStaticFileReference(
@@ -158,7 +158,7 @@ abstract class StoreFileService {
             )
         )
         if (uploadFileToPathResult.isNotEmpty()) {
-            return TextReferenceFileAnalysisUtil.filePathReplace(uploadFileToPathResult.toMutableMap(), content)
+            return StoreFileAnalysisUtil.filePathReplace(uploadFileToPathResult.toMutableMap(), content)
         }
         return content
     }
@@ -188,8 +188,8 @@ abstract class StoreFileService {
      * 清理组件版本引用文件
      */
     fun cleanStoreVersionReferenceFile(storeCode: String, version: String) {
-        val filePath = TextReferenceFileAnalysisUtil.buildStoreArchivePath("$storeCode$fileSeparator$version")
-        if (TextReferenceFileAnalysisUtil.isDirectoryNotEmpty(filePath)) {
+        val filePath = StoreFileAnalysisUtil.buildStoreArchivePath("$storeCode$fileSeparator$version")
+        if (StoreFileAnalysisUtil.isDirectoryNotEmpty(filePath)) {
             File(filePath).deleteRecursively()
         }
     }

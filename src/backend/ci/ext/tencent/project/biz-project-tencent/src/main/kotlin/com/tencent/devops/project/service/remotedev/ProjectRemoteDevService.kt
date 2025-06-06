@@ -4,15 +4,21 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.auth.api.ServicePermissionExtResource
 import com.tencent.devops.auth.api.service.ServiceMonitorSpaceResource
+import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.RemoteDevDao
+import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectProperties
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -31,6 +37,7 @@ import org.springframework.stereotype.Service
  */
 @Service
 class ProjectRemoteDevService @Autowired constructor(
+    private val tokenService: ClientTokenService,
     private val objectMapper: ObjectMapper,
     private val client: Client,
     private val dslContext: DSLContext,
@@ -49,6 +56,9 @@ class ProjectRemoteDevService @Autowired constructor(
 
     @Value("\${remoteDev.bkrepoDevxUrl:}")
     val bkrepoDevxUrl = ""
+
+    @Value("\${remoteDev.bkrepoCsigDevxUrl:}")
+    val bkrepoCsigDevxUrl = ""
 
     @Value("\${remoteDev.bkrepoDevxSha256Key:}")
     val bkrepoDevxSha256Key = ""
@@ -84,8 +94,9 @@ class ProjectRemoteDevService @Autowired constructor(
             }
         }
 
-        // 启动bkrepo相关配置
+        // 启动bkrepo相关配置，包含ieg离岸和csig集群
         enableBkRepo(enableRepoData)
+        enableCsigBkRepo(enableRepoData)
     }
 
     private fun quickImportDashboard(
@@ -167,6 +178,39 @@ class ProjectRemoteDevService @Autowired constructor(
         }
     }
 
+    private fun enableCsigBkRepo(
+        data: EnableBkRepoData
+    ) {
+        val body = objectMapper.writeValueAsString(data)
+        val url = "$bkrepoCsigDevxUrl/repository/api/webhook/receiver/bkci"
+        val requestBody = body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+        val request = Request.Builder()
+            .url(url)
+            .headers(
+                mapOf(
+                    "X-DEVOPS-EVENT" to "DEVX_ENABLED",
+                    "X-DEVOPS-SIGNATURE-256" to HmacUtils(
+                        HmacAlgorithms.HMAC_SHA_256,
+                        bkrepoDevxSha256Key
+                    ).hmacHex(body)
+                ).toHeaders()
+            )
+            .post(requestBody)
+            .build()
+        logger.debug("enableCsigBkRepo|{}|{}", request.headers, body)
+        try {
+            OkhttpUtils.doHttp(request).use {
+                val responseStr = it.body!!.string()
+                if (!it.isSuccessful) {
+                    logger.warn("enableCsigBkRepo request failed, uri:($url)|response: ($responseStr)")
+                    return
+                }
+            }
+        } catch (e: Exception) {
+            logger.error("enableCsigBkRepo request api[${request.url.toUrl()}] error: ${e.localizedMessage}")
+        }
+    }
+
     fun updateRemoteDevInfo(
         userId: String,
         projectCode: String,
@@ -189,8 +233,12 @@ class ProjectRemoteDevService @Autowired constructor(
         if (addcloudDesktopNum != null) {
             prop = prop.copy(cloudDesktopNum = prop.cloudDesktopNum + addcloudDesktopNum)
         }
+        val managers =
+            client.get(ServiceUserResource::class)
+                .getProjectUserRoles(projectCode, BkAuthGroup.CGS_MANAGER).data?.toMutableSet() ?: mutableSetOf()
+        val add = rewriteManages?.minus(managers) ?: emptySet()
         if (rewriteManages != null) {
-            prop = prop.copy(remotedevManager = rewriteManages.joinToString(";"))
+            managers.addAll(rewriteManages)
         }
         if (enableRemotedev != null) {
             prop = prop.copy(remotedev = enableRemotedev)
@@ -202,6 +250,9 @@ class ProjectRemoteDevService @Autowired constructor(
             // 更新云研发项目时相关操作
             val enableRemoteDev = dbProperties.remotedev != true && enableRemotedev == true
             if (enableRemoteDev) {
+                client.get(ServicePermissionExtResource::class).migrateRemoteDevManager(
+                    projectCode = projectCode
+                )
                 enableRemoteDev(
                     userId = userId,
                     projectCode = record.englishName,
@@ -219,19 +270,29 @@ class ProjectRemoteDevService @Autowired constructor(
                     )
                 )
                 // 新开启的云研发项目给所有管理员发通知
-                val manager = prop.remotedevManager
-                    ?.split(";")?.filter { it.isNotBlank() }?.toSet()
-                    ?: emptySet()
-
                 sendEnableRemoteDevNotify(
-                    sendNotifyUser = manager,
+                    sendNotifyUser = managers,
                     projectCode = record.englishName,
                     projectName = record.projectName,
                     cloudDesktopNum = prop.cloudDesktopNum
                 )
             }
         }
-
+        if (add.isNotEmpty()) {
+            client.get(ServiceResourceMemberResource::class).batchAddResourceGroupMembers(
+                token = tokenService.getSystemToken(),
+                projectCode = projectCode,
+                projectCreateUserInfo = ProjectCreateUserInfo(
+                    createUserId = userId,
+                    roleName = BkAuthGroup.CGS_MANAGER.value,
+                    userIds = add.toList(),
+                    roleId = null,
+                    groupId = null,
+                    resourceType = null,
+                    resourceCode = null
+                )
+            )
+        }
         return projectDao.updatePropertiesByCode(dslContext, projectCode, prop) > 0
     }
 

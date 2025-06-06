@@ -47,7 +47,7 @@ import java.util.Date
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 
 @Service
 class AgentDisconnectNotifyService @Autowired constructor(

@@ -6,8 +6,34 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 data class ResourceVmReq(
     val zoneId: String?,
     val machineType: String?,
-    val internal: Boolean?
-)
+    val internal: Boolean?,
+    val tolerations: List<Toleration>? = null,
+    val nodeSelector: Map<String, String>? = null
+) {
+    data class Toleration(
+        val key: String = "bkbcs.tencent.com/node-group",
+        val operator: String = "Equal",
+        val value: String,
+        val effect: String = "NoSchedule"
+    )
+
+    constructor(
+        zoneId: String?,
+        machineType: String?,
+        internal: Boolean?,
+        specifyTaints: String? = null
+    ) : this(
+        zoneId = zoneId,
+        machineType = machineType,
+        internal = internal,
+        tolerations = if (specifyTaints != null) {
+            listOf(Toleration(value = specifyTaints))
+        } else null,
+        nodeSelector = if (specifyTaints != null) {
+            mapOf("bkbcs.tencent.com/node-group" to specifyTaints)
+        } else null
+    )
+}
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ResourceVmResp(

@@ -2216,6 +2216,34 @@
     {
       "operation": "upsert_action",
       "data": {
+        "id": "cgs_manage",
+        "name": "云桌面管理",
+        "name_en": "Cgs Manage",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "cgs",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
         "id": "cgs_create",
         "name": "创建云桌面",
         "name_en": "Cgs Create",

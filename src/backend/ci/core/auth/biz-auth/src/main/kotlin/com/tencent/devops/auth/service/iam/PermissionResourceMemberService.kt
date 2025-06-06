@@ -57,6 +57,8 @@ interface PermissionResourceMemberService {
 
     fun roleCodeToIamGroupId(
         projectCode: String,
+        resourceType: String,
+        resourceCode: String,
         roleCode: String
     ): Int
 
@@ -87,6 +89,7 @@ interface PermissionResourceMemberService {
         memberId: String,
         /*user or department or template*/
         memberType: String,
+        /*秒级时间戳，永久期限为4102444800*/
         expiredAt: Long,
         iamGroupId: Int
     ): Boolean

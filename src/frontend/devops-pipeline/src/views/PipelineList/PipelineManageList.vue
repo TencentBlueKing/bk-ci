@@ -1,5 +1,6 @@
 <template>
     <main class="pipeline-list-main">
+        <pipeline-problem-tips />
         <div
             class="recycle-bin-header"
             v-if="isDeleteView"
@@ -227,6 +228,7 @@
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
     import { mapActions, mapState } from 'vuex'
     import PipelineSearcher from './PipelineSearcher'
+    import PipelineProblemTips from '@/components/PipelineProblemTips'
 
     import Logo from '@/components/Logo'
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
@@ -256,7 +258,8 @@
             PipelineSearcher,
             ImportPipelinePopup,
             PipelineGroupEditDialog,
-            DisableDialog
+            DisableDialog,
+            PipelineProblemTips
         },
         mixins: [piplineActionMixin],
         data () {
@@ -517,11 +520,6 @@
         align-items: center;
         > h5 {
             color: #313238;
-        }
-    }
-    .pipeline-list-main-header {
-        .bk-dropdown-menu {
-            top: -1px;
         }
     }
     .pipeline-sort-dropdown-menu {

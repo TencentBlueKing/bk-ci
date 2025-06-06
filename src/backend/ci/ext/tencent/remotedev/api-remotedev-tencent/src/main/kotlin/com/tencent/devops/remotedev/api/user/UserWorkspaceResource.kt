@@ -43,6 +43,8 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
 import com.tencent.devops.remotedev.pojo.tai.Moa2faReqData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faRespData
 import com.tencent.devops.remotedev.pojo.tai.Moa2faVerifyReqData
@@ -52,16 +54,16 @@ import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
-import javax.ws.rs.DefaultValue
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.DefaultValue
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "USER_WORKSPACE", description = "用户-工作空间")
 @Path("/{apiType:user|desktop}/workspaces")
@@ -314,6 +316,9 @@ interface UserWorkspaceResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "实例ID", required = false)
+        @QueryParam("workspaceName")
+        workspaceName: String?,
         @Parameter(description = "发起的验证数据", required = true)
         moa2faReqData: Moa2faReqData
     ): Result<Moa2faRespData>
@@ -340,4 +345,14 @@ interface UserWorkspaceResource {
         @QueryParam("type")
         type: RemoteDevNotifyType
     ): Result<Boolean>
+
+    @Operation(summary = "获取项目策略")
+    @POST
+    @Path("/get_project_strategy")
+    fun getProjectStrategy(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: ProjectStrategyFetchInfo
+    ): Result<ProjectStrategyResp>
 }

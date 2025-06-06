@@ -93,6 +93,7 @@ watch(
     if (oldVal) {
       filter.value = [];
       applyTips.value = '';
+      userGroupList.value = [];
       pagination.value.current = 1;
     }
   },

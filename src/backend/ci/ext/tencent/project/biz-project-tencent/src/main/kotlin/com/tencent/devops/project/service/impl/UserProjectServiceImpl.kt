@@ -29,10 +29,15 @@ package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthPlatformApi
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.gray.Gray
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TServiceRecord
 import com.tencent.devops.project.constant.ProjectMessageCode.BK_CONTAINER_SERVICE
@@ -44,7 +49,9 @@ import com.tencent.devops.project.dao.ServiceTypeDao
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.service.ServiceListVO
 import com.tencent.devops.project.pojo.service.ServiceVO
+import com.tencent.devops.project.service.ServiceManageService
 import com.tencent.devops.project.service.tof.TOFService
+import jakarta.servlet.http.HttpServletRequest
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -53,7 +60,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
-import javax.servlet.http.HttpServletRequest
 
 @Suppress("UNUSED", "LongParameterList", "LongMethod", "ExplicitItLambdaParameter")
 @Service
@@ -64,9 +70,24 @@ class UserProjectServiceImpl @Autowired constructor(
     private val favoriteDao: FavoriteDao,
     gray: Gray,
     redisOperation: RedisOperation,
+    authProjectApi: AuthProjectApi,
+    pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val tofService: TOFService,
-    private val bkTag: BkTag
-) : AbsUserProjectServiceServiceImpl(dslContext, serviceTypeDao, serviceDao, favoriteDao, gray, redisOperation) {
+    private val bkTag: BkTag,
+    private val apiPlatformApi: AuthPlatformApi,
+    private val authPermissionApi: AuthPermissionApi
+) : AbsUserProjectServiceServiceImpl(
+    dslContext,
+    serviceTypeDao,
+    serviceDao,
+    favoriteDao,
+    gray,
+    redisOperation,
+    authProjectApi,
+    pipelineAuthServiceCode,
+    apiPlatformApi,
+    authPermissionApi
+) {
 
     @Value("\${project.container.url:#{null}}")
     private var containerUrl: String? = null
@@ -119,43 +140,50 @@ class UserProjectServiceImpl @Autowired constructor(
                         userId = userId,
                         replaceMap = replaceMap
                     )
-                    services.add(
-                        ServiceVO(
-                            id = it.id,
-                            name = I18nUtil.getCodeLanMessage(T_SERVICE_PREFIX + it.englishName)
-                                .ifBlank { it.name },
-                            link = it.link ?: "",
-                            linkNew = it.linkNew ?: "",
-                            status = getPermStatus(it),
-                            injectType = it.injectType ?: "",
-                            iframeUrl = replaceUrl(
-                                url = genUrl(url = it.iframeUrl, grayUrl = it.grayIframeUrl, projectId = projectId),
-                                replaceMap = replaceMap
-                            ),
-                            grayIframeUrl = replaceUrl(url = it.grayIframeUrl ?: "", replaceMap = replaceMap),
-                            cssUrl = replaceUrl(
-                                url = genUrl(url = it.cssUrl, grayUrl = it.grayCssUrl, projectId = projectId),
-                                replaceMap = replaceMap
-                            ),
-                            jsUrl = replaceUrl(
-                                url = genUrl(url = it.jsUrl, grayUrl = it.grayJsUrl, projectId = projectId),
-                                replaceMap = replaceMap
-                            ),
-                            grayCssUrl = replaceUrl(url = it.grayCssUrl ?: "", replaceMap = replaceMap),
-                            grayJsUrl = replaceUrl(url = it.grayJsUrl ?: "", replaceMap = replaceMap),
-                            showProjectList = it.showProjectList ?: false,
-                            showNav = it.showNav ?: false,
-                            projectIdType = it.projectIdType ?: "",
-                            collected = favor,
-                            weigHt = it.weight ?: 0,
-                            logoUrl = replaceUrl(url = it.logoUrl ?: "", replaceMap = replaceMap),
-                            webSocket = it.webSocket,
-                            newWindow = newWindow,
-                            newWindowUrl = newWindowUrl,
-                            clusterType = it.clusterType,
-                            docUrl = it.docUrl ?: ""
-                        )
+                    val code = it.englishName
+                    var serviceVO = ServiceVO(
+                        id = it.id,
+                        code = code,
+                        name = I18nUtil.getCodeLanMessage(T_SERVICE_PREFIX + it.englishName)
+                            .ifBlank { it.name },
+                        link = it.link ?: "",
+                        linkNew = it.linkNew ?: "",
+                        status = getPlatformStatus(it, userId),
+                        injectType = it.injectType ?: "",
+                        iframeUrl = replaceUrl(
+                            url = genUrl(url = it.iframeUrl, grayUrl = it.grayIframeUrl, projectId = projectId),
+                            replaceMap = replaceMap
+                        ),
+                        grayIframeUrl = replaceUrl(url = it.grayIframeUrl ?: "", replaceMap = replaceMap),
+                        cssUrl = replaceUrl(
+                            url = genUrl(url = it.cssUrl, grayUrl = it.grayCssUrl, projectId = projectId),
+                            replaceMap = replaceMap
+                        ),
+                        jsUrl = replaceUrl(
+                            url = genUrl(url = it.jsUrl, grayUrl = it.grayJsUrl, projectId = projectId),
+                            replaceMap = replaceMap
+                        ),
+                        grayCssUrl = replaceUrl(url = it.grayCssUrl ?: "", replaceMap = replaceMap),
+                        grayJsUrl = replaceUrl(url = it.grayJsUrl ?: "", replaceMap = replaceMap),
+                        showProjectList = it.showProjectList ?: false,
+                        showNav = it.showNav ?: false,
+                        projectIdType = it.projectIdType ?: "",
+                        collected = favor,
+                        weigHt = it.weight ?: 0,
+                        logoUrl = replaceUrl(url = it.logoUrl ?: "", replaceMap = replaceMap),
+                        webSocket = it.webSocket,
+                        newWindow = newWindow,
+                        newWindowUrl = newWindowUrl,
+                        clusterType = it.clusterType,
+                        docUrl = it.docUrl ?: ""
                     )
+                    serviceVO = doServiceSpecBus(
+                        code = code,
+                        serviceVO = serviceVO,
+                        userId = userId,
+                        projectId = projectId
+                    )
+                    services.add(serviceVO)
                 }
                 if (serviceListByTypeId != null) {
                     serviceListVO.add(
@@ -170,6 +198,22 @@ class UserProjectServiceImpl @Autowired constructor(
             return Result(code = 0, message = "OK", data = serviceListVO)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list services")
+        }
+    }
+
+    private fun doServiceSpecBus(
+        code: String,
+        serviceVO: ServiceVO,
+        userId: String,
+        projectId: String?
+    ): ServiceVO {
+        val beanName = "${code.uppercase()}_MANAGE_SERVICE"
+        return if (SpringContextUtil.isBeanExist(beanName)) {
+            // 对服务数据进行特殊处理
+            val serviceManageService = SpringContextUtil.getBean(ServiceManageService::class.java, beanName)
+            serviceManageService.doSpecBus(userId, serviceVO, projectId)
+        } else {
+            serviceVO
         }
     }
 
@@ -285,13 +329,12 @@ class UserProjectServiceImpl @Autowired constructor(
         return result
     }
 
-    private fun getPermStatus(tServiceRecord: TServiceRecord): String {
-        val isRbacCluster = bkTag.getLocalTag().contains("rbac")
+    private fun getPlatformStatus(tServiceRecord: TServiceRecord, userId: String): String {
         return when {
-            // 如果是rbac项目,那么旧版权限中心需要隐藏
-            tServiceRecord.englishName == "Perm" && isRbacCluster -> "planning"
-            // 如果不是rbac项目,那么新版权限中心需要隐藏
-            tServiceRecord.englishName == "Permission" && !isRbacCluster -> "planning"
+            // 平台管理界面，需要校验权限
+            tServiceRecord.englishName == SERVICE_ENGLISH_NAME_PLATFORM &&
+                    apiPlatformApi.validateUserPlatformPermission(userId) -> SERVICE_ITEM_STATUS_OK
+
             else -> tServiceRecord.status
         }
     }

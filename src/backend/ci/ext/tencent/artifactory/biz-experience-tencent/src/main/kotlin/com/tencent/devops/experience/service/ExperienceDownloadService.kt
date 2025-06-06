@@ -30,6 +30,7 @@ package com.tencent.devops.experience.service
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
+import com.tencent.devops.artifactory.pojo.AllowDownload
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.artifactory.pojo.HapJson5Info
 import com.tencent.devops.artifactory.pojo.TokenForJsonRequest
@@ -500,7 +501,7 @@ class ExperienceDownloadService @Autowired constructor(
     }
 
     fun jumpInfo(projectId: String, bundleIdentifier: String, platform: String): ExperienceJumpInfo {
-        if (platform != "ANDROID" && platform != "IOS") {
+        if (PlatformEnum.ofName(platform) == PlatformEnum.UNKNOWN) {
             logger.warn("platform is illegal , {}", platform)
             throw ErrorCodeException(
                 statusCode = 403,
@@ -508,14 +509,14 @@ class ExperienceDownloadService @Autowired constructor(
             )
         }
 
-        val experiencePublicRecord = experiencePublicDao.getByBundleId(
+        val experienceRecord = experienceDao.getByBundleId(
             dslContext = dslContext,
             projectId = projectId,
             bundleIdentifier = bundleIdentifier,
             platform = platform
         )
 
-        if (null == experiencePublicRecord) {
+        if (null == experienceRecord) {
             logger.warn(
                 "can not found record , projectId:{} , bundleIdentifier:{} , platform:{}",
                 projectId,
@@ -530,24 +531,24 @@ class ExperienceDownloadService @Autowired constructor(
 
         val scheme = if (platform == "ANDROID") {
             "bkdevopsapp://bkdevopsapp/app/experience/expDetail/" +
-                    HashUtil.encodeLongId(experiencePublicRecord.recordId)
+                    HashUtil.encodeLongId(experienceRecord.id)
         } else {
             "bkdevopsapp://app/experience/expDetail/" +
-                    HashUtil.encodeLongId(experiencePublicRecord.id)
+                    HashUtil.encodeLongId(experienceRecord.id)
         }
 
-        val shortUrlRequest = CreateShortUrlRequest(
-            getExternalDownloadUrl(
-                "third_app",
-                experiencePublicRecord.recordId,
-                false,
-                10 * 60
-            ).url, 10 * 60 * 2
-        )
-        return ExperienceJumpInfo(
-            scheme,
+        val url = if (experiencePublicDao.countByRecordId(dslContext, experienceRecord.id) > 0) {
+            val shortUrlRequest = CreateShortUrlRequest(
+                getExternalDownloadUrl(
+                    "third_app",
+                    experienceRecord.id,
+                    false,
+                    10 * 60
+                ).url, 10 * 60 * 2
+            )
             client.get(ServiceShortUrlResource::class).createShortUrl(shortUrlRequest).data!!
-        )
+        } else ""
+        return ExperienceJumpInfo(scheme, url)
     }
 
     private fun addUserDownloadTime(
@@ -588,6 +589,29 @@ class ExperienceDownloadService @Autowired constructor(
             logger.error("report speed error", e)
             return false
         }
+    }
+
+    fun allowDownload(
+        userId: String,
+        realIP: String,
+        experienceHashId: String?,
+        projectId: String?,
+        artifactoryType: ArtifactoryType?,
+        path: String?
+    ): AllowDownload {
+        var finalProjectId = projectId
+        var finalArtifactoryType = artifactoryType
+        var finalPath = path
+        if (!experienceHashId.isNullOrBlank()) {
+            val experienceId = HashUtil.decodeIdToLong(experienceHashId)
+            experienceDao.get(dslContext, experienceId).let {
+                finalProjectId = it.projectId
+                finalArtifactoryType = ArtifactoryType.valueOf(it.artifactoryType)
+                finalPath = it.artifactoryPath
+            }
+        }
+        return client.get(ServiceArtifactoryDownLoadResource::class)
+            .allowDownload(userId, realIP, finalProjectId!!, finalArtifactoryType!!, finalPath!!).data!!
     }
 
     companion object {

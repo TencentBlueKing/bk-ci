@@ -33,17 +33,19 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.experience.constant.ExperienceConstant.ORGANIZATION_OUTER
+import com.tencent.devops.experience.constant.ExperiencePublicType
+import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.ExperienceSearchRecommendDao
 import com.tencent.devops.experience.pojo.search.SearchAppInfoVO
 import com.tencent.devops.experience.pojo.search.SearchRecommendVO
+import jakarta.ws.rs.NotFoundException
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
 
 @Service
 class ExperienceSearchService @Autowired constructor(
@@ -64,7 +66,7 @@ class ExperienceSearchService @Autowired constructor(
         minigame: Boolean?
     ): Result<List<SearchAppInfoVO>> {
         val record = if (experiencePublic) {
-            val projectId = if (minigame != null && minigame == true) {
+            val projectId = if (minigame != null && minigame) {
                 if (minigameProjectId == null) {
                     throw NotFoundException("MiniGame projectId not found")
                 }
@@ -72,7 +74,7 @@ class ExperienceSearchService @Autowired constructor(
             } else {
                 null
             }
-            publicSearch(
+            allSearch(
                 userId = userId,
                 experienceName = experienceName,
                 platform = platform,
@@ -109,11 +111,12 @@ class ExperienceSearchService @Autowired constructor(
             bundleIdentifier = it.bundleIdentifier,
             version = it.version,
             versionTitle = it.versionTitle,
-            appScheme = it.appScheme
+            appScheme = it.appScheme,
+            classify = it.classify
         )
     }
 
-    private fun publicSearch(
+    private fun allSearch(
         userId: String,
         experienceName: String,
         platform: Int?,
@@ -121,15 +124,30 @@ class ExperienceSearchService @Autowired constructor(
     ): List<SearchAppInfoVO> {
         val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
         val now = LocalDateTime.now()
+        var recordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.ALL, false)
 
-        return experiencePublicDao.listLikeExperienceName(
+        recordIds = experienceDao.listIdsGroupByBundleId(
             dslContext = dslContext,
-            experienceName = experienceName.trim(),
-            platform = PlatformEnum.of(platform)?.name,
+            ids = recordIds,
+            expireTime = now,
+            online = true,
             projectId = projectId
+        ).map { it.value1() }.toMutableSet()
+
+        val platformStr = PlatformEnum.of(platform)?.name
+
+        return experienceDao.listByIds(
+            dslContext = dslContext,
+            ids = recordIds,
+            platform = platformStr,
+            expireTime = now,
+            online = true,
+            offset = 0,
+            limit = 100,
+            experienceName = experienceName
         ).map {
             SearchAppInfoVO(
-                experienceHashId = HashUtil.encodeLongId(it.recordId),
+                experienceHashId = HashUtil.encodeLongId(it.id),
                 experienceName = it.experienceName,
                 createTime = it.updateTime.timestampmilli(),
                 size = it.size,
@@ -139,10 +157,12 @@ class ExperienceSearchService @Autowired constructor(
                     ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
                 bundleIdentifier = it.bundleIdentifier,
                 appScheme = it.scheme,
-                type = it.type,
-                externalUrl = it.externalLink,
                 version = it.version,
-                downloadTime = it.downloadTime
+                classify = it.classify,
+                // 因为搜索需要包含内部体验, 所以以下参数不适用了
+                type = ExperiencePublicType.FROM_BKCI.id,
+                externalUrl = "",
+                downloadTime = 0
             )
         }.toList()
     }

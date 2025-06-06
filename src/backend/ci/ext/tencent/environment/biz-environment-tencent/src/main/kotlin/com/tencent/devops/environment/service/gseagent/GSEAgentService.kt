@@ -63,7 +63,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.InputStream
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @Service("GSEAgentService")
 data class GSEAgentService @Autowired constructor(
@@ -113,11 +113,7 @@ data class GSEAgentService @Autowired constructor(
                     bkHostId = it.bkHostId,
                     bkAddressing = it.bkAddressing,
                     apId = if (it.apId != null) it.apId else DEFAULT_INSTALL_AGENT_AP_ID,
-                    installChannelId = if (it.isAutoChooseInstallChannelId) {
-                        chooseAgentInstallChannelIdService.autoChooseAgentInstallChannelId(
-                            it.innerIp ?: ""
-                        )
-                    } else it.installChannelId,
+                    installChannelId = it.installChannelId,
                     innerIp = it.innerIp,
                     outerIp = null,
                     loginIp = it.loginIp,

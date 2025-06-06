@@ -246,7 +246,7 @@ class ProcessDao {
             } else {
                 baseStep.limit(totalHandleNum, handlePageSize)
             }
-            return baseStep.orderBy(BUILD_ID).fetch()
+            return baseStep.orderBy(BUILD_NUM).fetch()
         }
     }
 
@@ -268,7 +268,7 @@ class ProcessDao {
             return dslContext.select(BUILD_ID, CHANNEL, START_USER)
                 .from(this)
                 .where(conditions)
-                .orderBy(BUILD_ID).limit(limit).offset(offset).fetch()
+                .orderBy(BUILD_NUM).limit(limit).offset(offset).fetch()
         }
     }
 
@@ -295,11 +295,11 @@ class ProcessDao {
         projectId: String,
         pipelineId: String,
         buildId: String
-    ): Int {
+    ): Int? {
         with(Tables.T_PIPELINE_BUILD_HISTORY) {
             return dslContext.select(VERSION).from(this)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId).and(BUILD_ID.eq(buildId))))
-                .fetchOne(0, Int::class.java)!!
+                .fetchOne(0, Int::class.java)
         }
     }
 

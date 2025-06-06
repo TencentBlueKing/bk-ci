@@ -39,16 +39,15 @@
                             :is-error="errors.has(key)"
                             :error-msg="errors.first(key)"
                         >
-                            <component
-                                :is="'vuex-input'"
+                            <bk-input
                                 :disabled="disabled"
                                 :name="obj.key"
                                 v-validate.initial="Object.assign({}, { required: !!obj.required })"
-                                :handle-change="handleRemoteParamChange"
+                                @change="value => handleRemoteParamChange(obj.key, value)"
                                 :value="payloadValue[obj.key]"
-                                v-bind="obj"
                                 :placeholder="obj.placeholder"
-                            ></component>
+                                @blur="handleBlur"
+                            />
                         </form-field>
                     </template>
                 </bk-form>
@@ -58,14 +57,13 @@
 </template>
 
 <script>
-    import KeyOptions from './key-options'
     import FormField from '@/components/AtomPropertyPanel/FormField'
-    import VuexInput from '@/components/atomFormField/VuexInput'
+    // import VuexInput from '@/components/atomFormField/VuexInput'
+    import KeyOptions from './key-options'
     export default {
         components: {
             KeyOptions,
-            FormField,
-            VuexInput
+            FormField
         },
         props: {
             disabled: {
@@ -129,13 +127,12 @@
             },
             handleRemoteParamChange (name, value) {
                 Object.assign(this.payloadValue, { [name]: value })
-                this.updatePayload('payload', this.payloadValue)
             },
             updateOptions (name, value) {
                 this.handleUpdateOptions(name, value)
             },
-            updatePayload (name, value) {
-                this.handleUpdatePayload(name, value)
+            handleBlur () {
+                this.handleUpdatePayload('payload', this.payloadValue)
             }
         }
     }
@@ -154,13 +151,13 @@
             .type-select {
                 flex: 1;
                 font-size: 14px;
-                line-height: 22px;
+                height: 42px;
+                line-height: 42px;
                 color: #63656E;
                 text-align: center;
             }
             .is-active {
                 color: #3A84FF;
-                padding: 9px 6px;
                 border-bottom: 2px solid #3A84FF;
             }
         }

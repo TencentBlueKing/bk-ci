@@ -318,6 +318,9 @@
                     },
                     "always" : {
                       "type" : "boolean"
+                    },
+                    "start-params" : {
+                      "type" : "object"
                     }
                   }
                 }
@@ -374,6 +377,9 @@
                   },
                   "always" : {
                     "type" : "boolean"
+                  },
+                  "start-params" : {
+                    "type" : "object"
                   }
                 }
               } ]
@@ -1009,6 +1015,9 @@
                   },
                   "always" : {
                     "type" : "boolean"
+                  },
+                  "start-params" : {
+                    "type" : "object"
                   }
                 }
               }
@@ -1065,6 +1074,9 @@
                 },
                 "always" : {
                   "type" : "boolean"
+                },
+                "start-params" : {
+                  "type" : "object"
                 }
               }
             } ]
@@ -1460,7 +1472,7 @@
                     "type" : "string"
                   },
                   "type" : {
-                    "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "time-picker", "company-staff-input", "git-ref", "code-lib", "container-type", "artifactory", "sub-pipeline", "custom-file", "tips", "repo-ref" ]
+                    "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "time-picker", "company-staff-input", "git-ref", "svn-tag", "code-lib", "container-type", "artifactory", "sub-pipeline", "custom-file", "tips", "repo-ref" ]
                   },
                   "options" : {
                     "type" : "array",
@@ -1524,6 +1536,9 @@
                   "description" : {
                     "type" : "string"
                   },
+                  "group" : {
+                    "type" : "string"
+                  },
                   "multiple" : {
                     "type" : "boolean"
                   },
@@ -1531,6 +1546,9 @@
                     "type" : "boolean"
                   },
                   "repo-id" : {
+                    "type" : "string"
+                  },
+                  "relative-path" : {
                     "type" : "string"
                   },
                   "scm-type" : {
@@ -1550,6 +1568,9 @@
                   },
                   "filter-rule" : {
                     "type" : "string"
+                  },
+                  "version-control" : {
+                    "type" : "boolean"
                   },
                   "metadata" : {
                     "type" : "object"
@@ -1635,7 +1656,7 @@
                   "type" : "string"
                 },
                 "type" : {
-                  "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "time-picker", "company-staff-input", "git-ref", "code-lib", "container-type", "artifactory", "sub-pipeline", "custom-file", "tips", "repo-ref" ]
+                  "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "time-picker", "company-staff-input", "git-ref", "svn-tag", "code-lib", "container-type", "artifactory", "sub-pipeline", "custom-file", "tips", "repo-ref" ]
                 },
                 "options" : {
                   "type" : "array",
@@ -1699,6 +1720,9 @@
                 "description" : {
                   "type" : "string"
                 },
+                "group" : {
+                  "type" : "string"
+                },
                 "multiple" : {
                   "type" : "boolean"
                 },
@@ -1706,6 +1730,9 @@
                   "type" : "boolean"
                 },
                 "repo-id" : {
+                  "type" : "string"
+                },
+                "relative-path" : {
                   "type" : "string"
                 },
                 "scm-type" : {
@@ -1725,6 +1752,9 @@
                 },
                 "filter-rule" : {
                   "type" : "string"
+                },
+                "version-control" : {
+                  "type" : "boolean"
                 },
                 "metadata" : {
                   "type" : "object"
@@ -2175,6 +2205,9 @@
     "disable-pipeline" : {
       "type" : "boolean"
     },
+    "fail-if-variable-invalid" : {
+      "type" : "boolean"
+    },
     "recommended-version" : {
       "type" : "object",
       "additionalProperties" : false,
@@ -2532,6 +2565,9 @@
                 }
               } ]
             },
+            "show-runs-on" : {
+              "type" : "boolean"
+            },
             "services" : {
               "type" : "object",
               "additionalProperties" : {
@@ -2601,37 +2637,35 @@
                       }, {
                         "type" : "string"
                       } ]
-                    },
-                    "properties" : {
-                      "include" : {
-                        "oneOf" : [ {
-                          "type" : "array",
-                          "items" : {
-                            "type" : "object",
-                            "additionalProperties" : {
-                              "anyOf" : [ {
-                                "type" : "string"
-                              }, {
-                                "type" : "number"
-                              }, {
-                                "type" : "boolean"
-                              } ]
-                            }
-                          }
-                        }, {
+                    }
+                  }, {
+                    "type" : "string"
+                  } ]
+                },
+                "include" : {
+                  "oneOf" : [ {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "object",
+                      "additionalProperties" : {
+                        "anyOf" : [ {
                           "type" : "string"
-                        } ]
-                      },
-                      "exclude" : {
-                        "oneOf" : [ {
-                          "type" : "array",
-                          "items" : {
-                            "type" : "object"
-                          }
                         }, {
-                          "type" : "string"
+                          "type" : "number"
+                        }, {
+                          "type" : "boolean"
                         } ]
                       }
+                    }
+                  }, {
+                    "type" : "string"
+                  } ]
+                },
+                "exclude" : {
+                  "oneOf" : [ {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "object"
                     }
                   }, {
                     "type" : "string"

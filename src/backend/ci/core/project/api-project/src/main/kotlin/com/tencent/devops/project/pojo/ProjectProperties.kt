@@ -64,7 +64,9 @@ data class ProjectProperties(
     @get:Schema(title = "是否开启流水线命名提示")
     var enablePipelineNameTips: Boolean? = false,
     @get:Schema(title = "流水线命名格式")
-    var pipelineNameFormat: String? = null
+    var pipelineNameFormat: String? = null,
+    @get:Schema(title = "构建日志归档阈值(单位:万)")
+    var loggingLineLimit: Int? = null
 ) {
     /**
      * 接受前端请求时,只复制前端展示修改的值,由op控制的值不能修改
@@ -74,7 +76,8 @@ data class ProjectProperties(
             return this@ProjectProperties.copy(
                 pipelineDialect = pipelineDialect,
                 enablePipelineNameTips = enablePipelineNameTips,
-                pipelineNameFormat = pipelineNameFormat
+                pipelineNameFormat = pipelineNameFormat,
+                loggingLineLimit = loggingLineLimit
             )
         }
     }

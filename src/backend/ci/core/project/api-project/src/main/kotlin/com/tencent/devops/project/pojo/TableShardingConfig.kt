@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.project.pojo
 import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.common.web.annotation.BkField
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -40,5 +41,7 @@ data class TableShardingConfig(
     @field:BkField(minLength = 1, maxLength = 128)
     val tableName: String,
     @get:Schema(title = "分表数量")
-    val shardingNum: Int
+    val shardingNum: Int,
+    @get:Schema(title = "表类型")
+    val type: ShardingRuleTypeEnum
 )

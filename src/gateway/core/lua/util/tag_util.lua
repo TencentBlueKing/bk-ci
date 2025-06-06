@@ -38,6 +38,16 @@ function _M:get_tag(ns_config)
         x_gateway_tag = ngx.var["arg_x-gateway-tag"]
     end
 
+    -- auto集群项目强制路由
+    if x_gateway_tag ~= nil and gateway_project ~= 'codecc' and (
+            string.find(devops_project_id, "^CODE_")
+            or string.find(devops_project_id, "^CUSTOMPROJ_")
+            or string.find(devops_project_id, "^GITHUB_")
+            or string.find(devops_project_id, "^CLOSED_SOURCE_")
+        ) then
+        x_gateway_tag = "kubernetes-auto"
+    end
+
     if x_gateway_tag ~= nil then
         tag = x_gateway_tag
     else
@@ -71,7 +81,7 @@ function _M:get_tag(ns_config)
                 local redRes = red:hget(redis_key, hash_key)
                 if redRes and redRes ~= ngx.null then
                     local hash_val = redRes:sub(8) -- 兼容Spring Redis的hashValue的默认序列化
-                    tag_cache:set(devops_project_id, hash_val, 5)
+                    tag_cache:set(devops_project_id, hash_val, 60)
                     tag = hash_val
                 end
             end
@@ -97,7 +107,7 @@ function _M:get_tag(ns_config)
             red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
 
             -- 将redis拿到的tag保存在缓存
-            tag_cache:set(tag_cache_key, tag, 5)
+            tag_cache:set(tag_cache_key, tag, 60)
         end
     end
 
@@ -155,7 +165,7 @@ function _M:get_frontend_path(tag, project)
         if not frontend_path or frontend_path == ngx.null then
             frontend_path = ""
         end
-        frontend_path_cache:set(local_cache_key, frontend_path, 30)
+        frontend_path_cache:set(local_cache_key, frontend_path, 300)
         red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
     end
 
@@ -190,7 +200,7 @@ function _M:get_sub_path(tag)
         if not sub_path or sub_path == ngx.null then
             sub_path = "prod"
         end
-        sub_path_cache:set(tag, sub_path, 30)
+        sub_path_cache:set(tag, sub_path, 300)
         red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
         return sub_path
     else

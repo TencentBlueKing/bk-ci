@@ -30,6 +30,7 @@ package com.tencent.devops.process.yaml.transfer
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.TriggerRepositoryType
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
@@ -300,6 +301,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     ) else null,
                     skipWip = git.skipWip
                 )
+
                 CodeEventType.MERGE_REQUEST_ACCEPT ->
                     throw PipelineTransferException(
                         errorCode = CommonMessageCode.MR_ACCEPT_EVENT_NOT_SUPPORT_TRANSFER,
@@ -736,7 +738,16 @@ class TriggerTransfer @Autowired(required = false) constructor(
                         branches = timer.branches,
                         newExpression = timer.newExpression,
                         advanceExpression = timer.advanceExpression,
-                        noScm = timer.always != true
+                        noScm = timer.always != true,
+                        startParams = timer.startParams?.let {
+                            val params = it.map { entry ->
+                                mapOf(
+                                    "key" to entry.key,
+                                    "value" to entry.value
+                                )
+                            }
+                            JsonUtil.toJson(params, false)
+                        }
                     ).checkTriggerElementEnable(timer.enable)
                 )
             }
@@ -881,6 +892,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
             CodeEventType.CHANGE_CONTENT -> triggerOn.changeContent = rule
             CodeEventType.SHELVE_COMMIT -> triggerOn.shelveCommit = rule
             CodeEventType.SHELVE_SUBMIT -> triggerOn.shelveSubmit = rule
+            else -> {}
         }
     }
 }

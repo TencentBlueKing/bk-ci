@@ -5,13 +5,15 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpRemoteDevResource
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
+import com.tencent.devops.remotedev.pojo.WhiteList
+import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.windows.WindowsPoolListFetchData
 import com.tencent.devops.remotedev.service.MakeMoneyService
@@ -19,10 +21,11 @@ import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.UserRefreshService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.SleepControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -37,7 +40,8 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     private val workspaceDao: WorkspaceDao,
     private val dslContext: DSLContext,
     private val windowsResourceConfigService: WindowsResourceConfigService,
-    private val makeMoneyService: MakeMoneyService
+    private val makeMoneyService: MakeMoneyService,
+    private val configCacheService: ConfigCacheService
 ) : OpRemoteDevResource {
     override fun updateUserSetting(userId: String, data: List<OPUserSetting>): Result<Boolean> {
         data.forEach {
@@ -81,7 +85,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.CGS_DELETE)
+    @AuditEntry(actionId = TencentActionId.CGS_DELETE)
     override fun deleteWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         return Result(
             deleteControl.deleteWorkspace4OP(
@@ -91,7 +95,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.CGS_DELETE)
+    @AuditEntry(actionId = TencentActionId.CGS_DELETE)
     override fun batchDeleteWorkspace(
         userId: String,
         workspaceNames: Set<String>
@@ -99,7 +103,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         return Result(deleteControl.batchDeleteWindowsWorkspace4OP(userId, workspaceNames))
     }
 
-    @AuditEntry(actionId = ActionId.CGS_STOP)
+    @AuditEntry(actionId = TencentActionId.CGS_STOP)
     override fun stopWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         return Result(
             sleepControl.stopWorkspace(
@@ -177,5 +181,29 @@ class OpRemoteDevResourceImpl @Autowired constructor(
 
     override fun bills(userId: String, year: Int, month: Int, push: Boolean): Response {
         return makeMoneyService.bills(year, month, push)
+    }
+
+    override fun configs(userId: String): Result<Map<String, String>> {
+        return Result(configCacheService.opFetchAllConfig())
+    }
+
+    override fun updateConfigs(userId: String, key: String, value: String): Result<Boolean> {
+        return Result(configCacheService.opInsertOrUpdateConfig(key, value))
+    }
+
+    override fun deleteConfigs(userId: String, key: String): Result<Boolean> {
+        return Result(configCacheService.opDeleteConfig(key))
+    }
+
+    override fun whiteList(userId: String, whiteListType: WhiteListType): Result<List<WhiteList>> {
+        return Result(whiteListService.opFetch(userId, whiteListType))
+    }
+
+    override fun updateWhiteList(userId: String, whiteList: WhiteList): Result<Boolean> {
+        return Result(whiteListService.opCreateOrUpdateWhiteList(userId, whiteList))
+    }
+
+    override fun deleteWhiteList(userId: String, whiteList: WhiteList): Result<Boolean> {
+        return Result(whiteListService.opDeleteWhiteList(userId, whiteList))
     }
 }

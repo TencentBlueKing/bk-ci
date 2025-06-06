@@ -380,6 +380,19 @@ class AuthResourceGroupDao {
         }
     }
 
+    fun isGroupBelongToProject(
+        dslContext: DSLContext,
+        projectCode: String,
+        groupId: String
+    ): Boolean {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.selectCount()
+                .from(this).where(PROJECT_CODE.eq(projectCode))
+                .and(RELATION_ID.eq(groupId))
+                .fetchOne(0, Int::class.java)!! > 0
+        }
+    }
+
     fun listGroupByResourceType(
         dslContext: DSLContext,
         projectCode: String,

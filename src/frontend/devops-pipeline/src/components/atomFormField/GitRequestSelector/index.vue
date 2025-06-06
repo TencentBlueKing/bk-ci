@@ -28,6 +28,7 @@
 </template>
 
 <script>
+    import { findItemById } from '@/utils/util'
     import atomFieldMixin from '../atomFieldMixin'
     import Selector from '../Selector'
     export default {
@@ -130,11 +131,11 @@
 
                     // 单选selector时处理******
                     if (!this.multiSelect) {
-                        if (this.value !== '' && this.list.filter(item => item.id === this.value).length === 0) {
+                        if (this.value !== '' && !findItemById(this.list, this.value)) {
                             this.setNoUsePermission(true)
                             this.list.splice(0, 0, {
                                 id: this.value,
-                                name: `******（${this.$t('editPage.noPermToView')}）`
+                                name: this.$t('editPage.withoutOption')
                             })
                         } else {
                             this.setNoUsePermission(false)
@@ -143,10 +144,10 @@
                         // 多选selector时处理******,现在的处理方式是，把多选的数组遍历，看里面的每一项是否在list，若不在则加一项***
                         this.value = this.value.length ? this.value : []
                         this.value.forEach(value => {
-                            if (value !== '' && this.list.filter(item => item.id === value).length === 0) {
+                            if (value !== '' && !findItemById(this.list, value)) {
                                 this.list.splice(0, 0, {
                                     id: value,
-                                    name: `******（${this.$t('editPage.noPermToView')}）`
+                                    name: this.$t('editPage.withoutOption')
                                 })
                             }
                         })

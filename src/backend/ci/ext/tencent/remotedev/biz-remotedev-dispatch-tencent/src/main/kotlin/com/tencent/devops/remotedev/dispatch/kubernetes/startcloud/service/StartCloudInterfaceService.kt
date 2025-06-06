@@ -33,8 +33,11 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.Environm
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentShare
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentUnShare
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentUserCreate
+import com.tencent.devops.remotedev.pojo.remotedev.ResourceEstimateByVmResponse
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.ResourceEstimateByVmRequest
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceRedisUtils
+import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
@@ -120,6 +123,23 @@ class StartCloudInterfaceService @Autowired constructor(
 
     fun getTaskInfoByUid(uid: String): TaskStatus? {
         return workspaceRedisUtils.getTaskStatus(uid)
+    }
+
+    fun startGetResourceEstimateByVm(
+        specifyTaints: String,
+        zoneId: String,
+        machineType: String,
+        quotaType: QuotaType? = null
+    ): ResourceEstimateByVmResponse {
+        return workspaceBcsClient.startGetResourceEstimateByVm(
+            ResourceEstimateByVmRequest(
+                zoneId = zoneId,
+                machineType = machineType,
+                internal = quotaType?.getInternal() ?: false,
+                tolerations = listOf(ResourceEstimateByVmRequest.Toleration(value = specifyTaints)),
+                nodeSelector = mapOf("bkbcs.tencent.com/node-group" to specifyTaints)
+            )
+        )
     }
 
     // 同步更新云桌面资源池列表

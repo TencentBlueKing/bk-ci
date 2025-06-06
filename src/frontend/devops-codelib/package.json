@@ -42,7 +42,7 @@
     "eslint-plugin-standard": "^5.0.0",
     "eslint-plugin-vue": "6.2.2",
     "html-webpack-plugin": "^5.3.2",
-    "lodash": "^4.17.21",
+    "lodash-es": "^4.17.21",
     "mini-css-extract-plugin": "2.4.2",
     "sass": "^1.42.1",
     "sass-loader": "^12.1.0",
@@ -53,7 +53,7 @@
     "webpack": "~5.76.1"
   },
   "scripts": {
-    "dev": "cross-env NODE_ENV=dev nx exec -- webpack-dev-server --mode development",
+    "dev": "cross-env NODE_ENV=dev webpack-dev-server --mode development",
     "public:dev": "cross-env NODE_ENV=dev webpack --mode production",
     "public:test": "cross-env NODE_ENV=test webpack --mode production",
     "public:master": "cross-env NODE_ENV=master webpack --mode production",

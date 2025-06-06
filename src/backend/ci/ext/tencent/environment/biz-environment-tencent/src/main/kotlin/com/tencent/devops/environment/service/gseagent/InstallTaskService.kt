@@ -56,7 +56,7 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 
 /**
  * GSE Agent安装任务相关服务：查询状态、查询任务日志等

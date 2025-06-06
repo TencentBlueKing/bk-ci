@@ -28,6 +28,7 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.project.pojo.TableShardingConfig
 import org.jooq.DSLContext
 
@@ -44,12 +45,14 @@ interface TableShardingConfigService {
     fun getTableShardingConfigByName(
         clusterName: String,
         moduleCode: SystemModuleEnum,
-        tableName: String
+        tableName: String,
+        ruleType: ShardingRuleTypeEnum = ShardingRuleTypeEnum.TABLE
     ): TableShardingConfig?
 
     fun listByModule(
         dslContext: DSLContext,
         clusterName: String,
-        moduleCode: SystemModuleEnum
+        moduleCode: SystemModuleEnum,
+        ruleType: ShardingRuleTypeEnum = ShardingRuleTypeEnum.TABLE
     ): List<TableShardingConfig>?
 }

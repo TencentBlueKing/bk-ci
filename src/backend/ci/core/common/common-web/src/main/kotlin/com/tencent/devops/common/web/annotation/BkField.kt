@@ -29,8 +29,8 @@ package com.tencent.devops.common.web.annotation
 
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.common.web.validation.BkFieldValidator
-import javax.validation.Constraint
-import javax.validation.Payload
+import jakarta.validation.Constraint
+import jakarta.validation.Payload
 import kotlin.reflect.KClass
 
 @Target(AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)

@@ -123,12 +123,15 @@ object YamlObjects {
         val propsMap = transValue<Map<String, Any?>>(fromPath, "props", props)
         val po = VariableProps(
             label = getNullValue("label", propsMap),
-            type = getNotNullValue("type", "props", propsMap),
+            type = getNullValue("type", propsMap),
             options = getVarPropOptions(fromPath, propsMap["options"]),
             description = getNullValue("description", propsMap),
-            multiple = getNullValue("multiple", propsMap)?.toBoolean(),
-            required = getNullValue("required", propsMap)?.toBoolean(),
+            group = getNullValue("group", propsMap),
+            multiple = getNullValue("multiple", propsMap)?.toBooleanStrictOrNull(),
+            required = getNullValue("required", propsMap)?.toBooleanStrictOrNull(),
             repoHashId = getNullValue("repo-id", propsMap),
+            relativePath = getNullValue("relative-path", propsMap),
+            versionControl = getNullValue("version-control", propsMap)?.toBooleanStrictOrNull(),
             scmType = getNullValue("scm-type", propsMap),
             containerType = getVarPropContainerType(fromPath, propsMap["container-type"]),
             glob = getNullValue("filter-rule", propsMap),
@@ -309,9 +312,13 @@ object YamlObjects {
 
     fun getStrategy(fromPath: TemplatePath, strategy: Any?): Strategy? {
         val strategyMap = transValue<Map<String, Any?>>(fromPath, "strategy", strategy)
-        val matrix = strategyMap["matrix"] ?: return null
+        val matrix = strategyMap["matrix"]
+        val include = strategyMap["include"]
+        val exclude = strategyMap["exclude"]
         return Strategy(
             matrix = matrix,
+            include = include,
+            exclude = exclude,
             fastKill = getNullValue("fast-kill", strategyMap)?.toBoolean(),
             maxParallel = getNullValue("max-parallel", strategyMap)?.toInt()
         )
@@ -537,6 +544,7 @@ fun <T> YamlTemplate<T>.getJob(fromPath: TemplatePath, job: Map<String, Any>, de
         enable = YamlObjects.getNullValue("enable", job)?.toBoolean(),
         name = job["name"]?.toString(),
         runsOn = job["runs-on"],
+        showRunsOn = YamlObjects.getNullValue("show-runs-on", job)?.toBoolean(),
         mutex = if (job["mutex"] == null) {
             null
         } else {

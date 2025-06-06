@@ -31,13 +31,70 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.UserCopilotResource
 import com.tencent.devops.repository.service.CopilotOpenTokenService
+import com.tencent.devops.repository.service.RepositoryCopilotService
+import com.tencent.devops.scm.enums.AISummaryRateType
+import com.tencent.devops.scm.pojo.CodeGitCopilotSummary
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserCopilotResourceImpl @Autowired constructor(
-    private val copilotOpenTokenService: CopilotOpenTokenService
+    private val copilotOpenTokenService: CopilotOpenTokenService,
+    private val repositoryCopilotService: RepositoryCopilotService
 ) : UserCopilotResource {
     override fun getCopilotOpenToken(userId: String, refresh: Boolean?): Result<String> {
         return Result(copilotOpenTokenService.getAccessToken(userId, refresh ?: false))
+    }
+
+    override fun createSummary(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementId: String
+    ): Result<CodeGitCopilotSummary> {
+        return Result(
+            repositoryCopilotService.createSummary(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                elementId = elementId
+            )
+        )
+    }
+
+    override fun getSummary(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementId: String
+    ): Result<CodeGitCopilotSummary> {
+        return Result(
+            repositoryCopilotService.getSummary(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                elementId = elementId
+            )
+        )
+    }
+
+    override fun rateSummary(
+        userId: String,
+        projectName: String,
+        processId: String,
+        type: AISummaryRateType,
+        feedback: String?
+    ): Result<Boolean> {
+        repositoryCopilotService.rateSummary(
+            userId = userId,
+            projectName = projectName,
+            processId = processId,
+            type = type,
+            feedback = feedback
+        )
+        return Result(true)
     }
 }

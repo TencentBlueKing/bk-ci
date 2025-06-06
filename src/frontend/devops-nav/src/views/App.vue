@@ -5,6 +5,7 @@
     >
         <router-view />
         <AnnouncementDialog />
+        <NonDisclosureAgreement />
     </div>
 </template>
 
@@ -14,9 +15,12 @@
     import { Action, State } from 'vuex-class'
     import AnnouncementDialog from '../components/AnnouncementDialog/index.vue'
     
+    import NonDisclosureAgreement from '../components/NonDisclosureAgreement/index.vue'
+    
     @Component({
         components: {
-            AnnouncementDialog
+            AnnouncementDialog,
+            NonDisclosureAgreement
         }
     })
     export default class App extends Vue {

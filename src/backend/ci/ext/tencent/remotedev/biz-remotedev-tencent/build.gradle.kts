@@ -34,7 +34,7 @@ dependencies {
     api(project(":core:common:common-websocket"))
     api(project(":core:notify:api-notify"))
     api(project(":core:auth:api-auth"))
-    api(project(":core:common:common-audit"))
+    api(project(":ext:tencent:common:common-audit:common-audit-tencent"))
     api(project(":ext:tencent:remotedev:api-remotedev-tencent"))
     api(project(":ext:tencent:remotedev:common-remotedev-dispatch-tencent"))
     api(project(":ext:tencent:remotedev:biz-remotedev-dispatch-tencent"))

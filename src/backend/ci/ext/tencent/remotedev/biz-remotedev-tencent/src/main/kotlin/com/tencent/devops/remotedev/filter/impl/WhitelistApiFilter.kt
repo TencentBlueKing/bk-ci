@@ -8,11 +8,11 @@ import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.filter.ApiFilter
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
-import javax.ws.rs.container.ContainerRequestContext
-import javax.ws.rs.container.PreMatching
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.ext.Provider
+import jakarta.ws.rs.container.ContainerRequestContext
+import jakarta.ws.rs.container.PreMatching
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.ext.Provider
 import org.slf4j.LoggerFactory
 
 @Provider
@@ -33,6 +33,7 @@ class WhitelistApiFilter constructor(
         EXTERNAL("/api/external/", false),
         REMOTEDEV("/api/remotedev/", false),
         SERVICE("/api/service/", false),
+        CDI("/api/cdi/", false),
         OP("/api/op/", true),
         SWAGGER("/api/swagger.json", false),
         OPEN("/api/open/", false);

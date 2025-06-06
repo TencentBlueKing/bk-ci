@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.pojo.common.publication
 
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -39,5 +40,7 @@ data class StorePkgInfoUpdateRequest(
     @get:Schema(title = "组件版本号", required = true)
     val version: String,
     @get:Schema(title = "组件包环境信息", required = true)
-    val storePkgEnvInfos: List<StorePkgEnvInfo>
+    val storePkgEnvInfos: List<StorePkgEnvInfo>,
+    @get:Schema(title = "发布类型", required = false)
+    val releaseType: ReleaseTypeEnum? = null
 )

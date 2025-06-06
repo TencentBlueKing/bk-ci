@@ -2,7 +2,7 @@ package com.tencent.devops.remotedev.resources.user
 
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserProjectGitProxyResource
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateTGitProjectInfo
@@ -18,7 +18,7 @@ class UserProjectGitProxyResourceImpl @Autowired constructor(
     private val gitProxyTGitService: GitProxyTGitService
 ) : UserProjectGitProxyResource {
 
-    @AuditEntry(actionId = ActionId.TGIT_LINK_CREATE)
+    @AuditEntry(actionId = TencentActionId.TGIT_LINK_CREATE)
     override fun linktgit(
         userId: String,
         projectId: String,
@@ -27,12 +27,12 @@ class UserProjectGitProxyResourceImpl @Autowired constructor(
         return Result(gitProxyTGitService.checkUserPermission(userId, projectId, data))
     }
 
-    @AuditEntry(actionId = ActionId.TGIT_LINK_LIST)
+    @AuditEntry(actionId = TencentActionId.TGIT_LINK_LIST)
     override fun tgitList(userId: String, projectId: String): Result<List<TGitRepoData>> {
         return Result(gitProxyTGitService.tgitLinkList(projectId))
     }
 
-    @AuditEntry(actionId = ActionId.TGIT_LINK_DELETE)
+    @AuditEntry(actionId = TencentActionId.TGIT_LINK_DELETE)
     override fun deleteTgitRepo(userId: String, projectId: String, repoId: Long, onlyDelete: Boolean?): Result<Boolean> {
         return Result(gitProxyTGitService.deleteTgitLink(userId, projectId, repoId, onlyDelete))
     }
@@ -57,7 +57,7 @@ class UserProjectGitProxyResourceImpl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.TGIT_LINK_CREATE)
+    @AuditEntry(actionId = TencentActionId.TGIT_LINK_CREATE)
     override fun createProject(userId: String, data: CreateTGitProjectInfo): Result<Boolean> {
         return Result(gitProxyTGitService.createProjectAndLinkTGit(userId, data))
     }

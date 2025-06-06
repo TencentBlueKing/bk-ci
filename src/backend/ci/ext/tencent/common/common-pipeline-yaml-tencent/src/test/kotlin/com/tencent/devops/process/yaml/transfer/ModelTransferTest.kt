@@ -365,6 +365,7 @@ internal class ModelTransferTest : BkCiAbstractTest() {
                 userId = "test",
                 model = modelAndSetting.model,
                 setting = modelAndSetting.setting,
+                pipelineInfo = pipelineInfo,
                 version = YamlVersion.V3_0,
                 aspectWrapper = PipelineTransferAspectWrapper(defaultAspects)
             )

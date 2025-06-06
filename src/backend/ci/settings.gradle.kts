@@ -153,6 +153,7 @@ include(":core:artifactory:model-artifactory")
 include(":core:repository")
 include(":core:repository:api-repository")
 include(":core:repository:biz-repository")
+include(":core:repository:biz-base-scm")
 include(":core:repository:boot-repository")
 include(":core:repository:model-repository")
 
@@ -240,6 +241,7 @@ include(":ext:tencent:common:common-auth:common-auth-tencent")
 include(":ext:tencent:common:common-kafka-tencent")
 include(":ext:tencent:common:common-remotedev-tencent")
 include(":ext:tencent:common:common-pipeline-yaml-tencent")
+include(":ext:tencent:common:common-audit:common-audit-tencent")
 
 include(":ext:tencent:project")
 include(":ext:tencent:project:api-project-tencent")
@@ -392,6 +394,7 @@ include(":ext:tencent:sign:boot-sign-tencent")
 include(":ext:tencent:sign:model-sign-tencent")
 
 include(":ext:tencent:metrics")
+include(":ext:tencent:metrics:api-metrics-tencent")
 include(":ext:tencent:metrics:biz-metrics-tencent")
 include(":ext:tencent:metrics:boot-metrics-tencent")
 

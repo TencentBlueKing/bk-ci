@@ -32,25 +32,25 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
+import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
-import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminData
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyListData
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
 
 @Tag(name = "OP_PROJECT_WORKSPACE", description = "OP_PROJECT_WORKSPACE")
 @Path("/op/project/workspace")
@@ -82,17 +82,6 @@ interface OpProjectWorkspaceResource {
         @Parameter(description = "查询参数")
         data: ProjectWorkspaceFetchData
     ): Result<Page<ProjectWorkspace>>
-
-    @Operation(summary = "批量获取指定项目的云桌面的云研发管理员和拥有者")
-    @POST
-    @Path("/fetchOwnerAndAdmin")
-    fun fetchOwnerAndAdmin(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "获取数据")
-        data: FetchOwnerAndAdminData
-    ): Result<Set<String>>
 
     @Operation(summary = "修改云研发机器在 CMDB 的属性")
     @POST
@@ -155,4 +144,32 @@ interface OpProjectWorkspaceResource {
         @QueryParam("workspaceName")
         workspaceName: String
     )
+    @Operation(summary = "分配云桌面拥有者和共享人")
+    @POST
+    @Path("/assign_user")
+    fun assignUser(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "工作空间描述", required = true)
+        assigns: List<ProjectWorkspaceAssign>
+    ): Result<Boolean>
+
+    @Operation(summary = "修改实例别名")
+    @POST
+    @Path("/edit")
+    fun editWorkspace(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "备注名称", required = true)
+        @QueryParam("displayName")
+        displayName: String
+    ): Result<Boolean>
 }

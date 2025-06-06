@@ -33,13 +33,14 @@ import com.tencent.devops.common.api.pojo.Result
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.Consumes
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "OP_PIPELINE_AGENT_REF", description = "OP-流水线-更新子流水线引用信息")
 @Path("/op/subpipeline/ref")
@@ -57,6 +58,21 @@ interface OpSubPipelineRefResource {
         @Parameter(description = "项目ID", required = false)
         @QueryParam("projectId")
         projectId: String?,
+        @Parameter(description = "流水线id", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?
+    ): Result<Boolean>
+
+    @Operation(summary = "删除子流水线引用信息")
+    @DELETE
+    @Path("/delete")
+    fun delSubPipelineRef(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
         @Parameter(description = "流水线id", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?

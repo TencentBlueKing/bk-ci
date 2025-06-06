@@ -23,11 +23,11 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.CLIENT_VERSION_WARNI
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.CLIENT_VERSION_WARNING_NOTIFY
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.container.ContainerRequestContext
-import javax.ws.rs.container.PreMatching
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.ext.Provider
+import jakarta.ws.rs.container.ContainerRequestContext
+import jakarta.ws.rs.container.PreMatching
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.ext.Provider
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 

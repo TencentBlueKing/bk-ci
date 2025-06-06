@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.HashMap
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 /**
  * 子流水线合法性检查服务
@@ -253,15 +253,13 @@ class SubPipelineCheckService @Autowired constructor(
                     taskPipelineName = it.taskPipelineName
                 )
             }
-            logger.info("check circular dependency|subRefList[$subRefList]")
-            if (subRefList.isEmpty()) return ElementCheckResult(true)
+            if (subRefList.isEmpty()) {
+                return ElementCheckResult(true)
+            }
             subRefList.forEach {
-                val exist = HashMap(existsPipeline)
-                val chain = mutableListOf<SubPipelineRef>()
-                // 保存原有链路
-                chain.addAll(recursiveChain)
-                chain.add(it)
-                exist[it.refKey()] = it
+                // 增加新节点
+                recursiveChain.add(it)
+                existsPipeline[it.refKey()] = it
                 logger.info(
                     "callPipelineStartup|" +
                             "supProjectId:${it.subProjectId},subPipelineId:${it.subPipelineId}," +
@@ -271,15 +269,19 @@ class SubPipelineCheckService @Autowired constructor(
                 val checkResult = checkCircularDependency(
                     subPipelineRef = it,
                     rootPipelineKey = rootPipelineKey,
-                    recursiveChain = chain,
-                    existsPipeline = exist
+                    recursiveChain = recursiveChain,
+                    existsPipeline = existsPipeline
                 )
                 // 检查不成功，直接返回
                 if (!checkResult.result) {
                     return checkResult
                 }
-                existsPipeline.putAll(exist)
-                recursiveChain.addAll(chain)
+                if (recursiveChain.isNotEmpty()) {
+                    recursiveChain.removeLast()
+                }
+                if (existsPipeline.isNotEmpty()) {
+                    existsPipeline.remove(it.refKey())
+                }
             }
             return ElementCheckResult(true)
         }

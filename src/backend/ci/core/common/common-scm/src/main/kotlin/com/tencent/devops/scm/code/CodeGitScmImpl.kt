@@ -120,7 +120,7 @@ class CodeGitScmImpl constructor(
             logger.warn("Fail to list all branches", ignored)
             throw ScmException(
                 I18nUtil.getCodeLanMessage(
-                    CommonMessageCode.GIT_INVALID_PRIVATE_KEY_OR_PASSWORD,
+                    CommonMessageCode.THIRD_PARTY_SERVICE_OPERATION_FAILED,
                     params = arrayOf(ScmType.CODE_GIT.name, ignored.message ?: "")
                 ),
                 ScmType.CODE_GIT.name
@@ -161,7 +161,7 @@ class CodeGitScmImpl constructor(
             logger.warn("Fail to list all branches", ignored)
             throw ScmException(
                 I18nUtil.getCodeLanMessage(
-                    CommonMessageCode.GIT_INVALID_PRIVATE_KEY_OR_PASSWORD,
+                    CommonMessageCode.THIRD_PARTY_SERVICE_OPERATION_FAILED,
                     params = arrayOf(ScmType.CODE_GIT.name, ignored.message ?: "")
                 ),
                 ScmType.CODE_GIT.name

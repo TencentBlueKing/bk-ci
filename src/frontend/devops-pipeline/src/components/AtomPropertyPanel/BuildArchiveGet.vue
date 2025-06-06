@@ -30,8 +30,8 @@
 </template>
 
 <script>
-    import atomMixin from './atomMixin'
     import validMixins from '../validMixins'
+    import atomMixin from './atomMixin'
     export default {
         name: 'build-archive-get',
         mixins: [atomMixin, validMixins],
@@ -107,7 +107,9 @@
                 } catch (e) {
                     if (e.code === 403) {
                         if (this.element.buildNoType === 'ASSIGN' && this.element.buildNo) {
-                            this.newModel.buildNo.list = [{ id: this.element.buildNo, name: `******（${this.$t('editPage.noPermToView')}）` }]
+                            this.newModel.buildNo.list = [
+                                { id: this.element.buildNo, name: this.$t('editPage.withoutOption') }
+                            ]
                         }
                     } else {
                         this.$showTips({

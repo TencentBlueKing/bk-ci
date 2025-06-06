@@ -4,13 +4,13 @@ import com.tencent.devops.common.api.pojo.Result
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.Consumes
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.PUT
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "OP_PIPELINE", description = "OP-流水线")
 @Path("/op/pipelines/tx")
@@ -40,5 +40,20 @@ interface OpTxPipelineResource {
         @Parameter(description = "构建数据失效时间", required = false)
         @QueryParam("buildTimeoutDays")
         buildTimeoutDays: Long?
+    ): Result<Int>
+
+    @Operation(summary = "修复流水线状态")
+    @PUT
+    @Path("/{projectId}/{pipelineId}/fixResourceVersion")
+    fun fixResourceVersion(
+        @Parameter(description = "流水线Id", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线Id", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "目标正式版本", required = false)
+        @QueryParam("version")
+        version: Int?
     ): Result<Int>
 }

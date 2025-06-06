@@ -1,0 +1,137 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.repository.dao
+
+import com.tencent.devops.model.repository.tables.TRepositoryCopilotSummary
+import com.tencent.devops.model.repository.tables.records.TRepositoryCopilotSummaryRecord
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
+
+@Suppress("ALL")
+@Repository
+class CopilotSummaryDao {
+
+    fun get(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        elementId: String
+    ): TRepositoryCopilotSummaryRecord? {
+        with(TRepositoryCopilotSummary.T_REPOSITORY_COPILOT_SUMMARY) {
+            return dslContext.selectFrom(this)
+                .where(
+                    BUILD_ID.eq(buildId).and(ELEMENT_ID.eq(elementId)).and(PROJECT_ID.eq(projectId))
+                )
+                .fetchAny()
+        }
+    }
+
+    fun create(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        elementId: String,
+        scmType: String,
+        projectName: String,
+        source: String,
+        target: String,
+        status: Int,
+        summary: String?
+    ) {
+        with(TRepositoryCopilotSummary.T_REPOSITORY_COPILOT_SUMMARY) {
+            val now = LocalDateTime.now()
+            dslContext.insertInto(
+                this,
+                PROJECT_ID,
+                BUILD_ID,
+                ELEMENT_ID,
+                SCM_TYPE,
+                PROJECT_NAME,
+                SOURCE_COMMIT,
+                TARGET_COMMIT,
+                STATUS,
+                SUMMARY,
+                CREATE_TIME
+            ).values(
+                projectId,
+                buildId,
+                elementId,
+                scmType,
+                projectName,
+                source,
+                target,
+                status,
+                summary,
+                now
+            ).onDuplicateKeyUpdate()
+                .set(SOURCE_COMMIT, source)
+                .set(TARGET_COMMIT, target)
+                .set(STATUS, status)
+                .set(SUMMARY, summary)
+                .set(CREATE_TIME, now)
+                .execute()
+        }
+    }
+
+    fun update(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        elementId: String,
+        source: String? = null,
+        target: String? = null,
+        status: Int,
+        summary: String?
+    ) {
+        with(TRepositoryCopilotSummary.T_REPOSITORY_COPILOT_SUMMARY) {
+            val now = LocalDateTime.now()
+            dslContext.update(this)
+                    .let {
+                        if (!source.isNullOrBlank()) {
+                            it.set(SOURCE_COMMIT, source)
+                        }
+                        if (!target.isNullOrBlank()) {
+                            it.set(TARGET_COMMIT, target)
+                        }
+                        it
+                    }
+                    .set(STATUS, status)
+                    .set(SUMMARY, summary)
+                    .set(CREATE_TIME, now)
+                    .where(
+                        listOf(
+                            PROJECT_ID.eq(projectId),
+                            BUILD_ID.eq(buildId),
+                            ELEMENT_ID.eq(elementId)
+                        )
+                    )
+                    .execute()
+        }
+    }
+}

@@ -22,6 +22,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
+import com.tencent.devops.remotedev.pojo.expert.DeleteDiskData
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
@@ -30,6 +31,8 @@ import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
 import com.tencent.devops.remotedev.pojo.image.ListImagesData
 import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
+import com.tencent.devops.remotedev.pojo.itsm.BKItsmCreateTicketReq
+import com.tencent.devops.remotedev.pojo.itsm.BKItsmCreateTicketRespData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.EnableRemotedevData
@@ -42,9 +45,14 @@ import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmData
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmResp
 import com.tencent.devops.remotedev.pojo.remotedev.TaskResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyInfo
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
@@ -321,10 +329,16 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun getWindowsQuota(
         userId: String,
         type: QuotaType?,
-        zoneType: WindowsResourceZoneConfigType
+        zoneType: WindowsResourceZoneConfigType,
+        specifyTaints: String?
     ): Result<Map<String, Map<String, Int>>> {
         logger.info("getWindowsQuota $userId|$type|$zoneType")
-        return client.get(ServiceRemoteDevResource::class).getWindowsQuota(userId, type, zoneType)
+        return client.get(ServiceRemoteDevResource::class).getWindowsQuota(
+            userId = userId,
+            type = type,
+            zoneType = zoneType,
+            specifyTaints = specifyTaints
+        )
     }
 
     override fun updateUsageLimit(
@@ -509,15 +523,26 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun createWorkspaceDisk(
         userId: String,
         workspaceName: String,
-        size: String
+        size: String,
+        forceRestart: Boolean?
     ): Result<CreateDiskResp> {
-        logger.info("createWorkspaceDisk |$userId|$workspaceName|$size")
-        return client.get(ServiceRemoteDevResource::class).createDisk(userId, workspaceName, size)
+        logger.info("createWorkspaceDisk |$userId|$workspaceName|$size|$forceRestart")
+        return client.get(ServiceRemoteDevResource::class).createDisk(
+            userId = userId,
+            workspaceName = workspaceName,
+            size = size,
+            forceRestart = forceRestart
+        )
     }
 
     override fun fetchWorkspaceDiskList(userId: String, workspaceName: String): Result<List<VmDiskInfo>?> {
         logger.info("fetchWorkspaceDiskList |$userId|$workspaceName")
         return client.get(ServiceRemoteDevResource::class).fetchDiskList(userId, workspaceName)
+    }
+
+    override fun deleteDisk(userId: String, data: DeleteDiskData): Result<CreateDiskResp> {
+        logger.info("deleteDisk |$userId|$data")
+        return client.get(ServiceRemoteDevResource::class).deleteDisk(userId, data)
     }
 
     override fun upgradeWorkspace(
@@ -632,9 +657,10 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).enableProjectRemotedev(userId, data)
     }
 
+    @Deprecated("废弃，后续会删除")
     override fun updateRemotedevManager(userId: String, data: UpdateRemotedevDataManagers): Result<Boolean> {
         logger.info("updateRemotedevManager |$userId|$data")
-        return client.get(ServiceRemoteDevResource::class).updateProjectRemotedevManager(userId, data)
+        return Result(true)
     }
 
     override fun fetchImages(userId: String, data: ListImagesData): Result<ListImagesResp?> {
@@ -650,5 +676,28 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     ): Result<DeleteImageResp> {
         logger.info("deleteImage |$userId|$projectId|$imageId|$delaySeconds")
         return client.get(ServiceRemoteDevResource::class).deleteImage(userId, projectId, imageId, delaySeconds)
+    }
+
+    override fun createItsmTicket(
+        userId: String,
+        createReqStr: BKItsmCreateTicketReq
+    ): Result<BKItsmCreateTicketRespData> {
+        logger.info("createItsmTicket |$userId|$createReqStr")
+        return client.get(ServiceRemoteDevResource::class).createItsmTicket(userId, createReqStr)
+    }
+
+    override fun getProjectStrategy(userId: String, data: ProjectStrategyFetchInfo): Result<ProjectStrategyResp> {
+        logger.info("getProjectStrategy |$userId|$data")
+        return client.get(ServiceRemoteDevResource::class).getProjectStrategy(userId, data)
+    }
+
+    override fun updateProjectStrategy(userId: String, data: ProjectStrategyInfo): Result<Boolean> {
+        logger.info("updateProjectStrategy |$userId|$data")
+        return client.get(ServiceRemoteDevResource::class).updateProjectStrategy(userId, data)
+    }
+
+    override fun syncVm(userId: String, data: SyncVmData): Result<SyncVmResp?> {
+        logger.info("syncVm |$userId|$data")
+        return client.get(ServiceRemoteDevResource::class).syncVm(userId, data)
     }
 }

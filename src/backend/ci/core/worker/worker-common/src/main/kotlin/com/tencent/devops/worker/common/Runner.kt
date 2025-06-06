@@ -76,7 +76,7 @@ import org.slf4j.LoggerFactory
 
 object Runner {
 
-    private const val maxSleepStep = 50L
+    private const val maxSleepStep = 80L
     private const val windows = 5L
     private const val millsStep = 100L
     private val logger = LoggerFactory.getLogger(Runner::class.java)
@@ -251,6 +251,8 @@ object Runner {
                         LoggerService.elementId = buildTask.taskId!!
                         LoggerService.stepId = buildTask.stepId ?: ""
                         LoggerService.elementName = buildTask.elementName ?: LoggerService.elementId
+                        LoggerService.loggingLineLimit = buildVariables.loggingLineLimit?.coerceIn(1, 100)
+                            ?.times(10000) ?: LOG_TASK_LINE_LIMIT
                         CredentialUtils.signToken = buildTask.signToken ?: ""
 
                         // 开始Task执行
@@ -273,6 +275,7 @@ object Runner {
                         LoggerService.elementId = ""
                         LoggerService.elementName = ""
                         LoggerService.stepId = ""
+                        LoggerService.loggingLineLimit = LOG_TASK_LINE_LIMIT
                         waitCount = 0
                     }
                 }

@@ -32,59 +32,59 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.api.annotation.SkipLogField
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "安装agent的请求信息中的 host信息")
+@Schema(title = "调用GSE安装agent的请求信息中的 host信息")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class AgentHostForInstallAgent(
     @get:Schema(title = "业务ID", required = true)
-    @JsonProperty("bk_biz_id")
+    @get:JsonProperty("bk_biz_id")
     val bkBizId: Int,
     @get:Schema(title = "管控区域ID", required = true)
-    @JsonProperty("bk_cloud_id")
+    @get:JsonProperty("bk_cloud_id")
     val bkCloudId: Int,
     @get:Schema(title = "主机ID")
-    @JsonProperty("bk_host_id")
+    @get:JsonProperty("bk_host_id")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     val bkHostId: Int?,
     @get:Schema(title = "寻址方式，1: 0，静态 2: 1，动态")
-    @JsonProperty("bk_addressing")
+    @get:JsonProperty("bk_addressing")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     val bkAddressing: String?,
     @get:Schema(title = "接入点ID")
-    @JsonProperty("ap_id")
+    @get:JsonProperty("ap_id")
     val apId: Int? = null,
     @get:Schema(title = "安装通道ID")
-    @JsonProperty("install_channel_id")
+    @get:JsonProperty("install_channel_id")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     val installChannelId: Int?,
     @get:Schema(title = "内网IPV4地址，inner_ip和inner_ipv6必选其一")
-    @JsonProperty("inner_ip")
+    @get:JsonProperty("inner_ip")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     val innerIp: String?,
     @get:Schema(title = "外网IP")
-    @JsonProperty("outer_ip")
+    @get:JsonProperty("outer_ip")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     val outerIp: String?,
     @get:Schema(title = "登录IP")
-    @JsonProperty("login_ip")
+    @get:JsonProperty("login_ip")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     val loginIp: String?,
     @get:Schema(title = "数据IP")
-    @JsonProperty("data_ip")
+    @get:JsonProperty("data_ip")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     val dataIp: String?,
     @get:Schema(title = "内网IPv6")
-    @JsonProperty("inner_ipv6")
+    @get:JsonProperty("inner_ipv6")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     val innerIpv6: String?,
     @get:Schema(title = "外网IPv6")
-    @JsonProperty("outer_ipv6")
+    @get:JsonProperty("outer_ipv6")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     val outerIpv6: String?,
     @get:Schema(title = "操作系统，1：LINUX 2：WINDOWS 3：AIX 4：SOLARIS", required = true)
-    @JsonProperty("os_type")
+    @get:JsonProperty("os_type")
     val osType: String?,
     @get:Schema(title = "认证类型，1：PASSWORD，密码认证 2: KEY，秘钥认证 3：TJJ_PASSWORD，默认为密码认证")
-    @JsonProperty("auth_type")
+    @get:JsonProperty("auth_type")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     val authType: String?,
     @get:Schema(title = "账户")
@@ -101,26 +101,26 @@ data class AgentHostForInstallAgent(
     @JsonInclude(JsonInclude.Include.NON_NULL)
     val key: String?,
     @get:Schema(title = "是否手动模式")
-    @JsonProperty("is_manual")
+    @get:JsonProperty("is_manual")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     val isManual: Boolean?,
     @get:Schema(title = "密码保留天数，默认保留一天")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     val retention: Int?,
     @get:Schema(title = "加速设置，默认为0")
-    @JsonProperty("peer_exchange_switch_for_agent")
+    @get:JsonProperty("peer_exchange_switch_for_agent")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     val peerExchangeSwitchForAgent: Int?,
     @get:Schema(title = "传输限速")
-    @JsonProperty("bt_speed_limit")
+    @get:JsonProperty("bt_speed_limit")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     val btSpeedLimit: String?,
     @get:Schema(title = "数据压缩开关，默认是关闭")
-    @JsonProperty("enable_compression")
+    @get:JsonProperty("enable_compression")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     val enableCompression: Boolean?,
     @get:Schema(title = "数据文件路径")
-    @JsonProperty("data_path")
+    @get:JsonProperty("data_path")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     val dataPath: String?
 )

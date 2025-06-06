@@ -32,7 +32,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.dockerjava.api.model.AuthConfig
 import com.github.dockerjava.core.DefaultDockerClientConfig
-import com.github.dockerjava.core.DockerClientBuilder
+import com.github.dockerjava.core.DockerClientImpl
 import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.dockerjava.core.command.PushImageResultCallback
 import com.tencent.devops.common.api.util.JsonUtil
@@ -127,7 +127,7 @@ class TkeService @Autowired constructor(
         return task
     }
 
-    private val dockerClient = DockerClientBuilder.getInstance(dockerClientConfig).build()
+    private val dockerClient = DockerClientImpl.getInstance(dockerClientConfig)
 
     private fun buildTkeImageTaskKey(taskId: String): String {
         return "image.pushTkeImageTask_$taskId"
@@ -345,7 +345,7 @@ class TkeService @Autowired constructor(
             .withRegistryUsername(pushImageParam.userName)
             .withRegistryPassword(pushImageParam.password)
             .build()
-        val tkeDockerClient = DockerClientBuilder.getInstance(tkeDockerClientConfig).build()
+        val tkeDockerClient = DockerClientImpl.getInstance(tkeDockerClientConfig)
 
         try {
             val authConfig = AuthConfig()

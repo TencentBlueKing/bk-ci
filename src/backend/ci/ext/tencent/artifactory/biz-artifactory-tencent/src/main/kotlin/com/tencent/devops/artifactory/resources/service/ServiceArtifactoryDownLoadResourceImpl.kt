@@ -29,6 +29,7 @@ package com.tencent.devops.artifactory.resources.service
 
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
+import com.tencent.devops.artifactory.pojo.AllowDownload
 import com.tencent.devops.artifactory.pojo.ApkDefenderRequest
 import com.tencent.devops.artifactory.pojo.TokenForJsonRequest
 import com.tencent.devops.artifactory.pojo.Url
@@ -147,6 +148,24 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
             permits = 1
         ).first()
         return Result(Url(url.url, url.url2))
+    }
+
+    override fun allowDownload(
+        userId: String,
+        realIP: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<AllowDownload> {
+        return Result(
+            bkRepoDownloadService.allowDownload(
+                userId = userId,
+                projectId = projectId,
+                artifactoryType = artifactoryType,
+                path = path,
+                ip = realIP
+            )
+        )
     }
 
     private fun checkParam(projectId: String, path: String) {

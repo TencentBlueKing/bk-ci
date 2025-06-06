@@ -38,9 +38,9 @@ config = {
         port = __REDIS_PORT__,
         pass = "__REDIS_PASS__", -- redis 密码，没有密码的话，把这行注释掉
         database = __REDIS_DB__, -- 默认选择db0
-        max_idle_time = 600000,  -- 保留在连接池的时间
-        pool_size = 5,           -- 连接池的大小
-        backlog = 100,           -- 连接等待队列
+        max_idle_time = 30000,  -- 保留在连接池的时间
+        pool_size = 10,           -- 连接池的大小
+        backlog = 10,           -- 连接等待队列
         ssl = false
     },
     oauth = { -- 对接蓝鲸权限中心才需要的配置

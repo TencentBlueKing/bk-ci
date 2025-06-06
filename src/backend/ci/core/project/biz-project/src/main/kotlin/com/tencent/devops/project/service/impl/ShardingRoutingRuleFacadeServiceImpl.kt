@@ -74,7 +74,8 @@ class ShardingRoutingRuleFacadeServiceImpl @Autowired constructor(
             val tableShardingConfig = tableShardingConfigService.getTableShardingConfigByName(
                 clusterName = clusterName,
                 moduleCode = moduleCode,
-                tableName = tableName
+                tableName = tableName,
+                ruleType = ruleType
             )
             tableShardingConfig?.let {
                 // 查找该分片规则对应的数据源

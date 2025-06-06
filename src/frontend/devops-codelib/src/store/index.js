@@ -24,11 +24,12 @@ const store = {
     actions,
     mutations,
     state: {
+        providerConfig: {},
         codelibTypes: [],
         codelibs: null,
         tickets: null,
         showCodelibDialog: false,
-        fetchingCodelibDetail: true,
+        fetchingCodelibDetail: false,
         codelib: {
             aliasName: '',
             credentialId: '',
@@ -42,6 +43,13 @@ const store = {
             project: []
         },
         tgitOAuth: {
+            project: []
+        },
+        scmgitOAuth: {
+            project: []
+        },
+        
+        scmsvnOAuth: {
             project: []
         },
         templateCodeLib: null

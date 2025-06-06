@@ -153,6 +153,7 @@ interface PacGitApiService {
         targetAction: CodeTargetAction,
         pipelineId: String,
         pipelineName: String,
-        versionName: String?
+        versionName: String?,
+        targetBranch: String?
     ): PacGitPushResult
 }

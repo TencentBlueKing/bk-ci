@@ -64,6 +64,7 @@ import org.jooq.Record2
 import org.jooq.Record3
 import org.jooq.Result
 import org.jooq.SelectHavingStep
+import org.jooq.conf.ParamType
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -95,7 +96,7 @@ class OpImageDao @Autowired constructor() {
         // 查找每组imageCode最新的记录
         val tmp = dslContext.select(
             tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
-            tImage.CREATE_TIME.max().`as`(KEY_CREATE_TIME)
+            DSL.max(tImage.CREATE_TIME).`as`(KEY_CREATE_TIME)
         ).from(tImage).groupBy(tImage.IMAGE_CODE)
         val t = dslContext.select(
             tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
@@ -178,7 +179,7 @@ class OpImageDao @Autowired constructor() {
         // 查找每组imageCode最新的记录
         val tmp = dslContext.select(
             tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
-            tImage.CREATE_TIME.max().`as`(KEY_CREATE_TIME)
+            DSL.max(tImage.CREATE_TIME).`as`(KEY_CREATE_TIME)
         ).from(tImage).groupBy(tImage.IMAGE_CODE)
         val t = dslContext.select(
             tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
@@ -267,7 +268,7 @@ class OpImageDao @Autowired constructor() {
         } else {
             baseStep
         }
-        logger.info("$interfaceName:listOpImages:SQL:${limitStep.getSQL(true)}")
+        logger.info("$interfaceName:listOpImages:SQL:${limitStep.getSQL(ParamType.INLINED)}")
         return limitStep.skipCheck().fetch()
     }
 

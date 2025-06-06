@@ -39,11 +39,14 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.Environm
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentCreateBasicBody
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperate
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateCreateDisk
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateDeleteDisk
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateExpandDisk
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.SyncVmReq
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskDataClass
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
+import com.tencent.devops.remotedev.pojo.expert.DeleteDiskData
 import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
 import com.tencent.devops.remotedev.pojo.image.ListImagesData
 import com.tencent.devops.remotedev.pojo.image.ListImagesResp
@@ -52,6 +55,8 @@ import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmData
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmResp
 import com.tencent.devops.remotedev.pojo.remotedev.TaskCommonResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import org.jooq.DSLContext
@@ -111,10 +116,14 @@ class StartCloudRemoteDevService @Autowired constructor(
                     pvcs = event.devFile.pvcs,
                     tolerations = if (event.devFile.specifyTaints != null) {
                         listOf(EnvironmentCreateBasicBody.Toleration(value = checkNotNull(event.devFile.specifyTaints)))
-                    } else null,
+                    } else {
+                        null
+                    },
                     nodeSelector = if (event.devFile.specifyTaints != null) {
                         mapOf("bkbcs.tencent.com/node-group" to checkNotNull(event.devFile.specifyTaints))
-                    } else null
+                    } else {
+                        null
+                    }
                 )
             )
         )
@@ -258,19 +267,23 @@ class StartCloudRemoteDevService @Autowired constructor(
         pipelineId: String,
         machineType: String?,
         zoneId: String?,
-        live: Boolean?
+        live: Boolean?,
+        specifyTaints: String?
     ): TaskCommonResp {
         val resp = workspaceBcsClient.startOperateWorkspace(
             userId = userId,
             action = EnvironmentAction.CLONE_VM,
             workspaceName = workspaceName,
+            // 优化：提取specifyTaints的处理逻辑，避免重复判断和checkNotNull调用
             environmentOperate = EnvironmentOperate(
                 uid = getEnvironmentUid(workspaceName),
                 userId = userId,
                 pipelineId = pipelineId,
                 zoneId = zoneId,
                 machineType = machineType,
-                live = live
+                live = live,
+                tolerations = specifyTaints?.let { listOf(EnvironmentCreateBasicBody.Toleration(value = it)) },
+                nodeSelector = specifyTaints?.let { mapOf("bkbcs.tencent.com/node-group" to it) }
             )
         )
         return TaskCommonResp(taskId = resp.taskID, taskUid = resp.taskUid)
@@ -300,14 +313,24 @@ class StartCloudRemoteDevService @Autowired constructor(
         return ExpandDiskValidateResp(true, null, resp.taskID)
     }
 
-    override fun createDisk(workspaceName: String, userId: String, size: String): CreateDiskResp {
+    override fun createDisk(
+        workspaceName: String,
+        userId: String,
+        size: String,
+        forceRestart: Boolean?
+    ): CreateDiskResp {
         val envId = getEnvironmentUid(workspaceName)
         // 存在hdd就不能挂盘了
         val hdd = workspaceBcsClient.fetchDiskList(envId)?.firstOrNull { it.pvcClass == CreateDiskDataClass.HDD.data }
         if (hdd != null) {
             return CreateDiskResp(false, "$envId exist hdd ${hdd.pvcName}", null)
         }
-        val data = EnvironmentOperateCreateDisk(uid = envId, pvcSize = size, pvcClass = CreateDiskDataClass.HDD.data)
+        val data = EnvironmentOperateCreateDisk(
+            uid = envId,
+            pvcSize = size,
+            pvcClass = CreateDiskDataClass.HDD.data,
+            forceRestart = forceRestart
+        )
         val resp = workspaceBcsClient.startOperateWorkspace(
             userId = userId,
             action = EnvironmentAction.CREATE_DISK,
@@ -322,6 +345,23 @@ class StartCloudRemoteDevService @Autowired constructor(
         return workspaceBcsClient.fetchDiskList(envId) ?: emptyList()
     }
 
+    override fun deleteDisk(userId: String, data: DeleteDiskData): CreateDiskResp {
+        val envId = getEnvironmentUid(data.workspaceName)
+        val info = EnvironmentOperateDeleteDisk(
+            uid = envId,
+            pvcName = data.pvcName,
+            forceRestart = data.forceRestart,
+            delaySeconds = data.delaySeconds
+        )
+        val resp = workspaceBcsClient.startOperateWorkspace(
+            userId = userId,
+            action = EnvironmentAction.DELETE_DISK,
+            workspaceName = data.workspaceName,
+            environmentOperate = info
+        )
+        return CreateDiskResp(true, null, resp.taskID)
+    }
+
     override fun taskStatus(taskId: String): WorkspaceTaskStatus? {
         return workspaceBcsClient.getTaskStatus(taskId)
     }
@@ -332,6 +372,20 @@ class StartCloudRemoteDevService @Autowired constructor(
 
     override fun deleteImage(imageId: String, delaySeconds: Int?): String? {
         return workspaceBcsClient.deleteImage(imageId, delaySeconds)?.taskID
+    }
+
+    override fun syncVm(data: SyncVmData): SyncVmResp? {
+        val req = SyncVmReq(
+            syncOnly = data.syncOnly,
+            uid = getEnvironmentUid(data.sourceWorkspaceName),
+            targetEnvID = getEnvironmentUid(data.targetWorkspaceName)
+        )
+        val res = workspaceBcsClient.syncVm(req) ?: return null
+        return SyncVmResp(
+            taskID = res.taskID,
+            environmentUid = res.environmentUid,
+            taskUid = res.taskUid
+        )
     }
 
     override fun getWorkspaceUrl(userId: String, workspaceName: String): String {
@@ -368,7 +422,8 @@ class StartCloudRemoteDevService @Autowired constructor(
             environmentHost = workspaceStatus.environmentIP,
             ready = true,
             started = true,
-            regionId = workspaceInfo.regionId
+            regionId = workspaceInfo.regionId,
+            vmName = workspaceStatus.name
         )
     }
 

@@ -10,6 +10,7 @@ import com.tencent.devops.remotedev.config.BkConfig
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceUseSnapshotsDao
+import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import io.swagger.v3.oas.annotations.media.Schema
@@ -18,9 +19,9 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.StreamingOutput
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.StreamingOutput
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -33,14 +34,18 @@ class MakeMoneyService @Autowired constructor(
     private val historyDao: WorkspaceOpHistoryDao,
     private val workspaceDao: WorkspaceDao,
     private val snapshotsDao: WorkspaceUseSnapshotsDao,
-    private val bkConfig: BkConfig
+    private val bkConfig: BkConfig,
+    private val workspaceWindowsDao: WorkspaceWindowsDao,
+    private val windowsResourceConfigService: WindowsResourceConfigService
 ) {
     data class SaveData(
         val projectId: String,
         val projectName: String,
         val status: WorkspaceStatus,
         val ip: String,
-        val bgName: String
+        val bgName: String,
+        val machineType: String,
+        val creator: String
     )
 
     companion object {
@@ -151,7 +156,9 @@ class MakeMoneyService @Autowired constructor(
                     projectName = it.projectName,
                     status = WorkspaceStatus.load(it.status),
                     ip = it.ip,
-                    bgName = it.creatorBgName
+                    bgName = it.creatorBgName,
+                    creator = it.creator,
+                    machineType = ""
                 )
             }))
             page += 1
@@ -177,7 +184,9 @@ class MakeMoneyService @Autowired constructor(
                     projectName = it.projectName,
                     status = WorkspaceStatus.load(it.status),
                     ip = it.ip,
-                    bgName = it.creatorBgName
+                    bgName = it.creatorBgName,
+                    creator = it.creator,
+                    machineType = ""
                 )
             })
             // 快照昨天在使用的实例
@@ -240,7 +249,12 @@ class MakeMoneyService @Autowired constructor(
             val usage: Int,
             @JsonProperty("daydetail")
             @get:Schema(title = "日明细数据")
-            val dayDetail: Map<String, Int>
+            val dayDetail: Map<String, Int>,
+            @get:Schema(title = "创建人")
+            val creator: String,
+            @JsonProperty("machine_type")
+            @get:Schema(title = "机型")
+            val machineType: String
         )
     }
 
@@ -284,9 +298,17 @@ class MakeMoneyService @Autowired constructor(
             }
         }
         val dateList = getDateList(start, end)
+        val allConfig = windowsResourceConfigService.getAllType(true, null).associateBy { it.id!! }
         val res = mutableListOf<Bill.BillDetail>()
         // 分块处理减少性能压力
         total.keys.chunked(99).forEach { chunk ->
+
+            // 获取实例对应的机型
+            val allWindows = workspaceWindowsDao.batchFetchWorkspaceWindowsInfo(
+                dslContext,
+                chunk.toSet()
+            ).associateBy { it.workspaceName }
+
             val workspaceInfo = workspaceDao.limitFetchWorkspace(
                 dslContext = dslContext,
                 limit = PageUtil.convertPageSizeToSQLLimit(1, 100),
@@ -297,7 +319,9 @@ class MakeMoneyService @Autowired constructor(
                     projectName = it.projectName,
                     status = WorkspaceStatus.load(it.status),
                     ip = it.ip,
-                    bgName = it.creatorBgName
+                    bgName = it.creatorBgName,
+                    machineType = allWindows[it.name]?.let { i -> allConfig[i.winConfigId.toLong()]?.size } ?: "",
+                    creator = it.creator
                 )
             })
             chunk.forEach { name ->
@@ -316,7 +340,9 @@ class MakeMoneyService @Autowired constructor(
                         usage = usage,
                         dayDetail = dayDetail,
                         bgName = workspace?.bgName ?: "ERROR",
-                        flag = if (workspace?.bgName == "IEG互动娱乐事业群" || workspace?.bgName == "子公司组织") 1 else 0
+                        flag = if (workspace?.bgName == "IEG互动娱乐事业群" || workspace?.bgName == "子公司组织") 1 else 0,
+                        creator = workspace?.creator ?: "ERROR",
+                        machineType = workspace?.machineType ?: "ERROR"
                     )
                 )
             }
@@ -367,6 +393,8 @@ class MakeMoneyService @Autowired constructor(
             row.createCell(8).setCellValue("daydetail 日明细数据")
             row.createCell(9).setCellValue("bg_name bg名")
             row.createCell(10).setCellValue("flag")
+            row.createCell(11).setCellValue("creator")
+            row.createCell(12).setCellValue("machine_type")
         }
 
         bills.forEachIndexed { index, bill ->
@@ -383,6 +411,8 @@ class MakeMoneyService @Autowired constructor(
             row.createCell(8).setCellValue(JsonUtil.toJson(bill.dayDetail, formatted = false))
             row.createCell(9).setCellValue(bill.bgName)
             row.createCell(10).setCellValue(bill.flag.toString())
+            row.createCell(11).setCellValue(bill.creator)
+            row.createCell(12).setCellValue(bill.machineType)
         }
         for (i in 0 until 10) {
             sheet.trackAllColumnsForAutoSizing()

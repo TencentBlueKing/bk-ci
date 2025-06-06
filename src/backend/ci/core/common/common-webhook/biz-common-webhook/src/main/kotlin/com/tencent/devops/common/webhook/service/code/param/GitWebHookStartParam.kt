@@ -65,13 +65,12 @@ class GitWebHookStartParam @Autowired constructor(
         projectId: String,
         element: CodeGitWebHookTriggerElement,
         repo: Repository,
-        matcher: ScmWebhookMatcher,
+        matcher: ScmWebhookMatcher?,
         variables: Map<String, String>,
         params: WebHookParams,
         matchResult: WebhookMatchResult
     ): Map<String, Any> {
         val startParams = mutableMapOf<String, Any>()
-        startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID] = matcher.getRevision()
         startParams[BK_REPO_GIT_WEBHOOK_EVENT_TYPE] = params.eventType ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_INCLUDE_BRANCHS] = element.branchName ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_BRANCHS] = element.excludeBranchName ?: ""
@@ -81,7 +80,6 @@ class GitWebHookStartParam @Autowired constructor(
         startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_BRANCH] =
             matchResult.extra[MATCH_BRANCH] ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_PATH] = matchResult.extra[MATCH_PATHS] ?: ""
-        startParams[BK_REPO_GIT_MANUAL_UNLOCK] = matcher.getEnv()[BK_REPO_GIT_MANUAL_UNLOCK] ?: false
         startParams[BK_REPO_GIT_WEBHOOK_ENABLE_CHECK] = element.enableCheck ?: true
         startParams[BK_REPO_WEBHOOK_REPO_AUTH_USER] =
             if (repo is CodeGitRepository && repo.authType == RepoAuthType.OAUTH) {
@@ -89,12 +87,16 @@ class GitWebHookStartParam @Autowired constructor(
             } else {
                 eventCacheService.getRepoAuthUser(projectId = projectId, repo = repo)
             }
-        startParams.putAll(
-            matcher.retrieveParams(
-                projectId = projectId,
-                repository = repo
+        matcher?.let {
+            startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID] = matcher.getRevision()
+            startParams[BK_REPO_GIT_MANUAL_UNLOCK] = matcher.getEnv()[BK_REPO_GIT_MANUAL_UNLOCK] ?: false
+            startParams.putAll(
+                matcher.retrieveParams(
+                    projectId = projectId,
+                    repository = repo
+                )
             )
-        )
+        }
 
         return startParams
     }

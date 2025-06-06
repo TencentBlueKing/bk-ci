@@ -109,7 +109,7 @@ class DevxHandleBuildResultService @Autowired constructor(
         } else {
             null
         }
-        val userId = storeBuildResultRequest.userId
+        val userId = baseRecord.modifier
         // 处理环境信息业务逻辑
         val storeBaseEnvDataPOs: MutableList<StoreBaseEnvDataPO> = mutableListOf()
         val storeBaseEnvExtDataPOs: MutableList<StoreBaseEnvExtDataPO> = mutableListOf()

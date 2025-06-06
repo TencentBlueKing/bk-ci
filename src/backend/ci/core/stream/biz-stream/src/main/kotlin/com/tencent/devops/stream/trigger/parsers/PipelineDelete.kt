@@ -119,8 +119,9 @@ class PipelineDelete @Autowired constructor(
                 pipelineId = pipelineId,
                 branch = action.data.eventCommon.branch
             )
-
-            repoTriggerEventService.deleteRepoTriggerEvent(pipelineId)
+            if (action.data.eventCommon.branch == action.data.context.defaultBranch) {
+                repoTriggerEventService.deleteRepoTriggerEvent(pipelineId)
+            }
 
             val isFileEmpty =
                 if (null != filePath && action.data.eventCommon.branch != action.data.context.defaultBranch) {

@@ -147,6 +147,7 @@ class WorkspaceCommon @Autowired constructor(
             dslContext = dslContext,
             launchId = gameId.second.toInt(),
             regionId = workspaceInfo.regionId,
+            vmName = workspaceInfo.vmName,
             workspaceName = workspaceName
         )
     }
@@ -308,6 +309,14 @@ class WorkspaceCommon @Autowired constructor(
             workspaceInfo.status == EnvStatusEnum.unknow -> {
                 workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.EXCEPTION)
                 return WorkspaceStatus.EXCEPTION
+            }
+            workspaceInfo.status == EnvStatusEnum.expanding -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.EXPANDING)
+                return WorkspaceStatus.EXPANDING
+            }
+            workspaceInfo.status == EnvStatusEnum.operating -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.OPERATING)
+                return WorkspaceStatus.OPERATING
             }
 
             else -> logger.warn(
@@ -730,7 +739,11 @@ class WorkspaceCommon @Autowired constructor(
     }
 
     // 创建实例成功后做异步设置，包含L盘挂载
-    fun makeDiskMount(ip: String, user: String) {
+    fun makeDiskMount(
+        ip: String,
+        user: String,
+        owner: String? = null
+    ) {
         try {
             val infoS = redisCache.get(PIPELINE_CONFIG_INFO) ?: return
             val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
@@ -742,6 +755,7 @@ class WorkspaceCommon @Autowired constructor(
                     "job_ip_list" -> newParam[k] = resIps.joinToString(separator = " ")
                     "repoId" -> newParam[k] = REPOID
                     "localDriver" -> newParam[k] = LOCALDRIVER
+                    "owner" -> newParam[k] = owner ?: ""
                     else -> newParam[k] = v
                 }
             }
@@ -790,10 +804,9 @@ class WorkspaceCommon @Autowired constructor(
         if (projectId.isNullOrBlank() || ownerType == WorkspaceOwnerType.PERSONAL) {
             return config.devcouldAppName to config.devcouldCurLaunchId
         }
-        return projectStartAppLinkDao.getAppId(dslContext, projectId)?.let { projectId to it } ?: kotlin.run {
-            remotedevProjectService.migrateOldData(projectId)
-            checkNotNull(projectStartAppLinkDao.getAppId(dslContext, projectId)?.let { projectId to it })
-        }
+        return checkNotNull(
+            projectStartAppLinkDao.getAppId(dslContext, projectId)?.let { projectId to it }
+        ) { "Not found project $projectId appId" }
     }
 
     fun devxEnvNodeInit(

@@ -23,6 +23,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceUpgradeReq
 import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskResp
+import com.tencent.devops.remotedev.pojo.expert.DeleteDiskData
 import com.tencent.devops.remotedev.pojo.expert.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.expert.SupRecordData
 import com.tencent.devops.remotedev.pojo.expert.SupRecordDataResp
@@ -31,6 +32,8 @@ import com.tencent.devops.remotedev.pojo.image.DeleteImageResp
 import com.tencent.devops.remotedev.pojo.image.ListImagesData
 import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
+import com.tencent.devops.remotedev.pojo.itsm.BKItsmCreateTicketReq
+import com.tencent.devops.remotedev.pojo.itsm.BKItsmCreateTicketRespData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.EnableRemotedevData
@@ -43,25 +46,30 @@ import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmData
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmResp
 import com.tencent.devops.remotedev.pojo.remotedev.TaskResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyFetchInfo
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyInfo
+import com.tencent.devops.remotedev.pojo.strategy.ProjectStrategyResp
 import com.tencent.devops.remotedev.pojo.windows.QuotaInApiRes
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
-import javax.ws.rs.DefaultValue
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.DefaultValue
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "OPEN_API_REMOTEDEV", description = "OPEN-API-REMOTEDEV服务")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/remotedev")
@@ -443,7 +451,10 @@ interface ApigwRemoteDevResource {
         @Parameter(description = "地域类型", required = true)
         @QueryParam("zoneType")
         @DefaultValue("DEFAULT")
-        zoneType: WindowsResourceZoneConfigType
+        zoneType: WindowsResourceZoneConfigType,
+        @Parameter(description = "创建时指定污点标签", required = true)
+        @QueryParam("specifyTaints")
+        specifyTaints: String?
     ): Result<Map<String, Map<String, Int>>>
 
     @Operation(summary = "更新项目/个人在使用云桌面上的配额", tags = ["v4_app_remotedev_usage_limit"])
@@ -731,7 +742,10 @@ interface ApigwRemoteDevResource {
         workspaceName: String,
         @Parameter(description = "磁盘大小", required = true)
         @QueryParam("size")
-        size: String
+        size: String,
+        @Parameter(description = "是否强制重启", required = false)
+        @QueryParam("forceRestart")
+        forceRestart: Boolean?
     ): Result<CreateDiskResp>
 
     @Operation(summary = "获取工作空间磁盘列表", tags = ["v4_app_remotedev_workspace_disk_list"])
@@ -745,6 +759,16 @@ interface ApigwRemoteDevResource {
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<List<VmDiskInfo>?>
+
+    @Operation(summary = "卸载并回收磁盘", tags = ["v4_app_remotedev_workspace_delete_disk"])
+    @POST
+    @Path("/workspace_delete_disk")
+    fun deleteDisk(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: DeleteDiskData
+    ): Result<CreateDiskResp>
 
     @Operation(summary = "云桌面调整配置", tags = ["v4_app_remotedev_workspace_upgrade"])
     @POST
@@ -948,4 +972,45 @@ interface ApigwRemoteDevResource {
         @QueryParam("delaySeconds")
         delaySeconds: Int?
     ): Result<DeleteImageResp>
+
+    @Operation(summary = "创建ITSM单据流程", tags = ["v4_app_remotedev_create_itsm_ticket"])
+    @POST
+    @Path("/create_itsm_ticket")
+    fun createItsmTicket(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "请求参数", required = true)
+        createReqStr: BKItsmCreateTicketReq
+    ): Result<BKItsmCreateTicketRespData>
+
+    @Operation(summary = "获取项目策略", tags = ["v4_app_remotedev_get_project_strategy"])
+    @POST
+    @Path("/get_project_strategy")
+    fun getProjectStrategy(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: ProjectStrategyFetchInfo
+    ): Result<ProjectStrategyResp>
+
+    @Operation(summary = "修改项目策略", tags = ["v4_app_remotedev_update_project_strategy"])
+    @POST
+    @Path("/update_project_strategy")
+    fun updateProjectStrategy(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: ProjectStrategyInfo
+    ): Result<Boolean>
+
+    @Operation(summary = "同步Vm数据盘", tags = ["v4_app_remotedev_sync_vm"])
+    @POST
+    @Path("/sync_vm")
+    fun syncVm(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: SyncVmData
+    ): Result<SyncVmResp?>
 }
