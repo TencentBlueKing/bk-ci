@@ -210,18 +210,18 @@ BEGIN
                   FROM information_schema.COLUMNS
               WHERE TABLE_SCHEMA = db
                 AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY'
-                AND COLUMN_NAME = 'ARTIFACT_ANALYTICS_INFO') THEN
+                AND COLUMN_NAME = 'ARTIFACT_QUALITY_INFO') THEN
     ALTER TABLE `T_PIPELINE_BUILD_HISTORY`
-        ADD COLUMN `ARTIFACT_ANALYTICS_INFO` mediumtext comment '制品质量分析结果' after `ARTIFACT_INFO`;
+        ADD COLUMN `ARTIFACT_QUALITY_INFO` mediumtext comment '制品质量分析结果' after `ARTIFACT_INFO`;
     END IF;
 
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
               WHERE TABLE_SCHEMA = db
                 AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY_DEBUG'
-                AND COLUMN_NAME = 'ARTIFACT_ANALYTICS_INFO') THEN
+                AND COLUMN_NAME = 'ARTIFACT_QUALITY_INFO') THEN
     ALTER TABLE `T_PIPELINE_BUILD_HISTORY_DEBUG`
-        ADD COLUMN `ARTIFACT_ANALYTICS_INFO` mediumtext comment '制品质量分析结果' after `ARTIFACT_INFO`;
+        ADD COLUMN `ARTIFACT_QUALITY_INFO` mediumtext comment '制品质量分析结果' after `ARTIFACT_INFO`;
     END IF;
 
 COMMIT;
