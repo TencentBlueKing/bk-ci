@@ -49,8 +49,9 @@ class SimpleProjectExtService @Autowired constructor(
         logoAddress: String?
     ) {
         client.get(ServiceBkRepoResource::class).createProjectResource(
-            userId,,
-            projectCreateInfo.englishName
+            userId = userId,
+            tenantId = projectCreateInfo.tenantId,
+            projectId = projectCreateInfo.englishName
         )
     }
 
