@@ -30,10 +30,12 @@ package com.tencent.devops.auth.provider.rbac.config
 
 import com.tencent.devops.auth.dao.AuthItsmCallbackDao
 import com.tencent.devops.auth.provider.rbac.listener.AuthItsmCallbackListener
+import com.tencent.devops.auth.provider.rbac.listener.AuthProjectLevelPermissionsSyncListener
 import com.tencent.devops.auth.provider.rbac.listener.AuthResourceGroupCreateListener
 import com.tencent.devops.auth.provider.rbac.listener.AuthResourceGroupModifyListener
 import com.tencent.devops.auth.provider.rbac.listener.SyncGroupAndMemberListener
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthItsmCallbackEvent
+import com.tencent.devops.auth.provider.rbac.pojo.event.AuthProjectLevelPermissionsSyncEvent
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupCreateEvent
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupModifyEvent
 import com.tencent.devops.auth.provider.rbac.service.PermissionGradeManagerService
@@ -105,10 +107,26 @@ class RbacMQConfiguration {
         traceEventDispatcher = traceEventDispatcher
     )
 
+    @Bean
+    fun authProjectLevelPermissionsSyncListener(
+        permissionService: PermissionResourceGroupPermissionService,
+        traceEventDispatcher: TraceEventDispatcher
+    ) = AuthProjectLevelPermissionsSyncListener(
+        permissionService = permissionService,
+        traceEventDispatcher = traceEventDispatcher
+    )
+
     @EventConsumer
     fun authResourceGroupCreateConsumer(
         @Autowired authResourceGroupCreateListener: AuthResourceGroupCreateListener
     ) = ScsConsumerBuilder.build<AuthResourceGroupCreateEvent> { authResourceGroupCreateListener.execute(it) }
+
+    @EventConsumer
+    fun authProjectLevelPermissionsSyncConsumer(
+        @Autowired authProjectLevelPermissionsSyncListener: AuthProjectLevelPermissionsSyncListener
+    ) = ScsConsumerBuilder.build<AuthProjectLevelPermissionsSyncEvent> {
+        authProjectLevelPermissionsSyncListener.execute(it)
+    }
 
     @Bean
     fun authResourceGroupModifyListener(

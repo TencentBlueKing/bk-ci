@@ -23,40 +23,17 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.auth.resources.user
+package com.tencent.devops.auth.provider.rbac.pojo.event
 
-import com.tencent.devops.auth.api.user.UserProjectMemberResource
-import com.tencent.devops.auth.pojo.DepartmentUserCount
-import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
-import com.tencent.devops.auth.service.iam.PermissionProjectService
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import com.tencent.devops.common.web.RestResource
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.pojo.trace.ITraceEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
 
-@RestResource
-class UserProjectMemberResourceImpl @Autowired constructor(
-    val permissionProjectService: PermissionProjectService,
-    val permissionManageFacadeService: PermissionManageFacadeService
-) : UserProjectMemberResource {
-    override fun checkManager(userId: String, projectId: String): Result<Boolean> {
-        val result = permissionProjectService.checkProjectManager(userId, projectId) ||
-            permissionProjectService.isProjectUser(userId, projectId, BkAuthGroup.CI_MANAGER)
-        return Result(result)
-    }
-
-    override fun getProjectUserDepartmentDistribution(
-        userId: String,
-        projectId: String,
-        parentDepartmentId: Int
-    ): Result<List<DepartmentUserCount>> {
-        return Result(
-            permissionManageFacadeService.getProjectUserDepartmentDistribution(
-                projectCode = projectId,
-                parentDepartmentId = parentDepartmentId
-            )
-        )
-    }
-}
+@Event(StreamBinding.AUTH_PROJECT_LEVEL_GROUP_PERMISSIONS_SYNC)
+data class AuthProjectLevelPermissionsSyncEvent(
+    val projectCode: String,
+    val iamGroupIds: List<Int>
+) : ITraceEvent()
