@@ -258,6 +258,10 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         return Result(mapOf("repositoryHashId" to repositoryInfo.repositoryHashId!!, "codeSrc" to repositoryInfo.url))
     }
 
+    override fun handleAtomExtend(marketAtomCreateRequest: MarketAtomCreateRequest, userId: String, atomCode: String) {
+        TODO("Not yet implemented")
+    }
+
     override fun getFileStr(
         projectCode: String,
         atomCode: String,

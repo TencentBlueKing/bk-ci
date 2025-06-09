@@ -194,6 +194,10 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         }
     }
 
+    override fun doStorePostCreateBus(storeCreateRequest: StoreCreateRequest) {
+        TODO("Not yet implemented")
+    }
+
     override fun doStoreUpdatePreBus(storeUpdateRequest: StoreUpdateRequest) {
         val storeBaseCreateRequest = storeUpdateRequest.baseInfo
         val storeCode = storeBaseCreateRequest.storeCode

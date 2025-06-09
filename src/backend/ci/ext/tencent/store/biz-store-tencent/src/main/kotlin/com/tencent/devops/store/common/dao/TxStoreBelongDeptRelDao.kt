@@ -39,64 +39,72 @@ import org.springframework.stereotype.Repository
 @Repository
 class TxStoreBelongDeptRelDao {
 
+    private fun buildInsertQuery(
+        userId: String,
+        dslContext: DSLContext,
+        storeBelongDeptRel: StoreBelongDeptRel
+    ) = with(TStoreBelongDeptRel.T_STORE_BELONG_DEPT_REL) {
+        dslContext.insertInto(
+            this,
+            ID,
+            STORE_CODE,
+            STORE_TYPE,
+            BG_ID,
+            BG_NAME,
+            DEPT_ID,
+            DEPT_NAME,
+            CENTER_ID,
+            CENTER_NAME,
+            GROUP_ID,
+            GROUP_NAME,
+            BUSINESS_LINE_ID,
+            BUSINESS_LINE_NAME,
+            CREATOR,
+            MODIFIER,
+            CREATE_TIME,
+            UPDATE_TIME
+        ).values(
+            UUIDUtil.generate(),
+            storeBelongDeptRel.storeCode,
+            storeBelongDeptRel.storeType.type.toByte(),
+            storeBelongDeptRel.storeDeptInfo.bgId,
+            storeBelongDeptRel.storeDeptInfo.bgName,
+            storeBelongDeptRel.storeDeptInfo.deptId,
+            storeBelongDeptRel.storeDeptInfo.deptName,
+            storeBelongDeptRel.storeDeptInfo.centerId,
+            storeBelongDeptRel.storeDeptInfo.centerName,
+            storeBelongDeptRel.storeDeptInfo.groupId,
+            storeBelongDeptRel.storeDeptInfo.groupName,
+            storeBelongDeptRel.storeDeptInfo.businessLineId,
+            storeBelongDeptRel.storeDeptInfo.businessLineName,
+            userId,
+            userId,
+            LocalDateTime.now(),
+            LocalDateTime.now()
+        ).onDuplicateKeyUpdate()
+            .set(BG_ID, storeBelongDeptRel.storeDeptInfo.bgId)
+            .set(BG_NAME, storeBelongDeptRel.storeDeptInfo.bgName)
+            .set(DEPT_ID, storeBelongDeptRel.storeDeptInfo.deptId)
+            .set(DEPT_NAME, storeBelongDeptRel.storeDeptInfo.deptName)
+            .set(CENTER_ID, storeBelongDeptRel.storeDeptInfo.centerId)
+            .set(CENTER_NAME, storeBelongDeptRel.storeDeptInfo.centerName)
+            .set(GROUP_ID, storeBelongDeptRel.storeDeptInfo.groupId)
+            .set(GROUP_NAME, storeBelongDeptRel.storeDeptInfo.groupName)
+            .set(BUSINESS_LINE_ID, storeBelongDeptRel.storeDeptInfo.businessLineId)
+            .set(BUSINESS_LINE_NAME, storeBelongDeptRel.storeDeptInfo.businessLineName)
+            .set(MODIFIER, userId)
+            .set(UPDATE_TIME, LocalDateTime.now())
+    }
 
+    fun add(userId: String, dslContext: DSLContext, storeBelongDeptRel: StoreBelongDeptRel) {
+        buildInsertQuery(userId, dslContext, storeBelongDeptRel).execute()
+    }
 
     fun batchAdd(userId: String, dslContext: DSLContext, storeBelongDeptRelList: List<StoreBelongDeptRel>) {
-        with(TStoreBelongDeptRel.T_STORE_BELONG_DEPT_REL) {
-            val addStep = storeBelongDeptRelList.map { storeBelongDeptRel ->
-                dslContext.insertInto(
-                    this,
-                    ID,
-                    STORE_CODE,
-                    STORE_TYPE,
-                    BG_ID,
-                    BG_NAME,
-                    DEPT_ID,
-                    DEPT_NAME,
-                    CENTER_ID,
-                    CENTER_NAME,
-                    GROUP_ID,
-                    GROUP_NAME,
-                    BUSINESS_LINE_ID,
-                    BUSINESS_LINE_NAME,
-                    CREATOR,
-                    MODIFIER,
-                    CREATE_TIME,
-                    UPDATE_TIME
-                ).values(
-                    UUIDUtil.generate(),
-                    storeBelongDeptRel.storeCode,
-                    storeBelongDeptRel.storeType.type.toByte(),
-                    storeBelongDeptRel.storeDeptInfo.bgId,
-                    storeBelongDeptRel.storeDeptInfo.bgName,
-                    storeBelongDeptRel.storeDeptInfo.deptId,
-                    storeBelongDeptRel.storeDeptInfo.deptName,
-                    storeBelongDeptRel.storeDeptInfo.centerId,
-                    storeBelongDeptRel.storeDeptInfo.centerName,
-                    storeBelongDeptRel.storeDeptInfo.groupId,
-                    storeBelongDeptRel.storeDeptInfo.groupName,
-                    storeBelongDeptRel.storeDeptInfo.businessLineId,
-                    storeBelongDeptRel.storeDeptInfo.businessLineName,
-                    userId,
-                    userId,
-                    LocalDateTime.now(),
-                    LocalDateTime.now()
-                ).onDuplicateKeyUpdate()
-                    .set(BG_ID, storeBelongDeptRel.storeDeptInfo.bgId)
-                    .set(BG_NAME, storeBelongDeptRel.storeDeptInfo.bgName)
-                    .set(DEPT_ID, storeBelongDeptRel.storeDeptInfo.deptId)
-                    .set(DEPT_NAME, storeBelongDeptRel.storeDeptInfo.deptName)
-                    .set(CENTER_ID, storeBelongDeptRel.storeDeptInfo.centerId)
-                    .set(CENTER_NAME, storeBelongDeptRel.storeDeptInfo.centerName)
-                    .set(GROUP_ID, storeBelongDeptRel.storeDeptInfo.groupId)
-                    .set(GROUP_NAME, storeBelongDeptRel.storeDeptInfo.groupName)
-                    .set(BUSINESS_LINE_ID, storeBelongDeptRel.storeDeptInfo.businessLineId)
-                    .set(BUSINESS_LINE_NAME, storeBelongDeptRel.storeDeptInfo.businessLineName)
-                    .set(MODIFIER, userId)
-                    .set(UPDATE_TIME, LocalDateTime.now())
-            }
-            dslContext.batch(addStep).execute()
+        val addStep = storeBelongDeptRelList.map { storeBelongDeptRel ->
+            buildInsertQuery(userId, dslContext, storeBelongDeptRel)
         }
+        dslContext.batch(addStep).execute()
     }
 
     fun delete(dslContext: DSLContext, storeCode: String, storeType: StoreTypeEnum) {

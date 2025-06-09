@@ -39,6 +39,6 @@ class TxOpStoreDeptResourceImpl @Autowired constructor(
 ) : TxOpStoreDeptResource {
 
     override fun initStoreBelongDept(): Result<Boolean> {
-        return Result(txStoreBelongDeptService.initStoreBelongDept())
+        return Result(txStoreBelongDeptService.initAllStoreBelongDept())
     }
 }

@@ -76,7 +76,7 @@ class TxStoreBelongDeptServiceImpl @Autowired constructor(
         return true
     }
 
-    override fun initStoreBelongDept(): Boolean {
+    override fun initAllStoreBelongDept(): Boolean {
         initStoreBelongDept(ATOM)
         initStoreBelongDept(SERVICE)
         initStoreBelongDept(IMAGE)
@@ -85,27 +85,38 @@ class TxStoreBelongDeptServiceImpl @Autowired constructor(
         return true
     }
 
+    override fun initAllStoreBelongDept(userId: String, storeType: StoreTypeEnum, storeCode: String) {
+        val userDeptInfo = getUserDeptInfo(userId)
+        userDeptInfo?.let {
+            StoreBelongDeptRel(
+                storeCode = storeCode,
+                storeType = storeType,
+                storeDeptInfo = it
+            )
+        }
+    }
+
     override fun getStoreBelongDept(userId: String, storeCode: String, storeType: StoreTypeEnum): StoreBelongDeptRel? {
         return txStoreBelongDeptRelDao.getByStoreCodeAndType(dslContext, storeCode, storeType)
     }
 
-    private fun initStoreBelongDept(storeTypeEnum: StoreTypeEnum) {
+    fun initStoreBelongDept(storeTypeEnum: StoreTypeEnum) {
         Executors.newFixedThreadPool(1).submit {
             logger.info("begin initAtomBelongDept!!")
             var offset = 0
             do {
                 val listStoreInitCreator = listStoreInitCreator(storeTypeEnum, offset)
                 val storeBelongDeptRelList = mutableListOf<StoreBelongDeptRel>()
-                listStoreInitCreator.forEach { atomInitCreator ->
-                    val atomCode = atomInitCreator.value1()
-                    val creator = atomInitCreator.value1()
+                listStoreInitCreator.forEach { storeInitCreator ->
+                    val storeCode = storeInitCreator.value1()
+                    val creator = storeInitCreator.value1()
                     // 获取用户组织架构
                     val userDeptInfo = getUserDeptInfo(creator)
                     userDeptInfo?.let {
                         storeBelongDeptRelList.add(
                             StoreBelongDeptRel(
-                                storeCode = atomCode,
-                                storeType = ATOM,
+                                storeCode = storeCode,
+                                storeType = storeTypeEnum,
                                 storeDeptInfo = it
                             )
                         )
