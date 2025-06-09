@@ -81,7 +81,7 @@
       "public:master": {
         "outputs": [
           "{workspaceRoot}/frontend/environment",
-          "{workspaceRoot}/frontend/entry's"
+          "{workspaceRoot}/frontend/entry's/environment.json"
         ]
       }
     }
