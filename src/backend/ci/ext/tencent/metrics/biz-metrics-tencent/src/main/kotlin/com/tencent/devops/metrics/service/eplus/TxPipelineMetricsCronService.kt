@@ -116,12 +116,14 @@ class TxPipelineMetricsCronService @Autowired constructor(
     ) {
         val tPipelineMetricsInfoRecords = mutableListOf<TEplusPipelineMetricsDataDailyRecord>()
         var pageNum = 1
-        val pageSize = 1000
+        val pageSize = 10000
         var failedBatches = 0
 
         while (true) {
             val redisLock = RedisLock(redisOperation, LOCK_KEY, 30)
             try {
+                redisLock.lock()
+                Thread.sleep(60 * 1000L) // 防止接口请求超过限制
                 val response = queryInvalidPipelineMonitorCardData(
                     token = token,
                     cardId = cardId,
@@ -130,6 +132,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
                     pageSize = pageSize,
                     input = input
                 )
+                logger.info("queryAndProcessCardData response message: ${response["message"]}")
                 val data = response["data"] as Map<String, Any>
                 val result = data["result"] as Map<String, Any>
                 val rows = result["rows"] as List<Map<String, Any>>
@@ -144,7 +147,6 @@ class TxPipelineMetricsCronService @Autowired constructor(
                         }
                     )
                 }
-                redisLock.lock()
                 metricsData(tPipelineMetricsInfoRecords)
 
                 if (rows.size < pageSize) break
@@ -340,7 +342,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
         namespaceId: Int,
         queryMode: Int = 2,
         pageNum: Int = 1,
-        pageSize: Int = 1000,
+        pageSize: Int = 10000,
         input: Map<String, Any>? = null
     ): Map<String, Any> {
         val requestBody = mutableMapOf(
