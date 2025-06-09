@@ -298,6 +298,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
                 assignData = { row ->
                     this.projectId = row["project_id"] as String
                     this.pipelineId = row["pipeline_id"] as String
+                    this.isInvalidPipeline = true
                     this.url = row["n3"] as String
                     this.pipelineName = row["n1"] as String
                 },
