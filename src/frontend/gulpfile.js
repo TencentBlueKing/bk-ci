@@ -135,8 +135,11 @@ task('generate-assets-json', () => {
     const assetsBundlesName = path.join(__dirname, dist, BUNDLE_NAME)
     const prevAssets = JSON.parse(fs.readFileSync(assetsBundlesName, 'utf-8'))
     // 读取path.join(__dirname, dist, 'entry's', '*.json')所有Json合并成一个
-    const finalAssets = globSync(path.join(entryDir, '*.json')).reduce((acc, file) => {
+    const entryJsons = globSync(path.join(entryDir, '*.json'))
+    console.log('entry jsons: ', entryJsons)
+    const finalAssets = entryJsons.reduce((acc, file) => {
         const content = JSON.parse(fs.readFileSync(file, 'utf-8'))
+        console.log('assets json content: ', content)
         acc = {
             ...acc,
             ...content
