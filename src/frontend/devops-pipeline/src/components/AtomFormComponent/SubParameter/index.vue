@@ -85,6 +85,9 @@
                 const { atomValue = {}, $route: { params = {} } } = this
                 return {
                     bkPoolType: this?.container?.dispatchType?.buildType,
+                    pipelineId: Object.prototype.hasOwnProperty.call(params, 'templateId')
+                        ? params.templateId
+                        : '',
                     ...params,
                     ...atomValue
                 }
@@ -124,7 +127,7 @@
                     this.pipelineRequiredParams.branch = typeof value.branch === 'string' && value.branch.isBkVar()
                         ? this.requiredParams[value.branch.extractBkVar()]
                         : value.branch
-                    if ((value.subPip !== oldValue.subPip) || (value.branch !== oldValue.branch)) {
+                    if ((value?.subPip !== oldValue?.subPip) || (value?.branch !== oldValue?.branch)) {
                         this.atomValue[this.name] = []
                         this.getParametersList()
                         this.initData()
@@ -209,7 +212,7 @@
                     url += `${index <= 0 ? '?' : '&'}${key}=${value}`
                 })
                 const pipelineInfoQuery = this.param.pipelineInfoQuery || {}
-                Object.keys(pipelineInfoQuery).forEach(key => {
+                this.pipelineInfo && Object.keys(pipelineInfoQuery).forEach(key => {
                     const value = typeof this.pipelineInfo[key] === 'undefined' ? pipelineInfoQuery[key] : this.pipelineInfo[key]
                     Object.keys(urlQuery).length ? url += `&${key}=${value}` : url += `?${key}=${value}`
                 })
