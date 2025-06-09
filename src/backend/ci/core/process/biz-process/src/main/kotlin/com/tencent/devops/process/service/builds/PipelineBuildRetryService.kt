@@ -495,7 +495,7 @@ class PipelineBuildRetryService @Autowired constructor(
         // retry/skip的 task 所在的 stage 必须是运行中，否则无法被重试或者跳过
         Preconditions.checkTrue(
             condition = stage.status.isRunning(),
-            exception = ErrorCodeException(errorCode = ProcessMessageCode.ERROR_RETRY_STAGE_NOT_RUNNING)
+            exception = ErrorCodeException(errorCode = ProcessMessageCode.ERROR_RETRY_TASK_IN_STAGE_NOT_RUNNING)
         )
         val container = pipelineContainerService.getContainer(
             projectId = pipeline.projectId,
@@ -510,7 +510,7 @@ class PipelineBuildRetryService @Autowired constructor(
         // retry/skip的 task 所在的 Job 必须是结束状态，否则无法被重试或者跳过
         Preconditions.checkTrue(
             condition = container.status.isFinish(),
-            exception = ErrorCodeException(errorCode = ProcessMessageCode.ERROR_JOB_RUNNING)
+            exception = ErrorCodeException(errorCode = ProcessMessageCode.ERROR_RETRY_TASK_IN_CONTAINER_NOT_FINISHED)
         )
         val task = pipelineTaskService.getByTaskId(
             projectId = pipeline.projectId,
@@ -523,7 +523,7 @@ class PipelineBuildRetryService @Autowired constructor(
         // retry/skip的 task 必须是失败或者被取消的状态，否则无法被重试或者跳过
         Preconditions.checkTrue(
             condition = task.status.isFailure() || task.status.isCancel(),
-            exception = ErrorCodeException(errorCode = ProcessMessageCode.ERROR_RETRY_STAGE_NOT_FAILED)
+            exception = ErrorCodeException(errorCode = ProcessMessageCode.ERROR_RETRY_TASK_NOT_FAILED)
         )
     }
 
