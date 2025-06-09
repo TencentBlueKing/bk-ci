@@ -95,7 +95,7 @@ import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
 import com.tencent.devops.store.pojo.image.response.ImageAgentTypeInfo
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import java.time.LocalDateTime
-import java.util.*
+import java.util.Base64
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
