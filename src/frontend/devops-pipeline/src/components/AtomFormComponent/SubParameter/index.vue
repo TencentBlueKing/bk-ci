@@ -79,15 +79,17 @@
         computed: {
             ...mapState('atom', [
                 'pipelineInfo',
-                'pipeline'
+                'pipeline',
+                'template'
             ]),
             paramValues () {
                 const { atomValue = {}, $route: { params = {} } } = this
+                const isTemplate = Object.prototype.hasOwnProperty.call(params, 'templateId')
                 return {
                     bkPoolType: this?.container?.dispatchType?.buildType,
-                    pipelineId: Object.prototype.hasOwnProperty.call(params, 'templateId')
-                        ? params.templateId
-                        : '',
+                    pipelineId: isTemplate ? params.templateId : '',
+                    templateVersion: isTemplate ? this.template?.currentVersion?.version : '',
+                    version: this.pipelineInfo?.version,
                     ...params,
                     ...atomValue
                 }
