@@ -219,7 +219,8 @@ class MarketStoreQueryDao {
             tStoreBaseFeature.RECOMMEND_FLAG,
             tStoreBaseFeature.RD_TYPE,
             tStoreBaseFeature.PUBLIC_FLAG,
-            tStoreBase.CREATE_TIME
+            tStoreBase.CREATE_TIME,
+            tStoreBase.BUS_NUM
         ).from(tStoreBase)
             .leftJoin(tStoreBaseFeature)
             .on(

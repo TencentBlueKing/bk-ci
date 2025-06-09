@@ -28,6 +28,7 @@
 package com.tencent.devops.store.common.service.impl
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.auth.REFERER
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_OS
@@ -105,6 +106,7 @@ import java.time.LocalDateTime
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
 
 @Suppress("TooManyFunctions", "LargeClass")
 @Service
@@ -188,6 +190,11 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
     companion object {
         private val executor = Executors.newFixedThreadPool(30)
     }
+
+    private val storeBusNumCache = Caffeine.newBuilder()
+        .maximumSize(10000)
+        .expireAfterWrite(100, TimeUnit.DAYS)
+        .build<String, Long>()
 
     override fun getMyComponents(
         userId: String,
@@ -957,11 +964,14 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 finalTestStoreCodes.add(storeCode)
             } else {
                 // 比较当前安装的版本与组件最新版本
-                val shouldAddStoreCode = when {
-                    updateFlag == null -> true
-                    updateFlag -> installedVersion == null || StoreUtils.isGreaterVersion(version, installedVersion)
-                    else -> installedVersion != null && !StoreUtils.isGreaterVersion(version, installedVersion)
-                }
+                val shouldAddStoreCode = updateFlag?.let {
+                    val currentBusNum = getStoreBusNum(storeType, storeCode, version) ?: 0
+                    val installedBusNum = installedVersion?.let { v -> getStoreBusNum(storeType, storeCode, v) } ?: 0
+                    when {
+                        updateFlag -> installedVersion == null || currentBusNum > installedBusNum
+                        else -> installedVersion != null && currentBusNum <= installedBusNum
+                    }
+                } ?: true
                 if (shouldAddStoreCode) {
                     finalNormalStoreCodes.add(storeCode)
                 }
@@ -969,6 +979,26 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         }
         storeInfoQuery.normalStoreCodes = finalNormalStoreCodes
         storeInfoQuery.testStoreCodes = finalTestStoreCodes
+    }
+
+    private fun getStoreBusNum(
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        version: String
+    ): Long? {
+        val storeBusNumCacheKey = StoreUtils.getStoreFieldKeyPrefix(storeType, storeCode, version)
+        // 尝试从缓存获取业务编号，若不存在则从数据库查询
+        val busNum = storeBusNumCache.getIfPresent(storeBusNumCacheKey) ?: storeBaseQueryDao.getMaxBusNumByCode(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType,
+            version = version
+        )
+        // 若获取到有效业务编号，更新缓存
+        busNum?.let {
+            storeBusNumCache.put(storeBusNumCacheKey, busNum)
+        }
+        return busNum
     }
 
     private fun doList(
@@ -1080,10 +1110,13 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             // 是否可更新
             val installedVersion = installedInfoMap?.get(storeCode)
             val updateFlag = storeInfoQuery.updateFlag ?: run {
-                installedVersion == null || StoreUtils.isGreaterVersion(
-                    version,
-                    installedVersion
-                ) || status in StoreStatusEnum.getTestStatusList()
+                // 当已安装版本不存在时或处于测试状态直接返回true，避免后续无效计算
+                if (installedVersion == null || status in StoreStatusEnum.getTestStatusList()) true
+                else {
+                    val currentBusNum = record[tStoreBase.BUS_NUM] ?: 0
+                    val installedBusNum = getStoreBusNum(storeTypeEnum, storeCode, installedVersion) ?: 0
+                    currentBusNum > installedBusNum
+                }
             }
             val osList = queryComponentOsName(storeCode, storeTypeEnum)
             // 无构建环境组件是否可以在有构建环境运行
