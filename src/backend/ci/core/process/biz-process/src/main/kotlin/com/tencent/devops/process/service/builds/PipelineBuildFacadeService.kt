@@ -1370,6 +1370,7 @@ class PipelineBuildFacadeService(
             )
         }
         return buildRecordService.getBuildRecord(
+            userId = userId,
             buildInfo = buildInfo,
             executeCount = executeCount,
             queryDslContext = queryDslContext,
@@ -1911,6 +1912,7 @@ class PipelineBuildFacadeService(
             )
 
             val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
+                userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 offset = offset,
@@ -2599,6 +2601,7 @@ class PipelineBuildFacadeService(
                 )!!
             )
         }
+
         else -> {
             buildManualStartup(
                 userId = userId,
