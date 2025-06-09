@@ -37,7 +37,13 @@ enum class WhiteListType {
     // 限制访问所有 remotedev api
     API,
     // 限制访问云桌面
-    WINDOWS_GPU;
+    WINDOWS_GPU,
+    // 单向网络开关-项目级别开启
+    CDS_MESH_PROJECT,
+    // 单向网络开关-单个实例级别开启
+    CDS_MESH_WORKSPACE,
+    // 单向网络开关-单个实例级别关闭-黑名单
+    NOT_CDS_MESH_WORKSPACE;
 
     companion object {
         fun parse(value: String): WhiteListType {

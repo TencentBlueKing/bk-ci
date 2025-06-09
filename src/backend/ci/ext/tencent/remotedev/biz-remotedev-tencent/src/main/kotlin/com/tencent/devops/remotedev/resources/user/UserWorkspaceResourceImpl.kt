@@ -234,8 +234,9 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(workspaceService.checkMoa2fa(userId, workspaceName))
     }
 
-    override fun createMoa2faRequest(userId: String, moa2faReqData: Moa2faReqData): Result<Moa2faRespData> {
-        return Result(workspaceService.createMoa2faRequest(userId = userId, moa2faReqData = moa2faReqData))
+    @AuditEntry(actionId = TencentActionId.CGS_MOA_2FA)
+    override fun createMoa2faRequest(userId: String, workspaceName: String?, moa2faReqData: Moa2faReqData): Result<Moa2faRespData> {
+        return Result(workspaceService.createMoa2faRequest(userId = userId, workspaceName, moa2faReqData = moa2faReqData))
     }
 
     override fun verifyMoa2faResult(

@@ -46,6 +46,7 @@ import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
 import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
+import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -203,11 +204,19 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         val fileDetail = try {
             bkRepoService.show(userId, projectId, artifactoryType, path)
         } catch (e: Exception) {
-            logger.info("no permission , user:$userId , path:$path , artifactoryType:$artifactoryType")
-            throw ErrorCodeException(
-                statusCode = 403,
-                errorCode = GRANT_DOWNLOAD_PERMISSION
-            )
+            logger.info("exception , user:$userId , path:$path , artifactoryType:$artifactoryType , e:${e.message}")
+            if (e.message?.contains("not found") == true) {
+                throw ErrorCodeException(
+                    statusCode = 404,
+                    errorCode = FILE_NOT_EXIST,
+                    params = arrayOf(path)
+                )
+            } else {
+                throw ErrorCodeException(
+                    statusCode = 403,
+                    errorCode = GRANT_DOWNLOAD_PERMISSION
+                )
+            }
         }
         val pipelineId = fileDetail.meta["pipelineId"]?.toString() ?: StringUtils.EMPTY
         val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName

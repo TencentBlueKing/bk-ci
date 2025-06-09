@@ -31,6 +31,7 @@ import com.tencent.devops.experience.pojo.download.CheckVersionParam
 import com.tencent.devops.model.experience.tables.TExperience
 import com.tencent.devops.model.experience.tables.TExperienceDownloadDetail
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
+import jakarta.ws.rs.NotFoundException
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -41,7 +42,6 @@ import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import jakarta.ws.rs.NotFoundException
 
 @Repository
 @SuppressWarnings("LongParameterList", "LongMethod", "CyclomaticComplexMethod")
@@ -423,7 +423,8 @@ class ExperienceDao {
         dslContext: DSLContext,
         ids: Set<Long>,
         expireTime: LocalDateTime,
-        online: Boolean
+        online: Boolean,
+        projectId: String? = null
     ): Result<Record1<Long>> {
         with(TExperience.T_EXPERIENCE) {
             return dslContext.select(DSL.max(ID))
@@ -431,6 +432,7 @@ class ExperienceDao {
                 .where(ID.`in`(ids))
                 .and(END_DATE.gt(expireTime))
                 .and(ONLINE.eq(online))
+                .let { if (null != projectId) it.and(PROJECT_ID.eq(projectId)) else it }
                 .groupBy(PROJECT_ID, BUNDLE_IDENTIFIER, PLATFORM, CLASSIFY)
                 .fetch()
         }
