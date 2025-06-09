@@ -52,5 +52,5 @@ interface TxStoreBelongDeptService {
      * 初始化组件所属组织架构
      * @param userId 组件创建人
      */
-    fun initAllStoreBelongDept(userId: String, storeType: StoreTypeEnum, storeCode: String)
+    fun initStoreBelongDept(userId: String, storeType: StoreTypeEnum, storeCode: String)
 }

@@ -44,16 +44,21 @@ import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.common.service.TxStoreBelongDeptService
 import com.tencent.devops.store.image.service.ImageReleaseService
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
+import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
 @Primary
 @Service
-class TxImageReleaseService @Autowired constructor() : ImageReleaseService() {
+class TxImageReleaseService @Autowired constructor(
+    private val txStoreBelongDeptService: TxStoreBelongDeptService
+) : ImageReleaseService() {
 
     override fun getPassTestStatus(isNormalUpgrade: Boolean): Byte {
         return if (isNormalUpgrade) {
@@ -61,6 +66,14 @@ class TxImageReleaseService @Autowired constructor() : ImageReleaseService() {
         } else {
             ImageStatusEnum.AUDITING.status.toByte()
         }
+    }
+
+    override fun handleImageExtend(userId: String, imageCode: String, marketImageRelRequest: MarketImageRelRequest) {
+        txStoreBelongDeptService.initStoreBelongDept(
+            userId = userId,
+            storeCode = imageCode,
+            storeType = StoreTypeEnum.IMAGE
+        )
     }
 
     override fun handleProcessInfo(isNormalUpgrade: Boolean, status: Int): List<ReleaseProcessItem> {

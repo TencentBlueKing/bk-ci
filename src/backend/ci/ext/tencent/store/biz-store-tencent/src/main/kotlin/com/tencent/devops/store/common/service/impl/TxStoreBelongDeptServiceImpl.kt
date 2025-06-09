@@ -85,13 +85,17 @@ class TxStoreBelongDeptServiceImpl @Autowired constructor(
         return true
     }
 
-    override fun initAllStoreBelongDept(userId: String, storeType: StoreTypeEnum, storeCode: String) {
+    override fun initStoreBelongDept(userId: String, storeType: StoreTypeEnum, storeCode: String) {
         val userDeptInfo = getUserDeptInfo(userId)
         userDeptInfo?.let {
-            StoreBelongDeptRel(
-                storeCode = storeCode,
-                storeType = storeType,
-                storeDeptInfo = it
+            txStoreBelongDeptRelDao.add(
+                userId,
+                dslContext,
+                StoreBelongDeptRel(
+                    storeCode = storeCode,
+                    storeType = storeType,
+                    storeDeptInfo = it
+                )
             )
         }
     }

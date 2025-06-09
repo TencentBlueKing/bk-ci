@@ -76,6 +76,7 @@ import com.tencent.devops.store.common.dao.StoreBuildInfoDao
 import com.tencent.devops.store.common.service.StoreArchiveService
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
+import com.tencent.devops.store.common.service.TxStoreBelongDeptService
 import com.tencent.devops.store.constant.StoreConstants.KEY_FRAMEWORK_CODE
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.CONFIG_YML_NAME
@@ -125,7 +126,8 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
     private val storeCommonService: StoreCommonService,
     private val storeArchiveService: StoreArchiveService,
     private val storeInnerPipelineConfig: StoreInnerPipelineConfig,
-    private val client: Client
+    private val client: Client,
+    private val txStoreBelongDeptService: TxStoreBelongDeptService
 ) : StoreReleaseSpecBusService {
 
     companion object {
@@ -194,8 +196,16 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         }
     }
 
-    override fun doStorePostCreateBus(storeCreateRequest: StoreCreateRequest) {
-        TODO("Not yet implemented")
+    override fun doStorePostCreateBus(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ) {
+        txStoreBelongDeptService.initStoreBelongDept(
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType
+        )
     }
 
     override fun doStoreUpdatePreBus(storeUpdateRequest: StoreUpdateRequest) {
