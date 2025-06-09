@@ -1343,6 +1343,7 @@ class PipelineBuildFacadeService(
     }
 
     fun getBuildRecord(
+        userId: String? = null,
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -1414,6 +1415,7 @@ class PipelineBuildFacadeService(
         }
 
         return getBuildRecord(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,

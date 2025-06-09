@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.archive.pojo.ArtifactQualityMetadataAnalytics
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCancelBroadCastEvent
@@ -184,7 +185,8 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineRuleService: PipelineRuleService,
     private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation,
-    private val repositoryVersionService: PipelineRepositoryVersionService
+    private val repositoryVersionService: PipelineRepositoryVersionService,
+    private val pipelineArtifactQualityService: PipelineArtifactQualityService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineRuntimeService::class.java)
@@ -355,6 +357,7 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun listPipelineBuildHistory(
+        userId: String? = null,
         projectId: String,
         pipelineId: String,
         offset: Int,
@@ -423,8 +426,13 @@ class PipelineRuntimeService @Autowired constructor(
             triggerUser = triggerUser
         )
         val result = mutableListOf<BuildHistory>()
-        list.forEach {
-            result.add(genBuildHistory(it, currentTimestamp))
+        list.forEach { buildInfo ->
+            val artifactQuality = pipelineArtifactQualityService.buildArtifactQuality(
+                userId = userId,
+                projectId = projectId,
+                artifactQualityList = buildInfo.artifactQualityList
+            )
+            result.add(genBuildHistory(buildInfo, currentTimestamp, artifactQuality))
         }
         return result
     }
@@ -556,7 +564,8 @@ class PipelineRuntimeService @Autowired constructor(
 
     private fun genBuildHistory(
         buildInfo: BuildInfo,
-        currentTimestamp: Long
+        currentTimestamp: Long,
+        artifactQuality: Map<String, List<ArtifactQualityMetadataAnalytics>>? = null
     ): BuildHistory {
         return with(buildInfo) {
             val startType = StartType.toStartType(trigger)

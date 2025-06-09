@@ -66,6 +66,7 @@ import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.process.engine.service.PipelineArtifactQualityService
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.PipelineInfoService
@@ -110,6 +111,7 @@ class PipelineBuildRecordService @Autowired constructor(
     private val recordTaskDao: BuildRecordTaskDao,
     private val client: Client,
     private val pipelineInfoService: PipelineInfoService,
+    private val pipelineArtifactQualityService: PipelineArtifactQualityService,
     recordModelService: PipelineRecordModelService,
     pipelineResourceDao: PipelineResourceDao,
     pipelineBuildDao: PipelineBuildDao,
@@ -166,6 +168,7 @@ class PipelineBuildRecordService @Autowired constructor(
      * @param refreshStatus: 是否刷新状态
      */
     fun getBuildRecord(
+        userId: String? = null,
         buildInfo: BuildInfo,
         executeCount: Int?,
         refreshStatus: Boolean = true,
@@ -387,7 +390,11 @@ class PipelineBuildRecordService @Autowired constructor(
             webhookInfo = buildInfo.webhookInfo,
             templateInfo = pipelineInfo.templateInfo,
             recordList = recordList,
-            artifactQuality = buildInfo.artifactQuality
+            artifactQuality = pipelineArtifactQualityService.buildArtifactQuality(
+                userId = userId,
+                projectId = projectId,
+                artifactQualityList = buildInfo.artifactQualityList
+            )
         )
     }
 
