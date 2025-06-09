@@ -92,10 +92,15 @@ class TxPipelineMetricsCronService @Autowired constructor(
     @Value("\${eplus.ms.metrics.namespace.invalidBuildPipeline.card.id}")
     private var invalidBuildPipeline: Int = 0 // 无效流水线卡片ID
 
+    @Value("\$eplus.ms.metrics.queryCardsPageSize：10000")
+    private val queryCardsPageSize = 10000
+
+    @Value("\${eplus.ms.metrics.sleepDurationMs:60000}")
+    private val sleepDurationMs: Long = 60000
+
     companion object {
         private val logger = LoggerFactory.getLogger(TxPipelineMetricsCronService::class.java)
         private const val LOCK_KEY = "tx_pipeline_metrics_cron_service"
-        private val syncExecutorService = Executors.newFixedThreadPool(5)
     }
 
 
@@ -116,14 +121,13 @@ class TxPipelineMetricsCronService @Autowired constructor(
     ) {
         val tPipelineMetricsInfoRecords = mutableListOf<TEplusPipelineMetricsDataDailyRecord>()
         var pageNum = 1
-        val pageSize = 10000
+        val pageSize = queryCardsPageSize
         var failedBatches = 0
 
         while (true) {
             val redisLock = RedisLock(redisOperation, LOCK_KEY, 30)
             try {
-                redisLock.lock()
-                Thread.sleep(60 * 1000L) // 防止接口请求超过限制
+                Thread.sleep(sleepDurationMs) // 防止接口请求超过限制
                 val response = queryInvalidPipelineMonitorCardData(
                     token = token,
                     cardId = cardId,
@@ -147,6 +151,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
                         }
                     )
                 }
+                redisLock.lock()
                 metricsData(tPipelineMetricsInfoRecords)
 
                 if (rows.size < pageSize) break
@@ -269,13 +274,16 @@ class TxPipelineMetricsCronService @Autowired constructor(
      * 调用所有同步数据方法
      */
     fun runAllSyncDataTasks() {
-        syncExecutorService.submit {
+        val syncExecutorService = Executors.newFixedThreadPool(5)
+        try {
             logger.info("start runAllSyncDataTasks")
-            handleHighFailureRate30d()
-            handleConsecutiveFailures90d()
-            handleScheduledTriggerNoCodeChange()
-            processInvalidPipelineData()
+            syncExecutorService.submit { handleHighFailureRate30d() }
+            syncExecutorService.submit { handleConsecutiveFailures90d() }
+            syncExecutorService.submit { handleScheduledTriggerNoCodeChange() }
+            syncExecutorService.submit { processInvalidPipelineData() }
             logger.info("end runAllSyncDataTasks")
+        } finally {
+            syncExecutorService.shutdown()
         }
     }
 
@@ -342,7 +350,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
         namespaceId: Int,
         queryMode: Int = 2,
         pageNum: Int = 1,
-        pageSize: Int = 10000,
+        pageSize: Int = queryCardsPageSize,
         input: Map<String, Any>? = null
     ): Map<String, Any> {
         val requestBody = mutableMapOf(
