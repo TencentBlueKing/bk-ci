@@ -155,7 +155,7 @@ import java.util.concurrent.TimeUnit
  *
  * @version 1.0
  */
-@Suppress("ALL", "IMPLICIT_CAST_TO_ANY")
+@Suppress("ALL")
 @Service
 class PipelineBuildFacadeService(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
