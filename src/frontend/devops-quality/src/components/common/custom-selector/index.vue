@@ -191,7 +191,7 @@
                         const resList = value.split(';').filter(item => item.trim())
 
                         resList.forEach(item => {
-                            const varMatch = item.match(/^[a-zA-Z][a-zA-Z_]+/g)
+                            const varMatch = item.match(/^[a-zA-Z][a-zA-Z_]+/gi)
                             if (varMatch) {
                                 const varItem = varMatch.join('')
                                 temp.push(varItem)
@@ -237,7 +237,6 @@
                 setTimeout(async () => {
                     const errList = []
                     const temp = []
-                    const duplicateList = [] // 重复项
                     const value = e.target.value
 
                     if (!value) {
@@ -246,16 +245,11 @@
                         return
                     }
 
+                    const selectedSet = new Set(this.selectedList)
                     const resList = value.split(',').filter(item => item.trim())
+                    const uniqueDuplicates = [...new Set(resList.filter(item => selectedSet.has(item)))]
 
-                    resList.forEach((item) => {
-                        if (this.selectedList.includes(item)) {
-                            duplicateList.push(item)
-                        }
-                    })
-
-                    if (duplicateList.length > 0) {
-                        const uniqueDuplicates = [...new Set(duplicateList)]
+                    if (uniqueDuplicates.length > 0) {
                         this.$bkMessage({
                             message: `${uniqueDuplicates.join(';')} 已存在`,
                             theme: 'error'
