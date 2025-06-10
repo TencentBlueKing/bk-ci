@@ -96,8 +96,7 @@ class PipelineArtifactQualityService(
     ): List<MetadataLabelDetail> {
         return metadataLabelsCache.get(userId to projectId) { key ->
             try {
-                client.get(ServiceArtifactQualityMetadataResource::class)
-                    .listArtifactQualityMetadataLabel(key.first, key.second).data.orEmpty()
+                client.get(ServiceArtifactQualityMetadataResource::class).list(key.first, key.second).data.orEmpty()
             } catch (ex: Exception) {
                 logger.warn("Fetch metadata labels failed ${key.first}|${key.second}|${ex.message}")
                 emptyList()

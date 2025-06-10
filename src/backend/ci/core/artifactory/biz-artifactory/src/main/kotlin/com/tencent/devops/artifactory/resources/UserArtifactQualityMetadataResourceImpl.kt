@@ -27,20 +27,82 @@
 
 package com.tencent.devops.artifactory.resources
 
-import com.tencent.devops.artifactory.api.service.ServiceArtifactQualityMetadataResource
+import com.tencent.devops.artifactory.api.user.UserArtifactQualityMetadataResource
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.pojo.MetadataLabelDetail
+import com.tencent.devops.common.archive.pojo.MetadataLabelDetailUpdate
 import com.tencent.devops.common.web.RestResource
 
 @RestResource
-class ServiceArtifactQualityMetadataResourceImpl(
+class UserArtifactQualityMetadataResourceImpl(
     private val bkRepoClient: BkRepoClient
-) : ServiceArtifactQualityMetadataResource {
+) : UserArtifactQualityMetadataResource {
     override fun list(
         userId: String,
         projectId: String
     ): Result<List<MetadataLabelDetail>> {
-        return Result(bkRepoClient.listArtifactQualityMetadataLabels(userId, projectId))
+        return Result(
+            bkRepoClient.listArtifactQualityMetadataLabels(
+                userId = userId,
+                projectId = projectId
+            )
+        )
+    }
+
+    override fun get(
+        userId: String,
+        projectId: String,
+        labelKey: String
+    ): Result<MetadataLabelDetail> {
+        return Result(
+            bkRepoClient.getArtifactQualityMetadataLabel(
+                userId = userId,
+                projectId = projectId,
+                labelKey = labelKey
+            )
+        )
+    }
+
+    override fun delete(
+        userId: String,
+        projectId: String,
+        labelKey: String
+    ): Result<Boolean> {
+        bkRepoClient.deleteArtifactQualityMetadataLabel(
+            userId = userId,
+            projectId = projectId,
+            labelKey = labelKey
+        )
+        return Result(true)
+    }
+
+    override fun update(
+        userId: String,
+        projectId: String,
+        labelKey: String,
+        metadataLabelUpdate: MetadataLabelDetailUpdate
+    ): Result<Boolean> {
+        bkRepoClient.updateArtifactQualityMetadataLabel(
+            userId = userId,
+            projectId = projectId,
+            labelKey = labelKey,
+            metadataLabelUpdate = metadataLabelUpdate
+        )
+        return Result(true)
+    }
+
+    override fun create(
+        userId: String,
+        projectId: String,
+        labelKey: String,
+        metadataLabel: MetadataLabelDetail
+    ): Result<Boolean> {
+        bkRepoClient.createArtifactQualityMetadataLabel(
+            userId = userId,
+            projectId = projectId,
+            metadataLabel = metadataLabel
+        )
+        return Result(true)
     }
 }

@@ -1185,7 +1185,7 @@ class BkRepoClient constructor(
         return doRequest(request).resolveResponse<Response<QueryData>>()!!.data!!
     }
 
-    fun listArtifactQualityMetadataLabel(
+    fun listArtifactQualityMetadataLabels(
         userId: String,
         projectId: String
     ): List<MetadataLabelDetail> {
@@ -1197,6 +1197,20 @@ class BkRepoClient constructor(
             .get()
             .build()
         return doRequest(request).resolveResponse<Response<List<MetadataLabelDetail>>>()!!.data!!
+    }
+
+    fun getArtifactQualityMetadataLabel(
+        userId: String,
+        projectId: String,
+        labelKey: String
+    ): MetadataLabelDetail {
+        val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/metadata/label/$projectId/$labelKey"
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
+            .get()
+            .build()
+        return doRequest(request).resolveResponse<Response<MetadataLabelDetail>>()!!.data!!
     }
 
     fun createArtifactQualityMetadataLabel(

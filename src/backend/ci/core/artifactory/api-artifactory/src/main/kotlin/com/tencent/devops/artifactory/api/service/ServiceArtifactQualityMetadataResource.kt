@@ -14,7 +14,7 @@ import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.core.MediaType
 
-@Tag(name = "SERVICE_ARTIFACTORY_QUALITY_METADATA", description = "制品质量元数据")
+@Tag(name = "SERVICE_ARTIFACTORY_QUALITY_METADATA", description = "SERVICE-制品质量元数据")
 @Path("/service/artifactories/quality/metadata")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -23,7 +23,7 @@ interface ServiceArtifactQualityMetadataResource {
     @Operation(summary = "获取项目制品质量元数据标签")
     @GET
     @Path("/list/{projectId}}")
-    fun listArtifactQualityMetadataLabel(
+    fun list(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
