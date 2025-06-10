@@ -168,15 +168,15 @@ class TxStoreBelongDeptServiceImpl @Autowired constructor(
             null
         } else {
             StoreDeptInfo(
-                bgId = userInfo.bgId.toInt(),
+                bgId = userInfo.bgId,
                 bgName = userInfo.bgName,
-                deptId = userInfo.deptId.toInt(),
+                deptId = userInfo.deptId,
                 deptName = userInfo.deptName,
-                centerId = userInfo.centerId.toInt(),
+                centerId = userInfo.centerId,
                 centerName = userInfo.centerName,
-                groupId = userInfo.groupId.toInt(),
+                groupId = userInfo.groupId,
                 groupName = userInfo.groupName,
-                businessLineId = userInfo.businessLineId?.toLong(),
+                businessLineId = userInfo.businessLineId,
                 businessLineName = userInfo.businessLineName,
             )
         }

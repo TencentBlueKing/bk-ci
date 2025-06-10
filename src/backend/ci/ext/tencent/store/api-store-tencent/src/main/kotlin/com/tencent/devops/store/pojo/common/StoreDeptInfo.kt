@@ -32,23 +32,23 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "组织架构信息")
 data class StoreDeptInfo(
     @get:Schema(title = "BGID", required = true)
-    val bgId: Int,
+    val bgId: String,
     @get:Schema(title = "BG名称", required = true)
     val bgName: String,
     @get:Schema(title = "部门ID", required = false)
-    val deptId: Int?,
+    val deptId: String?,
     @get:Schema(title = "部门名称", required = false)
     val deptName: String?,
     @get:Schema(title = "中心ID", required = false)
-    val centerId: Int?,
+    val centerId: String?,
     @get:Schema(title = "中心名称", required = false)
     val centerName: String?,
     @get:Schema(title = "组ID", required = false)
-    val groupId: Int?,
+    val groupId: String?,
     @get:Schema(title = "组名称", required = false)
     val groupName: String?,
     @get:Schema(title = "业务线ID", required = false)
-    val businessLineId: Long?,
+    val businessLineId: String?,
     @get:Schema(title = "业务线名称", required = false)
     val businessLineName: String?
 )

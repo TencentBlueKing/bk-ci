@@ -128,15 +128,15 @@ class TxStoreBelongDeptRelDao {
                         storeCode = storeCode,
                         storeType = storeType,
                         storeDeptInfo = StoreDeptInfo(
-                            bgId = record.bgId.toInt(),
+                            bgId = record.bgId,
                             bgName = record.bgName,
-                            deptId = record.deptId.toInt(),
+                            deptId = record.deptId,
                             deptName = record.deptName,
-                            centerId = record.centerId.toInt(),
+                            centerId = record.centerId,
                             centerName = record.centerName,
-                            groupId = record.groupId.toInt(),
+                            groupId = record.groupId,
                             groupName = record.groupName,
-                            businessLineId = record.businessLineId?.toLong(),
+                            businessLineId = record.businessLineId,
                             businessLineName = record.businessLineName
                         )
                     )
