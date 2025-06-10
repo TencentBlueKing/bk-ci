@@ -49,6 +49,7 @@ import com.tencent.devops.project.api.service.ServiceUserResource
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executors
+import kotlin.math.ceil
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -121,52 +122,81 @@ class TxPipelineMetricsCronService @Autowired constructor(
         metricsData: (List<TEplusPipelineMetricsDataDailyRecord>) -> Unit,
         input: Map<String, Any>? = null
     ) {
-        val tPipelineMetricsInfoRecords = mutableListOf<TEplusPipelineMetricsDataDailyRecord>()
+        // 动态生成锁键避免竞争
+        val lockKey = "CARD_DATA_PROCESS:${cardId}:${namespaceId}"
+        val redisLock = RedisLock(redisOperation, lockKey, 30)
+        if (!redisLock.tryLock()) return
+
         var pageNum = 1
-        val pageSize = queryCardsPageSize
-        var failedNum = 0
-        var total: Int? = null
-        var totalPageNum: Int? = null
-        do {
-            Thread.sleep(sleepDurationMs) // 防止接口请求超过限制
-            val redisLock = RedisLock(redisOperation, LOCK_KEY, 30)
+        var failedPageAttempts = 0  // 当前页失败次数
+        var totalFailedPages = 0    // 总失败页数
+        var totalPages: Int? = null
+
+        while (totalPages == null || pageNum <= totalPages) {
+            Thread.sleep(sleepDurationMs)
+            val currentPageRecords = mutableListOf<TEplusPipelineMetricsDataDailyRecord>()  // 每页单独列表
+
             try {
                 val response = queryInvalidPipelineMonitorCardData(
                     token = token,
                     cardId = cardId,
                     namespaceId = namespaceId,
                     pageNum = pageNum,
-                    pageSize = pageSize,
+                    pageSize = queryCardsPageSize,
                     input = input
-                )
-                val data = response["data"] as Map<String, Any>
-                val result = data["result"] as Map<String, Any>
-                val rows = result["rows"] as List<Map<String, Any>>
-                if (total == null) {
-                    total = result["total"] as? Int ?: 0
-                    totalPageNum = (total + pageSize - 1) / pageSize
+                ).also {
+                    logger.info("Page $pageNum response: ${it["message"]}")
                 }
-                if (rows.isEmpty()) break
+                val data = response["data"] as? Map<String, Any>
+                    ?: throw RemoteServiceException("Invalid response data: ${response["message"]}")
 
+                val result = data["result"] as? Map<String, Any>
+                    ?: throw RemoteServiceException("Missing result field")
+
+                val rows = result["rows"] as? List<Map<String, Any>>
+                    ?: throw RemoteServiceException("Invalid rows format")
+
+                if (totalPages == null) {
+                    val totalItems = result["total"] as? Int ?: 0
+                    totalPages = ceil(totalItems.toDouble() / queryCardsPageSize).toInt()
+                    if (totalItems == 0) break
+                }
+
+                // 处理当前页数据
                 rows.forEach { row ->
-                    tPipelineMetricsInfoRecords.add(
+                    currentPageRecords.add(
                         TEplusPipelineMetricsDataDailyRecord().apply {
                             assignData(row)
-                            this.statisticsTime = LocalDate.now().atStartOfDay()
+                            statisticsTime = LocalDate.now().atStartOfDay()
                         }
                     )
                 }
-                redisLock.lock()
-                metricsData(tPipelineMetricsInfoRecords)
-                pageNum++
+
+                metricsData(currentPageRecords)
+                pageNum++  // 成功才翻页
+                failedPageAttempts = 0  // 重置当前页失败计数
+
             } catch (e: Exception) {
-                failedNum++
-                logger.warn("Process batch failed (pageNum: $pageNum), will retry next page", e)
-                if (failedNum > 3) break
+                logger.warn("Process page $pageNum failed", e)
+                when {
+                    e is RemoteServiceException -> break
+
+                    ++failedPageAttempts >= 3 -> {
+                        totalFailedPages++
+                        logger.warn("Skipping page $pageNum after 3 attempts")
+                        pageNum++  // 跳过当前页
+                        failedPageAttempts = 0
+                    }
+                }
+                // 重试次数过多则终止
+                if (totalFailedPages >= 3) {
+                    logger.error("Aborted: 3+ pages failed")
+                    break
+                }
             } finally {
                 redisLock.unlock()
             }
-        } while (totalPageNum != null && pageNum <= totalPageNum)
+        }
     }
 
     /**
@@ -212,7 +242,6 @@ class TxPipelineMetricsCronService @Autowired constructor(
             )
         } catch (e: Exception) {
             logger.warn("handle pipeline high failure rate30d data fail", e)
-            throw e
         }
         logger.info("end handleHighFailureRate30d")
     }
@@ -239,7 +268,6 @@ class TxPipelineMetricsCronService @Autowired constructor(
             )
         } catch (e: Exception) {
             logger.warn("handle consecutive failures90d data fail", e)
-            throw e
         }
         logger.info("end handleConsecutiveFailures90d")
     }
@@ -266,7 +294,6 @@ class TxPipelineMetricsCronService @Autowired constructor(
             )
         } catch (e: Exception) {
             logger.warn("handle scheduled trigger no code change data fail", e)
-            throw e
         }
         logger.info("end handleScheduledTriggerNoCodeChange")
     }
