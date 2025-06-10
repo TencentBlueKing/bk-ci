@@ -58,6 +58,7 @@
             <p
                 v-else
                 class="publish-dept-detail"
+                v-bkloading="{ isLoading: orgLoading, size: 'mini' }"
             >
                 <span>{{ deptInfo.deptPath || '' }}</span>
                 <span class="ml6">{{ deptInfo.centerName || '' }}</span>
@@ -84,6 +85,7 @@
                 deptMap: new Map(),
                 centerId: '',
                 centerLoading: false,
+                orgLoading: false,
                 initOrgValue: [],
                 initCenterId: ''
             }
@@ -153,6 +155,7 @@
             async requestList () {
                 const { code: storeCode, type } = this.$route.params
                 try {
+                    this.orgLoading = true
                     const typeMap = {
                         atom: 'ATOM'
                     }
@@ -163,21 +166,23 @@
                     const info = res.storeDeptInfo
                 
                     const tempOrgValue = []
-                    if (info.bgId) tempOrgValue.push(String(info.bgId))
-                    if (info.businessLineId) tempOrgValue.push(String(info.businessLineId))
-                    if (info.deptId) tempOrgValue.push(String(info.deptId))
+                    if (info.bgId) tempOrgValue.push(info.bgId)
+                    if (info.businessLineId) tempOrgValue.push(info.businessLineId)
+                    if (info.deptId) tempOrgValue.push(info.deptId)
 
                     if (tempOrgValue.length > 0) {
                         await this.loadCascadeNodes(tempOrgValue)
                         const lastNodeId = tempOrgValue[tempOrgValue.length - 1]
                         await this.fetchCenterList(lastNodeId)
-                        this.centerId = String(info.centerId)
+                        this.centerId = info.centerId
                     }
                     this.$nextTick(() => {
                         this.orgValue = tempOrgValue
                     })
                 } catch (error) {
                     console.log(error)
+                } finally {
+                    this.orgLoading = false
                 }
             },
             async loadCascadeNodes (pathIds) {
