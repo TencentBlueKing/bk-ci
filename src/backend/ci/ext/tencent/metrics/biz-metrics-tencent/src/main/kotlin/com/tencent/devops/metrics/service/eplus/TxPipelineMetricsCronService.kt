@@ -34,11 +34,13 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.metrics.dao.PipelineMetricsInfoDao
 import com.tencent.devops.model.metrics.tables.records.TEplusPipelineMetricsDataDailyRecord
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executors
+import kotlin.math.ceil
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -59,7 +61,8 @@ class TxPipelineMetricsCronService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val dslContext: DSLContext,
     private val pipelineMetricsInfoDao: PipelineMetricsInfoDao,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val gray: Gray
 ) {
 
     @Value("\${eplus.token}")
@@ -79,11 +82,15 @@ class TxPipelineMetricsCronService @Autowired constructor(
 
     @Value("\${eplus.ms.metrics.namespace.scheduledTriggerNoCodeChange.card.id}")
     private var scheduledTriggerNoCodeChangeCardId: Int = 0 // 定时触发无代码变更卡片ID
+    @Value("\$eplus.ms.metrics.queryCardsPageSize：10000")
+    private val queryCardsPageSize = 10000
+
+    @Value("\${eplus.ms.metrics.sleepDurationMs:60000}")
+    private val sleepDurationMs: Long = 60000
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxPipelineMetricsCronService::class.java)
         private const val LOCK_KEY = "tx_pipeline_metrics_cron_service"
-        private val syncExecutorService = Executors.newFixedThreadPool(5)
     }
 
 
@@ -102,53 +109,80 @@ class TxPipelineMetricsCronService @Autowired constructor(
         metricsData: (List<TEplusPipelineMetricsDataDailyRecord>) -> Unit,
         input: Map<String, Any>? = null
     ) {
-        val tPipelineMetricsInfoRecords = mutableListOf<TEplusPipelineMetricsDataDailyRecord>()
-        var pageNum = 1
-        val pageSize = 1000
-        var failedBatches = 0
+        // 动态生成锁键避免竞争
+        val lockKey = "CARD_DATA_PROCESS:${cardId}:${namespaceId}"
+        val redisLock = RedisLock(redisOperation, lockKey, 30)
+        if (!redisLock.tryLock()) return
 
-        while (true) {
-            val redisLock = RedisLock(redisOperation, LOCK_KEY, 30)
+        var pageNum = 1
+        var failedPageAttempts = 0  // 当前页失败次数
+        var totalFailedPages = 0    // 总失败页数
+        var totalPages: Int? = null
+
+        while (totalPages == null || pageNum <= totalPages) {
+            Thread.sleep(sleepDurationMs)
+            val currentPageRecords = mutableListOf<TEplusPipelineMetricsDataDailyRecord>()  // 每页单独列表
+
             try {
                 val response = queryInvalidPipelineMonitorCardData(
                     token = token,
                     cardId = cardId,
                     namespaceId = namespaceId,
                     pageNum = pageNum,
-                    pageSize = pageSize,
+                    pageSize = queryCardsPageSize,
                     input = input
-                )
-                val data = response["data"] as Map<String, Any>
-                val result = data["result"] as Map<String, Any>
-                val rows = result["rows"] as List<Map<String, Any>>
+                ).also {
+                    logger.info("Page $pageNum response: ${it["message"]}")
+                }
+                val data = response["data"] as? Map<String, Any>
+                    ?: throw RemoteServiceException("Invalid response data: ${response["message"]}")
 
-                if (rows.isEmpty()) break
+                val result = data["result"] as? Map<String, Any>
+                    ?: throw RemoteServiceException("Missing result field")
 
+                val rows = result["rows"] as? List<Map<String, Any>>
+                    ?: throw RemoteServiceException("Invalid rows format")
+
+                if (totalPages == null) {
+                    val totalItems = result["total"] as? Int ?: 0
+                    totalPages = ceil(totalItems.toDouble() / queryCardsPageSize).toInt()
+                    if (totalItems == 0) break
+                }
+
+                // 处理当前页数据
                 rows.forEach { row ->
-                    tPipelineMetricsInfoRecords.add(
+                    currentPageRecords.add(
                         TEplusPipelineMetricsDataDailyRecord().apply {
                             assignData(row)
-                            this.statisticsTime = LocalDate.now().atStartOfDay()
+                            statisticsTime = LocalDate.now().atStartOfDay()
                         }
                     )
                 }
-                redisLock.lock()
-                metricsData(tPipelineMetricsInfoRecords)
 
-                if (rows.size < pageSize) break
-                pageNum++
+                metricsData(currentPageRecords)
+                pageNum++  // 成功才翻页
+                failedPageAttempts = 0  // 重置当前页失败计数
+
             } catch (e: Exception) {
-                failedBatches++
-                logger.warn("Process batch failed (pageNum: $pageNum), will retry next page", e)
-                pageNum++ // 递增页码，跳过当前失败页
-                continue
+                logger.warn("Process page $pageNum failed", e)
+                when {
+                    e is RemoteServiceException -> break
+
+                    ++failedPageAttempts >= 3 -> {
+                        totalFailedPages++
+                        logger.warn("Skipping page $pageNum after 3 attempts")
+                        pageNum++  // 跳过当前页
+                        failedPageAttempts = 0
+                    }
+                }
+                // 重试次数过多则终止
+                if (totalFailedPages >= 3) {
+                    logger.error("Aborted: 3+ pages failed")
+                    break
+                }
             } finally {
                 redisLock.unlock()
             }
-        }
-
-        if (failedBatches > 0) {
-            logger.warn("Process completed with $failedBatches failed batches")
         }
     }
 
@@ -157,6 +191,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
      */
     @Scheduled(cron = "0 0 9 * * ?")
     fun handleHighFailureRate30d() {
+        if (!gray.isGray()) return
         logger.info("start handleHighFailureRate30d")
         try {
             val dateTimeFrom = LocalDate.now()
@@ -194,7 +229,6 @@ class TxPipelineMetricsCronService @Autowired constructor(
             )
         } catch (e: Exception) {
             logger.warn("handle pipeline high failure rate30d data fail", e)
-            throw e
         }
         logger.info("end handleHighFailureRate30d")
     }
@@ -204,6 +238,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
      */
     @Scheduled(cron = "0 0 9 * * ?")
     fun handleConsecutiveFailures90d() {
+        if (!gray.isGray()) return
         logger.info("start handleConsecutiveFailures90d")
         try {
             queryAndProcessCardData(
@@ -220,7 +255,6 @@ class TxPipelineMetricsCronService @Autowired constructor(
             )
         } catch (e: Exception) {
             logger.warn("handle consecutive failures90d data fail", e)
-            throw e
         }
         logger.info("end handleConsecutiveFailures90d")
     }
@@ -230,6 +264,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
      */
     @Scheduled(cron = "0 0 9 * * ?")
     fun handleScheduledTriggerNoCodeChange() {
+        if (!gray.isGray()) return
         logger.info("start handleScheduledTriggerNoCodeChange")
         try {
             queryAndProcessCardData(
@@ -246,7 +281,6 @@ class TxPipelineMetricsCronService @Autowired constructor(
             )
         } catch (e: Exception) {
             logger.warn("handle scheduled trigger no code change data fail", e)
-            throw e
         }
         logger.info("end handleScheduledTriggerNoCodeChange")
     }
@@ -255,12 +289,15 @@ class TxPipelineMetricsCronService @Autowired constructor(
      * 调用所有同步数据方法
      */
     fun runAllSyncDataTasks() {
-        syncExecutorService.submit {
+        val syncExecutorService = Executors.newFixedThreadPool(5)
+        try {
             logger.info("start runAllSyncDataTasks")
-            handleHighFailureRate30d()
-            handleConsecutiveFailures90d()
-            handleScheduledTriggerNoCodeChange()
+            syncExecutorService.submit { handleHighFailureRate30d() }
+            syncExecutorService.submit { handleConsecutiveFailures90d() }
+            syncExecutorService.submit { handleScheduledTriggerNoCodeChange() }
             logger.info("end runAllSyncDataTasks")
+        } finally {
+            syncExecutorService.shutdown()
         }
     }
 
@@ -302,7 +339,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
         namespaceId: Int,
         queryMode: Int = 2,
         pageNum: Int = 1,
-        pageSize: Int = 1000,
+        pageSize: Int = queryCardsPageSize,
         input: Map<String, Any>? = null
     ): Map<String, Any> {
         val requestBody = mutableMapOf(
