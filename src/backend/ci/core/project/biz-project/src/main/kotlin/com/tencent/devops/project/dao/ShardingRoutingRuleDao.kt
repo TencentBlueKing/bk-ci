@@ -78,7 +78,8 @@ class ShardingRoutingRuleDao {
         moduleCode: SystemModuleEnum,
         type: ShardingRuleTypeEnum,
         routingName: String,
-        tableName: String? = null
+        tableName: String? = null,
+        lockFlag: Boolean = false
     ): Int {
         with(TShardingRoutingRule.T_SHARDING_ROUTING_RULE) {
             val conditions = getQueryShardingRoutingRuleCondition(
@@ -90,6 +91,7 @@ class ShardingRoutingRuleDao {
             )
             return dslContext.selectCount().from(this)
                 .where(conditions)
+                .run { if (lockFlag) forUpdate() else this }
                 .fetchOne(0, Int::class.java)!!
         }
     }
