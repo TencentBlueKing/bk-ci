@@ -36,6 +36,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.metrics.constants.Constants.BK_TO_HANDLE
@@ -68,7 +69,8 @@ class TxPipelineMetricsCronService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val dslContext: DSLContext,
     private val pipelineMetricsInfoDao: PipelineMetricsInfoDao,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val gray: Gray
 ) {
 
     @Value("\${eplus.token}")
@@ -122,12 +124,13 @@ class TxPipelineMetricsCronService @Autowired constructor(
         val tPipelineMetricsInfoRecords = mutableListOf<TEplusPipelineMetricsDataDailyRecord>()
         var pageNum = 1
         val pageSize = queryCardsPageSize
-        var failedBatches = 0
-
-        while (true) {
+        var failedNum = 0
+        var total: Int? = null
+        var totalPageNum: Int? = null
+        do {
+            Thread.sleep(sleepDurationMs) // 防止接口请求超过限制
             val redisLock = RedisLock(redisOperation, LOCK_KEY, 30)
             try {
-                Thread.sleep(sleepDurationMs) // 防止接口请求超过限制
                 val response = queryInvalidPipelineMonitorCardData(
                     token = token,
                     cardId = cardId,
@@ -136,11 +139,13 @@ class TxPipelineMetricsCronService @Autowired constructor(
                     pageSize = pageSize,
                     input = input
                 )
-                logger.info("queryAndProcessCardData response message: ${response["message"]}")
                 val data = response["data"] as Map<String, Any>
                 val result = data["result"] as Map<String, Any>
                 val rows = result["rows"] as List<Map<String, Any>>
-
+                if (total == null) {
+                    total = result["total"] as? Int ?: 0
+                    totalPageNum = (total + pageSize - 1) / pageSize
+                }
                 if (rows.isEmpty()) break
 
                 rows.forEach { row ->
@@ -153,22 +158,15 @@ class TxPipelineMetricsCronService @Autowired constructor(
                 }
                 redisLock.lock()
                 metricsData(tPipelineMetricsInfoRecords)
-
-                if (rows.size < pageSize) break
                 pageNum++
             } catch (e: Exception) {
-                failedBatches++
+                failedNum++
                 logger.warn("Process batch failed (pageNum: $pageNum), will retry next page", e)
-                pageNum++ // 递增页码，跳过当前失败页
-                continue
+                if (failedNum > 3) break
             } finally {
                 redisLock.unlock()
             }
-        }
-
-        if (failedBatches > 0) {
-            logger.warn("Process completed with $failedBatches failed batches")
-        }
+        } while (totalPageNum != null && pageNum <= totalPageNum)
     }
 
     /**
@@ -176,6 +174,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
      */
     @Scheduled(cron = "0 0 9 * * ?")
     fun handleHighFailureRate30d() {
+        if (!gray.isGray()) return
         logger.info("start handleHighFailureRate30d")
         try {
             val dateTimeFrom = LocalDate.now()
@@ -223,6 +222,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
      */
     @Scheduled(cron = "0 0 9 * * ?")
     fun handleConsecutiveFailures90d() {
+        if (!gray.isGray()) return
         logger.info("start handleConsecutiveFailures90d")
         try {
             queryAndProcessCardData(
@@ -249,6 +249,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
      */
     @Scheduled(cron = "0 0 9 * * ?")
     fun handleScheduledTriggerNoCodeChange() {
+        if (!gray.isGray()) return
         logger.info("start handleScheduledTriggerNoCodeChange")
         try {
             queryAndProcessCardData(
