@@ -418,36 +418,40 @@ class PipelineRepositoryVersionService(
         projectId: String? = null,
         queryUnknownRelatedFlag: Boolean? = null
     ): Boolean {
-        Executors.newFixedThreadPool(1).submit {
-            logger.info("begin asyncBatchUpdateReferFlag!!")
-            var offset = 0
-            val limit = PageUtil.DEFAULT_PAGE_SIZE
-            do {
-                val projectConditionDTO = ProjectConditionDTO(
-                    channelCode = projectChannelCode,
-                    routerTag = routerTag
-                )
-                projectId?.let {
-                    projectConditionDTO.projectCodes = mutableListOf(it)
-                }
-                val projectInfos = client.get(ServiceProjectResource::class).listProjectsByCondition(
-                    projectConditionDTO = projectConditionDTO,
-                    limit = limit,
-                    offset = offset
-                ).data ?: break
-                projectInfos.forEach { projectInfo ->
-                    val pipelineIds = pipelineInfoDao.listPipelineIdByProject(dslContext, projectInfo.englishName)
-                    pipelineIds.forEach { pipelineId ->
-                        updatePipelineReferFlag(
-                            projectId = projectInfo.englishName,
-                            pipelineId = pipelineId,
-                            queryUnknownRelatedFlag = queryUnknownRelatedFlag
-                        )
+        val executors = Executors.newFixedThreadPool(1)
+        try {
+            executors.submit {
+                logger.info("begin asyncBatchUpdateReferFlag!!")
+                var offset = 0
+                val limit = PageUtil.DEFAULT_PAGE_SIZE
+                do {
+                    val projectConditionDTO = ProjectConditionDTO(
+                        channelCode = projectChannelCode,
+                        routerTag = routerTag
+                    ).apply {
+                        projectId?.let { projectCodes = listOf(it) }
                     }
-                }
-                offset += limit
-            } while (projectInfos.size == limit)
-            logger.info("end asyncBatchUpdateReferFlag!!")
+                    val projectInfos = client.get(ServiceProjectResource::class).listProjectsByCondition(
+                        projectConditionDTO = projectConditionDTO,
+                        limit = limit,
+                        offset = offset
+                    ).data ?: break
+                    projectInfos.forEach { projectInfo ->
+                        val pipelineIds = pipelineInfoDao.listPipelineIdByProject(dslContext, projectInfo.englishName)
+                        pipelineIds.forEach { pipelineId ->
+                            updatePipelineReferFlag(
+                                projectId = projectInfo.englishName,
+                                pipelineId = pipelineId,
+                                queryUnknownRelatedFlag = queryUnknownRelatedFlag
+                            )
+                        }
+                    }
+                    offset += limit
+                } while (projectInfos.size == limit)
+                logger.info("end asyncBatchUpdateReferFlag!!")
+            }
+        } finally {
+            executors.shutdown()
         }
         return true
     }
