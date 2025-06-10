@@ -95,7 +95,6 @@ class UserArtifactQualityMetadataResourceImpl(
     override fun create(
         userId: String,
         projectId: String,
-        labelKey: String,
         metadataLabel: MetadataLabelDetail
     ): Result<Boolean> {
         bkRepoClient.createArtifactQualityMetadataLabel(
