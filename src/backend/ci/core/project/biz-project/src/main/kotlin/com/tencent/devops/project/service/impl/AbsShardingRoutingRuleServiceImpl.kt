@@ -87,8 +87,7 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
                     moduleCode = shardingRoutingRule.moduleCode,
                     type = shardingRoutingRule.type,
                     routingName = routingName,
-                    tableName = shardingRoutingRule.tableName,
-                    lockFlag = true
+                    tableName = shardingRoutingRule.tableName
                 )
                 if (nameCount > 0) {
                     // 已添加则无需重复添加
@@ -180,8 +179,7 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
                     moduleCode = shardingRoutingRule.moduleCode,
                     type = shardingRoutingRule.type,
                     routingName = routingName,
-                    tableName = shardingRoutingRule.tableName,
-                    lockFlag = true
+                    tableName = shardingRoutingRule.tableName
                 )
                 if (nameCount > 0) {
                     val rule = shardingRoutingRuleDao.getById(context, id)

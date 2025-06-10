@@ -78,8 +78,7 @@ class ShardingRoutingRuleDao {
         moduleCode: SystemModuleEnum,
         type: ShardingRuleTypeEnum,
         routingName: String,
-        tableName: String? = null,
-        lockFlag: Boolean = false
+        tableName: String? = null
     ): Int {
         with(TShardingRoutingRule.T_SHARDING_ROUTING_RULE) {
             val conditions = getQueryShardingRoutingRuleCondition(
