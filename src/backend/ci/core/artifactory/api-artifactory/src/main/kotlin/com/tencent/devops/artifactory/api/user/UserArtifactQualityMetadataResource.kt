@@ -84,7 +84,7 @@ interface UserArtifactQualityMetadataResource {
 
     @Operation(summary = "创建项目制品质量元数据标签")
     @POST
-    @Path("/{labelKey}")
+    @Path("/")
     fun create(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -92,9 +92,6 @@ interface UserArtifactQualityMetadataResource {
         @Parameter(description = "项目 ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "标签KEY", required = true)
-        @PathParam("labelKey")
-        labelKey: String,
         @Parameter(description = "请求体", required = true)
         metadataLabel: MetadataLabelDetail
     ): Result<Boolean>
