@@ -122,20 +122,17 @@ class TxPipelineMetricsCronService @Autowired constructor(
         metricsData: (List<TEplusPipelineMetricsDataDailyRecord>) -> Unit,
         input: Map<String, Any>? = null
     ) {
-        // 动态生成锁键避免竞争
         val lockKey = "CARD_DATA_PROCESS:${cardId}:${namespaceId}"
-        val redisLock = RedisLock(redisOperation, lockKey, 30)
+        val redisLock = RedisLock(redisOperation, lockKey, 600)
         if (!redisLock.tryLock()) return
 
         var pageNum = 1
-        var failedPageAttempts = 0  // 当前页失败次数
-        var totalFailedPages = 0    // 总失败页数
+        var failedPageAttempts = 0
+        var totalFailedPages = 0
         var totalPages: Int? = null
 
         while (totalPages == null || pageNum <= totalPages) {
             Thread.sleep(sleepDurationMs)
-            val currentPageRecords = mutableListOf<TEplusPipelineMetricsDataDailyRecord>()  // 每页单独列表
-
             try {
                 val response = queryInvalidPipelineMonitorCardData(
                     token = token,
@@ -144,65 +141,65 @@ class TxPipelineMetricsCronService @Autowired constructor(
                     pageNum = pageNum,
                     pageSize = queryCardsPageSize,
                     input = input
-                ).also {
-                    logger.info("Page $pageNum response: ${it["message"]}")
-                }
-                val data = response["data"] as? Map<String, Any>
-                    ?: throw RemoteServiceException("Invalid response data: ${response["message"]}")
+                )
 
-                val result = data["result"] as? Map<String, Any>
-                    ?: throw RemoteServiceException("Missing result field")
+                val (currentTotalPages, records) = processPageData(response, assignData, totalPages)
+                totalPages = currentTotalPages
 
-                val rows = result["rows"] as? List<Map<String, Any>>
-                    ?: throw RemoteServiceException("Invalid rows format")
-
-                if (totalPages == null) {
-                    val totalItems = result["total"] as? Int ?: 0
-                    totalPages = ceil(totalItems.toDouble() / queryCardsPageSize).toInt()
-                    if (totalItems == 0) break
-                }
-
-                // 处理当前页数据
-                rows.forEach { row ->
-                    currentPageRecords.add(
-                        TEplusPipelineMetricsDataDailyRecord().apply {
-                            assignData(row)
-                            statisticsTime = LocalDate.now().atStartOfDay()
-                        }
-                    )
-                }
-
-                metricsData(currentPageRecords)
-                pageNum++  // 成功才翻页
-                failedPageAttempts = 0  // 重置当前页失败计数
-
+                metricsData(records)
+                pageNum++
+                failedPageAttempts = 0
             } catch (e: Exception) {
-                logger.warn("Process page $pageNum failed", e)
-                when {
-                    e is RemoteServiceException -> break
-
-                    ++failedPageAttempts >= 3 -> {
-                        totalFailedPages++
-                        logger.warn("Skipping page $pageNum after 3 attempts")
-                        pageNum++  // 跳过当前页
-                        failedPageAttempts = 0
-                    }
-                }
-                // 重试次数过多则终止
-                if (totalFailedPages >= 3) {
-                    logger.error("Aborted: 3+ pages failed")
-                    break
-                }
+                handlePageError(e, pageNum, ++failedPageAttempts, ++totalFailedPages)
+                if (totalFailedPages >= 3) break
             } finally {
                 redisLock.unlock()
             }
         }
     }
 
+    private fun processPageData(
+        response: Map<String, Any>,
+        assignData: TEplusPipelineMetricsDataDailyRecord.(Map<String, Any>) -> Unit,
+        currentTotalPages: Int?
+    ): Pair<Int?, List<TEplusPipelineMetricsDataDailyRecord>> {
+        val data = response["data"] as? Map<String, Any>
+            ?: throw RemoteServiceException("Invalid response data: ${response["message"]}")
+
+        val result = data["result"] as? Map<String, Any>
+            ?: throw RemoteServiceException("Missing result field")
+
+        val rows = result["rows"] as? List<Map<String, Any>>
+            ?: throw RemoteServiceException("Invalid rows format")
+
+        var totalPages = currentTotalPages
+        if (totalPages == null) {
+            val totalItems = result["total"] as? Int ?: 0
+            totalPages = if (totalItems > 0) ceil(totalItems.toDouble() / queryCardsPageSize).toInt() else 0
+        }
+
+        val records = rows.map { row ->
+            TEplusPipelineMetricsDataDailyRecord().apply {
+                assignData(row)
+                statisticsTime = LocalDate.now().atStartOfDay()
+            }
+        }
+
+        return Pair(totalPages, records)
+    }
+
+    private fun handlePageError(e: Exception, pageNum: Int, failedAttempts: Int, totalFailedPages: Int) {
+        logger.warn("Process page $pageNum failed", e)
+        when {
+            e is RemoteServiceException -> throw e
+            failedAttempts >= 3 -> logger.warn("Skipping page $pageNum after 3 attempts")
+        }
+    }
+
     /**
      * 处理高失败率30天数据
      */
-    @Scheduled(cron = "0 0 9 * * ?")
+    @Scheduled(cron = "0 0 8 * * ?")
     fun handleHighFailureRate30d() {
         if (!gray.isGray()) return
         logger.info("start handleHighFailureRate30d")
@@ -249,7 +246,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
     /**
      * 处理连续失败90天数据
      */
-    @Scheduled(cron = "0 0 9 * * ?")
+    @Scheduled(cron = "0 0 8 * * ?")
     fun handleConsecutiveFailures90d() {
         if (!gray.isGray()) return
         logger.info("start handleConsecutiveFailures90d")
@@ -275,7 +272,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
     /**
      * 处理定时触发无代码变更数据
      */
-    @Scheduled(cron = "0 0 9 * * ?")
+    @Scheduled(cron = "0 0 8 * * ?")
     fun handleScheduledTriggerNoCodeChange() {
         if (!gray.isGray()) return
         logger.info("start handleScheduledTriggerNoCodeChange")
