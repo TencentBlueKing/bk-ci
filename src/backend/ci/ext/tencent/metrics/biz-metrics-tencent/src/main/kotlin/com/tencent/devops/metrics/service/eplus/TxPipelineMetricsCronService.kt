@@ -92,18 +92,14 @@ class TxPipelineMetricsCronService @Autowired constructor(
     @Value("\${eplus.ms.metrics.namespace.scheduledTriggerNoCodeChange.card.id}")
     private var scheduledTriggerNoCodeChangeCardId: Int = 0 // 定时触发无代码变更卡片ID
 
-    @Value("\${eplus.ms.metrics.namespace.invalidBuildPipeline.card.id}")
-    private var invalidBuildPipeline: Int = 0 // 无效流水线卡片ID
-
-    @Value("\$eplus.ms.metrics.queryCardsPageSize：10000")
-    private val queryCardsPageSize = 10000
+    @Value("\${eplus.ms.metrics.queryCardsPageSize:10000}")
+    private val queryCardsPageSize: Int = 10000
 
     @Value("\${eplus.ms.metrics.sleepDurationMs:60000}")
     private val sleepDurationMs: Long = 60000
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxPipelineMetricsCronService::class.java)
-        private const val LOCK_KEY = "tx_pipeline_metrics_cron_service"
     }
 
 
@@ -128,7 +124,6 @@ class TxPipelineMetricsCronService @Autowired constructor(
 
         var pageNum = 1
         var failedPageAttempts = 0
-        var totalFailedPages = 0
         var totalPages: Int? = null
 
         while (totalPages == null || pageNum <= totalPages) {
@@ -150,8 +145,14 @@ class TxPipelineMetricsCronService @Autowired constructor(
                 pageNum++
                 failedPageAttempts = 0
             } catch (e: Exception) {
-                handlePageError(e, pageNum, ++failedPageAttempts, ++totalFailedPages)
-                if (totalFailedPages >= 3) break
+                logger.warn("Process page $pageNum failed", e)
+                when {
+                    e is RemoteServiceException -> throw e
+                    ++failedPageAttempts >= 3 -> {
+                        logger.warn("Skipping page $pageNum after 3 attempts")
+                        break
+                    }
+                }
             } finally {
                 redisLock.unlock()
             }
@@ -186,14 +187,6 @@ class TxPipelineMetricsCronService @Autowired constructor(
         }
 
         return Pair(totalPages, records)
-    }
-
-    private fun handlePageError(e: Exception, pageNum: Int, failedAttempts: Int, totalFailedPages: Int) {
-        logger.warn("Process page $pageNum failed", e)
-        when {
-            e is RemoteServiceException -> throw e
-            failedAttempts >= 3 -> logger.warn("Skipping page $pageNum after 3 attempts")
-        }
     }
 
     /**
