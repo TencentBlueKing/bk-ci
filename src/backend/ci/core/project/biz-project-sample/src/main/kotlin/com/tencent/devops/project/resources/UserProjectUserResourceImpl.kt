@@ -27,20 +27,26 @@
 
 package com.tencent.devops.project.resources
 
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.user.UserProjectUserResource
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.user.ProjectUser
+import com.tencent.devops.project.pojo.user.TenantInfoForDisplay
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.UserCacheService
 import com.tencent.devops.project.service.UserService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 
 @RestResource
 class UserProjectUserResourceImpl @Autowired constructor(
     private val userService: UserService,
     private val userCacheService: UserCacheService
 ) : UserProjectUserResource {
+
+    @Value("\${bk-user.webUrl:}")
+    private val bkUserWebUrl: String? = null
 
     override fun get(userId: String): Result<ProjectUser> {
 
@@ -56,5 +62,17 @@ class UserProjectUserResourceImpl @Autowired constructor(
 
     override fun getDetail(userId: String): Result<UserDeptDetail> {
         return Result(userCacheService.getDetailFromCache(userId))
+    }
+
+    override fun tenantInfoForDisplay(userId: String, tenantId: String): Result<TenantInfoForDisplay> {
+        if (!TenantUtils.isMultiTenantMode()) {
+            throw RuntimeException("Tenant mode is not enabled")
+        }
+        return Result(
+            TenantInfoForDisplay(
+                tenantId = tenantId,
+                apiBaseUrl = bkUserWebUrl ?: ""
+            )
+        )
     }
 }
