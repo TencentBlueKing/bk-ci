@@ -73,7 +73,8 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
             routingName = routingName,
             tableName = shardingRoutingRule.tableName
         )
-        logger.info("$userId addShardingRoutingRule params: $shardingRoutingRule")
+        logger.info("$userId addShardingRoutingRule params: rule:$shardingRoutingRule|" +
+                "clusterName:${CommonUtils.getDbClusterName()}")
         val lock = RedisLock(redisOperation, "$key:add", 30)
         try {
             lock.lock()

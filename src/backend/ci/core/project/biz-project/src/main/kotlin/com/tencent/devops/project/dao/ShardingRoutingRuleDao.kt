@@ -91,7 +91,6 @@ class ShardingRoutingRuleDao {
             )
             return dslContext.selectCount().from(this)
                 .where(conditions)
-                .run { if (lockFlag) forUpdate() else this }
                 .fetchOne(0, Int::class.java)!!
         }
     }
