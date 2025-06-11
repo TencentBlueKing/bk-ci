@@ -258,7 +258,7 @@
             displayConditionList () {
                 return {
                     paramType: 'list',
-                    list: this.globalParams.map(item => ({
+                    list: this.globalParams.filter(item => item.id !== this.param.id).map(item => ({
                         ...item,
                         key: item.id
                     }))
