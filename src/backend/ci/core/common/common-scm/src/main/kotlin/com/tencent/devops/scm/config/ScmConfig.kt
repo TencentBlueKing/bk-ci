@@ -25,27 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.pojo
+package com.tencent.devops.scm.config
 
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
 
 /**
- * 代码库查询条件
+ * Git通用配置
  */
-data class RepoCondition(
-    var projectId: String? = null,
-    var repoIds: List<Long>? = null,
-    // 代码库类型
-    var type: ScmType? = null,
-    var projectName: String? = null,
-    var gitProjectId: String? = null,
-    // 授权用户
-    var oauthUserId: String? = null,
-    // 授权类型
-    var authType: RepoAuthType? = null,
-    var scmCode: String? = null,
-    var enablePac: Boolean? = null,
-    // SVN授权类型
-    var svnType: String? = null
-)
+@Configuration
+@ConditionalOnWebApplication
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class ScmConfig {
+
+    @Value("\${scm.external.common.webhookUrl:/process/api/external/scm/{scmCode}/commit}")
+    val commonHookUrl: String = ""
+}
