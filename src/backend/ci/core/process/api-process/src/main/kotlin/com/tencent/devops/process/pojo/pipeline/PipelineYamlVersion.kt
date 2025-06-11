@@ -47,5 +47,7 @@ data class PipelineYamlVersion(
     @get:Schema(title = "流水线ID")
     val pipelineId: String,
     @get:Schema(title = "流水线版本")
-    val version: Int
+    val version: Int,
+    @get:Schema(title = "是否为最新版本")
+    var released: Boolean = false
 )

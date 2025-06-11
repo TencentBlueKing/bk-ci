@@ -33,5 +33,6 @@ package com.tencent.devops.process.pojo.pipeline
 data class SubPipelineIdAndName(
     val projectId: String,
     val pipelineId: String,
-    val pipelineName: String
+    val pipelineName: String,
+    val branch: String?
 )

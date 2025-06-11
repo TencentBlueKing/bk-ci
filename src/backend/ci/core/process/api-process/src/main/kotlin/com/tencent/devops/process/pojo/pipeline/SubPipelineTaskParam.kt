@@ -45,5 +45,7 @@ data class SubPipelineTaskParam(
     @get:Schema(title = "解析后[pipelineId]", required = false)
     val pipelineId: String = "",
     @get:Schema(title = "解析后[pipelineName]", required = false)
-    val pipelineName: String = ""
+    val pipelineName: String = "",
+    @get:Schema(title = "子流水线的分支版本", required = false)
+    val branch: String? = ""
 )

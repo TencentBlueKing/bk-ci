@@ -63,7 +63,10 @@ interface ServiceSubPipelineResource {
         projectId: String,
         @Parameter(description = "流水线ID", required = false, example = "")
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @Parameter(description = "分支版本", required = false)
+        @QueryParam("branch")
+        branch: String?
     ): Result<List<PipelineBuildParamFormProp>>
 
     @Operation(summary = "从构建机启动指定项目的子流水线")
@@ -98,6 +101,9 @@ interface ServiceSubPipelineResource {
         @QueryParam("runMode")
         runMode: String,
         @Parameter(description = "启动参数", required = true)
-        values: Map<String, String>
+        values: Map<String, String>,
+        @Parameter(description = "分支版本", required = false)
+        @QueryParam("branch")
+        branch: String?
     ): Result<ProjectBuildId>
 }
