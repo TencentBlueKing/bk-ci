@@ -30,6 +30,7 @@ package com.tencent.devops.metrics.service.eplus
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
@@ -92,6 +93,10 @@ class TxPipelineMetricsCronService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxPipelineMetricsCronService::class.java)
+        // HTTP请求超时时间（秒）
+        private const val CONNECT_TIMEOUT_SECONDS = 5L
+        private const val READ_TIMEOUT_SECONDS = 300L
+        private const val WRITE_TIMEOUT_SECONDS = 15L
     }
 
 
@@ -351,10 +356,18 @@ class TxPipelineMetricsCronService @Autowired constructor(
             requestBody.putAll(input)
         }
 
-        return postWithToken(
+        val response = OkhttpUtils.doCustomTimeoutPost(
+            connectTimeout = CONNECT_TIMEOUT_SECONDS,
+            readTimeout = READ_TIMEOUT_SECONDS,
+            writeTimeout = WRITE_TIMEOUT_SECONDS,
             url = cardQueryUrl,
-            token = token,
-            requestBody = requestBody
+            jsonParam = JsonUtil.toJson(requestBody),
+            headers = mapOf(
+                "token" to token,
+                "Content-Type" to "application/json"
+            )
         )
+        val responseStr = response.body!!.string()
+        return JsonUtil.toMap(responseStr)
     }
 }
