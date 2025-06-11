@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.metrics.dao.PipelineMetricsInfoDao
 import com.tencent.devops.model.metrics.tables.records.TEplusPipelineMetricsDataDailyRecord
 import java.time.LocalDate
@@ -61,8 +60,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val dslContext: DSLContext,
     private val pipelineMetricsInfoDao: PipelineMetricsInfoDao,
-    private val redisOperation: RedisOperation,
-    private val gray: Gray
+    private val redisOperation: RedisOperation
 ) {
 
     @Value("\${eplus.token}")
@@ -88,6 +86,9 @@ class TxPipelineMetricsCronService @Autowired constructor(
 
     @Value("\${eplus.ms.metrics.sleepDurationMs:60000}")
     private val sleepDurationMs: Long = 60000
+
+    @Value("\${eplus.ms.metrics.enableFlag:false}")
+    private val enableFlag: Boolean = false
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxPipelineMetricsCronService::class.java)
@@ -185,7 +186,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
      */
     @Scheduled(cron = "0 0 8 * * ?")
     fun handleHighFailureRate30d() {
-        if (!gray.isGray()) return
+        if (!enableFlag) return
         logger.info("start handleHighFailureRate30d")
         try {
             val dateTimeFrom = LocalDate.now()
@@ -232,7 +233,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
      */
     @Scheduled(cron = "0 0 8 * * ?")
     fun handleConsecutiveFailures90d() {
-        if (!gray.isGray()) return
+        if (!enableFlag) return
         logger.info("start handleConsecutiveFailures90d")
         try {
             queryAndProcessCardData(
@@ -258,7 +259,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
      */
     @Scheduled(cron = "0 0 8 * * ?")
     fun handleScheduledTriggerNoCodeChange() {
-        if (!gray.isGray()) return
+        if (!enableFlag) return
         logger.info("start handleScheduledTriggerNoCodeChange")
         try {
             queryAndProcessCardData(
