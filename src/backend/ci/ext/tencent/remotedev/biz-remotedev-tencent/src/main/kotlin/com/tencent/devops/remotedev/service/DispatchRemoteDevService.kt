@@ -93,4 +93,8 @@ class DispatchRemoteDevService(
     override fun workspaceDeleteDiskCallback(taskId: String, workspaceName: String, operator: String) {
         return expertSupportService.deleteDiskCallback(taskId, workspaceName, operator)
     }
+
+    override fun workspaceSyncVmCallback(taskId: String, workspaceName: String, operator: String) {
+        return expertSupportService.syncVmCallback(taskId, workspaceName, operator)
+    }
 }
