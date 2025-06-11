@@ -160,15 +160,15 @@ class PipelineWebhookDao {
         }
     }
 
-    fun getByProjectNameAndType(
+    fun getByProjectNamesAndType(
         dslContext: DSLContext,
-        projectName: String,
+        projectNames: Set<String>,
         repositoryType: String,
         yamlPipelineIds: List<String>?
     ): List<WebhookTriggerPipeline>? {
         with(T_PIPELINE_WEBHOOK) {
             return dslContext.select(PROJECT_ID, PIPELINE_ID).from(this)
-                .where(PROJECT_NAME.eq(projectName))
+                .where(PROJECT_NAME.`in`(projectNames))
                 .and(REPOSITORY_TYPE.eq(repositoryType))
                 .and(DELETE.eq(false))
                 .let {
@@ -185,34 +185,6 @@ class PipelineWebhookDao {
                         pipelineId = it.value2()
                     )
                 }
-        }
-    }
-
-    fun getByProjectNamesAndType(
-        dslContext: DSLContext,
-        projectNames: Set<String>,
-        repositoryType: String,
-        yamlPipelineIds: List<String>?
-    ): List<WebhookTriggerPipeline>? {
-        with(T_PIPELINE_WEBHOOK) {
-            return dslContext.select(PROJECT_ID, PIPELINE_ID).from(this)
-                    .where(PROJECT_NAME.`in`(projectNames))
-                    .and(REPOSITORY_TYPE.eq(repositoryType))
-                    .and(DELETE.eq(false))
-                    .let {
-                        if (yamlPipelineIds.isNullOrEmpty()) {
-                            it
-                        } else {
-                            it.and(PIPELINE_ID.notIn(yamlPipelineIds))
-                        }
-                    }
-                    .groupBy(PROJECT_ID, PIPELINE_ID)
-                    .fetch().map {
-                        WebhookTriggerPipeline(
-                            projectId = it.value1(),
-                            pipelineId = it.value2()
-                        )
-                    }
         }
     }
 

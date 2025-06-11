@@ -316,9 +316,9 @@ class PipelineWebhookService @Autowired constructor(
         ) && name != getProjectName(name)
         // 精准匹配结果
         val exactResults = if (needExactMatch) {
-            pipelineWebhookDao.getByProjectNameAndType(
+            pipelineWebhookDao.getByProjectNamesAndType(
                 dslContext = dslContext,
-                projectName = name,
+                projectNames = setOf(name),
                 repositoryType = repositoryType.name,
                 yamlPipelineIds = yamlPipelineIds
             )?.toSet() ?: setOf()
