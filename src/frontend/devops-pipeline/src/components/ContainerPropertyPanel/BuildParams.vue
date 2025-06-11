@@ -896,11 +896,10 @@
 
             getCodeUrl (type) {
                 type = type || 'CODE_GIT'
-                return `/${REPOSITORY_API_URL_PREFIX}/user/repositories/{projectId}/hasPermissionList?permission=USE&repositoryType=${type}&page=1&pageSize=1000`
+                return `/${REPOSITORY_API_URL_PREFIX}/user/repositories/${this.$route.params.projectId}/hasPermissionList?permission=USE&repositoryType=${type}&page=1&pageSize=1000`
             },
-
             getSearchUrl (type) {
-                return `/${PROCESS_API_URL_PREFIX}/user/buildParam/repository/${this.$route.params.projectId}/hashId?repositoryType=${type}&permission=LIST&aliasName={keyword}&page=1&pageSize=200`
+                return `${this.getCodeUrl(type)}&aliasName={keyword}`
             },
             
             getSearchBranchUrl (param) {
