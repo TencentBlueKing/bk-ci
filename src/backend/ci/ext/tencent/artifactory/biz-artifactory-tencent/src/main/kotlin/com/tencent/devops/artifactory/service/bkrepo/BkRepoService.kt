@@ -272,7 +272,7 @@ class BkRepoService @Autowired constructor(
         ) {
             throw PermissionForbiddenException(
                 I18nUtil.getCodeLanMessage(
-                    messageCode = ArtifactoryMessageCode.LAST_MODIFY_USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
+                    messageCode = ArtifactoryMessageCode.HANDOVER_TO_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
                     params = arrayOf(lastModifyUser, projectId)
                 )
             )
@@ -284,7 +284,7 @@ class BkRepoService @Autowired constructor(
                 pipelineId = targetPipelineId,
                 permission = AuthPermission.DOWNLOAD,
                 message = I18nUtil.getCodeLanMessage(
-                    messageCode = ArtifactoryMessageCode.LAST_MODIFY_USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
+                    messageCode = ArtifactoryMessageCode.HANDOVER_TO_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
                     params = arrayOf(lastModifyUser, projectId, targetPipelineId)
                 )
             )
