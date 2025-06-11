@@ -1728,5 +1728,6 @@
   "attributeName": "属性名",
   "metadataAttributeName": "元数据属性名",
   "metadataAttributeValue": "元数据属性值",
-  "artifactQuality": "制品质量"
+  "artifactQuality": "制品质量",
+  "totalArtifactCount": "共 {0} 个"
 }

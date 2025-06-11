@@ -171,30 +171,17 @@
                 </div>
             </div>
         </div>
-        <div class="part-quality-block">
+        <div
+            class="part-quality-block"
+            v-if="artifactQuality && Object.keys(artifactQuality).length"
+        >
             <span class="part-quality-block-title">
                 {{ $t("artifactQuality") }}
             </span>
-            <ul>
-                <li
-                    class="quality-tags"
-                    v-for="item in qualityList"
-                    :key="item.id"
-                    @click="goOutputs(item.id)"
-                >
-                    <span class="tag-label">{{ item.title }}</span>
-                    <div
-                        v-for="(tag, index) in item.colorNumberList"
-                        :key="index"
-                        class="color-item"
-                    >
-                        <span
-                            :style="{ backgroundColor: tag.color }"
-                            class="color-block"
-                        >{{ tag.number }}</span>
-                    </div>
-                </li>
-            </ul>
+            <ArtifactQuality
+                :data="artifactQuality"
+                @goOutputs="goOutputs"
+            />
         </div>
     </header>
 </template>
@@ -203,10 +190,13 @@
     import Logo from '@/components/Logo'
     import { mapActions } from 'vuex'
     import MaterialItem from './MaterialItem'
+    import ArtifactQuality from './artifactQuality'
+
     export default {
         components: {
             MaterialItem,
-            Logo
+            Logo,
+            ArtifactQuality
         },
         props: {
             visible: {
@@ -225,27 +215,7 @@
                 remark: this.execDetail.remark,
                 isChangeRemark: false,
                 isShowMoreMaterial: false,
-                curVersionDesc: '',
-                qualityList: [
-                    {
-                        id: 1,
-                        title: '自动化测试',
-                        colorNumberList: [
-                            { color: '#65C389', number: '5' },
-                            { color: '#FF5656', number: '2' }
-                        ]
-                    },
-                    {
-                        id: 2,
-                        title: '制品成分分析',
-                        colorNumberList: [
-                            { color: '#65C389', number: '10' },
-                            { color: '#FF5656', number: '4' },
-                            { color: '#F8B64F', number: '10' },
-                            { color: '#C4C6CC', number: '4' }
-                        ]
-                    }
-                ]
+                curVersionDesc: ''
             }
         },
         computed: {
@@ -283,8 +253,10 @@
                             }
                         }
                     }]
+            },
+            artifactQuality () {
+                return this.execDetail?.artifactQuality
             }
-
         },
         watch: {
             execDetail: {
@@ -548,49 +520,9 @@
     .part-quality-block-title {
         color: #979ba5;
         margin-right: 24px;
+        margin-top: 3px;
         padding-top: 4px;
         flex-shrink: 0;
-    }
-    ul {
-        flex: 1;
-        display: flex;
-        flex-wrap: wrap;
-        margin: 0;
-        padding: 0;
-        list-style-type: none;
-        .quality-tags {
-            display: inline-flex;
-            align-items: center;
-            margin-bottom: 12px;
-            margin-right: 12px;
-            padding: 4px 8px;
-            background: #FAFBFD;
-            border: 1px solid #DCDEE5;
-            border-radius: 2px;
-            cursor: pointer;
-            .tag-label {
-                color: #4D4F56;
-            }
-            .color-item {
-                margin-left: 6px;
-                position: relative;
-            }
-            .color-block {
-                display: inline-block;
-                padding: 0 4px;
-                height: 16px;
-                color: #FFF;
-                border-radius: 11px;
-
-                transition: background-color 0.3s ease;
-                &:hover {
-                    opacity: 0.8;
-                }
-            }
-            &:hover {
-                background-color: #F0F1F5;
-            }
-        }
     }
 }
 </style>

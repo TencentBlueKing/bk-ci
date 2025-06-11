@@ -20,14 +20,14 @@
                         v-if="isOutputPage"
                     >
                         <p>{{ $t('metaData') }}</p>
-                        <SearchSelect
+                        <search-select
                             class="select-search"
                             unique-select
                             :data="artifactFilterData"
                             v-model="artifactValue"
                             @change="updateSearchKey"
                         >
-                        </SearchSelect>
+                        </search-select>
                     </div>
                     <bk-input
                         class="input-search"
@@ -160,7 +160,16 @@
                                 <bk-table-column
                                     :label="$t('view.value')"
                                     prop="value"
-                                ></bk-table-column>
+                                >
+                                    <template slot-scope="props">
+                                        <span
+                                            v-if="props.row.color"
+                                            :style="{ backgroundColor: props.row.color }"
+                                            class="color-block"
+                                        ></span>
+                                        <span>{{ props.row.value }}</span>
+                                    </template>
+                                </bk-table-column>
                                 <bk-table-column
                                     :label="$t('desc')"
                                     prop="description"
@@ -291,10 +300,17 @@
                 activeOutputDetail: null,
                 hasPermission: false,
                 isLoading: false,
-                artifactValue: []
+                artifactValue: [],
+                artifactFilterData: []
             }
         },
         computed: {
+            filterQuery () {
+                return this.artifactValue.reduce((query, item) => {
+                    query[item.id] = item.values.map(value => value.id).join(',')
+                    return query
+                }, {})
+            },
             isOutputPage () {
                 return this.currentTab === 'artifacts'
             },
@@ -303,56 +319,6 @@
             },
             filterPlaceholder () {
                 return this.$t(`${this.currentTab}FilterPlaceholder`)
-            },
-            artifactFilterData () {
-                return [
-                    {
-                        name: '自动化测试质量',
-                        id: '1-2',
-                        multiable: true,
-                        children: [
-                            {
-                                id: 'Critical',
-                                name: 'Critical'
-                            },
-                            {
-                                id: 'High',
-                                name: 'High'
-                            },
-                            {
-                                id: 'Medium',
-                                name: 'Medium'
-                            },
-                            {
-                                id: 'Low',
-                                name: 'Low'
-                            }
-                        ]
-                    },
-                    {
-                        name: '制品签名',
-                        id: '1-3',
-                        multiable: true,
-                        children: [
-                            {
-                                id: 'Critical',
-                                name: 'Critical'
-                            },
-                            {
-                                id: 'High',
-                                name: 'High'
-                            },
-                            {
-                                id: 'Medium',
-                                name: 'Medium'
-                            },
-                            {
-                                id: 'Low',
-                                name: 'Low'
-                            }
-                        ]
-                    }
-                ]
             },
             thirdPartyReportList () {
                 return this.outputs.filter((report) => this.isThirdReport(report.reportType))
@@ -622,13 +588,52 @@
         },
         mounted () {
             this.init()
+            this.getArtifactDate()
         },
         methods: {
             ...mapActions('common', [
                 'requestFileInfo',
                 'requestOutputs',
+                'getMetadataLabel',
                 'requestExecPipPermission'
             ]),
+
+            updateSearchKey (value) {
+                console.log('🚀元数据搜索', this.filterQuery)
+            },
+            async getArtifactDate () {
+                const repoList = await this.getMetadataLabel({
+                    projectId: this.$route.params.projectId,
+                    labelKey: 'BK_CI_ARTIFACT_AUTOTEST'
+                })
+
+                const nonEmptyItems = repoList.filter(item => Object.keys(item.labelColorMap).length > 0)
+                const emptyItems = repoList.filter(item => Object.keys(item.labelColorMap).length === 0)
+
+                const nonEmptyResult = nonEmptyItems.map(item => {
+                    const labelColorMapKeys = Object.keys(item.labelColorMap)
+                    return {
+                        id: item.labelKey,
+                        name: item.labelKey,
+                        multiable: true,
+                        children: labelColorMapKeys.map(key => ({
+                            id: key,
+                            name: key
+                        }))
+                    }
+                })
+                
+                const customItem = {
+                    id: 'custom',
+                    name: '自定义元数据',
+                    multiable: true,
+                    children: emptyItems.map(item => ({
+                        id: item.labelKey,
+                        name: item.labelKey
+                    }))
+                }
+                this.artifactFilterData = [...nonEmptyResult, customItem]
+            },
 
             async init () {
                 const { projectId, pipelineId, buildNo: buildId } = this.$route.params
@@ -1030,6 +1035,14 @@
 
         .pipeline-exec-output-block {
             padding: 16px 24px;
+
+            .color-block {
+                display: inline-block;
+                margin-right: 8px;
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+            }
 
             .pipeline-exec-output-block-title {
                 font-size: 14px;

@@ -1730,5 +1730,6 @@
   "attributeName": "Attribute Name",
   "metadataAttributeName": "Metadata Attribute Name",
   "metadataAttributeValue": "Metadata Attribute Value",
-  "artifactQuality": "Artifact Quality"
+  "artifactQuality": "Artifact Quality",
+  "totalArtifactCount": "Total of {0}"
 }
