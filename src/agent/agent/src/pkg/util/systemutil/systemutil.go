@@ -29,13 +29,14 @@ package systemutil
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"net"
 	"net/url"
 	"os"
 	"os/user"
 	"runtime"
 	"strings"
+
+	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
