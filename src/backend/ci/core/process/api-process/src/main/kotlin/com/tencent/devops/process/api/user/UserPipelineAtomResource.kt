@@ -119,6 +119,9 @@ interface UserPipelineAtomResource {
         pipelineId: String,
         @Parameter(description = "指定流水线版本", required = false)
         @QueryParam("version")
-        version: Int?
+        version: Int?,
+        @Parameter(description = "是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<Map<String, AtomProp>?>
 }
