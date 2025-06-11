@@ -98,6 +98,9 @@ class TxPipelineMetricsCronService @Autowired constructor(
     @Value("\${eplus.ms.metrics.sleepDurationMs:60000}")
     private val sleepDurationMs: Long = 60000
 
+    @Value("\${eplus.ms.metrics.namespace.invalidBuildPipeline.card.id}")
+    private var invalidBuildPipeline: Int = 0 // 无效流水线卡片ID
+
     companion object {
         private val logger = LoggerFactory.getLogger(TxPipelineMetricsCronService::class.java)
     }
@@ -305,7 +308,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
         }
     }
 
-    @Scheduled(cron = "0 0 9 * * ?")
+    @Scheduled(cron = "0 0 8 * * ?")
     fun processInvalidPipelineData() {
         logger.info("start processInvalidPipelineData")
 
@@ -317,7 +320,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
                     this.projectId = row["project_id"] as String
                     this.pipelineId = row["pipeline_id"] as String
                     this.isInvalidPipeline = true
-                    this.url = row["n3"] as String
+                    this.url = row["n2"] as String
                     this.pipelineName = row["n1"] as String
                 },
                 metricsData = { records ->
