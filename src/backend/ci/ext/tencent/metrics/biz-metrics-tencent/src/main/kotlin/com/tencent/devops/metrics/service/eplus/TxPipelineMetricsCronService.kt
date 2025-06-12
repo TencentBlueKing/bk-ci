@@ -87,7 +87,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
     @Value("\${eplus.ms.metrics.enableFlag:false}")
     private val enableFlag: Boolean = false
 
-    @Value("\${eplus.ms.metrics.enableFlag:300}")
+    @Value("\${eplus.ms.metrics.readTimeoutSeconds:300}")
     private val readTimeoutSeconds: Long = 300
 
     companion object {
