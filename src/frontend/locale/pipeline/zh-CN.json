@@ -1728,7 +1728,8 @@
     "observing": "观察到",
     "failureRateTips": " {0} 条流水线近30天内失败率高于 {1}，",
     "consecutiveFailuresTips": "{0} 条流水线近90天内{1}，",
-    "scheduledTriggerNoCodeChangeTips": "{0} 条流水线定时触发但代码无变更，可能存在异常，请关注。",
+    "scheduledTriggerNoCodeChangeTips": "{0} 条流水线定时触发但代码无变更，",
+    "focusOnAnomalies": "可能存在异常，请关注。",
     "continuousFailure": "持续失败",
     "views": "点击查看",
     "dataUpdateT1": "（数据T+1更新)"
