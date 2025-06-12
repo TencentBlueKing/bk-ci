@@ -940,6 +940,6 @@ class ServiceRemoteDevResourceImpl(
     }
 
     override fun syncVm(userId: String, data: SyncVmData): Result<SyncVmResp?> {
-        return Result(expertSupportService.syncVm(data))
+        return Result(expertSupportService.syncVm(userId, data))
     }
 }

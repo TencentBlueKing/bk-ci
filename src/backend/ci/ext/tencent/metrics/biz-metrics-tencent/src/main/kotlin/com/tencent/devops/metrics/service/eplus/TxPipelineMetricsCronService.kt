@@ -28,8 +28,8 @@
 package com.tencent.devops.metrics.service.eplus
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
@@ -70,8 +70,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val dslContext: DSLContext,
     private val pipelineMetricsInfoDao: PipelineMetricsInfoDao,
-    private val redisOperation: RedisOperation,
-    private val gray: Gray
+    private val redisOperation: RedisOperation
 ) {
 
     @Value("\${eplus.token}")
@@ -98,11 +97,17 @@ class TxPipelineMetricsCronService @Autowired constructor(
     @Value("\${eplus.ms.metrics.sleepDurationMs:60000}")
     private val sleepDurationMs: Long = 60000
 
-    @Value("\${eplus.ms.metrics.namespace.invalidBuildPipeline.card.id}")
-    private var invalidBuildPipeline: Int = 0 // 无效流水线卡片ID
+    @Value("\${eplus.ms.metrics.enableFlag:false}")
+    private val enableFlag: Boolean = false
+
+    @Value("\${eplus.ms.metrics.readTimeoutSeconds:300}")
+    private val readTimeoutSeconds: Long = 300
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxPipelineMetricsCronService::class.java)
+        // HTTP请求超时时间（秒）
+        private const val CONNECT_TIMEOUT_SECONDS = 5L
+        private const val WRITE_TIMEOUT_SECONDS = 15L
     }
 
 
@@ -140,7 +145,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
                     pageSize = queryCardsPageSize,
                     input = input
                 )
-
+                if (response.isEmpty()) return
                 val (currentTotalPages, records) = processPageData(response, assignData, totalPages)
                 totalPages = currentTotalPages
 
@@ -197,7 +202,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
      */
     @Scheduled(cron = "0 0 8 * * ?")
     fun handleHighFailureRate30d() {
-        if (!gray.isGray()) return
+        if (!enableFlag) return
         logger.info("start handleHighFailureRate30d")
         try {
             val dateTimeFrom = LocalDate.now()
@@ -244,7 +249,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
      */
     @Scheduled(cron = "0 0 8 * * ?")
     fun handleConsecutiveFailures90d() {
-        if (!gray.isGray()) return
+        if (!enableFlag) return
         logger.info("start handleConsecutiveFailures90d")
         try {
             queryAndProcessCardData(
@@ -270,7 +275,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
      */
     @Scheduled(cron = "0 0 8 * * ?")
     fun handleScheduledTriggerNoCodeChange() {
-        if (!gray.isGray()) return
+        if (!enableFlag) return
         logger.info("start handleScheduledTriggerNoCodeChange")
         try {
             queryAndProcessCardData(
@@ -389,11 +394,22 @@ class TxPipelineMetricsCronService @Autowired constructor(
             requestBody.putAll(input)
         }
 
-        return postWithToken(
+        val response = OkhttpUtils.doCustomTimeoutPost(
+            connectTimeout = CONNECT_TIMEOUT_SECONDS,
+            readTimeout = readTimeoutSeconds,
+            writeTimeout = WRITE_TIMEOUT_SECONDS,
             url = cardQueryUrl,
-            token = token,
-            requestBody = requestBody
+            jsonParam = JsonUtil.toJson(requestBody),
+            headers = mapOf(
+                "token" to token,
+                "Content-Type" to "application/json"
+            )
         )
+        if (!response.isSuccessful) {
+            throw RemoteServiceException("queryInvalidPipelineMonitorCardData request failed: ${response.message}")
+        }
+        val responseStr = response.body?.string()
+        return responseStr?.let { JsonUtil.toMap(it) } ?: emptyMap()
     }
 
     private fun fetchInvalidPipelineProjectIds(limit: Int, offset: Int): List<String> {

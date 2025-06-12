@@ -41,7 +41,7 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.Environm
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateCreateDisk
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateDeleteDisk
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateExpandDisk
-import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.SyncVmReq
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateSyncVm
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskDataClass
@@ -375,16 +375,21 @@ class StartCloudRemoteDevService @Autowired constructor(
     }
 
     override fun syncVm(data: SyncVmData): SyncVmResp? {
-        val req = SyncVmReq(
+        val req = EnvironmentOperateSyncVm(
             syncOnly = data.syncOnly,
             uid = getEnvironmentUid(data.sourceWorkspaceName),
             targetEnvID = getEnvironmentUid(data.targetWorkspaceName)
         )
-        val res = workspaceBcsClient.syncVm(req) ?: return null
+        val resp = workspaceBcsClient.startOperateWorkspace(
+            userId = data.userId,
+            action = EnvironmentAction.SYNC_VM,
+            workspaceName = data.sourceWorkspaceName,
+            environmentOperate = req
+        )
         return SyncVmResp(
-            taskID = res.taskID,
-            environmentUid = res.environmentUid,
-            taskUid = res.taskUid
+            taskID = resp.taskID,
+            environmentUid = resp.environmentUid,
+            taskUid = resp.taskUid
         )
     }
 

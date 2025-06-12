@@ -78,6 +78,27 @@ interface ServiceNodeResource {
         nodeHashIds: List<String>
     ): Result<List<NodeWithPermission>>
 
+    @Operation(summary = "获取项目节点详情")
+    @POST
+    @Path("/projects/{projectId}/node_status")
+    fun getNodeStatus(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "节点 hashId (nodeHashId、nodeName、agentHashId 三个参数任选其一填入即可)", required = false)
+        @QueryParam("nodeHashId")
+        nodeHashId: String?,
+        @Parameter(description = "节点 别名 (nodeHashId、nodeName、agentHashId 三个参数任选其一填入即可)", required = false)
+        @QueryParam("nodeName")
+        nodeName: String?,
+        @Parameter(description = "节点 agentId (nodeHashId、nodeName、agentHashId 三个参数任选其一填入即可)", required = false)
+        @QueryParam("agentHashId")
+        agentHashId: String?
+    ): Result<NodeWithPermission>
+
     @Operation(summary = "根据hashId获取项目节点列表(不校验权限)")
     @POST
     @Path("/projects/{projectId}/listRawByHashIds")

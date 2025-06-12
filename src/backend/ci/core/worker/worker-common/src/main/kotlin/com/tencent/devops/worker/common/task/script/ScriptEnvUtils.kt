@@ -35,6 +35,7 @@ import java.io.File
 object ScriptEnvUtils {
     private const val ENV_FILE = "result.log"
     private const val CONTEXT_FILE = "context.log"
+    private const val ERROR_FILE = "setError.log"
     private const val QUALITY_GATEWAY_FILE = "gatewayValueFile.ini"
     private val keyRegex = Regex("^[a-zA-Z_][a-zA-Z0-9_]*$")
     private val logger = LoggerFactory.getLogger(ScriptEnvUtils::class.java)
@@ -57,6 +58,10 @@ object ScriptEnvUtils {
         return readScriptContext(workspace, getContextFile(buildId))
     }
 
+    fun getSetError(buildId: String, workspace: File): Map<String, String> {
+        return readScriptContext(workspace, getSetErrorFile(buildId))
+    }
+
     fun getEnvFile(buildId: String): String {
         val randomNum = ExecutorUtil.getThreadLocal()
         return "$buildId-$randomNum-$ENV_FILE"
@@ -67,6 +72,11 @@ object ScriptEnvUtils {
         return "$buildId-$randomNum-$CONTEXT_FILE"
     }
 
+    fun getSetErrorFile(buildId: String): String {
+        val randomNum = ExecutorUtil.getThreadLocal()
+        return "$buildId-$randomNum-$ERROR_FILE"
+    }
+
     private fun getDefaultEnvFile(buildId: String): String {
         return "$buildId-$ENV_FILE"
     }
@@ -75,9 +85,11 @@ object ScriptEnvUtils {
         val defaultEnvFilePath = getDefaultEnvFile(buildId)
         val randomEnvFilePath = getEnvFile(buildId)
         val randomContextFilePath = getContextFile(buildId)
+        val randomSetErrorFilePath = getSetErrorFile(buildId)
         deleteFile(defaultEnvFilePath, workspace)
         deleteFile(randomEnvFilePath, workspace)
         deleteFile(randomContextFilePath, workspace)
+        deleteFile(randomSetErrorFilePath, workspace)
         ExecutorUtil.removeThreadLocal()
     }
 
