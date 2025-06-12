@@ -343,6 +343,9 @@ class TxPipelineMetricsCronService @Autowired constructor(
                 "Content-Type" to "application/json"
             )
         )
+        if (!response.isSuccessful) {
+            throw RemoteServiceException("queryInvalidPipelineMonitorCardData request failed: ${response.message}")
+        }
         val responseStr = response.body?.string()
         return responseStr?.let { JsonUtil.toMap(it) } ?: emptyMap()
     }
