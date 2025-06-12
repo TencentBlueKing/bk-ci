@@ -45,6 +45,7 @@ import com.tencent.devops.auth.dao.AuthResourceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
+import com.tencent.devops.auth.pojo.AuthResourceGroup
 import com.tencent.devops.auth.pojo.dto.GroupAddDTO
 import com.tencent.devops.auth.pojo.dto.ListGroupConditionDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
@@ -63,6 +64,7 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.enums.GroupType
 import com.tencent.devops.common.redis.RedisOperation
@@ -574,6 +576,21 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             iamGroupId = iamGroupId
         )
         return iamGroupId
+    }
+
+    override fun getByGroupCode(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        groupCode: BkAuthGroup
+    ): AuthResourceGroup? {
+        return authResourceGroupDao.getByGroupCode(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            groupCode = groupCode.value
+        )
     }
 
     override fun syncManagerGroup(
