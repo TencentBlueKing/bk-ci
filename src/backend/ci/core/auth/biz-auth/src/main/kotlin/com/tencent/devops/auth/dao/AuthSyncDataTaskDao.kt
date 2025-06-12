@@ -1,7 +1,6 @@
 package com.tencent.devops.auth.dao
 
 import com.tencent.devops.model.auth.tables.TAuthSyncDataTask
-import com.tencent.devops.model.auth.tables.records.TAuthSyncDataTaskRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
