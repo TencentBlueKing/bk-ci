@@ -132,7 +132,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
                     pageSize = queryCardsPageSize,
                     input = input
                 )
-
+                if (response.isEmpty()) return
                 val (currentTotalPages, records) = processPageData(response, assignData, totalPages)
                 totalPages = currentTotalPages
 
@@ -343,7 +343,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
                 "Content-Type" to "application/json"
             )
         )
-        val responseStr = response.body!!.string()
-        return JsonUtil.toMap(responseStr)
+        val responseStr = response.body?.string()
+        return responseStr?.let { JsonUtil.toMap(it) } ?: emptyMap()
     }
 }
