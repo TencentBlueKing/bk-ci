@@ -1,8 +1,9 @@
-import java.net.URI
+import utils.MavenUtil
 
 plugins {
     id("com.tencent.devops.boot") version "0.0.7"
     detektCheck
+    id("io.github.gradle-nexus.publish-plugin")
     `task-license-report` // 检查License合规
 }
 
@@ -28,7 +29,7 @@ allprojects {
 
     // 新增maven 仓库
     repositories {
-        add(maven { url = URI("https://repo.jenkins-ci.org/releases") })
+        add(maven { url = uri("https://repo.jenkins-ci.org/releases") })
     }
 
     // 版本管理
@@ -177,5 +178,18 @@ allprojects {
     configurations.all {
         resolutionStrategy.cacheChangingModulesFor(0,"seconds")
         resolutionStrategy.cacheDynamicVersionsFor(0,"seconds")
+    }
+}
+
+nexusPublishing {
+    repositories {
+
+        sonatype {
+            nexusUrl.set(uri(MavenUtil.getUrl(project)))
+            snapshotRepositoryUrl.set(uri(MavenUtil.getUrl(project)))
+
+            username.set(MavenUtil.getUserName(project))
+            password.set(MavenUtil.getPassword(project))
+        }
     }
 }
