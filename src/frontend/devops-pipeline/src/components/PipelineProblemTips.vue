@@ -28,7 +28,7 @@
             >
                 <span class="red-highlight">{{ pipelineProblemDetail.scheduledTriggerNoCodeChangeCount }}</span>
             </i18n>
-            <span>{{ $t('pipelineProblemTips.continuousFailure') }}</span>
+            <span>{{ $t('pipelineProblemTips.focusOnAnomalies') }}</span>
             <bk-button
                 text
                 class="view-btn"
