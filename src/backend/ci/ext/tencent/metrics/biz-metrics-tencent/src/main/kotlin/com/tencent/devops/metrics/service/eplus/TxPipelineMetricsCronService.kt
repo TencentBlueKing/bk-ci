@@ -28,7 +28,6 @@
 package com.tencent.devops.metrics.service.eplus
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -41,9 +40,6 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executors
 import kotlin.math.ceil
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -298,28 +294,6 @@ class TxPipelineMetricsCronService @Autowired constructor(
             logger.info("end runAllSyncDataTasks")
         } finally {
             syncExecutorService.shutdown()
-        }
-    }
-
-    private fun postWithToken(
-        url: String,
-        token: String,
-        requestBody: Map<String, Any>
-    ): Map<String, Any> {
-        val jsonBody = objectMapper.writeValueAsString(requestBody)
-        val request = Request.Builder()
-            .url(url)
-            .addHeader("token", token)
-            .addHeader("Content-Type", "application/json")
-            .post(jsonBody.toRequestBody("application/json".toMediaTypeOrNull()))
-            .build()
-
-        OkhttpUtils.doHttp(request).use { response ->
-            if (!response.isSuccessful) {
-                throw RemoteServiceException("request failed, status code: ${response.code}")
-            }
-            val responseStr = response.body!!.string()
-            return objectMapper.readValue(responseStr)
         }
     }
 
