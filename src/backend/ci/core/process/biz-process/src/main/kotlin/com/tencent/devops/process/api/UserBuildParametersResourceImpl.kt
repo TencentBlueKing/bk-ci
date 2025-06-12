@@ -257,7 +257,7 @@ class UserBuildParametersResourceImpl @Autowired constructor(
         ).data ?: listOf()
         result.addAll(branches)
         result.addAll(tags)
-        return result
+        return result.distinct()
     }
 
     override fun buildParamFormProp(

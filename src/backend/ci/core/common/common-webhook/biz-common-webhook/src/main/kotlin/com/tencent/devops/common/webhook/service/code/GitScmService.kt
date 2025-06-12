@@ -54,8 +54,10 @@ import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.GitTagInfo
 import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.RepoSessionRequest
+import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
@@ -559,6 +561,87 @@ class GitScmService @Autowired constructor(
         } catch (ignored: Exception) {
             logger.warn("Fail to get credential: $credentialId", ignored)
             null
+        }
+    }
+
+    fun getTag(
+        projectId: String,
+        repo: Repository,
+        tagName: String
+    ): GitTagInfo? {
+        val type = getType(repo) ?: return null
+        return try {
+            val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+            val token = getToken(
+                projectId = projectId,
+                credentialId = repo.credentialId,
+                userName = repo.userName,
+                authType = tokenType,
+                scmType = repo.getScmType(),
+                repoUrl = repo.url
+            )
+            if (type.first == RepoAuthType.OAUTH) {
+                client.get(ServiceScmOauthResource::class).getTagInfo(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    tagName = tagName
+                ).data
+            } else {
+                client.get(ServiceScmResource::class).getTagInfo(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    tagName = tagName
+                ).data
+            }
+        } catch (e: Exception) {
+            logger.warn("fail to get tag info", e)
+            null
+        }
+    }
+
+    fun getTapdItem(
+        repo: Repository,
+        projectId: String,
+        refType: String,
+        iid: Long
+    ): List<TapdWorkItem> {
+        val type = getType(repo) ?: return listOf()
+        return try {
+            val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+            val token = getToken(
+                projectId = projectId,
+                credentialId = repo.credentialId,
+                userName = repo.userName,
+                authType = tokenType,
+                scmType = repo.getScmType(),
+                repoUrl = repo.url
+            )
+            if (type.first == RepoAuthType.OAUTH) {
+                client.get(ServiceScmOauthResource::class).getTapdWorkItems(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    refType = refType,
+                    iid = iid
+                ).data
+            } else {
+                client.get(ServiceScmResource::class).getTapdWorkItems(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    refType = refType,
+                    iid = iid
+                ).data
+            } ?: listOf()
+        } catch (e: Exception) {
+            logger.warn("fail to get tapd item", e)
+            listOf()
         }
     }
 }
