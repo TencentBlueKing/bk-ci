@@ -60,6 +60,7 @@ import com.tencent.devops.remotedev.pojo.op.OpDiskOperatorDataResp
 import com.tencent.devops.remotedev.pojo.op.OpDiskOperatorDiskType
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.remotedev.SyncVmData
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmInfo
 import com.tencent.devops.remotedev.pojo.remotedev.SyncVmResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
@@ -1045,7 +1046,14 @@ class ExpertSupportService @Autowired constructor(
             .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
             .scopeId = workspace.projectId
 
-        val res = remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.BCS).syncVm(data) ?: return null
+        val res = remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.BCS).syncVm(
+            SyncVmInfo(
+                userId = userId,
+                syncOnly = data.syncOnly,
+                targetWorkspaceName = data.targetWorkspaceName,
+                sourceWorkspaceName = data.sourceWorkspaceName
+            )
+        ) ?: return null
 
         // 状态和记录也是两台机器都要
         workspaceDao.updateWorkspaceStatus(
