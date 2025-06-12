@@ -112,10 +112,6 @@ class UserManageService @Autowired constructor(
             var page = 1
             val pageSize = PageUtil.MAX_PAGE_SIZE
             logger.info("start to sync user info data")
-            val previousUserSyncDataRecord = syncDataTaskDao.getLatestSyncDataTaskRecord(
-                dslContext = dslContext,
-                taskType = AuthSyncDataType.USER_SYNC_TASK_TYPE.type
-            )
             val latestTaskId = UUIDUtil.generate()
             syncDataTaskDao.recordSyncDataTask(
                 dslContext = dslContext,
@@ -166,12 +162,10 @@ class UserManageService @Autowired constructor(
                 page += 1
             } while (bkUserInfos.size == pageSize)
             // 标记用户是否离职
-            previousUserSyncDataRecord.takeIf { it != null }?.let {
-                userInfoDao.updateUserDepartedFlag(
-                    dslContext = dslContext,
-                    taskId = it.taskId
-                )
-            }
+            userInfoDao.updateUserDepartedFlag(
+                dslContext = dslContext,
+                taskId = latestTaskId
+            )
             syncDataTaskDao.recordSyncDataTask(
                 dslContext = dslContext,
                 taskId = latestTaskId,
@@ -238,10 +232,6 @@ class UserManageService @Autowired constructor(
             var page = 1
             val pageSize = PageUtil.MAX_PAGE_SIZE
             logger.info("start to sync department info data")
-            val previousDepartmentSyncDataRecord = syncDataTaskDao.getLatestSyncDataTaskRecord(
-                dslContext = dslContext,
-                taskType = AuthSyncDataType.DEPARTMENT_SYNC_TASK_TYPE.type
-            )
             val latestTaskId = UUIDUtil.generate()
             syncDataTaskDao.recordSyncDataTask(
                 dslContext = dslContext,
@@ -280,12 +270,10 @@ class UserManageService @Autowired constructor(
                 }
                 page += 1
             } while (deptInfos.size == pageSize)
-            previousDepartmentSyncDataRecord.takeIf { it != null }?.let {
-                departmentDao.deleteByTaskId(
-                    dslContext = dslContext,
-                    taskId = it.taskId
-                )
-            }
+            departmentDao.deleteByTaskId(
+                dslContext = dslContext,
+                taskId = latestTaskId
+            )
             syncDepartmentRelations()
             syncDataTaskDao.recordSyncDataTask(
                 dslContext = dslContext,

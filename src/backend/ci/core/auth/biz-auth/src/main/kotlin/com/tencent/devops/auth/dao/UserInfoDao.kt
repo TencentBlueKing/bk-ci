@@ -66,7 +66,7 @@ class UserInfoDao {
             dslContext.update(this)
                 .set(DEPARTED, true)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .where(TASK_ID.eq(taskId))
+                .where(TASK_ID.notEqual(taskId))
                 .execute()
         }
     }

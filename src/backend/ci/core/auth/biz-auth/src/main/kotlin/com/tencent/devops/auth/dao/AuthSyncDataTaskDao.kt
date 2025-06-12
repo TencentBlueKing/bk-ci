@@ -28,16 +28,4 @@ class AuthSyncDataTaskDao {
                 .execute()
         }
     }
-
-    fun getLatestSyncDataTaskRecord(
-        dslContext: DSLContext,
-        taskType: String
-    ): TAuthSyncDataTaskRecord? {
-        return with(TAuthSyncDataTask.T_AUTH_SYNC_DATA_TASK) {
-            dslContext.selectFrom(this)
-                .where(TASK_TYPE.eq(taskType))
-                .orderBy(END_TIME.desc())
-                .fetchAny()
-        }
-    }
 }

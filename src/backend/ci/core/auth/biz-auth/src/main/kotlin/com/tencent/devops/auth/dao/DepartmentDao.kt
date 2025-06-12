@@ -128,7 +128,7 @@ class DepartmentDao {
         taskId: String
     ) {
         with(TDepartment.T_DEPARTMENT) {
-            dslContext.deleteFrom(this).where(TASK_ID.eq(taskId)).execute()
+            dslContext.deleteFrom(this).where(TASK_ID.notEqual(taskId)).execute()
         }
     }
 

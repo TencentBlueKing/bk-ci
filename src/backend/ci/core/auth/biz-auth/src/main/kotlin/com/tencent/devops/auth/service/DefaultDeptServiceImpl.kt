@@ -79,11 +79,14 @@ class DefaultDeptServiceImpl : DeptService {
         )
 
     override fun listUserInfos(searchUserEntity: SearchUserAndDeptEntity): BkUserInfoVo {
-        TODO("Not yet implemented")
+        return BkUserInfoVo(
+            count = 0,
+            results = emptyList()
+        )
     }
 
     override fun getUserDeptDetails(userId: String): BkDeptDetailsVo? {
-        TODO("Not yet implemented")
+        return null
     }
 
     override fun getMemberInfo(
@@ -106,6 +109,9 @@ class DefaultDeptServiceImpl : DeptService {
     override fun isUserDeparted(userId: String): Boolean = false
 
     override fun listDeptInfos(searchDeptEnity: SearchUserAndDeptEntity): DeptInfoVo {
-        TODO("Not yet implemented")
+        return DeptInfoVo(
+            count = 0,
+            results = emptyList()
+        )
     }
 }
