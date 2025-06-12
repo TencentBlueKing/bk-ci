@@ -139,12 +139,6 @@ class UserImageResourceImpl @Autowired constructor(
             throw RuntimeException("list project image failed")
         }
     }
-
-    override fun listAllProjectImages(userId: String, projectId: String, searchKey: String?): Result<ImageListResp> {
-        checkUserAndProject(userId, projectId)
-        return Result(artifactoryService.listAllProjectImages(projectId, searchKey))
-    }
-
     override fun listProjectBuildImages(
         userId: String,
         projectId: String,
@@ -186,24 +180,45 @@ class UserImageResourceImpl @Autowired constructor(
         }
     }
 
-    override fun getImageInfo(userId: String, imageRepo: String, tagStart: Int?, tagLimit: Int?): Result<DockerRepo?> {
+    override fun getImageInfo(
+        userId: String,
+        imageRepo: String,
+        projectId: String,
+        imageName: String,
+        tagStart: Int?,
+        tagLimit: Int?
+    ): Result<DockerRepo?> {
         if (imageRepo.isBlank()) {
             throw OperationException("imageRepo required")
         }
 
         val vStart = if (tagStart == null || tagStart == 0) 0 else tagStart
         val vLimit = if (tagLimit == null || tagLimit == 0) 1000 else tagLimit
-
         return try {
-            Result(artifactoryService.getImageInfo(imageRepo, true, vStart, vLimit))
+            Result(
+                artifactoryService.getImageInfo(
+                    imageRepo = imageRepo,
+                    includeTagDetail = true,
+                    projectId = projectId,
+                    imageName = imageName,
+                    tagStart = vStart,
+                    tagLimit = vLimit,
+                    userId = userId
+                )
+            )
         } catch (e: Exception) {
             logger.error("get image info failed", e)
             throw RuntimeException("get image info failed")
         }
     }
 
-    override fun getTagInfo(userId: String, imageRepo: String, imageTag: String): Result<DockerTag?> {
-        if (imageRepo.isBlank()) {
+    override fun getTagInfo(
+        userId: String,
+        projectId: String,
+        imageName: String,
+        imageTag: String
+    ): Result<DockerTag?> {
+        if (imageName.isBlank()) {
             throw OperationException("imageRepo required")
         }
         if (imageTag.isBlank()) {
@@ -211,7 +226,14 @@ class UserImageResourceImpl @Autowired constructor(
         }
 
         try {
-            return Result(artifactoryService.getTagInfo(imageRepo, imageTag))
+            return Result(
+                artifactoryService.getTagInfo(
+                    userId = userId,
+                    projectId = projectId,
+                    imageName = imageName,
+                    imageTag = imageTag
+                )
+            )
         } catch (e: Exception) {
             logger.error("get image tag failed", e)
             throw RuntimeException("get image tag failed")

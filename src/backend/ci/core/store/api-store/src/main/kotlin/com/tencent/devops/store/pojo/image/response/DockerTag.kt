@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C)) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -11,7 +11,7 @@
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software")), to deal in the Software without restriction, including without limitation the
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
@@ -25,23 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:misc:api-image"))
-    api(project(":core:notify:api-notify"))
-    api(project(":core:ticket:api-ticket"))
-    api(project(":core:misc:model-image"))
-    api(project(":core:common:common-redis"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-archive"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:log:api-log"))
-    api(project(":core:dispatch:api-dispatch-kubernetes"))
-    api("org.apache.commons:commons-compress")
-    api("com.github.docker-java:docker-java-core")
-    api("org.glassfish.jersey.core:jersey-client")
-    api("org.glassfish.jersey.core:jersey-server")
-    api("org.glassfish.jersey.core:jersey-common")
-    api("org.glassfish.jersey.containers:jersey-container-servlet")
-}
+package com.tencent.devops.store.pojo.image.response
+
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(title = "Docker标签模型")
+data class DockerTag(
+    @get:Schema(title = "标签")
+    var tag: String? = null,
+    @get:Schema(title = "仓库")
+    var repo: String? = null,
+    @get:Schema(title = "镜像")
+    var image: String? = null,
+    @get:Schema(title = "创建者")
+    var createdBy: String? = null,
+    @get:Schema(title = "创建时间")
+    var created: String? = null,
+    @get:Schema(title = "修改时间")
+    var modified: String? = null,
+    @get:Schema(title = "修改者")
+    var modifiedBy: String? = null,
+    @get:Schema(title = "描述")
+    var desc: String? = "",
+    @get:Schema(title = "大小")
+    var size: String? = null,
+    @get:Schema(title = "构件列表")
+    var artifactorys: List<String>? = null,
+    @get:Schema(title = "是否已关联到store")
+    var storeFlag: Boolean? = null
+)

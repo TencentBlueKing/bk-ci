@@ -1201,6 +1201,34 @@ class BkRepoClient constructor(
         }
     }
 
+    fun getImageInfo(
+        userId: String,
+        projectId: String,
+        imageName: String,
+        repoName: String,
+        pageSize: Int,
+        pageNumber: Int
+    ): Map<String, Any> {
+        var url =
+            "${getGatewayUrl()}/bkrepo/api/service/repository/api/package/page/$projectId/$repoName?packageName=${imageName}"
+        url += "&pageNumber=${pageNumber}&pageSize=${pageSize}"
+        val request = Request.Builder().url(url).headers(getCommonHeaders(userId, projectId).toHeaders()).get().build()
+        return doRequest(request).resolveResponse<Response<Map<String, Any>>>()!!.data!!
+    }
+
+    fun getImageVersion(
+        userId: String,
+        projectId: String,
+        imageName: String,
+        repoName: String,
+        packageKey: String
+    ): Map<String, Any> {
+        val url =
+            "${getGatewayUrl()}/bkrepo/api/service/repository/api/version/list/$projectId/$repoName?packageKey=${packageKey}"
+        val request = Request.Builder().url(url).headers(getCommonHeaders(userId, projectId).toHeaders()).get().build()
+        return doRequest(request).resolveResponse<Response<Map<String, Any>>>()!!.data!!
+    }
+
     private inline fun <reified T> okhttp3.Response.resolveResponse(allowCode: Int? = null): T? {
         this.use {
             val responseContent = this.body!!.string()

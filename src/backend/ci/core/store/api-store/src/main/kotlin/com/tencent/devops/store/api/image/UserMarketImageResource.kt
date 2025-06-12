@@ -36,6 +36,7 @@ import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.store.pojo.image.enums.MarketImageSortTypeEnum
 import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.image.response.ImageDetail
+import com.tencent.devops.store.pojo.image.response.ImagePageData
 import com.tencent.devops.store.pojo.image.response.MarketImageMain
 import com.tencent.devops.store.pojo.image.response.MarketImageResp
 import com.tencent.devops.store.pojo.image.response.MyImage
@@ -210,4 +211,20 @@ interface UserMarketImageResource {
         @PathParam("imageCode")
         imageCode: String
     ): Result<List<VersionInfo>>
+
+    //获取公共镜像列表
+    @Operation(summary = "获取公共镜像列表")
+    @GET
+    @Path("/public/image/list")
+    fun getPublicImageList(
+        @Parameter(description = "镜像名", required =true)
+        @QueryParam("imageName")
+        imageName: String,
+        @Parameter(description = "页码", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页大小", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<ImagePageData>
 }

@@ -41,6 +41,7 @@ import com.tencent.devops.store.pojo.image.response.MarketImageMain
 import com.tencent.devops.store.pojo.image.response.MarketImageResp
 import com.tencent.devops.store.pojo.image.response.MyImage
 import com.tencent.devops.store.image.service.ImageService
+import com.tencent.devops.store.pojo.image.response.ImagePageData
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -49,6 +50,12 @@ class UserMarketImageResourceImpl @Autowired constructor(
 ) : UserMarketImageResource {
     override fun getPipelineImageVersions(projectCode: String, imageCode: String): Result<List<VersionInfo>> {
         return Result(imageService.getPipelineImageVersions(projectCode, imageCode))
+    }
+
+    override fun getPublicImageList(imageName: String, page: Int?, pageSize: Int?): Result<ImagePageData> {
+        val actualPage = page ?: 1
+        val actualPageSize = pageSize ?: 10
+        return imageService.getPublicImageList(imageName = imageName, page = actualPage, pageSize = actualPageSize)
     }
 
     override fun delete(userId: String, imageCode: String): Result<Boolean> {
