@@ -47,6 +47,9 @@
     import { mapActions } from 'vuex'
     const PIPELINE_PROBLEM_CLOSE_TIME = 'PIPELINE_PROBLEM_CLOSE_TIME'
     export default {
+        props: {
+            updateTableHeight: Function
+        },
         data () {
             return {
                 pipelineProblemDetail: {}
@@ -78,6 +81,9 @@
                     projectId: this.projectId
                 })
                 this.pipelineProblemDetail = res ?? {}
+                this.$nextTick(() => {
+                    this.updateTableHeight()
+                })
             },
             handleClosePipelineProblemTips () {
                 const currentTime = this.getCurrentTime()
