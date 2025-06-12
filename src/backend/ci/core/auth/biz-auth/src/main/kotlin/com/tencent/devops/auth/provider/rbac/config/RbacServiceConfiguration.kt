@@ -143,7 +143,8 @@ class RbacServiceConfiguration {
         authResourceDao: AuthResourceDao,
         authResourceGroupDao: AuthResourceGroupDao,
         authResourceGroupMemberDao: AuthResourceGroupMemberDao,
-        resourceGroupPermissionService: PermissionResourceGroupPermissionService
+        resourceGroupPermissionService: PermissionResourceGroupPermissionService,
+        traceEventDispatcher: TraceEventDispatcher
     ) = AuthResourceService(
         dslContext = dslContext,
         authResourceDao = authResourceDao,

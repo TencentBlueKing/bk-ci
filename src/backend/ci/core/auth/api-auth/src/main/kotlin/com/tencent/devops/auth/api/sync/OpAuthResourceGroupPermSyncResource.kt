@@ -71,4 +71,12 @@ interface OpAuthResourceGroupPermSyncResource {
         @Parameter(description = "按条件迁移项目实体", required = true)
         projectConditionDTO: ProjectConditionDTO
     ): Result<Boolean>
+
+    @POST
+    @Path("/syncUserProjectPermissionsByCondition")
+    @Operation(summary = "按条件同步用户项目级权限")
+    fun syncUserProjectPermissionsByCondition(
+        @Parameter(description = "按条件迁移项目实体", required = true)
+        projectConditionDTO: ProjectConditionDTO
+    ): Result<Boolean>
 }
