@@ -37,28 +37,28 @@ class ProjectNameFilterTest {
     fun filter() {
         var projectNameFilter = ProjectNameFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
-            triggerOnProjectName = "aaa/bbb",
+            triggerOnProjectNames = setOf("aaa/bbb"),
             projectName = "aaa/bbb"
         )
         Assertions.assertTrue(projectNameFilter.doFilter(response))
 
         projectNameFilter = ProjectNameFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
-            triggerOnProjectName = "aaa/ccc",
+            triggerOnProjectNames = setOf("aaa/ccc"),
             projectName = "aaa/bbb"
         )
         Assertions.assertFalse(projectNameFilter.doFilter(response))
 
         projectNameFilter = ProjectNameFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
-            triggerOnProjectName = "bbb",
+            triggerOnProjectNames = setOf("bbb"),
             projectName = "aaa/bbb/ccc"
         )
         Assertions.assertTrue(projectNameFilter.doFilter(response))
 
         projectNameFilter = ProjectNameFilter(
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
-            triggerOnProjectName = "bbb",
+            triggerOnProjectNames = setOf("bbb"),
             projectName = "aaa/bbb/ccc/ddd"
         )
         Assertions.assertFalse(projectNameFilter.doFilter(response))

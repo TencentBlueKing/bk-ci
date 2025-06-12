@@ -104,6 +104,8 @@ interface ScmWebhookMatcher {
         return emptyList()
     }
 
+    fun getCompatibilityRepoName(): Set<String> = setOf()
+
     companion object {
         private val logger = LoggerFactory.getLogger(ScmWebhookMatcher::class.java)
     }
