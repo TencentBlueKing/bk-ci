@@ -87,11 +87,13 @@ class TxPipelineMetricsCronService @Autowired constructor(
     @Value("\${eplus.ms.metrics.enableFlag:false}")
     private val enableFlag: Boolean = false
 
+    @Value("\${eplus.ms.metrics.enableFlag:300}")
+    private val readTimeoutSeconds: Long = 300
+
     companion object {
         private val logger = LoggerFactory.getLogger(TxPipelineMetricsCronService::class.java)
         // HTTP请求超时时间（秒）
         private const val CONNECT_TIMEOUT_SECONDS = 5L
-        private const val READ_TIMEOUT_SECONDS = 300L
         private const val WRITE_TIMEOUT_SECONDS = 15L
     }
 
@@ -332,7 +334,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
 
         val response = OkhttpUtils.doCustomTimeoutPost(
             connectTimeout = CONNECT_TIMEOUT_SECONDS,
-            readTimeout = READ_TIMEOUT_SECONDS,
+            readTimeout = readTimeoutSeconds,
             writeTimeout = WRITE_TIMEOUT_SECONDS,
             url = cardQueryUrl,
             jsonParam = JsonUtil.toJson(requestBody),
