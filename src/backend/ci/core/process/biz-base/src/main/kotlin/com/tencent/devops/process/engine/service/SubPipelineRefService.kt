@@ -55,11 +55,19 @@ class SubPipelineRefService @Autowired constructor(
         logger.info("delete sub pipeline ref|$projectId|$pipelineId|$changeCount")
     }
 
-    fun list(transaction: DSLContext? = null, projectId: String, pipelineId: String): Result<TPipelineSubRefRecord> {
+    fun list(
+        transaction: DSLContext? = null,
+        projectId: String,
+        pipelineId: String,
+        subProjectId: String? = null,
+        subPipelineId: String? = null
+    ): Result<TPipelineSubRefRecord> {
         return subPipelineRefDao.list(
             dslContext = transaction ?: dslContext,
             projectId = projectId,
-            pipelineId = pipelineId
+            pipelineId = pipelineId,
+            subProjectId = subProjectId,
+            subPipelineId = subPipelineId
         )
     }
 

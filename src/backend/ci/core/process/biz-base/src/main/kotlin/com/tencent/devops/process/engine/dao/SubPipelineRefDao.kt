@@ -97,13 +97,23 @@ class SubPipelineRefDao {
     fun list(
         dslContext: DSLContext,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        subProjectId: String? = null,
+        subPipelineId: String? = null
     ): Result<TPipelineSubRefRecord> {
         return with(TPipelineSubRef.T_PIPELINE_SUB_REF) {
             dslContext.selectFrom(this).where(
                 PROJECT_ID.eq(projectId).and(
                     PIPELINE_ID.eq(pipelineId)
-                )
+                ).let {
+                    if (subProjectId.isNullOrBlank()) {
+                        it.and(SUB_PROJECT_ID.eq(subProjectId))
+                    }
+                    if (subPipelineId.isNullOrBlank()) {
+                        it.and(SUB_PIPELINE_ID.eq(subPipelineId))
+                    }
+                    it
+                }
             ).fetch()
         }
     }
