@@ -34,6 +34,7 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -43,6 +44,15 @@ class TxPipelineMetricssService@Autowired constructor(
     private val pipelineMetricsInfoDao: PipelineMetricsInfoDao,
     private val txPipelineMetricsCronService: TxPipelineMetricsCronService
 ) {
+
+    @Value("\${eplus.ms.metrics.namespace.highFailureRate30d.card.id}")
+    private var highFailureRate30dCardId: Int = 0 // 高失败率30天卡片ID
+
+    @Value("\${eplus.ms.metrics.namespace.consecutiveFailures90d.card.id}")
+    private var consecutiveFailures90dCardId: Int = 0 // 连续失败90天卡片ID
+
+    @Value("\${eplus.ms.metrics.namespace.scheduledTriggerNoCodeChange.card.id}")
+    private var scheduledTriggerNoCodeChangeCardId: Int = 0 // 定时触发无代码变更卡片ID
 
     fun getPipelineIssueAnalysis(userId: String, projectId: String): ProjectPipelineIssueAnalysisInfo? {
         val verifyUserProjectPermission = client.get(ServiceProjectResource::class).verifyUserProjectPermission(
@@ -58,15 +68,20 @@ class TxPipelineMetricssService@Autowired constructor(
         val consecutiveFailuresCount = pipelineMetricsInfoDao.countConsecutiveFailures90d(dslContext, projectId)
         val scheduledTriggerNoCodeChangeCount
         = pipelineMetricsInfoDao.countScheduledTriggerNoCodeChange(dslContext, projectId)
-        if (failureRateCount == 0 && consecutiveFailuresCount == 0 && scheduledTriggerNoCodeChangeCount == 0) {
-            return null
+
+        val cardId = when {
+            failureRateCount > 0 -> highFailureRate30dCardId
+            consecutiveFailuresCount > 0 -> consecutiveFailures90dCardId
+            scheduledTriggerNoCodeChangeCount > 0 -> scheduledTriggerNoCodeChangeCardId
+            else -> return null
         }
 
         return ProjectPipelineIssueAnalysisInfo(
             projectId = projectId,
             failureRateCount = failureRateCount,
             consecutiveFailuresCount = consecutiveFailuresCount,
-            scheduledTriggerNoCodeChangeCount = scheduledTriggerNoCodeChangeCount
+            scheduledTriggerNoCodeChangeCount = scheduledTriggerNoCodeChangeCount,
+            cardId = cardId
         )
     }
 
