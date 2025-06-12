@@ -644,12 +644,14 @@ class RbacPermissionResourceGroupPermissionService(
                     offset = offset
                 ).data ?: break
                 projectCodes.forEach {
-                    CompletableFuture.supplyAsync(
-                        {
-                            MDC.put(TraceTag.BIZID, traceId)
-                            syncProjectPermissions(it.englishName)
-                        },
-                        syncProjectsExecutorService
+                    result.add(
+                        CompletableFuture.supplyAsync(
+                            {
+                                MDC.put(TraceTag.BIZID, traceId)
+                                syncProjectPermissions(it.englishName)
+                            },
+                            syncProjectsExecutorService
+                        )
                     )
                 }
                 offset += limit
