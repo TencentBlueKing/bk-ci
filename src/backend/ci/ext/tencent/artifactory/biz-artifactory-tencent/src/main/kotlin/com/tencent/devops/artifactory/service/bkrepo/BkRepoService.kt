@@ -361,6 +361,7 @@ class BkRepoService @Autowired constructor(
                 repoNames = listOf(RepoUtils.PIPELINE_REPO, RepoUtils.CUSTOM_REPO),
                 fileNames = listOf(),
                 metadata = mapOf(ARCHIVE_PROPS_PIPELINE_ID to pipelineId, ARCHIVE_PROPS_BUILD_ID to buildId),
+                qualityMetadata = emptyList(),
                 page = 0,
                 pageSize = 10000
             ).records
