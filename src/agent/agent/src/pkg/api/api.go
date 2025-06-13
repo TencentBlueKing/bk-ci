@@ -29,9 +29,10 @@ package api
 
 import (
 	"fmt"
-	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 	"reflect"
 	"strconv"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/httputil"
