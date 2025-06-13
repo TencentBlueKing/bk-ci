@@ -47,6 +47,8 @@ import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.project.api.service.ServiceUserResource
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.temporal.WeekFields
+import java.util.Locale
 import java.util.concurrent.Executors
 import kotlin.math.ceil
 import org.jooq.DSLContext
@@ -397,8 +399,12 @@ class TxPipelineMetricsCronService @Autowired constructor(
     /**
      * 每隔两周周一10点发送项目无效流水线监控报告
      */
-    @Scheduled(cron = "0 0 10 ? * MON/2")
+    @Scheduled(cron = "0 0 10 ? * MON")
     fun sendInvalidPipelineMonitorReport() {
+        val today = LocalDate.now()
+        val weekNumber = today.get(WeekFields.of(Locale.getDefault()).weekOfWeekBasedYear())
+        if (weekNumber % 2 != 0) return
+
         logger.info("starts the task of sending a report email")
         var offset = 0
         val limit = 100
@@ -417,6 +423,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
             projectId = projectId,
             statisticsTime = LocalDate.now().atStartOfDay()
         ).map { it.value1() to it.value2() }.toMap()
+        if (invalidPipelineMap.isEmpty()) return
         val projectPipelineInfo = convertPipelineExpirationInfo(projectId, invalidPipelineMap)
 
         try {
