@@ -236,15 +236,15 @@
                     if (this.codelib['@type']?.startsWith('scm') && this.codelib.credentialType === 'OAUTH') {
                         await this.checkScmOAuth({
                             projectId,
-                            scmCode: this.codelib.scmCode,
+                            scmCode: newVal,
                             type: codelibTypeConstants,
-                            username: newVal
+                            username: this.codelib.userName
                         })
                     } else if (this.codelib.authType === 'OAUTH') {
                         await this.checkOAuth({
                             projectId,
                             type: codelibTypeConstants,
-                            username: newVal
+                            username: this.codelib.userName
                         })
                     }
                 }
