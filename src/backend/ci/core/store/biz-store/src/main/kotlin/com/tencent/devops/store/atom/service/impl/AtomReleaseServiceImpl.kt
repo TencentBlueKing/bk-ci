@@ -1500,13 +1500,11 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     }
 
     private fun sendPendingReview(userId: String, atomName: String, version: String) {
-        // 构建消息内容参数（包含成功数、失败数和错误信息）
         val bodyParams = mapOf(
             "userId" to userId,
             "atomName" to atomName,
             "version" to version,
         )
-        // 创建通知请求对象
         val request = SendNotifyMessageTemplateRequest(
             templateCode = "BK_STORE_ATOM_AUDIT_NOTIFY",
             receivers = mutableSetOf("v_kykang", "carlyin", "fayewang"),
@@ -1514,7 +1512,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             notifyType = mutableSetOf(NotifyType.WEWORK.name)
         )
         try {
-            // 发送消息通知
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
         } catch (ignored: Throwable) {
             logger.warn("Failed to send notify message", ignored)
