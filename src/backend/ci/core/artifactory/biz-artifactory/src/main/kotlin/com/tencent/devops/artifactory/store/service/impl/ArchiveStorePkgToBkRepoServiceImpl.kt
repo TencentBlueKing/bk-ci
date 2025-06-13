@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.File
 import jakarta.ws.rs.NotFoundException
+import com.tencent.bkrepo.auth.pojo.token.TokenType.DOWNLOAD
 
 abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl() {
 
@@ -206,7 +207,7 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
                 repoName = getBkRepoName(storeType),
                 fullPathSet = setOf(pkgPath),
                 expireSeconds = 3600L,
-                type = TokenType.DOWNLOAD,
+                type = DOWNLOAD,
                 host = "$repoPrefixUrl/generic"
             ),
             bkrepoPrefixUrl = repoPrefixUrl,
