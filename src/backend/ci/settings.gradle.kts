@@ -33,6 +33,7 @@ pluginManagement {
         if (System.getenv("GITHUB_WORKFLOW") == null) { // 普通环境
             maven(url = "https://mirrors.tencent.com/nexus/repository/maven-public")
             maven(url = "https://mirrors.tencent.com/nexus/repository/gradle-plugins/")
+            maven(url = "https://central.sonatype.com/repository/maven-snapshots/")
         } else { // GitHub Action 环境
             maven {
                 name = "MavenSnapshot"
