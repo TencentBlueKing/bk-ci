@@ -327,11 +327,10 @@ class AuthDeptServiceImpl(
         return if (departedMembersCache.getIfPresent(userId) == true) {
             true
         } else {
-            val isUserDeparted = getUserInfo(userId) == null
-            departedMembersCache.put(userId, true)
-            isUserDeparted
+            getUserInfo(userId) == null
         }.also {
             if (it) {
+                departedMembersCache.put(userId, true)
                 logger.info("user departed :$userId")
             }
         }
