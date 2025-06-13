@@ -133,7 +133,7 @@ class ReportArchiveTask : ITask() {
             val fileDirPath = Paths.get(fileDir.canonicalPath)
             val allFileList = recursiveGetFiles(fileDir)
             if (allFileList.size > 10) {
-                val executors = Executors.newFixedThreadPool(10)
+                val executors = Executors.newFixedThreadPool(5)
                 allFileList.forEach {
                     executors.execute {
                         uploadReportFile(fileDirPath, it, elementId, buildVariables, token)
