@@ -29,7 +29,7 @@ package com.tencent.devops.store.atom.service.impl
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.tencent.bkrepo.common.api.util.toJsonString
-import com.tencent.devops.artifactory.pojo.ArchiveStorePkgRequest
+import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -517,15 +517,16 @@ class OpAtomServiceImpl @Autowired constructor(
         }
         try {
             if (file.exists()) {
-                val archiveAtomResult = StoreFileAnalysisUtil.serviceArchiveStoreFile(
+                val archiveAtomResult = StoreFileAnalysisUtil.serviceArchiveAtomFile(
                     userId = userId,
                     client = client,
                     file = file,
-                    archiveStorePkgRequest = ArchiveStorePkgRequest(
-                        storeCode = atomCode,
-                        storeType = StoreTypeEnum.ATOM,
+                    archiveAtomRequest = ArchiveAtomRequest(
+                        atomCode = atomCode,
+                        projectCode = releaseInfo.projectId,
                         version = versionInfo.version,
-                        releaseType = versionInfo.releaseType
+                        releaseType = versionInfo.releaseType,
+                        os = JsonUtil.toJson(releaseInfo.os),
                     )
                 )
                 if (archiveAtomResult.isNotOk()) {
