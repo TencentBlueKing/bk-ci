@@ -36,11 +36,11 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.pojo.Page
+import jakarta.servlet.http.HttpServletResponse
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
-import jakarta.servlet.http.HttpServletResponse
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 
 @Suppress("ALL")
 interface ArchiveFileService {

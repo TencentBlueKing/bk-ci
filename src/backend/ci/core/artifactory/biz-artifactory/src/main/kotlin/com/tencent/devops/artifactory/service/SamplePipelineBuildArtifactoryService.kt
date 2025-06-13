@@ -79,6 +79,7 @@ class SamplePipelineBuildArtifactoryService @Autowired constructor(
             repoNames = listOf(REPO_NAME_PIPELINE, REPO_NAME_CUSTOM),
             fileNames = listOf(),
             metadata = mapOf("pipelineId" to pipelineId, "buildId" to buildId),
+            qualityMetadata = emptyList(),
             page = 1,
             pageSize = 1000
         ).records

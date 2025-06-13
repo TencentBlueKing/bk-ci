@@ -877,6 +877,7 @@ class BkRepoClient constructor(
         repoNames: List<String>, // eq or
         fileNames: List<String>, // match or
         metadata: Map<String, String>, // eq and
+        qualityMetadata: List<Pair<String, String>>, //eq or
         page: Int,
         pageSize: Int
     ): QueryData {
@@ -901,6 +902,12 @@ class BkRepoClient constructor(
                 Rule.QueryRule("metadata.${it.key}", it.value, OperationType.EQ)
             }.toMutableList())
             ruleList.add(metadataRule)
+        }
+        if (qualityMetadata.isNotEmpty()) {
+            val qualityRule = Rule.NestedRule(qualityMetadata.map {
+                Rule.QueryRule("metadata.${it.first}", it.second, OperationType.EQ)
+            }.toMutableList(), Rule.NestedRule.RelationType.OR)
+            ruleList.add(qualityRule)
         }
         val rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
 
