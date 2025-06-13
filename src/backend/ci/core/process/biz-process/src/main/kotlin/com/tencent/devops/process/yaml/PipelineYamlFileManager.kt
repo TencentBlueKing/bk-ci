@@ -27,8 +27,12 @@
 
 package com.tencent.devops.process.yaml
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.HTTP_401
+import com.tencent.devops.common.api.constant.HTTP_403
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
@@ -73,6 +77,7 @@ import com.tencent.devops.scm.api.pojo.Commit
 import com.tencent.devops.scm.api.pojo.Content
 import com.tencent.devops.scm.api.pojo.PullRequest
 import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
+import com.tencent.devops.scm.exception.ScmException
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
@@ -371,6 +376,18 @@ class PipelineYamlFileManager @Autowired constructor(
                     branch = ref,
                     mrUrl = pullRequest?.link
                 )
+            } catch (ignored: RemoteServiceException) {
+                throw when (ignored.errorCode) {
+                    HTTP_401, HTTP_403 -> ScmException(
+                        I18nUtil.getCodeLanMessage(
+                            CommonMessageCode.THIRD_PARTY_SERVICE_OPERATION_FAILED,
+                            params = arrayOf(repository.getScmType().name, ignored.message ?: "")
+                        ),
+                        repository.getScmType().name
+                    )
+
+                    else -> ignored
+                }
             } catch (ignored: Exception) {
                 logger.error(
                     "[PAC_PIPELINE]|Failed to release yaml pipeline|projectId:$projectId|pipelineId:$pipelineId|" +
