@@ -4,7 +4,7 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.artifactory.api.service.ServiceArtifactQualityMetadataResource
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.common.archive.pojo.ArtifactQualityMetadataAnalytics
-import com.tencent.devops.common.archive.pojo.MetadataLabelDetail
+import com.tencent.bkrepo.repository.pojo.metadata.label.MetadataLabelDetail
 import com.tencent.devops.common.client.Client
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service

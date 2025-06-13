@@ -30,7 +30,7 @@ package com.tencent.devops.artifactory.resources
 import com.tencent.devops.artifactory.api.service.ServiceArtifactQualityMetadataResource
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.archive.client.BkRepoClient
-import com.tencent.devops.common.archive.pojo.MetadataLabelDetail
+import com.tencent.bkrepo.repository.pojo.metadata.label.MetadataLabelDetail
 import com.tencent.devops.common.web.RestResource
 
 @RestResource
