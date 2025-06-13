@@ -746,6 +746,14 @@ class TriggerTransfer @Autowired(required = false) constructor(
                                 )
                             }
                             JsonUtil.toJson(params, false)
+                        },
+                        version = if ((timer.newExpression?.size ?: 0) > 1 ||
+                                (timer.advanceExpression?.size ?: 0) > 1
+                        ) {
+                            // 1.* 插件支持支持多个触发规则,2.*仅支持一个触发规则
+                            "1.*"
+                        } else {
+                            "2.*"
                         }
                     ).checkTriggerElementEnable(timer.enable)
                 )
