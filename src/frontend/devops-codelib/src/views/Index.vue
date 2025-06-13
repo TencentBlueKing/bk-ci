@@ -208,6 +208,7 @@
             this.sortBy = sortBy ?? localStorage.getItem('codelibSortBy') ?? ''
             await this.init()
             this.projectList = this.$store.state.projectList
+            await this.refreshCodelibList()
             if (
                 this.$route.hash.includes('popupGit')
                 || this.$route.hash.includes('popupGithub')
