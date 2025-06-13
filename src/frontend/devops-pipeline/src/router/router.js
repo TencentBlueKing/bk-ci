@@ -171,7 +171,7 @@ const routes = [
                 component: AtomDebug
             },
             {
-                path: ':pipelineId',
+                path: ':pipelineId([^/.]+)',
                 component: pipelinesEntry,
                 children: [
                     {
