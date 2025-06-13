@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.service
 
+import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.auth.api.AuthPlatformApi
@@ -49,7 +50,8 @@ class SampleUserProjectServiceServiceImpl(
     redisOperation: RedisOperation,
     authProjectApi: AuthProjectApi,
     pipelineAuthServiceCode: PipelineAuthServiceCode,
-    apiPlatformApi: AuthPlatformApi
+    apiPlatformApi: AuthPlatformApi,
+    authPermissionApi: AuthPermissionApi
 ) : AbsUserProjectServiceServiceImpl(
     dslContext,
     serviceTypeDao,
@@ -59,5 +61,6 @@ class SampleUserProjectServiceServiceImpl(
     redisOperation,
     authProjectApi,
     pipelineAuthServiceCode,
-    apiPlatformApi
+    apiPlatformApi,
+    authPermissionApi
 )

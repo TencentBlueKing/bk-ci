@@ -653,6 +653,7 @@ class PipelineStageService @Autowired constructor(
                     NotifyUtils.WEWORK_GROUP_KEY to (checkIn.notifyGroup?.joinToString(separator = ",") ?: "")
                 ),
                 position = ControlPointPosition.BEFORE_POSITION,
+                stageSeq = stage.seq,
                 stageId = stage.stageId,
                 notifyType = NotifyUtils.checkNotifyType(checkIn.notifyType),
                 markdownContent = checkIn.markdownContent,

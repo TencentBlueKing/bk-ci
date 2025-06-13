@@ -110,12 +110,18 @@ data class VariableProps(
     @JsonProperty("scm-type")
     @get:Schema(title = "scm-type")
     val scmType: String? = null,
+    @JsonProperty("relative-path")
+    @get:Schema(title = "relative-path")
+    val relativePath: String? = null,
     @JsonProperty("container-type")
     @get:Schema(title = "container-type")
     val containerType: BuildContainerTypeYaml? = null,
     @get:Schema(title = "自定义仓库通配符", required = false)
     @JsonProperty("filter-rule")
     val glob: String? = null,
+    @JsonProperty("version-control")
+    @get:Schema(title = "version-control")
+    val versionControl: Boolean? = null,
     @get:Schema(title = "文件元数据", required = false)
     @JsonProperty("metadata")
     val properties: Map<String, String>? = null,
@@ -124,7 +130,8 @@ data class VariableProps(
     fun empty(): Boolean {
         return label == null && (type == null || type == VariablePropType.VUEX_INPUT.value) && options == null &&
             description == null && group == null && multiple == null && required == null && repoHashId == null &&
-            scmType == null && containerType == null && glob == null && properties == null && payload == null
+            scmType == null && containerType == null && glob == null && properties == null && payload == null &&
+            relativePath == null
     }
 }
 
@@ -186,7 +193,7 @@ enum class VariablePropType(val value: String) {
     TIME_PICKER("time-picker"),
     COMPANY_STAFF_INPUT("company-staff-input"),
     GIT_REF("git-ref"),
-    SVN_REF("svn-tag"),
+    SVN_TAG("svn-tag"),
     REPO_REF("repo-ref"),
     CODE_LIB("code-lib"),
     CONTAINER_TYPE("container-type"),
@@ -202,6 +209,7 @@ enum class VariablePropType(val value: String) {
         CHECKBOX -> BuildFormPropertyType.MULTIPLE
         BOOLEAN -> BuildFormPropertyType.BOOLEAN
         GIT_REF -> BuildFormPropertyType.GIT_REF
+        SVN_TAG -> BuildFormPropertyType.SVN_TAG
         CODE_LIB -> BuildFormPropertyType.CODE_LIB
         CONTAINER_TYPE -> BuildFormPropertyType.CONTAINER_TYPE
         ARTIFACTORY -> BuildFormPropertyType.ARTIFACTORY

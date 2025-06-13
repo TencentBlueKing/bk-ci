@@ -57,7 +57,7 @@
                 'showStageReviewPanel'
             ]),
             stageTitle () {
-                return `${this.$t('stageInTitle')}${typeof this.stage !== 'undefined' ? this.stage.name : 'stage'}`
+                return `${this.$t('stageInTitle')}${typeof this.stage !== 'undefined' && this.stage.name ? this.stage.name : 'stage'}`
             },
             stageReviewType () {
                 return this.showStageReviewPanel.type

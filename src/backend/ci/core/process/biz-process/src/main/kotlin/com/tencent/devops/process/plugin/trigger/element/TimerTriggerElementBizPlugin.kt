@@ -120,7 +120,11 @@ class TimerTriggerElementBizPlugin constructor(
         if (param.pipelineId.isNotBlank()) {
             with(param) {
                 val taskId = element.id ?: ""
-                pipelineTimerService.deleteTimer(projectId, pipelineId, userId, taskId)
+                // 直接删除定时触发器，需兼容旧数据（taskId为空）
+                pipelineTimerService.deleteTimer(projectId, pipelineId, userId, "")
+                pipelineTimerService.deleteTimer(projectId, pipelineId, userId, taskId).let {
+                    logger.info("beforeDelete|$pipelineId|delete [${element.id}] timer|result=$it")
+                }
                 pipelineTimerService.deleteTimerBranch(
                     projectId = projectId,
                     pipelineId = pipelineId,

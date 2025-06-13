@@ -1321,7 +1321,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
         try {
             projectExtService.enableProject(
-                userId = userId ?: "",
+                userId = userId ?: "system",
                 projectId = englishName,
                 enabled = enabled
             )

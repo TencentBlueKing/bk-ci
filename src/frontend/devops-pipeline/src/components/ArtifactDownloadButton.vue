@@ -51,7 +51,6 @@
 </template>
 
 <script>
-    import { convertFileSize } from '@/utils/util'
     export default {
         props: {
             downloadIcon: Boolean,
@@ -82,9 +81,9 @@
         computed: {
             disabled () {
                 // 目录超10Gb 禁用状态
-                if (this.output) {
-                    const size = this.output.folder ? this.convertFileSize(this.getFolderSize(this.output), 'B') : this.output.size > 0 ? this.convertFileSize(this.output.size, 'B') : '--'
-                    return this.output.folder ? size.includes('GB') && size.split(' ')[0] > 1 : false
+                if (this.output?.folder) {
+                    const size = this.getFolderSize(this.output)
+                    return size >= 10 * 1024 * 1024 * 1024
                 }
                 return false
             },
@@ -96,7 +95,6 @@
             this.cancelDownloading()
         },
         methods: {
-            convertFileSize,
             setVisible (visible) {
                 this.visible = visible
             },

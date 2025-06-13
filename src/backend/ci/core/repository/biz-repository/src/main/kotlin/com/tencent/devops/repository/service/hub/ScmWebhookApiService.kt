@@ -27,7 +27,6 @@
 
 package com.tencent.devops.repository.service.hub
 
-import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.repository.service.RepositoryScmConfigService
 import com.tencent.devops.repository.service.RepositoryService
@@ -58,19 +57,15 @@ class ScmWebhookApiService @Autowired constructor(
         return scmProviderManager.webhookParser(properties).parse(request)
     }
 
-    fun webhookEnrich(webhook: Webhook, authRepoList: List<AuthRepository>): Webhook {
-        val scmCode = authRepoList.firstOrNull()?.scmCode ?: throw InvalidParamException("scmCode is empty")
-        val properties = repositoryScmConfigService.getProps(scmCode = scmCode)
-        val providerRepositories = authRepoList.map {
-            providerRepositoryFactory.create(
-                properties = properties,
-                authRepository = it
+    fun webhookEnrich(webhook: Webhook, authRepo: AuthRepository): Webhook {
+        return invokeApi(
+            authRepository = authRepo
+        ) { properties, providerRepository ->
+            scmApiManager.webhookEnrich(
+                providerProperties = properties,
+                providerRepository = providerRepository,
+                webhook = webhook
             )
         }
-        return scmApiManager.webhookEnrich(
-            providerProperties = properties,
-            providerRepositories = providerRepositories,
-            webhook = webhook
-        )
     }
 }

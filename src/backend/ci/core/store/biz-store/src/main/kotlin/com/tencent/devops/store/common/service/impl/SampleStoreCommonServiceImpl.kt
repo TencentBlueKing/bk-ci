@@ -42,7 +42,7 @@ class SampleStoreCommonServiceImpl : StoreCommonServiceImpl() {
     }
 
     override fun generateStoreVisibleData(
-        storeCodeList: List<String?>,
+        storeCodeList: List<String>,
         storeType: StoreTypeEnum
     ): HashMap<String, MutableList<Int>>? {
         return null // 开源版插件不设置可见范围

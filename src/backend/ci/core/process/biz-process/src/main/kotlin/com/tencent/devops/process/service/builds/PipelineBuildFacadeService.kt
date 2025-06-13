@@ -69,6 +69,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamTyp
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
+import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
@@ -145,10 +146,10 @@ import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.UriBuilder
+import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 /**
  *
@@ -801,15 +802,21 @@ class PipelineBuildFacadeService(
         }
         logger.info("[$buildId]|buildManualReview|taskId=$trueElementId|userId=$userId|params=$params")
 
-        pipelineRuntimeService.manualDealReview(
-            taskId = trueElementId,
-            userId = userId,
-            params = params.apply {
-                this.projectId = projectId
-                this.pipelineId = pipelineId
-                this.buildId = buildId
-            }
-        )
+        if (!pipelineRuntimeService.manualDealReview(
+                taskId = trueElementId,
+                userId = userId,
+                params = params.apply {
+                    this.projectId = projectId
+                    this.pipelineId = pipelineId
+                    this.buildId = buildId
+                }
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TASK_REVIEW_NOT_FOUND_OR_NOT_RUNNING,
+                params = arrayOf(trueElementId)
+            )
+        }
         if (params.status == ManualReviewAction.ABORT) {
             buildRecordService.updateBuildCancelUser(
                 projectId = projectId,
@@ -2210,7 +2217,8 @@ class PipelineBuildFacadeService(
                 val intervalTime = System.currentTimeMillis() - cancelActionTime
                 var flag = false // 是否强制终止
                 if (intervalTime <= cancelIntervalLimitTime * 1000) {
-                    val alreadyCancelUser = buildRecordService.getBuildCancelUser(pipelineId, buildId, buildInfo.executeCount)
+                    val alreadyCancelUser =
+                        buildRecordService.getBuildCancelUser(pipelineId, buildId, buildInfo.executeCount)
                     logger.warn("The build $buildId of project $projectId already cancel by user $alreadyCancelUser")
                     val timeTip = cancelIntervalLimitTime - intervalTime / 1000
                     throw ErrorCodeException(
@@ -2503,7 +2511,11 @@ class PipelineBuildFacadeService(
         val startParameters = buildInfo.buildParameters?.filter {
             it.key != PIPELINE_RETRY_COUNT
         }?.associate {
-            it.key to it.value.toString()
+            it.key to if (CascadePropertyUtils.supportCascadeParam(it.valueType) && it.value is Map<*, *>) {
+                JsonUtil.toJson(it.value)
+            } else {
+                it.value.toString()
+            }
         }?.toMutableMap() ?: mutableMapOf()
         startParameters.putAll(buildVars)
         val startType = StartType.toStartType(buildInfo.trigger)
@@ -2592,6 +2604,7 @@ class PipelineBuildFacadeService(
                 )!!
             )
         }
+
         else -> {
             buildManualStartup(
                 userId = userId,

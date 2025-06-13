@@ -57,6 +57,7 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.AGENT_VERS
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_DEL_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_CHANGE_USER_NOT_SUPPORT
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_DUPLICATE
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_OR_ID_INVALID
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.NODE_USAGE_BUILD
@@ -475,6 +476,31 @@ class NodeService @Autowired constructor(
                 }
             )
         }
+    }
+
+    fun getNodeStatus(
+        userId: String,
+        projectId: String,
+        nodeHashId: String?,
+        nodeName: String?,
+        agentHashId: String?
+    ): NodeWithPermission {
+        val hashId = when {
+            nodeHashId != null -> nodeHashId
+            nodeName != null -> nodeDao.getByDisplayName(dslContext, projectId, nodeName, null)
+                .firstOrNull()?.nodeHashId
+
+            agentHashId != null -> thirdPartyAgentDao.getAgent(dslContext, HashUtil.decodeIdToLong(agentHashId))
+                ?.nodeId?.let { HashUtil.encodeLongId(it) }
+
+            else -> null
+        } ?: throw ErrorCodeException(
+            errorCode = ERROR_NODE_NAME_OR_ID_INVALID
+        )
+        return listByHashIds(userId, projectId, listOf(hashId)).firstOrNull() ?: throw ErrorCodeException(
+            errorCode = ERROR_NODE_NOT_EXISTS,
+            params = arrayOf(hashId)
+        )
     }
 
     fun listByHashIds(userId: String, projectId: String, hashIds: List<String>): List<NodeWithPermission> {
