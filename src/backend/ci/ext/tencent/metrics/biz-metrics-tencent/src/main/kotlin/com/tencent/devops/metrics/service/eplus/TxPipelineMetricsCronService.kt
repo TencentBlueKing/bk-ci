@@ -36,7 +36,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.metrics.constants.Constants.BK_TO_HANDLE
@@ -50,9 +49,6 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executors
 import kotlin.math.ceil
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -102,6 +98,9 @@ class TxPipelineMetricsCronService @Autowired constructor(
 
     @Value("\${eplus.ms.metrics.readTimeoutSeconds:300}")
     private val readTimeoutSeconds: Long = 300
+
+    @Value("\${eplus.ms.metrics.namespace.invalidBuildPipeline.card.id}")
+    private var invalidBuildPipeline: Int = 0 // 无效流水线卡片ID
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxPipelineMetricsCronService::class.java)
@@ -303,6 +302,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
         val syncExecutorService = Executors.newFixedThreadPool(5)
         try {
             logger.info("start runAllSyncDataTasks")
+            pipelineMetricsInfoDao.cleanTodayData(dslContext)
             syncExecutorService.submit { handleHighFailureRate30d() }
             syncExecutorService.submit { handleConsecutiveFailures90d() }
             syncExecutorService.submit { handleScheduledTriggerNoCodeChange() }
@@ -337,28 +337,6 @@ class TxPipelineMetricsCronService @Autowired constructor(
             throw e
         }
         logger.info("end processInvalidPipelineData")
-    }
-
-    private fun postWithToken(
-        url: String,
-        token: String,
-        requestBody: Map<String, Any>
-    ): Map<String, Any> {
-        val jsonBody = objectMapper.writeValueAsString(requestBody)
-        val request = Request.Builder()
-            .url(url)
-            .addHeader("token", token)
-            .addHeader("Content-Type", "application/json")
-            .post(jsonBody.toRequestBody("application/json".toMediaTypeOrNull()))
-            .build()
-
-        OkhttpUtils.doHttp(request).use { response ->
-            if (!response.isSuccessful) {
-                throw RemoteServiceException("request failed, status code: ${response.code}")
-            }
-            val responseStr = response.body!!.string()
-            return objectMapper.readValue(responseStr)
-        }
     }
 
     /**

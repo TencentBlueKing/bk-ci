@@ -32,8 +32,8 @@ import com.tencent.devops.model.metrics.tables.records.TEplusPipelineMetricsData
 import java.time.LocalDate
 import java.time.LocalDateTime
 import org.jooq.DSLContext
-import org.jooq.Record2
 import org.jooq.Field
+import org.jooq.Record2
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
@@ -155,5 +155,16 @@ class PipelineMetricsInfoDao {
             }
         }
         dslContext.batch(steps).execute()
+    }
+
+    /**
+     * 清理当天统计数据
+     * @param dslContext 数据库上下文
+     * @return 删除的记录数
+     */
+    fun cleanTodayData(dslContext: DSLContext){
+        dslContext.deleteFrom(table)
+            .where(table.STATISTICS_TIME.eq(currentStatisticsTime))
+            .execute()
     }
 }
