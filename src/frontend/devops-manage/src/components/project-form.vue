@@ -2,7 +2,8 @@
 import { ref, watch, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import http from '@/http/api';
-import { BaseInfoContent, PermissionContent, PipelineContent, ArtifactoryContent } from "@/components/project-form-item/";
+import { BaseInfoContent, PermissionContent, PipelineContent } from "@/components/project-form-item/";
+import ProjectSettings from "./project-settings.vue"
 
 const { t } = useI18n();
 const emits = defineEmits(['change', 'approvedChange', 'initProjectForm']);
@@ -39,6 +40,13 @@ const rules = {
       trigger: 'change',
     },
   ],
+  metadatas: [
+    {
+      validator: () => !Object.keys(projectData.value.metadatas).length,
+      message: t('请选择项目项目最大可授权人员范围'),
+      trigger: 'change',
+    },
+  ]
 };
 
 const projectData = ref<any>(props.data);
@@ -61,11 +69,6 @@ const collapsePanels = computed(() => [
     isShow: projectData.value.properties,
     component: PipelineContent,
   }] : [],
-  {
-    name: 'artifactory',
-    title: '制品库',
-    component: ArtifactoryContent,
-  }
 ]);
 
 const handleChangeForm = () => {
@@ -111,18 +114,19 @@ onMounted(async () => {
     class="project-form"
   >
     <bk-collapse
+      v-if="props.type === 'apply'"
       v-model="activeCollapse"
       :hasHeaderHover="false"
     >
       <bk-collapse-panel
-        v-for="panel in collapsePanels"
+        v-for="(panel, index) in collapsePanels"
         :key="panel.name"
         :name="panel.name"
         icon="right-shape"
       >
           <span class="title">{{ t(panel.title) }}</span>
           <template #content>
-            <div class="project-tab">
+            <div :class="['project-tab', { 'has-bottom-border': index !== collapsePanels.length - 1 }]">
               <component
                 :is="panel.component"
                 :type="type"
@@ -130,12 +134,21 @@ onMounted(async () => {
                 :data="projectData"
                 :initPipelineDialect="initPipelineDialect"
                 @handle-change-form="handleChangeForm"
-                @clear-validate="handleClearValidate"
+                @clearValidate="handleClearValidate"
               />
             </div>
           </template>
       </bk-collapse-panel>
     </bk-collapse>
+    <project-settings
+      v-else 
+      :type="type"
+      :is-rbac="isRbac"
+      :data="projectData"
+      :initPipelineDialect="initPipelineDialect"
+      @change="handleChangeForm"
+      @clearValidate="handleClearValidate"
+    />
   </bk-form>
 </template>
 
@@ -151,14 +164,22 @@ onMounted(async () => {
     font-size: 12px;
   }
   .project-form {
+    .bk-collapse-header {
+      .bk-collapse-title {
+        margin-left: 12px;
+      }
+      .bk-collapse-icon {
+        left: 0;
+      }
+    }
     .bk-collapse-content {
       padding: 0;
     }
     .bk-collapse-item {
-      margin-bottom: 24px;
+      padding: 16px 32px 0 32px;
+      background-color: #fff;
     }
     .bk-form-item {
-      width: 1000px;
       margin: 0 auto;
       margin-bottom: 24px;
     }
@@ -173,8 +194,7 @@ onMounted(async () => {
   }
   .project-tab {
     width: 100%;
-    padding: 20px 30px;
-    background-color: #fff;
+    padding: 20px 0;
     .sub-title {
       font-size: 14px;
       border-bottom: 2px solid #DCDEE5;
@@ -184,5 +204,8 @@ onMounted(async () => {
       margin-top: 10px;
       max-width: 1000px;
     }
+  }
+  .has-bottom-border {
+    border-bottom: 1px solid #DCDEE5;
   }
 </style>

@@ -36,22 +36,25 @@ const currentDialect = ref();
 const isDialectDialog = ref(false);
 
 const fetchProjectData = async () => {
-  isLoading.value = true;
-  await http.requestProjectData({
-    englishName: projectCode,
-  }).then((res) => {
+  try {
+    isLoading.value = true;
+    const [projectDatas, metadataList] = await Promise.all([
+      http.requestProjectData({englishName: projectCode}),
+      http.getMetadataList(projectCode)
+    ])
     projectData.value = {
-      ...res,
+      ...projectDatas,
       properties: {
         pipelineDialect: 'CLASSIC',
         loggingLineLimit: null,
-        ...res.properties,
+        ...projectDatas.properties,
       },
+      metadatas: metadataList
     };
-    currentDialect.value = res.properties?.pipelineDialect || 'CLASSIC';
+    currentDialect.value = projectDatas.properties?.pipelineDialect || 'CLASSIC';
     if (projectData.value.centerId === '0') projectData.value.centerId = ''
     if (projectData.value.projectType === 0) projectData.value.projectType = ''
-  }).catch((err) => {
+  } catch (err) {
     if (err.code === 403) {
       hasPermission.value = false
     } else {
@@ -60,8 +63,9 @@ const fetchProjectData = async () => {
         message: err.message || err,
       })
     }
-  });
-  isLoading.value = false;
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 /**
@@ -101,12 +105,13 @@ const handleFormChange = (val: boolean) => {
 const infoBoxInstance = ref();
 
 const updateProject = async () => {
+  const { metadatas, ...projectDatas } = projectData.value;
   infoBoxInstance.value?.hide()
   btnLoading.value = true;
   const result = await http
     .requestUpdateProject({
       projectId: projectData.value.englishName,
-      projectData: projectData.value,
+      projectData: projectDatas,
     })
     .catch((err) => {
       if (err.code === 403) {
@@ -208,39 +213,41 @@ onMounted(() => {
         @initProjectForm="initProjectForm">
       </project-form>
       <div class="btn-group">
-        <Popover
-          :content="statusDisabledTips[projectData?.approvalStatus]"
-          :disabled="![1, 4].includes(projectData?.approvalStatus)"
-          v-perm="{
-            disablePermissionApi: [1, 3, 4].includes(projectData?.approvalStatus),
-            hasPermission: [1, 3, 4].includes(projectData?.approvalStatus),
-            permissionData: {
-              projectId: projectCode,
-              resourceType: RESOURCE_TYPE,
-              resourceCode: projectCode,
-              action: RESOURCE_ACTION.EDIT
-            }
-          }"
-        >
-          <span>
-            <bk-button
-              class="btn mr10"
-              :disabled="[1, 4].includes(projectData?.approvalStatus)"
-              theme="primary"
-              :loading="btnLoading"
-              @click="handleUpdate"
-            >
-              {{ t('提交更新') }}
-            </bk-button>
-          </span>
-        </Popover>
-        <bk-button
-          class="btn"
-          :loading="btnLoading"
-          @click="handleCancel"
-        >
-          {{ t('取消') }}
-        </bk-button>
+        <div class="buttons">
+          <Popover
+            :content="statusDisabledTips[projectData?.approvalStatus]"
+            :disabled="![1, 4].includes(projectData?.approvalStatus)"
+            v-perm="{
+              disablePermissionApi: [1, 3, 4].includes(projectData?.approvalStatus),
+              hasPermission: [1, 3, 4].includes(projectData?.approvalStatus),
+              permissionData: {
+                projectId: projectCode,
+                resourceType: RESOURCE_TYPE,
+                resourceCode: projectCode,
+                action: RESOURCE_ACTION.EDIT
+              }
+            }"
+          >
+            <span>
+              <bk-button
+                class="btn mr10"
+                :disabled="[1, 4].includes(projectData?.approvalStatus)"
+                theme="primary"
+                :loading="btnLoading"
+                @click="handleUpdate"
+              >
+                {{ t('提交更新') }}
+              </bk-button>
+            </span>
+          </Popover>
+          <bk-button
+            class="btn"
+            :loading="btnLoading"
+            @click="handleCancel"
+          >
+            {{ t('取消') }}
+          </bk-button>
+        </div>
       </div>
     </section>
     <bk-exception
@@ -303,7 +310,7 @@ onMounted(() => {
       height: 8px !important;
     }
     .edit-project-form {
-      width: 100%;
+      width: 1200px;
       flex: 1;
       margin: 0 auto;
       :deep(.bk-form-label) {
@@ -323,6 +330,10 @@ onMounted(() => {
       line-height: 48px;
       background: #FAFBFD;
       box-shadow: 0 -1px 0 0 #DCDEE5;
+      .buttons {
+        width: 1200px;
+        margin: 0 auto;
+      }
     }
     .mr10 {
       margin-right: 10px;

@@ -128,9 +128,9 @@ const handleCancel = () => {
       height: 8px !important;
     }
     .create-project-form {
-      position: relative;
-      padding: 0 16px;
+      width: 1200px;
       flex: 1;
+      margin: 0 auto;
     }
     .btn-group {
       position: fixed;

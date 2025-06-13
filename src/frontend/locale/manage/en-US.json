@@ -360,6 +360,15 @@
     "元数据类型": "Metadata Type",
     "枚举值（单选）": "Enumeration Values (Single Choice)",
     "元数据别名": "Metadata Alias",
-    "添加元数据": "Add Metadata",
-    "内置": "Built-in"
+    "新建元数据": "Create New Metadata",
+    "内置": "Built-in",
+    "编辑元数据": "Edit Metadata",
+    "字符串": "String",
+    "开启颜色配置": "Enable Color Configuration",
+    "属于制品质量分组的元数据，将在制品列表、制品详情等页面展示": "The metadata belonging to the artifact quality group will be displayed on pages such as the artifact list and artifact details",
+    "项目设置": "Project Settings",
+    "枚举值不能重复": "Enumeration values cannot be duplicated",
+    "枚举值不能为空": "Enumeration values cannot be empty",
+    "元数据键不能为空": "Metadata key cannot be empty",
+    "高级设置": "Advanced Settings"
 }

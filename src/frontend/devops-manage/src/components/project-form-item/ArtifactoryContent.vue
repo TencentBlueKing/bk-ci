@@ -2,7 +2,8 @@
   <div>
     <bk-form-item
       :label="t('制品质量元数据')"
-      property="metadata"
+      property="metadatas"
+      :required="true"
       :description="t('当制品标记了此配置中的元数据时，在构建历史，构建详情总结界面，将展示对应的质量标签，便于用户快速了解构建产出的制品质量。')"
     >
       <p
@@ -13,9 +14,9 @@
         <span>{{ t('添加') }}</span>
       </p>
       <bk-table
-        :border="['outer']"
-        :max-height="495"
-        :data="metadataList"
+        :border="['row']"
+        :max-height="500"
+        :data="projectData.metadatas"
         show-overflow-tooltip
         :pagination="pipelinePagination"
         remote-pagination
@@ -26,7 +27,7 @@
       >
         <bk-table-column
           :label="t('元数据键')"
-          prop="key"
+          prop="labelKey"
           :width="200"
           showOverflowTooltip
         >
@@ -36,7 +37,7 @@
                 <span class="tag">{{ t('内置') }}</span>
               </p>
               <div class="key-group">
-                <p text>{{ row.key }}</p>
+                <p text>{{ row.labelKey }}</p>
                 <p class="name">{{ row.name }}</p>
               </div>
             </div>
@@ -44,29 +45,29 @@
         </bk-table-column>
         <bk-table-column
           :label="t('枚举值')"
-          prop="enums"
+          prop="labelColorMap"
         >
           <template #default="{row}">
-            <div v-for="item in row.enums">
+            <div v-for="(color, key) in row.labelColorMap">
               <p>
-                <span :style="{backgroundColor: item.color}" class="enums-icon"></span>
-                <span>{{ item.value }}</span>
+                <span :style="{backgroundColor: color}" class="enums-icon"></span>
+                <span>{{ key }}</span>
               </p>
             </div>
           </template>
         </bk-table-column>
         <bk-table-column
           :label="t('分组')"
-          prop="group"
+          prop="category"
         >
           <template #default="{row}">
-            <span v-if="row.group" class="tag">{{ row.group}}</span>
+            <span v-if="row.category" class="tag">{{ row.category}}</span>
             <span v-else>--</span>
           </template>
         </bk-table-column>
         <bk-table-column
           :label="t('描述')"
-          prop="describe"
+          prop="description"
         />
         <bk-table-column
           :label="t('启用')"
@@ -93,8 +94,8 @@
   </div>
 
   <bk-sideslider
-    v-model:isShow="isShowMetadataAdd"
-    :title="t('添加元数据')"
+    v-model:isShow="isShowMetadataForm"
+    :title="metadaSidesliderTitle"
     renderDirective="if"
     :width="640"
   >
@@ -108,70 +109,81 @@
     >
       <bk-form-item
         :label="t('元数据键')"
-        property="key"
-        required
+        property="labelKey"
+        :required="true"
       >
         <bk-input
-          v-model="metadataForm.key"
+          v-model.trim="metadataForm.labelKey"
+          :disabled="!isAdd"
           :placeholder="t('由字母、数字和下划线组成，且以英文字母开头')"
           clearable
         />
       </bk-form-item>
       <bk-form-item
-        :label="t('元数据别名')"
-        property="name"
-      >
-        <bk-input
-          v-model="metadataForm.name"
-          placeholder="请输入"
-          clearable
-        />
-      </bk-form-item>
-      <bk-form-item
         :label="t('元数据分组')"
-        property="group"
+        property="category"
       >
-        <bk-select v-model="metadataForm.group">
+        <bk-select v-model="metadataForm.category">
           <bk-option
             label="质量"
-            value="1"
+            value="质量"
           />
         </bk-select>
+        <span class="tips">{{ t('属于制品质量分组的元数据，将在制品列表、制品详情等页面展示') }}</span>
       </bk-form-item>
       <bk-form-item
         :label="t('元数据类型')"
-        property="type"
+        property="enumType"
         required
       >
-        <bk-radio-group v-model="metadataForm.type">
-          <bk-radio label="枚举值" />
-          <bk-radio label="字符串" :disabled="metadataForm.group === '1'" />
+        <bk-radio-group v-model="metadataForm.enumType">
+          <bk-radio :label="true">{{ t('枚举值') }}</bk-radio>
+          <bk-radio :label="false" :disabled="metadataForm.category === '质量'">{{ t('字符串') }}</bk-radio>
         </bk-radio-group>
       </bk-form-item>
       <bk-form-item
-        v-if="metadataForm.type === '枚举值'"
-        :label="t('枚举值（单选）')"
-        property="enums"
+        v-if="metadataForm.enumType"
+        property="labelColorMap"
         required
+        class="enums"
       >
+        <template #label>
+          <span>{{ t('枚举值（单选）') }}</span>
+        </template>
+        <div class="enums-enable">
+          <bk-switcher
+            v-model="metadataForm.enableColorConfig"
+            theme="primary"
+          />
+          <span>{{ t('开启颜色配置') }}</span>
+        </div>
         <div>
           <div
-            v-for="(item, index) in metadataForm.enums"
+            v-for="(item, index) in metadataForm.labelColorMap"
             :key="index"
-            class="enums-list"
+            class="enums-content"
           >
-            <bk-color-picker
-              :recommend="false"
-              v-model="item.color"
-            >
-              <template #trigger>
-                <div :style="{backgroundColor: item.color}" class="color-picker" ></div>
-              </template>
-            </bk-color-picker>
-            <bk-input
-              v-model="item.value"
-            />
-            <Del width="15" height="15" fill="#979BA5" @click="removeEnumValue(index)" />
+            <div class="enums-list">
+              <bk-color-picker
+                v-if="metadataForm.enableColorConfig"
+                :recommend="false"
+                v-model="item.color"
+              >
+                <template #trigger>
+                  <div :style="{backgroundColor: item.color}" class="color-picker" ></div>
+                </template>
+              </bk-color-picker>
+              <bk-input
+                v-model.trim="item.value"
+                :class="{ 'input-error': enumErrors[index] }"
+                @blur="validateEnum(index)"
+                @input="validateEnum(index)"
+              />
+              <Del width="15" height="15" fill="#979BA5" @click="removeEnumValue(index)" />
+            </div>
+            <span v-if="enumErrors[index]" class="error-message">
+              {{ enumErrors[index] === 'required' ? t('枚举值不能为空') : t('枚举值不能重复') }}
+            </span>
           </div>
           <p
             @click="addEnumValue"
@@ -184,22 +196,20 @@
       </bk-form-item>
       <bk-form-item
         :label="t('描述')"
-        property="describe"
+        property="description"
       >
         <bk-input
-          v-model="metadataForm.describe"
+          v-model="metadataForm.description"
           placeholder="请输入"
           :rows="3"
           :maxlength="100"
           type="textarea"
         />
       </bk-form-item>
-
-      
     </bk-form>
     <div class="btn-group">
-      <bk-button theme="primary" @click="handleMetadataAdd"> {{t('添加')}} </bk-button>
-      <bk-button> {{t('取消')}} </bk-button>
+      <bk-button theme="primary" @click="handleMetadataSubmit"> {{t('确定')}} </bk-button>
+      <bk-button @click="handleMetadataCancel"> {{t('取消')}} </bk-button>
     </div>
   </template>
   </bk-sideslider>
@@ -207,60 +217,36 @@
 
 <script setup name="MetadataFormItem">
 import http from '@/http/api';
-import { ref } from 'vue';
+import { computed, ref, reactive, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Del } from 'bkui-vue/lib/icon';
+import { useRoute } from 'vue-router';
+import { InfoBox, Message } from 'bkui-vue';
 
 const { t } = useI18n();
+const route = useRoute();
+const { projectCode } = route.params;
 const props = defineProps({
   data: {
     type: Object,
     required: true
   },
-  type: String
+  type: String,
+  isRbac: Boolean,
+  initPipelineDialect: String
 });
 const emits = defineEmits(['handleChangeForm', 'beforeChange']);
 
 const projectData = ref(props.data);
-const isShowMetadataAdd = ref(false);
-const metadataList = ref([{
-  key: '1FSDDDXVDFSVD_DJJ_K1',
-  name: 'sdf',
-  group: '质量',
-  type: '枚举值',
-  isEnable: true,
-  enums:[
-    { color: '#EAA7A7', value: 'Signed' },
-    { color: '#FFFFFF', value: 'Medium' },
-    { color: '#E61717', value: '123' }
-  ],
-  describe: '一段描述'
-},{
-  key: 'FSCEFGV',
-  name: 'sdf',
-  group: '',
-  type: '枚举值',
-  isEnable: true,
-  enums:[
-    { color: '#FFFFFF', value: 'Signed' },
-    { color: '#E61717', value: 'gddfbcv' }
-  ],
-  describe: ''
-}]);
+const enumErrors = reactive({});
+const isShowMetadataForm = ref(false);
+const isAdd = ref(false);
 const pipelinePagination = ref({ count: 0, limit: 20, current: 1 });
 const metadataFormRef = ref();
-const metadataForm = ref({
-  key: '',
-  name: '',
-  group: '',
-  type: '枚举值',
-  enums: [
-    { color: '#FFFFFF', value: '' },
-  ],
-  describe: ''
-})
+const metadataForm = ref(getFormData())
 const metadataRules = {
-  name: [
+  labelKey: [
+    { required: true, message: t('元数据键不能为空'), trigger: 'blur' },
     {
       validator: (value) => /^[a-zA-Z][a-zA-Z0-9_]*$/.test(value),
       message: t('由字母、数字和下划线组成，且以英文字母开头'),
@@ -268,15 +254,110 @@ const metadataRules = {
     }
   ],
 };
+const metadaSidesliderTitle = computed(() => isAdd.value ? t('新建元数据') : t('编辑元数据'))
 
-const addEnumValue = () => {
-  metadataForm.value.enums.push({ color: '#FFFFFF', value: '' });
+watch(() => metadataForm.value.enableColorConfig, (newValue) => {
+  if (!newValue) {
+    metadataForm.value.labelColorMap.forEach(item => {
+      item.color = '#C4C6CC';
+    });
+  }
+}, { immediate: true });
+
+watch(()=> metadataForm.value.category, (newValue)=>{
+  if (newValue === '质量') {
+    metadataForm.value.enumType = true
+  }
+}, { immediate: true })
+
+function getFormData () {
+  return {
+    labelKey: '',
+    category: '',
+    enumType: true,
+    enableColorConfig: true,
+    labelColorMap: [
+      { color: '#C4C6CC', value: '' },
+    ],
+    description: ''
+  }
+}
+
+function addEnumValue () {
+  metadataForm.value.labelColorMap.push({
+    value: '',
+    color: '#C4C6CC'
+  });
+
+  const newIndex = metadataForm.value.labelColorMap.length - 1;
+  enumErrors[newIndex] = null;
 };
 
-const removeEnumValue = (index) => {
-  metadataForm.value.enums.splice(index, 1);
+function removeEnumValue (index) {
+  metadataForm.value.labelColorMap.splice(index, 1);
+
+  const value = metadataForm.value.labelColorMap[index]?.value;
+  value && delete enumErrors[index];
+  validateAllEnums()
 };
 
+function validateEnum (index) {
+  const value = metadataForm.value.labelColorMap[index]?.value;
+  enumErrors[index] = value ? null : 'required';
+  validateAllEnumsForDuplicates();
+};
+/**
+ * 检查重复值并更新错误状态
+ */
+function validateAllEnumsForDuplicates() {
+  const valueIndexes = {};
+  metadataForm.value.labelColorMap.forEach((item, index) => {
+    if (item.value) {
+      if (!valueIndexes[item.value]) {
+        valueIndexes[item.value] = [];
+      }
+      valueIndexes[item.value].push(index);
+    }
+  });
+
+  // 先重置所有重复错误
+  for (const key in enumErrors) {
+    if (enumErrors[key] === 'duplicate') {
+      enumErrors[key] = null;
+    }
+  }
+
+  // 标记新的重复错误
+  for (const value in valueIndexes) {
+    const indices = valueIndexes[value];
+    if (indices.length > 1) {
+      indices.forEach(index => {
+        enumErrors[index] = 'duplicate';
+      });
+    }
+  }
+  
+  return valueIndexes;
+}
+/**
+ * 校验所有枚举值
+ */
+function validateAllEnums() {
+  Object.keys(enumErrors).forEach(key => {
+    enumErrors[key] = null;
+  });
+  
+  let hasEmptyValue = false;
+  metadataForm.value.labelColorMap.forEach((item, index) => {
+    if (!item.value) {
+      enumErrors[index] = 'required';
+      hasEmptyValue = true;
+    }
+  });
+
+  const valueToIndices = validateAllEnumsForDuplicates();
+  return !hasEmptyValue && Object.keys(valueToIndices).every(value => valueToIndices[value].length === 1);
+}
 async function fetchListViewPipelines () {
   try {
     isLoading.value = true;
@@ -305,27 +386,132 @@ function pageValueChange (value) {
 }
 
 function showMetadataAdd () {
-  isShowMetadataAdd.value = true;
+  isAdd.value = true;
+  isShowMetadataForm.value = true;
 }
 
-function handleMetadataAdd () {
-  console.log(metadataForm.value, '表单数据');
-  metadataList.value.push(metadataForm.value)
+function convertArrayToObject (arr) {
+  return arr.reduce((obj, item) => {
+    if (item.value) {
+      obj[item.value] = item.color;
+    }
+    return obj;
+  }, {});
+};
+
+async function createMetadata(metadataParams) {
+  const res = await http.createdMetadata(projectCode, metadataParams);
+  if (res) {
+    projectData.value.metadatas.push(metadataParams);
+  }
+}
+
+async function updateMetadata(metadataParams) {
+  const labelKey = metadataParams.labelKey;
+  const res = await http.updateMetadata(projectCode, labelKey, metadataParams);
+  if (res) {
+    const index = projectData.value.metadatas.findIndex(item => item.labelKey === labelKey);
+    if (index !== -1) {
+      projectData.value.metadatas[index] = metadataParams;
+    }
+  }
+}
+
+async function handleMetadataSubmit () {
+  try {
+    if (metadataForm.value.enumType && !validateAllEnums()) return;
+    
+    const valid = await metadataFormRef.value.validate();
+    if (valid) {
+      const { labelColorMap, ...baseForm } = metadataForm.value;
+      const metadataParams = {
+        ...baseForm,
+        ...(metadataForm.value.enumType ? {labelColorMap: convertArrayToObject(metadataForm.value.labelColorMap)}:{})
+      };
+
+      if (isAdd.value) {
+        await createMetadata(metadataParams);
+      } else {
+        await updateMetadata(metadataParams);
+      }
+
+      Message({
+        theme: 'success',
+        message: t('保存成功'),
+      });
+      isShowMetadataForm.value = false;
+    }
+  } catch (err) {
+    Message({
+      theme: 'error',
+      message: err.message || err,
+    });
+  }
+}
+function handleMetadataCancel () {
+  isShowMetadataForm.value = false;
+  metadataForm.value = getFormData();
+  Object.keys(enumErrors).forEach(key => {
+    enumErrors[key] = false;
+  });
+}
+function convertObjectToArray(labelColorMap) {
+  if (labelColorMap && typeof labelColorMap === 'object' && Object.keys(labelColorMap).length) {
+    return Object.entries(labelColorMap).map(([value, color]) => {
+      return {
+        value,
+        color
+      }
+    });
+  }
+  return [{ color: '#C4C6CC', value: '' }];
 }
 
 function handleEdit (row) {
-  isShowMetadataAdd.value = true;
-  metadataForm.value = row;
+  isShowMetadataForm.value = true;
+  isAdd.value = false;
+  metadataForm.value = {
+    ...row,
+    labelColorMap: convertObjectToArray(row.labelColorMap)
+  };
 }
 
-function handleDelete (row) {
-
+async function handleDelete (row) {
+  InfoBox({
+    infoType: 'warning',
+    title: t('确定删除此元数据吗？'),
+    contentAlign: 'center',
+    headerAlign: 'center',
+    footerAlign: 'center',
+    onConfirm: async () => {
+      try {
+        const labelKey = row.labelKey;
+        const res = await http.deleteMetadata(projectCode, labelKey);
+        if (res) {
+          projectData.value.metadatas = projectData.value.metadatas.filter(
+            item => item.labelKey !== labelKey
+          );
+          Message({
+            theme: 'success',
+            message: t('删除成功'),
+          });
+        }
+      } catch (err) {
+        Message({
+          theme: 'error',
+          message: err.message || err,
+        });
+      }
+    },
+    onClosed: () => true,
+  });
 }
 
 </script>
 
 <style lang="scss" scoped>
 .metadata-add {
+  width: 150px;
   font-size: 12px;
   color: #3A84FF;
   cursor: pointer;
@@ -370,6 +556,23 @@ function handleDelete (row) {
 .metadata-slider {
   margin: 16px 24px;
   height: calc(100% - 38px);
+  .tips {
+    color: #979BA5;
+  }
+  .enums {
+    position: relative;
+  }
+  .enums-enable{
+    color: #4D4F56;
+    font-size: 14px;
+    position: absolute;
+    top: -32px;
+    right: 0;
+    span {
+      padding-bottom: 2px;
+      border-bottom: 1px dashed #979BA5;
+    }
+  }
 }
 .btn-group {
   margin: 32px 24px 0;
@@ -377,10 +580,12 @@ function handleDelete (row) {
   bottom: 0;
   background-color: #fff;
 }
+.enums-content {
+  margin-bottom: 12px;
+}
 .enums-list {
   display: flex;
   grid-gap: 8px;
-  margin-bottom: 12px;
 
   .bk-input {
     flex: 1;
@@ -395,5 +600,13 @@ function handleDelete (row) {
 .bk-color-picker.bk-color-picker-show-value {
   border: none;
   width: 32px;
+}
+.input-error {
+  border-color: #ff5656 !important;
+}
+.error-message {
+  color: #ff5656;
+  font-size: 12px;
+  margin-top: 4px;
 }
 </style>

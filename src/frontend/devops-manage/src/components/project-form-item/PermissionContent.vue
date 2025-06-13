@@ -8,6 +8,7 @@
       <bk-tag
         v-for="(subjectScope, index) in projectData.subjectScopes"
         :key="index"
+        class="mr4"
       >
         {{ subjectScope.id === '*' ? t('全员') : subjectScope.name }}
       </bk-tag>
@@ -48,7 +49,10 @@ const props = defineProps({
   data: {
     type: Object,
     required: true
-  }
+  },
+  type: String,
+  isRbac: Boolean,
+  initPipelineDialect: String,
 });
 const emits = defineEmits(['handleChangeForm']);
 

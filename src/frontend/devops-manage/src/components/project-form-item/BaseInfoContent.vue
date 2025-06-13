@@ -98,7 +98,8 @@ const props = defineProps({
     required: true
   },
   type: String,
-  isRbac: Boolean
+  isRbac: Boolean,
+  initPipelineDialect: String
 });
 const emits = defineEmits(['handleChangeForm', 'clearValidate']);
 
