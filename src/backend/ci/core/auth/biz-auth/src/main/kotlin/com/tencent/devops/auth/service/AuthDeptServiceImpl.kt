@@ -327,7 +327,7 @@ class AuthDeptServiceImpl(
         return if (departedMembersCache.getIfPresent(userId) == true) {
             true
         } else {
-            getUserInfo(userId) == null
+            getUserAndPutInCache(userId) == null
         }.also {
             if (it) {
                 departedMembersCache.put(userId, true)
