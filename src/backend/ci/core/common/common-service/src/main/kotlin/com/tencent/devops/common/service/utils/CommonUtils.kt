@@ -39,18 +39,18 @@ import com.tencent.devops.common.service.PROFILE_DEVELOPMENT
 import com.tencent.devops.common.service.PROFILE_PRODUCTION
 import com.tencent.devops.common.service.PROFILE_TEST
 import com.tencent.devops.common.service.Profile
-import org.apache.commons.lang3.StringUtils
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
-import org.springframework.context.i18n.LocaleContextHolder
-import org.springframework.web.context.request.RequestContextHolder
-import org.springframework.web.context.request.ServletRequestAttributes
 import java.io.File
 import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.SocketException
 import java.util.Enumeration
+import org.apache.commons.lang3.StringUtils
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.springframework.context.i18n.LocaleContextHolder
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 
 object CommonUtils {
 
@@ -155,7 +155,7 @@ object CommonUtils {
         logger.info("serviceUploadFile serviceUrl is:$serviceUrl")
         OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
             val responseContent = response.body!!.string()
-            logger.error("uploadFile responseContent is: $responseContent")
+            logger.info("uploadFile responseContent is: $responseContent")
             if (!response.isSuccessful) {
                 val message = MessageUtil.getMessageByLocale(
                     messageCode = CommonMessageCode.SYSTEM_ERROR,
