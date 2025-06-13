@@ -19,7 +19,8 @@
         <component
             ref="form"
             :is="comName"
-        ></component>
+            :oauth-user-list="oauthUserList"
+        />
         <footer slot="footer">
             <template v-if="showDialogFooter">
                 <bk-button
@@ -80,6 +81,10 @@
             refreshCodelibList: {
                 type: Function,
                 required: true
+            },
+            oauthUserList: {
+                type: Array,
+                default: () => []
             }
         },
         data () {
@@ -225,21 +230,21 @@
                 }
             },
             
-            codelib: {
-                deep: true,
-                handler: async function (newVal, oldVal) {
-                    if (newVal.authType === oldVal.authType && newVal['@type'] === oldVal['@type'] && !this.isShow) return
+            'codelib.scmCode': {
+                handler: async function (newVal) {
                     const { projectId, codelibTypeConstants } = this
-                    if (newVal['@type']?.startsWith('scm') && newVal.credentialType === 'OAUTH') {
+                    if (this.codelib['@type']?.startsWith('scm') && this.codelib.credentialType === 'OAUTH') {
                         await this.checkScmOAuth({
                             projectId,
-                            scmCode: newVal.scmCode,
-                            type: codelibTypeConstants
+                            scmCode: this.codelib.scmCode,
+                            type: codelibTypeConstants,
+                            userName: newVal
                         })
-                    } else if (newVal.authType === 'OAUTH' && !this.hasValidate) {
+                    } else if (this.codelib.authType === 'OAUTH') {
                         await this.checkOAuth({
                             projectId,
-                            type: codelibTypeConstants
+                            type: codelibTypeConstants,
+                            userName: newVal
                         })
                     }
                 }
@@ -346,7 +351,8 @@
                     credentialId: '',
                     projectName: '',
                     authType: '',
-                    svnType: ''
+                    svnType: '',
+                    userName: ''
                 })
             }
         }

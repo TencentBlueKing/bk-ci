@@ -45,6 +45,25 @@
                 </div>
             </div>
         </bk-form-item>
+        <bk-form-item
+            v-if="isOAUTH"
+            :label="$t('codelib.authorizeAccount')"
+            :required="true"
+            property="userName"
+        >
+            <bk-select
+                v-model="codelib.userName"
+                :clearable="false"
+            >
+                <bk-option
+                    v-for="user in oauthUserList"
+                    :key="user.operator"
+                    :id="user.operator"
+                    :name="user.operator"
+                >
+                </bk-option>
+            </bk-select>
+        </bk-form-item>
         <template v-if="oAuth.hasPower && isOAUTH">
             <bk-form-item
                 :label="$t('codelib.address')"

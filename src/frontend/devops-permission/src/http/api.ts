@@ -49,14 +49,14 @@ export default {
     return fetch.get(`${repositoryPerfix}/repositories/oauth`)
   },
   // 删除oauth授权
-  deleteOauth(type: any) {
-    return fetch.delete(`${repositoryPerfix}/repositories/oauth//delete?scmCode=${type}`)
+  deleteOauth(type: any, username: string) {
+    return fetch.delete(`${repositoryPerfix}/repositories/oauth/delete?scmCode=${type}&username=${username}`)
   },
   getOauthRelSource(type: any, page: Number, pageSize: Number) {
     return fetch.get(`${repositoryPerfix}/repositories/oauth/relSource?scmCode=${type}&page=${page}&pageSize=${pageSize}`)
   },
-  refreshOauth(oauthType: any, redirectUrl: any) {
-    return fetch.post(`${repositoryPerfix}/repositories/oauth/reset?scmCode=${oauthType}&redirectUrl=${redirectUrl}`)
+  refreshOauth(oauthType: any, username: string, redirectUrl: any) {
+    return fetch.post(`${repositoryPerfix}/repositories/oauth/reset?scmCode=${oauthType}&username=${username}&redirectUrl=${redirectUrl}`)
   },
   /**
    * 获取（代码库、流水线、部署节点）授权列表
