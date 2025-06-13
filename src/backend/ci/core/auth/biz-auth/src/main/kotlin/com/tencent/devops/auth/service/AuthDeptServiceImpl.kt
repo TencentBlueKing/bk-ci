@@ -259,7 +259,7 @@ class AuthDeptServiceImpl(
     }
 
     override fun getUserInfo(userId: String, name: String): UserAndDeptInfoVo? {
-        return userInfoCache.getIfPresent(userId) ?: getUserAndPutInCache(userId)
+        return userInfoCache.getIfPresent(name) ?: getUserAndPutInCache(name)
     }
 
     override fun getMemberInfo(
