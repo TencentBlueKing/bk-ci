@@ -136,7 +136,7 @@ class PipelineMetricsInfoDao {
         with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
             return dslContext.select(PIPELINE_ID, URL)
                 .from(this)
-                .where(STATISTICS_TIME.eq(LocalDate.now().atStartOfDay()))
+                .where(STATISTICS_TIME.eq(statisticsTime))
                 .and(PROJECT_ID.eq(projectId))
                 .and(IS_INVALID_PIPELINE.eq(true))
                 .fetch()
