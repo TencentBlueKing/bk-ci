@@ -238,13 +238,13 @@
                             projectId,
                             scmCode: this.codelib.scmCode,
                             type: codelibTypeConstants,
-                            userName: newVal
+                            username: newVal
                         })
                     } else if (this.codelib.authType === 'OAUTH') {
                         await this.checkOAuth({
                             projectId,
                             type: codelibTypeConstants,
-                            userName: newVal
+                            username: newVal
                         })
                     }
                 }

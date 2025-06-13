@@ -293,14 +293,14 @@ const actions = {
         scmCode,
         type,
         search = '',
-        userName
+        username
     }) {
         try {
             const query = {
                 projectId,
                 scmCode,
                 search,
-                userName
+                username
             }
             commit(DIALOG_LOADING_MUTATION, true)
             const queryStr = Object.keys(query).filter(key => query[key]).map(key => `${key}=${query[key]}`).join('&')
@@ -328,14 +328,14 @@ const actions = {
         repositoryHashId,
         search = '',
         type = 'git',
-        userName
+        username
     }) {
         try {
             const query = {
                 projectId,
                 repositoryHashId,
                 search,
-                userName
+                username
             }
             commit(DIALOG_LOADING_MUTATION, true)
             const queryStr = Object.keys(query).filter(key => query[key]).map(key => `${key}=${query[key]}`).join('&')

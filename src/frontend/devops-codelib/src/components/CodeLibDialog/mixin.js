@@ -321,7 +321,7 @@ export default {
                 projectId,
                 type: codelibTypeConstants,
                 search,
-                userName: this.codelib.userName
+                username: this.codelib.userName
             })
         },
 
@@ -332,7 +332,7 @@ export default {
                 type: codelibTypeConstants,
                 scmCode: this.codelib.scmCode,
                 search,
-                userName: this.codelib.userName
+                username: this.codelib.userName
             })
         },
 
