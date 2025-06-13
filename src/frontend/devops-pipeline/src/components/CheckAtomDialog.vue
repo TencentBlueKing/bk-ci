@@ -6,8 +6,6 @@
         :width="650"
         :position="{ top: '100' }"
         :auto-close="false"
-        @confirm="handleAtomCheck"
-        @cancel="cancleAtomCheck"
     >
         <div v-bkloading="{ isLoading }">
             <bk-form
@@ -73,6 +71,22 @@
                 </bk-form-item>
             </bk-form>
         </div>
+        <template #footer>
+            <bk-button
+                :theme="'primary'"
+                :disabled="isReviewer"
+                @click="handleAtomCheck"
+                class="mr10"
+            >
+                {{ $t('confirm') }}
+            </bk-button>
+            <bk-button
+                :theme="'default'"
+                @click="cancelAtomCheck"
+            >
+                {{ $t('cancel') }}
+            </bk-button>
+        </template>
     </bk-dialog>
 </template>
 
@@ -137,6 +151,9 @@
         computed: {
             routerParams () {
                 return this.$route.params
+            },
+            isReviewer () {
+                return !this.data.buildId
             }
         },
         watch: {
@@ -156,7 +173,7 @@
                 'getCheckAtomInfo',
                 'handleCheckAtom'
             ]),
-            cancleAtomCheck () {
+            cancelAtomCheck () {
                 this.toggleCheck(false)
                 this.$refs.checkForm.clearError()
             },

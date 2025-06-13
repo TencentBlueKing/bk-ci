@@ -104,7 +104,7 @@ init:
       code: downloadArtifact
     - url: https://github.com/TencentBlueKing/ci-plugin-perforce-sync/releases/download/v1.0.13/PerforceSync_en.zip
       code: PerforceSync
-    - url: https://github.com/TencentBlueKing/ci-CodeCCCheckAtom/releases/download/v0.0.12/CodeCCCheckAtom_en.zip
+    - url: https://github.com/TencentBlueKing/ci-CodeCCCheckAtom/releases/download/v0.1.4/CodeCCCheckAtom_en.zip
       code: CodeCCCheckAtom
 
 # 多集群开关

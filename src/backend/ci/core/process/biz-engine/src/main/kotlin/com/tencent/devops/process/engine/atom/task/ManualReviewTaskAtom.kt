@@ -204,6 +204,7 @@ class ManualReviewTaskAtom(
                 ),
                 position = null,
                 stageId = null,
+                taskId = param.id,
                 callbackData = mapOf(
                     "projectId" to projectCode,
                     "pipelineId" to pipelineId,

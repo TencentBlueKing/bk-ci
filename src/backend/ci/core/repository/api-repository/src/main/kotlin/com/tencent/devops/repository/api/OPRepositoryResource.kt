@@ -127,4 +127,16 @@ interface OPRepositoryResource {
         @QueryParam("repoHashId")
         repoHashId: String?
     ): Result<Boolean>
+
+    @Operation(summary = "")
+    @PUT
+    @Path("updateRepoScmCode")
+    fun updateRepoScmCode(
+        @Parameter(description = "项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String?,
+        @Parameter(description = "代码库ID", required = false)
+        @QueryParam("repoHashId")
+        repoHashId: String?
+    ): Result<Boolean>
 }

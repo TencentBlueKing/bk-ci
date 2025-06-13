@@ -58,6 +58,16 @@ abstract class AbstractScmApiService(
         authRepository: AuthRepository,
         action: (providerProperties: ScmProviderProperties, providerRepository: ScmProviderRepository) -> T
     ): T {
+        return invokeApi(
+            authRepository = authRepository,
+            action = action
+        )
+    }
+
+    protected fun <T> invokeApi(
+        authRepository: AuthRepository,
+        action: (providerProperties: ScmProviderProperties, providerRepository: ScmProviderRepository) -> T
+    ): T {
         val properties = repositoryScmConfigService.getProps(scmCode = authRepository.scmCode)
         val providerRepository = providerRepositoryFactory.create(
             properties = properties,

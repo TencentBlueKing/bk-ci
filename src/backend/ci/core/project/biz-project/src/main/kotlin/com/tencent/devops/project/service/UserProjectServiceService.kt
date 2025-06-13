@@ -81,5 +81,10 @@ interface UserProjectServiceService {
     /**
      * 查询服务跳转地址
      */
-    fun getServiceUrl(userId: String, projectId: String?, serviceId: Long): Result<String>
+    fun getServiceUrl(
+        userId: String,
+        projectId: String?,
+        pipelineId: String?,
+        serviceId: Long
+    ): Result<String>
 }

@@ -29,7 +29,7 @@ package com.tencent.devops.store.atom.service.impl
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.tencent.bkrepo.common.api.util.toJsonString
-import com.tencent.devops.artifactory.pojo.ArchiveStorePkgRequest
+import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -127,6 +127,11 @@ class OpAtomServiceImpl @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(OpAtomServiceImpl::class.java)
     private val fileSeparator: String = FileSystems.getDefault().separator
+    private val executorService by lazy {
+        Executors.newFixedThreadPool(1).apply {
+            Runtime.getRuntime().addShutdownHook(Thread { shutdown() })
+        }
+    }
 
     /**
      * op系统获取插件信息
@@ -512,15 +517,16 @@ class OpAtomServiceImpl @Autowired constructor(
         }
         try {
             if (file.exists()) {
-                val archiveAtomResult = StoreFileAnalysisUtil.serviceArchiveStoreFile(
+                val archiveAtomResult = StoreFileAnalysisUtil.serviceArchiveAtomFile(
                     userId = userId,
                     client = client,
                     file = file,
-                    archiveStorePkgRequest = ArchiveStorePkgRequest(
-                        storeCode = atomCode,
-                        storeType = StoreTypeEnum.ATOM,
+                    archiveAtomRequest = ArchiveAtomRequest(
+                        atomCode = atomCode,
+                        projectCode = releaseInfo.projectId,
                         version = versionInfo.version,
-                        releaseType = versionInfo.releaseType
+                        releaseType = versionInfo.releaseType,
+                        os = JsonUtil.toJson(releaseInfo.os),
                     )
                 )
                 if (archiveAtomResult.isNotOk()) {
@@ -641,7 +647,7 @@ class OpAtomServiceImpl @Autowired constructor(
     }
 
     override fun updateAtomSensitiveCacheConfig(userId: String, atomCode: String?): Result<Boolean> {
-        Executors.newFixedThreadPool(1).submit {
+        executorService.submit {
             logger.info("begin updateAtomSensitiveCacheConfig!!")
             val statusList = listOf(
                 AtomStatusEnum.TESTING.status.toByte(),

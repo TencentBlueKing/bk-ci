@@ -441,7 +441,8 @@
                     params: {
                         ...to.params,
                         type: 'executeDetail'
-                    }
+                    },
+                    query: to.query
                 })
             } else {
                 next()

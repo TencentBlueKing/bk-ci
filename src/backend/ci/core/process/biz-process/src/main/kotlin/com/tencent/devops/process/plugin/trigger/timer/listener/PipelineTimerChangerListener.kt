@@ -76,7 +76,15 @@ class PipelineTimerChangerListener @Autowired constructor(
                     schedulerManager.deleteJob(taskComboKey)
                 }
                 if (ActionType.REFRESH == (event.actionType)) {
-                    val success = schedulerManager.addJob(taskComboKey, crontab, jobBeanClass)
+                    val success = schedulerManager.addJob(
+                        key = taskComboKey,
+                        cronExpression = crontab,
+                        jobBeanClass = jobBeanClass,
+                        projectId = event.projectId,
+                        pipelineId = pipelineId,
+                        taskId = event.taskId ?: "",
+                        md5 = md5
+                    )
                     logger.info("[$pipelineId]|TimerChange|crontab=$crontab|success=$success")
                 }
             }

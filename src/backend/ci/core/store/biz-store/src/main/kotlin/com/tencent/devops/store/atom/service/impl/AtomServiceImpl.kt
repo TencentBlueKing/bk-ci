@@ -218,7 +218,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     /**
      * 获取插件列表
      */
-    @Suppress("UNCHECKED_CAST")
     @BkTimed(extraTags = ["get", "getPipelineAtom"], value = "store_get_pipeline_atom")
     override fun getPipelineAtoms(
         userId: String,
@@ -332,12 +331,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         var memberDataMap: Map<String, MutableList<String>>? = null
         var installedAtomList: List<String>? = null
         var userDeptList: List<Int>? = null
-        if (queryProjectAtomFlag && !atomCodeSet.isNullOrEmpty()) {
+        if (queryProjectAtomFlag && atomCodeSet.isNotEmpty()) {
             atomPipelineCntMap = client.get(ServiceMeasurePipelineResource::class).batchGetPipelineCountByAtomCode(
                 atomCodes = atomCodeSet.joinToString(","),
                 projectCode = projectCode
             ).data
-        } else if (!queryProjectAtomFlag && !atomCodeSet.isNullOrEmpty()) {
+        } else if (!queryProjectAtomFlag && atomCodeSet.isNotEmpty()) {
             val atomCodeList = atomCodeSet.toList()
             atomVisibleDataMap = storeCommonService.generateStoreVisibleData(atomCodeList, StoreTypeEnum.ATOM)
             memberDataMap = atomMemberService.batchListMember(atomCodeList, StoreTypeEnum.ATOM).data
@@ -779,7 +778,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     /**
      * 根据项目代码、插件代码和版本号获取插件信息
      */
-    @Suppress("UNCHECKED_CAST")
     @BkTimed(extraTags = ["get", "getPipelineAtom"], value = "store_get_pipeline_atom")
     override fun getPipelineAtomVersions(
         projectCode: String?,

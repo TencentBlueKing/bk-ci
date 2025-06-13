@@ -29,8 +29,8 @@ package com.tencent.devops.process.engine.interceptor
 
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
+import com.tencent.devops.process.engine.pojo.PipelineInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
@@ -56,5 +56,7 @@ data class InterceptData(
     @get:Schema(title = "并发构建数量限制", required = false)
     val maxConRunningQueueSize: Int, // MULTIPLE类型时，并发构建数量限制
     @get:Schema(title = "是否为重试操作", required = false)
-    val retry: Boolean? = false
+    val retry: Boolean? = false,
+    @get:Schema(title = "是否为运行中重试", required = true)
+    val retryOnRunningBuild: Boolean = false
 )
