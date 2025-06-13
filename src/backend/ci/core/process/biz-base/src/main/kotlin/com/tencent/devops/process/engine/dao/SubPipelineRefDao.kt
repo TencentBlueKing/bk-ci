@@ -106,10 +106,10 @@ class SubPipelineRefDao {
                 PROJECT_ID.eq(projectId).and(
                     PIPELINE_ID.eq(pipelineId)
                 ).let {
-                    if (subProjectId.isNullOrBlank()) {
+                    if (!subProjectId.isNullOrBlank()) {
                         it.and(SUB_PROJECT_ID.eq(subProjectId))
                     }
-                    if (subPipelineId.isNullOrBlank()) {
+                    if (!subPipelineId.isNullOrBlank()) {
                         it.and(SUB_PIPELINE_ID.eq(subPipelineId))
                     }
                     it
