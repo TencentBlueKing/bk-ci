@@ -65,9 +65,9 @@
             >
                 <bk-option
                     v-for="user in oauthUserList"
-                    :key="user.operator"
-                    :id="user.operator"
-                    :name="user.operator"
+                    :key="user.username"
+                    :id="user.username"
+                    :name="user.username"
                 >
                 </bk-option>
             </bk-select>
