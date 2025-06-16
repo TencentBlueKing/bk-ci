@@ -15,6 +15,7 @@ import com.tencent.devops.auth.dao.AuthAuthorizationDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
+import com.tencent.devops.auth.pojo.DepartmentUserCount
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.HandoverDetailDTO
 import com.tencent.devops.auth.pojo.dto.HandoverOverviewCreateDTO
@@ -52,8 +53,10 @@ import com.tencent.devops.auth.pojo.vo.HandoverGroupDetailVo
 import com.tencent.devops.auth.pojo.vo.HandoverOverviewVo
 import com.tencent.devops.auth.pojo.vo.MemberExitsProjectCheckVo
 import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
+import com.tencent.devops.auth.provider.rbac.pojo.event.AuthProjectLevelPermissionsSyncEvent
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.PermissionAuthorizationService
+import com.tencent.devops.auth.service.UserManageService
 import com.tencent.devops.auth.service.iam.PermissionHandoverApplicationService
 import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
@@ -78,6 +81,7 @@ import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationConditionReq
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationHandoverConditionRequest
 import com.tencent.devops.common.auth.enums.HandoverChannelCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
@@ -112,7 +116,9 @@ class RbacPermissionManageFacadeServiceImpl(
     private val authorizationDao: AuthAuthorizationDao,
     private val authResourceService: AuthResourceService,
     private val client: Client,
-    private val config: CommonConfig
+    private val config: CommonConfig,
+    private val userManageService: UserManageService,
+    private val traceEventDispatcher: TraceEventDispatcher
 ) : PermissionManageFacadeService {
     override fun getMemberGroupsDetails(
         projectId: String,
@@ -460,11 +466,14 @@ class RbacPermissionManageFacadeServiceImpl(
             projectCode = projectCode,
             memberId = memberId
         )
+        // 获取用户的所属组织
+        val memberDeptInfos = userManageService.getUserDepartmentPath(memberId)
         return authResourceGroupMemberDao.listMemberGroupIdsInProject(
             dslContext = dslContext,
             projectCode = projectCode,
             memberId = memberId,
-            iamTemplateIds = iamTemplateIds
+            iamTemplateIds = iamTemplateIds,
+            memberDeptInfos = memberDeptInfos
         )
     }
 
@@ -1027,6 +1036,12 @@ class RbacPermissionManageFacadeServiceImpl(
             iamGroupId = groupId,
             expiredTime = DateTimeUtil.convertTimestampToLocalDateTime(finalExpiredAt),
             memberId = targetMember.id
+        )
+        traceEventDispatcher.dispatch(
+            AuthProjectLevelPermissionsSyncEvent(
+                projectCode = projectCode,
+                iamGroupIds = listOf(groupId)
+            )
         )
     }
 
@@ -1602,6 +1617,12 @@ class RbacPermissionManageFacadeServiceImpl(
             handoverTo = handoverMemberDTO.handoverTo,
             expiredTime = DateTimeUtil.convertTimestampToLocalDateTime(finalExpiredAt)
         )
+        traceEventDispatcher.dispatch(
+            AuthProjectLevelPermissionsSyncEvent(
+                projectCode = projectCode,
+                iamGroupIds = listOf(groupId)
+            )
+        )
     }
 
     private fun deleteTask(
@@ -1622,6 +1643,12 @@ class RbacPermissionManageFacadeServiceImpl(
             projectCode = projectCode,
             iamGroupId = groupId,
             memberIds = listOf(removeMemberDTO.targetMember.id)
+        )
+        traceEventDispatcher.dispatch(
+            AuthProjectLevelPermissionsSyncEvent(
+                projectCode = projectCode,
+                iamGroupIds = listOf(groupId)
+            )
         )
     }
 
@@ -2327,6 +2354,26 @@ class RbacPermissionManageFacadeServiceImpl(
             )
         }
         return ""
+    }
+
+    override fun getProjectUserDepartmentDistribution(
+        projectCode: String,
+        parentDepartmentId: Int
+    ): List<DepartmentUserCount> {
+        logger.info("get Project User Department Distribution {}|{}", projectCode, parentDepartmentId)
+        val userIds = authResourceGroupMemberDao.listProjectMembers(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            memberType = MemberType.USER.type,
+            userName = null,
+            deptName = null,
+            offset = null,
+            limit = null
+        ).map { it.id }
+        return userManageService.getUserDepartmentDistribution(
+            userIds = userIds,
+            parentId = parentDepartmentId
+        )
     }
 
     private fun listGroupsOfHandoverPreview(queryReq: HandoverDetailsQueryReq): SQLPage<HandoverGroupDetailVo> {

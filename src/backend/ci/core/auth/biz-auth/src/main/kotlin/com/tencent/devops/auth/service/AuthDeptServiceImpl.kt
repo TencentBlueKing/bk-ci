@@ -51,6 +51,7 @@ import com.tencent.devops.auth.entity.UserDeptTreeInfo
 import com.tencent.devops.auth.pojo.BkUserDeptInfo
 import com.tencent.devops.auth.pojo.BkUserInfo
 import com.tencent.devops.auth.pojo.DeptInfo
+import com.tencent.devops.auth.pojo.vo.BkDeptDetailsVo
 import com.tencent.devops.auth.pojo.vo.BkUserInfoVo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
@@ -120,7 +121,7 @@ class AuthDeptServiceImpl(
             fuzzyLookups = null,
             accessToken = accessToken
         )
-        return getDeptInfo(search)
+        return listDeptInfos(search)
     }
 
     override fun getDeptByParent(parentId: Int, accessToken: String?, userId: String, pageSize: Int?): DeptInfoVo {
@@ -135,7 +136,7 @@ class AuthDeptServiceImpl(
             accessToken = accessToken,
             pageSize = pageSize ?: null
         )
-        return getDeptInfo(search)
+        return listDeptInfos(search)
     }
 
     @Suppress("ComplexMethod")
@@ -174,7 +175,7 @@ class AuthDeptServiceImpl(
         val userAndDeptInfos = mutableListOf<UserAndDeptInfoVo>()
         when (type) {
             ManagerScopesEnum.USER -> {
-                val userInfos = getUserInfo(userSearch)
+                val userInfos = listUserInfos(userSearch)
                 userInfos.results.forEach {
                     userAndDeptInfos.add(
                         it.toUserAndDeptInfoVo()
@@ -183,20 +184,20 @@ class AuthDeptServiceImpl(
             }
 
             ManagerScopesEnum.DEPARTMENT -> {
-                val deptInfos = getDeptInfo(deptSearch)
+                val deptInfos = listDeptInfos(deptSearch)
                 deptInfos.results.forEach {
                     it.toUserAndDeptInfoVo()
                 }
             }
 
             ManagerScopesEnum.ALL -> {
-                val userInfos = getUserInfo(userSearch)
+                val userInfos = listUserInfos(userSearch)
                 userInfos.results.forEach {
                     userAndDeptInfos.add(
                         it.toUserAndDeptInfoVo()
                     )
                 }
-                val deptInfos = getDeptInfo(deptSearch)
+                val deptInfos = listDeptInfos(deptSearch)
                 deptInfos.results.forEach {
                     userAndDeptInfos.add(
                         it.toUserAndDeptInfoVo()
@@ -243,7 +244,7 @@ class AuthDeptServiceImpl(
             fuzzyLookups = null,
             accessToken = null
         )
-        return getDeptInfo(search)
+        return listDeptInfos(search)
     }
 
     override fun getUserDeptInfo(userId: String): Set<String> {
@@ -397,7 +398,7 @@ class AuthDeptServiceImpl(
                     lookupField = USERNAME,
                     exactLookups = memberIds.joinToString(",")
                 )
-                getUserInfo(userSearch).results.map { it.toUserAndDeptInfoVo() }
+                listUserInfos(userSearch).results.map { it.toUserAndDeptInfoVo() }
             }
 
             ManagerScopesEnum.DEPARTMENT -> {
@@ -409,7 +410,7 @@ class AuthDeptServiceImpl(
                     lookupField = ID,
                     exactLookups = memberIds.joinToString(",")
                 )
-                getDeptInfo(deptSearch).results.map { it.toUserAndDeptInfoVo() }
+                listDeptInfos(deptSearch).results.map { it.toUserAndDeptInfoVo() }
             }
 
             else -> emptyList()
@@ -466,6 +467,19 @@ class AuthDeptServiceImpl(
         return callUserCenter(LIST_PROFILE_DEPARTMENTS, deptSearch)
     }
 
+    override fun getUserDeptDetails(userId: String): BkDeptDetailsVo? {
+        val deptSearch = SearchProfileDeptEntity(
+            id = userId,
+            with_family = true,
+            bk_app_code = appCode!!,
+            bk_app_secret = appSecret!!,
+            bk_username = userId
+        )
+        val deptInfoStr = callUserCenter(LIST_PROFILE_DEPARTMENTS, deptSearch)
+        if (deptInfoStr.isBlank()) return null
+        return objectMapper.readValue<List<BkDeptDetailsVo>>(deptInfoStr)[0]
+    }
+
     private fun getAndRefreshDeptUser(deptId: Int, accessToken: String?): List<String> {
         val search = SearchDeptUserEntity(
             id = deptId,
@@ -479,12 +493,12 @@ class AuthDeptServiceImpl(
         return findUserName(responseStr)
     }
 
-    private fun getDeptInfo(searchDeptEnity: SearchUserAndDeptEntity): DeptInfoVo {
+    override fun listDeptInfos(searchDeptEnity: SearchUserAndDeptEntity): DeptInfoVo {
         val responseDTO = callUserCenter(LIST_DEPARTMENTS, searchDeptEnity)
         return objectMapper.readValue(responseDTO)
     }
 
-    private fun getUserInfo(searchUserEntity: SearchUserAndDeptEntity): BkUserInfoVo {
+    override fun listUserInfos(searchUserEntity: SearchUserAndDeptEntity): BkUserInfoVo {
         val responseDTO = callUserCenter(USER_INFO_LIST, searchUserEntity)
         return objectMapper.readValue(responseDTO)
     }

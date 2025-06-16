@@ -28,6 +28,9 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
+import com.tencent.devops.auth.entity.SearchUserAndDeptEntity
+import com.tencent.devops.auth.pojo.vo.BkDeptDetailsVo
+import com.tencent.devops.auth.pojo.vo.BkUserInfoVo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 
@@ -75,6 +78,17 @@ class DefaultDeptServiceImpl : DeptService {
             type = ManagerScopesEnum.USER
         )
 
+    override fun listUserInfos(searchUserEntity: SearchUserAndDeptEntity): BkUserInfoVo {
+        return BkUserInfoVo(
+            count = 0,
+            results = emptyList()
+        )
+    }
+
+    override fun getUserDeptDetails(userId: String): BkDeptDetailsVo? {
+        return null
+    }
+
     override fun getUserInfo(userId: String): UserAndDeptInfoVo? {
         return null
     }
@@ -97,4 +111,11 @@ class DefaultDeptServiceImpl : DeptService {
     override fun listDepartedMembers(memberIds: List<String>): List<String> = emptyList()
 
     override fun isUserDeparted(userId: String): Boolean = false
+
+    override fun listDeptInfos(searchDeptEnity: SearchUserAndDeptEntity): DeptInfoVo {
+        return DeptInfoVo(
+            count = 0,
+            results = emptyList()
+        )
+    }
 }

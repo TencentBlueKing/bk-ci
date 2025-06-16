@@ -28,6 +28,9 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
+import com.tencent.devops.auth.entity.SearchUserAndDeptEntity
+import com.tencent.devops.auth.pojo.vo.BkDeptDetailsVo
+import com.tencent.devops.auth.pojo.vo.BkUserInfoVo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 
@@ -77,4 +80,10 @@ interface DeptService {
     ): List<String>
 
     fun isUserDeparted(userId: String): Boolean
+
+    fun listDeptInfos(searchUserEntity: SearchUserAndDeptEntity): DeptInfoVo
+
+    fun listUserInfos(searchUserEntity: SearchUserAndDeptEntity): BkUserInfoVo
+
+    fun getUserDeptDetails(userId: String): BkDeptDetailsVo?
 }

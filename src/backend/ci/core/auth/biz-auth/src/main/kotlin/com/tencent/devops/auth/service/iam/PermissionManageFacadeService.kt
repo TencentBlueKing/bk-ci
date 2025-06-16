@@ -1,6 +1,7 @@
 package com.tencent.devops.auth.service.iam
 
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
+import com.tencent.devops.auth.pojo.DepartmentUserCount
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.IamGroupIdsQueryConditionDTO
 import com.tencent.devops.auth.pojo.dto.InvalidAuthorizationsDTO
@@ -291,4 +292,12 @@ interface PermissionManageFacadeService {
         projectCode: String,
         request: RemoveMemberFromProjectReq
     ): String
+
+    /**
+     * 获取项目用户部门分布情况
+     * */
+    fun getProjectUserDepartmentDistribution(
+        projectCode: String,
+        parentDepartmentId: Int
+    ): List<DepartmentUserCount>
 }
