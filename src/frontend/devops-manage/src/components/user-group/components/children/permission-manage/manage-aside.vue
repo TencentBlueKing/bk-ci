@@ -332,7 +332,7 @@ const isBatchOperate = ref(false);
 const dialogTopOffset = ref();
 const ulMaxHeight = computed(() => window.innerHeight * 0.8 - 256);
 const tagInput = ref(null);
-const checkedMembers = ref();
+const checkedMembers = ref([]);
 const selectAll = ref(false);
 
 watch(
