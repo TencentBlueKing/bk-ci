@@ -53,8 +53,11 @@ interface DeptService {
 
     fun getUserDeptInfo(userId: String): Set<String>
 
-    // 获取单个用户信息
+    @Deprecated("老接口，已废弃")
     fun getUserInfo(userId: String, name: String): UserAndDeptInfoVo?
+
+    // 获取单个用户信息
+    fun getUserInfo(userId: String): UserAndDeptInfoVo?
 
     // 获取成员信息
     fun getMemberInfo(

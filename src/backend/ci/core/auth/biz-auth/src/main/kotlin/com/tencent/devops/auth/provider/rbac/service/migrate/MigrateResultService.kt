@@ -215,7 +215,7 @@ class MigrateResultService constructor(
         )
 
         // 校验用户是否离职
-        val userExists = deptService.getUserInfo(userId = "admin", name = userId) != null
+        val userExists = deptService.getUserInfo(userId) != null
         if (!userExists) {
             logger.info(
                 "user does not exist or has left the company, skip comparison|$projectCode|$resourceCode|$userId"
