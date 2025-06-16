@@ -94,9 +94,6 @@
             }
         },
         computed: {
-            ...mapState({
-                user: 'user'
-            }),
             ...mapState('codelib', [
                 'codelib',
                 'gitOAuth',
@@ -276,12 +273,11 @@
                 
                 const {
                     projectId,
-                    user: { username },
                     codelib,
                     createRepo,
                     repositoryHashId
                 } = this
-                const params = Object.assign({}, codelib, { userName: username })
+                const params = Object.assign({}, codelib)
                 try {
                     this.$refs.form.$refs.form.validate().then(async () => {
                         if (!this.urlErrMsg) {
