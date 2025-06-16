@@ -206,6 +206,13 @@
                     return this.codelib.credentialType === 'OAUTH'
                 }
                 return this.codelib.authType === 'OAUTH'
+            },
+
+            shouldCheckScmAuth () {
+                return {
+                    scmCode: this.codelib.scmCode,
+                    userName: this.codelib.userName
+                }
             }
         },
         watch: {
@@ -230,13 +237,13 @@
                 }
             },
             
-            'codelib.scmCode': {
+            shouldCheckScmAuth: {
                 handler: async function (newVal) {
                     const { projectId, codelibTypeConstants } = this
                     if (this.codelib['@type']?.startsWith('scm') && this.codelib.credentialType === 'OAUTH') {
                         await this.checkScmOAuth({
                             projectId,
-                            scmCode: newVal,
+                            scmCode: this.codelib.scmCode,
                             type: codelibTypeConstants,
                             username: this.codelib.userName
                         })
