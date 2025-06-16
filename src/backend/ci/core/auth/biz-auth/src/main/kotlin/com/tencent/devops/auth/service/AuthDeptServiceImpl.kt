@@ -262,6 +262,10 @@ class AuthDeptServiceImpl(
         return userInfoCache.getIfPresent(name) ?: getUserAndPutInCache(name)
     }
 
+    override fun getUserInfo(userId: String): UserAndDeptInfoVo? {
+        return userInfoCache.getIfPresent(userId) ?: getUserAndPutInCache(userId)
+    }
+
     override fun getMemberInfo(
         memberId: String,
         memberType: ManagerScopesEnum
@@ -327,7 +331,7 @@ class AuthDeptServiceImpl(
         return if (departedMembersCache.getIfPresent(userId) == true) {
             true
         } else {
-            getUserAndPutInCache(userId) == null
+            getUserInfo(userId) == null
         }.also {
             if (it) {
                 departedMembersCache.put(userId, true)
@@ -336,7 +340,7 @@ class AuthDeptServiceImpl(
         }
     }
 
-    private fun getUserInfo(userId: String): UserAndDeptInfoVo? {
+    private fun getUserInfoFromExternal(userId: String): UserAndDeptInfoVo? {
         return try {
             val url = getAuthRequestUrl(String.format(USER_INFO, userId))
             val searchEntity = SearchUserAndDeptEntity(
@@ -446,7 +450,7 @@ class AuthDeptServiceImpl(
     }
 
     private fun getUserAndPutInCache(userId: String): UserAndDeptInfoVo? {
-        return getUserInfo(
+        return getUserInfoFromExternal(
             userId = userId
         ).also { if (it != null) userInfoCache.put(userId, it) }
     }
