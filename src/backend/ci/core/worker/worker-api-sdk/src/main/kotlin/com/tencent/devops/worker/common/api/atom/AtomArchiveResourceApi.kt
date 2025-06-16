@@ -37,7 +37,6 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
-import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
@@ -63,6 +62,7 @@ import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_PLUGIN_S
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPDATE_PLUGIN_ENV_INFO_FAILED
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.utils.TenantWorkerUtils
 import java.io.File
 import java.net.URLEncoder
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -250,7 +250,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         authFlag: Boolean,
         queryCacheFlag: Boolean
     ) {
-        val tenantId = TenantUtils.getTenantIdByEnglishName(projectId)
+        val tenantId = TenantWorkerUtils.getTenantId(projectId)
         val storeProjectId = if (tenantId == null) "bk-store" else "${tenantId}.bk-store"
         val filePath = when (realm) {
             REALM_LOCAL -> "$BK_CI_ATOM_DIR/$atomFilePath"
