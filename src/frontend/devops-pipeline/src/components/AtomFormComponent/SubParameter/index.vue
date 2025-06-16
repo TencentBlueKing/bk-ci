@@ -21,27 +21,44 @@
                     class="param-input"
                     v-for="(parameter, index) in parameters"
                     :key="parameter.key"
+                    v-bk-tooltips="{
+                        content: $t('notParamsTip'),
+                        disabled: !parameter.disabled,
+                        placements: ['left']
+                    }"
                 >
-                    <bk-select
-                        class="input-com"
-                        :disabled="disabled"
-                        :value="parameter.key"
-                        @change="(val) => handleChangeKey(val, index)"
-                    >
-                        <bk-option
-                            v-for="option in subParamsKeyList"
-                            :key="option.key"
-                            :id="option.key"
-                            :name="option.key"
-                            :disabled="parameters.find(i => i.key === option.key)"
+                    <template v-if="parameter.hasKey">
+                        <bk-select
+                            class="input-com"
+                            :disabled="disabled"
+                            :value="parameter.key"
+                            @change="(val) => handleChangeKey(val, index)"
+                        >
+                            <bk-option
+                                v-for="option in subParamsKeyList"
+                                :key="option.key"
+                                :id="option.key"
+                                :name="option.key"
+                                :disabled="parameters.find(i => i.key === option.key)"
+                            />
+                        </bk-select>
+                    </template>
+                    <template v-else>
+                        <bk-input
+                            v-model="parameter.key"
+                            class="input-com param-not-key-input"
+                            disabled
+                            :title="parameter.key"
                         />
-                    </bk-select>
+                    </template>
                     <span class="input-seg">=</span>
                     <bk-input
                         v-model="parameter.value"
                         :type="parameter.type === 'textarea' ? 'textarea' : 'text'"
-                        class="input-com"
-                        :disabled="disabled"
+                        :class="['input-com', {
+                            'param-not-key-input': parameter.disabled
+                        }]"
+                        :disabled="disabled || parameter.disabled"
                         :title="parameter.value"
                         @change="(val) => handleChangeValue(val, index)"
                     />
@@ -128,10 +145,13 @@
                 if (!Array.isArray(values)) values = JSON.parse(values)
 
                 this.parameters = values.map(i => {
+                    const type = this.typeMap.get(i.key)?.type
                     return {
                         ...i,
-                        type: this.typeMap.get(i.key).type || 'text',
-                        value: isObject(i.value) ? JSON.stringify(i.value) : i.value
+                        type: type || i.key || 'text',
+                        value: isObject(i.value) ? JSON.stringify(i.value) : i.value,
+                        hasKey: !!type,
+                        disabled: !type
                     }
                 })
             },
@@ -213,6 +233,7 @@
         margin-bottom: 10px;
         display: flex;
         align-items: center;
+      
         .input-com {
             flex: 1;
         }
@@ -224,6 +245,14 @@
             font-size: 14px;
             margin-left: 5px;
             cursor: pointer;
+        }
+    }
+</style>
+
+<style lang="scss">
+  .param-not-key-input {
+        .bk-form-input {
+            text-decoration: line-through !important;
         }
     }
 </style>
