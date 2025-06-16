@@ -859,7 +859,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.push?.let { push ->
             elementQueue.add(
                 CodeScmGitWebHookTriggerElement(
-                    name = push.name ?: "Git事件触发",
+                    name = push.name ?: "Git通用事件触发",
                     data = CodeScmGitWebHookTriggerData(
                         input = CodeScmGitWebHookTriggerInput(
                             branchName = push.branches.nonEmptyOrNull()?.join(),
@@ -888,7 +888,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.mr?.let { mr ->
             elementQueue.add(
                 CodeScmGitWebHookTriggerElement(
-                    name = mr.name ?: "Git事件触发",
+                    name = mr.name ?: "Git通用事件触发",
                     data = CodeScmGitWebHookTriggerData(
                         input = CodeScmGitWebHookTriggerInput(
                             branchName = mr.targetBranches.nonEmptyOrNull()?.join(),

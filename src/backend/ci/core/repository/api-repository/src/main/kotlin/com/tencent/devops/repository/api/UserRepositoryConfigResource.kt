@@ -30,6 +30,7 @@ package com.tencent.devops.repository.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
@@ -69,7 +70,10 @@ interface UserRepositoryConfigResource {
     fun list(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
+        userId: String,
+        @Parameter(description = "代码库类型", required = false)
+        @QueryParam("scmType")
+        scmType: ScmType?
     ): Result<List<ScmConfigBaseInfo>>
 
     @Operation(summary = "获取代码库提供者")
@@ -181,44 +185,26 @@ interface UserRepositoryConfigResource {
 
     @Operation(summary = "获取目标代码库支持的触发事件")
     @GET
-    @Path("/events")
+    @Path("/{scmCode}/events")
     fun supportEvents(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
-        @QueryParam("projectId")
-        projectId: String,
-        @Parameter(description = "repoHashId", required = false)
-        @QueryParam("repoHashId")
-        repoHashId: String?,
-        @Parameter(description = "aliasName", required = false)
-        @QueryParam("aliasName")
-        aliasName: String?,
-        @Parameter(description = "repoType", required = false)
-        @QueryParam("repoType")
-        repoType: String? = RepositoryType.ID.name
+        @Parameter(description = "scmCode", required = true)
+        @PathParam("scmCode")
+        scmCode: String
     ): Result<List<IdValue>>
 
     @Operation(summary = "获取目标代码库支持的事件动作")
     @GET
-    @Path("/events/{eventType}/actions")
+    @Path("/{scmCode}/events/{eventType}/actions")
     fun supportEventActions(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
-        @QueryParam("projectId")
-        projectId: String,
-        @Parameter(description = "repoHashId", required = false)
-        @QueryParam("repoHashId")
-        repoHashId: String?,
-        @Parameter(description = "aliasName", required = false)
-        @QueryParam("aliasName")
-        aliasName: String?,
-        @Parameter(description = "repoType", required = false)
-        @QueryParam("repoType")
-        repoType: String? = RepositoryType.ID.name,
+        @Parameter(description = "scmCode", required = true)
+        @PathParam("scmCode")
+        scmCode: String,
         @Parameter(description = "eventType", required = false)
         @PathParam("eventType")
         eventType: String

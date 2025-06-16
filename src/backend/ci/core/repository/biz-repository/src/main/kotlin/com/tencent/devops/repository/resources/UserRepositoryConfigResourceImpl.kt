@@ -27,6 +27,7 @@
 
 package com.tencent.devops.repository.resources
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
@@ -49,9 +50,9 @@ class UserRepositoryConfigResourceImpl @Autowired constructor(
     private val repositoryScmConfigService: RepositoryScmConfigService
 ) : UserRepositoryConfigResource {
 
-    override fun list(userId: String): Result<List<ScmConfigBaseInfo>> {
+    override fun list(userId: String, scmType: ScmType?): Result<List<ScmConfigBaseInfo>> {
         return Result(
-            repositoryScmConfigService.listConfigBaseInfo(userId)
+            repositoryScmConfigService.listConfigBaseInfo(userId, scmType)
         )
     }
 
@@ -137,39 +138,20 @@ class UserRepositoryConfigResourceImpl @Autowired constructor(
         )
     }
 
-    override fun supportEvents(
-        userId: String,
-        projectId: String,
-        repoHashId: String?,
-        aliasName: String?,
-        repoType: String?
-    ): Result<List<IdValue>> {
+    override fun supportEvents(userId: String, scmCode: String): Result<List<IdValue>> {
         return Result(
             repositoryScmConfigService.supportEvents(
                 userId = userId,
-                projectId = projectId,
-                repoHashId = repoHashId,
-                aliasName = aliasName,
-                repoType = repoType
+                scmCode = scmCode
             )
         )
     }
 
-    override fun supportEventActions(
-        userId: String,
-        projectId: String,
-        repoHashId: String?,
-        aliasName: String?,
-        repoType: String?,
-        eventType: String
-    ): Result<List<IdValue>> {
+    override fun supportEventActions(userId: String, scmCode: String, eventType: String): Result<List<IdValue>> {
         return Result(
             repositoryScmConfigService.supportEventActions(
                 userId = userId,
-                projectId = projectId,
-                repoHashId = repoHashId,
-                aliasName = aliasName,
-                repoType = repoType,
+                scmCode = scmCode,
                 eventType = eventType
             )
         )

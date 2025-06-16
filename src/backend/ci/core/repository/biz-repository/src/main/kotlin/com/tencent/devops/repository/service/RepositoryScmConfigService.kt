@@ -28,13 +28,11 @@
 package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.IdValue
-import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPlatformApi
@@ -42,7 +40,6 @@ import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.constant.RepositoryMessageCode.CREDENTIAL_TYPE_PREFIX
-import com.tencent.devops.repository.constant.RepositoryMessageCode.GIT_NOT_FOUND
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.dao.RepositoryScmConfigDao
 import com.tencent.devops.repository.dao.RepositoryScmProviderDao
@@ -188,12 +185,13 @@ class RepositoryScmConfigService @Autowired constructor(
         }
     }
 
-    fun listConfigBaseInfo(userId: String): List<ScmConfigBaseInfo> {
+    fun listConfigBaseInfo(userId: String, scmType: ScmType?): List<ScmConfigBaseInfo> {
         val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(PageUtil.DEFAULT_PAGE, PageUtil.MAX_PAGE_SIZE)
         val providerMap = repositoryScmProviderDao.list(dslContext = dslContext).associateBy { it.providerCode }
         val scmConfigs = repositoryScmConfigDao.list(
             dslContext = dslContext,
             excludeStatus = ScmConfigStatus.DISABLED,
+            scmType = scmType,
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
         )
@@ -441,46 +439,32 @@ class RepositoryScmConfigService @Autowired constructor(
 
     fun supportEvents(
         userId: String,
-        projectId: String,
-        repoHashId: String?,
-        aliasName: String?,
-        repoType: String?
+        scmCode: String
     ): List<IdValue> {
-        val scmProvider = getProviderConfig(
-            projectId = projectId,
-            repoHashId = repoHashId,
-            aliasName = aliasName,
-            repoType = repoType ?: RepositoryType.ID.name
-        ) ?: return listOf()
-        return (scmProvider.webhookProps?.eventTypeList ?: emptyList()).map {
-            IdValue(
-                it,
-                eventDesc(scmProvider.providerCode, it)
-            )
-        }
+        return getProviderConfig(scmCode)?.let { provider ->
+            provider.webhookProps?.let { props ->
+                props.eventTypeList?.map { event ->
+                    IdValue(event, eventDesc(provider.providerCode, event))
+                }
+            }
+        } ?: listOf()
     }
 
     fun supportEventActions(
         userId: String,
-        projectId: String,
-        repoHashId: String?,
-        aliasName: String?,
-        repoType: String?,
+        scmCode: String,
         eventType: String
     ): List<IdValue> {
-        val scmProvider = getProviderConfig(
-            projectId = projectId,
-            repoHashId = repoHashId,
-            aliasName = aliasName,
-            repoType = repoType ?: RepositoryType.ID.name
-        ) ?: return listOf()
-        val actionMap = scmProvider.webhookProps?.eventTypeActionMap ?: emptyMap()
-        return (actionMap[eventType] ?: emptyList()).map {
-            IdValue(
-                EventAction.valueOf(it).value,
-                eventActionDesc(scmProvider.providerCode, eventType, it)
-            )
-        }
+        return getProviderConfig(scmCode)?.let { provider ->
+            provider.webhookProps?.let { props ->
+                props.eventTypeActionMap?.get(eventType)?.map { action ->
+                    IdValue(
+                        EventAction.valueOf(action).value,
+                        eventActionDesc(provider.providerCode, eventType, action)
+                    )
+                }
+            }
+        } ?: listOf()
     }
 
     private fun getProviderConfig(scmCode: String): RepositoryScmProvider? {
@@ -489,38 +473,6 @@ class RepositoryScmConfigService @Autowired constructor(
             params = arrayOf(scmCode)
         )
         return repositoryScmProviderDao.get(dslContext, scmConfig.providerCode)
-    }
-
-    private fun getProviderConfig(
-        projectId: String,
-        repoHashId: String?,
-        aliasName: String?,
-        repoType: String
-    ): RepositoryScmProvider? {
-        var refName = ""
-        val repoInfo = when (repoType) {
-            RepositoryType.ID.name -> {
-                if (repoHashId.isNullOrBlank()) {
-                    throw ParamBlankException("repoHashId is null")
-                }
-                refName = repoHashId
-                repositoryDao.getById(dslContext, HashUtil.decodeOtherIdToLong(repoHashId))
-            }
-
-            RepositoryType.NAME.name -> {
-                if (aliasName.isNullOrBlank()) {
-                    throw ParamBlankException("aliasName is null")
-                }
-                refName = aliasName
-                repositoryDao.getByName(dslContext, projectId, aliasName)
-            }
-
-            else -> null
-        } ?: throw ErrorCodeException(
-            errorCode = GIT_NOT_FOUND,
-            params = arrayOf(refName)
-        )
-        return getProviderConfig(repoInfo.scmCode)
     }
 
     private fun convertScmConfigVo(

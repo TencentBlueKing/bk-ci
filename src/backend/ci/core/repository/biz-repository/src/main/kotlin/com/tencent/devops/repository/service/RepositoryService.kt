@@ -850,7 +850,8 @@ class RepositoryService @Autowired constructor(
         offset: Int,
         limit: Int,
         aliasName: String? = null,
-        enablePac: Boolean? = null
+        enablePac: Boolean? = null,
+        scmCode: String? = null
     ): SQLPage<RepositoryInfo> {
         val hasPermissionList = repositoryPermissionService.filterRepository(userId, projectId, authPermission)
         val repositoryTypes = repositoryType?.split(",")?.map { ScmType.valueOf(it) }
@@ -861,7 +862,8 @@ class RepositoryService @Autowired constructor(
             repositoryTypes = repositoryTypes,
             aliasName = aliasName,
             repositoryIds = hasPermissionList.toSet(),
-            enablePac = enablePac
+            enablePac = enablePac,
+            scmCode = scmCode
         )
         val repositoryRecordList =
             repositoryDao.listByProject(
@@ -872,7 +874,8 @@ class RepositoryService @Autowired constructor(
                 repositoryIds = hasPermissionList.toSet(),
                 enablePac = enablePac,
                 offset = offset,
-                limit = limit
+                limit = limit,
+                scmCode = scmCode
             )
         val repositoryList = repositoryRecordList.map {
             RepositoryInfo(
