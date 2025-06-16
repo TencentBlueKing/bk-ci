@@ -194,7 +194,7 @@ class RepositoryOauthService @Autowired constructor(
         }
         oauth2TokenStoreManager.store(scmCode = scmCode, oauthTokenInfo = oauthTokenInfo)
         return UriComponentsBuilder.fromUriString(oauth2State.redirectUrl)
-                .queryParam("userId", user.username)
+                .replaceQueryParam("userId", user.username)
                 .build()
                 .toUriString()
     }
