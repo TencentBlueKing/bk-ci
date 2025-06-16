@@ -25,6 +25,7 @@ import com.tencent.devops.repository.service.oauth2.Oauth2TokenStoreManager
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.web.util.UriComponentsBuilder
 import java.util.Base64
 
 /**
@@ -192,7 +193,10 @@ class RepositoryOauthService @Autowired constructor(
             )
         }
         oauth2TokenStoreManager.store(scmCode = scmCode, oauthTokenInfo = oauthTokenInfo)
-        return oauth2State.redirectUrl
+        return UriComponentsBuilder.fromUriString(oauth2State.redirectUrl)
+                .queryParam("userId", user.username)
+                .build()
+                .toUriString()
     }
 
     fun oauthUserList(
