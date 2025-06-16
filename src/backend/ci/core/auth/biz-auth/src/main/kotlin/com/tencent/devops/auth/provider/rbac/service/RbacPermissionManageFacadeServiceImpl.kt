@@ -31,6 +31,8 @@ import com.tencent.devops.auth.pojo.enum.JoinedType
 import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.enum.OperateChannel
 import com.tencent.devops.auth.pojo.enum.RemoveMemberButtonControl
+import com.tencent.devops.auth.pojo.request.BatchRemoveMemberFromProjectReq
+import com.tencent.devops.auth.pojo.request.BatchRemoveMemberFromProjectResponse
 import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRemoveConditionReq
@@ -1827,7 +1829,7 @@ class RbacPermissionManageFacadeServiceImpl(
             }
 
             if (memberType == MemberType.USER.type) {
-                // 查询用户还存在那些组织中
+                // 查询用户还存在哪些组织中
                 val userDeptInfos = deptService.getUserInfo(targetMember.id)?.deptInfo?.map { it.name!! }
                 if (userDeptInfos != null) {
                     return authResourceGroupMemberDao.isMembersInProject(
@@ -1840,6 +1842,29 @@ class RbacPermissionManageFacadeServiceImpl(
             }
             return emptyList()
         }
+    }
+
+    override fun batchRemoveMemberFromProject(
+        userId: String,
+        projectCode: String,
+        removeMemberFromProjectReq: BatchRemoveMemberFromProjectReq
+    ): BatchRemoveMemberFromProjectResponse {
+        val users = mutableListOf<ResourceMemberInfo>()
+        val departments = mutableListOf<ResourceMemberInfo>()
+        removeMemberFromProjectReq.targetMembers.sortedBy { it.type }.forEach { member ->
+            removeMemberFromProject(
+                userId = userId,
+                projectCode = projectCode,
+                removeMemberFromProjectReq = RemoveMemberFromProjectReq(
+                    targetMember = member,
+                    handoverTo = removeMemberFromProjectReq.handoverTo
+                )
+            ).takeIf { it.isNotEmpty() }?.let {
+                departments.addAll(it)
+                users.add(member)
+            }
+        }
+        return BatchRemoveMemberFromProjectResponse(users, departments.distinct())
     }
 
     override fun removeMemberFromProjectCheck(
@@ -1870,6 +1895,21 @@ class RbacPermissionManageFacadeServiceImpl(
                 true
             }
         return isMemberHasNoPermission && isMemberHasNoAuthorizations
+    }
+
+    override fun batchRemoveMemberFromProjectCheck(
+        userId: String,
+        projectCode: String,
+        targetMembers: List<ResourceMemberInfo>
+    ): Boolean = targetMembers.all { member ->
+        removeMemberFromProjectCheck(
+            userId = userId,
+            projectCode = projectCode,
+            removeMemberFromProjectReq = RemoveMemberFromProjectReq(
+                targetMember = member,
+                handoverTo = null
+            )
+        )
     }
 
     override fun handleHanoverApplication(request: HandoverOverviewUpdateReq): Boolean {
