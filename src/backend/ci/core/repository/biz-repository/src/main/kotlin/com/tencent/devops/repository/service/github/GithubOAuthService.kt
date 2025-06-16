@@ -159,9 +159,8 @@ class GithubOAuthService @Autowired constructor(
         val specRedirectUrl = arrays.getOrNull(6) ?: ""
         // 重定向类型
         val redirectUrlTypeEnum = RedirectUrlTypeEnum.getRedirectUrlType(arrays.getOrNull(7) ?: "")
-        // 操作人
-        val operator = (arrays.getOrNull(8) ?: "").ifBlank { userId }// 获取授权server端用户信息（蓝盾平台用户名可能跟github用户名不一致）
-        val userResponse = getUser(githubToken.accessToken)
+        // 操作人, 获取授权server端用户信息（蓝盾平台用户名可能跟github用户名不一致）
+        val operator = (arrays.getOrNull(8) ?: "").ifBlank { userId }
         githubTokenService.createAccessToken(
             userId = userId,
             accessToken = githubToken.accessToken,
