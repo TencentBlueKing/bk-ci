@@ -18,6 +18,7 @@
                         <form-field
                             v-for="param in list"
                             :key="param.id"
+                            v-if="param.show"
                             :required="param.required"
                             :is-error="errors.has('devops' + param.name)"
                             :error-msg="errors.first('devops' + param.name)"
@@ -287,7 +288,8 @@
                                     childrenOptions: this.getBranchOption(this.paramValues?.[param.id]?.['repo-name'])
                                 }
                                 : {}
-                        )
+                        ),
+                        show: Object.keys(param.displayCondition ?? {}).every((key) => this.paramValues[key] === param.displayCondition[key])
                     }
                 })
             },

@@ -57,9 +57,9 @@
 </template>
 
 <script>
-    import mixins from '../mixins'
     import { isObject } from '@/utils/util'
     import { mapState } from 'vuex'
+    import mixins from '../mixins'
     export default {
         name: 'sub-parameter',
         mixins: [mixins],
@@ -174,6 +174,10 @@
             },
 
             getParametersList () {
+                if (this.param.paramType === 'list' && Array.isArray(this.param.list)) {
+                    this.subParamsKeyList = this.param.list
+                    return
+                }
                 let [url] = this.generateReqUrl(this.param.url, this.paramValues)
 
                 if (!url) return
