@@ -556,10 +556,7 @@ class RbacPermissionManageFacadeServiceImpl(
     private fun getMemberDeptInfos(
         memberId: String
     ): List<String> {
-        deptService.getUserInfo(
-            userId = "admin",
-            name = memberId
-        )?.deptInfo ?: return emptyList()
+        deptService.getUserInfo(memberId)?.deptInfo ?: return emptyList()
         return deptService.getUserDeptInfo(memberId).toList()
     }
 
@@ -1858,10 +1855,7 @@ class RbacPermissionManageFacadeServiceImpl(
 
             if (memberType == MemberType.USER.type) {
                 // 查询用户还存在那些组织中
-                val userDeptInfos = deptService.getUserInfo(
-                    userId = "admin",
-                    name = targetMember.id
-                )?.deptInfo?.map { it.name!! }
+                val userDeptInfos = deptService.getUserInfo(targetMember.id)?.deptInfo?.map { it.name!! }
                 if (userDeptInfos != null) {
                     return authResourceGroupMemberDao.isMembersInProject(
                         dslContext = dslContext,
@@ -2165,10 +2159,7 @@ class RbacPermissionManageFacadeServiceImpl(
             projectCode = projectCode,
             memberId = userId
         )
-        val memberDeptInfos = deptService.getUserInfo(
-            userId = "admin",
-            name = userId
-        )?.deptInfo?.map { it.name!! }
+        val memberDeptInfos = deptService.getUserInfo(userId)?.deptInfo?.map { it.name!! }
 
         return authResourceGroupMemberDao.isMemberInProject(
             dslContext = dslContext,
@@ -2188,10 +2179,7 @@ class RbacPermissionManageFacadeServiceImpl(
         userId: String
     ): MemberExitsProjectCheckVo {
         logger.info("check member exits project:$projectCode|$userId")
-        val userDeptInfos = deptService.getUserInfo(
-            userId = "admin",
-            name = userId
-        )?.deptInfo?.map { it.name!! } ?: emptyList()
+        val userDeptInfos = deptService.getUserInfo(userId)?.deptInfo?.map { it.name!! } ?: emptyList()
         val userDepartmentsInProject = authResourceGroupMemberDao.isMembersInProject(
             dslContext = dslContext,
             projectCode = projectCode,

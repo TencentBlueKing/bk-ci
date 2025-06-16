@@ -155,7 +155,7 @@ class RbacPermissionApplyService @Autowired constructor(
 
     private fun isUserExists(userId: String) {
         // 校验新用户信息是否同步完成
-        val userExists = deptService.getUserInfo(userId = "admin", name = userId) != null
+        val userExists = deptService.getUserInfo(userId) != null
         if (!userExists) {
             logger.warn("user($userId) does not exist")
             throw ErrorCodeException(
