@@ -105,7 +105,7 @@ class RepositoryScmTokenDao {
         }
     }
 
-    fun list(dslContext: DSLContext, operator: String, scmCode: String): Result<TRepositoryScmTokenRecord>{
+    fun list(dslContext: DSLContext, operator: String, scmCode: String): Result<TRepositoryScmTokenRecord> {
         with(TRepositoryScmToken.T_REPOSITORY_SCM_TOKEN) {
             return dslContext.selectFrom(this)
                     .where(OPERATOR.eq(operator))

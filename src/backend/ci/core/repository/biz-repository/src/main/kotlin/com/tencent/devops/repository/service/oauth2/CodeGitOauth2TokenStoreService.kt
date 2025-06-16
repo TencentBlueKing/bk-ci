@@ -84,7 +84,7 @@ class CodeGitOauth2TokenStoreService @Autowired constructor(
         gitTokenDao.saveAccessToken(dslContext, oauthTokenInfo.userId, gitToken)
     }
 
-    override fun list(userId: String, scmCode: String) : List<OauthTokenInfo> {
+    override fun list(userId: String, scmCode: String): List<OauthTokenInfo> {
         return gitTokenDao.listToken(dslContext, userId).map {
             OauthTokenInfo(
                 accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.accessToken),

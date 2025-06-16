@@ -73,7 +73,7 @@ class UserRepositoryOauthResourceImpl @Autowired constructor(
         )
     }
 
-    override fun oauthUserList(userId: String,scmCode: String): Result<List<OauthUserVo>> {
+    override fun oauthUserList(userId: String, scmCode: String): Result<List<OauthUserVo>> {
         return Result(
             repositoryOauthService.oauthUserList(
                 userId = userId,

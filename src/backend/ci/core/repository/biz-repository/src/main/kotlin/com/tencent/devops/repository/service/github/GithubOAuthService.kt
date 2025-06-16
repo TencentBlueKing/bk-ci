@@ -163,7 +163,7 @@ class GithubOAuthService @Autowired constructor(
         val operator = (arrays.getOrNull(8) ?: "").ifBlank { userId }// 获取授权server端用户信息（蓝盾平台用户名可能跟github用户名不一致）
         val userResponse = getUser(githubToken.accessToken)
         githubTokenService.createAccessToken(
-            userId = userResponse.login,
+            userId = userId,
             accessToken = githubToken.accessToken,
             tokenType = githubToken.tokenType,
             scope = githubToken.scope,
@@ -176,7 +176,7 @@ class GithubOAuthService @Autowired constructor(
                 specRedirectUrl
             } else {
                 "${gitConfig.githubRedirectUrl}/$projectId$popupTag$repoHashId?" +
-                        "resetType=$resetType&userId=${userResponse.login}"
+                        "resetType=$resetType&userId=$userId"
             }
         )
     }

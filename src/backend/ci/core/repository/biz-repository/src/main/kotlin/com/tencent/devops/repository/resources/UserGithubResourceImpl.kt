@@ -52,9 +52,9 @@ class UserGithubResourceImpl @Autowired constructor(
         return Result(
             githubService.getProject(
                 projectId = projectId,
-                userId =  userId,
-                repoHashId =  repoHashId,
-                username =  username
+                userId = userId,
+                repoHashId = repoHashId,
+                username = username
             )
         )
     }

@@ -203,12 +203,17 @@ class RepositoryOauthService @Autowired constructor(
         userId: String,
         scmCode: String
     ): List<OauthUserVo> {
-        return oauth2TokenStoreManager.list(userId = userId, scmCode = scmCode).map {
-            OauthUserVo(
-                username = it.userId,
-                operator = it.operator ?: it.userId
-            )
-        }
+        return oauth2TokenStoreManager.list(userId = userId, scmCode = scmCode)
+                .sortedWith(
+                    compareByDescending<OauthTokenInfo> { it.userId == userId }
+                            .thenBy { it.userId }
+                )
+                .map {
+                    OauthUserVo(
+                        username = it.userId,
+                        operator = it.operator ?: it.userId
+                    )
+                }
     }
 
     private fun encodeOauthState(
