@@ -74,14 +74,14 @@
     <template #header>
       <p v-if="!isBatchOperate">
         {{ t("移出项目") }}
-        <span class="dialog-header"> {{t("移出用户")}}： {{ removeUser.id }} ({{ removeUser.name }}) </span>
+        <span class="dialog-header"> {{t("移出用户")}}： {{ removeUser?.id }} ({{ removeUser?.name }}) </span>
       </p>
       <p v-else>{{ t('批量移出项目') }}</p>
     </template>
     <bk-loading :loading="removeCheckLoading">
       <template #default>
         <template v-if="removeMemberChecked">
-          <p v-if="!isBatchOperate" class="remove-tips">{{ t('XXX拥有的权限均已过期，无需交接，确定移出用户并清理过期权限吗？', [`${removeUser.id} (${removeUser.name})`]) }}</p>
+          <p v-if="!isBatchOperate" class="remove-tips">{{ t('XXX拥有的权限均已过期，无需交接，确定移出用户并清理过期权限吗？', [`${removeUser?.id} (${removeUser?.name})`]) }}</p>
           <p v-else class="remove-tips">{{ t('用户拥有的权限均已过期，无需交接，确定移出用户并清理过期权限吗？') }}</p>
         </template>
         <template v-else>
@@ -196,7 +196,7 @@
   >
     <template #header>
       {{t("人员列表")}}
-      <span class="dialog-header"> {{ removeUser.name }} </span>
+      <span class="dialog-header"> {{ removeUser?.name }} </span>
     </template>
     <template #default>
         <bk-table
@@ -228,7 +228,7 @@
     </template>
     <template #default>
         <p v-if="!isBatchOperate" class="remove-text">
-          <span>{{t("待移出组织")}}：</span> {{ removeUser.name }}
+          <span>{{t("待移出组织")}}：</span> {{ removeUser?.name }}
         </p>
         <ul
           v-else
