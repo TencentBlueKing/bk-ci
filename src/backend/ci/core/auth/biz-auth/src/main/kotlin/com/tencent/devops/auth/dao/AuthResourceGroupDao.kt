@@ -193,6 +193,22 @@ class AuthResourceGroupDao {
         }
     }
 
+    fun getByGroupCode(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        groupCode: String
+    ): AuthResourceGroup? {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.selectFrom(this).where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_CODE.eq(resourceCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(GROUP_CODE.eq(groupCode))
+                .fetchOne()?.let { convert(it) }
+        }
+    }
+
     fun get(
         dslContext: DSLContext,
         projectCode: String,
@@ -443,7 +459,8 @@ class AuthResourceGroupDao {
                     defaultGroup = defaultGroup,
                     relationId = relationId.toInt(),
                     createTime = createTime,
-                    updateTime = updateTime
+                    updateTime = updateTime,
+                    description = description
                 )
             } catch (ignore: Exception) {
                 logger.warn(
