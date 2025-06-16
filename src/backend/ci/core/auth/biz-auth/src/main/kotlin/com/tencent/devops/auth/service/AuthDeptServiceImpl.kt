@@ -66,11 +66,10 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import java.util.concurrent.TimeUnit
 
-class AuthDeptServiceImpl @Autowired constructor(
+class AuthDeptServiceImpl(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper
 ) : DeptService {
@@ -107,7 +106,7 @@ class AuthDeptServiceImpl @Autowired constructor(
     // 已离职或不存在成员
     private val departedMembersCache = CacheBuilder.newBuilder()
         .maximumSize(10000)
-        .expireAfterWrite(30, TimeUnit.MINUTES)
+        .expireAfterWrite(10, TimeUnit.MINUTES)
         .build<String/*userId*/, Boolean/*是否不存在/离职*/>()
 
     override fun getDeptByLevel(level: Int, accessToken: String?, userId: String): DeptInfoVo {
@@ -260,17 +259,29 @@ class AuthDeptServiceImpl @Autowired constructor(
     }
 
     override fun getUserInfo(userId: String, name: String): UserAndDeptInfoVo? {
-        return userInfoCache.getIfPresent(name) ?: getUserAndPutInCache(userId, name)
+        return userInfoCache.getIfPresent(name) ?: getUserAndPutInCache(name)
+    }
+
+    override fun getUserInfo(userId: String): UserAndDeptInfoVo? {
+        return userInfoCache.getIfPresent(userId) ?: getUserAndPutInCache(userId)
     }
 
     override fun getMemberInfo(
         memberId: String,
         memberType: ManagerScopesEnum
     ): UserAndDeptInfoVo {
-        return listMemberInfos(
-            memberIds = listOf(memberId),
-            memberType = memberType
-        ).firstOrNull() ?: throw ErrorCodeException(
+        return when (memberType) {
+            ManagerScopesEnum.USER -> {
+                getUserInfo(memberId)
+            }
+
+            else -> {
+                listMemberInfos(
+                    memberIds = listOf(memberId),
+                    memberType = memberType
+                ).firstOrNull()
+            }
+        } ?: throw ErrorCodeException(
             errorCode = AuthMessageCode.USER_NOT_EXIST,
             params = arrayOf(memberId),
             defaultMessage = "member $memberId not exist"
@@ -320,14 +331,55 @@ class AuthDeptServiceImpl @Autowired constructor(
         return if (departedMembersCache.getIfPresent(userId) == true) {
             true
         } else {
-            listMemberInfos(
-                memberIds = listOf(userId),
-                memberType = ManagerScopesEnum.USER
-            ).isEmpty()
+            getUserInfo(userId) == null
         }.also {
             if (it) {
+                departedMembersCache.put(userId, true)
                 logger.info("user departed :$userId")
             }
+        }
+    }
+
+    private fun getUserInfoFromExternal(userId: String): UserAndDeptInfoVo? {
+        return try {
+            val url = getAuthRequestUrl(String.format(USER_INFO, userId))
+            val searchEntity = SearchUserAndDeptEntity(
+                bk_app_code = appCode!!,
+                bk_app_secret = appSecret!!,
+                bk_username = userId,
+                fields = USER_LABEL,
+                lookupField = USERNAME
+            )
+            val request = Request.Builder().url(url)
+                .headers(searchEntity.toMap().toHeaders())
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use {
+                if (!it.isSuccessful) {
+                    logger.warn("get user info fail {}|{}|{}", url, searchEntity, it)
+                    throw OperationException(
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = AuthMessageCode.USER_NOT_EXIST
+                        )
+                    )
+                }
+                val responseStr = it.body!!.string()
+                logger.info("get user info response {}", responseStr)
+                val responseDTO = JsonUtil.to(responseStr, object : TypeReference<ResponseDTO<BkUserInfo>>() {})
+                if (responseDTO.code != 0L || responseDTO.result == false) {
+                    logger.warn("get user info fail {}|{}|{}", url, searchEntity, it)
+                    throw OperationException(
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = AuthMessageCode.USER_NOT_EXIST
+                        )
+                    )
+                }
+                logger.info("get user info：${objectMapper.writeValueAsString(responseDTO.data)}")
+                responseDTO.data.toUserAndDeptInfoVo()
+            }
+        } catch (ex: Exception) {
+            logger.warn("User does not exist $userId |$ex")
+            null
         }
     }
 
@@ -397,17 +449,10 @@ class AuthDeptServiceImpl @Autowired constructor(
         )
     }
 
-    private fun getUserAndPutInCache(
-        userId: String,
-        name: String
-    ): UserAndDeptInfoVo? {
-        return getUserAndDeptByName(
-            name = name,
-            accessToken = null,
-            userId = userId,
-            type = ManagerScopesEnum.USER,
-            exactLookups = true
-        ).firstOrNull().also { if (it != null) userInfoCache.put(name, it) }
+    private fun getUserAndPutInCache(userId: String): UserAndDeptInfoVo? {
+        return getUserInfoFromExternal(
+            userId = userId
+        ).also { if (it != null) userInfoCache.put(userId, it) }
     }
 
     private fun getUserDeptFamily(userId: String): String {
@@ -440,7 +485,7 @@ class AuthDeptServiceImpl @Autowired constructor(
     }
 
     private fun getUserInfo(searchUserEntity: SearchUserAndDeptEntity): BkUserInfoVo {
-        val responseDTO = callUserCenter(USER_INFO, searchUserEntity)
+        val responseDTO = callUserCenter(USER_INFO_LIST, searchUserEntity)
         return objectMapper.readValue(responseDTO)
     }
 
@@ -541,7 +586,8 @@ class AuthDeptServiceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(AuthDeptServiceImpl::class.java)
         const val LIST_DEPARTMENTS = "api/c/compapi/v2/usermanage/list_departments/"
         const val LIST_DEPARTMENT_PROFILES = "api/c/compapi/v2/usermanage/list_department_profiles/"
-        const val USER_INFO = "api/c/compapi/v2/usermanage/list_users/"
+        const val USER_INFO_LIST = "api/c/compapi/v2/usermanage/list_users/"
+        const val USER_INFO = "api/c/compapi/v2/usermanage/retrieve_user?id=%s"
         const val RETRIEVE_DEPARTMENT = "api/c/compapi/v2/usermanage/retrieve_department/"
         const val LIST_PROFILE_DEPARTMENTS = "api/c/compapi/v2/usermanage/list_profile_departments/"
         const val MAX_USER_OF_DEPARTMENT_RETURNED = 500
