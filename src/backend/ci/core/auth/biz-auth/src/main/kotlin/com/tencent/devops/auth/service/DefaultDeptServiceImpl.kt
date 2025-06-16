@@ -75,6 +75,10 @@ class DefaultDeptServiceImpl : DeptService {
             type = ManagerScopesEnum.USER
         )
 
+    override fun getUserInfo(userId: String): UserAndDeptInfoVo? {
+        return null
+    }
+
     override fun getMemberInfo(
         memberId: String,
         memberType: ManagerScopesEnum
