@@ -2688,7 +2688,7 @@ class PipelineBuildFacadeService(
         userId: String,
         version: Int?
     ): List<PipelineBuildParamFormProp> {
-        val model = if (pipelineId.startsWith("p-")) {
+        val model = if (PipelineUtils.isPipelineId(pipelineId)) {
             pipelineRepositoryService.getBuildTriggerInfo(
                 projectId, pipelineId, version
             ).second.model
