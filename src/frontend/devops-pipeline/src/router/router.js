@@ -68,7 +68,7 @@ const ImportPipelineEdit = () => import(/* webpackChunkName: "importPipeline" */
 
 const routes = [
     {
-        path: '/pipeline/:projectId([^/]+)',
+        path: '/pipeline/:projectId',
         component: pipelines,
         name: 'pipelineRoot',
         redirect: {
@@ -171,7 +171,7 @@ const routes = [
                 component: AtomDebug
             },
             {
-                path: ':pipelineId([^/.]+)',
+                path: ':pipelineId',
                 component: pipelinesEntry,
                 children: [
                     {
