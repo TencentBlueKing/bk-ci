@@ -114,9 +114,9 @@ interface UserRepositoryOauthResource {
         @Parameter(description = "回调链接(授权完以后的链接地址)", required = true)
         @QueryParam("redirectUrl")
         redirectUrl: String,
-        @Parameter(description = "需要重置的用户名", required = true)
+        @Parameter(description = "需要重置的用户名", required = false)
         @QueryParam("username")
-        username: String
+        username: String? = ""
     ): Result<Oauth2Url>
 
     @GET

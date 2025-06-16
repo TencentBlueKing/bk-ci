@@ -61,14 +61,14 @@ class UserRepositoryOauthResourceImpl @Autowired constructor(
         userId: String,
         scmCode: String,
         redirectUrl: String,
-        username: String
+        username: String?
     ): Result<Oauth2Url> {
         return Result(
             repositoryOauthService.oauthUrl(
                 userId = userId,
                 scmCode = scmCode,
                 redirectUrl = redirectUrl,
-                username = username
+                username = (username ?: "").ifBlank { userId }
             )
         )
     }
