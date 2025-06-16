@@ -40,13 +40,6 @@ const rules = {
       trigger: 'change',
     },
   ],
-  metadatas: [
-    {
-      validator: () => !Object.keys(projectData.value.metadatas).length,
-      message: t('请选择项目项目最大可授权人员范围'),
-      trigger: 'change',
-    },
-  ]
 };
 
 const projectData = ref<any>(props.data);

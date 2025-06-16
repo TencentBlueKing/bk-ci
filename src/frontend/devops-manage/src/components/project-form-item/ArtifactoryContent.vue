@@ -1,12 +1,13 @@
 <template>
-  <div>
+  <div class="artifactory">
     <bk-form-item
-      :label="t('制品质量元数据')"
+      :label="t('元数据')"
       property="metadatas"
-      :required="true"
+      :label-width="130"
       :description="t('当制品标记了此配置中的元数据时，在构建历史，构建详情总结界面，将展示对应的质量标签，便于用户快速了解构建产出的制品质量。')"
     >
       <p
+        v-if="type !== 'show'"
         class="metadata-add"
         @click="showMetadataAdd"
       >
@@ -16,49 +17,55 @@
       <bk-table
         :border="['row']"
         :max-height="500"
-        :data="projectData.metadatas"
-        show-overflow-tooltip
-        :pagination="pipelinePagination"
-        remote-pagination
+        :data="metadataList"
         empty-cell-text="--"
         showOverflowTooltip
-        @page-limit-change="pageLimitChange"
-        @page-value-change="pageValueChange"
       >
         <bk-table-column
           :label="t('元数据键')"
           prop="labelKey"
-          :width="200"
+          :width="240"
           showOverflowTooltip
         >
           <template #default="{row}">
             <div class="key-layout">
-              <p>
-                <span class="tag">{{ t('内置') }}</span>
-              </p>
-              <div class="key-group">
-                <p text>{{ row.labelKey }}</p>
-                <p class="name">{{ row.name }}</p>
-              </div>
+              <span class="key">
+                <bk-overflow-title type="tips">{{ row.labelKey }}</bk-overflow-title>
+              </span>
+              <span v-if="row.system" class="tag">{{ t('内置') }}</span>
             </div>
+          </template>
+        </bk-table-column>
+        <bk-table-column
+          :label="t('元数据值类型')"
+          prop="enumType"
+          :min-width="100"
+        >
+          <template #default="{row}">
+            <span>{{ row.enumType ? t('枚举类型') : t('字符串')}}</span>
           </template>
         </bk-table-column>
         <bk-table-column
           :label="t('枚举值')"
+          :min-width="100"
           prop="labelColorMap"
         >
           <template #default="{row}">
-            <div v-for="(color, key) in row.labelColorMap">
-              <p>
-                <span :style="{backgroundColor: color}" class="enums-icon"></span>
-                <span>{{ key }}</span>
-              </p>
+            <div class="label-color-content" v-if="Object.keys(row.labelColorMap).length">
+              <div v-for="(color, key) in row.labelColorMap">
+                <p class="color-map">
+                  <span :style="{backgroundColor: color}" class="enums-icon"></span>
+                  <span>{{ key }}</span>
+                </p>
+              </div>
             </div>
+            <span v-else>--</span>
           </template>
         </bk-table-column>
         <bk-table-column
-          :label="t('分组')"
+          :label="t('元数据分组')"
           prop="category"
+          :min-width="100"
         >
           <template #default="{row}">
             <span v-if="row.category" class="tag">{{ row.category}}</span>
@@ -68,15 +75,19 @@
         <bk-table-column
           :label="t('描述')"
           prop="description"
+          :width="200"
         />
         <bk-table-column
-          :label="t('启用')"
-          prop="isEnable"
+          :label="t('是否启用')"
+          prop="display"
+          :sort="true"
+          :min-width="110"
         >
           <template #default="{row}">
             <bk-switcher
-              v-model="row.isEnable"
+              v-model="row.display"
               theme="primary"
+              @change="(status) => handleChangeEnable(status, row)"
             />
           </template>
         </bk-table-column>
@@ -85,7 +96,7 @@
           :label="t('操作')"
         >
           <template #default="{row}">
-            <bk-button class="ml10" text theme="primary" @click="handleEdit(row)"> {{t('编辑')}} </bk-button>
+            <bk-button text theme="primary" @click="handleEdit(row)"> {{t('编辑')}} </bk-button>
             <bk-button class="ml10" text theme="primary" @click="handleDelete(row)"> {{t('删除')}} </bk-button>
           </template>
         </bk-table-column>
@@ -97,6 +108,7 @@
     v-model:isShow="isShowMetadataForm"
     :title="metadaSidesliderTitle"
     renderDirective="if"
+    @closed="handleMetadataCancel"
     :width="640"
   >
   <template #default>
@@ -217,7 +229,7 @@
 
 <script setup name="MetadataFormItem">
 import http from '@/http/api';
-import { computed, ref, reactive, watch } from 'vue';
+import { computed, ref, reactive, watch, onMounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Del } from 'bkui-vue/lib/icon';
 import { useRoute } from 'vue-router';
@@ -241,7 +253,6 @@ const projectData = ref(props.data);
 const enumErrors = reactive({});
 const isShowMetadataForm = ref(false);
 const isAdd = ref(false);
-const pipelinePagination = ref({ count: 0, limit: 20, current: 1 });
 const metadataFormRef = ref();
 const metadataForm = ref(getFormData())
 const metadataRules = {
@@ -268,7 +279,30 @@ watch(()=> metadataForm.value.category, (newValue)=>{
   if (newValue === '质量') {
     metadataForm.value.enumType = true
   }
-}, { immediate: true })
+}, { immediate: true });
+
+const metadataList = ref([]);
+const isLoading= ref(false);
+
+watch(() => projectData.value.properties, (newValue, oldValue) => {
+  if (newValue && !oldValue) {
+    nextTick(()=>{
+      fetchMetadataList();
+    });
+  }
+}, { immediate: true });
+
+async function fetchMetadataList () {
+  isLoading.value = true;
+  try {
+    const res = await http.getMetadataList(projectCode);
+    metadataList.value= res;
+  } catch (error) {
+    console.log("error", error);
+  } finally {
+    isLoading.value = false;
+  }
+}
 
 function getFormData () {
   return {
@@ -358,32 +392,6 @@ function validateAllEnums() {
   const valueToIndices = validateAllEnumsForDuplicates();
   return !hasEmptyValue && Object.keys(valueToIndices).every(value => valueToIndices[value].length === 1);
 }
-async function fetchListViewPipelines () {
-  try {
-    isLoading.value = true;
-    const params = {
-      page: pipelinePagination.value.current,
-      pageSize: pipelinePagination.value.limit,
-    };
-    const res = await http.listInheritedDialectPipelines(projectId.value, params);
-    pipelineList.value = res.records;
-    pipelinePagination.value.count = res.count;
-  } catch (error) {
-    console.log(error);
-  } finally {
-    isLoading.value = false;
-  }
-}
-
-function pageLimitChange (limit) {
-  pipelinePagination.value.limit = limit;
-  fetchListViewPipelines();
-}
-
-function pageValueChange (value) {
-  pipelinePagination.value.current = value;
-  fetchListViewPipelines();
-}
 
 function showMetadataAdd () {
   isAdd.value = true;
@@ -399,10 +407,18 @@ function convertArrayToObject (arr) {
   }, {});
 };
 
+function handleChangeEnable(_, row) {
+  updateMetadata(row)
+}
+
 async function createMetadata(metadataParams) {
   const res = await http.createdMetadata(projectCode, metadataParams);
   if (res) {
-    projectData.value.metadatas.push(metadataParams);
+    fetchMetadataList();
+    Message({
+      theme: 'success',
+      message: t('创建成功'),
+    });
   }
 }
 
@@ -410,10 +426,11 @@ async function updateMetadata(metadataParams) {
   const labelKey = metadataParams.labelKey;
   const res = await http.updateMetadata(projectCode, labelKey, metadataParams);
   if (res) {
-    const index = projectData.value.metadatas.findIndex(item => item.labelKey === labelKey);
-    if (index !== -1) {
-      projectData.value.metadatas[index] = metadataParams;
-    }
+    fetchMetadataList();
+    Message({
+      theme: 'success',
+      message: t('更新成功'),
+    });
   }
 }
 
@@ -434,18 +451,11 @@ async function handleMetadataSubmit () {
       } else {
         await updateMetadata(metadataParams);
       }
-
-      Message({
-        theme: 'success',
-        message: t('保存成功'),
-      });
       isShowMetadataForm.value = false;
+      handleMetadataCancel();
     }
   } catch (err) {
-    Message({
-      theme: 'error',
-      message: err.message || err,
-    });
+    console.log('err', err);
   }
 }
 function handleMetadataCancel () {
@@ -488,9 +498,7 @@ async function handleDelete (row) {
         const labelKey = row.labelKey;
         const res = await http.deleteMetadata(projectCode, labelKey);
         if (res) {
-          projectData.value.metadatas = projectData.value.metadatas.filter(
-            item => item.labelKey !== labelKey
-          );
+          fetchMetadataList();
           Message({
             theme: 'success',
             message: t('删除成功'),
@@ -508,7 +516,13 @@ async function handleDelete (row) {
 }
 
 </script>
-
+<style lang="scss">
+.artifactory {
+  .bk-form-content {
+    max-width: 1000px !important;
+  }
+}
+</style>
 <style lang="scss" scoped>
 .metadata-add {
   width: 150px;
@@ -519,39 +533,39 @@ async function handleDelete (row) {
 .key-layout {
   display: flex;
   align-items: center;
+  color: #4D4F56;
+  font-size: 12px;
 
-  .key-group {
-    flex: 1;
-    margin-left: 6px;
-    font-size: 12px;
-    color: #4D4F56;
-    font-size: 12px;
-
-    p {
-      line-height: 16px;
-      max-width: 168px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .name {
-      color: #979BA5;
-    }
+  .key {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 .tag {
-  padding: 5px 6px;
+  display: inline-block;
+  height: 20px;
+  line-height: 20px;
+  text-align: center;
+  padding: 0 4px;
   background: #F0F1F5;
   border-radius: 2px;
 }
-.enums-icon {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  margin-right: 8px;
-  border: 1px solid #C4C6CC;
-  border-radius: 50%;
+.label-color-content {
+  padding: 10px 0;
+  .color-map {
+    height: 20px;
+    line-height: 20px;
+  }
+  .enums-icon {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: 8px;
+    border: 1px solid #C4C6CC;
+    border-radius: 50%;
+  }
 }
 .metadata-slider {
   margin: 16px 24px;

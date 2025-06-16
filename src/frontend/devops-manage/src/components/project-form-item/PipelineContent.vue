@@ -10,6 +10,7 @@
         v-model="projectData.properties.pipelineDialect"
         @change="handleChangeForm"
         :beforeChange="beforeChange"
+        class="dialect-radio"
       >
         <bk-radio label="CLASSIC">
           <span>{{ t('CLASSIC') }}</span>
@@ -45,7 +46,7 @@
     >
       <bk-switcher
         v-model="projectData.properties.enablePipelineNameTips"
-        size="large"
+        size="small"
         theme="primary"
       />
       <bk-input
@@ -301,6 +302,11 @@ function handleToPipeline (row) {
 
 </script>
 <style lang="scss">
+.dialect-radio {
+  .bk-radio-label {
+    font-size: 12px;
+  }
+}
 .pipeline-sideslider .bk-modal-content{
   padding: 16px 24px;
 }

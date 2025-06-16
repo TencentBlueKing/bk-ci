@@ -36,25 +36,22 @@ const currentDialect = ref();
 const isDialectDialog = ref(false);
 
 const fetchProjectData = async () => {
-  try {
-    isLoading.value = true;
-    const [projectDatas, metadataList] = await Promise.all([
-      http.requestProjectData({englishName: projectCode}),
-      http.getMetadataList(projectCode)
-    ])
+  isLoading.value = true;
+  await http.requestProjectData({
+    englishName: projectCode,
+  }).then((res) => {
     projectData.value = {
-      ...projectDatas,
+      ...res,
       properties: {
         pipelineDialect: 'CLASSIC',
         loggingLineLimit: null,
-        ...projectDatas.properties,
+        ...res.properties,
       },
-      metadatas: metadataList
     };
-    currentDialect.value = projectDatas.properties?.pipelineDialect || 'CLASSIC';
+    currentDialect.value = res.properties?.pipelineDialect || 'CLASSIC';
     if (projectData.value.centerId === '0') projectData.value.centerId = ''
     if (projectData.value.projectType === 0) projectData.value.projectType = ''
-  } catch (err) {
+  }).catch((err) => {
     if (err.code === 403) {
       hasPermission.value = false
     } else {
@@ -63,9 +60,8 @@ const fetchProjectData = async () => {
         message: err.message || err,
       })
     }
-  } finally {
-    isLoading.value = false;
-  }
+  });
+  isLoading.value = false;
 };
 
 /**
@@ -105,13 +101,12 @@ const handleFormChange = (val: boolean) => {
 const infoBoxInstance = ref();
 
 const updateProject = async () => {
-  const { metadatas, ...projectDatas } = projectData.value;
   infoBoxInstance.value?.hide()
   btnLoading.value = true;
   const result = await http
     .requestUpdateProject({
       projectId: projectData.value.englishName,
-      projectData: projectDatas,
+      projectData: projectData.value,
     })
     .catch((err) => {
       if (err.code === 403) {
@@ -311,6 +306,8 @@ onMounted(() => {
     }
     .edit-project-form {
       width: 1200px;
+      height: 100%;
+      background-color: #FFF;
       flex: 1;
       margin: 0 auto;
       :deep(.bk-form-label) {
@@ -324,7 +321,6 @@ onMounted(() => {
       position: fixed;
       bottom: 0;
       left: 0;
-      padding-left: 24px;
       width: 100%;
       height: 48px;
       line-height: 48px;

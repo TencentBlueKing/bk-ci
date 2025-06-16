@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { BaseInfoContent, PermissionContent, PipelineContent, ArtifactoryContent } from "@/components/project-form-item/";
 
@@ -28,7 +28,7 @@ const panels = [
       name: 'permission',
       title: '权限',
       component: PermissionContent,
-    }] : [],]
+    }] : []]
   },
   {
     name: 'pipelineSettings',
@@ -62,7 +62,6 @@ const handleClearValidate = () => {
   emits('clearValidate');
 };
 
-
 </script>
 
 <template>
@@ -79,6 +78,7 @@ const handleClearValidate = () => {
       >
         <div class="edit-form-content">
           <bk-collapse
+            v-if="item.name === 'projectSettings'"
             v-model="item.activeCollapse"
             :hasHeaderHover="false"
           >
@@ -104,6 +104,22 @@ const handleClearValidate = () => {
                 </template>
             </bk-collapse-panel>
           </bk-collapse>
+          <div
+            v-else
+            v-for="(panel, index) in item.collapsePanels"
+            :key="panel.name"
+            class="other-setting"
+          >
+              <component
+                :is="panel.component"
+                :type="type"
+                :is-rbac="isRbac"
+                :data="projectData"
+                :initPipelineDialect="initPipelineDialect"
+                @handle-change-form="handleChangeForm"
+                @clearValidate="handleClearValidate"
+              />
+          </div>
         </div>
       </bk-tab-panel>
     </bk-tab>
@@ -114,9 +130,12 @@ const handleClearValidate = () => {
 .setting-content {
   .edit-form-content {
     background-color: #fff;
-    box-shadow: 0 2px 4px 0 #1919290d;
     border-radius: 2px;
   }
+}
+.other-setting {
+  height: 100%;
+  padding: 25px 0;
 }
 </style>
 <style lang="scss">
