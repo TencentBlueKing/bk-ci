@@ -322,16 +322,18 @@ class BuildLogPrinter(
         stepId: String? = null
     ) {
         try {
-            genLogPrintPrintResource().updateLogStatus(
-                buildId = buildId,
-                finished = true,
-                tag = tag,
-                subTag = subTag,
-                containerHashId = containerHashId,
-                executeCount = executeCount,
-                jobId = jobId,
-                stepId = stepId
-            )
+            doWithCircuitBreaker {
+                genLogPrintPrintResource().updateLogStatus(
+                    buildId = buildId,
+                    finished = true,
+                    tag = tag,
+                    subTag = subTag,
+                    containerHashId = containerHashId,
+                    executeCount = executeCount,
+                    jobId = jobId,
+                    stepId = stepId
+                )
+            }
         } catch (ignore: Exception) {
             logger.warn("[$buildId]|stopLog fail", ignore)
         }
@@ -347,15 +349,17 @@ class BuildLogPrinter(
         stepId: String? = null
     ) {
         try {
-            genLogPrintPrintResource().addLogStatus(
-                buildId = buildId,
-                tag = tag,
-                subTag = subTag,
-                containerHashId = containerHashId,
-                executeCount = executeCount,
-                jobId = jobId,
-                stepId = stepId
-            )
+            doWithCircuitBreaker {
+                genLogPrintPrintResource().addLogStatus(
+                    buildId = buildId,
+                    tag = tag,
+                    subTag = subTag,
+                    containerHashId = containerHashId,
+                    executeCount = executeCount,
+                    jobId = jobId,
+                    stepId = stepId
+                )
+            }
         } catch (ignore: Exception) {
             logger.warn("[$buildId]|stopLog fail", ignore)
         }
