@@ -89,6 +89,34 @@ class TxPipelineMetricssService@Autowired constructor(
         txPipelineMetricsCronService.runAllSyncDataTasks()
     }
 
+    /**
+     * 更新流水线白名单状态
+     * @param userId 用户ID
+     * @param projectId 项目ID
+     * @param pipelineId 流水线ID
+     * @param isAdd true表示添加白名单，false表示移除白名单
+     * @return 操作是否成功
+     */
+    fun updatePipelineWhitelist(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        isAdd: Boolean
+    ): Boolean {
+        try {
+            pipelineMetricsInfoDao.updateAutoDisableWhitelist(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                deleteFlag = !isAdd
+            )
+            return true
+        } catch (e: Exception) {
+            logger.warn("Failed to update whitelist for pipeline $pipelineId in project $projectId", e)
+            return false
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(TxPipelineMetricssService::class.java)
     }

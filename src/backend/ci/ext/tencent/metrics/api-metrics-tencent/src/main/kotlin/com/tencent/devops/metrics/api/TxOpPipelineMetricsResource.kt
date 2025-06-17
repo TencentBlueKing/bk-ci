@@ -36,6 +36,7 @@ import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "OP_PIPELINE_EPLUS", description = "OP-流水线度量-EPLUS")
@@ -52,4 +53,22 @@ interface TxOpPipelineMetricsResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     )
+
+    @Operation(summary = "更新流水线白名单状态")
+    @GET
+    @Path("/whitelist/update")
+    fun updatePipelineWhitelist(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "是否添加到白名单", required = true)
+        @QueryParam("isAdd")
+        isAdd: Boolean
+    ): com.tencent.devops.common.api.pojo.Result<Boolean>
 }
