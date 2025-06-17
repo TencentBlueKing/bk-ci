@@ -28,6 +28,7 @@
 package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.model.metrics.tables.TEplusPipelineMetricsDataDaily
+import com.tencent.devops.model.metrics.tables.TEplusPipelineMetricsWhiteList
 import com.tencent.devops.model.metrics.tables.records.TEplusPipelineMetricsDataDailyRecord
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -94,18 +95,26 @@ class PipelineMetricsInfoDao {
         dslContext, records, table.SCHEDULED_TRIGGER_NO_CODE_CHANGE
     )
 
-    // 统一的计数方法
+    // 统一的计数方法（排除白名单流水线）
     private fun countByField(
         dslContext: DSLContext,
         projectId: String,
         field: Field<Boolean>
     ): Int {
-        return dslContext.selectCount()
-            .from(table)
-            .where(table.STATISTICS_TIME.eq(currentStatisticsTime))
-            .and(table.PROJECT_ID.eq(projectId))
-            .and(field.eq(true))
-            .fetchOne(0, Int::class.java) ?: 0
+        with(TEplusPipelineMetricsWhiteList.T_EPLUS_PIPELINE_METRICS_WHITE_LIST.`as`("w")) {
+            return dslContext.selectCount()
+                .from(table)
+                .leftJoin(this)
+                .on(
+                    table.PIPELINE_ID.eq(PIPELINE_ID)
+                        .and(table.PROJECT_ID.eq(PROJECT_ID))
+                )
+                .where(table.STATISTICS_TIME.eq(currentStatisticsTime))
+                .and(table.PROJECT_ID.eq(projectId))
+                .and(field.eq(true))
+                .and(PIPELINE_ID.isNull()) // 排除白名单中的流水线
+                .fetchOne(0, Int::class.java) ?: 0
+        }
     }
 
     fun countHighFailureRate30d(dslContext: DSLContext, projectId: String) =
@@ -166,5 +175,56 @@ class PipelineMetricsInfoDao {
         dslContext.deleteFrom(table)
             .where(table.STATISTICS_TIME.eq(currentStatisticsTime))
             .execute()
+    }
+
+    /**
+     * 更新流水线自动禁用白名单设置
+     * @param projectId 项目ID
+     * @param pipelineId 流水线ID
+     * @param deleteFlag 是否删除
+     * @return 更新记录数
+     */
+    fun updateAutoDisableWhitelist(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        deleteFlag: Boolean
+    ) {
+        if (deleteFlag) {
+            // 删除白名单记录
+            with(TEplusPipelineMetricsWhiteList.T_EPLUS_PIPELINE_METRICS_WHITE_LIST) {
+                dslContext.deleteFrom(this)
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(PIPELINE_ID.eq(pipelineId))
+                    .execute()
+            }
+        } else {
+            // 插入白名单记录
+            with(TEplusPipelineMetricsWhiteList.T_EPLUS_PIPELINE_METRICS_WHITE_LIST) {
+                dslContext.insertInto(this)
+                    .set(PROJECT_ID, projectId)
+                    .set(PIPELINE_ID, pipelineId)
+                    .set(CREATE_TIME, LocalDateTime.now())
+                    .onDuplicateKeyIgnore()
+                    .execute()
+            }
+        }
+    }
+
+    /**
+     * 根据项目ID获取自动禁用白名单流水线列表
+     * @param projectId 项目ID
+     * @return 流水线ID列表
+     */
+    fun listAutoDisableWhitelist(
+        dslContext: DSLContext,
+        projectId: String
+    ): List<String> {
+        with(TEplusPipelineMetricsWhiteList.T_EPLUS_PIPELINE_METRICS_WHITE_LIST) {
+            return dslContext.select(PIPELINE_ID)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .fetchInto(String::class.java)
+        }
     }
 }

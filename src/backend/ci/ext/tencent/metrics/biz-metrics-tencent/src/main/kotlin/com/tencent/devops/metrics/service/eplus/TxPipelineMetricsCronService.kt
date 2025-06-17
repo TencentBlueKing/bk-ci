@@ -418,13 +418,29 @@ class TxPipelineMetricsCronService @Autowired constructor(
     }
 
     private fun sendReportForProject(projectId: String) {
-        val invalidPipelineMap = pipelineMetricsInfoDao.listProjectInvalidPipelineInfo(
+        // 获取所有无效流水线
+        val allInvalidPipelines = pipelineMetricsInfoDao.listProjectInvalidPipelineInfo(
             dslContext = dslContext,
             projectId = projectId,
             statisticsTime = LocalDate.now().atStartOfDay()
         ).map { it.value1() to it.value2() }.toMap()
-        if (invalidPipelineMap.isEmpty()) return
-        val projectPipelineInfo = convertPipelineExpirationInfo(projectId, invalidPipelineMap)
+
+        if (allInvalidPipelines.isEmpty()) return
+
+        // 获取该项目的白名单流水线
+        val whitelistPipelines = pipelineMetricsInfoDao.listAutoDisableWhitelist(
+            dslContext = dslContext,
+            projectId = projectId
+        ).toSet()
+
+        // 过滤掉白名单中的流水线
+        val filteredInvalidPipelines = allInvalidPipelines.filterKeys {
+            !whitelistPipelines.contains(it)
+        }
+
+        if (filteredInvalidPipelines.isEmpty()) return
+
+        val projectPipelineInfo = convertPipelineExpirationInfo(projectId, filteredInvalidPipelines)
 
         try {
             if (projectPipelineInfo != null) {
