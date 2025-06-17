@@ -938,7 +938,12 @@ class PipelineBuildFacadeService(
         }
         PipelineUtils.checkStageReviewParam(reviewRequest?.reviewParams)
         if (!reviewRequest?.reviewParams.isNullOrEmpty()) {
-            check11853(projectId, buildId, reviewRequest, pipelineId)
+            check11853(
+                projectId = projectId,
+                buildId = buildId,
+                reviewRequest = reviewRequest!!,
+                pipelineId = pipelineId
+            )
         }
 
         val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
