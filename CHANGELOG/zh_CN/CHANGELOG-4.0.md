@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v4.0.0-rc.3](#v400-rc3)
+   - [Changelog since v4.0.0-rc.2](#changelog-since-v400-rc2)
+
 - [v4.0.0-rc.2](#v400-rc2)
    - [Changelog since v4.0.0-rc.1](#changelog-since-v400-rc1)
 
@@ -10,6 +13,35 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v4.0.0-rc.3
+## 2025-06-10
+### Changelog since v4.0.0-rc.2
+#### 新增
+
+##### 流水线
+- [新增] feat: CODE支持SVN_TAG类型 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11781)
+
+##### 未分类
+- [新增] feat: 查询服务跳转增加流水线维度参数 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11765)
+
+#### 优化
+
+##### 流水线
+- [优化] perf：流水线运行中、重试失败的步骤时提示队列满问题跟进和优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11807)
+
+##### 日志服务
+- [优化] perf: 日志模块数据清理未支持跨集群 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11814)
+
+##### 项目管理
+- [优化] pref:db分片规则保存优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11811)
+- [优化] pref：启用禁用项目接口优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11763)
+
+#### 修复
+
+##### 流水线
+- [修复] bug: 运行中重试时,重试插件的stage状态必须为运行中 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11802)
+- [修复] bug: 修复当项目ID含有_时，定时任务不触发 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11800)
+
 # v4.0.0-rc.2
 ## 2025-05-29
 ### Changelog since v4.0.0-rc.1
