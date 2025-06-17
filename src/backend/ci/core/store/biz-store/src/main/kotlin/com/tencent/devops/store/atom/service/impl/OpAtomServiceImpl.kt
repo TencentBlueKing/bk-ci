@@ -29,7 +29,7 @@ package com.tencent.devops.store.atom.service.impl
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.tencent.bkrepo.common.api.util.toJsonString
-import com.tencent.devops.artifactory.pojo.ArchiveStorePkgRequest
+import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -88,6 +88,12 @@ import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
 import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.io.File
+import java.io.InputStream
+import java.nio.charset.Charset
+import java.nio.file.FileSystems
+import java.time.LocalDateTime
+import java.util.concurrent.Executors
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -95,12 +101,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.util.FileSystemUtils
-import java.io.File
-import java.io.InputStream
-import java.nio.charset.Charset
-import java.nio.file.FileSystems
-import java.time.LocalDateTime
-import java.util.concurrent.Executors
 
 @Service
 @Suppress("LongParameterList", "LongMethod", "ReturnCount", "ComplexMethod", "NestedBlockDepth")
@@ -506,15 +506,16 @@ class OpAtomServiceImpl @Autowired constructor(
         }
         try {
             if (file.exists()) {
-                val archiveAtomResult = StoreFileAnalysisUtil.serviceArchiveStoreFile(
+                val archiveAtomResult = StoreFileAnalysisUtil.serviceArchiveAtomFile(
                     userId = userId,
                     client = client,
                     file = file,
-                    archiveStorePkgRequest = ArchiveStorePkgRequest(
-                        storeCode = atomCode,
-                        storeType = StoreTypeEnum.ATOM,
+                    archiveAtomRequest = ArchiveAtomRequest(
+                        atomCode = atomCode,
+                        projectCode = releaseInfo.projectId,
                         version = versionInfo.version,
-                        releaseType = versionInfo.releaseType
+                        releaseType = versionInfo.releaseType,
+                        os = JsonUtil.toJson(releaseInfo.os),
                     )
                 )
                 if (archiveAtomResult.isNotOk()) {

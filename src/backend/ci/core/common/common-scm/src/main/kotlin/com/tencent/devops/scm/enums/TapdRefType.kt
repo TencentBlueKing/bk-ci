@@ -25,32 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.op
+package com.tencent.devops.scm.enums
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.enums.AuthSystemType
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.engine.service.PipelineRepositoryVersionService
-import org.springframework.beans.factory.annotation.Autowired
-
-@RestResource
-class OpPipelineVersionResourceImpl @Autowired constructor(
-    private val pipelineRepositoryVersionService: PipelineRepositoryVersionService
-) : OpPipelineVersionResource {
-
-    override fun asyncBatchUpdateReferFlag(
-        projectChannelCode: String,
-        routerTag: AuthSystemType?,
-        projectId: String?,
-        queryUnknownRelatedFlag: Boolean?,
-    ): Result<Boolean> {
-        return Result(
-            pipelineRepositoryVersionService.asyncBatchUpdateReferFlag(
-                projectChannelCode = projectChannelCode,
-                routerTag = routerTag,
-                projectId = projectId,
-                queryUnknownRelatedFlag = queryUnknownRelatedFlag
-            )
-        )
-    }
+enum class TapdRefType(val value: String) {
+    MR("mr"),
+    CR("cr"),
+    ISSUE("issue")
 }

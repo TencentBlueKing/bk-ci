@@ -43,7 +43,7 @@ data class BuildFormProperty(
     @get:Schema(title = "是否为常量", required = true)
     var constant: Boolean? = false,
     @get:Schema(title = "元素类型", required = true)
-    val type: BuildFormPropertyType,
+    var type: BuildFormPropertyType,
     @get:Schema(title = "默认值", required = true)
     var defaultValue: Any,
     @get:Schema(title = "上次构建的取值", required = true)
