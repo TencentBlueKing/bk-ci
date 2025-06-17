@@ -30,9 +30,11 @@ package com.tencent.devops.process.yaml
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
@@ -457,10 +459,22 @@ class PipelineYamlFacadeService @Autowired constructor(
                 params = arrayOf(repoHashId)
             )
             val authRepository = AuthRepository(repository)
-            val serverRepository = client.get(ServiceScmRepositoryApiResource::class).getServerRepository(
-                projectId = projectId,
-                authRepository = authRepository
-            ).data
+            val serverRepository = try {
+                client.get(ServiceScmRepositoryApiResource::class).getServerRepository(
+                    projectId = projectId,
+                    authRepository = authRepository
+                ).data
+            } catch (ignored: Exception) {
+                // 目标仓库被删除
+                throw if (ignored is RemoteServiceException && ignored.errorCode == HTTP_404) {
+                    ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION,
+                        params = arrayOf(repository.projectName)
+                    )
+                } else {
+                    ignored
+                }
+            }
             if (serverRepository !is GitScmServerRepository) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC

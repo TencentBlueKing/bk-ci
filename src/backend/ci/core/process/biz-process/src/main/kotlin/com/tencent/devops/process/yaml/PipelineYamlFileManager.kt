@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.yaml
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.constant.HTTP_403
 import com.tencent.devops.common.api.enums.RepositoryType
@@ -77,7 +76,6 @@ import com.tencent.devops.scm.api.pojo.Commit
 import com.tencent.devops.scm.api.pojo.Content
 import com.tencent.devops.scm.api.pojo.PullRequest
 import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
-import com.tencent.devops.scm.exception.ScmException
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
@@ -378,12 +376,9 @@ class PipelineYamlFileManager @Autowired constructor(
                 )
             } catch (ignored: RemoteServiceException) {
                 throw when (ignored.errorCode) {
-                    HTTP_401, HTTP_403 -> ScmException(
-                        I18nUtil.getCodeLanMessage(
-                            CommonMessageCode.THIRD_PARTY_SERVICE_OPERATION_FAILED,
-                            params = arrayOf(repository.getScmType().name, ignored.message ?: "")
-                        ),
-                        repository.getScmType().name
+                    HTTP_401, HTTP_403 -> ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_USER_NO_PUSH_PERMISSION,
+                        params = arrayOf(repository.userName, repository.projectName)
                     )
 
                     else -> ignored
