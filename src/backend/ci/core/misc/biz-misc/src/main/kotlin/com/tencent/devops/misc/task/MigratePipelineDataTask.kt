@@ -403,8 +403,7 @@ class MigratePipelineDataTask constructor(
                     BuildStatus.QUEUE,
                     BuildStatus.QUEUE_CACHE,
                     BuildStatus.RUNNING
-                ),
-                lockFlag = true
+                )
             )
 
             // 存在运行中的构建时禁止迁移
@@ -421,8 +420,7 @@ class MigratePipelineDataTask constructor(
             val unCompletedStageSuccessCount = processDao.countUnCompletedStageSuccess(
                 dslContext = transactionContext,
                 projectId = projectId,
-                pipelineId = pipelineId,
-                lockFlag = true
+                pipelineId = pipelineId
             )
 
             // 存在未成功完成的STAGE_SUCCESS状态构建时禁止迁移
