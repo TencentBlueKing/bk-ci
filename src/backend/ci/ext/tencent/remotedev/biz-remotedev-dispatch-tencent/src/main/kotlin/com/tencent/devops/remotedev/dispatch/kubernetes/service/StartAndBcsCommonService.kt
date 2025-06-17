@@ -93,6 +93,7 @@ class StartAndBcsCommonService @Autowired constructor(
             CLONE_VM -> cloneCreateNewVm(task, taskStatus)
             CREATE_DISK -> createDisk(taskStatus, task)
             EnvironmentAction.DELETE_DISK -> deleteDisk(taskStatus, task)
+            EnvironmentAction.SYNC_VM -> syncVm(taskStatus, task)
         }
     }
 
@@ -511,6 +512,31 @@ class StartAndBcsCommonService @Autowired constructor(
             )
         }.onFailure {
             logger.warn("workspaceTaskCallback|workspaceDeleteDiskCallback fail ${it.message}", it)
+        }
+        dispatchWorkspaceOpHisDao.update(
+            dslContext = dslContext,
+            uid = task.uid,
+            status = if (taskStatus.status == TaskStatusEnum.successed) {
+                EnvironmentActionStatus.SUCCEEDED
+            } else {
+                EnvironmentActionStatus.FAILED
+            },
+            actionMsg = taskStatus.logs.ifEmpty { null }?.joinToString(";")
+        )
+    }
+
+    private fun syncVm(
+        taskStatus: TaskStatus,
+        task: DispatchWorkspaceOpHisRecord
+    ) {
+        kotlin.runCatching {
+            SpringContextUtil.getBean(ServiceRemoteDevInterface::class.java).workspaceSyncVmCallback(
+                taskId = taskStatus.uid,
+                workspaceName = task.workspaceName,
+                operator = task.operator
+            )
+        }.onFailure {
+            logger.warn("workspaceTaskCallback|workspaceSyncVmCallback fail ${it.message}", it)
         }
         dispatchWorkspaceOpHisDao.update(
             dslContext = dslContext,

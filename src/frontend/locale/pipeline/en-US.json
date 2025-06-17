@@ -1105,7 +1105,9 @@
     "withoutOption": "The selected item no longer exists or you don't have permission to view it",
     "randomlyGenerate": "<Randomly generate>",
     "enableVersionControl": "Enable version control",
-    "versionControlTip": "Once enabled, uploading files will automatically generate versioned paths within the directory to prevent overwriting files with the same name."
+    "versionControlTip": "Once enabled, uploading files will automatically generate versioned paths within the directory to prevent overwriting files with the same name.",
+    "controlOption": "Control Options",
+    "displayCondition": "Display Condition"
   },
   "storeMap": {
     "textarea": "Textarea",
@@ -1751,7 +1753,8 @@
     "observing": "Observing",
     "failureRateTips": "failure rate of {0} pipelines was higher than {1} in the past 30 days,",
     "consecutiveFailuresTips": "{0} pipelines {1} in the past 90 days,",
-    "scheduledTriggerNoCodeChangeTips": "{0} pipelines were triggered regularly but the code did not change. There may be anomalies, please pay attention.",
+    "scheduledTriggerNoCodeChangeTips": "{0} pipelines were triggered regularly but the code did not change.",
+    "focusOnAnomalies": "There may be anomalies, please pay attention.",
     "continuousFailure": "continued failure",
     "views": "Views",
     "dataUpdateT1": "(Data updated T+1)"

@@ -1567,7 +1567,7 @@ class PipelineRuntimeService @Autowired constructor(
     /**
      * 手动审批
      */
-    fun manualDealReview(taskId: String, userId: String, params: ReviewParam) {
+    fun manualDealReview(taskId: String, userId: String, params: ReviewParam): Boolean {
         // # 5108 消除了人工审核非必要的事务，防止在发送MQ挂住时，导致的长时间锁定
         pipelineTaskService.getByTaskId(projectId = params.projectId, buildId = params.buildId, taskId = taskId)
             ?.run {
@@ -1625,8 +1625,10 @@ class PipelineRuntimeService @Autowired constructor(
                             executeCount = executeCount ?: 1
                         )
                     )
+                    return true
                 }
             }
+        return false
     }
 
     /**

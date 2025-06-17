@@ -179,7 +179,7 @@ class ManagerService @Autowired constructor(
                 )
                 throw ErrorCodeException(
                     errorCode = ERROR_USER_CONTRACT_NOT_SIGNED,
-                    params = arrayOf("${config.devopsHostGateway}/console/pipeline/$projectId")
+                    params = arrayOf(userId, "${config.devopsHostGateway}/console/pipeline/$projectId")
                 )
             }
         }

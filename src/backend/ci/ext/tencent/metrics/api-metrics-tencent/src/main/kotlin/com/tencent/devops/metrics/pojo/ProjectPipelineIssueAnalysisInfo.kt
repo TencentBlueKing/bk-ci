@@ -38,5 +38,7 @@ data class ProjectPipelineIssueAnalysisInfo(
     @get:Schema(title = "近 90 天内持续失败的流水线数量", required = false)
     val consecutiveFailuresCount: Int? = null,
     @get:Schema(title = "定时触发但代码无变更的流水线数量", required = false)
-    val scheduledTriggerNoCodeChangeCount: Int? = null
+    val scheduledTriggerNoCodeChangeCount: Int? = null,
+    @get:Schema(title = "流水线问题关联图卡ID", required = false)
+    val cardId: Int? = null
 )
