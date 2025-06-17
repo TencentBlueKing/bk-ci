@@ -1783,5 +1783,11 @@
     "dataUpdateT1": "（数据T+1更新)"
   },
   "noArchivedPipelines": "暂无已存档流水线，不用操作",
-  "notParamsTip": "该参数已不再是入参或已被删除，执行时不能再传入。可手动删除，或保存后自动从此参数列表中删除。"
+  "notParamsTip": "该参数已不再是入参或已被删除，执行时不能再传入。可手动删除，或保存后自动从此参数列表中删除。",
+  "attributeValue": "属性值",
+  "attributeName": "属性名",
+  "metadataAttributeName": "元数据属性名",
+  "metadataAttributeValue": "元数据属性值",
+  "artifactQuality": "制品质量",
+  "totalArtifactCount": "共 {0} 个"
 }
