@@ -1,9 +1,9 @@
 <template>
-    <header class="exec-detail-summary">
-        <div
-            v-if="visible"
-            class="exec-detail-summary-info"
-        >
+    <header
+        v-if="visible"
+        class="exec-detail-summary"
+    >
+        <div class="exec-detail-summary-info">
             <div class="exec-detail-summary-info-material">
                 <span class="exec-detail-summary-info-block-title">
                     {{ $t("details.triggerRepo") }}
@@ -173,6 +173,18 @@
                 </div>
             </div>
         </div>
+        <div
+            class="part-quality-block"
+            v-if="artifactQuality && Object.keys(artifactQuality).length"
+        >
+            <span class="part-quality-block-title">
+                {{ $t("artifactQuality") }}
+            </span>
+            <ArtifactQuality
+                :data="artifactQuality"
+                @goOutputs="goOutputs"
+            />
+        </div>
     </header>
 </template>
 
@@ -180,10 +192,13 @@
     import Logo from '@/components/Logo'
     import { mapActions } from 'vuex'
     import MaterialItem from './MaterialItem'
+    import ArtifactQuality from './artifactQuality'
+
     export default {
         components: {
             MaterialItem,
-            Logo
+            Logo,
+            ArtifactQuality
         },
         props: {
             visible: {
@@ -243,6 +258,9 @@
             },
             archiveFlag () {
                 return this.$route.query.archiveFlag
+            },
+            artifactQuality () {
+                return this.execDetail?.artifactQuality
             }
         },
         watch: {
@@ -257,6 +275,18 @@
                     }
                 },
                 immediate: true
+            },
+            goOutputs (id) {
+                this.$router.push({
+                    name: 'pipelinesDetail',
+                    params: {
+                        ...this.routerParams,
+                        type: 'outputs'
+                    },
+                    query: {
+                        id
+                    }
+                })
             }
         },
         methods: {
@@ -484,6 +514,21 @@
                 @include ellipsis();
             }
         }
+    }
+}
+.part-quality-block {
+    display: flex;
+    flex-wrap: wrap;
+    padding-top: 18px;
+    padding-bottom: 10px;
+    font-size: 12px;
+    
+    .part-quality-block-title {
+        color: #979ba5;
+        margin-right: 24px;
+        margin-top: 3px;
+        padding-top: 4px;
+        flex-shrink: 0;
     }
 }
 </style>

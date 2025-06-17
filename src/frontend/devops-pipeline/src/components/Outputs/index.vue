@@ -15,7 +15,22 @@
                 class="pipeline-exec-outputs-aside"
             >
                 <div class="pipeline-exec-outputs-filter-input">
+                    <div
+                        class="artifact-search"
+                        v-if="isOutputPage"
+                    >
+                        <p>{{ $t('metaData') }}</p>
+                        <search-select
+                            class="select-search"
+                            unique-select
+                            :data="artifactFilterData"
+                            v-model="artifactValue"
+                            @change="updateSearchKey"
+                        >
+                        </search-select>
+                    </div>
                     <bk-input
+                        class="input-search"
                         clearable
                         right-icon="bk-icon icon-search"
                         :placeholder="filterPlaceholder"
@@ -153,7 +168,16 @@
                                 <bk-table-column
                                     :label="$t('view.value')"
                                     prop="value"
-                                ></bk-table-column>
+                                >
+                                    <template slot-scope="props">
+                                        <span
+                                            v-if="props.row.color"
+                                            :style="{ backgroundColor: props.row.color }"
+                                            class="color-block"
+                                        ></span>
+                                        <span>{{ props.row.value }}</span>
+                                    </template>
+                                </bk-table-column>
                                 <bk-table-column
                                     :label="$t('desc')"
                                     prop="description"
@@ -255,6 +279,8 @@
     import { extForFile, repoTypeMap, repoTypeNameMap } from '@/utils/pipelineConst'
     import { convertFileSize, convertTime } from '@/utils/util'
     import { mapActions } from 'vuex'
+    import SearchSelect from '@blueking/search-select'
+    import '@blueking/search-select/dist/styles/index.css'
 
     export default {
         components: {
@@ -265,7 +291,8 @@
             CopyToCustomRepoDialog,
             OutputQrcode,
             // ArtifactsList
-            ArtifactDownloadButton
+            ArtifactDownloadButton,
+            SearchSelect
         },
         props: {
             currentTab: {
@@ -282,12 +309,23 @@
                 activeOutput: '',
                 activeOutputDetail: null,
                 hasPermission: false,
-                isLoading: false
+                isLoading: false,
+                artifactValue: [],
+                artifactFilterData: []
             }
         },
         computed: {
+            filterQuery () {
+                return this.artifactValue.reduce((query, item) => {
+                    query[item.id] = item.values.map(value => value.id).join(',')
+                    return query
+                }, {})
+            },
+            isOutputPage () {
+                return this.currentTab === 'artifacts'
+            },
             initWidth () {
-                return this.currentTab === 'reports' ? '300px' : '40%'
+                return !this.isOutputPag ? '300px' : '40%'
             },
             filterPlaceholder () {
                 return this.$t(`${this.currentTab}FilterPlaceholder`)
@@ -551,6 +589,7 @@
                 }
             },
             currentTab: function () {
+                this.keyWord = ''
                 this.$nextTick(this.init)
             },
             '$route.params.buildNo' () {
@@ -559,13 +598,50 @@
         },
         mounted () {
             this.init()
+            this.getArtifactDate()
         },
         methods: {
             ...mapActions('common', [
                 'requestFileInfo',
                 'requestOutputs',
+                'getMetadataLabel',
                 'requestExecPipPermission'
             ]),
+
+            updateSearchKey (value) {
+                console.log('🚀元数据搜索', this.filterQuery)
+            },
+            async getArtifactDate () {
+                const repoList = await this.getMetadataLabel({
+                    projectId: this.$route.params.projectId,
+                    labelKey: 'BK_CI_ARTIFACT_AUTOTEST'
+                })
+                const nonEmptyItems = repoList.filter(item => Object.keys(item.labelColorMap).length > 0)
+                const emptyItems = repoList.filter(item => Object.keys(item.labelColorMap).length === 0)
+                const nonEmptyResult = nonEmptyItems.map(item => {
+                    const labelColorMapKeys = Object.keys(item.labelColorMap)
+                    return {
+                        id: item.labelKey,
+                        name: item.labelKey,
+                        multiable: true,
+                        children: labelColorMapKeys.map(key => ({
+                            id: key,
+                            name: key
+                        }))
+                    }
+                })
+                
+                const customItem = {
+                    id: 'custom',
+                    name: '自定义元数据',
+                    multiable: true,
+                    children: emptyItems.map(item => ({
+                        id: item.labelKey,
+                        name: item.labelKey
+                    }))
+                }
+                this.artifactFilterData = [...nonEmptyResult, customItem]
+            },
 
             async init () {
                 const { projectId, pipelineId, buildNo: buildId } = this.$route.params
@@ -805,7 +881,44 @@
         flex-direction: column;
 
         .pipeline-exec-outputs-filter-input {
+            display: flex;
+            width: 100%;
             margin: 12px 0;
+            flex-shrink: 0;
+            .artifact-search {
+                display: flex;
+                height: 32px;
+                margin-right: 4px;
+                flex: 0 0 60%;
+                p {
+                    width: 50px;
+                    text-align: center;
+                    height: 32px;
+                    line-height: 32px;
+                    background-color: #fafbfd;
+                    font-size: 12px;
+                    border: 1px solid #c4c6cc;
+                    border-radius: 2px;
+                    border-right: none;
+                }
+                .select-search {
+                    flex: 1;
+                    ::placeholder {
+                        font-size: 12px;
+                        color: #c4c6cc;
+                    }
+                    .search-tag-box {
+                        white-space: break-spaces;
+                    }
+                    .search-select-wrap {
+                        overflow-y: auto;
+                    }
+                }
+            }
+            .input-search {
+                flex-shrink: 0;
+                flex: 1;
+            }
         }
 
         .pipeline-exec-outputs-filter {
@@ -926,6 +1039,14 @@
 
         .pipeline-exec-output-block {
             padding: 16px 24px;
+
+            .color-block {
+                display: inline-block;
+                margin-right: 8px;
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+            }
 
             .pipeline-exec-output-block-title {
                 font-size: 14px;
