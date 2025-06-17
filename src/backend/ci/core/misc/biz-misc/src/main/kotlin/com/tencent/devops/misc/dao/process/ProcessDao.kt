@@ -365,8 +365,7 @@ class ProcessDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        status: Set<BuildStatus>,
-        lockFlag: Boolean = false
+        status: Set<BuildStatus>
     ): Int {
         val tPipelineBuildHistory = TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY
         fun queryTableCount(table: Table<*>): Int {
@@ -380,7 +379,6 @@ class ProcessDao {
             return dslContext.selectCount()
                 .from(table)
                 .where(conditions)
-                .run { if (lockFlag) forUpdate() else this }
                 .fetchOne(0, Int::class.java) ?: 0
         }
         return queryTableCount(T_PIPELINE_BUILD_HISTORY) + queryTableCount(T_PIPELINE_BUILD_HISTORY_DEBUG)
@@ -389,8 +387,7 @@ class ProcessDao {
     fun countUnCompletedStageSuccess(
         dslContext: DSLContext,
         projectId: String,
-        pipelineId: String,
-        lockFlag: Boolean = false
+        pipelineId: String
     ): Int {
         val tPipelineBuildHistory = TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY
         fun queryTableCount(table: Table<*>): Int {
@@ -412,7 +409,6 @@ class ProcessDao {
             return dslContext.selectCount()
                 .from(table)
                 .where(conditions)
-                .run { if (lockFlag) forUpdate() else this }
                 .fetchOne(0, Int::class.java) ?: 0
         }
 
