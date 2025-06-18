@@ -399,7 +399,7 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
     ): Boolean
 
     abstract override fun generateStoreVisibleData(
-        storeCodeList: List<String?>,
+        storeCodeList: List<String>,
         storeType: StoreTypeEnum
     ): HashMap<String, MutableList<Int>>?
 
