@@ -2374,4 +2374,12 @@ class PipelineRepositoryService constructor(
             pipelineId = pipelineId
         )
     }
+
+    fun getTemplateVersionRecord(templateId: String, version: Long?) = templateDao.getTemplate(
+        dslContext = dslContext,
+        templateId = templateId,
+        version = version
+    ) ?: throw ErrorCodeException(
+        errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
+    )
 }

@@ -746,6 +746,15 @@ class TriggerTransfer @Autowired(required = false) constructor(
                                 )
                             }
                             JsonUtil.toJson(params, false)
+                        },
+                        version = if (timer.newExpression.filterNonEmpty().isEmpty() &&
+                                (timer.advanceExpression?.size ?: 0) == 1
+                        ) {
+                            // 2.*仅支持一个触发规则, 且没有newExpression入参
+                            "2.*"
+                        } else {
+                            // 1.* 插件支持支持多个触发规则
+                            "1.*"
                         }
                     ).checkTriggerElementEnable(timer.enable)
                 )
@@ -858,6 +867,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
     private fun String.disjoin() = this.split(",")
 
     private fun List<String>?.nonEmptyOrNull() = this?.ifEmpty { null }
+
+    private fun List<String>?.filterNonEmpty() = this?.filter { it.isNotBlank() } ?: listOf()
 
     private fun buildP4TriggerElement(
         rule: PushRule?,
