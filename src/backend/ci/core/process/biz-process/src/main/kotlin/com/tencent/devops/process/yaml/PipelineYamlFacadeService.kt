@@ -30,6 +30,8 @@ package com.tencent.devops.process.yaml
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.HTTP_401
+import com.tencent.devops.common.api.constant.HTTP_403
 import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
@@ -467,16 +469,23 @@ class PipelineYamlFacadeService @Autowired constructor(
                     projectId = projectId,
                     authRepository = authRepository
                 ).data
-            } catch (ignored: Exception) {
-                // 目标仓库被删除
-                throw if (ignored is RemoteServiceException && ignored.errorCode == HTTP_404) {
-                    ErrorCodeException(
+            } catch (ignored: RemoteServiceException) {
+                when (ignored.httpStatus) {
+                    // 目标仓库被删除
+                    HTTP_404 -> ErrorCodeException(
                         errorCode = ProcessMessageCode.ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION,
                         params = arrayOf(repository.projectName)
                     )
-                } else {
-                    ignored
+
+                    HTTP_401, HTTP_403 -> ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_USER_NO_PUSH_PERMISSION,
+                        params = arrayOf(repository.userName, repository.projectName)
+                    )
+
+                    else -> ignored
                 }
+            } catch (ignored: Exception) {
+                throw ignored
             }
             if (serverRepository !is GitScmServerRepository) {
                 throw ErrorCodeException(
