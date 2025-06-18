@@ -43,7 +43,7 @@ data class BuildFormProperty(
     @get:Schema(title = "是否为常量", required = true)
     var constant: Boolean? = false,
     @get:Schema(title = "元素类型", required = true)
-    val type: BuildFormPropertyType,
+    var type: BuildFormPropertyType,
     @get:Schema(title = "默认值", required = true)
     var defaultValue: Any,
     @get:Schema(title = "上次构建的取值", required = true)
@@ -54,6 +54,8 @@ data class BuildFormProperty(
     var desc: String?,
     @get:Schema(title = "分组信息", required = false)
     val category: String? = null,
+    @get:Schema(title = "展示条件", required = false)
+    val displayCondition: Map<String, String>? = null,
 
     // 针对 SVN_TAG 新增字段
     @get:Schema(title = "repoHashId", required = false)

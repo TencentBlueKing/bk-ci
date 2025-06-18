@@ -414,36 +414,53 @@ class PipelineRepositoryVersionService(
 
     fun asyncBatchUpdateReferFlag(
         projectChannelCode: String,
-        routerTag: AuthSystemType? = null
+        routerTag: AuthSystemType? = null,
+        projectId: String? = null,
+        queryUnknownRelatedFlag: Boolean? = null
     ): Boolean {
-        Executors.newFixedThreadPool(1).submit {
-            logger.info("begin asyncBatchUpdateReferFlag!!")
-            var offset = 0
-            val limit = PageUtil.DEFAULT_PAGE_SIZE
-            do {
-                val projectInfos = client.get(ServiceProjectResource::class).listProjectsByCondition(
-                    projectConditionDTO = ProjectConditionDTO(
+        val executors = Executors.newFixedThreadPool(1)
+        try {
+            executors.submit {
+                logger.info("begin asyncBatchUpdateReferFlag!!")
+                var offset = 0
+                val limit = PageUtil.DEFAULT_PAGE_SIZE
+                do {
+                    val projectConditionDTO = ProjectConditionDTO(
                         channelCode = projectChannelCode,
                         routerTag = routerTag
-                    ),
-                    limit = limit,
-                    offset = offset
-                ).data ?: break
-                projectInfos.forEach { projectInfo ->
-                    val projectId = projectInfo.englishName
-                    val pipelineIds = pipelineInfoDao.listPipelineIdByProject(dslContext, projectId)
-                    pipelineIds.forEach { pipelineId ->
-                        updatePipelineReferFlag(projectId, pipelineId)
+                    ).apply {
+                        projectId?.let { projectCodes = listOf(it) }
                     }
-                }
-                offset += limit
-            } while (projectInfos.size == limit)
-            logger.info("end asyncBatchUpdateReferFlag!!")
+                    val projectInfos = client.get(ServiceProjectResource::class).listProjectsByCondition(
+                        projectConditionDTO = projectConditionDTO,
+                        limit = limit,
+                        offset = offset
+                    ).data ?: break
+                    projectInfos.forEach { projectInfo ->
+                        val pipelineIds = pipelineInfoDao.listPipelineIdByProject(dslContext, projectInfo.englishName)
+                        pipelineIds.forEach { pipelineId ->
+                            updatePipelineReferFlag(
+                                projectId = projectInfo.englishName,
+                                pipelineId = pipelineId,
+                                queryUnknownRelatedFlag = queryUnknownRelatedFlag
+                            )
+                        }
+                    }
+                    offset += limit
+                } while (projectInfos.size == limit)
+                logger.info("end asyncBatchUpdateReferFlag!!")
+            }
+        } finally {
+            executors.shutdown()
         }
         return true
     }
 
-    private fun updatePipelineReferFlag(projectId: String, pipelineId: String) {
+    private fun updatePipelineReferFlag(
+        projectId: String,
+        pipelineId: String,
+        queryUnknownRelatedFlag: Boolean? = null
+    ) {
         var offset = 0
         val limit = PageUtil.DEFAULT_PAGE_SIZE
         val pipelineInfo = pipelineInfoDao.convert(
@@ -453,13 +470,13 @@ class PipelineRepositoryVersionService(
         try {
             lock.lock()
             do {
-                // 查询关联状态未知的版本
+                // 查询流水线版本记录
                 val pipelineVersionList = pipelineResourceVersionDao.listPipelineVersion(
                     dslContext = dslContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     pipelineInfo = pipelineInfo,
-                    queryUnknownRelatedFlag = true,
+                    queryUnknownRelatedFlag = queryUnknownRelatedFlag,
                     offset = offset,
                     limit = limit
                 )
