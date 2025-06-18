@@ -111,7 +111,8 @@ class PipelineYamlFacadeService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             repoHashId = repoHashId,
-            scmType = scmType
+            scmType = scmType,
+            authUserId = repository.userName
         )
         val action = eventActionFactory.loadManualEvent(setting = setting, event = event)
 
@@ -355,7 +356,8 @@ class PipelineYamlFacadeService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 repoHashId = repoHashId,
-                scmType = scmType
+                scmType = scmType,
+                authUserId = repository.userName
             )
             val action = eventActionFactory.loadManualEvent(setting = setting, event = event)
             if (!action.checkPushPermission()) {
@@ -399,7 +401,8 @@ class PipelineYamlFacadeService @Autowired constructor(
                     userId = userId,
                     projectId = projectId,
                     repoHashId = repoHashId,
-                    scmType = scmType
+                    scmType = scmType,
+                    authUserId = repository.userName
                 )
                 val action = eventActionFactory.loadManualEvent(setting = setting, event = event)
                 // 发布时创建流水线

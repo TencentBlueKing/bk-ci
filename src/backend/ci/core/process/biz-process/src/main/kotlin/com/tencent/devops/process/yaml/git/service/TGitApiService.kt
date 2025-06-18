@@ -287,15 +287,23 @@ class TGitApiService @Autowired constructor(
         }?.let { TGitFileInfo(content = it.content ?: "", blobId = it.blobId) }
     }
 
-    override fun checkPushPermission(userId: String, cred: PacGitCred, gitProjectId: String): Boolean {
+    override fun checkPushPermission(
+        userId: String,
+        cred: PacGitCred,
+        gitProjectId: String,
+        authUserId: String
+    ): Boolean {
         return try {
-            val member = client.get(ServiceGitResource::class).getProjectMembersAll(
+            val members = client.get(ServiceGitResource::class).getProjectMembersAll(
                 gitProjectId = gitProjectId,
                 search = userId,
                 tokenType = TokenTypeEnum.OAUTH,
                 token = cred.toToken()
-            ).data?.find { it.username == userId }
-            member?.let { it.accessLevel >= GitAccessLevelEnum.DEVELOPER.level } ?: false
+            ).data?.filter {
+                it.username == userId || it.username == authUserId
+            }
+            // 操作人和代码库授权人都必须有dev及以上权限
+            members?.any { it.accessLevel < GitAccessLevelEnum.DEVELOPER.level } ?: false
         } catch (ignored: Throwable) {
             logger.warn("Failed to check push permission|$userId|$gitProjectId")
             false
