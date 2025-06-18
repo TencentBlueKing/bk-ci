@@ -944,6 +944,14 @@ class PipelineBuildFacadeService(
             )
         }
         PipelineUtils.checkStageReviewParam(reviewRequest?.reviewParams)
+        if (!reviewRequest?.reviewParams.isNullOrEmpty()) {
+            reviewParamsCheck(
+                projectId = projectId,
+                buildId = buildId,
+                reviewRequest = reviewRequest!!,
+                pipelineId = pipelineId
+            )
+        }
 
         val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
             ?: throw ErrorCodeException(
@@ -1003,6 +1011,31 @@ class PipelineBuildFacadeService(
             )
         } finally {
             runLock.unlock()
+        }
+    }
+
+    private fun reviewParamsCheck(
+        projectId: String,
+        buildId: String,
+        reviewRequest: StageReviewRequest,
+        pipelineId: String
+    ) {
+        // feat: 检测stage审核参数与入参之间的不规范写法 #11853
+        val variables = buildVariableService.getAllVariableWithType(projectId, buildId).associateBy { it.key }
+        reviewRequest.reviewParams.forEach {
+            val prefix = "[$projectId][$pipelineId][$buildId]"
+            variables[it.key]?.let { check ->
+                logger.info("$prefix|11853_CHECK|STAGE|reviewParams|key=${it.key}|")
+                if (check.readOnly == true) {
+                    logger.info("$prefix|11853_CHECK|STAGE|READ_ONLY|key=${it.key}|")
+                }
+            }
+            variables["variables.${it.key}"]?.let { check ->
+                logger.info("$prefix|11853_CHECK|STAGE|HAS_VARIABLES|key=${it.key}|")
+                if (check.readOnly == true) {
+                    logger.info("$prefix|11853_CHECK|STAGE|VARIABLES_READ_ONLY|key=${it.key}|")
+                }
+            }
         }
     }
 
