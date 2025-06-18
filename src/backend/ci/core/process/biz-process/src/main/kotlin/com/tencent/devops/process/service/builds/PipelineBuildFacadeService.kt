@@ -938,7 +938,7 @@ class PipelineBuildFacadeService(
         }
         PipelineUtils.checkStageReviewParam(reviewRequest?.reviewParams)
         if (!reviewRequest?.reviewParams.isNullOrEmpty()) {
-            check11853(
+            reviewParamsCheck(
                 projectId = projectId,
                 buildId = buildId,
                 reviewRequest = reviewRequest!!,
@@ -1007,7 +1007,7 @@ class PipelineBuildFacadeService(
         }
     }
 
-    private fun check11853(
+    private fun reviewParamsCheck(
         projectId: String,
         buildId: String,
         reviewRequest: StageReviewRequest,

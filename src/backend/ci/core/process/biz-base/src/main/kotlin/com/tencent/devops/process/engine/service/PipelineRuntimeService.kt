@@ -1565,7 +1565,7 @@ class PipelineRuntimeService @Autowired constructor(
         )
     }
 
-    private fun check11853(
+    private fun reviewParamsCheck(
         projectId: String,
         buildId: String,
         params: List<ManualReviewParam>,
@@ -1612,7 +1612,7 @@ class PipelineRuntimeService @Autowired constructor(
                             buildId = buildId,
                             variables = params.params.associate { it.key to it.value.toString() }
                         )
-                        check11853(
+                        reviewParamsCheck(
                             projectId = projectId,
                             buildId = buildId,
                             params = params.params,
