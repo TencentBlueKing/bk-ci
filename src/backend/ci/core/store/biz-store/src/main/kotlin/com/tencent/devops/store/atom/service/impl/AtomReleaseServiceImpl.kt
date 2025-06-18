@@ -197,6 +197,10 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     @Value("\${store.defaultAtomErrorCodePrefix:8}")
     private lateinit var defaultAtomErrorCodePrefix: String
 
+    @Value("\${store.defaultAtomPublisherReviewer:v_kykang,carlyin,fayewang}")
+    private lateinit var defaultAtomPublisherReviewer: String
+
+
     companion object {
         private val logger = LoggerFactory.getLogger(AtomReleaseServiceImpl::class.java)
     }
@@ -1500,21 +1504,25 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     }
 
     private fun sendPendingReview(userId: String, atomName: String, version: String) {
-        // 构建消息内容参数（包含成功数、失败数和错误信息）
         val bodyParams = mapOf(
             "userId" to userId,
             "atomName" to atomName,
             "version" to version,
         )
-        // 创建通知请求对象
+
+        val receivers = defaultAtomPublisherReviewer
+            .split(",")
+            .map { it.trim() }
+            .toMutableSet()
+
         val request = SendNotifyMessageTemplateRequest(
             templateCode = "BK_STORE_ATOM_AUDIT_NOTIFY",
-            receivers = mutableSetOf("v_kykang", "carlyin", "fayewang"),
+            receivers = receivers,
             bodyParams = bodyParams,
             notifyType = mutableSetOf(NotifyType.WEWORK.name)
         )
+
         try {
-            // 发送消息通知
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
         } catch (ignored: Throwable) {
             logger.warn("Failed to send notify message", ignored)
