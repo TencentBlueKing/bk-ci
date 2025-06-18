@@ -48,5 +48,6 @@ data class AtomReleaseRequest(
     val branch: String? = null,
     @get:Schema(title = "发布人")
     val publisher: String? = null,
-
-    )
+    @get:Schema(title = "插件名")
+    val atomName: String? = null,
+)
