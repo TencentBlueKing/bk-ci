@@ -117,4 +117,19 @@ class SubPipelineRefService @Autowired constructor(
             infos = needDelInfos
         )
     }
+
+    /**
+     * 是否存在调用链路
+     */
+    fun exists(
+        projectId: String,
+        pipelineId: String,
+        subProjectId: String,
+        subPipelineId: String
+    ) = list(
+        projectId = projectId,
+        pipelineId = pipelineId,
+        subProjectId = subProjectId,
+        subPipelineId = subPipelineId
+    ).isNotEmpty
 }

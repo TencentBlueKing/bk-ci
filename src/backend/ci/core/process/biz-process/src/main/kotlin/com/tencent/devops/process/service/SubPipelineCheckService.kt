@@ -178,20 +178,19 @@ class SubPipelineCheckService @Autowired constructor(
         subPipelineElementMap.forEach { (subPipeline, elements) ->
             val subProjectId = subPipeline.projectId
             val subPipelineId = subPipeline.pipelineId
-            subPipelineRefService.list(
+            val existsLink = subPipelineRefService.exists(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 subProjectId = subProjectId,
                 subPipelineId = subPipelineId
-            ).let {
-                // 已经归档过的链路，无需重复校验，直接跳过
-                if (it.isNotEmpty) {
-                    logger.info(
-                        "pipeline link already verified|" +
-                                "[$projectId|$pipelineId]->[$subProjectId|$subPipelineId]"
-                    )
-                    return@forEach
-                }
+            )
+            // 已经归档过的链路，无需重复校验，直接跳过
+            if (existsLink) {
+                logger.info(
+                    "pipeline link already verified|" +
+                            "[$projectId|$pipelineId]->[$subProjectId|$subPipelineId]"
+                )
+                return@forEach
             }
             val subPipelineRef = SubPipelineRef(
                 projectId = projectId,
