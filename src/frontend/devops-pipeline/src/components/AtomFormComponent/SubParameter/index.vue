@@ -151,14 +151,15 @@
                         type: type || i.key || 'text',
                         value: isObject(i.value) ? JSON.stringify(i.value) : i.value,
                         hasKey: !!type,
-                        disabled: !type
+                        disabled: !type && i.key
                     }
                 })
             },
             addParam () {
                 this.parameters.push({
                     key: '',
-                    value: ''
+                    value: '',
+                    hasKey: true
                 })
             },
             cutParam (index) {
