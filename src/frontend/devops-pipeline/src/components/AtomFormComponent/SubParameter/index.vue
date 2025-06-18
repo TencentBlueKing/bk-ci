@@ -90,6 +90,7 @@
                     pipelineId: isTemplate ? params.templateId : '',
                     templateVersion: isTemplate ? this.template?.currentVersion?.version : '',
                     version: this.pipelineInfo?.version,
+                    isTemplate,
                     ...params,
                     ...atomValue
                 }
@@ -158,7 +159,7 @@
                 this.parameters = values.map(i => {
                     return {
                         ...i,
-                        type: this.typeMap.get(i.key).type || 'text',
+                        type: this.typeMap.get(i.key)?.type || 'text',
                         value: isObject(i.value) ? JSON.stringify(i.value) : i.value
                     }
                 })
