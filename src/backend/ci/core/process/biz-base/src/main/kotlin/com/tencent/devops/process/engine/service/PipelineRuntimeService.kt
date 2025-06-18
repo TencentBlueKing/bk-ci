@@ -56,6 +56,7 @@ import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
@@ -138,15 +139,15 @@ import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
+import java.time.LocalDateTime
+import java.util.Date
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.Date
-import java.util.concurrent.TimeUnit
 
 /**
  * 流水线运行时相关的服务
@@ -1140,9 +1141,11 @@ class PipelineRuntimeService @Autowired constructor(
             context.retryOnRunningBuild -> {
                 context.sendBuildStageEvent()
             }
+
             context.startBuildStatus.isReadyToRun() -> {
                 context.sendBuildStartEvent()
             }
+
             context.triggerReviewers?.isNotEmpty() == true -> {
                 prepareTriggerReview(
                     userId = context.userId,
@@ -1229,7 +1232,7 @@ class PipelineRuntimeService @Autowired constructor(
                 modelVar = mutableMapOf(), status = context.startBuildStatus.name,
                 timestamps = mapOf(
                     BuildTimestampType.BUILD_CONCURRENCY_QUEUE to
-                            BuildRecordTimeStamp(context.now.timestampmilli(), null)
+                        BuildRecordTimeStamp(context.now.timestampmilli(), null)
                 ), queueTime = context.now
             )
         }
@@ -1562,6 +1565,33 @@ class PipelineRuntimeService @Autowired constructor(
         )
     }
 
+    private fun check11853(
+        projectId: String,
+        buildId: String,
+        params: List<ManualReviewParam>,
+        pipelineId: String,
+        taskName: String,
+        taskId: String
+    ) {
+        // feat: 检测stage审核参数与入参之间的不规范写法 #11853
+        val variables = buildVariableService.getAllVariableWithType(projectId, buildId).associateBy { it.key }
+        params.forEach {
+            val prefix = "[$projectId][$pipelineId][$buildId][$taskId][$taskName]"
+            variables[it.key]?.let { check ->
+                logger.info("$prefix|11853_CHECK_TASK|reviewParams|key=${it.key}|")
+                if (check.readOnly == true) {
+                    logger.info("$prefix|11853_CHECK_TASK|READ_ONLY|key=${it.key}|")
+                }
+            }
+            variables["variables.${it.key}"]?.let { check ->
+                logger.info("$prefix|11853_CHECK_TASK|HAS_VARIABLES|key=${it.key}|")
+                if (check.readOnly == true) {
+                    logger.info("$prefix|11853_CHECK_TASK|VARIABLES_READ_ONLY|key=${it.key}|")
+                }
+            }
+        }
+    }
+
     /**
      * 手动审批
      */
@@ -1581,6 +1611,14 @@ class PipelineRuntimeService @Autowired constructor(
                             pipelineId = pipelineId,
                             buildId = buildId,
                             variables = params.params.associate { it.key to it.value.toString() }
+                        )
+                        check11853(
+                            projectId = projectId,
+                            buildId = buildId,
+                            params = params.params,
+                            pipelineId = pipelineId,
+                            taskName = taskName,
+                            taskId = taskId
                         )
                     }
 

@@ -1016,16 +1016,17 @@ class PipelineBuildFacadeService(
         // feat: 检测stage审核参数与入参之间的不规范写法 #11853
         val variables = buildVariableService.getAllVariableWithType(projectId, buildId).associateBy { it.key }
         reviewRequest.reviewParams.forEach {
+            val prefix = "[$projectId][$pipelineId][$buildId]"
             variables[it.key]?.let { check ->
-                logger.info("[$projectId][$pipelineId][$buildId]|11853_CHECK|reviewParams|key=${it.key}|")
+                logger.info("$prefix|11853_CHECK_STAGE|reviewParams|key=${it.key}|")
                 if (check.readOnly == true) {
-                    logger.info("[$projectId][$pipelineId][$buildId]|11853_CHECK|READ_ONLY|key=${it.key}|")
+                    logger.info("$prefix|11853_CHECK_STAGE|READ_ONLY|key=${it.key}|")
                 }
             }
             variables["variables.${it.key}"]?.let { check ->
-                logger.info("[$projectId][$pipelineId][$buildId]|11853_CHECK|HAS_VARIABLES|key=${it.key}|")
+                logger.info("$prefix|11853_CHECK_STAGE|HAS_VARIABLES|key=${it.key}|")
                 if (check.readOnly == true) {
-                    logger.info("[$projectId][$pipelineId][$buildId]|11853_CHECK|VARIABLES_READ_ONLY|key=${it.key}|")
+                    logger.info("$prefix|11853_CHECK_STAGE|VARIABLES_READ_ONLY|key=${it.key}|")
                 }
             }
         }
