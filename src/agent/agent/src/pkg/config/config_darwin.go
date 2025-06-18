@@ -1,4 +1,4 @@
-//go:build linux || darwin
+//go:build darwin
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -29,10 +29,30 @@
 
 package config
 
+import (
+	"fmt"
+
+	"github.com/pkg/errors"
+	"golang.org/x/sys/unix"
+)
+
 func GetWinTaskType() string {
 	return ""
 }
 
 func GetOsVersion() (string, error) {
-	return "", nil
+	// 使用 SysctlString 直接获取字符串类型的系统信息
+	// "kern.osproductversion" 对应 sw_vers 的 ProductVersion
+	productVersion, err := unix.Sysctl("kern.osproductversion")
+	if err != nil {
+		return "", errors.Wrap(err, "get kern.osproductversion error")
+	}
+
+	// "kern.osrelease" 是内核版本，例如 "23.4.0"
+	kernelVersion, err := unix.Sysctl("kern.osrelease")
+	if err != nil {
+		return "", errors.Wrap(err, "get kern.osrelease error")
+	}
+
+	return fmt.Sprintf("%s;%s", productVersion, kernelVersion), nil
 }
