@@ -1018,15 +1018,15 @@ class PipelineBuildFacadeService(
         reviewRequest.reviewParams.forEach {
             val prefix = "[$projectId][$pipelineId][$buildId]"
             variables[it.key]?.let { check ->
-                logger.info("$prefix|11853_CHECK_STAGE|reviewParams|key=${it.key}|")
+                logger.info("$prefix|11853_CHECK|STAGE|reviewParams|key=${it.key}|")
                 if (check.readOnly == true) {
-                    logger.info("$prefix|11853_CHECK_STAGE|READ_ONLY|key=${it.key}|")
+                    logger.info("$prefix|11853_CHECK|STAGE|READ_ONLY|key=${it.key}|")
                 }
             }
             variables["variables.${it.key}"]?.let { check ->
-                logger.info("$prefix|11853_CHECK_STAGE|HAS_VARIABLES|key=${it.key}|")
+                logger.info("$prefix|11853_CHECK|STAGE|HAS_VARIABLES|key=${it.key}|")
                 if (check.readOnly == true) {
-                    logger.info("$prefix|11853_CHECK_STAGE|VARIABLES_READ_ONLY|key=${it.key}|")
+                    logger.info("$prefix|11853_CHECK|STAGE|VARIABLES_READ_ONLY|key=${it.key}|")
                 }
             }
         }

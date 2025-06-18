@@ -1578,15 +1578,15 @@ class PipelineRuntimeService @Autowired constructor(
         params.forEach {
             val prefix = "[$projectId][$pipelineId][$buildId][$taskId][$taskName]"
             variables[it.key]?.let { check ->
-                logger.info("$prefix|11853_CHECK_TASK|reviewParams|key=${it.key}|")
+                logger.info("$prefix|11853_CHECK|TASK|reviewParams|key=${it.key}|")
                 if (check.readOnly == true) {
-                    logger.info("$prefix|11853_CHECK_TASK|READ_ONLY|key=${it.key}|")
+                    logger.info("$prefix|11853_CHECK|TASK|READ_ONLY|key=${it.key}|")
                 }
             }
             variables["variables.${it.key}"]?.let { check ->
-                logger.info("$prefix|11853_CHECK_TASK|HAS_VARIABLES|key=${it.key}|")
+                logger.info("$prefix|11853_CHECK|TASK|HAS_VARIABLES|key=${it.key}|")
                 if (check.readOnly == true) {
-                    logger.info("$prefix|11853_CHECK_TASK|VARIABLES_READ_ONLY|key=${it.key}|")
+                    logger.info("$prefix|11853_CHECK|TASK|VARIABLES_READ_ONLY|key=${it.key}|")
                 }
             }
         }
