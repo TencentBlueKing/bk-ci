@@ -35,8 +35,11 @@ import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
  * 用户主动操作的事件
  */
 data class PipelineYamlManualEvent(
+    // 操作人
     val userId: String,
     val projectId: String,
     val repoHashId: String,
-    val scmType: ScmType
+    val scmType: ScmType,
+    // 代码库授权人
+    val authUserId: String
 ) : CodeWebhookEvent
