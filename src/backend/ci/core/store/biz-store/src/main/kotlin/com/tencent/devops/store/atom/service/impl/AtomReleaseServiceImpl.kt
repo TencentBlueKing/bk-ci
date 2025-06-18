@@ -197,6 +197,10 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     @Value("\${store.defaultAtomErrorCodePrefix:8}")
     private lateinit var defaultAtomErrorCodePrefix: String
 
+    @Value("\${store.defaultAtomPublisherReviewer:v_kykang,carlyin,fayewang}")
+    private lateinit var defaultAtomPublisherReviewer: String
+
+
     companion object {
         private val logger = LoggerFactory.getLogger(AtomReleaseServiceImpl::class.java)
     }
@@ -1505,12 +1509,19 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             "atomName" to atomName,
             "version" to version,
         )
+
+        val receivers = defaultAtomPublisherReviewer
+            .split(",")
+            .map { it.trim() }
+            .toMutableSet()
+
         val request = SendNotifyMessageTemplateRequest(
             templateCode = "BK_STORE_ATOM_AUDIT_NOTIFY",
-            receivers = mutableSetOf("v_kykang", "carlyin", "fayewang"),
+            receivers = receivers,
             bodyParams = bodyParams,
             notifyType = mutableSetOf(NotifyType.WEWORK.name)
         )
+
         try {
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
         } catch (ignored: Throwable) {
