@@ -31,7 +31,6 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
-import com.tencent.bkrepo.common.query.model.Sort
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.BUILD_NOT_EXIST
@@ -316,18 +315,13 @@ open class BkRepoDownloadService(
             argPath,
             "utf-8"
         ).replace("+", "%20")
-        val fileProperties = bkRepoClient.listMetadata(
-            userId = creatorId,
-            projectId = projectId,
-            repoName = repoName,
-            path = path
-        )
         val fileDetail = bkRepoClient.getFileDetail(
             userId = creatorId,
             projectId = projectId,
             repoName = repoName,
             path = path
         )
+        val fileProperties = fileDetail!!.metadata.map { it.key to it.value.toString() }.toMap()
         val bundleIdentifier = fileProperties[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER] ?: ""
         val appTitle = fileProperties[ARCHIVE_PROPS_APP_NAME] ?: fileProperties[ARCHIVE_PROPS_APP_APP_TITLE] ?: ""
         val appVersion = fileProperties[ARCHIVE_PROPS_APP_VERSION] ?: ""
@@ -335,20 +329,26 @@ open class BkRepoDownloadService(
         val appMinApiVersion = fileProperties[ARCHIVE_PROPS_APP_MIN_API_VERSION] ?: ""
         val appTargetApiVersion = fileProperties[ARCHIVE_PROPS_APP_TARGET_API_VERSION] ?: ""
         val appIcon = fileProperties[ARCHIVE_PROPS_APP_ICON]?.let { UrlUtil.toOuterPhotoAddr(it) } ?: ""
-        val sha256 = fileDetail!!.sha256
+        val sha256 = fileDetail.sha256
         val deployDomain = HomeHostUtil.outerServerHost().removePrefix("https://").removePrefix("http://")
         val appDeviceTypes = fileProperties[ARCHIVE_PROPS_APP_DEVICE_TYPES] ?: "[\"tablet\",\"phone\"]"
         val appModuleType = fileProperties[ARCHIVE_PROPS_APP_MODULE_TYPE] ?: "entry"
 
         // 支持HSP
-        val hspStringBuilder = getHspString(
-            fileProperties = fileProperties,
-            creatorId = creatorId,
-            projectId = projectId,
-            userId = userId,
-            ttl = ttl,
-            buildId = fileProperties[ARCHIVE_PROPS_BUILD_ID]
-        )
+        val buildId = fileProperties[ARCHIVE_PROPS_BUILD_ID]
+        var hspStringBuilder = ""
+        if (buildId != null) {
+            hspStringBuilder = getHspString(
+                fileProperties = fileProperties,
+                creatorId = creatorId,
+                projectId = projectId,
+                userId = userId,
+                ttl = ttl,
+                buildId = buildId
+            )
+        } else {
+            logger.warn("buildId is null")
+        }
         if (logger.isDebugEnabled) {
             logger.debug("hspStringBuilder: $hspStringBuilder")
         }
@@ -392,37 +392,29 @@ open class BkRepoDownloadService(
         projectId: String,
         userId: String,
         ttl: Int,
-        buildId: String?
+        buildId: String
     ): String {
         val appDependencies = fileProperties[ARCHIVE_PROPS_APP_DEPENDENCIES]
         val hspStringBuilder = StringBuilder()
         if (null != appDependencies) {
             val dependencies = JsonUtil.to(appDependencies, object : TypeReference<List<HapAppDependency>>() {})
+            val hspFileMap = bkRepoClient.queryByPathEqOrNameMatchOrMetadataEqAnd(
+                userId = creatorId,
+                projectId = projectId,
+                repoNames = listOf(REPO_NAME_PIPELINE, REPO_NAME_CUSTOM),
+                filePaths = emptyList(),
+                fileNames = listOf("*.hsp"),
+                metadata = mapOf(ARCHIVE_PROPS_BUILD_ID to buildId),
+                page = 1,
+                pageSize = 1000 // 最多关联1000个HSP
+            ).records.filter { null != it.metadata && it.metadata!!.contains(ARCHIVE_PROPS_APP_NAME) }
+                .associateBy { it.metadata!![ARCHIVE_PROPS_APP_NAME]!!.toString() }
             for (d in dependencies) {
-                val metadata = mutableMapOf(
-                    ARCHIVE_PROPS_APP_NAME to d.moduleName,
-                    ARCHIVE_PROPS_APP_VERSION_CODE to d.versionCode.toString()
-                )
-                if (buildId != null) {
-                    metadata[ARCHIVE_PROPS_BUILD_ID] = buildId
-                }
-                val hspFiles = bkRepoClient.queryByPathEqOrNameMatchOrMetadataEqAnd(
-                    userId = creatorId,
-                    projectId = projectId,
-                    repoNames = listOf(REPO_NAME_PIPELINE, REPO_NAME_CUSTOM),
-                    filePaths = emptyList(),
-                    fileNames = emptyList(),
-                    metadata = metadata,
-                    page = 1,
-                    pageSize = 1,
-                    sortBy = "createdDate",
-                    direction = Sort.Direction.DESC
-                ).records
-                if (hspFiles.isEmpty()) {
+                val hspFile = hspFileMap[d.moduleName]
+                if (hspFile == null) {
                     logger.warn("module not found , name:{} , code:{}", d.moduleName, d.versionCode)
                     continue
                 }
-                val hspFile = hspFiles[0]
                 val hspMetadata = hspFile.metadata ?: emptyMap()
                 if (logger.isDebugEnabled) {
                     logger.debug("hspFile: {}", hspFile)
