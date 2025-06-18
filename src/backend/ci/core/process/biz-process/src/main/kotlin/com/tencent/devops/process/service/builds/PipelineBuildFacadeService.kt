@@ -2686,13 +2686,11 @@ class PipelineBuildFacadeService(
         includeConst: Boolean?,
         includeNotRequired: Boolean?,
         userId: String,
-        version: Int?
+        version: Int?,
+        isTemplate: Boolean?
     ): List<PipelineBuildParamFormProp> {
-        val model = if (PipelineUtils.isPipelineId(pipelineId)) {
-            pipelineRepositoryService.getBuildTriggerInfo(
-                projectId, pipelineId, version
-            ).second.model
-        } else {
+        val model = if (isTemplate == true) {
+            // 模板触发器
             val templateModelStr = pipelineRepositoryService.getTemplateVersionRecord(
                 templateId = pipelineId,
                 version = version?.toLong()
@@ -2705,6 +2703,10 @@ class PipelineBuildFacadeService(
                     errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
                 )
             }
+        } else {
+            pipelineRepositoryService.getBuildTriggerInfo(
+                projectId, pipelineId, version
+            ).second.model
         }
         val triggerContainer = model.getTriggerContainer()
         val properties = getBuildManualParams(

@@ -266,7 +266,8 @@ class UserBuildParametersResourceImpl @Autowired constructor(
         pipelineId: String,
         includeConst: Boolean?,
         includeNotRequired: Boolean?,
-        version: Int?
+        version: Int?,
+        isTemplate: Boolean?
     ): Result<List<PipelineBuildParamFormProp>> {
         val buildParamFormProp = pipelineBuildFacadeService.getBuildParamFormProp(
             projectId = projectId,
@@ -274,7 +275,8 @@ class UserBuildParametersResourceImpl @Autowired constructor(
             includeConst = includeConst,
             includeNotRequired = includeNotRequired,
             userId = userId,
-            version = version
+            version = version,
+            isTemplate = isTemplate
         )
         return Result(buildParamFormProp)
     }
