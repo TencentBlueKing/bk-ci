@@ -94,7 +94,7 @@ class ServiceImageResourceImpl @Autowired constructor(
     ): Result<ImagePageData> {
         val vSearchKey = searchKey ?: ""
         val (vStart, vLimit) = pair(start, limit)
-        return Result(artifactoryService.listProjectImages(projectId, vSearchKey, vStart, vLimit))
+        return Result(artifactoryService.listProjectImages(userId,projectId, vSearchKey, vStart, vLimit))
     }
 
     override fun getImageInfo(

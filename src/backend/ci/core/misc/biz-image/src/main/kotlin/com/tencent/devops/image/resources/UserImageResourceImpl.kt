@@ -122,18 +122,17 @@ class UserImageResourceImpl @Autowired constructor(
     override fun listProjectImages(
         userId: String,
         projectId: String,
-        searchKey: String?,
+        imageName: String,
         start: Int?,
         limit: Int?
-    ): Result<ImagePageData> {
+    ): Result<ImagePageData?> {
         checkUserAndProject(userId, projectId)
 
-        val vSearchKey = searchKey ?: ""
         val vStart = if (start == null || start == 0) 0 else start
         val vLimit = if (limit == null || limit == 0) 10000 else limit
 
         return try {
-            Result(artifactoryService.listProjectImages(projectId, vSearchKey, vStart, vLimit))
+            Result(artifactoryService.listProjectImages(userId,projectId, imageName, vStart, vLimit))
         } catch (e: Exception) {
             logger.error("list project image failed", e)
             throw RuntimeException("list project image failed")

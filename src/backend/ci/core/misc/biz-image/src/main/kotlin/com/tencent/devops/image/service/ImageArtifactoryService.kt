@@ -119,11 +119,69 @@ class ImageArtifactoryService @Autowired constructor(
         return ImagePageData(resultRepos, start, limit, total)
     }
 
-    fun listProjectImages(projectCode: String, searchKey: String, start: Int, limit: Int): ImagePageData {
-        val aql = generateListProjectImagesAql(projectCode, searchKey)
-        logger.info("aql: $aql")
+    fun listProjectImages(
+        userId: String,
+        projectCode: String,
+        imageName: String,
+        start: Int,
+        limit: Int
+    ): ImagePageData? {
+        val imageInfoMap = bkRepoClient.getImageInfo(
+            userId = userId,
+            projectId = projectCode,
+            imageName = imageName,
+            repoName = "image",
+            pageNumber = start,
+            pageSize = limit
+        )
+        if (imageInfoMap.isEmpty()) {
+            return null
+        }
+        val records = imageInfoMap["records"] as List<Map<String, String>>
+        if (records.isEmpty()) {
+            return null
+        }
+        val repos = records.map { record ->
 
-        return listProjectImagesByAql(aql, start, limit)
+            val dockerTag = DockerTag().apply {
+                tag = record["latest"]
+                repo = "image"
+                image = imageName
+                created = record["createdDate"]
+                createdBy = record["createdBy"]
+                modified = record["lastModifiedDate"]
+                modifiedBy = record["lastModifiedBy"]
+                desc = record["description"]
+                size = record["key"]?.let { it1 ->
+                    getSize(
+                        userId = userId,
+                        projectId = projectCode,
+                        repoName = "image",
+                        imageName = imageName,
+                        packageKey = it1
+                    )
+                }
+            }
+            DockerRepo().apply {
+                repoUrl = dockerConfig.imagePrefix
+                repo = "image"
+                type = parseType("image")
+                repoType = ""
+                name = parseName("image")
+                created = record["createdDate"]
+                createdBy = record["createdBy"]
+                modified = record["lastModifiedDate"]
+                modifiedBy = record["lastModifiedBy"]
+                imagePath = parseImagePath("image")
+                tags = arrayListOf(dockerTag)
+                tagCount = 1
+                this.tagStart = tagStart
+                this.tagLimit = tagLimit
+                downloadCount = 0 // TODO 实现下载次数统计
+            }
+
+        }
+        return ImagePageData(repos, start, limit, records.size)
     }
 
     private fun generateListProjectImagesAql(projectCode: String, searchKey: String): String {
