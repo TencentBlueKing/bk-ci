@@ -91,11 +91,11 @@ import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import java.net.URLEncoder
-import java.util.regex.Pattern
 import jakarta.ws.rs.BadRequestException
 import jakarta.ws.rs.NotFoundException
 import jakarta.ws.rs.core.Response
+import java.net.URLEncoder
+import java.util.regex.Pattern
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.slf4j.LoggerFactory
 import org.springframework.util.DigestUtils
@@ -346,7 +346,8 @@ open class BkRepoDownloadService(
             creatorId = creatorId,
             projectId = projectId,
             userId = userId,
-            ttl = ttl
+            ttl = ttl,
+            buildId = fileProperties[ARCHIVE_PROPS_BUILD_ID]
         )
         if (logger.isDebugEnabled) {
             logger.debug("hspStringBuilder: $hspStringBuilder")
@@ -390,20 +391,28 @@ open class BkRepoDownloadService(
         creatorId: String,
         projectId: String,
         userId: String,
-        ttl: Int
+        ttl: Int,
+        buildId: String?
     ): String {
         val appDependencies = fileProperties[ARCHIVE_PROPS_APP_DEPENDENCIES]
         val hspStringBuilder = StringBuilder()
         if (null != appDependencies) {
             val dependencies = JsonUtil.to(appDependencies, object : TypeReference<List<HapAppDependency>>() {})
             for (d in dependencies) {
+                val metadata = mutableMapOf(
+                    ARCHIVE_PROPS_APP_NAME to d.moduleName,
+                    ARCHIVE_PROPS_APP_VERSION_CODE to d.versionCode.toString()
+                )
+                if (buildId != null) {
+                    metadata[ARCHIVE_PROPS_BUILD_ID] = buildId
+                }
                 val hspFiles = bkRepoClient.queryByPathEqOrNameMatchOrMetadataEqAnd(
                     userId = creatorId,
                     projectId = projectId,
                     repoNames = listOf(REPO_NAME_PIPELINE, REPO_NAME_CUSTOM),
                     filePaths = emptyList(),
                     fileNames = emptyList(),
-                    metadata = mapOf("appName" to d.moduleName, "appVersionCode" to d.versionCode.toString()),
+                    metadata = metadata,
                     page = 1,
                     pageSize = 1,
                     sortBy = "createdDate",
