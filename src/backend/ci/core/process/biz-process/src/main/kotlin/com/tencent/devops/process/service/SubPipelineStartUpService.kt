@@ -171,12 +171,19 @@ class SubPipelineStartUpService @Autowired constructor(
                 subPipelineId = callPipelineId
             )
             if (existsLink) {
+                // 链路已归档，则说明不存在递归调用的情况
                 logger.info(
                     "pipeline link already verified|" +
                             "[$projectId|$parentPipelineId]->[$fixProjectId|$callPipelineId]"
                 )
+            } else {
+                checkSub(
+                    atomCode,
+                    projectId = fixProjectId,
+                    pipelineId = callPipelineId,
+                    existPipelines = existPipelines
+                )
             }
-            checkSub(atomCode, projectId = fixProjectId, pipelineId = callPipelineId, existPipelines = existPipelines)
         } catch (e: OperationException) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = ProcessMessageCode.ERROR_SUBPIPELINE_CYCLE_CALL,
