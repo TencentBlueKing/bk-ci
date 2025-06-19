@@ -49,6 +49,8 @@ import com.tencent.bkrepo.generic.pojo.TemporaryAccessUrl
 import com.tencent.bkrepo.generic.pojo.TemporaryUrlCreateRequest
 import com.tencent.bkrepo.repository.pojo.metadata.UserMetadataSaveRequest
 import com.tencent.bkrepo.repository.pojo.metadata.label.MetadataLabelDetail
+import com.tencent.bkrepo.repository.pojo.metadata.label.UserLabelCreateRequest
+import com.tencent.bkrepo.repository.pojo.metadata.label.UserLabelUpdateRequest
 import com.tencent.bkrepo.repository.pojo.node.NodeDetail
 import com.tencent.bkrepo.repository.pojo.node.NodeInfo
 import com.tencent.bkrepo.repository.pojo.node.NodeSizeInfo
@@ -72,7 +74,6 @@ import com.tencent.devops.common.archive.constant.REPO_REPORT
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.BKRepoProjectUpdateRequest
 import com.tencent.devops.common.archive.pojo.BkRepoFile
-import com.tencent.devops.common.archive.pojo.MetadataLabelDetailUpdate
 import com.tencent.devops.common.archive.pojo.PackageVersionInfo
 import com.tencent.devops.common.archive.pojo.ProjectMetadata
 import com.tencent.devops.common.archive.pojo.QueryData
@@ -1223,7 +1224,7 @@ class BkRepoClient constructor(
     fun createArtifactQualityMetadataLabel(
         userId: String,
         projectId: String,
-        metadataLabel: MetadataLabelDetail
+        metadataLabel: UserLabelCreateRequest
     ) {
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/metadata/label/$projectId"
         val request = Request.Builder().url(url).headers(getCommonHeaders(userId, projectId).toHeaders())
@@ -1236,7 +1237,7 @@ class BkRepoClient constructor(
         userId: String,
         projectId: String,
         labelKey: String,
-        metadataLabelUpdate: MetadataLabelDetailUpdate
+        metadataLabelUpdate: UserLabelUpdateRequest
     ) {
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/metadata/label/$projectId/$labelKey"
         val request = Request.Builder().url(url).headers(getCommonHeaders(userId, projectId).toHeaders())
