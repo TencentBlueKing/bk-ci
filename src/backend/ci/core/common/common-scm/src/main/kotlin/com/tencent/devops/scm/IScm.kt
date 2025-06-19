@@ -35,8 +35,10 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.GitTagInfo
 import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.pojo.TapdWorkItem
 
 @Suppress("ALL")
 interface IScm {
@@ -98,4 +100,8 @@ interface IScm {
     fun getCommitReviewInfo(crId: Long): GitCommitReviewInfo? = null
 
     fun getLoginSession(): LoginSession? = null
+
+    fun getTag(tagName: String): GitTagInfo? = null
+
+    fun getTapdWorkItems(refType: String, iid: Long): List<TapdWorkItem> = listOf()
 }

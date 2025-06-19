@@ -99,7 +99,7 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
      * 批量获取已经审核通过的可见范围
      */
     override fun batchGetVisibleDept(
-        storeCodeList: List<String?>,
+        storeCodeList: List<String>,
         storeType: StoreTypeEnum
     ): Result<HashMap<String, MutableList<Int>>> {
         val ret = hashMapOf<String, MutableList<Int>>()
@@ -153,7 +153,7 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
                 deptId = it.deptId,
                 storeType = storeType.type.toByte()
             )
-            if (count> 0) {
+            if (count > 0) {
                 return@forEach
             }
             pendingDeptInfoList.add(it)

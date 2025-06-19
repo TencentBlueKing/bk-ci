@@ -98,4 +98,8 @@ abstract class AbstractScmWebhookMatcher<T : CodeWebhookEvent>(
             repository = repository
         )
     }
+
+    override fun getCompatibilityRepoName(): Set<String> {
+        return eventHandler.getCompatibilityRepoName(event)
+    }
 }

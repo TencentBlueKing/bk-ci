@@ -1,5 +1,6 @@
 <template>
     <main class="pipeline-list-main">
+        <pipeline-problem-tips />
         <div
             class="recycle-bin-header"
             v-if="isDeleteView"
@@ -252,6 +253,7 @@
     import ArchiveViewName from '@/components/pipelineList/archiveViewName'
     import ArchiveDialog from '@/views/PipelineList/ArchiveDialog'
     import DeleteArchivedDialog from '@/views/PipelineList/DeleteArchivedDialog'
+    import PipelineProblemTips from '@/components/PipelineProblemTips'
 
     import Logo from '@/components/Logo'
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
@@ -285,7 +287,8 @@
             ArchiveViewName,
             ArchiveDialog,
             DeleteArchivedDialog,
-            DisableDialog
+            DisableDialog,
+            PipelineProblemTips
         },
         mixins: [piplineActionMixin],
         data () {

@@ -76,10 +76,10 @@ class WebhookGrayCompareService @Autowired constructor(
 ) {
 
     private val executor = ThreadPoolUtil.getThreadPoolExecutor(
-        corePoolSize = 5,
-        maximumPoolSize = 5,
+        corePoolSize = 1,
+        maximumPoolSize = 1,
         keepAliveTime = 0L,
-        queue = LinkedBlockingQueue(10),
+        queue = LinkedBlockingQueue(1),
         threadNamePrefix = "webhook-gray-compare-%d"
     )
 
@@ -208,7 +208,8 @@ class WebhookGrayCompareService @Autowired constructor(
         val triggerPipelines = pipelineWebhookService.getTriggerPipelines(
             name = matcher.getRepoName(),
             repositoryType = scmType,
-            yamlPipelineIds = yamlPipelineIds
+            yamlPipelineIds = yamlPipelineIds,
+            compatibilityRepoNames = matcher.getCompatibilityRepoName()
         )
         val pipelineAndParamsMap = mutableMapOf<String, Map<String, Any>>()
         triggerPipelines.forEach { (projectId, pipelineId) ->

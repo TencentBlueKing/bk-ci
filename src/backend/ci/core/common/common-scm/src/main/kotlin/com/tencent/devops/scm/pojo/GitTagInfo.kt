@@ -25,30 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.resources
+package com.tencent.devops.scm.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.common.TxOpMigrateStoreResource
-import com.tencent.devops.store.common.service.TxOpMigrateStoreInfoService
-import com.tencent.devops.store.common.service.TxOpMigrateStoreLogoService
-import org.springframework.beans.factory.annotation.Autowired
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@RestResource
-class TxOpMigrateStoreResourceImpl @Autowired constructor(
-    private val txOpMigrateStoreLogoService: TxOpMigrateStoreLogoService,
-    private val txOpMigrateStoreInfoService: TxOpMigrateStoreInfoService
-) : TxOpMigrateStoreResource {
-
-    override fun migrateStoreLogo(): Result<Boolean> {
-        return Result(txOpMigrateStoreLogoService.migrateStoreLogo())
-    }
-
-    override fun migrateStoreDescription(): Result<Boolean> {
-        return Result(txOpMigrateStoreInfoService.migrateStoreDescription())
-    }
-
-    override fun migrateStoreUrlScheme(): Result<Boolean> {
-        return Result(txOpMigrateStoreInfoService.migrateStoreUrlScheme())
-    }
-}
+@Schema(title = "git tag 信息")
+data class GitTagInfo(
+    val name: String = "",
+    val message: String = "",
+    val description: String? = "",
+    @JsonProperty("created_at")
+    val createdAt: String? = "",
+    val commit: GitCommit
+)

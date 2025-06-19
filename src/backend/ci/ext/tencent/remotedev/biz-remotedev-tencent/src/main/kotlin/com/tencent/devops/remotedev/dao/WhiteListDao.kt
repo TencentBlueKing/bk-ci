@@ -49,6 +49,15 @@ class WhiteListDao {
         }
     }
 
+    fun fetch(
+        dslContext: DSLContext,
+        type: WhiteListType
+    ): List<WhiteList> {
+        with(TWhiteList.T_WHITE_LIST) {
+            return dslContext.selectFrom(this).where(TYPE.eq(type.name)).fetch(mapper)
+        }
+    }
+
     fun get(
         dslContext: DSLContext,
         name: String,

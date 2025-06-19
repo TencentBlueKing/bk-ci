@@ -40,8 +40,17 @@ class OpPipelineVersionResourceImpl @Autowired constructor(
 
     override fun asyncBatchUpdateReferFlag(
         projectChannelCode: String,
-        routerTag: AuthSystemType?
+        routerTag: AuthSystemType?,
+        projectId: String?,
+        queryUnknownRelatedFlag: Boolean?,
     ): Result<Boolean> {
-        return Result(pipelineRepositoryVersionService.asyncBatchUpdateReferFlag(projectChannelCode, routerTag))
+        return Result(
+            pipelineRepositoryVersionService.asyncBatchUpdateReferFlag(
+                projectChannelCode = projectChannelCode,
+                routerTag = routerTag,
+                projectId = projectId,
+                queryUnknownRelatedFlag = queryUnknownRelatedFlag
+            )
+        )
     }
 }

@@ -72,7 +72,7 @@
         ],
         "outputs": [
           "{workspaceRoot}/frontend/codelib",
-          "{workspaceRoot}/frontend/entry's"
+          "{workspaceRoot}/frontend/entry's/codelib.json"
         ]
       }
     }

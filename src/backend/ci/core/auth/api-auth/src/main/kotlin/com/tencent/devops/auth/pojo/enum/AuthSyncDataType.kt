@@ -25,12 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.service
+package com.tencent.devops.auth.pojo.enum
 
-interface TxOpMigrateStoreLogoService {
-
-    /**
-     * 迁移logo
-     */
-    fun migrateStoreLogo(): Boolean
+enum class AuthSyncDataType(val type: String) {
+    USER_SYNC_TASK_TYPE("USER"),
+    DEPARTMENT_SYNC_TASK_TYPE("DEPARTMENT"),
+    GROUP_AND_MEMBER_SYNC_TASK_TYPE("GROUP_AND_MEMBER"),
+    GROUP_PERMISSIONS_SYNC_TASK_TYPE("GROUP_PERMISSIONS")
 }

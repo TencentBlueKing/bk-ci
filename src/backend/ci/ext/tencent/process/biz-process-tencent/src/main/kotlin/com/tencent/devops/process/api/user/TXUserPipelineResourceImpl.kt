@@ -86,25 +86,40 @@ class TXUserPipelineResourceImpl @Autowired constructor(
     }
 
     private fun checkParam(setting: PipelineSetting) {
-        if (setting.runLockType == PipelineRunLockType.SINGLE || setting.runLockType == PipelineRunLockType.SINGLE_LOCK) {
-            if (setting.waitQueueTimeMinute < PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN ||
-                    setting.waitQueueTimeMinute > PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
-            ) {
-                throw InvalidParamException(
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = MAXIMUM_QUEUE_LENGTH_ILLEGAL
-                    )
-                )
-            }
-            if (setting.maxQueueSize < PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN ||
-                    setting.maxQueueSize > PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
-            ) {
-                throw InvalidParamException(
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = MAXIMUM_NUMBER_QUEUES_ILLEGAL
-                    )
-                )
-            }
+        if (setting.runLockType == PipelineRunLockType.SINGLE ||
+                setting.runLockType == PipelineRunLockType.SINGLE_LOCK
+        ) {
+            validateQueueTime(setting.waitQueueTimeMinute)
+            validateQueueSize(setting.maxQueueSize)
+        }
+    }
+
+    /**
+     * 校验等待队列时间是否在有效范围内
+     * @param minutes 等待时间(分钟)
+     * @throws InvalidParamException 当时间不在有效范围内时抛出
+     */
+    private fun validateQueueTime(minutes: Int) {
+        if (
+                minutes !in PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN..
+                PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
+        ) {
+            throw InvalidParamException(
+                I18nUtil.getCodeLanMessage(MAXIMUM_QUEUE_LENGTH_ILLEGAL)
+            )
+        }
+    }
+
+    /**
+     * 校验最大队列大小是否在有效范围内
+     * @param size 队列大小
+     * @throws InvalidParamException 当大小不在有效范围内时抛出
+     */
+    private fun validateQueueSize(size: Int) {
+        if (size !in PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN..PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX) {
+            throw InvalidParamException(
+                I18nUtil.getCodeLanMessage(MAXIMUM_NUMBER_QUEUES_ILLEGAL)
+            )
         }
     }
 }

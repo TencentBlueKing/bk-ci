@@ -348,7 +348,8 @@ class TriggerSvnService(
             paths,
             files,
             svnRevisionInfo.commitTime,
-            files.size
+            files.size,
+            null
         )
     }
 

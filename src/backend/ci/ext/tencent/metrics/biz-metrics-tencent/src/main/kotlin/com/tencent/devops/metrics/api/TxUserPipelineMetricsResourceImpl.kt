@@ -25,36 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.atom
+package com.tencent.devops.metrics.api
 
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.v3.oas.annotations.tags.Tag
-import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.Parameter
-import jakarta.ws.rs.Consumes
-import jakarta.ws.rs.PUT
-import jakarta.ws.rs.Path
-import jakarta.ws.rs.Produces
-import jakarta.ws.rs.QueryParam
-import jakarta.ws.rs.core.MediaType
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.metrics.pojo.ProjectPipelineIssueAnalysisInfo
+import com.tencent.devops.metrics.service.eplus.TxPipelineMetricssService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Tag(name = "OP_PIPELINE_ATOM", description = "OP-流水线-插件")
-@Path("/op/pipeline/atom")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface TxOpMigrateAtomResource {
-
-    @Operation(summary = "迁移插件包")
-    @PUT
-    @Path("/pkg/migrate")
-    fun migrateAtomPkg(
-        @Parameter(description = "结束时间", required = true)
-        @QueryParam("endTime")
-        endTime: String
-    ): Result<Boolean>
-
-    @Operation(summary = "迁移插件静态文件")
-    @PUT
-    @Path("/static/file/migrate")
-    fun migrateAtomStaticFile(): Result<Boolean>
+@RestResource
+class TxUserPipelineMetricsResourceImpl @Autowired constructor(
+    private val txPipelineMetricsService: TxPipelineMetricssService
+) : TxUserPipelineMetricsResource {
+    override fun getPipelineIssueAnalysis(
+        userId: String,
+        projectId: String
+    ): Result<ProjectPipelineIssueAnalysisInfo?> {
+        return Result(txPipelineMetricsService.getPipelineIssueAnalysis(userId, projectId))
+    }
 }

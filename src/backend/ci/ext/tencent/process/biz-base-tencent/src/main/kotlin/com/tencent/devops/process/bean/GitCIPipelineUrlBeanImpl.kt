@@ -87,6 +87,24 @@ class GitCIPipelineUrlBeanImpl constructor(
         return client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
     }
 
+    override fun genBuildReviewUrl(
+        projectCode: String,
+        pipelineId: String,
+        buildId: String,
+        stageSeq: Int?,
+        taskId: String?,
+        needShortUrl: Boolean
+    ): String {
+        return genBuildDetailUrl(
+            projectCode = projectCode,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            position = null,
+            stageId = null,
+            needShortUrl = needShortUrl
+        )
+    }
+
     companion object {
         private val logger = org.slf4j.LoggerFactory.getLogger(GitCIPipelineUrlBeanImpl::class.java)
         private const val TTL = 24 * 3600 * 15

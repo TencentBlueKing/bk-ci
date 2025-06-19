@@ -99,8 +99,8 @@
                 :handle-change="handleChange"
                 v-validate="'required'"
                 :data-vv-scope="'pipelineParam'"
-                :replace-key="param.replaceKey"
-                :search-url="param.searchUrl"
+                replace-key="{keyword}"
+                :search-url="getSearchUrl('CODE_SVN')"
             >
             </request-selector>
         </form-field>
@@ -202,6 +202,8 @@
                 :data-vv-scope="'pipelineParam'"
                 :value="param.defaultValue"
                 :handle-change="handleChange"
+                replace-key="{keyword}"
+                :search-url="getSearchUrl(param.scmType)"
             >
             </request-selector>
             <request-selector
@@ -492,10 +494,10 @@
 
             getCodeUrl (type) {
                 type = type || 'CODE_GIT'
-                return `/${REPOSITORY_API_URL_PREFIX}/user/repositories/{projectId}/hasPermissionList?permission=USE&repositoryType=${type}&page=1&pageSize=1000`
+                return `/${REPOSITORY_API_URL_PREFIX}/user/repositories/${this.$route.params.projectId}/hasPermissionList?permission=USE&repositoryType=${type}&page=1&pageSize=1000`
             },
             getSearchUrl (type) {
-                return `/${PROCESS_API_URL_PREFIX}/user/buildParam/repository/${this.$route.params.projectId}/hashId?repositoryType=${type}&permission=LIST&aliasName={keyword}&page=1&pageSize=200`
+                return `${this.getCodeUrl(type)}&aliasName={keyword}`
             },
             getSearchBranchUrl () {
                 return `/${PROCESS_API_URL_PREFIX}/user/buildParam/${this.$route.params.projectId}/repository/refs?search={keyword}&repositoryType=NAME&repositoryId=${this.param.defaultValue['repo-name']}`

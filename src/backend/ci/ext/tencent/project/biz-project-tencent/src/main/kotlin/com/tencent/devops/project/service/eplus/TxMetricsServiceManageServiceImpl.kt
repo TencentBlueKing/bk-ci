@@ -34,10 +34,10 @@ import com.tencent.devops.project.service.ServiceManageService
 import com.tencent.devops.project.service.eplus.EplusEncrptUtil.Filter
 import com.tencent.devops.project.service.eplus.EplusEncrptUtil.JsonData
 import com.tencent.devops.project.service.eplus.EplusEncrptUtil.encryptPanelToken
+import java.text.MessageFormat
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.text.MessageFormat
 
 @Service("METRICS_MANAGE_SERVICE")
 class TxMetricsServiceManageServiceImpl(
@@ -60,18 +60,34 @@ class TxMetricsServiceManageServiceImpl(
     @Value("\${eplus.ms.metrics.panelPid:#{null}}")
     private val panelPid: Int? = null
 
-    override fun doSpecBus(userId: String, serviceVO: ServiceVO, projectId: String?): ServiceVO {
+    @Value("\${eplus.ms.metrics.performAnalysisPanelPid:#{null}}")
+    private val performAnalysisPanelPid: Int? = null
+
+    override fun doSpecBus(
+        userId: String,
+        serviceVO: ServiceVO,
+        projectId: String?,
+        pipelineId: String?
+    ): ServiceVO {
         if (projectId.isNullOrBlank() || publicKey.isNullOrBlank()) return serviceVO
         if (panelUrl.isNullOrBlank() || panelPid == null || panelNid == null) return serviceVO
         val project = projectDao.getByEnglishName(dslContext, projectId)
-        if (project?.authSecrecy != ProjectAuthSecrecyStatus.PUBLIC.value) return serviceVO
+        val filter = mutableListOf(Filter(col = "project_id", op = "=", `val` = projectId))
+        if (pipelineId.isNullOrBlank()) {
+            if (project?.authSecrecy != ProjectAuthSecrecyStatus.PUBLIC.value) return serviceVO
+        } else {
+            filter.add(Filter(col = "pipeline_id", op = "=", `val` = pipelineId))
+        }
         // 非保密项目才跳去eplus页面看统计数据
         return serviceVO.apply {
             val jsonData = JsonData(
                 nid = panelNid,
-                pid = panelPid,
+                pid = when {
+                    pipelineId.isNullOrBlank() -> panelPid
+                    else -> performAnalysisPanelPid ?: return serviceVO
+                },
                 user = userId,
-                filter = listOf(Filter(col = "project_id", op = "=", `val` = projectId))
+                filter = filter
             )
             val token = encryptPanelToken(publicKey, jsonData)
             // 生成eplus的跳转页面地址

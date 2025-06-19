@@ -63,3 +63,15 @@ data class EnvironmentOperateDeleteDisk(
     val forceRestart: Boolean?,
     val delaySeconds: Int?
 ) : EnvironmentOperateInf(uid)
+
+/**
+ * 备份主机相关
+ * @param syncOnly 仅同步,不跑初始化和cgs流程
+ * @param targetEnvID 目标vm的EnvID
+ * @param uid 原vm的EnvID
+ */
+data class EnvironmentOperateSyncVm(
+    val syncOnly: Boolean?,
+    val targetEnvID: String,
+    override val uid: String
+) : EnvironmentOperateInf(uid)

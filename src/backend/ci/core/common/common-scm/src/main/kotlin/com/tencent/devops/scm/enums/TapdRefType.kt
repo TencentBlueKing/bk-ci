@@ -25,24 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.atom.resources
+package com.tencent.devops.scm.enums
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.atom.TxOpMigrateAtomResource
-import com.tencent.devops.store.atom.service.TxOpMigrateAtomService
-import org.springframework.beans.factory.annotation.Autowired
-
-@RestResource
-class TxOpMigrateAtomResourceImpl @Autowired constructor(
-    private val txOpMigrateAtomService: TxOpMigrateAtomService
-) : TxOpMigrateAtomResource {
-
-    override fun migrateAtomPkg(endTime: String): Result<Boolean> {
-        return Result(txOpMigrateAtomService.migrateAtomPkg(endTime))
-    }
-
-    override fun migrateAtomStaticFile(): Result<Boolean> {
-        return Result(txOpMigrateAtomService.migrateAtomStaticFile())
-    }
+enum class TapdRefType(val value: String) {
+    MR("mr"),
+    CR("cr"),
+    ISSUE("issue")
 }

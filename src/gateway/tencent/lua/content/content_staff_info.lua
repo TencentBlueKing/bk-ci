@@ -58,7 +58,7 @@ elseif x_credentialKey ~= nil then
     local departmentName = staff_info_new.DepartmentName
     local email = staff_info_new.EnglishName .. '@tencent.com'
     if staff_info_new.IsOuter then
-        staff_info_new.EnglishName = staff_info_new.EnglishName .. "@bkci"
+        staff_info_new.EnglishName = staff_info_new.EnglishName .. "@tai"
         avatars = "https://bkdevops.qq.com/app/download/devops_app.png"
         departmentName = "outer"
         email = ""

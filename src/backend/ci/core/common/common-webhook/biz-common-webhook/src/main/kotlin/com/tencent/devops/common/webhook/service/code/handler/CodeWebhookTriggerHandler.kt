@@ -136,4 +136,11 @@ interface CodeWebhookTriggerHandler<T : CodeWebhookEvent> {
         projectId: String? = null,
         repository: Repository? = null
     ): Map<String, Any>
+
+    /**
+     * 兼容仓库名，考虑仓库迁移场景
+     * 当webhook中[Repo_Group/Repo_Name]和[Repo_Group_Suffix/Repo_Name] 两个RepoName都指向同一个仓库时
+     * 在此处做兼容，进而触发相关流水线
+     */
+    fun getCompatibilityRepoName(event: T): Set<String> = setOf()
 }

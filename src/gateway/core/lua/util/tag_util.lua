@@ -38,6 +38,16 @@ function _M:get_tag(ns_config)
         x_gateway_tag = ngx.var["arg_x-gateway-tag"]
     end
 
+    -- auto集群项目强制路由
+    if x_gateway_tag ~= nil and gateway_project ~= 'codecc' and (
+            string.find(devops_project_id, "^CODE_")
+            or string.find(devops_project_id, "^CUSTOMPROJ_")
+            or string.find(devops_project_id, "^GITHUB_")
+            or string.find(devops_project_id, "^CLOSED_SOURCE_")
+        ) then
+        x_gateway_tag = "kubernetes-auto"
+    end
+
     if x_gateway_tag ~= nil then
         tag = x_gateway_tag
     else

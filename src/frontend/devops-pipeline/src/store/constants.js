@@ -35,6 +35,7 @@ export const LOG_API_URL_PREFIX = 'log/api'
 export const DEVCLOUD_API_URL_PREFIX = 'dispatch-devcloud/api'
 export const AUTH_URL_PREFIX = 'auth/api'
 export const VERSION_URL_PREFIX = 'version/api'
+export const MERTICS_URL_PREFIX = 'metrics/api'
 
 export const ALL_PIPELINE_VIEW_ID = 'allPipeline'
 export const MY_PIPELINE_VIEW_ID = 'myPipeline'

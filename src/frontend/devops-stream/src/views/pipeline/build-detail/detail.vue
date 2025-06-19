@@ -45,7 +45,7 @@
                         <span class="title-item">
                             <span v-if="buildDetail.objectKind === 'schedule'">{{$t('pipeline.system')}}</span>
                             <template v-else>
-                                <img :src="`https:////rhrc.woa.com/photo/150/${buildDetail.userId}.png`">
+                                <img :src="`https:////rhrc.woa.com/photo/150/${buildDetail.userId}.png?default_when_absent=true`">
                                 <template v-if="buildDetail.objectKind === 'openApi'">
                                     {{$t('pipeline.openapi')}}（{{ buildDetail.userId }}）
                                 </template>
@@ -108,15 +108,15 @@
 
 <script>
     import Pipeline from '@/components/Pipeline'
-import { getPipelineStatusCircleIconCls, getPipelineStatusClass } from '@/components/status'
-import { pipelines } from '@/http'
-import {
-getbuildTypeIcon,
-preciseDiff,
-timeFormatter
-} from '@/utils'
-import register from '@/utils/websocket-register'
-import { mapActions, mapState } from 'vuex'
+    import { getPipelineStatusCircleIconCls, getPipelineStatusClass } from '@/components/status'
+    import { pipelines } from '@/http'
+    import {
+        getbuildTypeIcon,
+        preciseDiff,
+        timeFormatter
+    } from '@/utils'
+    import register from '@/utils/websocket-register'
+    import { mapActions, mapState } from 'vuex'
 
     export default {
         components: {

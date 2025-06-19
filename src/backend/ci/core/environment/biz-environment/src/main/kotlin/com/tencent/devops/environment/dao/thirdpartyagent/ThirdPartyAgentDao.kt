@@ -325,19 +325,21 @@ class ThirdPartyAgentDao {
     fun listImportAgent(
         dslContext: DSLContext,
         projectId: String,
+        nodeIds: Set<Long>,
         os: OS?,
-        limit: Int = PageUtil.MAX_PAGE_SIZE
     ): List<TEnvironmentThirdpartyAgentRecord> {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId)).let {
-                    if (null == os) {
-                        it
-                    } else {
+                    if (null != os) {
                         it.and(OS.eq(os.name))
                     }
+                    if (nodeIds.isNotEmpty()) {
+                        it.and(NODE_ID.`in`(nodeIds))
+                    } else {
+                        it
+                    }
                 }
-                .limit(limit)
                 .fetch()
         }
     }

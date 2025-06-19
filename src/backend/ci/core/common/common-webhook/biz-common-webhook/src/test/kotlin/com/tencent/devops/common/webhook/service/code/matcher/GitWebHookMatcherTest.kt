@@ -92,7 +92,7 @@ class GitWebHookMatcherTest : BkCiAbstractTest() {
         val eventCacheService: EventCacheService = mockk()
         every { gitScmService.getCredential(any(), null) } returns null
         CodeWebhookHandlerRegistrar.register(TGitPushTriggerHandler(eventCacheService, gitScmService))
-        CodeWebhookHandlerRegistrar.register(TGitTagPushTriggerHandler())
+        CodeWebhookHandlerRegistrar.register(TGitTagPushTriggerHandler(eventCacheService))
         CodeWebhookHandlerRegistrar.register(
             TGitMrTriggerHandler(
                 gitScmService = gitScmService,
