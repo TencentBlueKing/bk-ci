@@ -27,12 +27,14 @@
 
 package com.tencent.devops.remotedev.api.external
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
@@ -60,5 +62,22 @@ interface ExternalResource {
         workspaceName: String,
         @Parameter(description = "回调信息", required = true)
         softwareList: SoftwareCallbackRes
+    ): Result<Boolean>
+
+    @Operation(summary = "单向网络开关-单个实例级别开启。多次调用时为覆盖关系")
+    @POST
+    @Path("/cds_mesh_enable_and_domain")
+    fun cdsMeshEnableAndDomain(
+        @Parameter(description = "10位时间戳")
+        @HeaderParam("ts")
+        ts: String,
+        @HeaderParam("token")
+        token: String,
+        @QueryParam("cds_id")
+        cdsId: String,
+        @QueryParam("enable")
+        enable: String,
+        @QueryParam("domain")
+        domain: String
     ): Result<Boolean>
 }
