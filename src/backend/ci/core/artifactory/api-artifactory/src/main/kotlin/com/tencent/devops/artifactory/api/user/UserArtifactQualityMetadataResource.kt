@@ -37,7 +37,7 @@ interface UserArtifactQualityMetadataResource {
 
     @Operation(summary = "获取流水线级别制品质量元数据")
     @GET
-    @Path("/{pipelineId}")
+    @Path("/pipeline/{pipelineId}")
     fun listByPipeline(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
