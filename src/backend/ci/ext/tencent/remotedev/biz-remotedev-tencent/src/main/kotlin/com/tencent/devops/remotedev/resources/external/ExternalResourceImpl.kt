@@ -96,7 +96,7 @@ class ExternalResourceImpl @Autowired constructor(
             logger.warn("ts not match|ts=$ts")
             return Result(false)
         }
-        val sign = ShaUtils.sha256("$ts$token$cdsId")
+        val sign = ShaUtils.sha256("$ts$externalKey$cdsId")
         if (sign != token) {
             logger.warn("sign not match|sign=$sign|token=$token|ts=$ts|cdsId=$cdsId")
             return Result(false)
