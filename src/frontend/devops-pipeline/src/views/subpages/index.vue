@@ -50,7 +50,7 @@
                 const { data } = await this.$store.dispatch('common/validatePermission', {
                     projectId: this.$route.params.projectId,
                     resourceType: 'project',
-                    resourceCode: 'yu-test',
+                    resourceCode: this.$route.params.pipelineId,
                     actionList: [PROJECT_RESOURCE_ACTION.ARCHIVED]
                 })
                 this.$store.commit(`common/${SET_PROJECT_PERM}`, data[PROJECT_RESOURCE_ACTION.ARCHIVED])
