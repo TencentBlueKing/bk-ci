@@ -1,9 +1,10 @@
 package com.tencent.devops.artifactory.api.user
 
+import com.tencent.bkrepo.repository.pojo.metadata.label.MetadataLabelDetail
+import com.tencent.bkrepo.repository.pojo.metadata.label.UserLabelCreateRequest
+import com.tencent.bkrepo.repository.pojo.metadata.label.UserLabelUpdateRequest
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.bkrepo.repository.pojo.metadata.label.MetadataLabelDetail
-import com.tencent.devops.common.archive.pojo.MetadataLabelDetailUpdate
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -94,7 +95,7 @@ interface UserArtifactQualityMetadataResource {
         @PathParam("labelKey")
         labelKey: String,
         @Parameter(description = "请求体", required = true)
-        metadataLabelUpdate: MetadataLabelDetailUpdate
+        metadataLabelUpdate: UserLabelUpdateRequest
     ): Result<Boolean>
 
     @Operation(summary = "创建项目制品质量元数据标签")
@@ -108,6 +109,6 @@ interface UserArtifactQualityMetadataResource {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "请求体", required = true)
-        metadataLabel: MetadataLabelDetail
+        metadataLabel: UserLabelCreateRequest
     ): Result<Boolean>
 }
