@@ -317,7 +317,7 @@ export default {
    * 用户移出项目
    */
   removeMemberFromProject (projectId: string, params: any) {
-    return http.put(`${IAM_PERFIX}/member/${projectId}/removeMemberFromProject`, params);
+    return http.put(`${IAM_PERFIX}/member/${projectId}/batchRemoveMemberFromProject`, params);
   },
   /**
    * 重置资源授权管理
@@ -339,7 +339,7 @@ export default {
   },
 
   removeMemberFromProjectCheck (projectId: string, params: any) {
-    return http.post(`${IAM_PERFIX}/member/${projectId}/removeMemberFromProjectCheck`, params);
+    return http.post(`${IAM_PERFIX}/member/${projectId}/batchRemoveMemberFromProjectCheck`, params);
   },
   /**
    * 获取资源类型列表

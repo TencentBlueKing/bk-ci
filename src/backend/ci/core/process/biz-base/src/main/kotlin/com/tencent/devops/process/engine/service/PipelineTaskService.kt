@@ -43,8 +43,10 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_TASK_RETRY_NOTICE
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
@@ -65,15 +67,15 @@ import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKS
 import com.tencent.devops.process.utils.JOB_RETRY_TASK_ID
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_PROJECT_ID
+import java.time.Duration
+import java.time.LocalDateTime
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.Duration
-import java.time.LocalDateTime
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 @Suppress(
     "TooManyFunctions",
@@ -440,7 +442,7 @@ class PipelineTaskService @Autowired constructor(
         return dataMap
     }
 
-    fun isRetryWhenFail(projectId: String, taskId: String, buildId: String): Boolean {
+    fun isRetryWhenFail(projectId: String, taskId: String, buildId: String, failedMsg: String?): Boolean {
         val taskRecord = getBuildTask(projectId, buildId, taskId)
             ?: return false
         val retryCount = redisOperation.get(
@@ -455,7 +457,11 @@ class PipelineTaskService @Autowired constructor(
             )
             buildLogPrinter.addYellowLine(
                 buildId = buildId,
-                message = "[${taskRecord.taskName}] failed, and retry $nextCount",
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = BK_BUILD_TASK_RETRY_NOTICE,
+                    params = arrayOf(taskRecord.taskName, nextCount.toString(), failedMsg ?: "run failed"),
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ),
                 tag = taskRecord.taskId,
                 containerHashId = taskRecord.containerId,
                 executeCount = 1,

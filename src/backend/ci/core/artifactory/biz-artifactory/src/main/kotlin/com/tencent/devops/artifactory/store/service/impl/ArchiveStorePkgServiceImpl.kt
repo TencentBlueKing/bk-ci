@@ -362,12 +362,16 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                 defaultMessage = validateResult.message
             )
         }
+        var finalOsName = osName
+        if (storeType == StoreTypeEnum.DEVX && osName.isNullOrBlank()) {
+            finalOsName = OSType.WINDOWS.name.lowercase()
+        }
         val storePkgEnvInfos = client.get(ServiceStoreArchiveResource::class).getComponentPkgEnvInfo(
             userId = userId,
             storeType = storeType,
             storeCode = storeCode,
             version = version,
-            osName = osName,
+            osName = finalOsName,
             osArch = osArch
         ).data
         if (storePkgEnvInfos.isNullOrEmpty()) {

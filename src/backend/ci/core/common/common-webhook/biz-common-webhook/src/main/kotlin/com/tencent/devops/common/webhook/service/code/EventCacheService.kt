@@ -10,10 +10,13 @@ import com.tencent.devops.repository.sdk.github.response.CommitResponse
 import com.tencent.devops.repository.sdk.github.response.PullRequestResponse
 import com.tencent.devops.scm.code.p4.api.P4ChangeList
 import com.tencent.devops.scm.code.p4.api.P4ServerInfo
+import com.tencent.devops.scm.enums.TapdRefType
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.GitTagInfo
+import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.scm.pojo.WebhookCommit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -251,6 +254,42 @@ class EventCacheService @Autowired constructor(
             )
             eventCache?.githubCommitInfo = githubCommitInfo
             githubCommitInfo
+        }
+    }
+
+    fun getTagInfo(
+        projectId: String,
+        repo: Repository,
+        tagName: String
+    ): GitTagInfo? {
+        val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
+        return eventCache?.tagInfo ?: run {
+            val tagInfo = gitScmService.getTag(
+                projectId = projectId,
+                repo = repo,
+                tagName = tagName
+            )
+            eventCache?.tagInfo = tagInfo
+            tagInfo
+        }
+    }
+
+    fun getTapdItem(
+        projectId: String,
+        repo: Repository,
+        refType: TapdRefType,
+        iid: Long
+    ): List<TapdWorkItem>? {
+        val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
+        return eventCache?.tapdWorkItems ?: run {
+            val tapdWorkItems = gitScmService.getTapdItem(
+                projectId = projectId,
+                repo = repo,
+                refType = refType.value,
+                iid = iid
+            )
+            eventCache?.tapdWorkItems = tapdWorkItems
+            tapdWorkItems
         }
     }
 
