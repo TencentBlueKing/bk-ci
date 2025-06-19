@@ -35,6 +35,21 @@ interface UserArtifactQualityMetadataResource {
         projectId: String
     ): Result<List<MetadataLabelDetail>>
 
+    @Operation(summary = "获取流水线级别制品质量元数据")
+    @GET
+    @Path("/{pipelineId}")
+    fun listByPipeline(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目 ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线Id", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+    ): Result<List<MetadataLabelDetail>>
+
     @Operation(summary = "获取项目制品质量元数据标签")
     @GET
     @Path("/{labelKey}")
