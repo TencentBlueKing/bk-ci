@@ -31,12 +31,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	"go/format"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 
 	"golang.org/x/text/language"
 )
