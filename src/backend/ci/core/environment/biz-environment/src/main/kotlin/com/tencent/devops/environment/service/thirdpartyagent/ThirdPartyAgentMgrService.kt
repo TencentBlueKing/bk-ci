@@ -1281,7 +1281,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                         jdkVersion = newHeartbeatInfo.props!!.jdkVersion ?: listOf(),
                         userProps = oldUserProps,
                         dockerInitFileInfo = newHeartbeatInfo.props?.dockerInitFileInfo,
-                        exitError = newHeartbeatInfo.errorExitData
+                        exitError = newHeartbeatInfo.errorExitData,
+                        osVersion = newHeartbeatInfo.props?.osVersion
                     ),
                     false
                 )
