@@ -4,6 +4,7 @@
         v-bkloading="{ isLoading }"
     >
         <bk-resize-layout
+            :key="currentTab"
             :collapsible="true"
             class="pipeline-exec-outputs"
             :initial-divide="initWidth"
@@ -17,17 +18,16 @@
                 <div class="pipeline-exec-outputs-filter-input">
                     <div
                         class="artifact-search"
-                        v-if="isOutputPage"
+                        v-if="currentTab === 'artifacts'"
                     >
                         <p>{{ $t('metaData') }}</p>
-                        <search-select
+                        <bk-search-select
                             class="select-search"
-                            unique-select
+                            :show-condition="false"
                             :data="artifactFilterData"
                             v-model="artifactValue"
                             @change="updateSearchKey"
-                        >
-                        </search-select>
+                        />
                     </div>
                     <bk-input
                         class="input-search"
@@ -270,8 +270,6 @@
     import { extForFile, repoTypeMap, repoTypeNameMap } from '@/utils/pipelineConst'
     import { convertFileSize, convertTime } from '@/utils/util'
     import { mapActions } from 'vuex'
-    import SearchSelect from '@blueking/search-select'
-    import '@blueking/search-select/dist/styles/index.css'
 
     export default {
         components: {
@@ -281,8 +279,7 @@
             ExtMenu,
             CopyToCustomRepoDialog,
             // ArtifactsList
-            ArtifactDownloadButton,
-            SearchSelect
+            ArtifactDownloadButton
         },
         props: {
             currentTab: {
@@ -301,21 +298,29 @@
                 hasPermission: false,
                 isLoading: false,
                 artifactValue: [],
-                artifactFilterData: []
+                artifactFilterData: [],
+                qualityMetadata: {}
             }
         },
         computed: {
             filterQuery () {
-                return this.artifactValue.reduce((query, item) => {
-                    query[item.id] = item.values.map(value => value.id).join(',')
-                    return query
-                }, {})
-            },
-            isOutputPage () {
-                return this.currentTab === 'artifacts'
+                const uniqueKeys = new Set()
+                const result = []
+
+                this.artifactValue.forEach(item => {
+                    item.values.forEach(value => {
+                        const keyValue = `${item.id}:${value.id}`
+                        if (!uniqueKeys.has(keyValue)) {
+                            uniqueKeys.add(keyValue)
+                            result.push({ key: item.id, value: value.id })
+                        }
+                    })
+                })
+
+                return result
             },
             initWidth () {
-                return !this.isOutputPage ? '300px' : '40%'
+                return this.currentTab === 'reports' ? '300px' : '40%'
             },
             filterPlaceholder () {
                 return this.$t(`${this.currentTab}FilterPlaceholder`)
@@ -584,11 +589,23 @@
             },
             '$route.params.buildNo' () {
                 this.$nextTick(this.init)
+            },
+            '$route.query.metadataKey': {
+                handler (newVal) {
+                    this.qualityMetadata = {
+                        labelKey: newVal,
+                        values: this.$route.query.metadataValues.split(',')
+                    }
+                    this.initializeArtifactValue()
+                },
+                immediate: true
             }
         },
-        mounted () {
-            this.init()
-            this.getArtifactDate()
+        async mounted () {
+            await this.getArtifactDate()
+            if (!this.$route.query.metadataKey) {
+                this.init()
+            }
         },
         methods: {
             ...mapActions('common', [
@@ -597,9 +614,33 @@
                 'getMetadataLabel',
                 'requestExecPipPermission'
             ]),
+            initializeArtifactValue () {
+                if (!Object.keys(this.qualityMetadata).length) return
 
-            updateSearchKey (value) {
-                console.log('🚀元数据搜索', this.filterQuery)
+                const { labelKey, values } = this.qualityMetadata
+                this.artifactValue = [{
+                    id: labelKey,
+                    name: labelKey,
+                    multiable: true,
+                    values: values.map(item => ({
+                        id: item,
+                        name: item
+                    }))
+                }]
+                this.init()
+            },
+
+            async updateSearchKey (value) {
+                const metadataKey = this.$route.query.metadataKey
+                const hasMetadataKey = value.some(item => item.id === metadataKey)
+                const query = { ...this.$route.query }
+
+                if (!hasMetadataKey) {
+                    delete query.metadataKey
+                    delete query.metadataValues
+                    this.$router.replace({ query })
+                }
+                this.init()
             },
             async getArtifactDate () {
                 const repoList = await this.getMetadataLabel({
@@ -607,32 +648,22 @@
                     labelKey: 'BK_CI_ARTIFACT_AUTOTEST'
                 })
 
-                const nonEmptyItems = repoList.filter(item => Object.keys(item.labelColorMap).length > 0)
-                const emptyItems = repoList.filter(item => Object.keys(item.labelColorMap).length === 0)
-
-                const nonEmptyResult = nonEmptyItems.map(item => {
+                this.artifactFilterData = repoList.map(item => {
                     const labelColorMapKeys = Object.keys(item.labelColorMap)
                     return {
                         id: item.labelKey,
                         name: item.labelKey,
                         multiable: true,
-                        children: labelColorMapKeys.map(key => ({
-                            id: key,
-                            name: key
-                        }))
+                        ...(item.enumType
+                            ? {
+                                children: labelColorMapKeys.map(key => ({
+                                    id: key,
+                                    name: key
+                                }))
+                            }
+                            : {})
                     }
                 })
-                
-                const customItem = {
-                    id: 'custom',
-                    name: '自定义元数据',
-                    multiable: true,
-                    children: emptyItems.map(item => ({
-                        id: item.labelKey,
-                        name: item.labelKey
-                    }))
-                }
-                this.artifactFilterData = [...nonEmptyResult, customItem]
             },
 
             async init () {
@@ -651,6 +682,7 @@
                             //     result[key] = this.filterConditionMap[key]
                             //     return result
                             // }, {})),
+                            qualityMetadata: this.filterQuery,
                             ...this.pagination
                         })
                     ])

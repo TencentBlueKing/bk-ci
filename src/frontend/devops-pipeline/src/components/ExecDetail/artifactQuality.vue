@@ -2,13 +2,13 @@
     <ul>
         <li
             class="quality-tags"
-            v-for="(colorList, title) in data"
+            v-for="(values, title) in data"
             :key="title"
-            @click="goOutputs(title)"
+            @click="goOutputs(values)"
         >
             <span class="tag-label">{{ title }}</span>
             <div
-                v-for="(tag, index) in colorList"
+                v-for="(tag, index) in values"
                 :key="index"
                 class="color-item"
             >
@@ -30,8 +30,8 @@
             }
         },
         methods: {
-            goOutputs (title) {
-                this.$emit('goOutputs', title)
+            goOutputs (values) {
+                this.$emit('goOutputs', values)
             }
         }
     }

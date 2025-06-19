@@ -266,7 +266,6 @@
                         >
                             <ArtifactQuality
                                 :data="row.showAll ? row.artifactQuality : getSlicedData(row)"
-                                @goOutputs="goOutputs"
                             />
                             <div
                                 v-if="Object.keys(row.artifactQuality).length >= 3"

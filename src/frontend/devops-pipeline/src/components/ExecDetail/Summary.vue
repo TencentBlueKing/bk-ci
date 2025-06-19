@@ -330,7 +330,7 @@
                     this.hideRemarkEdit()
                 }
             },
-            goOutputs (id) {
+            goOutputs (values) {
                 this.$router.push({
                     name: 'pipelinesDetail',
                     params: {
@@ -338,7 +338,8 @@
                         type: 'outputs'
                     },
                     query: {
-                        id
+                        metadataKey: values[0].labelKey,
+                        metadataValues: values.map(item => item.value).join(',')
                     }
                 })
             }
