@@ -114,7 +114,11 @@ class ScmRepositoryApiService @Autowired constructor(
             )
             return AuthorizeResult(status = 403, url = oauthUrl.url)
         }
-        val opts = RepoListOptions.builder().repoName(search).page(1).pageSize(20).build()
+        val opts = RepoListOptions(
+            repoName = search,
+            page = 1,
+            pageSize = 20
+        )
         val projects = listRepository(
             scmCode = scmCode,
             auth = AccessTokenScmAuth(oauthTokenInfo.accessToken),
@@ -170,11 +174,11 @@ class ScmRepositoryApiService @Autowired constructor(
             scmApiManager.listBranches(
                 providerProperties = providerProperties,
                 providerRepository = providerRepository,
-                opts = BranchListOptions.builder()
-                        .search(search)
-                        .page(page)
-                        .pageSize(pageSize)
-                        .build()
+                opts = BranchListOptions(
+                    search = search,
+                    page = page,
+                    pageSize = pageSize
+                )
             )
         }
     }
@@ -210,11 +214,11 @@ class ScmRepositoryApiService @Autowired constructor(
             scmApiManager.findTags(
                 providerProperties = providerProperties,
                 providerRepository = providerRepository,
-                opts = TagListOptions.builder()
-                        .search(search)
-                        .page(page)
-                        .pageSize(pageSize)
-                        .build()
+                opts = TagListOptions(
+                    search = search,
+                    page = page,
+                    pageSize = pageSize
+                )
             )
         }
     }
@@ -280,17 +284,29 @@ class ScmRepositoryApiService @Autowired constructor(
         return if (existsEvents.contains(event)) {
             existsEvents[event]!!
         } else {
-            val builder = HookInput.builder().url(hookUrl).secret(secret)
-            ScmEventType.fromValue(event)?.let {
-                builder.events(HookEvents(it))
-            } ?: builder.nativeEvents(listOf(event))
-            if (!subPath.isNullOrBlank()) {
-                builder.path(subPath)
+            val hookEvents = ScmEventType.values().find { it.name == event }?.let {
+                HookEvents(it)
             }
+            val hookInput = HookInput(
+                url = hookUrl,
+                secret = secret,
+                events = hookEvents,
+                nativeEvents = if (hookEvents == null) {
+                    listOf(event)
+                } else {
+                    listOf()
+                },
+                name = "",
+                path = if (subPath.isNullOrBlank()) {
+                    null
+                } else {
+                    subPath
+                }
+            )
             scmApiManager.createHook(
                 providerProperties = providerProperties,
                 providerRepository = providerRepository,
-                input = builder.build()
+                input = hookInput
             )
         }
     }
@@ -306,10 +322,10 @@ class ScmRepositoryApiService @Autowired constructor(
         var page = 1
         val pageSize = PageUtil.MAX_PAGE_SIZE
         do {
-            val opts = ListOptions.builder()
-                .page(page)
-                .pageSize(PageUtil.MAX_PAGE_SIZE)
-                .build()
+            val opts = ListOptions(
+                page = page,
+                pageSize = PageUtil.MAX_PAGE_SIZE
+            )
             val hooks = scmApiManager.listHooks(
                 providerProperties = providerProperties,
                 providerRepository = providerRepository,
@@ -319,9 +335,9 @@ class ScmRepositoryApiService @Autowired constructor(
             hooks.forEach { existsHook ->
                 val matchSubPath = subPath?.let { existsHook.path == it } ?: true
                 if (existsHook.url == hookUrl && matchSubPath) {
-                    existsHook.events.enabledEvents.forEach { existsEvents[it] = existsHook }
+                    existsHook.events?.getEnabledEvents()?.forEach { existsEvents[it] = existsHook }
                     if (!existsHook.nativeEvents.isNullOrEmpty()) {
-                        existsHook.nativeEvents.forEach { existsEvents[it] = existsHook }
+                        existsHook.nativeEvents?.forEach { existsEvents[it] = existsHook }
                     }
                 }
             }

@@ -35,10 +35,10 @@ object WebhookRuleUtils {
         changes.forEach {
             with(it) {
                 when {
-                    deleted -> changedFiles.add(oldPath)
+                    deleted -> oldPath?.let { path -> changedFiles.add(path) }
                     renamed -> {
                         changedFiles.add(path)
-                        changedFiles.add(oldPath)
+                        oldPath?.let { path -> changedFiles.add(path) }
                     }
 
                     else ->

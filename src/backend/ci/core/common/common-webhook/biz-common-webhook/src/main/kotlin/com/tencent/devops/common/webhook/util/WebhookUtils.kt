@@ -256,8 +256,8 @@ object WebhookUtils {
         startParams[PIPELINE_GIT_MR_TITLE] = mrInfo?.title ?: ""
         startParams[PIPELINE_GIT_MR_DESC] = mrDesc
         startParams[PIPELINE_GIT_MR_PROPOSER] = mrInfo?.author?.username ?: ""
-        if (!homepage.isNullOrBlank()) {
-            startParams[PIPELINE_GIT_MR_URL] = "$homepage/merge_requests/${mrInfo?.mrNumber}"
+        if (!homepage.isNullOrBlank() && mrInfo?.mrNumber != null) {
+            startParams[PIPELINE_GIT_MR_URL] = "$homepage/merge_requests/${mrInfo.mrNumber}"
         }
         return startParams
     }

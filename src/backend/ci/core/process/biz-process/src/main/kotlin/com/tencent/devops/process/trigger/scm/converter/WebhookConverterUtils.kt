@@ -47,14 +47,18 @@ object WebhookConverterUtils {
                         addedFiles.add(path)
                     }
                     deleted -> {
-                        allFiles.add(oldPath)
-                        deletedFiles.add(oldPath)
+                        oldPath?.let { filePath ->
+                            allFiles.add(filePath)
+                            deletedFiles.add(filePath)
+                        }
                     }
                     renamed -> {
-                        renamedFiles[path] = oldPath
-                        renamedOldFiles[oldPath] = path
+                        oldPath?.let { filePath ->
+                            allFiles.add(filePath)
+                            renamedFiles[path] = filePath
+                            renamedOldFiles[filePath] = path
+                        }
                         allFiles.add(path)
-                        allFiles.add(oldPath)
                     }
                     else ->
                         updatedFiles.add(path)

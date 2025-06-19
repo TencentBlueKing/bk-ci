@@ -338,7 +338,7 @@ class RepositoryPacService @Autowired constructor(
             scmCode = repository.scmCode
         )
         // 获取yaml文件列表
-        val defaultBranch = serverRepository.defaultBranch
+        val defaultBranch = serverRepository.defaultBranch!!
         val fileTrees = fileApiService.listFileTree(
             projectId = projectId,
             path = RepositoryConstants.CI_DIR_PATH,
