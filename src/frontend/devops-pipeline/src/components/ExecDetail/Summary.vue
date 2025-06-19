@@ -275,18 +275,6 @@
                     }
                 },
                 immediate: true
-            },
-            goOutputs (id) {
-                this.$router.push({
-                    name: 'pipelinesDetail',
-                    params: {
-                        ...this.routerParams,
-                        type: 'outputs'
-                    },
-                    query: {
-                        id
-                    }
-                })
             }
         },
         methods: {
@@ -347,6 +335,19 @@
                     this.isChangeRemark = false
                     this.hideRemarkEdit()
                 }
+            },
+            goOutputs (values) {
+                this.$router.push({
+                    name: 'pipelinesDetail',
+                    params: {
+                        ...this.routerParams,
+                        type: 'outputs'
+                    },
+                    query: {
+                        metadataKey: values[0].labelKey,
+                        metadataValues: values.map(item => item.value).join(',')
+                    }
+                })
             }
         }
     }

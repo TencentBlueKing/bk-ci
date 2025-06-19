@@ -99,18 +99,21 @@
                 type: Function,
                 default: () => () => {}
             },
-            options: Array
+            keyoptions: Array,
+            valueoptions: Array
         },
         data () {
             return {
                 isLoading: false,
-                parameters: [],
-                valueList: []
+                parameters: []
             }
         },
         computed: {
             keyList () {
-                return this.options
+                return this.keyoptions
+            },
+            valueList () {
+                return this.valueoptions
             }
         },
         watch: {
