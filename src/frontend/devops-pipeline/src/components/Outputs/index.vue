@@ -645,7 +645,7 @@
             async getArtifactDate () {
                 const repoList = await this.getMetadataLabel({
                     projectId: this.$route.params.projectId,
-                    labelKey: 'BK_CI_ARTIFACT_AUTOTEST'
+                    pipelineId: this.$route.params.pipelineId
                 })
 
                 this.artifactFilterData = repoList.map(item => {
