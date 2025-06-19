@@ -104,7 +104,7 @@ class ExternalResourceImpl @Autowired constructor(
         val ws = workspaceService.limitFetchProjectWorkspace(
             limit = SQLLimit(0, 1),
             queryType = QueryType.OP,
-            search = WorkspaceSearch(ips = listOf(cdsId), onFuzzyMatch = false)
+            search = WorkspaceSearch(sips = listOf(cdsId), onFuzzyMatch = false)
         ).ifEmpty {
             logger.warn("no workspace found|cdsId=$cdsId")
             return Result(false)
