@@ -27,7 +27,6 @@
 
 package com.tencent.devops.image.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
@@ -41,7 +40,6 @@ import com.tencent.devops.image.constants.ImageMessageCode.IMAGE_COPYING_IN_PROG
 import com.tencent.devops.image.pojo.DockerRepo
 import com.tencent.devops.image.pojo.DockerTag
 import com.tencent.devops.image.pojo.ImageItem
-import com.tencent.devops.image.pojo.ImageListResp
 import com.tencent.devops.image.pojo.ImagePageData
 import okhttp3.Credentials
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -211,55 +209,58 @@ class ImageArtifactoryService @Autowired constructor(
         return listProjectImagesByAql(aql, start, limit)
     }
 
-    fun getBuildImageInfo(
-        imageRepo: String,
-        includeTagDetail: Boolean = false,
-        tagStart: Int = 0,
-        tagLimit: Int = 1000
-    ): DockerRepo? {
-        val aql = "items.find({\"\$and\":[{\"repo\":{\"\$eq\":\"docker-local\"}}," +
-            "{\"name\":{\"\$eq\":\"manifest.json\"}}," +
-            "{\"@docker.repoName\":\"$imageRepo\"}]}).include(\"property.key\",\"property.value\")"
-        var buildImages = aqlSearchImage(aql)
-        if (buildImages.isEmpty()) {
-            return null
-        }
 
-        buildImages = buildImages.sortedByDescending { it.modified }
-        val pageIndex = getPageIndex(buildImages.size, tagStart, tagLimit)
-
-        val resultTags = buildImages.subList(pageIndex.first, pageIndex.second)
-        logger.info("includeTagDetail: $includeTagDetail")
-        resultTags.forEach {
-            if (includeTagDetail) {
-                val tagInfo = getTagInfo(it.repo!!, it.tag!!)
-                if (tagInfo == null) {
-                    logger.error("image tag not found")
-                    throw RuntimeException("image tag not found")
-                }
-                it.size = tagInfo.size
-            }
-        }
-
-        val firstImage = buildImages[0]
-        return DockerRepo().apply {
-            repoUrl = dockerConfig.imagePrefix
-            repo = imageRepo
-            type = parseType(imageRepo)
-            repoType = ""
-            name = parseName(imageRepo)
-            created = firstImage.created
-            createdBy = firstImage.createdBy
-            modified = firstImage.modified
-            modifiedBy = firstImage.modifiedBy
-            imagePath = parseBuildImagePath(imageRepo)
-            tags = resultTags
-            tagCount = buildImages.size
-            this.tagStart = tagStart
-            this.tagLimit = tagLimit
-            downloadCount = 0 // TODO 实现下载次数统计
-        }
-    }
+//    fun getBuildImageInfo(
+//        imageRepo: String,
+//        includeTagDetail: Boolean = false,
+//        tagStart: Int = 0,
+//        tagLimit: Int = 1000
+//    ): DockerRepo? {
+//        val aql = "items.find({\"\$and\":[{\"repo\":{\"\$eq\":\"docker-local\"}}," +
+//            "{\"name\":{\"\$eq\":\"manifest.json\"}}," +
+//            "{\"@docker.repoName\":\"$imageRepo\"}]}).include(\"property.key\",\"property.value\")"
+//
+//
+//        var buildImages = aqlSearchImage(aql)
+//        if (buildImages.isEmpty()) {
+//            return null
+//        }
+//
+//        buildImages = buildImages.sortedByDescending { it.modified }
+//        val pageIndex = getPageIndex(buildImages.size, tagStart, tagLimit)
+//
+//        val resultTags = buildImages.subList(pageIndex.first, pageIndex.second)
+//        logger.info("includeTagDetail: $includeTagDetail")
+//        resultTags.forEach {
+//            if (includeTagDetail) {
+//                val tagInfo = getTagInfo(it.repo!!, it.tag!!,it.image!!)
+//                if (tagInfo == null) {
+//                    logger.error("image tag not found")
+//                    throw RuntimeException("image tag not found")
+//                }
+//                it.size = tagInfo.size
+//            }
+//        }
+//
+//        val firstImage = buildImages[0]
+//        return DockerRepo().apply {
+//            repoUrl = dockerConfig.imagePrefix
+//            repo = imageRepo
+//            type = parseType(imageRepo)
+//            repoType = ""
+//            name = parseName(imageRepo)
+//            created = firstImage.created
+//            createdBy = firstImage.createdBy
+//            modified = firstImage.modified
+//            modifiedBy = firstImage.modifiedBy
+//            imagePath = parseBuildImagePath(imageRepo)
+//            tags = resultTags
+//            tagCount = buildImages.size
+//            this.tagStart = tagStart
+//            this.tagLimit = tagLimit
+//            downloadCount = 0 // TODO 实现下载次数统计
+//        }
+//    }
 
     fun getImageInfo(
         imageRepo: String,

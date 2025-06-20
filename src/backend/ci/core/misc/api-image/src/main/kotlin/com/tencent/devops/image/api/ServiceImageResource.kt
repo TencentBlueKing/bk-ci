@@ -113,16 +113,16 @@ interface ServiceImageResource {
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "查询关键字", required = false)
-        @QueryParam("searchKey")
-        searchKey: String?,
+        @Parameter(description = "镜像名称", required = true)
+        @QueryParam("imageName")
+        imageName: String,
         @Parameter(description = "分页start", required = false)
         @QueryParam("start")
         start: Int?,
         @Parameter(description = "分页大小", required = false)
         @QueryParam("limit")
         limit: Int?
-    ): Result<ImagePageData>
+    ): Result<ImagePageData?>
 
     @Operation(summary = "获取镜像信息")
     @Path("/getImageInfo")
