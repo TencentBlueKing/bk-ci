@@ -96,8 +96,11 @@
           :label="t('操作')"
         >
           <template #default="{row}">
-            <bk-button text theme="primary" @click="handleEdit(row)"> {{t('编辑')}} </bk-button>
-            <bk-button class="ml10" text theme="primary" @click="handleDelete(row)"> {{t('删除')}} </bk-button>
+            <div v-if="!row.system">
+              <bk-button text theme="primary" @click="handleEdit(row)"> {{t('编辑')}} </bk-button>
+              <bk-button class="ml10" text theme="primary" @click="handleDelete(row)"> {{t('删除')}} </bk-button>
+            </div>
+            <div v-else>--</div>
           </template>
         </bk-table-column>
       </bk-table>
