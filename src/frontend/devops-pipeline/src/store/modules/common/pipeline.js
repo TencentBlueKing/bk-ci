@@ -25,6 +25,7 @@ import {
     PROCESS_API_URL_PREFIX,
     QUALITY_API_URL_PREFIX,
     REPOSITORY_API_URL_PREFIX,
+    AUTH_URL_PREFIX,
     STORE_API_URL_PREFIX
 } from '@/store/constants'
 import request from '@/utils/request'
@@ -41,7 +42,8 @@ import {
     SET_PAC_SUPPORT_SCM_TYPE_LIST,
     STORE_TEMPLATE_MUTATION,
     TEMPLATE_CATEGORY_MUTATION,
-    TEMPLATE_MUTATION
+    TEMPLATE_MUTATION,
+    SET_PROJECT_PERM
 } from './constants'
 
 function rootCommit (commit, ACTION_CONST, payload) {
@@ -62,7 +64,8 @@ export const state = {
     templateRuleList: [],
     qualityAtom: [],
     pacSupportScmTypeList: [],
-    dockerWhiteList: []
+    dockerWhiteList: [],
+    hasProjectPermission: false
 }
 
 export const mutations = {
@@ -149,6 +152,11 @@ export const mutations = {
     [SET_PAC_SUPPORT_SCM_TYPE_LIST]: (state, pacSupportScmTypeList) => {
         Object.assign(state, {
             pacSupportScmTypeList
+        })
+    },
+    [SET_PROJECT_PERM]: (state, hasProjectPermission) => {
+        Object.assign(state, {
+            hasProjectPermission
         })
     }
 }
@@ -421,6 +429,13 @@ export const actions = {
     summaryRate: async (_, { projectName, processId, type }) => {
         const { data } = await request.post(`${REPOSITORY_API_URL_PREFIX}/user/copilot/summary/rate?projectName=${projectName}&processId=${processId}&type=${type}`)
         return data
+    },
+    validatePermission: async (_, { projectId, ...params }) => {
+        return request.post(`${AUTH_URL_PREFIX}/user/auth/permission/batch/validate`, params, {
+            headers: {
+                'X-DEVOPS-PROJECT-ID': projectId
+            }
+        })
     }
 }
 

@@ -43,6 +43,35 @@ const actions = {
         return ajax.put(`${prefix}/pipelines/${projectId}/${pipelineId}/restore`).then(response => {
             return response.data
         })
+    },
+    requestArchivePipelineList ({ commit }, { projectId, ...query }) {
+        return ajax.get(`${prefix}/archive/projects/${projectId}/archived/pipelines/list`, {
+            params: query
+        }).then(response => {
+            return response.data
+        })
+    },
+    migrateArchivePipelineList (_, { projectId, pipelineId }) {
+        return ajax.post(`${prefix}/archive/projects/${projectId}/pipelines/${pipelineId}/data/migrate?cancelFlag=false`).then(response => {
+            return response.data
+        })
+    },
+    batchMigrateArchivePipelineList (_, { projectId, pipelineIds }) {
+        return ajax.post(`${prefix}/archive/projects/${projectId}/data/migrate?cancelFlag=false`, pipelineIds).then(response => {
+            return response.data
+        })
+    },
+    batchDeleteMigrateArchive (_, params) {
+        return ajax.delete(`${prefix}/pipelines/batchDelete?archiveFlag=true`, {
+            data: params
+        }).then(response => {
+            return response.data
+        })
+    },
+    deleteMigrateArchive (_, { projectId, pipelineId }) {
+        return ajax.delete(`${prefix}/pipelines/${projectId}/${pipelineId}?archiveFlag=true`).then(response => {
+            return response.data
+        })
     }
 }
 
