@@ -80,7 +80,7 @@ class PipelineArtifactQualityService(
                 validMetadataMap[item.labelKey]?.let { labelDetail ->
                     if (labelDetail.enumType) {
                         // 枚举类型：检查 value 是否存在于 labelColorMap 中
-                        labelDetail.labelColorMap?.containsKey(item.value) == true
+                        labelDetail.labelColorMap.containsKey(item.value)
                     } else {
                         // 非枚举类型：标签有效即保留
                         true
