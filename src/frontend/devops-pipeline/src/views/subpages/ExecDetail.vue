@@ -375,7 +375,10 @@
                     }
             },
             routerParams () {
-                return this.$route.params
+                return {
+                    ...this.$route.params,
+                    ...this.$route.query
+                }
             },
             curItemTab () {
                 return this.routerParams.type || 'executeDetail'
@@ -550,7 +553,8 @@
                     params: {
                         ...this.routerParams,
                         type: panel.name
-                    }
+                    },
+                    query: this.$route.query
                 })
             },
             collapseSummary () {
