@@ -14,6 +14,7 @@ import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "USER_PIPELINE_OUTPUT", description = "流水线产出物管理")
@@ -39,6 +40,9 @@ interface UserPipelineOutputResource {
         @PathParam("buildId")
         buildId: String,
         @Parameter(description = "搜索过滤条件", required = false)
-        option: PipelineOutputSearchOption?
+        option: PipelineOutputSearchOption?,
+        @Parameter(description = "是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<List<PipelineOutput>>
 }
