@@ -53,7 +53,7 @@ class AuthCronSyncGroupAndMember(
         }
     }
 
-    @Scheduled(cron = "0 0 0 1,15 * ?")
+    @Scheduled(cron = "0 0 0 ? * SAT")
     fun syncGroupPermissionsRegularly() {
         if (!enable) {
             return

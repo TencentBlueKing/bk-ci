@@ -139,32 +139,61 @@ class UserManageService @Autowired constructor(
                 }
                 bkUserInfos.forEach { bkUserInfo ->
                     logger.info("sync user info data ,{}", bkUserInfo)
-                    try {
-                        val deptInfoDTO = extractDeptInfo(bkUserInfo.userName)
-                        userInfoDao.create(
-                            dslContext = dslContext,
-                            userInfo = UserInfo(
-                                userId = bkUserInfo.userName,
-                                userName = bkUserInfo.displayName,
-                                enabled = bkUserInfo.enabled ?: true,
-                                departmentName = deptInfoDTO?.departmentName,
-                                departmentId = deptInfoDTO?.departmentId,
-                                departments = deptInfoDTO?.departments,
-                                path = deptInfoDTO?.path,
-                                departed = false
-                            ),
-                            taskId = latestTaskId
-                        )
-                    } catch (ex: Exception) {
-                        logger.warn("sync user info data failed $bkUserInfo|$ex")
+                    RetryUtils.retryAnyException(retryTime = 3, retryPeriodMills = 100) {
+                        try {
+                            val deptInfoDTO = extractDeptInfo(bkUserInfo.userName)
+                            userInfoDao.create(
+                                dslContext = dslContext,
+                                userInfo = UserInfo(
+                                    userId = bkUserInfo.userName,
+                                    userName = bkUserInfo.displayName,
+                                    enabled = bkUserInfo.enabled ?: true,
+                                    departmentName = deptInfoDTO?.departmentName,
+                                    departmentId = deptInfoDTO?.departmentId,
+                                    departments = deptInfoDTO?.departments,
+                                    path = deptInfoDTO?.path,
+                                    departed = false
+                                ),
+                                taskId = latestTaskId
+                            )
+                        } catch (ex: Exception) {
+                            logger.warn("sync user info data failed $bkUserInfo|$ex")
+                        }
                     }
                 }
                 page += 1
             } while (bkUserInfos.size == pageSize)
+
+            val departedUsers = userInfoDao.list(
+                dslContext = dslContext,
+                excludeTaskId = latestTaskId
+            )
+
+            // 二次校验用户是否离职，防止误操作。
+            departedUsers.forEach {
+                val userInfo = deptService.getUserInfo(it)
+                if (userInfo != null) {
+                    val deptInfoDTO = extractDeptInfo(userInfo.name)
+                    userInfoDao.create(
+                        dslContext = dslContext,
+                        userInfo = UserInfo(
+                            userId = userInfo.name,
+                            userName = userInfo.displayName,
+                            enabled = true,
+                            departmentName = deptInfoDTO?.departmentName,
+                            departmentId = deptInfoDTO?.departmentId,
+                            departments = deptInfoDTO?.departments,
+                            path = deptInfoDTO?.path,
+                            departed = false
+                        ),
+                        taskId = latestTaskId
+                    )
+                }
+            }
             // 标记用户是否离职
             userInfoDao.updateUserDepartedFlag(
                 dslContext = dslContext,
-                taskId = latestTaskId
+                excludeTaskId = latestTaskId
             )
             syncDataTaskDao.recordSyncDataTask(
                 dslContext = dslContext,

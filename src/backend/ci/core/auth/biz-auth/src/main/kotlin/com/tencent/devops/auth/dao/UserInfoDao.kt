@@ -60,13 +60,13 @@ class UserInfoDao {
 
     fun updateUserDepartedFlag(
         dslContext: DSLContext,
-        taskId: String
+        excludeTaskId: String
     ) {
         with(TUserInfo.T_USER_INFO) {
             dslContext.update(this)
                 .set(DEPARTED, true)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .where(TASK_ID.notEqual(taskId))
+                .where(TASK_ID.notEqual(excludeTaskId))
                 .execute()
         }
     }
@@ -79,6 +79,18 @@ class UserInfoDao {
             dslContext.selectFrom(this)
                 .where(USER_ID.eq(userId))
                 .fetchOne()?.convert()
+        }
+    }
+
+    fun list(
+        dslContext: DSLContext,
+        excludeTaskId: String
+    ): List<String> {
+        return with(TUserInfo.T_USER_INFO) {
+            dslContext.select(USER_ID).from(this)
+                .where(TASK_ID.notEqual(excludeTaskId))
+                .orderBy(CREATE_TIME.desc())
+                .fetch().map { it.value1() }
         }
     }
 
