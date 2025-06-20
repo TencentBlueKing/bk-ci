@@ -21,7 +21,8 @@ data class EnvironmentOperate(
     val live: Boolean? = null,
     val imageName: String? = null,
     val tolerations: List<Toleration>? = null,
-    val nodeSelector: Map<String, String>? = null
+    val nodeSelector: Map<String, String>? = null,
+    val force: Boolean = false
 ) : EnvironmentOperateInf(uid)
 
 /**

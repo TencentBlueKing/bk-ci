@@ -9,14 +9,15 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
 import com.tencent.devops.misc.pojo.constant.MiscMessageCode
 import com.tencent.devops.misc.pojo.process.MigratePipelineDataParam
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
-import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import org.apache.commons.collections4.ListUtils
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -43,6 +44,7 @@ class MigratePipelineDataTask constructor(
             val dslContext = migratePipelineDataParam.dslContext
             val migratingShardingDslContext = migratePipelineDataParam.migratingShardingDslContext
             val processDbMigrateDao = migratePipelineDataParam.processDataMigrateDao
+            val processDao = migratePipelineDataParam.processDao
             val archiveFlag = migratePipelineDataParam.archiveFlag
             // 1、获取是否允许执行的信号量
             semaphore?.acquire()
@@ -53,8 +55,15 @@ class MigratePipelineDataTask constructor(
                     handleUnFinishPipelines(RETRY_NUM)
                     Thread.sleep(DEFAULT_THREAD_SLEEP_TINE)
                 }
+                // 检查构建是否结束
+                isBuildCompleted(
+                    dslContext = dslContext,
+                    processDao = processDao,
+                    projectId = projectId,
+                    pipelineId = pipelineId
+                )
                 // 3、开始迁移流水线的数据
-                // 3.1、迁移T_PIPELINE_INFO表数据
+                // 迁移T_PIPELINE_INFO表数据
                 migratePipelineInfoData(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -63,7 +72,7 @@ class MigratePipelineDataTask constructor(
                     processDataMigrateDao = processDbMigrateDao,
                     archiveFlag = archiveFlag
                 )
-                // 3.2、迁移构建相关表数据
+                // 迁移构建相关表数据
                 var offset = 0
                 do {
                     val buildHistoryRecords = processDbMigrateDao.getPipelineBuildHistoryRecords(
@@ -78,7 +87,7 @@ class MigratePipelineDataTask constructor(
                         pipelineBuildHistoryRecords = buildHistoryRecords
                     )
                     migrateBuildLinkedData(
-                        buildHistoryRecords = buildHistoryRecords,
+                        buildIds = buildHistoryRecords.map { it.buildId },
                         processDataMigrateDao = processDbMigrateDao,
                         dslContext = dslContext,
                         projectId = projectId,
@@ -87,7 +96,30 @@ class MigratePipelineDataTask constructor(
                     )
                     offset += MEDIUM_PAGE_SIZE
                 } while (buildHistoryRecords.size == MEDIUM_PAGE_SIZE)
-                // 3.3、迁移T_PIPELINE_BUILD_SUMMARY表数据
+                offset = 0
+                do {
+                    val buildHistoryDebugRecords = processDbMigrateDao.getPipelineBuildHistoryDebugRecords(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        limit = MEDIUM_PAGE_SIZE,
+                        offset = offset
+                    )
+                    processDbMigrateDao.migratePipelineBuildHistoryDebugData(
+                        migratingShardingDslContext = migratingShardingDslContext,
+                        pipelineBuildHistoryDebugRecords = buildHistoryDebugRecords
+                    )
+                    migrateBuildLinkedData(
+                        buildIds = buildHistoryDebugRecords.map { it.buildId },
+                        processDataMigrateDao = processDbMigrateDao,
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        migratingShardingDslContext = migratingShardingDslContext,
+                        archiveFlag = archiveFlag
+                    )
+                    offset += MEDIUM_PAGE_SIZE
+                } while (buildHistoryDebugRecords.size == MEDIUM_PAGE_SIZE)
+                // 迁移T_PIPELINE_BUILD_SUMMARY表数据
                 migratePipelineBuildSummaryData(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -95,7 +127,7 @@ class MigratePipelineDataTask constructor(
                     migratingShardingDslContext = migratingShardingDslContext,
                     processDataMigrateDao = processDbMigrateDao
                 )
-                // 3.4、迁移T_PIPELINE_LABEL_PIPELINE表数据
+                // 迁移T_PIPELINE_LABEL_PIPELINE表数据
                 migratePipelineLabelPipelineData(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -103,7 +135,7 @@ class MigratePipelineDataTask constructor(
                     migratingShardingDslContext = migratingShardingDslContext,
                     processDataMigrateDao = processDbMigrateDao
                 )
-                // 3.5、迁移T_PIPELINE_RESOURCE表数据
+                // 迁移T_PIPELINE_RESOURCE表数据
                 migratePipelineResourceData(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -111,7 +143,7 @@ class MigratePipelineDataTask constructor(
                     migratingShardingDslContext = migratingShardingDslContext,
                     processDataMigrateDao = processDbMigrateDao
                 )
-                // 3.6、迁移T_PIPELINE_RESOURCE_VERSION表数据
+                // 迁移T_PIPELINE_RESOURCE_VERSION表数据
                 migratePipelineResourceVersionData(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -119,7 +151,7 @@ class MigratePipelineDataTask constructor(
                     migratingShardingDslContext = migratingShardingDslContext,
                     processDataMigrateDao = processDbMigrateDao
                 )
-                // 3.7、迁移T_TEMPLATE_PIPELINE表数据
+                // 迁移T_TEMPLATE_PIPELINE表数据
                 migrateTemplatePipelineData(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -127,8 +159,48 @@ class MigratePipelineDataTask constructor(
                     migratingShardingDslContext = migratingShardingDslContext,
                     processDataMigrateDao = processDbMigrateDao
                 )
+                // 迁移T_PIPELINE_FAVOR表数据
+                migratePipelineFavorData(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    dslContext = dslContext,
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    processDataMigrateDao = processDbMigrateDao
+                )
+                // 迁移T_PIPELINE_VIEW_GROUP表数据
+                migratePipelineViewGroupData(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    dslContext = dslContext,
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    processDataMigrateDao = processDbMigrateDao
+                )
+                // 迁移T_PIPELINE_SETTING表数据
+                migratePipelineSettingData(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    dslContext = dslContext,
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    processDataMigrateDao = processDbMigrateDao
+                )
+                // 迁移T_PIPELINE_SETTING_VERSION表数据
+                migratePipelineSettingVersionData(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    dslContext = dslContext,
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    processDataMigrateDao = processDbMigrateDao
+                )
+                // 迁移T_REPORT表数据
+                migrateReportData(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    dslContext = dslContext,
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    processDataMigrateDao = processDbMigrateDao
+                )
                 if (archiveFlag != true) {
-                    // 3.8、迁移T_PIPELINE_BUILD_CONTAINER表数据
+                    // 迁移T_PIPELINE_BUILD_CONTAINER表数据
                     migratePipelineBuildContainerData(
                         projectId = projectId,
                         pipelineId = pipelineId,
@@ -136,7 +208,7 @@ class MigratePipelineDataTask constructor(
                         migratingShardingDslContext = migratingShardingDslContext,
                         processDataMigrateDao = processDbMigrateDao
                     )
-                    // 3.9、迁移T_PIPELINE_BUILD_STAGE表数据
+                    // 迁移T_PIPELINE_BUILD_STAGE表数据
                     migratePipelineBuildStageData(
                         projectId = projectId,
                         pipelineId = pipelineId,
@@ -144,7 +216,7 @@ class MigratePipelineDataTask constructor(
                         migratingShardingDslContext = migratingShardingDslContext,
                         processDataMigrateDao = processDbMigrateDao
                     )
-                    // 3.10、迁移T_PIPELINE_BUILD_TASK表数据
+                    // 迁移T_PIPELINE_BUILD_TASK表数据
                     migratePipelineBuildTaskData(
                         projectId = projectId,
                         pipelineId = pipelineId,
@@ -152,15 +224,7 @@ class MigratePipelineDataTask constructor(
                         migratingShardingDslContext = migratingShardingDslContext,
                         processDataMigrateDao = processDbMigrateDao
                     )
-                    // 3.11、迁移T_PIPELINE_FAVOR表数据
-                    migratePipelineFavorData(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        dslContext = dslContext,
-                        migratingShardingDslContext = migratingShardingDslContext,
-                        processDataMigrateDao = processDbMigrateDao
-                    )
-                    // 3.12、迁移T_PIPELINE_MODEL_TASK表数据
+                    // 迁移T_PIPELINE_MODEL_TASK表数据
                     migratePipelineModelTaskData(
                         projectId = projectId,
                         pipelineId = pipelineId,
@@ -168,23 +232,7 @@ class MigratePipelineDataTask constructor(
                         migratingShardingDslContext = migratingShardingDslContext,
                         processDataMigrateDao = processDbMigrateDao
                     )
-                    // 3.13、迁移T_PIPELINE_SETTING表数据
-                    migratePipelineSettingData(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        dslContext = dslContext,
-                        migratingShardingDslContext = migratingShardingDslContext,
-                        processDataMigrateDao = processDbMigrateDao
-                    )
-                    // 3.14、迁移T_PIPELINE_SETTING_VERSION表数据
-                    migratePipelineSettingVersionData(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        dslContext = dslContext,
-                        migratingShardingDslContext = migratingShardingDslContext,
-                        processDataMigrateDao = processDbMigrateDao
-                    )
-                    // 3.15、迁移T_PIPELINE_WEBHOOK_QUEUE表数据
+                    // 迁移T_PIPELINE_WEBHOOK_QUEUE表数据
                     migratePipelineWebhookQueueData(
                         projectId = projectId,
                         pipelineId = pipelineId,
@@ -192,15 +240,7 @@ class MigratePipelineDataTask constructor(
                         migratingShardingDslContext = migratingShardingDslContext,
                         processDataMigrateDao = processDbMigrateDao
                     )
-                    // 3.16、迁移T_REPORT表数据
-                    migrateReportData(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        dslContext = dslContext,
-                        migratingShardingDslContext = migratingShardingDslContext,
-                        processDataMigrateDao = processDbMigrateDao
-                    )
-                    // 3.17、迁移T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO表数据
+                    // 迁移T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO表数据
                     migrateBuildTemplateAcrossInfoData(
                         projectId = projectId,
                         pipelineId = pipelineId,
@@ -208,7 +248,7 @@ class MigratePipelineDataTask constructor(
                         migratingShardingDslContext = migratingShardingDslContext,
                         processDataMigrateDao = processDbMigrateDao
                     )
-                    // 3.18、迁移T_PIPELINE_RECENT_USE表数据
+                    // 迁移T_PIPELINE_RECENT_USE表数据
                     migratePipelineRecentUseData(
                         projectId = projectId,
                         pipelineId = pipelineId,
@@ -216,15 +256,7 @@ class MigratePipelineDataTask constructor(
                         migratingShardingDslContext = migratingShardingDslContext,
                         processDataMigrateDao = processDbMigrateDao
                     )
-                    // 3.19、迁移T_PIPELINE_VIEW_GROUP表数据
-                    migratePipelineViewGroupData(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        dslContext = dslContext,
-                        migratingShardingDslContext = migratingShardingDslContext,
-                        processDataMigrateDao = processDbMigrateDao
-                    )
-                    // 3.20、迁移T_PIPELINE_TIMER表数据
+                    // 迁移T_PIPELINE_TIMER表数据
                     migratePipelineTimerData(
                         projectId = projectId,
                         pipelineId = pipelineId,
@@ -232,7 +264,7 @@ class MigratePipelineDataTask constructor(
                         migratingShardingDslContext = migratingShardingDslContext,
                         processDataMigrateDao = processDbMigrateDao
                     )
-                    // 3.21、迁移T_PIPELINE_TRIGGER_DETAIL表数据
+                    // 迁移T_PIPELINE_TRIGGER_DETAIL表数据
                     migratePipelineTriggerDetailData(
                         projectId = projectId,
                         pipelineId = pipelineId,
@@ -240,7 +272,7 @@ class MigratePipelineDataTask constructor(
                         migratingShardingDslContext = migratingShardingDslContext,
                         processDataMigrateDao = processDbMigrateDao
                     )
-                    // 3.22、迁移T_PIPELINE_REMOTE_AUTH表数据
+                    // 迁移T_PIPELINE_REMOTE_AUTH表数据
                     migratePipelineRemoteAuthData(
                         projectId = projectId,
                         pipelineId = pipelineId,
@@ -248,8 +280,64 @@ class MigratePipelineDataTask constructor(
                         migratingShardingDslContext = migratingShardingDslContext,
                         processDataMigrateDao = processDbMigrateDao
                     )
-                    // 3.23、迁移T_PIPELINE_WEBHOOK表数据
+                    // 迁移T_PIPELINE_WEBHOOK表数据
                     migratePipelineWebhookData(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        dslContext = dslContext,
+                        migratingShardingDslContext = migratingShardingDslContext,
+                        processDataMigrateDao = processDbMigrateDao
+                    )
+                    // 迁移T_PIPELINE_TIMER_BRANCH表数据
+                    migratePipelineTimerBranchData(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        dslContext = dslContext,
+                        migratingShardingDslContext = migratingShardingDslContext,
+                        processDataMigrateDao = processDbMigrateDao
+                    )
+                    // 迁移T_PIPELINE_YAML_INFO表数据
+                    migratePipelineYamlInfoData(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        dslContext = dslContext,
+                        migratingShardingDslContext = migratingShardingDslContext,
+                        processDataMigrateDao = processDbMigrateDao
+                    )
+                    // 迁移T_PIPELINE_YAML_VERSION表数据
+                    migratePipelineYamlVersionData(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        dslContext = dslContext,
+                        migratingShardingDslContext = migratingShardingDslContext,
+                        processDataMigrateDao = processDbMigrateDao
+                    )
+                    // 迁移T_PIPELINE_OPERATION_LOG表数据
+                    migratePipelineOperationLogData(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        dslContext = dslContext,
+                        migratingShardingDslContext = migratingShardingDslContext,
+                        processDataMigrateDao = processDbMigrateDao
+                    )
+                    // 迁移T_PIPELINE_WEBHOOK_VERSION表数据
+                    migratePipelineWebhookVersionData(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        dslContext = dslContext,
+                        migratingShardingDslContext = migratingShardingDslContext,
+                        processDataMigrateDao = processDbMigrateDao
+                    )
+                    // 迁移T_PIPELINE_CALLBACK表数据
+                    migratePipelineCallbackData(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        dslContext = dslContext,
+                        migratingShardingDslContext = migratingShardingDslContext,
+                        processDataMigrateDao = processDbMigrateDao
+                    )
+                    // 迁移T_PIPELINE_SUB_REF表数据
+                    migratePipelineSubRefData(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         dslContext = dslContext,
@@ -286,19 +374,79 @@ class MigratePipelineDataTask constructor(
             }
         }
 
+    /**
+     * 校验流水线构建是否已完成（用于数据迁移前的状态校验）
+     *
+     * @param dslContext 数据库操作上下文
+     * @param processDao 流水线构建数据访问对象
+     * @param projectId 项目ID
+     * @param pipelineId 流水线ID
+     *
+     * @throws ErrorCodeException 当存在运行中的构建或已完成的成功阶段时抛出异常
+     */
+    private fun isBuildCompleted(
+        dslContext: DSLContext,
+        processDao: ProcessDao,
+        projectId: String,
+        pipelineId: String
+    ) {
+        // 在事务中执行状态校验
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+
+            // 统计处于运行状态的构建数量
+            val runningCount = processDao.countAllBuildWithStatus(
+                dslContext = transactionContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                status = setOf(
+                    BuildStatus.QUEUE,
+                    BuildStatus.QUEUE_CACHE,
+                    BuildStatus.RUNNING
+                )
+            )
+
+            // 存在运行中的构建时禁止迁移
+            if (runningCount > 0) {
+                throw ErrorCodeException(
+                    errorCode = MiscMessageCode.ERROR_MIGRATING_PIPELINE_STATUS_INVALID,
+                    defaultMessage = I18nUtil.getCodeLanMessage(
+                        messageCode = MiscMessageCode.ERROR_MIGRATING_PIPELINE_STATUS_INVALID
+                    )
+                )
+            }
+
+            // 统计未成功完成的STAGE_SUCCESS状态数量
+            val unCompletedStageSuccessCount = processDao.countUnCompletedStageSuccess(
+                dslContext = transactionContext,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
+
+            // 存在未成功完成的STAGE_SUCCESS状态构建时禁止迁移
+            if (unCompletedStageSuccessCount > 0) {
+                throw ErrorCodeException(
+                    errorCode = MiscMessageCode.ERROR_MIGRATING_PIPELINE_STATUS_INVALID,
+                    defaultMessage = I18nUtil.getCodeLanMessage(
+                        messageCode = MiscMessageCode.ERROR_MIGRATING_PIPELINE_STATUS_INVALID
+                    )
+                )
+            }
+        }
+    }
+
     private fun migrateBuildLinkedData(
-        buildHistoryRecords: List<TPipelineBuildHistoryRecord>,
+        buildIds: List<String>,
         processDataMigrateDao: ProcessDataMigrateDao,
         dslContext: DSLContext,
         projectId: String,
         migratingShardingDslContext: DSLContext,
         archiveFlag: Boolean? = null
     ) {
-        val buildIds = buildHistoryRecords.map { it.buildId }
         // 由于detail表的流水线模型字段可能比较大，故一次迁移3条记录
         ListUtils.partition(buildIds, SHORT_PAGE_SIZE).forEach { rids ->
             if (archiveFlag != true) {
-                // 3.2.1、迁移T_PIPELINE_BUILD_DETAIL相关表数据
+                // 迁移T_PIPELINE_BUILD_DETAIL相关表数据
                 val buildDetailRecords = processDataMigrateDao.getPipelineBuildDetailRecords(
                     dslContext = dslContext,
                     projectId = projectId,
@@ -310,7 +458,7 @@ class MigratePipelineDataTask constructor(
                         pipelineBuildDetailRecords = buildDetailRecords
                     )
                 }
-                // 3.2.2、迁移T_PIPELINE_BUILD_VAR相关表数据
+                // 迁移T_PIPELINE_BUILD_VAR相关表数据
                 val buildVarRecords = processDataMigrateDao.getPipelineBuildVarRecords(
                     dslContext = dslContext,
                     projectId = projectId,
@@ -322,7 +470,7 @@ class MigratePipelineDataTask constructor(
                         pipelineBuildVarRecords = buildVarRecords
                     )
                 }
-                // 3.2.3、迁移T_PIPELINE_PAUSE_VALUE相关表数据
+                // 迁移T_PIPELINE_PAUSE_VALUE相关表数据
                 val pipelinePauseValueRecords = processDataMigrateDao.getPipelinePauseValueRecords(
                     dslContext = dslContext,
                     projectId = projectId,
@@ -334,7 +482,7 @@ class MigratePipelineDataTask constructor(
                         pipelinePauseValueRecords = pipelinePauseValueRecords
                     )
                 }
-                // 3.2.4、迁移T_PIPELINE_WEBHOOK_BUILD_PARAMETER相关表数据
+                // 迁移T_PIPELINE_WEBHOOK_BUILD_PARAMETER相关表数据
                 val webhookBuildParameterRecords = processDataMigrateDao.getPipelineWebhookBuildParameterRecords(
                     dslContext = dslContext,
                     projectId = projectId,
@@ -346,20 +494,20 @@ class MigratePipelineDataTask constructor(
                         webhookBuildParameterRecords = webhookBuildParameterRecords
                     )
                 }
-                // 3.2.5、迁移T_PIPELINE_TRIGGER_REVIEW相关表数据
-                val pipelineTriggerReviewRecords = processDataMigrateDao.getPipelineTriggerReviewRecords(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    buildIds = rids
-                )
-                if (pipelineTriggerReviewRecords.isNotEmpty()) {
-                    processDataMigrateDao.migratePipelineTriggerReviewData(
-                        migratingShardingDslContext = migratingShardingDslContext,
-                        pipelineTriggerReviewRecords = pipelineTriggerReviewRecords
-                    )
-                }
             }
-            // 3.2.6、迁移T_PIPELINE_BUILD_RECORD_CONTAINER相关表数据
+            // 迁移T_PIPELINE_TRIGGER_REVIEW相关表数据
+            val pipelineTriggerReviewRecords = processDataMigrateDao.getPipelineTriggerReviewRecords(
+                dslContext = dslContext,
+                projectId = projectId,
+                buildIds = rids
+            )
+            if (pipelineTriggerReviewRecords.isNotEmpty()) {
+                processDataMigrateDao.migratePipelineTriggerReviewData(
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    pipelineTriggerReviewRecords = pipelineTriggerReviewRecords
+                )
+            }
+            // 迁移T_PIPELINE_BUILD_RECORD_CONTAINER相关表数据
             val buildRecordContainerRecords = processDataMigrateDao.getPipelineBuildRecordContainerRecords(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -371,7 +519,7 @@ class MigratePipelineDataTask constructor(
                     buildRecordContainerRecords = buildRecordContainerRecords
                 )
             }
-            // 3.2.7、迁移T_PIPELINE_BUILD_RECORD_MODEL相关表数据
+            // 迁移T_PIPELINE_BUILD_RECORD_MODEL相关表数据
             val buildRecordModelRecords = processDataMigrateDao.getPipelineBuildRecordModelRecords(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -383,7 +531,7 @@ class MigratePipelineDataTask constructor(
                     buildRecordModelRecords = buildRecordModelRecords
                 )
             }
-            // 3.2.8、迁移T_PIPELINE_BUILD_RECORD_STAGE相关表数据
+            // 迁移T_PIPELINE_BUILD_RECORD_STAGE相关表数据
             val buildRecordStageRecords = processDataMigrateDao.getPipelineBuildRecordStageRecords(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -395,7 +543,7 @@ class MigratePipelineDataTask constructor(
                     buildRecordStageRecords = buildRecordStageRecords
                 )
             }
-            // 3.2.9、迁移T_PIPELINE_BUILD_RECORD_TASK相关表数据
+            // 迁移T_PIPELINE_BUILD_RECORD_TASK相关表数据
             val buildRecordTaskRecords = processDataMigrateDao.getPipelineBuildRecordTaskRecords(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -931,6 +1079,32 @@ class MigratePipelineDataTask constructor(
         }
     }
 
+    private fun migratePipelineTimerBranchData(
+        projectId: String,
+        pipelineId: String,
+        dslContext: DSLContext,
+        migratingShardingDslContext: DSLContext,
+        processDataMigrateDao: ProcessDataMigrateDao
+    ) {
+        var offset = 0
+        do {
+            val pipelineTimerBranchRecords = processDataMigrateDao.getPipelineTimerBranchRecords(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                limit = MEDIUM_PAGE_SIZE,
+                offset = offset
+            )
+            if (pipelineTimerBranchRecords.isNotEmpty()) {
+                processDataMigrateDao.migratePipelineTimerBranchData(
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    pipelineTimerBranchRecords = pipelineTimerBranchRecords
+                )
+            }
+            offset += MEDIUM_PAGE_SIZE
+        } while (pipelineTimerBranchRecords.size == MEDIUM_PAGE_SIZE)
+    }
+
     private fun migratePipelineTriggerDetailData(
         projectId: String,
         pipelineId: String,
@@ -955,6 +1129,156 @@ class MigratePipelineDataTask constructor(
             }
             offset += MEDIUM_PAGE_SIZE
         } while (pipelineTriggerDetailRecords.size == MEDIUM_PAGE_SIZE)
+    }
+
+    private fun migratePipelineYamlInfoData(
+        projectId: String,
+        pipelineId: String,
+        dslContext: DSLContext,
+        migratingShardingDslContext: DSLContext,
+        processDataMigrateDao: ProcessDataMigrateDao
+    ) {
+        val pipelineYamlInfoRecord = processDataMigrateDao.getPipelineYamlInfoRecord(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+        if (pipelineYamlInfoRecord != null) {
+            processDataMigrateDao.migratePipelineYamlInfoData(
+                migratingShardingDslContext = migratingShardingDslContext,
+                pipelineYamlInfoRecord = pipelineYamlInfoRecord
+            )
+        }
+    }
+
+    private fun migratePipelineYamlVersionData(
+        projectId: String,
+        pipelineId: String,
+        dslContext: DSLContext,
+        migratingShardingDslContext: DSLContext,
+        processDataMigrateDao: ProcessDataMigrateDao
+    ) {
+        var offset = 0
+        do {
+            val pipelineYamlVersionRecords = processDataMigrateDao.getPipelineYamlVersionRecords(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                limit = MEDIUM_PAGE_SIZE,
+                offset = offset
+            )
+            if (pipelineYamlVersionRecords.isNotEmpty()) {
+                processDataMigrateDao.migratePipelineYamlVersionData(
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    pipelineYamlVersionRecords = pipelineYamlVersionRecords
+                )
+            }
+            offset += MEDIUM_PAGE_SIZE
+        } while (pipelineYamlVersionRecords.size == MEDIUM_PAGE_SIZE)
+    }
+
+    private fun migratePipelineOperationLogData(
+        projectId: String,
+        pipelineId: String,
+        dslContext: DSLContext,
+        migratingShardingDslContext: DSLContext,
+        processDataMigrateDao: ProcessDataMigrateDao
+    ) {
+        var offset = 0
+        do {
+            val pipelineOperationLogRecords = processDataMigrateDao.getPipelineOperationLogRecords(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                limit = MEDIUM_PAGE_SIZE,
+                offset = offset
+            )
+            if (pipelineOperationLogRecords.isNotEmpty()) {
+                processDataMigrateDao.migratePipelineOperationLogData(
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    pipelineOperationLogRecords = pipelineOperationLogRecords
+                )
+            }
+            offset += MEDIUM_PAGE_SIZE
+        } while (pipelineOperationLogRecords.size == MEDIUM_PAGE_SIZE)
+    }
+
+    private fun migratePipelineWebhookVersionData(
+        projectId: String,
+        pipelineId: String,
+        dslContext: DSLContext,
+        migratingShardingDslContext: DSLContext,
+        processDataMigrateDao: ProcessDataMigrateDao
+    ) {
+        var offset = 0
+        do {
+            val pipelineWebhookVersionRecords = processDataMigrateDao.getPipelineWebhookVersionRecords(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                limit = MEDIUM_PAGE_SIZE,
+                offset = offset
+            )
+            if (pipelineWebhookVersionRecords.isNotEmpty()) {
+                processDataMigrateDao.migratePipelineWebhookVersionData(
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    pipelineWebhookVersionRecords = pipelineWebhookVersionRecords
+                )
+            }
+            offset += MEDIUM_PAGE_SIZE
+        } while (pipelineWebhookVersionRecords.size == MEDIUM_PAGE_SIZE)
+    }
+
+    private fun migratePipelineCallbackData(
+        projectId: String,
+        pipelineId: String,
+        dslContext: DSLContext,
+        migratingShardingDslContext: DSLContext,
+        processDataMigrateDao: ProcessDataMigrateDao
+    ) {
+        var offset = 0
+        do {
+            val pipelineCallbackRecords = processDataMigrateDao.getPipelineCallbackRecords(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                limit = MEDIUM_PAGE_SIZE,
+                offset = offset
+            )
+            if (pipelineCallbackRecords.isNotEmpty()) {
+                processDataMigrateDao.migratePipelineCallbackData(
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    pipelineCallbackRecords = pipelineCallbackRecords
+                )
+            }
+            offset += MEDIUM_PAGE_SIZE
+        } while (pipelineCallbackRecords.size == MEDIUM_PAGE_SIZE)
+    }
+
+    private fun migratePipelineSubRefData(
+        projectId: String,
+        pipelineId: String,
+        dslContext: DSLContext,
+        migratingShardingDslContext: DSLContext,
+        processDataMigrateDao: ProcessDataMigrateDao
+    ) {
+        var offset = 0
+        do {
+            val pipelineSubRefRecords = processDataMigrateDao.getPipelineSubRefRecords(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                limit = MEDIUM_PAGE_SIZE,
+                offset = offset
+            )
+            if (pipelineSubRefRecords.isNotEmpty()) {
+                processDataMigrateDao.migratePipelineSubRefData(
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    pipelineSubRefRecords = pipelineSubRefRecords
+                )
+            }
+            offset += MEDIUM_PAGE_SIZE
+        } while (pipelineSubRefRecords.size == MEDIUM_PAGE_SIZE)
     }
 
     private fun handleUnFinishPipelines(retryNum: Int) {

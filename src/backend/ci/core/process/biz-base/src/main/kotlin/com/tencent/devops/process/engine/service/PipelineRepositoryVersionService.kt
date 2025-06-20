@@ -32,8 +32,10 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.engine.control.lock.PipelineModelLock
 import com.tencent.devops.process.engine.control.lock.PipelineVersionLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
@@ -162,10 +164,11 @@ class PipelineRepositoryVersionService(
     fun getPipelineVersionSimple(
         projectId: String,
         pipelineId: String,
-        version: Int
+        version: Int,
+        archiveFlag: Boolean? = false
     ): PipelineVersionSimple? {
         return pipelineResourceVersionDao.getPipelineVersionSimple(
-            dslContext = dslContext,
+            dslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT),
             projectId = projectId,
             pipelineId = pipelineId,
             version = version
@@ -182,14 +185,16 @@ class PipelineRepositoryVersionService(
         versionName: String?,
         creator: String?,
         description: String?,
-        buildOnly: Boolean? = false
+        buildOnly: Boolean? = false,
+        archiveFlag: Boolean? = false
     ): Pair<Int, MutableList<PipelineVersionSimple>> {
         if (pipelineInfo == null) {
             return Pair(0, mutableListOf())
         }
+        val finalDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
         // 计算包括草稿在内的总数
         var count = pipelineResourceVersionDao.count(
-            dslContext = dslContext,
+            dslContext = finalDslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             includeDraft = false,
@@ -199,7 +204,7 @@ class PipelineRepositoryVersionService(
             buildOnly = buildOnly
         )
         val result = pipelineResourceVersionDao.listPipelineVersion(
-            dslContext = dslContext,
+            dslContext = finalDslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             pipelineInfo = pipelineInfo,
@@ -217,7 +222,7 @@ class PipelineRepositoryVersionService(
         val noSearch = versionName.isNullOrBlank() && creator.isNullOrBlank() && description.isNullOrBlank()
         if (result.isEmpty() && pipelineInfo.latestVersionStatus?.isNotReleased() != true && noSearch) {
             pipelineResourceDao.getReleaseVersionResource(
-                dslContext, projectId, pipelineId
+                finalDslContext, projectId, pipelineId
             )?.let { record ->
                 count = 1
                 result.add(
