@@ -1779,5 +1779,6 @@
     "continuousFailure": "持续失败",
     "views": "点击查看",
     "dataUpdateT1": "（数据T+1更新)"
-  }
+  },
+  "noArchivedPipelines": "暂无已存档流水线，不用操作"
 }

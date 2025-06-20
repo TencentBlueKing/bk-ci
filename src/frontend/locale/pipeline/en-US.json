@@ -1783,5 +1783,6 @@
     "continuousFailure": "continued failure",
     "views": "Views",
     "dataUpdateT1": "(Data updated T+1)"
-  }
+  },
+  "noArchivedPipelines": "No archived pipelines for now, no action needed"
 }
