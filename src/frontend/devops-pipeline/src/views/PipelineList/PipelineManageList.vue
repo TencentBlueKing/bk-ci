@@ -257,7 +257,7 @@
     import PipelineProblemTips from '@/components/PipelineProblemTips'
 
     import Logo from '@/components/Logo'
-    import piplineActionMixin from '@/mixins/pipeline-action-mixin'
+    import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
     import {
         ALL_PIPELINE_VIEW_ID,
         ARCHIVE_VIEW_ID,
@@ -291,7 +291,7 @@
             DisableDialog,
             PipelineProblemTips
         },
-        mixins: [piplineActionMixin],
+        mixins: [pipelineActionMixin],
         data () {
             const { page, pageSize, sortType, collation, ...restQuery } = this.$route.query
             return {
