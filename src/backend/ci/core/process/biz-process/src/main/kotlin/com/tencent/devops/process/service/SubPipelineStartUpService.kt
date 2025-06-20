@@ -52,6 +52,7 @@ import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibil
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
+import com.tencent.devops.process.engine.service.SubPipelineRefService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineId
@@ -93,7 +94,8 @@ class SubPipelineStartUpService @Autowired constructor(
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineUrlBean: PipelineUrlBean,
-    private val templateFacadeService: TemplateFacadeService
+    private val templateFacadeService: TemplateFacadeService,
+    private val subPipelineRefService: SubPipelineRefService
 ) {
 
     companion object {
@@ -162,7 +164,26 @@ class SubPipelineStartUpService @Autowired constructor(
         val watcher = Watcher("subPipeline start up")
         try {
             watcher.start("start check circular dependency")
-            checkSub(atomCode, projectId = fixProjectId, pipelineId = callPipelineId, existPipelines = existPipelines)
+            val existsLink = subPipelineRefService.exists(
+                projectId = projectId,
+                pipelineId = parentPipelineId,
+                subProjectId = fixProjectId,
+                subPipelineId = callPipelineId
+            )
+            if (existsLink) {
+                // 链路已归档，则说明不存在递归调用的情况
+                logger.info(
+                    "pipeline link already verified|" +
+                            "[$projectId|$parentPipelineId]->[$fixProjectId|$callPipelineId]"
+                )
+            } else {
+                checkSub(
+                    atomCode,
+                    projectId = fixProjectId,
+                    pipelineId = callPipelineId,
+                    existPipelines = existPipelines
+                )
+            }
         } catch (e: OperationException) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = ProcessMessageCode.ERROR_SUBPIPELINE_CYCLE_CALL,
