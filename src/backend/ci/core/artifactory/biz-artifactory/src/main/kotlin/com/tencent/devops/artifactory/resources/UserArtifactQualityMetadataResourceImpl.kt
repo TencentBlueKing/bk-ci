@@ -55,44 +55,51 @@ class UserArtifactQualityMetadataResourceImpl(
         )
     }
 
+    /**
+     * 根据流水线ID获取其最近一次构建产物所关联的元数据标签列表。
+     * 1. 获取流水线最近构建的产物。
+     * 2. 提取所有产物中不重复的元数据Key。
+     * 3. 获取项目下已定义的所有元数据标签。
+     * 4. 合并以上两组数据：
+     *    - 如果产物中的Key在项目标签中已定义，则使用项目标签的完整信息。
+     *    - 如果未定义，则为其创建一个临时的、默认的标签信息。
+     * 5. 按Key排序后返回。
+     */
     override fun listByPipeline(
         userId: String,
         projectId: String,
         pipelineId: String
     ): Result<List<MetadataLabelDetail>> {
-        // 1. 获取制品列表（优化空值处理）
-        val artifactList = client.get(ServiceBuildResource::class)
-            .getLatestBuildInfo(projectId, pipelineId, debug = false)
-            .data?.artifactList.orEmpty()
-
-        // 2. 提取元数据Key（优化去重逻辑）
-        val propertyKeys = artifactList
-            .flatMap { it.properties.orEmpty() }
-            .mapTo(HashSet()) { it.key }
-
-        // 3. 获取项目元数据标签（优化API调用）
-        val labelMap = bkRepoClient.listArtifactQualityMetadataLabels(userId, projectId)
+        // 获取项目下所有已定义的元数据标签，并转换为Map以便高效查找
+        val definedLabels = bkRepoClient.listArtifactQualityMetadataLabels(userId, projectId)
             .associateBy { it.labelKey }
 
-        // 4. 构建结果集（优化查找逻辑）
-        val result = propertyKeys.map { key ->
-            labelMap[key] ?: MetadataLabelDetail(  // 使用Map直接查找
+        // 获取流水线产物中的所有元数据Key
+        val artifactPropertyKeys = client.get(ServiceBuildResource::class)
+            .getLatestBuildInfo(projectId, pipelineId, debug = false)
+            .data?.artifactList.orEmpty()
+            .flatMap { it.properties.orEmpty() }
+            .mapTo(HashSet()) { it.key } // 使用HashSet自动去重
+
+        // 将产物中的Key与已定义的标签进行匹配和构建
+        val resultLabels = artifactPropertyKeys.map { key ->
+            definedLabels[key] ?: MetadataLabelDetail(
                 labelKey = key,
                 labelColorMap = emptyMap(),
-                display = true,
-                createdBy = "",
+                display = true, // 默认显示
+                createdBy = "custom",
                 enumType = false,
                 createdDate = LocalDateTime.now(),
-                lastModifiedBy = "",
+                lastModifiedBy = "custom",
                 lastModifiedDate = LocalDateTime.now(),
-                category = "",
+                category = "Uncategorized",
                 system = false,
-                enableColorConfig = false,
-                description = ""
+                description = "Auto-generated for an artifact property not defined in project.",
+                enableColorConfig = false
             )
         }.sortedBy { it.labelKey }
 
-        return Result(result)
+        return Result(resultLabels)
     }
 
     override fun get(
