@@ -84,13 +84,15 @@
                                     text: this.$t('newlist.addPipelineToGroup')
                                 }
                             ]
-                            : [
-                                {
-                                    btnProps,
-                                    handler: this.refreshList,
-                                    text: this.$t('retry')
-                                }
-                            ]
+                            : isArchive
+                                ? []
+                                : [
+                                    {
+                                        btnProps,
+                                        handler: this.refreshList,
+                                        text: this.$t('retry')
+                                    }
+                                ]
                     }
             }
         }
