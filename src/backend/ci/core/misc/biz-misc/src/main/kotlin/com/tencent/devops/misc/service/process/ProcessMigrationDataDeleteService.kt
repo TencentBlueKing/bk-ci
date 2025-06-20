@@ -134,7 +134,8 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineIds = pipelineIds,
-                broadcastTableDeleteFlag = broadcastTableDeleteFlag
+                broadcastTableDeleteFlag = broadcastTableDeleteFlag,
+                archivePipelineFlag = deleteMigrationDataParam.archivePipelineFlag
             )
         } while (pipelineIds?.size == DEFAULT_PAGE_SIZE)
         // 如果流水线ID为空，与项目直接相关的数据也需要清理
@@ -161,39 +162,18 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
         broadcastTableDeleteFlag: Boolean? = true,
         archivePipelineFlag: Boolean? = null
     ) {
-        val tPipelineBuildHistory = TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY
         pipelineIds?.forEach { pipelineId ->
-            var offset = 0
-            do {
-                val historyInfoRecords = processDao.getHistoryInfoList(
+            // 处理构建历史（普通+调试）
+            listOf(false, true).forEach { isDebug ->
+                processPipelineHistories(
                     dslContext = dslContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    offset = offset,
-                    limit = DEFAULT_PAGE_SIZE
-                )
-                val buildIds = historyInfoRecords?.map { it[tPipelineBuildHistory.BUILD_ID] }
-
-                // 批量删除构建相关数据
-                deletePipelineBuildDataByBuilds(
-                    buildIds = buildIds,
+                    isDebug = isDebug,
                     archivePipelineFlag = archivePipelineFlag,
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    pipelineId = pipelineId
-                )
-
-                // 删除流水线维度数据
-                deletePipelineBuildDataByPipelineId(
-                    archivePipelineFlag = archivePipelineFlag,
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
                     broadcastTableDeleteFlag = broadcastTableDeleteFlag
                 )
-
-                offset += DEFAULT_PAGE_SIZE
-            } while (historyInfoRecords?.size == DEFAULT_PAGE_SIZE)
+            }
         }
 
         if (!pipelineIds.isNullOrEmpty()) {
@@ -217,6 +197,55 @@ class ProcessMigrationDataDeleteService @Autowired constructor(
             }
         }
         logger.info("project[$projectId]|pipeline[$pipelineIds] deleteProjectPipelineRelData success!")
+    }
+
+    private fun processPipelineHistories(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        isDebug: Boolean,
+        archivePipelineFlag: Boolean?,
+        broadcastTableDeleteFlag: Boolean?
+    ) {
+        val tPipelineBuildHistory = TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY
+        var offset = 0
+        do {
+            val records = if (isDebug) {
+                processDao.getHistoryDebugInfoList(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    offset = offset,
+                    limit = DEFAULT_PAGE_SIZE
+                )
+            } else {
+                processDao.getHistoryInfoList(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    offset = offset,
+                    limit = DEFAULT_PAGE_SIZE
+                )
+            }
+            val buildIds = records?.map { it[tPipelineBuildHistory.BUILD_ID] }
+            // 按BuildID批量删除数据
+            deletePipelineBuildDataByBuilds(
+                buildIds = buildIds,
+                archivePipelineFlag = archivePipelineFlag,
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
+            offset += DEFAULT_PAGE_SIZE
+        } while (records?.size == DEFAULT_PAGE_SIZE)
+        // 按PipelineID删除数据
+        deletePipelineBuildDataByPipelineId(
+            archivePipelineFlag = archivePipelineFlag,
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            broadcastTableDeleteFlag = broadcastTableDeleteFlag
+        )
     }
 
     private fun deletePipelineBuildDataByPipelineId(

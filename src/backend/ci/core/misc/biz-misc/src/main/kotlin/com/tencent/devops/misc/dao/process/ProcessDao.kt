@@ -34,6 +34,7 @@ import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY_DEBUG
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE_VERSION
 import com.tencent.devops.model.process.tables.TPipelineBuildHisDataClear
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
+import com.tencent.devops.model.process.tables.TPipelineBuildHistoryDebug
 import com.tencent.devops.model.process.tables.TPipelineDataClear
 import com.tencent.devops.model.process.tables.TPipelineInfo
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
@@ -266,6 +267,29 @@ class ProcessDao {
             conditions.add(PIPELINE_ID.eq(pipelineId))
             if (!statusList.isNullOrEmpty()) {
                 conditions.add(STATUS.`in`(statusList.map { it.ordinal }))
+            }
+            return dslContext.select(BUILD_ID, CHANNEL, START_USER)
+                .from(this)
+                .where(conditions)
+                .orderBy(BUILD_NUM).limit(limit).offset(offset).fetch()
+        }
+    }
+
+    fun getHistoryDebugInfoList(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        limit: Int,
+        offset: Int,
+        statusList: List<BuildStatus>? = null
+    ): Result<out Record>? {
+        with(TPipelineBuildHistoryDebug.T_PIPELINE_BUILD_HISTORY_DEBUG) {
+            val conditions = mutableListOf<Condition>().apply {
+                add(PROJECT_ID.eq(projectId))
+                add(PIPELINE_ID.eq(pipelineId))
+                if (!statusList.isNullOrEmpty()) {
+                    add(STATUS.`in`(statusList.map { it.ordinal }))
+                }
             }
             return dslContext.select(BUILD_ID, CHANNEL, START_USER)
                 .from(this)
