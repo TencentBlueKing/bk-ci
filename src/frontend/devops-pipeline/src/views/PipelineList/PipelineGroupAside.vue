@@ -272,6 +272,9 @@
             projectId () {
                 return this.$route.params.projectId
             },
+            currentViewId () {
+                return this.$route.params.viewId
+            },
             groupNameRules () {
                 return [{
                     validator: this.checkGroupNameValid,
