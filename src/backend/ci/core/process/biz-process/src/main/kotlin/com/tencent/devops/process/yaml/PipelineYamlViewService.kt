@@ -16,6 +16,7 @@ import com.tencent.devops.process.service.view.PipelineViewService
 import com.tencent.devops.process.yaml.common.Constansts
 import com.tencent.devops.process.yaml.pojo.PipelineYamlViewLock
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -94,19 +95,22 @@ class PipelineYamlViewService(
             )
         )
         // 系统创建流水线组不需要校验权限
-        val viewHashId = pipelineViewGroupService.addViewGroup(
-            projectId = projectId,
-            userId = userId,
-            pipelineView = pipelineView,
-            checkPermission = false
-        )
-        pipelineYamlViewDao.save(
-            dslContext = dslContext,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            directory = directory,
-            viewId = HashUtil.decodeIdToLong(viewHashId)
-        )
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            val viewId = pipelineViewService.addView(
+                userId = userId,
+                projectId = projectId,
+                pipelineView = pipelineView,
+                context = transactionContext
+            )
+            pipelineYamlViewDao.save(
+                dslContext = transactionContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                directory = directory,
+                viewId = viewId
+            )
+        }
     }
 
     fun getPipelineYamlView(
