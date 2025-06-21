@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.PipelineViewType
+import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.engine.dao.PipelineYamlViewDao
 import com.tencent.devops.process.pojo.classify.PipelineViewFilterByPacRepo
 import com.tencent.devops.process.pojo.classify.PipelineViewForm
@@ -15,12 +16,14 @@ import com.tencent.devops.process.service.view.PipelineViewService
 import com.tencent.devops.process.yaml.common.Constansts
 import com.tencent.devops.process.yaml.pojo.PipelineYamlViewLock
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
 class PipelineYamlViewService(
     private val dslContext: DSLContext,
     private val pipelineYamlViewDao: PipelineYamlViewDao,
+    private val pipelineYamlInfoDao: PipelineYamlInfoDao,
     private val pipelineViewService: PipelineViewService,
     private val pipelineViewGroupService: PipelineViewGroupService,
     private val redisOperation: RedisOperation
@@ -141,5 +144,53 @@ class PipelineYamlViewService(
             repoHashId = repoHashId,
             directory = directory
         )
+    }
+
+    /**
+     * 删除空的流水线组
+     */
+    fun deleteEmptyYamlView(
+        userId: String,
+        projectId: String,
+        repoHashId: String,
+        directory: String
+    ) {
+        PipelineYamlViewLock(
+            redisOperation = redisOperation,
+            projectId = projectId,
+            repoHashId = repoHashId
+        ).use { lock ->
+            lock.lock()
+            val yamlPipelineCnt = pipelineYamlInfoDao.countYamlPipeline(
+                dslContext = dslContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                directory = directory
+            )
+            if (yamlPipelineCnt == 0L) {
+                logger.info("delete pipeline yaml view|$projectId|$repoHashId|$directory")
+                getPipelineYamlView(
+                    projectId = projectId,
+                    repoHashId = repoHashId,
+                    directory = directory
+                )?.let {
+                    pipelineViewGroupService.deleteViewGroup(
+                        projectId = projectId,
+                        userId = userId,
+                        viewIdEncode = HashUtil.encodeLongId(it.viewId),
+                        checkPac = false
+                    )
+                    deleteYamlView(
+                        projectId = projectId,
+                        repoHashId = repoHashId,
+                        directory = directory
+                    )
+                }
+            }
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineYamlViewService::class.java)
     }
 }
