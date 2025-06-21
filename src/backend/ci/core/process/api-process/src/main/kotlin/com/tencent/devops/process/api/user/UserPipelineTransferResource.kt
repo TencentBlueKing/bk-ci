@@ -73,6 +73,9 @@ interface UserPipelineTransferResource {
         @Parameter(description = "操作类型", required = true)
         @QueryParam("actionType")
         actionType: TransferActionType,
+        @Parameter(description = "归档库标识", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false,
         data: TransferBody
     ): Result<TransferResponseResult>
 

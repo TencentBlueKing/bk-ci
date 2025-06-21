@@ -89,7 +89,7 @@ class PipelineBuildTaskService @Autowired constructor(
             val errorCode = buildTask.errorCode ?: 0
             if (buildStatus.isFailure() && !actionType.isTerminate() && !FastKillUtils.isTerminateCode(errorCode)) {
                 // 如果配置了失败重试，且重试次数上线未达上限，则将状态设置为重试，让其进入
-                if (pipelineTaskService.isRetryWhenFail(buildTask.projectId, taskId, buildId)) {
+                if (pipelineTaskService.isRetryWhenFail(buildTask.projectId, taskId, buildId, buildTask.errorMsg)) {
                     logger.info("ENGINE|$buildId|$source|ATOM_FIN|$stageId|j($containerId)|t($taskId)|RetryFail")
                     // 将当前重试 task id 做记录
                     pipelineTaskService.taskRetryRecordSet(

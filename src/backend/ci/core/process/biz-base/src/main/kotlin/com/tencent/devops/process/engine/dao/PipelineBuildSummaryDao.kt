@@ -93,8 +93,8 @@ class PipelineBuildSummaryDao {
         projectId: String,
         pipelineIds: Set<String>
     ): Result<TPipelineBuildSummaryRecord> {
-        return with(T_PIPELINE_BUILD_SUMMARY) {
-            dslContext.selectFrom(this)
+        with(T_PIPELINE_BUILD_SUMMARY) {
+            return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.`in`(pipelineIds).and(PROJECT_ID.eq(projectId)))
                 .fetch()
         }
