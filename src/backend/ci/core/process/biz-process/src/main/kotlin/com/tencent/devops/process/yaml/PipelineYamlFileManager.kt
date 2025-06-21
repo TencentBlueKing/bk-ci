@@ -94,7 +94,7 @@ class PipelineYamlFileManager @Autowired constructor(
     private val pipelineTriggerEventService: PipelineTriggerEventService
 ) {
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineYamlRepositoryService::class.java)
+        private val logger = LoggerFactory.getLogger(PipelineYamlFileManager::class.java)
     }
 
     fun syncYamlFile(
@@ -982,11 +982,22 @@ class PipelineYamlFileManager @Autowired constructor(
             repoHashId = repoHashId,
             filePath = filePath
         )
+        val isTemplate = GitActionCommon.isTemplateFile(filePath)
         pipelineYamlResourceManager.deletePipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            isTemplate = GitActionCommon.isTemplateFile(filePath)
+            isTemplate = isTemplate
         )
+        // 删除流水线,如果关联的流水线组已经为空,应该删除
+        if (!isTemplate) {
+            val directory = GitActionCommon.getCiDirectory(filePath)
+            pipelineYamlViewService.deleteEmptyYamlView(
+                userId = userId,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                directory = directory
+            )
+        }
     }
 }
