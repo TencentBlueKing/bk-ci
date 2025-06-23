@@ -188,6 +188,10 @@ class RedisOperation(
         return masterRedisTemplate.opsForSet().isMember(getFinalKey(key, isDistinguishCluster), item) ?: false
     }
 
+    fun isMember(key: String, items: Array<String>, isDistinguishCluster: Boolean? = false): MutableMap<Any, Boolean>? {
+        return masterRedisTemplate.opsForSet().isMember(getFinalKey(key, isDistinguishCluster), *items)
+    }
+
     fun getSetMembers(key: String, isDistinguishCluster: Boolean? = false): Set<String>? {
         return masterRedisTemplate.opsForSet().members(getFinalKey(key, isDistinguishCluster))
     }
