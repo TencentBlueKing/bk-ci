@@ -638,17 +638,20 @@
             ...mapState('pipelines', [
                 'isManage'
             ]),
+            viewId () {
+                return this.$route.params.viewId
+            },
             isAllPipelineView () {
-                return this.$route.params.viewId === ALL_PIPELINE_VIEW_ID
+                return this.viewId === ALL_PIPELINE_VIEW_ID
             },
             isDeleteView () {
-                return this.$route.params.viewId === DELETED_VIEW_ID
+                return this.viewId === DELETED_VIEW_ID
             },
             isArchiveView () {
-                return this.$route.params.viewId === ARCHIVE_VIEW_ID
+                return this.viewId === ARCHIVE_VIEW_ID
             },
             isRecentView () {
-                return this.$route.params.viewId === RECENT_USED_VIEW_ID
+                return this.viewId === RECENT_USED_VIEW_ID
             },
             pipelineGroups () {
                 const res = this.pipelineList.map((pipeline, index) => {
@@ -903,7 +906,7 @@
                     const { count, page, records } = await this.getPipelines({
                         page: String(this.pagination.current),
                         pageSize: String(this.pagination.limit),
-                        viewId: this.$route.params.viewId,
+                        viewId: this.viewId,
                         ...this.filterParams,
                         ...query
                     })
@@ -967,7 +970,7 @@
             calcOverPosTable () {
                 const tagMargin = 6
 
-                this.visibleLabelCountList = this.pipelineList.reduce((acc, pipeline, index) => {
+                this.visibleLabelCountList = this.pipelineList?.reduce((acc, pipeline, index) => {
                     if (Array.isArray(pipeline?.groupLabel)) {
                         const labelBoxWidth = this.$refs[`belongsLabelBox_${index}`]?.clientWidth * 2
                         const labelLength = pipeline?.groupLabel.length
