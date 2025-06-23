@@ -857,6 +857,9 @@ onMounted(async () => {
       align-items: center;
 
     }
+    .project-tab {
+      padding: 5px 49px;
+    }
     .enable-status {
       display: flex;
       height: 24px;
