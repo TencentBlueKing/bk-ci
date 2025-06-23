@@ -27,7 +27,6 @@
 
 package com.tencent.devops.remotedev.api.external
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
 import io.swagger.v3.oas.annotations.Operation
@@ -73,8 +72,8 @@ interface ExternalResource {
         ts: String,
         @HeaderParam("token")
         token: String,
-        @QueryParam("cds_id")
-        cdsId: String,
+        @QueryParam("ip")
+        ip: String,
         @QueryParam("enable")
         enable: String,
         @QueryParam("domain")

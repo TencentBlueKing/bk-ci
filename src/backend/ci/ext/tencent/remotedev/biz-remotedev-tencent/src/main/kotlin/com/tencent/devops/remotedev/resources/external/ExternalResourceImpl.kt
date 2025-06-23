@@ -86,27 +86,27 @@ class ExternalResourceImpl @Autowired constructor(
     override fun cdsMeshEnableAndDomain(
         ts: String,
         token: String,
-        cdsId: String,
+        ip: String,
         enable: String,
         domain: String
     ): Result<Boolean> {
-        logger.info("cdsMeshEnableAndDomain|enable=$enable|domain=$domain|cdsId=$cdsId|ts=$ts|token=$token")
+        logger.info("cdsMeshEnableAndDomain|enable=$enable|domain=$domain|ip=$ip|ts=$ts|token=$token")
         // ts 10位时间戳需与当前时间相差小于10秒
         if (LocalDateTime.now().timestamp() - ts.toLong() > 10) {
             logger.warn("ts not match|ts=$ts")
             return Result(false)
         }
-        val sign = ShaUtils.sha256("$ts$externalKey$cdsId")
+        val sign = ShaUtils.sha256("$ts$externalKey$ip")
         if (sign != token) {
-            logger.warn("sign not match|sign=$sign|token=$token|ts=$ts|cdsId=$cdsId")
+            logger.warn("sign not match|sign=$sign|token=$token|ts=$ts|ip=$ip")
             return Result(false)
         }
         val ws = workspaceService.limitFetchProjectWorkspace(
             limit = SQLLimit(0, 1),
             queryType = QueryType.OP,
-            search = WorkspaceSearch(sips = listOf(cdsId), onFuzzyMatch = false)
+            search = WorkspaceSearch(sips = listOf(ip), onFuzzyMatch = false)
         ).ifEmpty {
-            logger.warn("no workspace found|cdsId=$cdsId")
+            logger.warn("no workspace found|ip=$ip")
             return Result(false)
         }.first()
         val cdsMesh = enable.toBooleanStrictOrNull()
