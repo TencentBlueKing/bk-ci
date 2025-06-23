@@ -33,6 +33,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.metrics.dao.PipelineMetricsInfoDao
 import com.tencent.devops.metrics.pojo.ProjectPipelineIssueAnalysisInfo
+import org.checkerframework.checker.units.qual.t
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -111,18 +112,22 @@ class TxPipelineMetricssService@Autowired constructor(
         pipelineIds: List<String>,
         isAdd: Boolean
     ): Boolean {
+
         try {
+            if (pipelineIds.isEmpty()) {
+                return false
+            }
             pipelineMetricsInfoDao.updateAutoDisableWhitelist(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineIds = pipelineIds,
                 deleteFlag = !isAdd
             )
-            return true
         } catch (e: Exception) {
             logger.warn("Failed to update whitelist for  project $projectId", e)
-            return false
+            throw e
         }
+        return true
     }
 
     companion object {
