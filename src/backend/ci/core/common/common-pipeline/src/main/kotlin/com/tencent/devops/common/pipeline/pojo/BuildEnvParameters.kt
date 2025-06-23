@@ -36,5 +36,7 @@ data class BuildEnvParameters(
     @get:Schema(title = "描述")
     val desc: String,
     @get:Schema(title = "路径")
-    val path: String? = null
+    val path: String? = null,
+    @get:Schema(title = "备注")
+    val remark: String? = null
 )
