@@ -32,13 +32,11 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileSyncReq
-import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServicePipelineYamlResourceImpl @Autowired constructor(
-    private val pipelineSettingFacadeService: PipelineSettingFacadeService,
     private val pipelineYamlFacadeService: PipelineYamlFacadeService
 ) : ServicePipelineYamlResource {
     override fun enable(
@@ -85,14 +83,11 @@ class ServicePipelineYamlResourceImpl @Autowired constructor(
     }
 
     override fun yamlExistInDefaultBranch(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
-        val setting = pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId)
         return Result(
-            if (setting.pipelineAsCodeSettings?.enable == true) {
-                pipelineYamlFacadeService.yamlExistInDefaultBranch(
-                    projectId = projectId,
-                    pipelineId = pipelineId
-                )
-            } else false
+            pipelineYamlFacadeService.yamlExistInDefaultBranch(
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
         )
     }
 }
