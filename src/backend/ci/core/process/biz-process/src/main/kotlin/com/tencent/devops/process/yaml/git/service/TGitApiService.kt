@@ -296,9 +296,10 @@ class TGitApiService @Autowired constructor(
         return try {
             val members = client.get(ServiceGitResource::class).getProjectMembersAll(
                 gitProjectId = gitProjectId,
-                search = userId,
+                search = null,
                 tokenType = TokenTypeEnum.OAUTH,
-                token = cred.toToken()
+                token = cred.toToken(),
+                pageSize = 1000
             ).data?.filter {
                 it.username == userId || it.username == authUserId
             }
