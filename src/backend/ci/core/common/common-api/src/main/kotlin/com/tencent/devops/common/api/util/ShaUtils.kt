@@ -28,7 +28,6 @@
 package com.tencent.devops.common.api.util
 
 import org.bouncycastle.util.encoders.Hex
-import java.io.File
 import java.io.InputStream
 import java.security.DigestInputStream
 import java.security.MessageDigest
@@ -92,12 +91,5 @@ object ShaUtils {
 
     fun isEqual(shaA: ByteArray, shaB: ByteArray): Boolean {
         return MessageDigest.isEqual(shaA, shaB)
-    }
-
-    @JvmStatic
-    fun main(args: Array<String>) {
-        val file = File("C:\\Users\\carlyin\\Desktop\\test\\dbtest_check_file_ctl-1.0.28.tar.gz")
-        val fileSha1 = file.inputStream().use { sha1InputStream(it) }
-        println(fileSha1)
     }
 }
