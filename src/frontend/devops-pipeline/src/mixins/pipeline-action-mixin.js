@@ -224,6 +224,16 @@ export default {
             const isDynamicGroup = this.currentGroup?.viewType === 1
             const isRunning = pipeline.latestBuildStatus === statusAlias.RUNNING
             const isDraft = pipeline.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING
+            let archiveTooltip
+            if (isRunning) {
+                archiveTooltip = this.$t('archive.unableToFile')
+            } else if (isDraft) {
+                archiveTooltip = this.$t('archive.onlyDraftVersion')
+            } else if (pipeline.archivingFlag) {
+                archiveTooltip = this.$t('archive.archiving')
+            } else {
+                archiveTooltip = false
+            }
 
             return [
                 {
@@ -297,8 +307,8 @@ export default {
                     : []),
                 {
                     text: this.$t('archive.archive'),
-                    disable: isRunning || isDraft,
-                    tooltips: isRunning ? this.$t('archive.unableToFile') : isDraft ? this.$t('archive.onlyDraftVersion') : false,
+                    disable: isRunning || isDraft || pipeline.archivingFlag,
+                    tooltips: archiveTooltip,
                     handler: this.archiveHandler,
                     hasPermission: pipeline.permissions.canArchive,
                     disablePermissionApi: true,

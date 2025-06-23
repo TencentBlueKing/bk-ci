@@ -179,7 +179,7 @@
             </div>
         </bk-table-column>
         <bk-table-column
-            v-if="allRenderColumnMap.label"
+            v-if="allRenderColumnMap.label && !isArchiveView"
             :label="$t('label')"
             :width="tableWidthMap.groupLabel"
             min-width="200"
@@ -418,7 +418,7 @@
                 </div>
             </bk-table-column>
             <bk-table-column
-                v-if="allRenderColumnMap.creator && !isArchiveView"
+                v-if="allRenderColumnMap.creator"
                 :width="tableWidthMap.creator"
                 :label="$t('creator')"
                 prop="creator"
@@ -553,7 +553,7 @@
             </div>
         </bk-table-column>
         <bk-table-column
-            v-if="!isPatchView && !isDeleteView"
+            v-if="!isPatchView && !isDeleteView && !isArchiveView"
             type="setting"
         >
             <bk-table-setting-content
@@ -945,7 +945,7 @@
             calcOverPosGroup () {
                 const tagMargin = 6
 
-                this.visibleTagCountList = this.pipelineList.reduce((acc, pipeline, index) => {
+                this.visibleTagCountList = this.pipelineList?.reduce((acc, pipeline, index) => {
                     if (Array.isArray(pipeline.viewNames)) {
                         const groupNameBoxWidth = this.$refs[`belongsGroupBox_${index}`]?.clientWidth * 2
                         const groupNameLength = pipeline.viewNames.length
@@ -1034,9 +1034,6 @@
                 list.forEach(item => {
                     this.$refs.pipelineTable.toggleRowSelection(item, false)
                 })
-            },
-            updatePipelineData (pipelineIds) {
-                this.pipelineList = this.pipelineList.filter(item => !pipelineIds.includes(item.pipelineId))
             }
         }
     }

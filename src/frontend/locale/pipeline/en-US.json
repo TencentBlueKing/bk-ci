@@ -1733,6 +1733,7 @@
     "deleteOrMoveYamlInRepoIfPacModeEnabled": "If the pipeline has PAC mode enabled, please delete/move the YAML file in the repository yourself to avoid automatic re-creation of the corresponding pipeline when the repository is triggered.",
     "onlyDraftVersion": "Only draft version, no need to archive, deletion is recommended",
     "unableToArchive": "There are {0} pipelines unable to be archived",
+    "archiving": "Archiving, a notification email will be sent upon completion. Please refresh the list manually.",
     "removeUnarchivablePipelines": "Remove unarchivable pipelines"
   },
   "cron": {
