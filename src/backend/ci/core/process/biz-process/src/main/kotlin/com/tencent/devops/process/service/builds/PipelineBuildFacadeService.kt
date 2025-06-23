@@ -2322,7 +2322,8 @@ class PipelineBuildFacadeService(
             val startUpVMTask = pipelineTaskService.getBuildTask(
                 projectId = projectCode,
                 buildId = buildId,
-                taskId = VMUtils.genStartVMTaskId(vmSeqId)
+                taskId = VMUtils.genStartVMTaskId(vmSeqId),
+                executeCount = executeCount
             )
             if (startUpVMTask?.status?.isRunning() == true) {
                 msg = "$msg| ${
@@ -2350,7 +2351,8 @@ class PipelineBuildFacadeService(
                 val startUpVMTask = pipelineTaskService.getBuildTask(
                     projectId = projectCode,
                     buildId = buildId,
-                    taskId = VMUtils.genStartVMTaskId(vmSeqId)
+                    taskId = VMUtils.genStartVMTaskId(vmSeqId),
+                    executeCount = executeCount
                 )
                 if (startUpVMTask?.status?.isRunning() == true) {
                     val taskParam = startUpVMTask.taskParams
