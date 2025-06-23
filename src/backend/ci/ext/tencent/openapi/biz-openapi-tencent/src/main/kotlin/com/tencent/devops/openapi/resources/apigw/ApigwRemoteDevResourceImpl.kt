@@ -283,7 +283,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         workspaceName: String,
         req: WorkspaceCloneReq
     ): Result<TaskResp> {
-        logger.info("workspaceClone $userId|$projectId|$workspaceName|$req")
+        logger.info("workspaceCloneTask $userId|$projectId|$workspaceName|$req")
         return client.get(ServiceRemoteDevResource::class).workspaceCloneTask(
             userId = userId,
             projectId = projectId,

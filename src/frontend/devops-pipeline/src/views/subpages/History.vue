@@ -97,6 +97,11 @@
             EplusBoard,
             DelegationPermission
         },
+        data () {
+            return {
+                shouldRetainArchiveFlag: false
+            }
+        },
         computed: {
             ...mapState('atom', ['pipelineInfo', 'pipeline', 'pipelineSetting', 'activePipelineVersion', 'switchingVersion']),
             ...mapGetters('atom', ['isActiveDraftVersion', 'isReleaseVersion', 'isReleasePipeline', 'isBranchVersion']),
@@ -105,6 +110,9 @@
             },
             activeChild () {
                 return this.getNavComponent(this.activeMenuItem)
+            },
+            archiveFlag () {
+                return this.$route.query.archiveFlag
             },
             hasAuthSecrecy () {
                 return this.$store.state.curProject.authSecrecy !== 1
@@ -205,7 +213,7 @@
                                 },
                                 name: 'changeLog'
                             }
-                        ].map((child) => ({
+                        ].filter(child => !this.archiveFlag || child.name === 'changeLog').map((child) => ({
                             ...child,
                             disabled: !this.isReleaseVersion,
                             active: this.activeMenuItem === child.name
@@ -218,9 +226,15 @@
             }
         },
         beforeDestroy () {
-            this.resetHistoryFilterCondition()
+            this.resetHistoryFilterCondition({ retainArchiveFlag: this.shouldRetainArchiveFlag })
             this.selectPipelineVersion(null)
             this.resetAtomModalMap()
+        },
+        beforeRouteLeave (to, from, next) {
+            // 判断目标路由是否需要保留 archiveFlag
+            const routesToKeepArchiveFlag = ['pipelinesDetail', 'draftDebugRecord']
+            this.shouldRetainArchiveFlag = routesToKeepArchiveFlag.includes(to.name) && to.query.archiveFlag !== undefined
+            next()
         },
         methods: {
             ...mapActions('pipelines', ['resetHistoryFilterCondition']),
@@ -283,7 +297,8 @@
                     params: {
                         ...this.$route.params,
                         type: child.name
-                    }
+                    },
+                    query: this.$route.query
                 })
             },
             switchToReleaseVersion () {
@@ -291,7 +306,8 @@
                     params: {
                         ...this.$route.params,
                         version: this.pipelineInfo?.releaseVersion
-                    }
+                    },
+                    query: this.$route.query
                 })
             }
         }

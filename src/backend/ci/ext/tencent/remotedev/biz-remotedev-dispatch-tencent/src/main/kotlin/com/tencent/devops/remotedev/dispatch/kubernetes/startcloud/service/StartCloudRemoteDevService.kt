@@ -55,7 +55,7 @@ import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
-import com.tencent.devops.remotedev.pojo.remotedev.SyncVmData
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmInfo
 import com.tencent.devops.remotedev.pojo.remotedev.SyncVmResp
 import com.tencent.devops.remotedev.pojo.remotedev.TaskCommonResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
@@ -210,7 +210,8 @@ class StartCloudRemoteDevService @Autowired constructor(
                 uid = getEnvironmentUid(workspaceName),
                 appName = appName,
                 userId = userId,
-                pipelineId = workspaceRedisUtils.getStartCloudOrder(workspaceName)
+                pipelineId = workspaceRedisUtils.getStartCloudOrder(workspaceName),
+                force = true
             )
         )
         return resp.taskUid
@@ -374,7 +375,7 @@ class StartCloudRemoteDevService @Autowired constructor(
         return workspaceBcsClient.deleteImage(imageId, delaySeconds)?.taskID
     }
 
-    override fun syncVm(data: SyncVmData): SyncVmResp? {
+    override fun syncVm(data: SyncVmInfo): SyncVmResp? {
         val req = EnvironmentOperateSyncVm(
             syncOnly = data.syncOnly,
             uid = getEnvironmentUid(data.sourceWorkspaceName),

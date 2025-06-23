@@ -192,13 +192,16 @@ const actions = {
     requestPipelineCount (_, { projectId }) {
         return ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipelines/projects/${projectId}/getCount`)
     },
+    requestAllPipelineGroup (_, { projectId }) {
+        return ajax.get(`${prefix}/${projectId}/list`)
+    },
     /**
      * 获取所有流水线分组
     */
     async requestGetGroupLists ({ commit, state, dispatch }, { projectId, viewId }) {
         try {
             const [pipelineGroups, groupCounts] = await Promise.all([
-                ajax.get(`${prefix}/${projectId}/list`),
+                dispatch('requestAllPipelineGroup', { projectId }),
                 dispatch('requestPipelineCount', { projectId })
             ])
             commit(SET_ALL_PIPELINE_GROUP, pipelineGroups.data)

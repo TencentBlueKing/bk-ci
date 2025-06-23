@@ -46,7 +46,7 @@
             :selectable="checkSelecteable"
         ></bk-table-column>
         <bk-table-column
-            v-if="!isPatchView && !isDeleteView"
+            v-if="!isPatchView && !isDeleteView && !isArchiveView"
             width="30"
             fixed="left"
         >
@@ -131,7 +131,7 @@
             </template>
         </bk-table-column>
         <bk-table-column
-            v-if="allRenderColumnMap.ownGroupName && (isAllPipelineView || isPatchView || isDeleteView)"
+            v-if="allRenderColumnMap.ownGroupName && (isAllPipelineView || isPatchView || isDeleteView) && !isArchiveView"
             :width="tableWidthMap.viewNames"
             min-width="300"
             :label="$t('ownGroupName')"
@@ -295,6 +295,7 @@
             ></bk-table-column>
         </template>
         <template v-else>
+            <!-- 最近执行 -->
             <bk-table-column
                 v-if="allRenderColumnMap.latestExec"
                 :width="tableWidthMap.latestExec"
@@ -320,7 +321,7 @@
                                 class="pipeline-cell-link pipeline-exec-msg-title"
                                 :disabled="props.row.permissions && !props.row.permissions.canView"
                                 v-perm="{
-                                    hasPermission: props.row.permissions && props.row.permissions.canView,
+                                    hasPermission: (props.row.permissions && props.row.permissions.canView) || isArchiveView,
                                     disablePermissionApi: true,
                                     permissionData: {
                                         projectId,
@@ -371,6 +372,7 @@
                     </div>
                 </div>
             </bk-table-column>
+            <!-- 最近执行时间 -->
             <bk-table-column
                 v-if="allRenderColumnMap.lastExecTime"
                 :width="tableWidthMap.latestBuildStartDate"
@@ -380,7 +382,7 @@
             >
                 <div
                     class="latest-build-multiple-row"
-                    v-if="!props.row.delete"
+                    v-if="!props.row.delete || isArchiveView"
                     slot-scope="props"
                 >
                     <p>{{ props.row.latestBuildStartDate }}</p>
@@ -398,6 +400,7 @@
                     </p>
                 </div>
             </bk-table-column>
+            <!-- 最近修改时间 -->
             <bk-table-column
                 v-if="allRenderColumnMap.lastModify"
                 :width="tableWidthMap.updateTime"
@@ -408,7 +411,7 @@
             >
                 <div
                     class="latest-build-multiple-row"
-                    v-if="!props.row.delete"
+                    v-if="!props.row.delete || isArchiveView"
                     slot-scope="props"
                 >
                     <p>{{ props.row.updater }}</p>
@@ -416,7 +419,7 @@
                 </div>
             </bk-table-column>
             <bk-table-column
-                v-if="allRenderColumnMap.creator"
+                v-if="allRenderColumnMap.creator && !isArchiveView"
                 :width="tableWidthMap.creator"
                 :label="$t('creator')"
                 prop="creator"
@@ -540,6 +543,14 @@
                         :config="props.row.pipelineActions"
                     ></ext-menu>
                 </template>
+                <bk-button
+                    v-if="isArchiveView"
+                    text
+                    theme="primary"
+                    @click="handleDelete(props.row)"
+                >
+                    {{ $t('delete') }}
+                </bk-button>
             </div>
         </bk-table-column>
         <bk-table-column
@@ -566,6 +577,7 @@
         ALL_PIPELINE_VIEW_ID,
         CACHE_PIPELINE_TABLE_WIDTH_MAP,
         DELETED_VIEW_ID,
+        ARCHIVE_VIEW_ID,
         PIPELINE_TABLE_COLUMN_CACHE,
         PIPELINE_TABLE_LIMIT_CACHE,
         RECENT_USED_VIEW_ID
@@ -616,7 +628,8 @@
                 tableColumn: [],
                 selectedTableColumn: [],
                 showCollectIndex: -1,
-                visibleLabelCountList: {}
+                visibleLabelCountList: {},
+                isShowDeleteMigrateArchiveDialog: false
             }
         },
         computed: {
@@ -631,6 +644,9 @@
             },
             isDeleteView () {
                 return this.$route.params.viewId === DELETED_VIEW_ID
+            },
+            isArchiveView () {
+                return this.$route.params.viewId === ARCHIVE_VIEW_ID
             },
             isRecentView () {
                 return this.$route.params.viewId === RECENT_USED_VIEW_ID
@@ -923,6 +939,9 @@
                     this.refresh()
                 }
             },
+            async handleDelete (row) {
+                this.openDeleteArchivedDialog(row)
+            },
             calcOverPosGroup () {
                 const tagMargin = 6
 
@@ -1010,6 +1029,14 @@
                         pipelineId: pipeline.pipelineId
                     }
                 })
+            },
+            toggleSelection (list) {
+                list.forEach(item => {
+                    this.$refs.pipelineTable.toggleRowSelection(item, false)
+                })
+            },
+            updatePipelineData (pipelineIds) {
+                this.pipelineList = this.pipelineList.filter(item => !pipelineIds.includes(item.pipelineId))
             }
         }
     }

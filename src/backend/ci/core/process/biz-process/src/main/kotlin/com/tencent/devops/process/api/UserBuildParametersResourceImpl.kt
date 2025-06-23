@@ -78,6 +78,14 @@ class UserBuildParametersResourceImpl @Autowired constructor(
                     params = TriggerBuildParamUtils.getBasicBuildParams().map {
                         it.copy(name = paramToContext[it.name] ?: it.name)
                     }.sortedBy { it.name }
+                ),
+                BuildParameterGroup(
+                    name = TriggerBuildParamUtils.getJobParamName(),
+                    params = TriggerBuildParamUtils.getJobBuildParams()
+                ),
+                BuildParameterGroup(
+                    name = TriggerBuildParamUtils.getStepParamName(),
+                    params = TriggerBuildParamUtils.getStepBuildParams()
                 )
             )
         )
@@ -257,7 +265,7 @@ class UserBuildParametersResourceImpl @Autowired constructor(
         ).data ?: listOf()
         result.addAll(branches)
         result.addAll(tags)
-        return result
+        return result.distinct()
     }
 
     override fun buildParamFormProp(

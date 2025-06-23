@@ -42,5 +42,7 @@ data class DeptInfo(
     @JsonProperty("has_children")
     val hasChildren: Boolean,
     @get:Schema(title = "是否启用")
-    val enabled: Boolean
+    val enabled: Boolean,
+    @get:Schema(title = "层级")
+    val level: Int = -1,
 )
