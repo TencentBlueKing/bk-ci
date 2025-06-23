@@ -107,10 +107,10 @@ class UserInfoCertService @Autowired constructor(
         }
     }
 
-    fun asyncAuthCheck(data: UserInfoAuthCheck) {
+    fun asyncAuthCheck(userId: String, data: UserInfoAuthCheck) {
         AsyncExecute.dispatch(
             streamBridge = streamBridge,
-            data = AsyncUserAuthCheck(projectId = data.projectId, userId = data.userId),
+            data = AsyncUserAuthCheck(projectId = data.projectId, userId = userId),
             errorLogTag = USER_CERT_LOG_PREFIX
         )
     }
