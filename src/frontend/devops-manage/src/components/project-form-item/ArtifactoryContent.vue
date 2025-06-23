@@ -51,7 +51,7 @@
           prop="labelColorMap"
         >
           <template #default="{row}">
-            <div class="label-color-content" v-if="Object.keys(row.labelColorMap).length">
+            <div class="label-color-content" v-if="Object.keys(row.labelColorMap ?? {}).length">
               <div v-for="(color, key) in row.labelColorMap">
                 <p class="color-map">
                   <span :style="{backgroundColor: color}" class="enums-icon"></span>

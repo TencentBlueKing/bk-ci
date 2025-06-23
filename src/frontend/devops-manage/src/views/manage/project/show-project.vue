@@ -731,7 +731,7 @@ const panels = computed(() => [
   }
   .detail-content-form {
     margin-bottom: 20px;
-    padding: 16px 32px 16px 18px;
+    padding: 16px 18px 16px 32px;
     background-color: #fff;
     box-shadow: 0 2px 2px 0 rgb(0 0 0 / 15%);
     ::v-deep .bk-form-label {

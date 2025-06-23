@@ -56,12 +56,12 @@ const collapsePanels = computed(() => [
     title: '权限',
     component: PermissionContent,
   }] : [],
-  ...projectData.value.properties ? [{
-    name: 'pipeline',
-    title: '流水线',
-    isShow: projectData.value.properties,
-    component: PipelineContent,
-  }] : [],
+  // ...projectData.value.properties ? [{
+  //   name: 'pipeline',
+  //   title: '流水线',
+  //   isShow: projectData.value.properties,
+  //   component: PipelineContent,
+  // }] : [],
 ]);
 
 const handleChangeForm = () => {
