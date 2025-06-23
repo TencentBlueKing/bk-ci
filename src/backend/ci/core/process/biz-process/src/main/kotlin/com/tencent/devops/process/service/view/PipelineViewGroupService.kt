@@ -73,15 +73,15 @@ import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.view.lock.PipelineViewGroupLock
 import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
+import java.text.Collator
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.text.Collator
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 
 @Service
 @SuppressWarnings("LoopWithTooManyJumpStatements", "LongParameterList", "TooManyFunctions", "ReturnCount")
@@ -863,17 +863,17 @@ class PipelineViewGroupService @Autowired constructor(
                 )
             summaries.add(
                 0, PipelineNewViewSummary(
-                id = PIPELINE_VIEW_UNCLASSIFIED,
-                projectId = projectId,
-                name = I18nUtil.getCodeLanMessage(PIPELINE_VIEW_UNCLASSIFIED),
-                projected = true,
-                createTime = LocalDateTime.now().timestamp(),
-                updateTime = LocalDateTime.now().timestamp(),
-                creator = "admin",
-                top = false,
-                viewType = PipelineViewType.UNCLASSIFIED,
-                pipelineCount = unclassifiedCount
-            )
+                    id = PIPELINE_VIEW_UNCLASSIFIED,
+                    projectId = projectId,
+                    name = I18nUtil.getCodeLanMessage(PIPELINE_VIEW_UNCLASSIFIED),
+                    projected = true,
+                    createTime = LocalDateTime.now().timestamp(),
+                    updateTime = LocalDateTime.now().timestamp(),
+                    creator = "admin",
+                    top = false,
+                    viewType = PipelineViewType.UNCLASSIFIED,
+                    pipelineCount = unclassifiedCount
+                )
             )
         }
         return summaries
@@ -971,9 +971,10 @@ class PipelineViewGroupService @Autowired constructor(
             false
         )
         val deleteCount = pipelineInfos.count { it.delete }
+        val isPipelineListPermissionControl = pipelinePermissionService.isControlPipelineListPermission(projectId)
         return PipelineViewPipelineCount(
             normalCount = pipelineInfos.size - deleteCount,
-            deleteCount = deleteCount
+            deleteCount = if (isPipelineListPermissionControl) 0 else deleteCount
         )
     }
 
