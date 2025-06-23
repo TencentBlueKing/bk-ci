@@ -1581,7 +1581,7 @@ class PipelineListFacadeService @Autowired constructor(
         buildTaskFinishCountMap: Map<String, Int>,
         pipelineYamlExistMap: Map<String, Boolean>,
         queryByWeb: Boolean,
-        pipelineArchivingFlagMap: Map<Any, Boolean>?
+        pipelineArchivingFlagMap: Map<String, Boolean>?
     ) {
         pipelines.forEach {
             val pipelineId = it.pipelineId

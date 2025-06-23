@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.constant.FAIL_MSG
 import com.tencent.devops.common.api.constant.KEY_ARCHIVE
 import com.tencent.devops.common.api.constant.KEY_PIPELINE_ID
 import com.tencent.devops.common.api.constant.KEY_PROJECT_ID
+import com.tencent.devops.common.api.constant.OPERATE
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ShardingRoutingRule
@@ -45,6 +46,7 @@ import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.BkApiUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
 import com.tencent.devops.misc.lock.MigrationLock
@@ -367,7 +369,11 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
             return
         }
         val titleParams = mapOf(KEY_PROJECT_ID to projectId, KEY_PIPELINE_ID to pipelineId)
-        val bodyParams = mapOf(KEY_PROJECT_ID to projectId, KEY_PIPELINE_ID to pipelineId)
+        val bodyParams = mapOf(
+            OPERATE to I18nUtil.getCodeLanMessage(KEY_ARCHIVE),
+            KEY_PROJECT_ID to projectId,
+            KEY_PIPELINE_ID to pipelineId
+        )
         val request = SendNotifyMessageTemplateRequest(
             templateCode = MIGRATE_PROCESS_PIPELINE_DATA_SUCCESS_TEMPLATE,
             receivers = mutableSetOf(userId),
@@ -397,7 +403,12 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
             return
         }
         val titleParams = mapOf(KEY_PROJECT_ID to projectId, KEY_PIPELINE_ID to pipelineId)
-        val bodyParams = mapOf(KEY_PROJECT_ID to projectId, KEY_PIPELINE_ID to pipelineId, FAIL_MSG to (errorMsg ?: ""))
+        val bodyParams = mapOf(
+            OPERATE to I18nUtil.getCodeLanMessage(KEY_ARCHIVE),
+            KEY_PROJECT_ID to projectId,
+            KEY_PIPELINE_ID to pipelineId,
+            FAIL_MSG to (errorMsg ?: "")
+        )
         val request = SendNotifyMessageTemplateRequest(
             templateCode = MIGRATE_PROCESS_PIPELINE_DATA_FAIL_TEMPLATE,
             receivers = mutableSetOf(userId),
