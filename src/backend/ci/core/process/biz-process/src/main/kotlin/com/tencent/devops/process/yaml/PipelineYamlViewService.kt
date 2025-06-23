@@ -94,7 +94,6 @@ class PipelineYamlViewService(
                 )
             )
         )
-        // 系统创建流水线组不需要校验权限
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             val viewId = pipelineViewService.addView(

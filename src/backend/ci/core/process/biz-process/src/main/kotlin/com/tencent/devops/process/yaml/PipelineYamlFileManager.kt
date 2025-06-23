@@ -989,7 +989,7 @@ class PipelineYamlFileManager @Autowired constructor(
             pipelineId = pipelineId,
             isTemplate = isTemplate
         )
-        // 删除流水线,如果关联的流水线组已经为空,应该删除
+        // 删除流水线,如果关联的流水线组下流水线已经为空,应该删除
         if (!isTemplate) {
             val directory = GitActionCommon.getCiDirectory(filePath)
             pipelineYamlViewService.deleteEmptyYamlView(
