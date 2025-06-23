@@ -304,7 +304,7 @@ class TGitApiService @Autowired constructor(
                 it.username == userId || it.username == authUserId
             }
             // 操作人和代码库授权人都必须有dev及以上权限
-            members?.any { it.accessLevel < GitAccessLevelEnum.DEVELOPER.level } ?: false
+            members?.all { it.accessLevel >= GitAccessLevelEnum.DEVELOPER.level } ?: false
         } catch (ignored: Throwable) {
             logger.warn("Failed to check push permission|$userId|$gitProjectId")
             false
