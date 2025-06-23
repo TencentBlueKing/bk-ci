@@ -37,11 +37,13 @@ interface IUserPipelinePermissionCheckStrategy {
      * @param projectId 项目ID
      * @param pipelineId 流水线ID
      * @param permission 权限
+     * @param message 错误信息
      */
     fun checkUserPipelinePermission(
         userId: String,
         projectId: String,
         pipelineId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        message: String? = null
     )
 }
