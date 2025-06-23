@@ -64,6 +64,9 @@ interface UserInfoResource {
     @POST
     @Path("/auth/check")
     fun asyncAuthCheck(
+        @Parameter(description = "用户ID", required = false, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         data: UserInfoAuthCheck
     ): Result<Boolean>
 
