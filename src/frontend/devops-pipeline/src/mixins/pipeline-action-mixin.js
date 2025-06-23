@@ -163,10 +163,19 @@ export default {
                     records: pipelineList
                 }
             } catch (e) {
-                this.$showTips({
-                    message: e.message || e,
-                    theme: 'error'
-                })
+                if (e.code === 403) {
+                    handleProjectNoPermission({
+                        projectId: this.$route.params.projectId,
+                        resourceCode: this.$route.params.projectId,
+                        action: PROJECT_RESOURCE_ACTION.MANAGE
+                    })
+                } else {
+                    this.$showTips({
+                        message: e.message || e,
+                        theme: 'error'
+                    })
+                }
+                return false
             }
         },
         getLatestBuildFromNow (latestBuildStartTime) {
