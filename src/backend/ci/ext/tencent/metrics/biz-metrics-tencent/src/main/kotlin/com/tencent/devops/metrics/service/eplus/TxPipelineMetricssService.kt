@@ -27,10 +27,12 @@
 
 package com.tencent.devops.metrics.service.eplus
 
+import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.metrics.dao.PipelineMetricsInfoDao
 import com.tencent.devops.metrics.pojo.ProjectPipelineIssueAnalysisInfo
-import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -42,7 +44,8 @@ class TxPipelineMetricssService@Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val pipelineMetricsInfoDao: PipelineMetricsInfoDao,
-    private val txPipelineMetricsCronService: TxPipelineMetricsCronService
+    private val txPipelineMetricsCronService: TxPipelineMetricsCronService,
+    private val tokenService: ClientTokenService
 ) {
 
     @Value("\${eplus.ms.metrics.namespace.highFailureRate30d.card.id}")
@@ -55,10 +58,15 @@ class TxPipelineMetricssService@Autowired constructor(
     private var scheduledTriggerNoCodeChangeCardId: Int = 0 // 定时触发无代码变更卡片ID
 
     fun getPipelineIssueAnalysis(userId: String, projectId: String): ProjectPipelineIssueAnalysisInfo? {
-        val verifyUserProjectPermission = client.get(ServiceProjectResource::class).verifyUserProjectPermission(
-            userId = userId,
-            projectCode = projectId
-        ).data
+        val verifyUserProjectPermission =
+            client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+                token = tokenService.getSystemToken(),
+                userId = userId,
+                action = ActionId.PROJECT_VISIT,
+                projectCode = projectId,
+                resourceCode = null
+            ).data!!
+
         if (verifyUserProjectPermission != true) {
             logger.info("user ${userId} does not have the permission to view pipeline management information")
             return null
@@ -100,19 +108,19 @@ class TxPipelineMetricssService@Autowired constructor(
     fun updatePipelineWhitelist(
         userId: String,
         projectId: String,
-        pipelineId: String,
+        pipelineIds: List<String>,
         isAdd: Boolean
     ): Boolean {
         try {
             pipelineMetricsInfoDao.updateAutoDisableWhitelist(
                 dslContext = dslContext,
                 projectId = projectId,
-                pipelineId = pipelineId,
+                pipelineIds = pipelineIds,
                 deleteFlag = !isAdd
             )
             return true
         } catch (e: Exception) {
-            logger.warn("Failed to update whitelist for pipeline $pipelineId in project $projectId", e)
+            logger.warn("Failed to update whitelist for  project $projectId", e)
             return false
         }
     }

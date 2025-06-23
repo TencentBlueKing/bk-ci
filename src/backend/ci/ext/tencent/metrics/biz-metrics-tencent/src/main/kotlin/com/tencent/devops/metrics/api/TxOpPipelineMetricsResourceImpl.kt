@@ -43,14 +43,14 @@ class TxOpPipelineMetricsResourceImpl @Autowired constructor(
     override fun updatePipelineWhitelist(
         userId: String,
         projectId: String,
-        pipelineId: String,
+        pipelineIds: List<String>,
         isAdd: Boolean
     ): com.tencent.devops.common.api.pojo.Result<Boolean> {
         return com.tencent.devops.common.api.pojo.Result(
             txPipelineMetricsService.updatePipelineWhitelist(
                 userId = userId,
                 projectId = projectId,
-                pipelineId = pipelineId,
+                pipelineIds = pipelineIds,
                 isAdd = isAdd
             )
         )

@@ -187,7 +187,7 @@ class PipelineMetricsInfoDao {
     fun updateAutoDisableWhitelist(
         dslContext: DSLContext,
         projectId: String,
-        pipelineId: String,
+        pipelineIds: List<String>,
         deleteFlag: Boolean
     ) {
         if (deleteFlag) {
@@ -195,19 +195,25 @@ class PipelineMetricsInfoDao {
             with(TEplusPipelineMetricsWhiteList.T_EPLUS_PIPELINE_METRICS_WHITE_LIST) {
                 dslContext.deleteFrom(this)
                     .where(PROJECT_ID.eq(projectId))
-                    .and(PIPELINE_ID.eq(pipelineId))
+                    .and(PIPELINE_ID.`in`(pipelineIds))
                     .execute()
             }
         } else {
             // 插入白名单记录
-            with(TEplusPipelineMetricsWhiteList.T_EPLUS_PIPELINE_METRICS_WHITE_LIST) {
-                dslContext.insertInto(this)
-                    .set(PROJECT_ID, projectId)
-                    .set(PIPELINE_ID, pipelineId)
-                    .set(CREATE_TIME, LocalDateTime.now())
-                    .onDuplicateKeyIgnore()
-                    .execute()
+            // 批量插入白名单记录
+            if (pipelineIds.isEmpty()) return
+
+            val now = LocalDateTime.now()
+            val queries = pipelineIds.map { pipelineId ->
+                with(TEplusPipelineMetricsWhiteList.T_EPLUS_PIPELINE_METRICS_WHITE_LIST) {
+                    dslContext.insertInto(this)
+                        .set(PROJECT_ID, projectId)
+                        .set(PIPELINE_ID, pipelineId)
+                        .set(CREATE_TIME, now)
+                        .onDuplicateKeyIgnore()
+                }
             }
+            dslContext.batch(queries).execute()
         }
     }
 

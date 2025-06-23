@@ -100,7 +100,7 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
             if (!notifyTypeScope.contains("MOA")) {
                 logger.warn(
                     "COMMON_NOTIFY_MESSAGE_TEMPLATE_NOT_FOUND|If needed, add on the OP" +
-                        "|type=MOA|template=${request.templateCode}"
+                        "|type=MOA|template=${request.templateCode}"l
                 )
             } else {
                 logger.info("send wework msg: $templateId")

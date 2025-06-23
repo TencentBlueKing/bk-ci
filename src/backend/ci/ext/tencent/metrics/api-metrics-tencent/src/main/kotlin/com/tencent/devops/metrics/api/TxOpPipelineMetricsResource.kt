@@ -28,12 +28,15 @@
 package com.tencent.devops.metrics.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
@@ -54,8 +57,8 @@ interface TxOpPipelineMetricsResource {
         userId: String
     )
 
-    @Operation(summary = "更新流水线白名单状态")
-    @GET
+    @Operation(summary = "批量更新项目下无效流水线白名单状态")
+    @POST
     @Path("/whitelist/update")
     fun updatePipelineWhitelist(
         @Parameter(description = "用户ID", required = true)
@@ -64,9 +67,8 @@ interface TxOpPipelineMetricsResource {
         @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
-        @QueryParam("pipelineId")
-        pipelineId: String,
+        @Parameter(description = "流水线ID列表", required = true)
+        pipelineIds: List<String>,
         @Parameter(description = "是否添加到白名单", required = true)
         @QueryParam("isAdd")
         isAdd: Boolean
