@@ -108,11 +108,16 @@ class UserInfoCertService @Autowired constructor(
     }
 
     fun asyncAuthCheck(userId: String, data: UserInfoAuthCheck) {
-        AsyncExecute.dispatch(
-            streamBridge = streamBridge,
-            data = AsyncUserAuthCheck(projectId = data.projectId, userId = userId),
-            errorLogTag = USER_CERT_LOG_PREFIX
-        )
+        try {
+            AsyncExecute.dispatch(
+                streamBridge = streamBridge,
+                data = AsyncUserAuthCheck(projectId = data.projectId, userId = userId),
+                errorLogTag = USER_CERT_LOG_PREFIX
+            )
+        } catch (e: Exception) {
+            // 记录异常日志，可以根据实际情况选择合适的日志级别和日志内容
+            logger.error("AsyncAuthCheck failed for userId: $userId,UserInfoAuthCheck: $data", e)
+        }
     }
 
     fun doAsyncAuthCheck(data: AsyncUserAuthCheck) {
