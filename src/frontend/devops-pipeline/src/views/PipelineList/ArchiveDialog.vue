@@ -66,7 +66,7 @@
             </div>
 
             <ul
-                v-if="isArchiveBatch"
+                v-if="isArchiveBatch && pipelineList.length"
                 class="archive-pipeline-list"
             >
                 <li
@@ -81,7 +81,7 @@
             <bk-button
                 theme="warning"
                 :loading="isSubmiting"
-                :disabled="!!unableToArchivePipelines.length"
+                :disabled="!!unableToArchivePipelines.length || !pipelineList.length"
                 @click="submit"
             >
                 {{ $t('archive.archive') }}
@@ -171,7 +171,6 @@
                                     class: 'button',
                                     on: {
                                         click: () => {
-                                            this.$emit('updatePipelineData', pipelineIds)
                                             this.$bkInfo.close(instance.id)
                                             this.requestGetGroupLists(this.$route.params)
                                             this.$emit('done')

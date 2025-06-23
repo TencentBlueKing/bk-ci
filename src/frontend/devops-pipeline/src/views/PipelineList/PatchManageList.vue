@@ -78,7 +78,6 @@
             @toggleSelection="toggleSelection"
             @cancel="toggleArchive"
             @done="refreshList"
-            @updatePipelineData="updatePipelineData"
         />
         <delete-archived-dialog
             type="archiveBatch"
@@ -192,9 +191,6 @@
             },
             toggleSelection (list) {
                 this.$refs.pipelineTable?.toggleSelection?.(list)
-            },
-            updatePipelineData (pipelines) {
-                this.$refs.pipelineTable?.updatePipelineData(pipelines)
             }
         }
     }
