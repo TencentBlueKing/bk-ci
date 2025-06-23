@@ -41,6 +41,7 @@ import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -57,6 +58,7 @@ import com.tencent.devops.misc.task.MigratePipelineDataTask
 import com.tencent.devops.misc.utils.MiscUtils
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceShardingRoutingRuleResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -88,17 +90,19 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
     }
 
     /**
-     * 删除process数据库数据
+     * 迁移process数据库数据
      * @param userId 用户ID
      * @param projectId 项目ID
      * @param pipelineId 流水线ID
      * @param cancelFlag 是否取消正在运行的构建
+     * @param sendMsgFlag 是否发送消息
      */
     fun migrateData(
         userId: String,
         projectId: String,
         pipelineId: String,
-        cancelFlag: Boolean = false
+        cancelFlag: Boolean = false,
+        sendMsgFlag: Boolean = true
     ) {
         val archiveDbShardingRoutingRule =
             client.get(ServiceShardingRoutingRuleResource::class).getShardingRoutingRuleByName(
@@ -123,7 +127,8 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
                 archiveDbShardingRoutingRule = archiveDbShardingRoutingRule,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                migrationLock = migrationLock
+                migrationLock = migrationLock,
+                sendMsgFlag = sendMsgFlag
             )
         ) {
             return
@@ -137,7 +142,8 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
                 archiveDbShardingRoutingRule = archiveDbShardingRoutingRule,
                 pipelineId = pipelineId,
                 migrationLock = migrationLock,
-                userId = userId
+                userId = userId,
+                sendMsgFlag = sendMsgFlag
             )
         } catch (ignored: Throwable) {
             val errorMsg = ignored.message
@@ -148,9 +154,10 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
                 pipelineId = pipelineId,
                 migrationLock = migrationLock,
                 userId = userId,
-                errorMsg = errorMsg
+                errorMsg = errorMsg,
+                sendMsgFlag = sendMsgFlag
             )
-            return
+            throw ignored
         } finally {
             // 从正在迁移的流水线集合移除该流水线
             redisOperation.removeSetMember(
@@ -168,7 +175,8 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
         pipelineId: String,
         migrationLock: MigrationLock,
         userId: String,
-        errorMsg: String?
+        errorMsg: String?,
+        sendMsgFlag: Boolean
     ) {
         try {
             if (archiveDbShardingRoutingRule != null) {
@@ -189,16 +197,18 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
-                errorMsg = ignored.message
+                errorMsg = ignored.message,
+                sendMsgFlag = sendMsgFlag
             )
-            return
+            throw ignored
         }
         // 迁移流水线数据失败发送失败消息通知用户
         sendMigrateProcessDataFailMsg(
             projectId = projectId,
             pipelineId = pipelineId,
             userId = userId,
-            errorMsg = errorMsg
+            errorMsg = errorMsg,
+            sendMsgFlag = sendMsgFlag
         )
     }
 
@@ -207,7 +217,8 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
         archiveDbShardingRoutingRule: ShardingRoutingRule?,
         pipelineId: String,
         migrationLock: MigrationLock,
-        userId: String
+        userId: String,
+        sendMsgFlag: Boolean
     ) {
         var tmpArchiveDbShardingRoutingRule = archiveDbShardingRoutingRule
         val originDbShardingRoutingRule =
@@ -228,7 +239,19 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
             val sourceClusterName = originDbShardingRoutingRule.clusterName
             val targetClusterName = tmpArchiveDbShardingRoutingRule.clusterName
             try {
+                val channelCode = processDao.getPipelineInfoByPipelineId(
+                    dslContext = dslContext, projectId = projectId, pipelineId = pipelineId
+                )?.channel?.let {
+                    ChannelCode.valueOf(it)
+                } ?: ChannelCode.BS
                 migrationLock.lock()
+                client.get(ServicePipelineResource::class).delete(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    channelCode = channelCode,
+                    checkFlag = false
+                )
                 // 删除流水线权限相关的数据
                 authResourceApi.deleteResource(
                     serviceCode = pipelineAuthServiceCode,
@@ -264,7 +287,12 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
                 migrationLock.unlock()
             }
             // 发送迁移成功消息
-            sendMigrateProcessDataSuccessMsg(projectId, pipelineId, userId)
+            sendMigrateProcessDataSuccessMsg(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                sendMsgFlag = sendMsgFlag
+            )
         }
     }
 
@@ -273,7 +301,8 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
         archiveDbShardingRoutingRule: ShardingRoutingRule?,
         projectId: String,
         pipelineId: String,
-        migrationLock: MigrationLock
+        migrationLock: MigrationLock,
+        sendMsgFlag: Boolean
     ): Boolean {
         if (archiveDbShardingRoutingRule != null) {
             val queryParam = ProjectDataMigrateHistoryQueryParam(
@@ -294,7 +323,8 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
                         errorMsg = I18nUtil.getCodeLanMessage(
                             messageCode = MiscMessageCode.ERROR_PROJECT_DATA_REPEAT_MIGRATE,
                             params = arrayOf(projectId)
-                        )
+                        ),
+                        sendMsgFlag = sendMsgFlag
                     )
                     return false
                 }
@@ -312,7 +342,16 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
         return true
     }
 
-    private fun sendMigrateProcessDataSuccessMsg(projectId: String, pipelineId: String, userId: String) {
+    private fun sendMigrateProcessDataSuccessMsg(
+        projectId: String,
+        pipelineId: String,
+        userId: String,
+        sendMsgFlag: Boolean
+    ) {
+        if (!sendMsgFlag) {
+            // 不发送消息
+            return
+        }
         val titleParams = mapOf(KEY_PROJECT_ID to projectId, KEY_PIPELINE_ID to pipelineId)
         val bodyParams = mapOf(KEY_PROJECT_ID to projectId, KEY_PIPELINE_ID to pipelineId)
         val request = SendNotifyMessageTemplateRequest(
@@ -336,8 +375,13 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         userId: String,
-        errorMsg: String?
+        errorMsg: String?,
+        sendMsgFlag: Boolean
     ) {
+        if (!sendMsgFlag) {
+            // 不发送消息
+            return
+        }
         val titleParams = mapOf(KEY_PROJECT_ID to projectId, KEY_PIPELINE_ID to pipelineId)
         val bodyParams = mapOf(KEY_PROJECT_ID to projectId, KEY_PIPELINE_ID to pipelineId, FAIL_MSG to (errorMsg ?: ""))
         val request = SendNotifyMessageTemplateRequest(

@@ -271,7 +271,7 @@ class PipelineBuildRetryService @Autowired constructor(
                 )
             }
             // 只有stage是running状态才运行插件级重试
-            if (stage.status.isFinish()) {
+            if (!stage.status.isRunning()) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_RETRY_STAGE_NOT_RUNNING
                 )
