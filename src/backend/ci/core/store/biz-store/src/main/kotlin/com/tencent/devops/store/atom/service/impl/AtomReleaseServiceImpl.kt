@@ -197,8 +197,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     @Value("\${store.defaultAtomErrorCodePrefix:8}")
     private lateinit var defaultAtomErrorCodePrefix: String
 
-    @Value("\${store.defaultAtomPublisherReviewer:v_kykang,carlyin,fayewang}")
-    private lateinit var defaultAtomPublisherReviewer: String
+    @Value("\${store.defaultAtomPublisherReviewer}")
+    private val defaultAtomPublisherReviewer: String? = null
 
 
     companion object {
@@ -1136,7 +1136,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             // 通过websocket推送状态变更消息
             storeWebsocketService.sendWebsocketMessage(userId, atomId)
             // 研发商店插件上架进入审核阶段时通知管理员审批
-            if (atomName !== null) {
+            if (atomName !== null && null != defaultAtomPublisherReviewer) {
                 sendPendingReview(
                     userId = userId,
                     atomName = atomName,
