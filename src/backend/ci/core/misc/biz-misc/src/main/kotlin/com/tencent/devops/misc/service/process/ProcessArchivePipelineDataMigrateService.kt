@@ -333,7 +333,11 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
                 if (!projectDataMigrateHistoryService.isDataCanMigrate(queryParam)) {
                     throw ErrorCodeException(
                         errorCode = MiscMessageCode.ERROR_PROJECT_DATA_REPEAT_MIGRATE,
-                        params = arrayOf(projectId)
+                        params = arrayOf(projectId),
+                        defaultMessage = I18nUtil.getCodeLanMessage(
+                            messageCode = MiscMessageCode.ERROR_PROJECT_DATA_REPEAT_MIGRATE,
+                            params = arrayOf(projectId)
+                        )
                     )
                 }
             }
@@ -346,7 +350,11 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
             ?.let {
                 throw ErrorCodeException(
                     errorCode = MiscMessageCode.ERROR_ARCHIVE_PAC_PIPELINE_YAML_EXIST,
-                    params = arrayOf(pipelineId)
+                    params = arrayOf(pipelineId),
+                    defaultMessage = I18nUtil.getCodeLanMessage(
+                        messageCode = MiscMessageCode.ERROR_ARCHIVE_PAC_PIPELINE_YAML_EXIST,
+                        params = arrayOf(pipelineId)
+                    )
                 )
             }
         // 把流水线加入正在迁移流水线集合中

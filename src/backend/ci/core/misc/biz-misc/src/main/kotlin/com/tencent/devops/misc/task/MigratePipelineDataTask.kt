@@ -49,19 +49,19 @@ class MigratePipelineDataTask constructor(
             // 1、获取是否允许执行的信号量
             semaphore?.acquire()
             logger.info("migrateProjectData project[$projectId],pipeline[$pipelineId] start..............")
+            if (cancelFlag) {
+                // 2、取消未结束的构建
+                handleUnFinishPipelines(RETRY_NUM)
+                Thread.sleep(DEFAULT_THREAD_SLEEP_TINE)
+            }
+            // 检查构建是否结束
+            isBuildCompleted(
+                dslContext = dslContext,
+                processDao = processDao,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
             try {
-                if (cancelFlag) {
-                    // 2、取消未结束的构建
-                    handleUnFinishPipelines(RETRY_NUM)
-                    Thread.sleep(DEFAULT_THREAD_SLEEP_TINE)
-                }
-                // 检查构建是否结束
-                isBuildCompleted(
-                    dslContext = dslContext,
-                    processDao = processDao,
-                    projectId = projectId,
-                    pipelineId = pipelineId
-                )
                 // 3、开始迁移流水线的数据
                 // 迁移T_PIPELINE_INFO表数据
                 migratePipelineInfoData(
