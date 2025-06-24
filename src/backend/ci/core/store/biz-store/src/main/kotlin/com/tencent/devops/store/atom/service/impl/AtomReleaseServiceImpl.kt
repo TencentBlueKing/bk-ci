@@ -1510,7 +1510,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             "version" to version,
         )
 
-        val receivers = defaultAtomPublisherReviewer
+        val receivers = defaultAtomPublisherReviewer!!
             .split(",")
             .map { it.trim() }
             .toMutableSet()
