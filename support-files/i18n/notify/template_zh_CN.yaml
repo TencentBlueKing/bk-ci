@@ -930,7 +930,7 @@
     id: "390987c50179422388dd742924fc2004"
     sender: "DevOps"
     title: "已成功${operate}项目【${projectId}】下流水线【${pipelineId}】的数据"
-    body: "已成功${operate}项目【${projectId}】下流水线【${pipelineId}】的数据，共计迁移流水线 1 条。"
+    body: "已成功${operate}项目【${projectId}】下流水线【${pipelineId}】的数据，共计${operate}流水线 1 条。"
   creator: "system"
   modifior: "system"
 - index: 44
