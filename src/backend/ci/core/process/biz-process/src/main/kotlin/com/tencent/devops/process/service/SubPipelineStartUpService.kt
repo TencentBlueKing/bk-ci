@@ -486,7 +486,8 @@ class SubPipelineStartUpService @Autowired constructor(
             includeConst = includeConst,
             includeNotRequired = includeNotRequired,
             userId = oauthUser,
-            version = null
+            version = null,
+            isTemplate = null
         )
         return Result(parameter)
     }
