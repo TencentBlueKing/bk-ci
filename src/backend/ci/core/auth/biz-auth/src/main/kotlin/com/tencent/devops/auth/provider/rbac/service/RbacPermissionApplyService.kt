@@ -268,7 +268,11 @@ class RbacPermissionApplyService @Autowired constructor(
         if (managerRoleGroupInfoList.isEmpty()) return emptyList()
 
         val groupIds = managerRoleGroupInfoList.map { it.id.toString() }
-        val verifyMemberJoinedResult = verifyMemberJoined(userId, groupIds)
+        val verifyMemberJoinedResult = verifyMemberJoined(
+            userId = userId,
+            groupIds = groupIds,
+            tenantId = TenantUtils.getTenantIdByEnglishName(projectId)
+        )
         val dbGroupRecords = authResourceGroupDao.listByRelationId(dslContext, projectId, groupIds)
 
         return managerRoleGroupInfoList.map { gInfo ->
@@ -302,14 +306,15 @@ class RbacPermissionApplyService @Autowired constructor(
 
     private fun verifyMemberJoined(
         userId: String,
-        groupIds: List<String>
+        groupIds: List<String>,
+        tenantId: String? = null
     ): Map<Int, GroupMemberVerifyInfo> {
         val verifyGroupValidMemberResult = mutableMapOf<Int, GroupMemberVerifyInfo>()
         val futures = mutableListOf<Future<*>>()
         groupIds.chunked(20).forEach { batchGroupIds ->
             futures.add(executor.submit {
                 val batchVerifyGroupValidMember =
-                    v2ManagerService.verifyGroupValidMember(userId, batchGroupIds.joinToString(","))
+                    v2ManagerService.verifyGroupValidMember(userId, batchGroupIds.joinToString(","), tenantId)
                 verifyGroupValidMemberResult.putAll(batchVerifyGroupValidMember)
             })
         }
