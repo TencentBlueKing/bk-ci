@@ -205,7 +205,7 @@ object ProcessMessageCode {
 
     const val ERROR_PAUSE_PIPELINE_IS_RUNNING = "2101107" // 暂停的流水线已开始运行
     const val ERROR_ELEMENT_TOO_LONG = "2101109" // {0} element大小越界
-    const val ERROR_JOB_RUNNING = "2101110" // job非完成态，不能进行重试
+    const val ERROR_RETRY_TASK_IN_CONTAINER_NOT_FINISHED = "2101110" // job非完成态，不能进行重试
     const val ERROR_TIMEOUT_IN_BUILD_QUEUE = "2101111" // 排队超时，取消运行! [{0}]
     const val ERROR_BUILD_TASK_QUALITY_OUT = "2101112" // 质量红线(准出)检测失败
     const val ERROR_TIMEOUT_IN_RUNNING = "2101113" // {0}运行达到({1})分钟，超时结束运行!
@@ -376,10 +376,11 @@ object ProcessMessageCode {
     const val ERROR_NOT_REPOSITORY_PUSH_PERMISSION = "2101271" // 用户 [{0}] 没有仓库 [{1}] PUSH权限
     // 同样的触发参数, 已不满足当前流水线最新版本 {0} 的触发条件, 继续运行可能会产生错误, 确认继续吗
     const val ERROR_TRIGGER_CONDITION_NOT_MATCH = "2101272"
-    const val ERROR_RETRY_STAGE_NOT_RUNNING = "2101273" // stage非运行中状态，不能进行插件级重试
+    const val ERROR_RETRY_TASK_IN_STAGE_NOT_RUNNING = "2101273" // stage非运行中状态，不能进行插件级重试
     const val ERROR_FAIL_IF_VARIABLE_INVALID = "2101274" // 参数[{0}]值超过系统限制(4K)，启动失败
     const val ERROR_OP_PIPELINE_NUM_INVALID = "2101275" // 处理的流水线数量[{0}]超过系统规定的最大值{1}，请调整参数或咨询助手
     const val ERROR_RUNNING_PIPELINE_ARCHIVE_INVALID = "2101276" // 流水线[{0}]正在运行中，无法归档
+    const val ERROR_RETRY_TASK_NOT_FAILED = "2101277" // 重试的插件不是失败状态，不能进行插件级重试
     const val ERROR_USER_NO_PUSH_PERMISSION = "2101280" // 用户[{0}]没有仓库[{1}]的推送权限, 请联系仓库管理员添加权限
 
     const val ERROR_TASK_REVIEW_NOT_FOUND_OR_NOT_RUNNING = "2101279" // 插件【ID:{0}】不存在或者不是可审核状态
