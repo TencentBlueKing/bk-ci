@@ -46,7 +46,6 @@ import jakarta.ws.rs.core.MediaType
 interface ServiceNotifyV2Resource {
     @Operation(summary = "发送RTX信息通知")
     @POST
-    @BkCheckBlackListInterface
     @Path("/rtx")
     fun sendRtxNotify(
         @Parameter(description = "RTX信息内容", required = true)
@@ -55,7 +54,6 @@ interface ServiceNotifyV2Resource {
 
     @Operation(summary = "发送电子邮件通知")
     @POST
-    @BkCheckBlackListInterface
     @Path("/email")
     fun sendEmailNotify(
         @Parameter(description = "电子邮件信息内容", required = true)
