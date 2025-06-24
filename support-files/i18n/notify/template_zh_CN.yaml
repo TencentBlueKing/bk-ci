@@ -914,8 +914,8 @@
   weworkTemplate:
     id: "390987c50179422388dd742924fc2003"
     sender: "DevOps"
-    title: "${operate}项目【${projectId}】下流水线【${pipelineId}】的数据失败"
-    body: "The data of pipeline [${pipelineId}] under project [${projectId}] failed to operate. The reason for the failure is: ${failMsg}"
+    title: "项目【${projectId}】下流水线【${pipelineId}】的数据${operate}失败"
+    body: "项目【${projectId}】下流水线【${pipelineId}】的数据${operate}失败， 失败原因： ${failMsg}"
   creator: "system"
   modifior: "system"
 - index: 43
@@ -929,8 +929,8 @@
   weworkTemplate:
     id: "390987c50179422388dd742924fc2004"
     sender: "DevOps"
-    title: "${operate}项目【${projectId}】下流水线【${pipelineId}】的数据成功"
-    body: "${operate}项目【${projectId}】下流水线【${pipelineId}】的数据成功，迁移成功的流水线一共1条。"
+    title: "已成功${operate}项目【${projectId}】下流水线【${pipelineId}】的数据"
+    body: "已成功${operate}项目【${projectId}】下流水线【${pipelineId}】的数据，共计迁移流水线 1 条。"
   creator: "system"
   modifior: "system"
 - index: 44

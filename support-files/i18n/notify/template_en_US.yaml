@@ -914,8 +914,8 @@
   weworkTemplate:
     id: "390987c50179422388dd742924fc2003"
     sender: "DevOps"
-    title: "Data of pipeline [${pipelineId}] under project [${operate}] failed"
-    body: "Failed to migrate data of pipeline [${pipelineId}] under project [${projectId}]. Failure reason: ${failMsg}"
+    title: "Data ${operate} failed for pipeline [${pipelineId}] under project [${projectId}]"
+    body: "Data ${operate} failed for pipeline [${pipelineId}] under project [${projectId}]. Failure reason: ${failMsg}"
   creator: "system"
   modifior: "system"
 - index: 43
@@ -929,8 +929,8 @@
   weworkTemplate:
     id: "390987c50179422388dd742924fc2004"
     sender: "DevOps"
-    title: "The data of pipeline [${pipelineId}] under ${operate} project [${projectId}] is successfully"
-    body: "The data of pipeline [${pipelineId}] under project [${operate}] was successfully migrated. There is a total of 1 pipeline that was successfully migrated."
+    title: "Successfully ${operate} project [${projectId}] pipeline [${pipelineId}] data"
+    body: "Data for pipeline [${pipelineId}] under project [${projectId}] has been successfully ${operated}, with a total of 1 pipelines ${operated}."
   creator: "system"
   modifior: "system"
 - index: 44

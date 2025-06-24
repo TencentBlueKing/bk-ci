@@ -368,7 +368,11 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
             // 不发送消息
             return
         }
-        val titleParams = mapOf(KEY_PROJECT_ID to projectId, KEY_PIPELINE_ID to pipelineId)
+        val titleParams = mapOf(
+            OPERATE to I18nUtil.getCodeLanMessage(KEY_ARCHIVE),
+            KEY_PROJECT_ID to projectId,
+            KEY_PIPELINE_ID to pipelineId
+        )
         val bodyParams = mapOf(
             OPERATE to I18nUtil.getCodeLanMessage(KEY_ARCHIVE),
             KEY_PROJECT_ID to projectId,
@@ -402,7 +406,11 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
             // 不发送消息
             return
         }
-        val titleParams = mapOf(KEY_PROJECT_ID to projectId, KEY_PIPELINE_ID to pipelineId)
+        val titleParams = mapOf(
+            OPERATE to I18nUtil.getCodeLanMessage(KEY_ARCHIVE),
+            KEY_PROJECT_ID to projectId,
+            KEY_PIPELINE_ID to pipelineId
+        )
         val bodyParams = mapOf(
             OPERATE to I18nUtil.getCodeLanMessage(KEY_ARCHIVE),
             KEY_PROJECT_ID to projectId,
