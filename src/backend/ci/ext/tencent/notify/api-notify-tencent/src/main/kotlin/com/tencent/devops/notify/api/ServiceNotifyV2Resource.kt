@@ -27,11 +27,12 @@
 package com.tencent.devops.notify.api
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.notify.api.annotation.BkCheckBlackListInterface
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
@@ -45,6 +46,7 @@ import jakarta.ws.rs.core.MediaType
 interface ServiceNotifyV2Resource {
     @Operation(summary = "发送RTX信息通知")
     @POST
+    @BkCheckBlackListInterface
     @Path("/rtx")
     fun sendRtxNotify(
         @Parameter(description = "RTX信息内容", required = true)
@@ -53,6 +55,7 @@ interface ServiceNotifyV2Resource {
 
     @Operation(summary = "发送电子邮件通知")
     @POST
+    @BkCheckBlackListInterface
     @Path("/email")
     fun sendEmailNotify(
         @Parameter(description = "电子邮件信息内容", required = true)
