@@ -1311,6 +1311,7 @@
   "filterChanged": "分组条件已更新",
   "refreshPreview": "刷新预览",
   "deletePipelineConfirm": "确定删除以下流水线吗？",
+  "deleteTheNumberOfPipelineConfirm": "确定删除以下 {0} 条流水线吗？",
   "deletePipelineConfirmDesc": "流水线删除后，可在回收站中找回",
   "patchAddTo": "批量添加至",
   "patchDelete": "批量删除",

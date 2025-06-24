@@ -1315,6 +1315,7 @@
   "filterChanged": "Grouping conditions have been updated",
   "refreshPreview": "Refresh Preview",
   "deletePipelineConfirm": "Confirm to delete the following pipeline?",
+  "deleteTheNumberOfPipelineConfirm": "Are you sure you want to delete the following {0} pipelines?",
   "deletePipelineConfirmDesc": "After pipeline is deleted, it can be retrieved in the recycle bin",
   "patchAddTo": "Batch Add to",
   "patchDelete": "Batch Delete",

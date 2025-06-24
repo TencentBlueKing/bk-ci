@@ -41,6 +41,7 @@
             <div class="pipeline-list-main-header-right-area">
                 <pipeline-searcher
                     v-model="filters"
+                    :is-archive-view="isArchiveView"
                 />
             </div>
         </header>
