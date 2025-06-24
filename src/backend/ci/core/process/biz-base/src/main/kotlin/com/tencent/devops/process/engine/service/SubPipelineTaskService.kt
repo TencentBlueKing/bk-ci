@@ -1,6 +1,7 @@
 package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
@@ -12,6 +13,7 @@ import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
@@ -256,13 +258,16 @@ class SubPipelineTaskService @Autowired constructor(
                 return@forEach
             }
             // 分支版本的流水线插件无需记录
-            if (
-                    !releasedBranchVersion(
-                        projectId = subPipelineTaskParam.projectId,
-                        pipelineId = subPipelineTaskParam.pipelineId,
-                        branch = subPipelineTaskParam.branch
-                    )
-            ) return@forEach
+            val branchName = subPipelineTaskParam.branch
+            if (!branchName.isNullOrBlank()) {
+                // 分支版本不存在则报错
+                getBranchVersionResource(
+                    projectId = subPipelineTaskParam.projectId,
+                    pipelineId = subPipelineTaskParam.pipelineId,
+                    branchName = branchName
+                )
+                return@forEach
+            }
             validRefList.add(
                 SubPipelineRef(
                     projectId = it.projectId,
@@ -362,22 +367,18 @@ class SubPipelineTaskService @Autowired constructor(
         return elementEnable && supportElement
     }
 
-    /**
-     * 是否为最新主干版本
-     */
-    private fun releasedBranchVersion(projectId: String, pipelineId: String, branch: String?): Boolean {
-        return if (!branch.isNullOrBlank()) {
-            // 保存草稿时，分支版本不校验
-            pipelineYamlVersionDao.getPipelineYamlVersion(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                ref = branch
-            )?.released ?: false
-        } else {
-            true
-        }
-    }
+    fun getBranchVersionResource(
+        projectId: String,
+        pipelineId: String,
+        branchName: String
+    ) = pipelineRepositoryService.getBranchVersionResource(
+        projectId = projectId,
+        pipelineId = pipelineId,
+        branchName = branchName
+    ) ?: throw ErrorCodeException(
+        errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH,
+        params = arrayOf(branchName)
+    )
 
     companion object {
         val logger = LoggerFactory.getLogger(SubPipelineTaskService::class.java)

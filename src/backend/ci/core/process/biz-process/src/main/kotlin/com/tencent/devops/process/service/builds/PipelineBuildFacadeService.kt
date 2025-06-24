@@ -2745,7 +2745,8 @@ class PipelineBuildFacadeService(
         includeNotRequired: Boolean?,
         userId: String,
         version: Int?,
-        isTemplate: Boolean?
+        isTemplate: Boolean?,
+        subModel: Model? = null
     ): List<PipelineBuildParamFormProp> {
         val model = if (isTemplate == true) {
             // 模板触发器
@@ -2762,8 +2763,8 @@ class PipelineBuildFacadeService(
                 )
             }
         } else {
-            pipelineRepositoryService.getBuildTriggerInfo(
-                projectId, pipelineId, version
+            subModel ?: pipelineRepositoryService.getBuildTriggerInfo(
+                projectId, pipelineId, null
             ).second.model
         }
         val triggerContainer = model.getTriggerContainer()

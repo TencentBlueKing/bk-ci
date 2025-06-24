@@ -180,7 +180,7 @@ class SubPipelineCheckService @Autowired constructor(
         val rootPipelineKey = "$projectId|$pipelineId"
         subPipelineElementMap.filter {
             // 分支版本子流水线不校验递归引用
-            releasedBranchVersion(
+            checkBranchVersion(
                 projectId = it.key.projectId,
                 pipelineId = it.key.pipelineId,
                 branch = it.key.branch
@@ -373,21 +373,15 @@ class SubPipelineCheckService @Autowired constructor(
         return stringBuilder.toString()
     }
 
-    private fun releasedBranchVersion(projectId: String, pipelineId: String, branch: String?): Boolean {
-        return if (!branch.isNullOrBlank()) {
-            // 保存草稿时，分支版本不校验
-            try {
-                pipelineYamlService.getPipelineYamlVersionInfo(projectId, pipelineId, branch).released
-            } catch (ignored: Exception) {
-                logger.warn(
-                    "check released branch version failed|" +
-                            "projectId:$projectId|pipelineId:$pipelineId|branch:$branch", ignored
-                )
-                false
-            }
-        } else {
-            true
-        }
+    private fun checkBranchVersion(
+        projectId: String,
+        pipelineId: String,
+        branch: String?
+    ) = if (!branch.isNullOrBlank()) {
+        subPipelineTaskService.getBranchVersionResource(projectId, pipelineId, branch)
+        true
+    } else {
+        true
     }
 
     companion object {

@@ -29,7 +29,6 @@
 package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
-import com.tencent.devops.model.process.tables.TPipelineYamlInfo
 import com.tencent.devops.model.process.tables.TPipelineYamlVersion
 import com.tencent.devops.model.process.tables.records.TPipelineYamlVersionRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVersion
@@ -206,54 +205,5 @@ class PipelineYamlVersionDao {
                 version = version
             )
         }
-    }
-
-    fun getPipelineYamlVersion(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        ref: String
-    ): PipelineYamlVersion? {
-        val t1 = TPipelineYamlInfo.T_PIPELINE_YAML_INFO
-        val t2 = TPipelineYamlVersion.T_PIPELINE_YAML_VERSION
-        return dslContext.select(
-            t1.PROJECT_ID,
-            t1.PIPELINE_ID,
-            t1.REPO_HASH_ID,
-            t1.FILE_PATH,
-            t1.DEFAULT_BRANCH,
-            t2.REF,
-            t2.BLOB_ID,
-            t2.COMMIT_ID,
-            t2.VERSION
-        )
-                .from(t1)
-                .leftJoin(t2)
-                .on(
-                    t1.PROJECT_ID.eq(t2.PROJECT_ID)
-                            .and(t1.REPO_HASH_ID.eq(t2.REPO_HASH_ID))
-                            .and(t1.FILE_PATH.eq(t2.FILE_PATH))
-                ).where(
-                    t1.PROJECT_ID.eq(projectId)
-                            .and(t1.PIPELINE_ID.eq(pipelineId))
-                            .and(t2.BRANCH_ACTION.eq(BranchVersionAction.ACTIVE.name))
-                            .and(t2.REF.eq(ref))
-                )
-                .orderBy(t2.VERSION.desc())
-                .limit(1)
-                .fetchOne()
-                ?.let {
-                    PipelineYamlVersion(
-                        projectId = it.value1(),
-                        pipelineId = it.value2(),
-                        repoHashId = it.value3(),
-                        filePath = it.value4(),
-                        ref = it.value6(),
-                        released = it.value5() == it.value6(),
-                        blobId = it.value7(),
-                        commitId = it.value8(),
-                        version = it.value9()
-                    )
-                }
     }
 }
