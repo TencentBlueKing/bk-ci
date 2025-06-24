@@ -225,9 +225,10 @@ class UserWorkspaceResourceImpl @Autowired constructor(
 
     override fun projectAccessDevicePermissions(
         userId: String,
-        macAddress: String
+        macAddress: String,
+        projectId: String?
     ): Result<Map<String, ProjectAccessDevicePermissionsResp>> {
-        return Result(workspaceService.projectAccessDevicePermissions(userId, macAddress))
+        return Result(workspaceService.projectAccessDevicePermissions(userId, macAddress, projectId))
     }
 
     override fun checkMoa2fa(userId: String, workspaceName: String): Result<Boolean> {
