@@ -123,7 +123,7 @@
                 return this.$route.params.projectId
             },
             unableToArchivePipelines () {
-                return this.pipelineList.filter(pipeline => pipeline.latestBuildStatus === statusAlias.RUNNING || pipeline.onlyDraftVersion)
+                return this.pipelineList.filter(pipeline => pipeline.latestBuildStatus === statusAlias.RUNNING || pipeline.onlyDraftVersion || pipeline.runningBuildCount > 0)
             }
         },
         methods: {
@@ -240,7 +240,6 @@
   }
   .active-tip-block {
     width: 100%;
-    height: 68px;
     background: #F5F6FA;
     border-radius: 2px;
     padding: 12px 16px;
