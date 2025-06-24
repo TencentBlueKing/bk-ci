@@ -39,4 +39,6 @@ dependencies {
     api("org.springframework.cloud:spring-cloud-stream")
     api("org.springframework.cloud:spring-cloud-starter-stream-kafka")
     api("org.springframework.cloud:spring-cloud-starter-stream-rabbit")
+
+    implementation("org.springframework.amqp:spring-rabbit-stream")
 }
