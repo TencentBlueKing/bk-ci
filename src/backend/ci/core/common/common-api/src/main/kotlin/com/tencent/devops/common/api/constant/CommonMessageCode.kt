@@ -262,6 +262,9 @@ object CommonMessageCode {
     const val BK_USER_REQUESTS_THE_PROJECT = "bkUserRequestsTheProject"
     const val BK_ENV_NOT_YET_SUPPORTED = "bkEnvNotYetSupported" // 尚未支持 {0} {1}，请联系 管理员 添加对应版本
 
+    // 插件{0}命名空间已废弃，请去掉后再使用code相关功能
+    const val BK_ELEMENT_NAMESPACE_NOT_SUPPORT = "bkElementNamespaceNotSupport"
+
     const val BK_BUILD_ENV_TYPE = "BUILD_ENV_TYPE_" // 构建环境-
     const val BK_BUILD_ENV_TYPE_BUILDLESS = "BUILD_ENV_TYPE_BUILDLESS" // 无编译环境
     const val BK_BUILD_ENV_TYPE_BUILD_TRIGGERS = "BUILD_ENV_TYPE_BUILD_TRIGGER" // 构建触发
