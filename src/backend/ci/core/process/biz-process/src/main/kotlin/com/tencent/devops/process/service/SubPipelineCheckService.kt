@@ -379,7 +379,7 @@ class SubPipelineCheckService @Autowired constructor(
         branch: String?
     ) = if (!branch.isNullOrBlank()) {
         subPipelineTaskService.getBranchVersionResource(projectId, pipelineId, branch)
-        true
+        false
     } else {
         true
     }

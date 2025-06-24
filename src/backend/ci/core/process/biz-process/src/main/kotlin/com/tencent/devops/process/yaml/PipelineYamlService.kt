@@ -629,20 +629,4 @@ class PipelineYamlService(
             branch = branch
         )
     }
-
-    fun getPipelineYamlVersionInfo(
-        projectId: String,
-        pipelineId: String,
-        branch: String
-    ): PipelineYamlVersion {
-        return pipelineYamlVersionDao.getPipelineYamlVersion(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            ref = branch
-        ) ?: throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH,
-            params = arrayOf(branch)
-        )
-    }
 }
