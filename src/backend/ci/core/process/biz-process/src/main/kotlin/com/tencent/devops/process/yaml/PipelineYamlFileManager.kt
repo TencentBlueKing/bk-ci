@@ -27,8 +27,12 @@
 
 package com.tencent.devops.process.yaml
 
+import com.tencent.devops.common.api.constant.HTTP_401
+import com.tencent.devops.common.api.constant.HTTP_403
+import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
@@ -304,17 +308,6 @@ class PipelineYamlFileManager @Autowired constructor(
                 errorCode = ProcessMessageCode.GIT_NOT_FOUND,
                 params = arrayOf(repoHashId)
             )
-            val authRepository = AuthRepository(repository)
-            val serverRepository = client.get(ServiceScmRepositoryApiResource::class).getServerRepository(
-                projectId = projectId,
-                authRepository = authRepository
-            ).data
-            if (serverRepository !is GitScmServerRepository) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC
-                )
-            }
-
             val lock = PipelineYamlTriggerLock(
                 redisOperation = redisOperation,
                 projectId = projectId,
@@ -323,6 +316,16 @@ class PipelineYamlFileManager @Autowired constructor(
                 expiredTimeInSeconds = 180
             )
             return try {
+                val authRepository = AuthRepository(repository)
+                val serverRepository = client.get(ServiceScmRepositoryApiResource::class).getServerRepository(
+                    projectId = projectId,
+                    authRepository = authRepository
+                ).data
+                if (serverRepository !is GitScmServerRepository) {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC
+                    )
+                }
                 lock.lock()
                 val defaultBranch = serverRepository.defaultBranch
                 val ref = when {
@@ -371,6 +374,20 @@ class PipelineYamlFileManager @Autowired constructor(
                     branch = ref,
                     mrUrl = pullRequest?.link
                 )
+            } catch (ignored: RemoteServiceException) {
+                throw when (ignored.errorCode) {
+                    // 目标仓库被删除
+                    HTTP_404 -> ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION,
+                        params = arrayOf(repository.projectName)
+                    )
+                    HTTP_401, HTTP_403 -> ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_USER_NO_PUSH_PERMISSION,
+                        params = arrayOf(repository.userName, repository.projectName)
+                    )
+
+                    else -> ignored
+                }
             } catch (ignored: Exception) {
                 logger.error(
                     "[PAC_PIPELINE]|Failed to release yaml pipeline|projectId:$projectId|pipelineId:$pipelineId|" +
