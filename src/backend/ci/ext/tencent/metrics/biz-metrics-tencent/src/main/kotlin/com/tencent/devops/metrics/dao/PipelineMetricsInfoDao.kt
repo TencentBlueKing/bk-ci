@@ -27,6 +27,7 @@
 
 package com.tencent.devops.metrics.dao
 
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.metrics.tables.TEplusPipelineMetricsDataDaily
 import com.tencent.devops.model.metrics.tables.TEplusPipelineMetricsWhiteList
 import com.tencent.devops.model.metrics.tables.records.TEplusPipelineMetricsDataDailyRecord
@@ -41,9 +42,6 @@ import org.springframework.stereotype.Repository
 @Repository
 class PipelineMetricsInfoDao {
 
-    private val table = TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY
-    private val fields = table.fields().toList()
-
     // 获取当前统计时间（凌晨0点）
     private val currentStatisticsTime: LocalDateTime
         get() = LocalDate.now().atStartOfDay()
@@ -52,10 +50,13 @@ class PipelineMetricsInfoDao {
         dslContext: DSLContext,
         projectId: String
     ): Result<TEplusPipelineMetricsDataDailyRecord> {
-        return dslContext.selectFrom(table)
-            .where(table.STATISTICS_TIME.eq(currentStatisticsTime))
-            .and(table.PROJECT_ID.eq(projectId))
-            .fetch()
+        with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
+            return dslContext.selectFrom(this)
+                .where(STATISTICS_TIME.eq(currentStatisticsTime))
+                .and(PROJECT_ID.eq(projectId))
+                .fetch()
+        }
+
     }
 
     // 统一的批量保存方法
@@ -65,7 +66,7 @@ class PipelineMetricsInfoDao {
         updateField: Field<Boolean>
     ) {
         if (records.isEmpty()) return
-
+        val table = TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY
         // 分批次处理，每批1000条
         records.chunked(1000).forEach { batch ->
             // 为每个批次创建单独的插入操作
@@ -83,17 +84,27 @@ class PipelineMetricsInfoDao {
 
     fun batchSaveHighFailureRate30dData(
         dslContext: DSLContext, records: List<TEplusPipelineMetricsDataDailyRecord>
-    ) = batchSaveData(dslContext, records, table.FAILURE_RATE_30D)
+    ) {
+        with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
+            batchSaveData(dslContext, records, FAILURE_RATE_30D)
+        }
+    }
 
     fun batchSaveConsecutiveFailures90dData(
         dslContext: DSLContext, records: List<TEplusPipelineMetricsDataDailyRecord>
-    ) = batchSaveData(dslContext, records, table.CONSECUTIVE_FAILURES_90D)
+    ) {
+        with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
+            batchSaveData(dslContext, records, CONSECUTIVE_FAILURES_90D)
+        }
+    }
 
     fun batchSaveScheduledTriggerNoCodeChangeData(
         dslContext: DSLContext, records: List<TEplusPipelineMetricsDataDailyRecord>
-    ) = batchSaveData(
-        dslContext, records, table.SCHEDULED_TRIGGER_NO_CODE_CHANGE
-    )
+    ) {
+        with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
+            batchSaveData(dslContext, records, SCHEDULED_TRIGGER_NO_CODE_CHANGE)
+        }
+    }
 
     // 统一的计数方法（排除白名单流水线）
     private fun countByField(
@@ -101,7 +112,8 @@ class PipelineMetricsInfoDao {
         projectId: String,
         field: Field<Boolean>
     ): Int {
-        with(TEplusPipelineMetricsWhiteList.T_EPLUS_PIPELINE_METRICS_WHITE_LIST.`as`("w")) {
+        val table = TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY
+        with(TEplusPipelineMetricsWhiteList.T_EPLUS_PIPELINE_METRICS_WHITE_LIST) {
             return dslContext.selectCount()
                 .from(table)
                 .leftJoin(this)
@@ -117,14 +129,23 @@ class PipelineMetricsInfoDao {
         }
     }
 
-    fun countHighFailureRate30d(dslContext: DSLContext, projectId: String) =
-        countByField(dslContext, projectId, table.FAILURE_RATE_30D)
+    fun countHighFailureRate30d(dslContext: DSLContext, projectId: String) {
+        with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
+            countByField(dslContext, projectId, FAILURE_RATE_30D)
+        }
+    }
 
-    fun countConsecutiveFailures90d(dslContext: DSLContext, projectId: String) =
-        countByField(dslContext, projectId, table.CONSECUTIVE_FAILURES_90D)
+    fun countConsecutiveFailures90d(dslContext: DSLContext, projectId: String) {
+        with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
+            countByField(dslContext, projectId, CONSECUTIVE_FAILURES_90D)
+        }
+    }
 
-    fun countScheduledTriggerNoCodeChange(dslContext: DSLContext, projectId: String) =
-        countByField(dslContext, projectId, table.SCHEDULED_TRIGGER_NO_CODE_CHANGE)
+    fun countScheduledTriggerNoCodeChange(dslContext: DSLContext, projectId: String) {
+        with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
+            countByField(dslContext, projectId, SCHEDULED_TRIGGER_NO_CODE_CHANGE)
+        }
+    }
 
     fun listInvalidPipelineProjectIds(dslContext: DSLContext, limit: Int, offset: Int): List<String> {
         with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
@@ -171,10 +192,37 @@ class PipelineMetricsInfoDao {
      * @param dslContext 数据库上下文
      * @return 删除的记录数
      */
-    fun cleanTodayData(dslContext: DSLContext){
-        dslContext.deleteFrom(table)
-            .where(table.STATISTICS_TIME.eq(currentStatisticsTime))
-            .execute()
+    fun cleanTodayData(dslContext: DSLContext) {
+        with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
+            dslContext.deleteFrom(this)
+                .where(STATISTICS_TIME.eq(currentStatisticsTime))
+                .execute()
+        }
+    }
+
+    fun addAutoDisableWhitelist(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineIds: List<String>
+    ) {
+        if (pipelineIds.isEmpty()) return
+        val queries = pipelineIds.map { pipelineId ->
+            with(TEplusPipelineMetricsWhiteList.T_EPLUS_PIPELINE_METRICS_WHITE_LIST) {
+                dslContext.insertInto(
+                    this,
+                    ID,
+                    PROJECT_ID,
+                    PIPELINE_ID,
+                    CREATE_TIME
+                ).values(
+                    UUIDUtil.generate(),
+                    projectId,
+                    pipelineId,
+                    LocalDateTime.now()
+                )
+            }
+        }
+        dslContext.batch(queries).execute()
     }
 
     /**
@@ -184,36 +232,16 @@ class PipelineMetricsInfoDao {
      * @param deleteFlag 是否删除
      * @return 更新记录数
      */
-    fun updateAutoDisableWhitelist(
+    fun removeAutoDisableWhitelist(
         dslContext: DSLContext,
         projectId: String,
-        pipelineIds: List<String>,
-        deleteFlag: Boolean
+        pipelineIds: List<String>
     ) {
-        if (deleteFlag) {
-            // 删除白名单记录
-            with(TEplusPipelineMetricsWhiteList.T_EPLUS_PIPELINE_METRICS_WHITE_LIST) {
-                dslContext.deleteFrom(this)
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(PIPELINE_ID.`in`(pipelineIds))
-                    .execute()
-            }
-        } else {
-            // 插入白名单记录
-            // 批量插入白名单记录
-            if (pipelineIds.isEmpty()) return
-
-            val now = LocalDateTime.now()
-            val queries = pipelineIds.map { pipelineId ->
-                with(TEplusPipelineMetricsWhiteList.T_EPLUS_PIPELINE_METRICS_WHITE_LIST) {
-                    dslContext.insertInto(this)
-                        .set(PROJECT_ID, projectId)
-                        .set(PIPELINE_ID, pipelineId)
-                        .set(CREATE_TIME, now)
-                        .onDuplicateKeyIgnore()
-                }
-            }
-            dslContext.batch(queries).execute()
+        with(TEplusPipelineMetricsWhiteList.T_EPLUS_PIPELINE_METRICS_WHITE_LIST) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.`in`(pipelineIds))
+                .execute()
         }
     }
 

@@ -116,12 +116,15 @@ class TxPipelineMetricssService@Autowired constructor(
             if (pipelineIds.isEmpty()) {
                 return false
             }
-            pipelineMetricsInfoDao.updateAutoDisableWhitelist(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineIds = pipelineIds,
-                deleteFlag = !isAdd
-            )
+            if(isAdd) {
+                pipelineMetricsInfoDao.addAutoDisableWhitelist(dslContext, projectId, pipelineIds)
+            } else {
+                pipelineMetricsInfoDao.removeAutoDisableWhitelist(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineIds = pipelineIds
+                )
+            }
         } catch (e: Exception) {
             logger.warn("Failed to update whitelist for  project $projectId", e)
             throw e
