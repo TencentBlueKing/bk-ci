@@ -224,7 +224,7 @@ object PipelineTransferAspectLoader {
             }
         )
 
-        //feat: PAC Code 检测流水线是否使用了命名空间 #11879
+        // feat: PAC Code 检测流水线是否使用了命名空间 #11879
         aspects.add(
             object : IPipelineTransferAspectElement {
                 override fun before(jp: PipelineTransferJoinPoint): Any? {
