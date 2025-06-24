@@ -36,5 +36,6 @@ data class AuthGroupConfigAction(
     val resourceType: String,
     val groupCode: String,
     val groupName: String,
-    val actions: List<String>
+    val actions: List<String>,
+    val desc: String? = null
 )

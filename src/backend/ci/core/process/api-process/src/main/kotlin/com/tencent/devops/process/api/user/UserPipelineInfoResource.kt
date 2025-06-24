@@ -109,7 +109,10 @@ interface UserPipelineInfoResource {
         projectId: String,
         @Parameter(description = "搜索名称")
         @QueryParam("pipelineName")
-        pipelineName: String?
+        pipelineName: String?,
+        @Parameter(description = "归档库标识", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<List<PipelineIdAndName>>
 
     @Operation(summary = "根据流水线ID搜索")

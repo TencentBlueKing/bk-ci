@@ -54,7 +54,8 @@
                     <span class="input-seg">=</span>
                     <bk-input
                         v-model="parameter.value"
-                        :type="parameter.type === 'textarea' ? 'textarea' : 'text'"
+                        :type="getInputType(parameter.type)"
+                        :precision="0"
                         :class="['input-com', {
                             'param-not-key-input': parameter.disabled
                         }]"
@@ -74,9 +75,9 @@
 </template>
 
 <script>
-    import mixins from '../mixins'
     import { isObject } from '@/utils/util'
     import { mapState } from 'vuex'
+    import mixins from '../mixins'
     export default {
         name: 'sub-parameter',
         mixins: [mixins],
@@ -195,6 +196,10 @@
             },
 
             getParametersList () {
+                if (this.param.paramType === 'list' && Array.isArray(this.param.list)) {
+                    this.subParamsKeyList = this.param.list
+                    return
+                }
                 let [url] = this.generateReqUrl(this.param.url, this.paramValues)
 
                 if (!url) return
@@ -213,6 +218,14 @@
                 this.$ajax.get(url).then((res) => {
                     this.subParamsKeyList = res.data?.properties || res.data || []
                 }).catch(e => this.$showTips({ message: e.message, theme: 'error' })).finally(() => (this.isLoading = false))
+            },
+            getInputType (type) {
+                const typeMap = {
+                    textarea: 'textarea',
+                    long: 'number'
+                }
+
+                return typeMap[type] || 'text'
             }
         }
     }

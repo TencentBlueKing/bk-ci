@@ -303,7 +303,8 @@ class PipelineWebhookService @Autowired constructor(
     fun getTriggerPipelines(
         name: String,
         repositoryType: ScmType,
-        yamlPipelineIds: List<String>?
+        yamlPipelineIds: List<String>?,
+        compatibilityRepoNames: Set<String>
     ): List<WebhookTriggerPipeline> {
         val pipelineSet = mutableSetOf<WebhookTriggerPipeline>()
         // 需要精确匹配的代码库类型
@@ -315,19 +316,22 @@ class PipelineWebhookService @Autowired constructor(
         ) && name != getProjectName(name)
         // 精准匹配结果
         val exactResults = if (needExactMatch) {
-            pipelineWebhookDao.getByProjectNameAndType(
+            pipelineWebhookDao.getByProjectNamesAndType(
                 dslContext = dslContext,
-                projectName = name,
+                projectNames = setOf(name),
                 repositoryType = repositoryType.name,
                 yamlPipelineIds = yamlPipelineIds
             )?.toSet() ?: setOf()
         } else {
             setOf()
         }
+        // 模糊匹配和兼容仓库名一起查
+        val repoNames = compatibilityRepoNames.map { getProjectName(it) }.toMutableSet()
+        repoNames.add(getProjectName(name))
         // 模糊匹配结果
-        val fuzzyResults = pipelineWebhookDao.getByProjectNameAndType(
+        val fuzzyResults = pipelineWebhookDao.getByProjectNamesAndType(
             dslContext = dslContext,
-            projectName = getProjectName(name),
+            projectNames = repoNames,
             repositoryType = repositoryType.name,
             yamlPipelineIds = yamlPipelineIds
         )?.toSet() ?: setOf()

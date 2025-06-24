@@ -31,10 +31,8 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Page
@@ -46,6 +44,7 @@ import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -54,7 +53,10 @@ import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.TTemplatePipeline
@@ -101,6 +103,8 @@ import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineStatusService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.service.view.PipelineViewService
+import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
+import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
@@ -112,6 +116,7 @@ import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
 import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.quality.api.v2.pojo.response.QualityPipeline
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.Record4
 import org.jooq.Result
@@ -120,7 +125,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
-import jakarta.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -144,7 +148,8 @@ class PipelineListFacadeService @Autowired constructor(
     private val pipelineLabelPipelineDao: PipelineLabelPipelineDao,
     private val pipelineRecentUseService: PipelineRecentUseService,
     private val pipelineListQueryParamService: PipelineListQueryParamService,
-    private val pipelineYamlService: PipelineYamlService
+    private val pipelineYamlService: PipelineYamlService,
+    private val redisOperation: RedisOperation
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -903,22 +908,23 @@ class PipelineListFacadeService @Autowired constructor(
                 AuthPermission.SHARE,
                 AuthPermission.EDIT,
                 AuthPermission.DOWNLOAD,
-                AuthPermission.EXECUTE
+                AuthPermission.EXECUTE,
+                AuthPermission.ARCHIVE
             ),
             pipelineIds = pipelineList.map { it.pipelineId }
         )
         return pipelineList.map { pipeline ->
-            pipeline.copy(
-                permissions = PipelinePermissions(
-                    canManage = permissionToListMap[AuthPermission.MANAGE]?.contains(pipeline.pipelineId) ?: false,
-                    canDelete = permissionToListMap[AuthPermission.DELETE]?.contains(pipeline.pipelineId) ?: false,
-                    canView = permissionToListMap[AuthPermission.VIEW]?.contains(pipeline.pipelineId) ?: false,
-                    canEdit = permissionToListMap[AuthPermission.EDIT]?.contains(pipeline.pipelineId) ?: false,
-                    canExecute = permissionToListMap[AuthPermission.EXECUTE]?.contains(pipeline.pipelineId) ?: false,
-                    canDownload = permissionToListMap[AuthPermission.DOWNLOAD]?.contains(pipeline.pipelineId) ?: false,
-                    canShare = permissionToListMap[AuthPermission.SHARE]?.contains(pipeline.pipelineId) ?: false
-                )
+            val pipelineId = pipeline.pipelineId
+            val limitFlag = redisOperation.isMember(
+                key = BkApiUtil.getApiAccessLimitPipelinesKey(),
+                item = pipelineId
             )
+            val permissions = if (limitFlag) {
+                PipelinePermissions(canManage = false, canView = true)
+            } else {
+                buildPipelinePermissions(permissionToListMap, pipelineId)
+            }
+            pipeline.copy(permissions = permissions)
         }
     }
 
@@ -927,30 +933,45 @@ class PipelineListFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String
     ): PipelinePermissions {
-        val permissionToListMap = pipelinePermissionService.filterPipelines(
-            userId = userId,
-            projectId = projectId,
-            authPermissions = setOf(
-                AuthPermission.MANAGE,
-                AuthPermission.VIEW,
-                AuthPermission.DELETE,
-                AuthPermission.SHARE,
-                AuthPermission.EDIT,
-                AuthPermission.DOWNLOAD,
-                AuthPermission.EXECUTE
-            ),
-            pipelineIds = listOf(pipelineId)
+        val limitFlag = redisOperation.isMember(
+            key = BkApiUtil.getApiAccessLimitPipelinesKey(),
+            item = pipelineId
         )
-        return PipelinePermissions(
-            canManage = permissionToListMap[AuthPermission.MANAGE]?.contains(pipelineId) ?: false,
-            canDelete = permissionToListMap[AuthPermission.DELETE]?.contains(pipelineId) ?: false,
-            canView = permissionToListMap[AuthPermission.VIEW]?.contains(pipelineId) ?: false,
-            canEdit = permissionToListMap[AuthPermission.EDIT]?.contains(pipelineId) ?: false,
-            canExecute = permissionToListMap[AuthPermission.EXECUTE]?.contains(pipelineId) ?: false,
-            canDownload = permissionToListMap[AuthPermission.DOWNLOAD]?.contains(pipelineId) ?: false,
-            canShare = permissionToListMap[AuthPermission.SHARE]?.contains(pipelineId) ?: false
-        )
+        return if (limitFlag) {
+            PipelinePermissions(canManage = false, canView = true)
+        } else {
+            val permissionToListMap = pipelinePermissionService.filterPipelines(
+                userId = userId,
+                projectId = projectId,
+                authPermissions = setOf(
+                    AuthPermission.MANAGE,
+                    AuthPermission.VIEW,
+                    AuthPermission.DELETE,
+                    AuthPermission.SHARE,
+                    AuthPermission.EDIT,
+                    AuthPermission.DOWNLOAD,
+                    AuthPermission.EXECUTE,
+                    AuthPermission.ARCHIVE
+                ),
+                pipelineIds = listOf(pipelineId)
+            )
+            buildPipelinePermissions(permissionToListMap, pipelineId)
+        }
     }
+
+    private fun buildPipelinePermissions(
+        permissionToListMap: Map<AuthPermission, List<String>>,
+        pipelineId: String
+    ) = PipelinePermissions(
+        canManage = permissionToListMap[AuthPermission.MANAGE]?.contains(pipelineId) ?: false,
+        canDelete = permissionToListMap[AuthPermission.DELETE]?.contains(pipelineId) ?: false,
+        canView = permissionToListMap[AuthPermission.VIEW]?.contains(pipelineId) ?: false,
+        canEdit = permissionToListMap[AuthPermission.EDIT]?.contains(pipelineId) ?: false,
+        canExecute = permissionToListMap[AuthPermission.EXECUTE]?.contains(pipelineId) ?: false,
+        canDownload = permissionToListMap[AuthPermission.DOWNLOAD]?.contains(pipelineId) ?: false,
+        canShare = permissionToListMap[AuthPermission.SHARE]?.contains(pipelineId) ?: false,
+        canArchive = permissionToListMap[AuthPermission.ARCHIVE]?.contains(pipelineId) ?: false
+    )
 
     fun getCount(userId: String, projectId: String): PipelineCount {
         val authPipelines = pipelinePermissionService.getResourceByPermission(
@@ -1905,7 +1926,8 @@ class PipelineListFacadeService @Autowired constructor(
         projectId: String,
         pipelineName: String?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        archiveFlag: Boolean? = false
     ): List<PipelineIdAndName> {
         logger.info("searchIdAndName |$projectId|$pipelineName| $page| $pageSize")
         val pageNotNull = page ?: 0
@@ -1913,7 +1935,7 @@ class PipelineListFacadeService @Autowired constructor(
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         val pipelineRecords =
             pipelineInfoDao.searchByProject(
-                dslContext = dslContext,
+                dslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT),
                 pipelineName = pipelineName,
                 projectCode = projectId,
                 limit = sqlLimit.limit,
@@ -1939,32 +1961,22 @@ class PipelineListFacadeService @Autowired constructor(
     fun getPipelineDetail(
         userId: String,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        archiveFlag: Boolean? = false
     ): PipelineDetailInfo? {
-        val permission = AuthPermission.VIEW
-        if (!pipelinePermissionService.checkPipelinePermission(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                permission = permission
-            )
-        ) {
-            throw PermissionForbiddenException(
-                MessageUtil.getMessageByLocale(
-                    CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                    I18nUtil.getLanguage(userId),
-                    arrayOf(
-                        userId,
-                        projectId,
-                        permission.getI18n(I18nUtil.getLanguage(userId)),
-                        pipelineId
-                    )
-                )
-            )
-        }
+        val userPipelinePermissionCheckStrategy =
+            UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+        UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.VIEW
+        )
+        val finalDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
             projectId = projectId,
-            pipelineId = pipelineId
+            pipelineId = pipelineId,
+            queryDslContext = finalDslContext
         ) ?: return null
         if (pipelineInfo.projectId != projectId) {
             throw ParamBlankException(
@@ -1976,20 +1988,27 @@ class PipelineListFacadeService @Autowired constructor(
             )
         }
         // 获取view信息
-        val pipelineViewNames =
-            pipelineViewGroupService.getViewNameMap(projectId, mutableSetOf(pipelineId)).get(pipelineId)
-        val hasEditPermission = pipelinePermissionService.checkPipelinePermission(
-            userId = userId,
+        val pipelineViewNames = pipelineViewGroupService.getViewNameMap(
             projectId = projectId,
-            pipelineId = pipelineId,
-            permission = AuthPermission.EDIT
-        )
-        val templatePipelineInfo = templatePipelineDao.get(dslContext, projectId, pipelineId)
+            pipelineIds = mutableSetOf(pipelineId),
+            queryDslContext = finalDslContext
+        )[pipelineId]
+        val hasEditPermission = if (archiveFlag != true) {
+            pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.EDIT
+            )
+        } else {
+            false
+        }
+        val templatePipelineInfo = templatePipelineDao.get(finalDslContext, projectId, pipelineId)
         val templateId = templatePipelineInfo?.templateId
         val templateVersion = templatePipelineInfo?.version
         val instanceFromTemplate = templateId != null
         val favorInfos = pipelineFavorDao.listByPipelineId(
-            dslContext = dslContext,
+            dslContext = finalDslContext,
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId
