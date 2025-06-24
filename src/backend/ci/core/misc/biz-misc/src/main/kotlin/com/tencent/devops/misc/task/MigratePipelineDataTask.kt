@@ -415,23 +415,6 @@ class MigratePipelineDataTask constructor(
                     )
                 )
             }
-
-            // 统计未成功完成的STAGE_SUCCESS状态数量
-            val unCompletedStageSuccessCount = processDao.countUnCompletedStageSuccess(
-                dslContext = transactionContext,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )
-
-            // 存在未成功完成的STAGE_SUCCESS状态构建时禁止迁移
-            if (unCompletedStageSuccessCount > 0) {
-                throw ErrorCodeException(
-                    errorCode = MiscMessageCode.ERROR_MIGRATING_PIPELINE_STATUS_INVALID,
-                    defaultMessage = I18nUtil.getCodeLanMessage(
-                        messageCode = MiscMessageCode.ERROR_MIGRATING_PIPELINE_STATUS_INVALID
-                    )
-                )
-            }
         }
     }
 
