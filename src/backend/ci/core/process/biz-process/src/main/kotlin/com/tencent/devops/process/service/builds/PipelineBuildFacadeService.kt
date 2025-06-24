@@ -51,6 +51,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -2743,12 +2744,28 @@ class PipelineBuildFacadeService(
         includeConst: Boolean?,
         includeNotRequired: Boolean?,
         userId: String,
-        version: Int?
+        version: Int?,
+        isTemplate: Boolean?
     ): List<PipelineBuildParamFormProp> {
-        val (pipeline, resource, debug) = pipelineRepositoryService.getBuildTriggerInfo(
-            projectId, pipelineId, version
-        )
-        val model = resource.model
+        val model = if (isTemplate == true) {
+            // 模板触发器
+            val templateModelStr = pipelineRepositoryService.getTemplateVersionRecord(
+                templateId = pipelineId,
+                version = version?.toLong()
+            ).template
+            try {
+                JsonUtil.to(templateModelStr, Model::class.java)
+            } catch (ignored: Exception) {
+                logger.error("parse process($pipelineId) model fail", ignored)
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
+                )
+            }
+        } else {
+            pipelineRepositoryService.getBuildTriggerInfo(
+                projectId, pipelineId, version
+            ).second.model
+        }
         val triggerContainer = model.getTriggerContainer()
         val properties = getBuildManualParams(
             projectId = projectId,
