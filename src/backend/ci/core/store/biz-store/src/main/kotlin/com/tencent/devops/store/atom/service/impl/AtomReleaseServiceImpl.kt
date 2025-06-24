@@ -197,7 +197,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     @Value("\${store.defaultAtomErrorCodePrefix:8}")
     private lateinit var defaultAtomErrorCodePrefix: String
 
-    @Value("\${store.defaultAtomPublisherReviewer}")
+    @Value("\${store.defaultAtomPublisherReviewer:#{null}}")
     private val defaultAtomPublisherReviewer: String? = null
 
 
