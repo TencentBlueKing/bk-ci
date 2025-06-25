@@ -56,9 +56,10 @@ import org.springframework.stereotype.Service
 
 @Primary
 @Service
-class TxImageReleaseService @Autowired constructor(
-    private val txStoreBelongDeptService: TxStoreBelongDeptService
-) : ImageReleaseService() {
+class TxImageReleaseService @Autowired constructor() : ImageReleaseService() {
+
+    @Autowired
+    private lateinit var txStoreBelongDeptService: TxStoreBelongDeptService
 
     override fun getPassTestStatus(isNormalUpgrade: Boolean): Byte {
         return if (isNormalUpgrade) {
