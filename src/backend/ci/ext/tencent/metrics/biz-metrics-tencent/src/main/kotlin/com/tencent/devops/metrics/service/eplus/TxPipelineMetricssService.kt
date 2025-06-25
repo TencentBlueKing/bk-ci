@@ -125,9 +125,9 @@ class TxPipelineMetricssService@Autowired constructor(
                     pipelineIds = pipelineIds
                 )
             }
-        } catch (e: Exception) {
-            logger.warn("Failed to update whitelist for  project $projectId", e)
-            throw e
+        } catch (ignored: Throwable) {
+            logger.warn("Failed to update whitelist for  project $projectId", ignored.message)
+            return false
         }
         return true
     }

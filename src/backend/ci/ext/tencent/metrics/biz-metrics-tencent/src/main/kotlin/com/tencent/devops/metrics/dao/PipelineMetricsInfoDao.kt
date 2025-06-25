@@ -129,21 +129,21 @@ class PipelineMetricsInfoDao {
         }
     }
 
-    fun countHighFailureRate30d(dslContext: DSLContext, projectId: String) {
-        with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
-            countByField(dslContext, projectId, FAILURE_RATE_30D)
+    fun countHighFailureRate30d(dslContext: DSLContext, projectId: String): Any {
+        return with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
+            return countByField(dslContext, projectId, FAILURE_RATE_30D)
         }
     }
 
-    fun countConsecutiveFailures90d(dslContext: DSLContext, projectId: String) {
+    fun countConsecutiveFailures90d(dslContext: DSLContext, projectId: String): Int {
         with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
-            countByField(dslContext, projectId, CONSECUTIVE_FAILURES_90D)
+            return countByField(dslContext, projectId, CONSECUTIVE_FAILURES_90D)
         }
     }
 
-    fun countScheduledTriggerNoCodeChange(dslContext: DSLContext, projectId: String) {
+    fun countScheduledTriggerNoCodeChange(dslContext: DSLContext, projectId: String): Int {
         with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
-            countByField(dslContext, projectId, SCHEDULED_TRIGGER_NO_CODE_CHANGE)
+            return countByField(dslContext, projectId, SCHEDULED_TRIGGER_NO_CODE_CHANGE)
         }
     }
 
