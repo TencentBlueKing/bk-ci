@@ -294,24 +294,6 @@
                     }
                 })
             },
-            renderParamList () {
-                // 将参数列表按照分组进行分组,未分组的参数放到一个分组里
-                const key = this.$t('notGrouped')
-                const listMap = this.paramList.reduce((acc, item) => {
-                    const categoryKey = item.category || key
-                    if (!acc[categoryKey]) {
-                        acc[categoryKey] = []
-                    }
-                    acc[categoryKey].push(item)
-                    return acc
-                }, {})
-
-                if (!(key in listMap)) {
-                    return listMap
-                }
-                const { [key]: value, ...rest } = listMap
-                return { [key]: value, ...rest }
-            },
             paramsListMap () {
                 return getParamsGroupByLabel(this.paramList)?.listMap ?? {}
             },
