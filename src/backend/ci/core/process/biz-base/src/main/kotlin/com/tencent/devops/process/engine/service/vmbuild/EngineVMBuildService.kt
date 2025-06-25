@@ -997,7 +997,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     pipelineTaskService.isRetryWhenFail(
                         projectId = buildInfo.projectId,
                         taskId = result.taskId,
-                        buildId = buildId
+                        buildId = buildId,
+                        failedMsg = result.message
                     ) -> {
                         // 将当前重试 task id 做记录
                         pipelineTaskService.taskRetryRecordSet(

@@ -51,6 +51,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -60,6 +61,8 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
+import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
@@ -137,6 +140,10 @@ import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.util.TaskUtils
+import com.tencent.devops.process.utils.BUILD_NO
+import com.tencent.devops.process.utils.FIXVERSION
+import com.tencent.devops.process.utils.MAJORVERSION
+import com.tencent.devops.process.utils.MINORVERSION
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
@@ -146,10 +153,10 @@ import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.UriBuilder
+import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 /**
  *
@@ -186,12 +193,10 @@ class PipelineBuildFacadeService(
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
     private var cancelIntervalLimitTime: Int = 60 // 取消间隔时间为60秒
 
-    @Value("\${pipeline.build.retry.limit_days:28}")
-    private var retryLimitDays: Int = 28
-
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildFacadeService::class.java)
         private const val RETRY_THIRD_AGENT_ENV = "RETRY_THIRD_AGENT_ENV"
+        private val VERSION_PARAMS = listOf(MAJORVERSION, MINORVERSION, FIXVERSION)
     }
 
     private fun filterParams(
@@ -802,15 +807,21 @@ class PipelineBuildFacadeService(
         }
         logger.info("[$buildId]|buildManualReview|taskId=$trueElementId|userId=$userId|params=$params")
 
-        pipelineRuntimeService.manualDealReview(
-            taskId = trueElementId,
-            userId = userId,
-            params = params.apply {
-                this.projectId = projectId
-                this.pipelineId = pipelineId
-                this.buildId = buildId
-            }
-        )
+        if (!pipelineRuntimeService.manualDealReview(
+                taskId = trueElementId,
+                userId = userId,
+                params = params.apply {
+                    this.projectId = projectId
+                    this.pipelineId = pipelineId
+                    this.buildId = buildId
+                }
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TASK_REVIEW_NOT_FOUND_OR_NOT_RUNNING,
+                params = arrayOf(trueElementId)
+            )
+        }
         if (params.status == ManualReviewAction.ABORT) {
             buildRecordService.updateBuildCancelUser(
                 projectId = projectId,
@@ -931,6 +942,14 @@ class PipelineBuildFacadeService(
             )
         }
         PipelineUtils.checkStageReviewParam(reviewRequest?.reviewParams)
+        if (!reviewRequest?.reviewParams.isNullOrEmpty()) {
+            reviewParamsCheck(
+                projectId = projectId,
+                buildId = buildId,
+                reviewRequest = reviewRequest!!,
+                pipelineId = pipelineId
+            )
+        }
 
         val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
             ?: throw ErrorCodeException(
@@ -990,6 +1009,31 @@ class PipelineBuildFacadeService(
             )
         } finally {
             runLock.unlock()
+        }
+    }
+
+    private fun reviewParamsCheck(
+        projectId: String,
+        buildId: String,
+        reviewRequest: StageReviewRequest,
+        pipelineId: String
+    ) {
+        // feat: 检测stage审核参数与入参之间的不规范写法 #11853
+        val variables = buildVariableService.getAllVariableWithType(projectId, buildId).associateBy { it.key }
+        reviewRequest.reviewParams.forEach {
+            val prefix = "[$projectId][$pipelineId][$buildId]"
+            variables[it.key]?.let { check ->
+                logger.info("$prefix|11853_CHECK|STAGE|reviewParams|key=${it.key}|")
+                if (check.readOnly == true) {
+                    logger.info("$prefix|11853_CHECK|STAGE|READ_ONLY|key=${it.key}|")
+                }
+            }
+            variables["variables.${it.key}"]?.let { check ->
+                logger.info("$prefix|11853_CHECK|STAGE|HAS_VARIABLES|key=${it.key}|")
+                if (check.readOnly == true) {
+                    logger.info("$prefix|11853_CHECK|STAGE|VARIABLES_READ_ONLY|key=${it.key}|")
+                }
+            }
         }
     }
 
@@ -1302,9 +1346,12 @@ class PipelineBuildFacadeService(
         buildNum: Int,
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
-        debugVersion: Int?
+        debugVersion: Int? = null,
+        archiveFlag: Boolean? = false
     ): ModelRecord {
-        pipelinePermissionService.validPipelinePermission(
+        val userPipelinePermissionCheckStrategy =
+            UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+        UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -1317,11 +1364,15 @@ class PipelineBuildFacadeService(
         )
         // 如果请求的参数是草稿版本的版本号，则用该版本查询调试记录，否则正常调用普通构建
         val targetDebugVersion = debugVersion?.takeIf {
-            val draftVersion = pipelineRepositoryService.getDraftVersionResource(projectId, pipelineId)
+            val draftVersion = pipelineRepositoryService.getDraftVersionResource(projectId, pipelineId, archiveFlag)
             draftVersion?.version == debugVersion
         }
         val buildId = pipelineRuntimeService.getBuildIdByBuildNum(
-            projectId, pipelineId, buildNum, targetDebugVersion
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildNum = buildNum,
+            debugVersion = targetDebugVersion,
+            archiveFlag = archiveFlag
         ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
@@ -1333,6 +1384,7 @@ class PipelineBuildFacadeService(
             buildId = buildId,
             executeCount = null,
             channelCode = channelCode,
+            archiveFlag = archiveFlag,
             encryptedFlag = !pipelinePermissionService.checkPipelinePermission(
                 userId = userId,
                 projectId = projectId,
@@ -1371,8 +1423,8 @@ class PipelineBuildFacadeService(
         return buildRecordService.getBuildRecord(
             buildInfo = buildInfo,
             executeCount = executeCount,
-            queryDslContext = queryDslContext,
-            encryptedFlag = encryptedFlag
+            encryptedFlag = encryptedFlag,
+            archiveFlag = archiveFlag
         ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
@@ -2211,7 +2263,8 @@ class PipelineBuildFacadeService(
                 val intervalTime = System.currentTimeMillis() - cancelActionTime
                 var flag = false // 是否强制终止
                 if (intervalTime <= cancelIntervalLimitTime * 1000) {
-                    val alreadyCancelUser = buildRecordService.getBuildCancelUser(pipelineId, buildId, buildInfo.executeCount)
+                    val alreadyCancelUser =
+                        buildRecordService.getBuildCancelUser(pipelineId, buildId, buildInfo.executeCount)
                     logger.warn("The build $buildId of project $projectId already cancel by user $alreadyCancelUser")
                     val timeTip = cancelIntervalLimitTime - intervalTime / 1000
                     throw ErrorCodeException(
@@ -2597,6 +2650,7 @@ class PipelineBuildFacadeService(
                 )!!
             )
         }
+
         else -> {
             buildManualStartup(
                 userId = userId,
@@ -2690,12 +2744,28 @@ class PipelineBuildFacadeService(
         includeConst: Boolean?,
         includeNotRequired: Boolean?,
         userId: String,
-        version: Int?
+        version: Int?,
+        isTemplate: Boolean?
     ): List<PipelineBuildParamFormProp> {
-        val (pipeline, resource, debug) = pipelineRepositoryService.getBuildTriggerInfo(
-            projectId, pipelineId, version
-        )
-        val model = resource.model
+        val model = if (isTemplate == true) {
+            // 模板触发器
+            val templateModelStr = pipelineRepositoryService.getTemplateVersionRecord(
+                templateId = pipelineId,
+                version = version?.toLong()
+            ).template
+            try {
+                JsonUtil.to(templateModelStr, Model::class.java)
+            } catch (ignored: Exception) {
+                logger.error("parse process($pipelineId) model fail", ignored)
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
+                )
+            }
+        } else {
+            pipelineRepositoryService.getBuildTriggerInfo(
+                projectId, pipelineId, version
+            ).second.model
+        }
         val triggerContainer = model.getTriggerContainer()
         val properties = getBuildManualParams(
             projectId = projectId,
@@ -2704,7 +2774,9 @@ class PipelineBuildFacadeService(
             debug = false,
             checkPermission = true,
             triggerParams = triggerContainer.params
-        )
+        ).toMutableList()
+        // 推荐版本号需额外处理
+        handleVersionParam(properties, triggerContainer.buildNo)
         val parameter = ArrayList<PipelineBuildParamFormProp>()
         val prop = properties.filter {
             val const = if (includeConst == false) {
@@ -2942,6 +3014,38 @@ class PipelineBuildFacadeService(
                 return@forEach
             }
             checkManualReviewParamOut(item.valueType, item, value)
+        }
+    }
+
+    private fun handleVersionParam(pipelineProps: MutableList<BuildFormProperty>, buildNo: BuildNo?) {
+        buildNo?.let {
+            // 固定版本号且为入参则填入
+            if (it.required == true) {
+                pipelineProps.forEach { formProp ->
+                    if (VERSION_PARAMS.contains(formProp.id)) {
+                        formProp.required = true
+                        formProp.type = BuildFormPropertyType.LONG
+                    }
+                }
+                if (it.buildNoType == BuildNoType.CONSISTENT) {
+                    pipelineProps.add(
+                        BuildFormProperty(
+                            id = BUILD_NO,
+                            required = true,
+                            type = BuildFormPropertyType.LONG,
+                            defaultValue = it.buildNo,
+                            options = null,
+                            desc = null,
+                            repoHashId = null,
+                            relativePath = null,
+                            scmType = null,
+                            containerType = null,
+                            glob = null,
+                            properties = null
+                        )
+                    )
+                }
+            }
         }
     }
 }

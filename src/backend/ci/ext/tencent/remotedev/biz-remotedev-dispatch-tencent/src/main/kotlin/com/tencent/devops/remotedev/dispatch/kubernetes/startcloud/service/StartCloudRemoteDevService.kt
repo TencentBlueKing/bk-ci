@@ -41,7 +41,7 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.Environm
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateCreateDisk
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateDeleteDisk
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateExpandDisk
-import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.SyncVmReq
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateSyncVm
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskDataClass
@@ -55,7 +55,7 @@ import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
-import com.tencent.devops.remotedev.pojo.remotedev.SyncVmData
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmInfo
 import com.tencent.devops.remotedev.pojo.remotedev.SyncVmResp
 import com.tencent.devops.remotedev.pojo.remotedev.TaskCommonResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
@@ -210,7 +210,8 @@ class StartCloudRemoteDevService @Autowired constructor(
                 uid = getEnvironmentUid(workspaceName),
                 appName = appName,
                 userId = userId,
-                pipelineId = workspaceRedisUtils.getStartCloudOrder(workspaceName)
+                pipelineId = workspaceRedisUtils.getStartCloudOrder(workspaceName),
+                force = true
             )
         )
         return resp.taskUid
@@ -374,17 +375,22 @@ class StartCloudRemoteDevService @Autowired constructor(
         return workspaceBcsClient.deleteImage(imageId, delaySeconds)?.taskID
     }
 
-    override fun syncVm(data: SyncVmData): SyncVmResp? {
-        val req = SyncVmReq(
+    override fun syncVm(data: SyncVmInfo): SyncVmResp? {
+        val req = EnvironmentOperateSyncVm(
             syncOnly = data.syncOnly,
             uid = getEnvironmentUid(data.sourceWorkspaceName),
             targetEnvID = getEnvironmentUid(data.targetWorkspaceName)
         )
-        val res = workspaceBcsClient.syncVm(req) ?: return null
+        val resp = workspaceBcsClient.startOperateWorkspace(
+            userId = data.userId,
+            action = EnvironmentAction.SYNC_VM,
+            workspaceName = data.sourceWorkspaceName,
+            environmentOperate = req
+        )
         return SyncVmResp(
-            taskID = res.taskID,
-            environmentUid = res.environmentUid,
-            taskUid = res.taskUid
+            taskID = resp.taskID,
+            environmentUid = resp.environmentUid,
+            taskUid = resp.taskUid
         )
     }
 

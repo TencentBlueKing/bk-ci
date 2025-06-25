@@ -27,6 +27,7 @@
 
 package com.tencent.devops.experience.permission
 
+import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.experience.dao.ExperienceDao
@@ -61,10 +62,9 @@ class ExperienceConfiguration {
         client: Client,
         dslContext: DSLContext,
         experienceDao: ExperienceDao,
-        tokenService: ClientTokenService
-    ) = RbacExperiencePermissionServiceImpl(
-        client, dslContext, experienceDao, tokenService
-    )
+        tokenService: ClientTokenService,
+        bkRepoClient: BkRepoClient
+    ) = RbacExperiencePermissionServiceImpl(client, dslContext, experienceDao, tokenService, bkRepoClient)
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")

@@ -67,12 +67,14 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
     override fun addShardingRoutingRule(userId: String, shardingRoutingRule: ShardingRoutingRule): Boolean {
         val routingName = shardingRoutingRule.routingName
         val key = ShardingUtil.getShardingRoutingRuleKey(
-            clusterName = CommonUtils.getDbClusterName(),
+            clusterName = shardingRoutingRule.clusterName,
             moduleCode = shardingRoutingRule.moduleCode.name,
             ruleType = shardingRoutingRule.type.name,
             routingName = routingName,
             tableName = shardingRoutingRule.tableName
         )
+        logger.info("$userId addShardingRoutingRule params: rule:$shardingRoutingRule|" +
+                "clusterName:${CommonUtils.getDbClusterName()}")
         val lock = RedisLock(redisOperation, "$key:add", 30)
         try {
             lock.lock()
@@ -108,6 +110,9 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
                 )
             }
             return isAdded
+        } catch (ignored: Throwable) {
+            logger.warn("Add ShardingRoutingRule failed", ignored)
+            return false
         } finally {
             lock.unlock()
         }
@@ -156,7 +161,7 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
     ): Boolean {
         val routingName = shardingRoutingRule.routingName
         val key = ShardingUtil.getShardingRoutingRuleKey(
-            clusterName = CommonUtils.getDbClusterName(),
+            clusterName = shardingRoutingRule.clusterName,
             moduleCode = shardingRoutingRule.moduleCode.name,
             ruleType = shardingRoutingRule.type.name,
             routingName = routingName,
@@ -165,6 +170,7 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
         val lock = RedisLock(redisOperation, "$key:update", 30)
         try {
             lock.lock()
+            var isUpdated = false
             dslContext.transaction { t ->
                 val context = DSL.using(t)
                 val nameCount = shardingRoutingRuleDao.countByName(
@@ -187,6 +193,9 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
                 }
                 // 更新db中规则信息
                 shardingRoutingRuleDao.update(context, id, shardingRoutingRule)
+                isUpdated = true
+            }
+            if (isUpdated) {
                 // 更新redis缓存规则信息
                 redisOperation.set(
                     key = key,
@@ -202,6 +211,9 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
                     )
                 )
             }
+        } catch (ignored: Throwable) {
+            logger.warn("Update ShardingRoutingRule failed", ignored)
+            return false
         } finally {
             lock.unlock()
         }

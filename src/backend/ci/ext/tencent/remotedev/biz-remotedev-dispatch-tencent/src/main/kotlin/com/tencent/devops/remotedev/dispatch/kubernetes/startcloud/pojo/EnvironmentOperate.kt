@@ -21,7 +21,8 @@ data class EnvironmentOperate(
     val live: Boolean? = null,
     val imageName: String? = null,
     val tolerations: List<Toleration>? = null,
-    val nodeSelector: Map<String, String>? = null
+    val nodeSelector: Map<String, String>? = null,
+    val force: Boolean = false
 ) : EnvironmentOperateInf(uid)
 
 /**
@@ -62,4 +63,16 @@ data class EnvironmentOperateDeleteDisk(
     val pvcName: String,
     val forceRestart: Boolean?,
     val delaySeconds: Int?
+) : EnvironmentOperateInf(uid)
+
+/**
+ * 备份主机相关
+ * @param syncOnly 仅同步,不跑初始化和cgs流程
+ * @param targetEnvID 目标vm的EnvID
+ * @param uid 原vm的EnvID
+ */
+data class EnvironmentOperateSyncVm(
+    val syncOnly: Boolean?,
+    val targetEnvID: String,
+    override val uid: String
 ) : EnvironmentOperateInf(uid)

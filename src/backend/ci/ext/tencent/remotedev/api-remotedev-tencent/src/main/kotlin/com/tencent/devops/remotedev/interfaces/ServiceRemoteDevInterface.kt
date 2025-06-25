@@ -42,4 +42,10 @@ interface ServiceRemoteDevInterface {
         workspaceName: String,
         operator: String
     )
+
+    fun workspaceSyncVmCallback(
+        taskId: String,
+        workspaceName: String,
+        operator: String
+    )
 }

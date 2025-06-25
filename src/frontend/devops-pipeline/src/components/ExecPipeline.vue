@@ -292,7 +292,7 @@
     import BkPipeline, { loadI18nMessages } from 'bkui-pipeline'
     import simplebar from 'simplebar-vue'
     import 'simplebar-vue/dist/simplebar.min.css'
-    import { mapActions, mapState } from 'vuex'
+    import { mapActions, mapState, mapGetters } from 'vuex'
     export default {
         components: {
             simplebar,
@@ -328,7 +328,8 @@
                 pipelineErrorGuideLink: this.$pipelineDocs.PIPELINE_ERROR_GUIDE_DOC,
                 element: {},
                 scrollElement: '.pipeline-detail-wrapper.biz-content',
-                isShowCheckDialog: false
+                isShowCheckDialog: false,
+                hasHandledRouteParams: false
             }
         },
         computed: {
@@ -340,6 +341,9 @@
                 'hideSkipExecTask',
                 'showPanelType',
                 'isPropertyPanelVisible'
+            ]),
+            ...mapGetters('atom', [
+                'getAllElements'
             ]),
             panels () {
                 return [
@@ -481,6 +485,9 @@
             },
             ruleIds () {
                 return this.curMatchRules?.flatMap(item => item.ruleList.map(rule => rule.ruleHashId)) || []
+            },
+            curPipelineAllElements () {
+                return this.getAllElements(this.execDetail?.model?.stages)
             }
         },
         watch: {
@@ -506,6 +513,17 @@
                         this.setShowErrorPopup()
                     }
                 })
+            },
+            curPipelineAllElements: {
+                handler (val) {
+                    if (val && !this.hasHandledRouteParams) {
+                        this.hasHandledRouteParams = true
+                        this.$nextTick(() => {
+                            this.handleRouteParams()
+                        })
+                    }
+                },
+                immediate: true
             }
         },
         updated () {
@@ -558,6 +576,21 @@
             ]),
             ...mapActions('common', ['requestInterceptAtom', 'requestMatchTemplateRuleList']),
             ...mapActions('pipelines', ['requestRetryPipeline']),
+            handleRouteParams () {
+                const { reviewTaskId, reviewStageSeq } = this.$route.query
+    
+                if (reviewTaskId) {
+                    const targetElement = this.curPipelineAllElements.find(element => element.id === reviewTaskId)
+                    if (targetElement && targetElement.status === 'REVIEWING') {
+                        this.reviewAtom({ id: reviewTaskId })
+                    }
+                } else if (reviewStageSeq) {
+                    this.handleStageCheck({
+                        type: 'checkIn',
+                        stageIndex: Number(reviewStageSeq) - 1
+                    })
+                }
+            },
             renderLabel (h, name) {
                 const panel = this.panels.find((panel) => panel.name === name)
                 return h('p', {}, [
