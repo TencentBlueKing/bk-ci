@@ -129,7 +129,7 @@ class PipelineMetricsInfoDao {
         }
     }
 
-    fun countHighFailureRate30d(dslContext: DSLContext, projectId: String): Any {
+    fun countHighFailureRate30d(dslContext: DSLContext, projectId: String): Int {
         return with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
             return countByField(dslContext, projectId, FAILURE_RATE_30D)
         }
