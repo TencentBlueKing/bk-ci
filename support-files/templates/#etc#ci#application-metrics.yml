@@ -55,9 +55,18 @@ spring:
         name: T_PROJECT_ATOM
         broadcastFlag: true
       - index: 15
-        name: T_EPLUS_PIPELINE_METRICS_DATA_DAILY
+        name: T_PROJECT_USER_DAILY
         databaseShardingStrategy: SHARDING
       - index: 16
+        name: T_PROJECT_BUILD_SUMMARY_DAILY
+        databaseShardingStrategy: SHARDING
+      - index: 17
+        name: T_DISPATCH_JOB_DAILY_METRICS
+        databaseShardingStrategy: SHARDING
+      - index: 18
+        name: T_EPLUS_PIPELINE_METRICS_DATA_DAILY
+        databaseShardingStrategy: SHARDING
+      - index: 19
         name: T_EPLUS_PIPELINE_METRICS_WHITE_LIST
         databaseShardingStrategy: SHARDING
 
