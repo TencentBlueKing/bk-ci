@@ -220,6 +220,7 @@ class PipelineMetricsInfoDao {
                     pipelineId,
                     LocalDateTime.now()
                 )
+                    .onDuplicateKeyIgnore()
             }
         }
         dslContext.batch(queries).execute()
