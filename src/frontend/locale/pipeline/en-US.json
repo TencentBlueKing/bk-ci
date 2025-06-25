@@ -1776,7 +1776,7 @@
   },
   "pipelineProblemTips": {
     "observing": "Observing",
-    "failureRateTips": "failure rate of {0} pipelines was higher than {1} in the past 30 days,",
+    "failureRateTips": "that the failure rate of the assembly line has exceeded 90% in the past 30 days,",
     "consecutiveFailuresTips": "{0} pipelines {1} in the past 90 days,",
     "scheduledTriggerNoCodeChangeTips": "{0} pipelines were triggered regularly but the code did not change.",
     "focusOnAnomalies": "There may be anomalies, please pay attention.",

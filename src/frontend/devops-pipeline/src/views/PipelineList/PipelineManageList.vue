@@ -1,6 +1,8 @@
 <template>
     <main class="pipeline-list-main">
-        <pipeline-problem-tips />
+        <pipeline-problem-tips
+            :update-table-height="updateTableHeight"
+        />
         <div
             class="recycle-bin-header"
             v-if="isDeleteView"

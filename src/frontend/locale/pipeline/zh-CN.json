@@ -1771,8 +1771,8 @@
     "removeUnarchivablePipelines": "去除无法归档的流水线"
   },
   "pipelineProblemTips": {
-    "observing": "观察到",
-    "failureRateTips": " {0} 条流水线近30天内失败率高于 {1}，",
+    "observing": "存在",
+    "failureRateTips": "流水线近 30 天内失败率高于 90%，",
     "consecutiveFailuresTips": "{0} 条流水线近90天内{1}，",
     "scheduledTriggerNoCodeChangeTips": "{0} 条流水线定时触发但代码无变更，",
     "focusOnAnomalies": "可能存在异常，请关注。",
