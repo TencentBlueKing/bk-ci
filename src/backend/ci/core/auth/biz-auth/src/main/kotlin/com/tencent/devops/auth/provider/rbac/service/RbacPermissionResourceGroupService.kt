@@ -446,7 +446,12 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         v2PageInfoDTO.pageSize = PageUtil.DEFAULT_PAGE
         v2PageInfoDTO.page = PageUtil.DEFAULT_PAGE
         val gradeManagerRoleGroupList =
-            iamV2ManagerService.getGradeManagerRoleGroupV2(projectInfo.relationId, searchGroupDTO, v2PageInfoDTO)
+            iamV2ManagerService.getGradeManagerRoleGroupV2(
+                projectInfo.relationId,
+                searchGroupDTO,
+                v2PageInfoDTO,
+                TenantUtils.getTenantIdByEnglishName(projectId)
+            )
         if (gradeManagerRoleGroupList.results.isNotEmpty() &&
             gradeManagerRoleGroupList.results.map { it.name }.contains(groupName)
         ) {

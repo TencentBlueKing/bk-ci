@@ -374,7 +374,10 @@ class RbacPermissionApplyService @Autowired constructor(
                 )
                 .reason(applyJoinGroupInfo.reason).build()
             logger.info("apply to join group: iamApplicationDTO=$iamApplicationDTO")
-            v2ManagerService.createRoleGroupApplicationV2(iamApplicationDTO)
+            v2ManagerService.createRoleGroupApplicationV2(
+                iamApplicationDTO,
+                TenantUtils.getTenantIdByEnglishName(applyJoinGroupInfo.projectCode)
+            )
             // 记录单据，用于同步用户组
             authResourceGroupApplyDao.batchCreate(
                 dslContext = dslContext,
