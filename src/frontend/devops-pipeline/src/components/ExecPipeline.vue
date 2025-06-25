@@ -112,7 +112,6 @@
                         :cancel-user-id="cancelUserId"
                         :user-name="userName"
                         :pipeline="curPipeline"
-                        :is-latest-build="!archiveFlag"
                         v-bind="$attrs"
                         @click="handlePiplineClick"
                         @stage-check="handleStageCheck"
@@ -488,9 +487,6 @@
             },
             curPipelineAllElements () {
                 return this.getAllElements(this.execDetail?.model?.stages)
-            },
-            archiveFlag () {
-                return this.$route.query.archiveFlag
             }
         },
         watch: {
