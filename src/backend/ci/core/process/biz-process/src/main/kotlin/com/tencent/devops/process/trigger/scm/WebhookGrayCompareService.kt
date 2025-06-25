@@ -75,11 +75,12 @@ class WebhookGrayCompareService @Autowired constructor(
     private val webhookTriggerMatcher: WebhookTriggerMatcher
 ) {
 
-    private val threadPoolExecutor = ThreadPoolUtil.getThreadPoolExecutor(
-        corePoolSize = 5,
-        maximumPoolSize = 5,
+    private val executor = ThreadPoolUtil.getThreadPoolExecutor(
+        corePoolSize = 1,
+        maximumPoolSize = 1,
         keepAliveTime = 0L,
-        queue = LinkedBlockingQueue(10),
+        queue = LinkedBlockingQueue(1),
+        threadNamePrefix = "webhook-gray-compare-%d"
     )
 
     fun asyncCompareWebhook(
@@ -87,16 +88,11 @@ class WebhookGrayCompareService @Autowired constructor(
         request: WebhookRequest,
         matcher: ScmWebhookMatcher
     ) {
-        val bizId = MDC.get(TraceTag.BIZID)
-        val actionTitle = "async compare webhook|scmType: $scmType|repoName: ${matcher.getRepoName()}"
-        threadPoolExecutor.submit {
-            val startTime = System.currentTimeMillis()
-            MDC.put(TraceTag.BIZID, bizId)
-            logger.info("start $actionTitle")
-            compareWebhook(scmType, request, matcher)
-            logger.info("finish $actionTitle time cost: ${System.currentTimeMillis() - startTime}")
-            MDC.remove(TraceTag.BIZID)
-        }
+        ThreadPoolUtil.submitAction(
+            executor = executor,
+            actionTitle = "async compare webhook|scmType: $scmType|repoName: ${matcher.getRepoName()}",
+            action = { compareWebhook(scmType, request, matcher) }
+        )
     }
 
     fun compareWebhook(scmType: ScmType, request: WebhookRequest, matcher: ScmWebhookMatcher) {
@@ -212,7 +208,8 @@ class WebhookGrayCompareService @Autowired constructor(
         val triggerPipelines = pipelineWebhookService.getTriggerPipelines(
             name = matcher.getRepoName(),
             repositoryType = scmType,
-            yamlPipelineIds = yamlPipelineIds
+            yamlPipelineIds = yamlPipelineIds,
+            compatibilityRepoNames = matcher.getCompatibilityRepoName()
         )
         val pipelineAndParamsMap = mutableMapOf<String, Map<String, Any>>()
         triggerPipelines.forEach { (projectId, pipelineId) ->

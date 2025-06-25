@@ -30,6 +30,7 @@ package com.tencent.devops.process.yaml.transfer
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.TriggerRepositoryType
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
@@ -736,7 +737,25 @@ class TriggerTransfer @Autowired(required = false) constructor(
                         branches = timer.branches,
                         newExpression = timer.newExpression,
                         advanceExpression = timer.advanceExpression,
-                        noScm = timer.always != true
+                        noScm = timer.always != true,
+                        startParams = timer.startParams?.let {
+                            val params = it.map { entry ->
+                                mapOf(
+                                    "key" to entry.key,
+                                    "value" to entry.value
+                                )
+                            }
+                            JsonUtil.toJson(params, false)
+                        },
+                        version = if (timer.newExpression.filterNonEmpty().isEmpty() &&
+                                (timer.advanceExpression?.size ?: 0) == 1
+                        ) {
+                            // 2.*仅支持一个触发规则, 且没有newExpression入参
+                            "2.*"
+                        } else {
+                            // 1.* 插件支持支持多个触发规则
+                            "1.*"
+                        }
                     ).checkTriggerElementEnable(timer.enable)
                 )
             }
@@ -848,6 +867,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
     private fun String.disjoin() = this.split(",")
 
     private fun List<String>?.nonEmptyOrNull() = this?.ifEmpty { null }
+
+    private fun List<String>?.filterNonEmpty() = this?.filter { it.isNotBlank() } ?: listOf()
 
     private fun buildP4TriggerElement(
         rule: PushRule?,

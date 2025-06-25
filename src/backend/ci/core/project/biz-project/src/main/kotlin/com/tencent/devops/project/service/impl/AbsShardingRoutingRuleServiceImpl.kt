@@ -42,6 +42,8 @@ import com.tencent.devops.project.dao.ShardingRoutingRuleDao
 import com.tencent.devops.project.dispatch.ShardingRoutingRuleDispatcher
 import com.tencent.devops.project.service.ShardingRoutingRuleService
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
 
@@ -53,6 +55,7 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
 ) : ShardingRoutingRuleService {
     companion object {
         private val DEFAULT_RULE_REDIS_CACHE_TIME = TimeUnit.DAYS.toSeconds(14) // 分片规则在redis默认缓存时间
+        private val logger = LoggerFactory.getLogger(AbsShardingRoutingRuleServiceImpl::class.java)
     }
 
     /**
@@ -64,43 +67,55 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
     override fun addShardingRoutingRule(userId: String, shardingRoutingRule: ShardingRoutingRule): Boolean {
         val routingName = shardingRoutingRule.routingName
         val key = ShardingUtil.getShardingRoutingRuleKey(
-            clusterName = CommonUtils.getDbClusterName(),
+            clusterName = shardingRoutingRule.clusterName,
             moduleCode = shardingRoutingRule.moduleCode.name,
             ruleType = shardingRoutingRule.type.name,
             routingName = routingName,
             tableName = shardingRoutingRule.tableName
         )
-        val lock = RedisLock(redisOperation, "$key:add", 10)
+        logger.info("$userId addShardingRoutingRule params: rule:$shardingRoutingRule|" +
+                "clusterName:${CommonUtils.getDbClusterName()}")
+        val lock = RedisLock(redisOperation, "$key:add", 30)
         try {
             lock.lock()
-            val nameCount = shardingRoutingRuleDao.countByName(
-                dslContext = dslContext,
-                clusterName = shardingRoutingRule.clusterName,
-                moduleCode = shardingRoutingRule.moduleCode,
-                type = shardingRoutingRule.type,
-                routingName = routingName,
-                tableName = shardingRoutingRule.tableName
-            )
-            if (nameCount > 0) {
-                // 已添加则无需重复添加
-                return true
+            var isAdded = false
+            dslContext.transaction { t ->
+                val context = DSL.using(t)
+                val nameCount = shardingRoutingRuleDao.countByName(
+                    dslContext = context,
+                    clusterName = shardingRoutingRule.clusterName,
+                    moduleCode = shardingRoutingRule.moduleCode,
+                    type = shardingRoutingRule.type,
+                    routingName = routingName,
+                    tableName = shardingRoutingRule.tableName
+                )
+                if (nameCount > 0) {
+                    // 已添加则无需重复添加
+                    logger.warn("Sharding routing rule($key) already exists")
+                    return@transaction
+                }
+                // 规则入库
+                shardingRoutingRuleDao.add(context, userId, shardingRoutingRule)
+                isAdded = true // 事务提交成功后标记
             }
-            // 规则入库
-            shardingRoutingRuleDao.add(dslContext, userId, shardingRoutingRule)
-            // 规则写入redis缓存
-            redisOperation.set(
-                key = key,
-                value = shardingRoutingRule.routingRule,
-                expiredInSecond = DEFAULT_RULE_REDIS_CACHE_TIME
-            )
-            // 发送规则新增事件消息
-            shardingRoutingRuleDispatcher.dispatch(
-                ShardingRoutingRuleBroadCastEvent(routingName = key, actionType = CrudEnum.CREATAE)
-            )
+            if (isAdded) {
+                // 事务提交后再操作缓存和事件（避免事务回滚导致缓存脏数据）
+                // 规则写入redis缓存
+                redisOperation.set(
+                    key = key, value = shardingRoutingRule.routingRule, expiredInSecond = DEFAULT_RULE_REDIS_CACHE_TIME
+                )
+                // 发送规则新增事件消息
+                shardingRoutingRuleDispatcher.dispatch(
+                    ShardingRoutingRuleBroadCastEvent(routingName = key, actionType = CrudEnum.CREATAE)
+                )
+            }
+            return isAdded
+        } catch (ignored: Throwable) {
+            logger.warn("Add ShardingRoutingRule failed", ignored)
+            return false
         } finally {
             lock.unlock()
         }
-        return true
     }
 
     /**
@@ -146,49 +161,59 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
     ): Boolean {
         val routingName = shardingRoutingRule.routingName
         val key = ShardingUtil.getShardingRoutingRuleKey(
-            clusterName = CommonUtils.getDbClusterName(),
+            clusterName = shardingRoutingRule.clusterName,
             moduleCode = shardingRoutingRule.moduleCode.name,
             ruleType = shardingRoutingRule.type.name,
             routingName = routingName,
             tableName = shardingRoutingRule.tableName
         )
-        val lock = RedisLock(redisOperation, "$key:update", 10)
+        val lock = RedisLock(redisOperation, "$key:update", 30)
         try {
             lock.lock()
-            val nameCount = shardingRoutingRuleDao.countByName(
-                dslContext = dslContext,
-                clusterName = shardingRoutingRule.clusterName,
-                moduleCode = shardingRoutingRule.moduleCode,
-                type = shardingRoutingRule.type,
-                routingName = routingName,
-                tableName = shardingRoutingRule.tableName
-            )
-            if (nameCount > 0) {
-                val rule = shardingRoutingRuleDao.getById(dslContext, id)
-                if (null != rule && routingName != rule.routingName) {
-                    // 抛出错误提示
-                    throw ErrorCodeException(
-                        errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
-                        params = arrayOf(routingName)
-                    )
-                }
-            }
-            // 更新db中规则信息
-            shardingRoutingRuleDao.update(dslContext, id, shardingRoutingRule)
-            // 更新redis缓存规则信息
-            redisOperation.set(
-                key = key,
-                value = shardingRoutingRule.routingRule,
-                expiredInSecond = DEFAULT_RULE_REDIS_CACHE_TIME
-            )
-            // 发送规则更新事件消息
-            shardingRoutingRuleDispatcher.dispatch(
-                ShardingRoutingRuleBroadCastEvent(
-                    routingName = key,
-                    routingRule = shardingRoutingRule.routingRule,
-                    actionType = CrudEnum.UPDATE
+            var isUpdated = false
+            dslContext.transaction { t ->
+                val context = DSL.using(t)
+                val nameCount = shardingRoutingRuleDao.countByName(
+                    dslContext = context,
+                    clusterName = shardingRoutingRule.clusterName,
+                    moduleCode = shardingRoutingRule.moduleCode,
+                    type = shardingRoutingRule.type,
+                    routingName = routingName,
+                    tableName = shardingRoutingRule.tableName
                 )
-            )
+                if (nameCount > 0) {
+                    val rule = shardingRoutingRuleDao.getById(context, id)
+                    if (null != rule && routingName != rule.routingName) {
+                        // 抛出错误提示
+                        throw ErrorCodeException(
+                            errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                            params = arrayOf(routingName)
+                        )
+                    }
+                }
+                // 更新db中规则信息
+                shardingRoutingRuleDao.update(context, id, shardingRoutingRule)
+                isUpdated = true
+            }
+            if (isUpdated) {
+                // 更新redis缓存规则信息
+                redisOperation.set(
+                    key = key,
+                    value = shardingRoutingRule.routingRule,
+                    expiredInSecond = DEFAULT_RULE_REDIS_CACHE_TIME
+                )
+                // 发送规则更新事件消息
+                shardingRoutingRuleDispatcher.dispatch(
+                    ShardingRoutingRuleBroadCastEvent(
+                        routingName = key,
+                        routingRule = shardingRoutingRule.routingRule,
+                        actionType = CrudEnum.UPDATE
+                    )
+                )
+            }
+        } catch (ignored: Throwable) {
+            logger.warn("Update ShardingRoutingRule failed", ignored)
+            return false
         } finally {
             lock.unlock()
         }

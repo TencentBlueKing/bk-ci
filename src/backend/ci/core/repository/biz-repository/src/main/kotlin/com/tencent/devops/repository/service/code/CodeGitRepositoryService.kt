@@ -404,7 +404,8 @@ class CodeGitRepositoryService @Autowired constructor(
         )
         if (member.accessLevel < GitAccessLevelEnum.MASTER.level) {
             throw ErrorCodeException(
-                errorCode = RepositoryMessageCode.ERROR_MEMBER_LEVEL_LOWER_MASTER
+                errorCode = RepositoryMessageCode.ERROR_MEMBER_LEVEL_LOWER_MASTER,
+                params = arrayOf(repository.userName)
             )
         }
         // 初始化应该新增push和mr事件

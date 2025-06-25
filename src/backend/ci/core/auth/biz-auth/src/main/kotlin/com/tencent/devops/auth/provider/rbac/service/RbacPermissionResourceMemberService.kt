@@ -17,15 +17,18 @@ import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.vo.ResourceMemberCountVO
+import com.tencent.devops.auth.provider.rbac.pojo.event.AuthProjectLevelPermissionsSyncEvent
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
+import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.project.constant.ProjectMessageCode
 import org.apache.commons.lang3.RandomUtils
 import org.jooq.DSLContext
@@ -41,7 +44,8 @@ class RbacPermissionResourceMemberService(
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val authResourceGroupMemberDao: AuthResourceGroupMemberDao,
     private val dslContext: DSLContext,
-    private val deptService: DeptService
+    private val deptService: DeptService,
+    private val traceEventDispatcher: TraceEventDispatcher
 ) : PermissionResourceMemberService {
     override fun getResourceGroupMembers(
         projectCode: String,
@@ -201,8 +205,7 @@ class RbacPermissionResourceMemberService(
         expiredAt: Long,
         iamGroupId: Int
     ): Boolean {
-        if (memberType == MemberType.USER.type &&
-            deptService.isUserDeparted(memberId)) {
+        if (memberType == MemberType.USER.type && deptService.isUserDeparted(memberId)) {
             return true
         }
         // 获取对应的资源组
@@ -238,6 +241,12 @@ class RbacPermissionResourceMemberService(
                 expiredTime = DateTimeUtil.convertTimestampToLocalDateTime(expiredAt)
             )
         }
+        traceEventDispatcher.dispatch(
+            AuthProjectLevelPermissionsSyncEvent(
+                projectCode = projectCode,
+                iamGroupIds = listOf(iamGroupId)
+            )
+        )
         return true
     }
 
@@ -262,6 +271,7 @@ class RbacPermissionResourceMemberService(
         members: List<String>?,
         departments: List<String>?
     ): Boolean {
+        logger.info("batch add resource group members :$projectCode|$iamGroupId|$expiredTime|$members|$departments")
         // 校验用户组是否属于该项目
         verifyGroupBelongToProject(
             projectCode = projectCode,
@@ -276,7 +286,9 @@ class RbacPermissionResourceMemberService(
         }
         val groupMembers = iamV2ManagerService.getRoleGroupMemberV2(iamGroupId, pageInfoDTO).results
         val groupUserMap = groupMembers.filter { it.type == userType }.associateBy { it.id }
-        val groupDepartmentSet = groupMembers.filter { it.type == deptType }.map { it.id }.toSet()
+        val groupDepartmentSet = groupMembers.filter {
+            it.type == deptType && it.expiredAt > LocalDateTime.now().timestamp()
+        }.map { it.id }.toSet()
         // 校验用户是否应该加入用户组
         val iamMemberInfos = mutableListOf<ManagerMember>()
         if (!members.isNullOrEmpty()) {
@@ -350,6 +362,12 @@ class RbacPermissionResourceMemberService(
                 groupMembers = groupMembersList
             )
         }
+        traceEventDispatcher.dispatch(
+            AuthProjectLevelPermissionsSyncEvent(
+                projectCode = projectCode,
+                iamGroupIds = listOf(iamGroupId)
+            )
+        )
         return true
     }
 
@@ -442,6 +460,12 @@ class RbacPermissionResourceMemberService(
             projectCode = projectCode,
             iamGroupId = iamGroupId,
             memberIds = allMemberIds
+        )
+        traceEventDispatcher.dispatch(
+            AuthProjectLevelPermissionsSyncEvent(
+                projectCode = projectCode,
+                iamGroupIds = listOf(iamGroupId)
+            )
         )
         return true
     }

@@ -46,6 +46,8 @@ data class GroupMemberHandoverConditionReq(
     override val targetMember: ResourceMemberInfo,
     @get:Schema(title = "操作渠道")
     override val operateChannel: OperateChannel = OperateChannel.MANAGER,
+    @get:Schema(title = "是否检查代码库交接")
+    val checkRepertoryAuthorization: Boolean = true,
     @get:Schema(title = "授予人")
     val handoverTo: ResourceMemberInfo
 ) : GroupMemberCommonConditionReq(

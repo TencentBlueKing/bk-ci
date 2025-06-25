@@ -8,7 +8,7 @@
                 @click="addParam"
             >
                 <i class="devops-icon icon-plus-circle"></i>
-                添加参数
+                {{ $t('addParam') }}
             </span>
         </label>
         <div class="sub-params-desc">{{ desc }}</div>
@@ -20,7 +20,7 @@
                 <li
                     class="param-input"
                     v-for="(parameter, index) in parameters"
-                    :key="index"
+                    :key="parameter.key"
                 >
                     <bk-select
                         class="input-com"
@@ -39,7 +39,8 @@
                     <span class="input-seg">=</span>
                     <bk-input
                         v-model="parameter.value"
-                        :type="parameter.type === 'textarea' ? 'textarea' : 'text'"
+                        :type="getInputType(parameter.type)"
+                        :precision="0"
                         class="input-com"
                         :disabled="disabled"
                         :title="parameter.value"
@@ -57,8 +58,9 @@
 </template>
 
 <script>
-    import mixins from '../mixins'
     import { isObject } from '@/utils/util'
+    import { mapState } from 'vuex'
+    import mixins from '../mixins'
     export default {
         name: 'sub-parameter',
         mixins: [mixins],
@@ -75,6 +77,9 @@
             }
         },
         computed: {
+            ...mapState('atom', [
+                'pipelineInfo'
+            ]),
             paramValues () {
                 const { atomValue = {}, $route: { params = {} } } = this
                 return {
@@ -120,7 +125,7 @@
         },
         methods: {
             initData () {
-                let values = this.atomValue[this.name] || []
+                let values = this.atomValue[this.name] || this.value || []
                 if (!Array.isArray(values)) values = JSON.parse(values)
 
                 this.parameters = values.map(i => {
@@ -138,7 +143,7 @@
                 })
             },
             cutParam (index) {
-                this.parameters = this.parameters.filter((item, i) => i !== index)
+                this.parameters.splice(index, 1)
                 this.updateParameters()
             },
 
@@ -170,6 +175,10 @@
             },
 
             getParametersList () {
+                if (this.param.paramType === 'list' && Array.isArray(this.param.list)) {
+                    this.subParamsKeyList = this.param.list
+                    return
+                }
                 let [url] = this.generateReqUrl(this.param.url, this.paramValues)
 
                 if (!url) return
@@ -179,11 +188,23 @@
                     const value = typeof this.paramValues[key] === 'undefined' ? urlQuery[key] : this.paramValues[key]
                     url += `${index <= 0 ? '?' : '&'}${key}=${value}`
                 })
-
+                const pipelineInfoQuery = this.param.pipelineInfoQuery || {}
+                Object.keys(pipelineInfoQuery).forEach(key => {
+                    const value = typeof this.pipelineInfo[key] === 'undefined' ? pipelineInfoQuery[key] : this.pipelineInfo[key]
+                    Object.keys(urlQuery).length ? url += `&${key}=${value}` : url += `?${key}=${value}`
+                })
                 this.isLoading = true
                 this.$ajax.get(url).then((res) => {
-                    this.subParamsKeyList = res.data || []
+                    this.subParamsKeyList = res.data?.properties || res.data || []
                 }).catch(e => this.$showTips({ message: e.message, theme: 'error' })).finally(() => (this.isLoading = false))
+            },
+            getInputType (type) {
+                const typeMap = {
+                    textarea: 'textarea',
+                    long: 'number'
+                }
+
+                return typeMap[type] || 'text'
             }
         }
     }

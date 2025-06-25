@@ -9,6 +9,7 @@
             :pipeline-name="pipelineInfo?.pipelineName"
         />
         <aside
+            v-if="!archiveFlag"
             :class="['pipeline-detail-right-aside', {
                 'is-debug-exec-detail': isDebugExec
             }]"
@@ -208,6 +209,9 @@
             },
             isDebugExec () {
                 return this.execDetail?.debug ?? false
+            },
+            archiveFlag () {
+                return this.$route.query.archiveFlag
             }
         },
         watch: {
@@ -302,7 +306,7 @@
                         message: this.$t('subpage.rebuildSuc'),
                         theme: 'success'
                     })
-                } else if (res.code === 2101260) {
+                } else if (res.code === 2101272) {
                     this.loading = false
                     this.$bkInfo({
                         title: this.$t('history.rePlay'),

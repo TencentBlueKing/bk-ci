@@ -31,7 +31,7 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
-import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
+import com.tencent.devops.process.pojo.pipeline.PipelineBuildParamFormProp
 import com.tencent.devops.process.service.SubPipelineStartUpService
 
 @RestResource
@@ -43,7 +43,7 @@ class ServiceSubPipelineResourceImpl constructor(
         userId: String,
         projectId: String,
         pipelineId: String
-    ): Result<List<SubPipelineStartUpInfo>> {
+    ): Result<List<PipelineBuildParamFormProp>> {
         return subPipeService.subPipelineManualStartupInfo(userId, projectId, pipelineId, true, true)
     }
 

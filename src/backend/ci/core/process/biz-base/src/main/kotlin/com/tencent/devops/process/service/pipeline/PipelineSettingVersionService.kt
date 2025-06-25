@@ -29,10 +29,12 @@ package com.tencent.devops.process.service.pipeline
 
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
@@ -66,16 +68,23 @@ class PipelineSettingVersionService @Autowired constructor(
         userId: String?,
         detailInfo: PipelineDetailInfo?,
         channelCode: ChannelCode = ChannelCode.BS,
-        version: Int
+        version: Int,
+        archiveFlag: Boolean? = false
     ): PipelineSetting {
+        val finalDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
         // 获取正式版本的流水线设置
-        var settingInfo = pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
+        var settingInfo = pipelineSettingDao.getSetting(finalDslContext, projectId, pipelineId)
 
         // 获取已生效的流水线的标签和分组
         val labels = ArrayList<String>()
         val labelNames = ArrayList<String>()
         userId?.let {
-            pipelineGroupService.getGroups(userId, projectId, pipelineId).forEach {
+            pipelineGroupService.getGroups(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                archiveFlag = archiveFlag
+            ).forEach {
                 labels.addAll(it.labels)
                 labelNames.addAll(it.labelNames)
             }
@@ -88,7 +97,8 @@ class PipelineSettingVersionService @Autowired constructor(
             } ?: client.get(ServicePipelineResource::class).getPipelineInfo(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                channelCode = channelCode
+                channelCode = channelCode,
+                archiveFlag = archiveFlag
             ).data?.let {
                 Pair(it.pipelineName, it.pipelineDesc)
             } ?: Pair(null, null)
@@ -112,7 +122,12 @@ class PipelineSettingVersionService @Autowired constructor(
 
         if (version > 0) { // #671 目前只接受通知设置的版本管理, 其他属于公共设置不接受版本管理
             // #8161 除了通知以外增加了其他用户配置作为版本管理
-            getPipelineSettingVersion(projectId, pipelineId, version)?.let { ve ->
+            getPipelineSettingVersion(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version,
+                queryDslContext = finalDslContext
+            )?.let { ve ->
                 settingInfo.version = ve.version
                 settingInfo.successSubscriptionList = ve.successSubscriptionList ?: settingInfo.successSubscriptionList
                 settingInfo.failSubscriptionList = ve.failSubscriptionList ?: settingInfo.failSubscriptionList
@@ -136,6 +151,7 @@ class PipelineSettingVersionService @Autowired constructor(
                     null
                 }
                 settingInfo.pipelineAsCodeSettings = ve.pipelineAsCodeSettings
+                settingInfo.failIfVariableInvalid = ve.failIfVariableInvalid
             }
             // 来自前端的请求中，版本中的可能还不是正式生效的，如果和正式配置中有差异则重新获取名称
             if (settingInfo.labels.isNotEmpty() && settingInfo.labels != labels && userId != null) {
@@ -159,10 +175,11 @@ class PipelineSettingVersionService @Autowired constructor(
     fun getPipelineSettingVersion(
         projectId: String,
         pipelineId: String,
-        version: Int
+        version: Int,
+        queryDslContext: DSLContext? = null
     ): PipelineSettingVersion? {
         return pipelineSettingVersionDao.getSettingVersion(
-            dslContext = dslContext,
+            dslContext = queryDslContext ?: dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             version = version

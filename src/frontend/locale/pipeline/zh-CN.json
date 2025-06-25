@@ -385,7 +385,10 @@
     "concurrentMaxConcurrency": "最大可并发数",
     "concurrentTimeout": "超限时排队，排队超时时间",
     "maxConRunningQueueSizeTips": "最大可并发数范围在1-200之间",
-    "maxConcurrencyPlaceholder": "缺省时以系统设置为准"
+    "maxConcurrencyPlaceholder": "缺省时以系统设置为准",
+    "whenVariableExceedsLength": "流水线变量值超长(>4K)时",
+    "clearTheValue": "值清空，继续运行",
+    "errorAndHalt": "报错，终止运行"
   },
   "template": {
     "addTemplate": "新建模板",
@@ -1084,7 +1087,9 @@
     "batchCopy": "一键复制",
     "randomlyGenerate": "<随机生成>",
     "enableVersionControl": "开启版本管理",
-    "versionControlTip": "开启后，上传文件时，将在目录下自动生成版本路径，避免同名覆盖。"
+    "versionControlTip": "开启后，上传文件时，将在目录下自动生成版本路径，避免同名覆盖。",
+    "controlOption": "控制选项",
+    "displayCondition": "何时展示本变量"
   },
   "storeMap": {
     "textarea": "文本框",
@@ -1260,6 +1265,7 @@
   "pipelineGroup": "流水线组",
   "patchManage": "批量管理",
   "searchPipelinePlaceholder": "流水线名称/创建人/流水线组/标签",
+  "searchPipelineArchivePlaceholder": "流水线名称/创建人",
   "ownGroupName": "所在项目流水线组",
   "latestExec": "最近执行",
   "addPipelineGroup": "创建流水线组",
@@ -1703,6 +1709,45 @@
   "isTaskTermination": "确认中止任务执行吗？",
   "pipelineNameConventions": "流水线命名规范：",
   "addLabels": "添加标签",
+  "archive": {
+    "archive": "归档",
+    "archiveLibrary": "存档库",
+    "batchArchiving": "批量归档",
+    "tips": "流水线归档操作不可逆，归档后：\n1. 只能查看，不支持编辑、执行\n2. 可以手动删除，若未删除，两年后将自动清理\n3. 归档仅保留流水线编排和执行历史，日志和制品不包含在内",
+    "unableToFile": "流水线正在执行，无法归档",
+    "isArchiveConfirmedTitles": "确定归档以下 {0} 条流水线吗？",
+    "isArchiveConfirmedTitle": "确定归档以下流水线吗？",
+    "archivePipelineFail": "归档流水线失败",
+    "archiveTips1": "流水线归档后，将不能编辑和执行，也{0}。",
+    "archiveTips2": "不能取消归档",
+    "archiveTips3": "仅拥有 {0} 的用户可查看和删除。",
+    "archiveTips4": "「管理归档流水线」权限",
+    "pipelineDeletionSuccess": "删除流水线成功",
+    "pipelineDeletionFailure": "删除流水线失败",
+    "afterArchivedPipelineDeletion": "已归档流水线删除后，{0}。",
+    "cannotBeRecovered": "不可找回",
+    "submissionSuccess": "提交成功",
+    "archivingTaskRunning": "归档任务异步运行中，完成后将会通知归档结果。",
+    "deleteOrMoveYamlInRepoIfPacModeEnabled": "若流水线已开启了PAC模式，请自行删除/移动代码库中的 YAML 文件，避免代码库触发时再次自动创建对应的流水线。",
+    "onlyDraftVersion": "仅有草稿版本，无需归档，建议删除",
+    "unableToArchive": "有 {0} 条流水线无法归档",
+    "removeUnarchivablePipelines": "去除无法归档的流水线"
+  },
+  "cron": {
+    "分": "分",
+    "时": "时",
+    "日": "日",
+    "周": "周",
+    "月": "月",
+    "下次：": "下次：",
+    "小时": "小时"
+  },
+  "enterRepoAlias": "请输入代码库别名",
+  "pacRepoNotSet": "将自动监听所属PAC代码库，无需设置",
+  "addParam": "添加参数",
+  "selectRepo": "选择代码库",
+  "enterAlias": "输入别名",
+  "monitorPac": "监听PAC",
   "groupLabel": "分组标签",
   "groupLabelTips": "拥有相同标签的变量，在查看和执行预览界面将在同一个分组下展示",
   "notGrouped": "未分组"

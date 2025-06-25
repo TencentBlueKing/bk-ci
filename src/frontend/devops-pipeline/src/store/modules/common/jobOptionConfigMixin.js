@@ -302,6 +302,7 @@ const jobOptionConfigMixin = {
                     default: '',
                     required: true,
                     label: this.$t('storeMap.customConditionExp'),
+                    docsLink: this.customExpressionsDoc,
                     isHidden: (container) => {
                         return container?.jobControlOption?.runCondition !== 'CUSTOM_CONDITION_MATCH'
                     },
@@ -324,6 +325,9 @@ const jobOptionConfigMixin = {
                 }
             })
             return list
+        },
+        customExpressionsDoc () {
+            return this.$pipelineDocs.CUSTOM_EXPRESSIONS_DOC
         }
     },
     methods: {

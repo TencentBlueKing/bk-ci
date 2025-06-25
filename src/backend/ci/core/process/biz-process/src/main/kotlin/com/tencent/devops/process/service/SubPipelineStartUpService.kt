@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -53,12 +52,12 @@ import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibil
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
+import com.tencent.devops.process.engine.service.SubPipelineRefService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.pipeline.PipelineBuildParamFormProp
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
-import com.tencent.devops.process.pojo.pipeline.StartUpInfo
-import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
@@ -95,7 +94,8 @@ class SubPipelineStartUpService @Autowired constructor(
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineUrlBean: PipelineUrlBean,
-    private val templateFacadeService: TemplateFacadeService
+    private val templateFacadeService: TemplateFacadeService,
+    private val subPipelineRefService: SubPipelineRefService
 ) {
 
     companion object {
@@ -164,7 +164,26 @@ class SubPipelineStartUpService @Autowired constructor(
         val watcher = Watcher("subPipeline start up")
         try {
             watcher.start("start check circular dependency")
-            checkSub(atomCode, projectId = fixProjectId, pipelineId = callPipelineId, existPipelines = existPipelines)
+            val existsLink = subPipelineRefService.exists(
+                projectId = projectId,
+                pipelineId = parentPipelineId,
+                subProjectId = fixProjectId,
+                subPipelineId = callPipelineId
+            )
+            if (existsLink) {
+                // 链路已归档，则说明不存在递归调用的情况
+                logger.info(
+                    "pipeline link already verified|" +
+                            "[$projectId|$parentPipelineId]->[$fixProjectId|$callPipelineId]"
+                )
+            } else {
+                checkSub(
+                    atomCode,
+                    projectId = fixProjectId,
+                    pipelineId = callPipelineId,
+                    existPipelines = existPipelines
+                )
+            }
         } catch (e: OperationException) {
             return I18nUtil.generateResponseDataObject(
                 messageCode = ProcessMessageCode.ERROR_SUBPIPELINE_CYCLE_CALL,
@@ -449,7 +468,7 @@ class SubPipelineStartUpService @Autowired constructor(
         includeNotRequired: Boolean?,
         parentProjectId: String = "",
         parentPipelineId: String = ""
-    ): Result<List<SubPipelineStartUpInfo>> {
+    ): Result<List<PipelineBuildParamFormProp>> {
         if (pipelineId.isBlank() || projectId.isBlank()) {
             return Result(ArrayList())
         }
@@ -461,80 +480,15 @@ class SubPipelineStartUpService @Autowired constructor(
         } else {
             userId
         }
-        val result = pipelineBuildFacadeService.buildManualStartupInfo(oauthUser, projectId, pipelineId, ChannelCode.BS)
-        val parameter = ArrayList<SubPipelineStartUpInfo>()
-        val prop = result.properties.filter {
-            val const = if (includeConst == false) { it.constant != true } else { true }
-            val required = if (includeNotRequired == false) { it.required } else { true }
-            const && required
-        }
-
-        for (item in prop) {
-            if (item.type == BuildFormPropertyType.MULTIPLE || item.type == BuildFormPropertyType.ENUM) {
-                val keyList = ArrayList<StartUpInfo>()
-                val valueList = ArrayList<StartUpInfo>()
-                val defaultValue = item.defaultValue.toString()
-                for (option in item.options!!) {
-                    valueList.add(
-                        StartUpInfo(
-                            option.key,
-                            option.value
-                        )
-                    )
-                }
-                val info = SubPipelineStartUpInfo(
-                    key = item.id,
-                    keyDisable = true,
-                    keyType = "input",
-                    keyListType = "",
-                    keyUrl = "",
-                    keyUrlQuery = ArrayList(),
-                    keyList = keyList,
-                    keyMultiple = false,
-                    value = if (item.type == BuildFormPropertyType.MULTIPLE) {
-                        if (defaultValue.isBlank()) {
-                            ArrayList()
-                        } else {
-                            defaultValue.split(",")
-                        }
-                    } else {
-                        defaultValue
-                    },
-                    valueDisable = false,
-                    valueType = "select",
-                    valueListType = "list",
-                    valueUrl = "",
-                    valueUrlQuery = ArrayList(),
-                    valueList = valueList,
-                    valueMultiple = item.type == BuildFormPropertyType.MULTIPLE,
-                    type = item.type.value
-                )
-                parameter.add(info)
-            } else {
-                val keyList = ArrayList<StartUpInfo>()
-                val valueList = ArrayList<StartUpInfo>()
-                val info = SubPipelineStartUpInfo(
-                    key = item.id,
-                    keyDisable = true,
-                    keyType = "input",
-                    keyListType = "",
-                    keyUrl = "",
-                    keyUrlQuery = ArrayList(),
-                    keyList = keyList,
-                    keyMultiple = false,
-                    value = item.defaultValue,
-                    valueDisable = false,
-                    valueType = "input",
-                    valueListType = "",
-                    valueUrl = "",
-                    valueUrlQuery = ArrayList(),
-                    valueList = valueList,
-                    valueMultiple = false,
-                    type = item.type.value
-                )
-                parameter.add(info)
-            }
-        }
+        val parameter = pipelineBuildFacadeService.getBuildParamFormProp(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            includeConst = includeConst,
+            includeNotRequired = includeNotRequired,
+            userId = oauthUser,
+            version = null,
+            isTemplate = null
+        )
         return Result(parameter)
     }
 

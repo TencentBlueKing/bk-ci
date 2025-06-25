@@ -393,7 +393,6 @@ class TGitMrTriggerHandler(
             startParams.putIfEmpty(PIPELINE_GIT_MR_DESC, event.object_attributes.description!!)
         }
         startParams.putIfEmpty(PIPELINE_GIT_MR_PROPOSER, event.user.username)
-
         return startParams
     }
 
