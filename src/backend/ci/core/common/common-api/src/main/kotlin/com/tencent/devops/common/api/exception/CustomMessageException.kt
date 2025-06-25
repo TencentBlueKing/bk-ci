@@ -25,29 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.resources
+package com.tencent.devops.common.api.exception
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.user.UserSignatureManageResource
-import com.tencent.devops.project.pojo.UserSignatureStatusResponse
-import com.tencent.devops.project.service.SignatureManageService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.api.constant.CommonMessageCode.CUSTOM_MESSAGE_EXCEPTION
 
-@RestResource
-class UserSignatureManageResourceImpl @Autowired constructor(
-    private val signatureManageService: SignatureManageService
-) : UserSignatureManageResource {
-    override fun getSignatureStatus(userId: String, projectId: String): Result<UserSignatureStatusResponse> {
-        return Result(
-            signatureManageService.getSignatureStatus(
-                projectId = projectId,
-                userId = userId
-            )
-        )
-    }
-
-    override fun listSignatureProjects(userId: String): Result<List<String>> {
-        return Result(signatureManageService.listSignatureProjects())
-    }
-}
+class CustomMessageException(
+    message: String?,
+    errorCode: String = CUSTOM_MESSAGE_EXCEPTION,
+    params: Array<String>? = null
+) : ErrorCodeException(errorCode = errorCode, defaultMessage = message, params = params)

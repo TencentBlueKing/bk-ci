@@ -33,7 +33,6 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
-import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
@@ -48,18 +47,6 @@ interface SignatureCallbackResource {
     @Path("/callback")
     @Operation(summary = "回调接口")
     fun callback(
-        @Parameter(description = "客户端Id", required = true)
-        @HeaderParam(value = "Smoba-Clientid")
-        clientId: String,
-        @Parameter(description = "随机字符串  ", required = true)
-        @HeaderParam(value = "Smoba-Nonce")
-        nonce: String,
-        @Parameter(description = "时间戳", required = true)
-        @HeaderParam(value = "Smoba-Timestamp")
-        timestamp: String,
-        @Parameter(description = "token", required = true)
-        @HeaderParam(value = "Smoba-Signature")
-        signature: String,
         @Parameter(description = "回调请求体", required = true)
         callbackInfo: SignatureCallbackInfo
     ): SignatureCallbackResponse

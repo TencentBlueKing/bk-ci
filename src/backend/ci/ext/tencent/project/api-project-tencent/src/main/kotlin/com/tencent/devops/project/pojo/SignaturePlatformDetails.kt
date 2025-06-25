@@ -25,29 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.resources
+package com.tencent.devops.project.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.user.UserSignatureManageResource
-import com.tencent.devops.project.pojo.UserSignatureStatusResponse
-import com.tencent.devops.project.service.SignatureManageService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.v3.oas.annotations.media.Schema
 
-@RestResource
-class UserSignatureManageResourceImpl @Autowired constructor(
-    private val signatureManageService: SignatureManageService
-) : UserSignatureManageResource {
-    override fun getSignatureStatus(userId: String, projectId: String): Result<UserSignatureStatusResponse> {
-        return Result(
-            signatureManageService.getSignatureStatus(
-                projectId = projectId,
-                userId = userId
-            )
-        )
-    }
-
-    override fun listSignatureProjects(userId: String): Result<List<String>> {
-        return Result(signatureManageService.listSignatureProjects())
-    }
-}
+@Schema(title = "保密签业务方平台详情")
+data class SignaturePlatformDetails(
+    val platform: String,
+    var platformSecret: String,
+    val platformName: String,
+    val url: String,
+    val information: String,
+    val projectCodes: List<String>
+)
