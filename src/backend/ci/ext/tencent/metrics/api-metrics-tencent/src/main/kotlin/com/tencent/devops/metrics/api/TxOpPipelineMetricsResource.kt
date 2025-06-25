@@ -39,6 +39,7 @@ import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
+import com.tencent.devops.common.api.pojo.Result
 
 @Tag(name = "OP_PIPELINE_EPLUS", description = "OP-流水线度量-EPLUS")
 @Path("/op/pipelines/eplus")
@@ -70,5 +71,5 @@ interface TxOpPipelineMetricsResource {
         @Parameter(description = "是否添加到白名单", required = true)
         @QueryParam("isAdd")
         isAdd: Boolean
-    ): com.tencent.devops.common.api.pojo.Result<Boolean>
+    ): Result<Boolean>
 }

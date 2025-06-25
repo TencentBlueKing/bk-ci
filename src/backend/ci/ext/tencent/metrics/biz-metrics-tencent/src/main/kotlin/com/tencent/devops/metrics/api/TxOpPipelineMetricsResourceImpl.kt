@@ -46,7 +46,7 @@ class TxOpPipelineMetricsResourceImpl @Autowired constructor(
         projectId: String,
         pipelineIds: List<String>,
         isAdd: Boolean
-    ): com.tencent.devops.common.api.pojo.Result<Boolean> {
+    ): Result<Boolean> {
         return Result(
             txPipelineMetricsService.updatePipelineWhitelist(
                 userId = userId,
