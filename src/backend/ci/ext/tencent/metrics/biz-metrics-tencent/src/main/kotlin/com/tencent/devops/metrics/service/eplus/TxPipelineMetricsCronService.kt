@@ -519,6 +519,6 @@ class TxPipelineMetricsCronService @Autowired constructor(
             </tr>
             """
         }
-        return rows
+        return rows.replace("\n", "")
     }
 }
