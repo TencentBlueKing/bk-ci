@@ -42,8 +42,6 @@ import org.springframework.amqp.core.ExchangeTypes
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.context.config.ConfigDataEnvironmentPostProcessor
 import org.springframework.boot.env.EnvironmentPostProcessor
-import org.springframework.cloud.stream.binder.rabbit.properties.RabbitConsumerProperties.ContainerType
-import org.springframework.cloud.stream.binder.rabbit.properties.RabbitProducerProperties.ProducerType
 import org.springframework.core.Ordered
 import org.springframework.core.env.ConfigurableEnvironment
 import org.springframework.core.env.PropertiesPropertySource
@@ -93,6 +91,9 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
                 val rabbitPropPrefix = "spring.cloud.stream.rabbit.bindings.$bindingName"
                 setProperty("$rabbitPropPrefix.producer.delayedExchange", "true")
                 setProperty("$rabbitPropPrefix.producer.exchangeType", ExchangeTypes.TOPIC)
+                if (event.type == RabbitQueueType.QUORUM) {
+                    setProperty("$rabbitPropPrefix.producer.quorum.enabled", "true")
+                }
                 val prefix = "spring.cloud.stream.bindings.$bindingName"
                 setProperty("$prefix.destination", event.destination)
                 setProperty("$prefix.binder", event.binder)
@@ -137,7 +138,6 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
         event: Event
     ) {
         val concurrencyExpression = "\${bkScs.consumer.concurrency.$bindingName:${consumer.defaultConcurrency}}"
-        val rabbitQueueTypeExpression = "\${bkScs.consumer.queueType.$bindingName:classic}"
         val bindingPrefix = "spring.cloud.stream.bindings.$bindingName-in-0"
         val rabbitPropPrefix = "spring.cloud.stream.rabbit.bindings.$bindingName-in-0"
         val pulsarPropPrefix = "spring.cloud.stream.pulsar.bindings.$bindingName-in-0"
@@ -157,7 +157,7 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
         setProperty("$rabbitPropPrefix.consumer.maxConcurrency", concurrencyExpression)
         setProperty("$rabbitPropPrefix.consumer.delayedExchange", "true")
         setProperty("$rabbitPropPrefix.consumer.exchangeType", ExchangeTypes.TOPIC)
-        if (RabbitQueueType.parse(rabbitQueueTypeExpression) == RabbitQueueType.QUORUM) {
+        if (event.type == RabbitQueueType.QUORUM) {
             setProperty("$rabbitPropPrefix.consumer.quorum.enabled", "true")
         }
     }
