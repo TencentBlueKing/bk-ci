@@ -575,6 +575,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         return Result(pipelineBuildFacadeService.batchServiceBasic(buildIds))
     }
 
+    @Deprecated("use batchGetBuildStatus instead")
     override fun getBatchBuildStatus(
         projectId: String,
         buildId: Set<String>,
@@ -589,6 +590,34 @@ class ServiceBuildResourceImpl @Autowired constructor(
             pipelineBuildFacadeService.getBatchBuildStatus(
                 projectId = projectId,
                 buildIdSet = buildId,
+                channelCode = channelCode,
+                startBeginTime = startBeginTime,
+                endBeginTime = endBeginTime,
+                checkPermission = ChannelCode.isNeedAuth(channelCode)
+            )
+        )
+    }
+
+    override fun batchGetBuildStatus(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        channelCode: ChannelCode,
+        startBeginTime: String?,
+        endBeginTime: String?,
+        buildIdSet: Set<String>
+    ): Result<List<BuildHistory>> {
+        checkUserId(userId)
+        checkParam(projectId, pipelineId)
+        if (buildIdSet.size > 100) {
+            throw IllegalArgumentException("The maximum number of buildIds is 100")
+        }
+        return Result(
+            pipelineBuildFacadeService.batchGetBuildStatus(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildIdSet = buildIdSet,
                 channelCode = channelCode,
                 startBeginTime = startBeginTime,
                 endBeginTime = endBeginTime,

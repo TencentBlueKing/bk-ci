@@ -1745,6 +1745,42 @@ class PipelineBuildFacadeService(
         return buildHistories
     }
 
+    fun batchGetBuildStatus(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildIdSet: Set<String>,
+        channelCode: ChannelCode,
+        startBeginTime: String?,
+        endBeginTime: String?,
+        checkPermission: Boolean
+    ): List<BuildHistory> {
+        if (checkPermission) {
+            pipelinePermissionService.validPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW,
+                message = MessageUtil.getMessageByLocale(
+                    ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_BUILD_STATUS))
+                )
+            )
+        }
+        val buildHistories = pipelineRuntimeService.getBuildHistoryByIds(
+            buildIds = buildIdSet,
+            startBeginTime = startBeginTime,
+            endBeginTime = endBeginTime,
+            projectId = projectId
+        )
+
+        if (buildHistories.isEmpty()) {
+            return emptyList()
+        }
+        return buildHistories
+    }
+
     fun getBuilds(
         userId: String,
         projectId: String,

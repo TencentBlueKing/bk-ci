@@ -203,6 +203,36 @@ interface ApigwBuildResourceV4 {
         buildId: String
     ): Result<BuildHistoryWithVars>
 
+    @Operation(
+        summary = "批量获取构建详情",
+        tags = ["v4_app_batch_get_build_status", "v4_user_batch_get_build_status"]
+    )
+    @POST
+    @Path("/batch_get_build_status")
+    fun batchGetBuildStatus(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @QueryParam("构建开始时间")
+        startBeginTime: String? = null,
+        @QueryParam("构建结束时间")
+        endBeginTime: String? = null,
+        @Parameter(description = "构建ID列表,最大不能超过100个", required = true)
+        buildIdSet: Set<String>,
+    ): Result<List<BuildHistory>>
+
     @Operation(summary = "获取流水线构建历史", tags = ["v4_user_build_list", "v4_app_build_list"])
     @GET
     @Path("/build_histories")

@@ -633,6 +633,7 @@ interface ServiceBuildResource {
     // @Path("/projects/{projectId}/batchStatus")
     @Path("/{projectId}/batchStatus")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
+    @Deprecated("use batchGetBuildStatus instead")
     fun getBatchBuildStatus(
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
@@ -646,6 +647,32 @@ interface ServiceBuildResource {
         startBeginTime: String? = null,
         @QueryParam("endBeginTime")
         endBeginTime: String? = null
+    ): Result<List<BuildHistory>>
+
+    @Operation(summary = "批量获取构建详情")
+    @POST
+    // @Path("/projects/{projectId}/batchStatus")
+    @Path("/{projectId}/batchGetBuildStatus")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
+    fun batchGetBuildStatus(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "渠道号，默认为BS", required = true)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode = ChannelCode.BS,
+        @QueryParam("startBeginTime")
+        startBeginTime: String? = null,
+        @QueryParam("endBeginTime")
+        endBeginTime: String? = null,
+        @Parameter(description = "构建ID", required = true)
+        buildIdSet: Set<String>
     ): Result<List<BuildHistory>>
 
     @Operation(summary = "获取流水线构建历史, 返回buildid")
