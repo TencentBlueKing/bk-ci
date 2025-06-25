@@ -356,7 +356,11 @@ class RbacPermissionService(
             } else {
                 action
             }
-            val instanceMap = authHelper.groupRbacInstanceByType(userId, useAction)
+            val instanceMap = authHelper.groupRbacInstanceByType(
+                userId,
+                useAction,
+                TenantUtils.getTenantIdByEnglishName(projectCode)
+            )
             return when {
                 resourceType == AuthResourceType.PROJECT.value ->
                     instanceMap[resourceType] ?: emptyList()
@@ -459,14 +463,15 @@ class RbacPermissionService(
             ) {
                 return mapOf(AuthResourceType.PROJECT.value to listOf(projectCode))
             }
-            return authHelper.groupRbacInstanceByType(userId, action).mapValues {
-                getFinalResourceCodes(
-                    projectCode = projectCode,
-                    resourceType = it.key,
-                    iamResourceCodes = it.value,
-                    createUser = userId
-                )
-            }
+            return authHelper.groupRbacInstanceByType(userId, action, TenantUtils.getTenantIdByEnglishName(projectCode))
+                .mapValues {
+                    getFinalResourceCodes(
+                        projectCode = projectCode,
+                        resourceType = it.key,
+                        iamResourceCodes = it.value,
+                        createUser = userId
+                    )
+                }
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to get user resources and parent resource|" +
@@ -529,7 +534,12 @@ class RbacPermissionService(
                 ) {
                     permissionMap[AuthPermission.get(authPermission)] = resources.map { it.resourceCode }
                 } else {
-                    val iamResourceCodes = authHelper.isAllowed(userId, action, instanceList)
+                    val iamResourceCodes = authHelper.isAllowed(
+                        userId,
+                        action,
+                        instanceList,
+                        TenantUtils.getTenantIdByEnglishName(projectCode)
+                    )
                     permissionMap[AuthPermission.get(authPermission)] = getFinalResourceCodes(
                         projectCode = projectCode,
                         resourceType = resourceType,
