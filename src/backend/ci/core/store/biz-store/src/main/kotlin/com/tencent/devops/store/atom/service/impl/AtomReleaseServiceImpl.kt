@@ -1136,7 +1136,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             // 通过websocket推送状态变更消息
             storeWebsocketService.sendWebsocketMessage(userId, atomId)
             // 研发商店插件上架进入审核阶段时通知管理员审批
-            if (atomName !== null && !(defaultAtomPublisherReviewers.isNullOrBlank())) {
+            if (atomName !== null && !defaultAtomPublisherReviewers.isNullOrBlank()) {
                 sendPendingReview(
                     userId = userId,
                     atomName = atomName,
