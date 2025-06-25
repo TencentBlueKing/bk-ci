@@ -66,12 +66,12 @@ class PipelineMetricsInfoDao {
         updateField: Field<Boolean>
     ) {
         if (records.isEmpty()) return
-        val table = TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY
+        val tEplusPipelineMetricsDataDaily = TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY
         // 分批次处理，每批1000条
         records.chunked(1000).forEach { batch ->
             // 为每个批次创建单独的插入操作
             val queries = batch.map { record ->
-                dslContext.insertInto(table)
+                dslContext.insertInto(tEplusPipelineMetricsDataDaily)
                     .set(record)
                     .onDuplicateKeyUpdate()
                     .set(updateField, record.get(updateField))
@@ -112,17 +112,17 @@ class PipelineMetricsInfoDao {
         projectId: String,
         field: Field<Boolean>
     ): Int {
-        val table = TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY
+        val tEplusPipelineMetricsDataDaily = TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY
         with(TEplusPipelineMetricsWhiteList.T_EPLUS_PIPELINE_METRICS_WHITE_LIST) {
             return dslContext.selectCount()
-                .from(table)
+                .from(tEplusPipelineMetricsDataDaily)
                 .leftJoin(this)
                 .on(
-                    table.PIPELINE_ID.eq(PIPELINE_ID)
-                        .and(table.PROJECT_ID.eq(PROJECT_ID))
+                    tEplusPipelineMetricsDataDaily.PIPELINE_ID.eq(PIPELINE_ID)
+                        .and(tEplusPipelineMetricsDataDaily.PROJECT_ID.eq(PROJECT_ID))
                 )
-                .where(table.STATISTICS_TIME.eq(currentStatisticsTime))
-                .and(table.PROJECT_ID.eq(projectId))
+                .where(tEplusPipelineMetricsDataDaily.STATISTICS_TIME.eq(currentStatisticsTime))
+                .and(tEplusPipelineMetricsDataDaily.PROJECT_ID.eq(projectId))
                 .and(field.eq(true))
                 .and(PIPELINE_ID.isNull()) // 排除白名单中的流水线
                 .fetchOne(0, Int::class.java) ?: 0
