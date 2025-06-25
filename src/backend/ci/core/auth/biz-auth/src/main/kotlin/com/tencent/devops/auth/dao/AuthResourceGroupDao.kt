@@ -286,6 +286,22 @@ class AuthResourceGroupDao {
         }
     }
 
+    fun listByResourceCode(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Result<TAuthResourceGroupRecord> {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(RESOURCE_CODE.eq(resourceCode))
+                .fetch()
+        }
+    }
+
+
     fun listIamGroupIdsByConditions(
         dslContext: DSLContext,
         projectCode: String,

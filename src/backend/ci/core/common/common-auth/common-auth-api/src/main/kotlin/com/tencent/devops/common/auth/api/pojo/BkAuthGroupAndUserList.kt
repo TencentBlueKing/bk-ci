@@ -42,5 +42,5 @@ data class BkAuthGroupAndUserList(
     @JsonProperty("dept_info_list")
     val deptInfoList: List<RoleGroupMemberInfo>? = null,
     @JsonProperty("type")
-    val type: String
+    val type: String = ""
 )
