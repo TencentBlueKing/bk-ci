@@ -27,7 +27,6 @@
 package com.tencent.devops.notify.api
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.notify.api.annotation.BkCheckBlackListInterface
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import io.swagger.v3.oas.annotations.Operation
