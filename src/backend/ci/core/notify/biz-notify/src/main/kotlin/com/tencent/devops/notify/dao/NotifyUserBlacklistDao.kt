@@ -38,7 +38,6 @@ class NotifyUserBlacklistDao {
     /**
      * 批量添加用户到通知黑名单
      * @param userIds 用户ID列表
-     * @param sendType 通知类型(RTX/EMAIL/WECHAT/ALL)
      * @return 成功添加的数量
      */
     fun batchAddToBlacklist(
@@ -49,8 +48,12 @@ class NotifyUserBlacklistDao {
         with(table) {
             if (userIds.isEmpty()) return 0
 
+            val existingUsers = listAllBlacklistUsers(dslContext)
+            val newUsers = userIds.filter { !existingUsers.contains(it) }
+            if (newUsers.isEmpty()) return 0
+
             val now = LocalDateTime.now()
-            val queries = userIds.map { userId ->
+            val queries = newUsers.map { userId ->
                 dslContext.insertInto(
                     this,
                     ID,

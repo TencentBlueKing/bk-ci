@@ -30,7 +30,6 @@ package com.tencent.devops.notify.config
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.ScsConsumerBuilder
 import com.tencent.devops.notify.consumer.NotifyMessageConsumer
-import com.tencent.devops.notify.filter.NotifyBlackListAspect
 import com.tencent.devops.notify.model.EmailNotifyMessageWithOperation
 import com.tencent.devops.notify.model.RtxNotifyMessageWithOperation
 import com.tencent.devops.notify.model.SmsNotifyMessageWithOperation
@@ -38,6 +37,7 @@ import com.tencent.devops.notify.model.VoiceNotifyMessageWithOperation
 import com.tencent.devops.notify.model.WechatNotifyMessageWithOperation
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
 import com.tencent.devops.notify.service.NotifyUserBlackListService
+import com.tencent.devops.notify.service.filter.NotifyBlackListAspect
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration

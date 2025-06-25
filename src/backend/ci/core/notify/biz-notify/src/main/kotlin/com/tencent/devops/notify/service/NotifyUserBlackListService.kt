@@ -58,8 +58,8 @@ class NotifyUserBlackListService @Autowired constructor(
                 refreshBlacklistCache()
             }
             true
-        } catch (e: Exception) {
-            logger.warn("Failed to batch add users to blacklist: $userIds", e)
+        } catch (ignored: Throwable) {
+            logger.warn("Failed to batch add users to blacklist: $userIds，${ignored.message}")
             false
         }
     }
@@ -76,8 +76,8 @@ class NotifyUserBlackListService @Autowired constructor(
                 refreshBlacklistCache()
             }
             true
-        } catch (e: Exception) {
-            logger.warn("Failed to batch remove users from blacklist: $userIds", e)
+        } catch (ignored: Throwable) {
+            logger.warn("Failed to batch remove users from blacklist: $userIds，${ignored.message}")
             false
         }
     }
@@ -89,8 +89,8 @@ class NotifyUserBlackListService @Autowired constructor(
         try {
             val blacklist = notifyUserBlacklistDao.listAllBlacklistUsers(dslContext)
             redisOperation.set(BLACKLIST_REDIS_KEY, blacklist.joinToString(","))
-        } catch (e: Exception) {
-            logger.warn("Failed to refresh blacklist cache", e)
+        } catch (ignored: Throwable) {
+            logger.warn("Failed to refresh blacklist cache，${ignored.message}")
         }
     }
 
@@ -102,14 +102,16 @@ class NotifyUserBlackListService @Autowired constructor(
         return try {
             val cached = redisOperation.get(BLACKLIST_REDIS_KEY)
             if (cached != null) {
-                return cached.split(",")
+                return if (cached.isEmpty()) emptyList() else cached.split(",")
             }
 
             val blacklist = notifyUserBlacklistDao.listAllBlacklistUsers(dslContext)
-            redisOperation.set(BLACKLIST_REDIS_KEY, blacklist.joinToString(","))
+            if (blacklist.isNotEmpty()) {
+                redisOperation.set(BLACKLIST_REDIS_KEY, blacklist.joinToString(","))
+            }
             blacklist
-        } catch (e: Exception) {
-            logger.warn("Failed to get blacklist", e)
+        } catch (ignored: Throwable) {
+            logger.warn("Failed to get blacklist，${ignored.message}")
             emptyList()
         }
     }

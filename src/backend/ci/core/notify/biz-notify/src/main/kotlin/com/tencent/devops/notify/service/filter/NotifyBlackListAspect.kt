@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.notify.filter
+package com.tencent.devops.notify.service.filter
 
 import com.tencent.devops.notify.api.annotation.BkCheckBlackListInterface
 import com.tencent.devops.notify.api.annotation.BkNotifyReceivers
@@ -74,8 +74,8 @@ class NotifyBlackListAspect constructor(
                     processAnnotatedField(obj, field)
                 }
             }
-        } catch (e: Exception) {
-            logger.warn("handle annotated BkNotifyReceivers field fail", e)
+        } catch (ignored: Throwable) {
+            logger.warn("handle annotated BkNotifyReceivers field fail，${ignored.message}")
         }
     }
 
@@ -85,8 +85,7 @@ class NotifyBlackListAspect constructor(
     private fun processAnnotatedField(obj: Any, field: Field) {
         try {
             field.isAccessible = true
-            val receivers = field.get(obj)
-            when (receivers) {
+            when (val receivers = field.get(obj)) {
                 is MutableSet<*> -> {
                     val originalSet = receivers as MutableSet<Any?>
                     // 过滤黑名单
@@ -102,8 +101,8 @@ class NotifyBlackListAspect constructor(
                     field.set(obj, filtered)
                 }
             }
-        } catch (e: Exception) {
-            logger.warn("Failed to process annotated field ${field.name}", e)
+        } catch (ignored: Throwable) {
+            logger.warn("Failed to process annotated field ${field.name}，${ignored.message}")
         }
     }
 
@@ -112,7 +111,7 @@ class NotifyBlackListAspect constructor(
      */
     private fun filterReceivers(receivers: Set<String>): Set<String> {
         val blacklist = notifyUserBlackListService.getBlacklist()
-        return receivers - blacklist
+        return receivers - blacklist.toSet()
     }
 
     companion object {
