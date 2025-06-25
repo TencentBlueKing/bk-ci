@@ -380,3 +380,35 @@ export const isBuildResourceParam = paramType(CONTAINER_TYPE)
 export const isArtifactoryParam = paramType(ARTIFACTORY)
 export const isSubPipelineParam = paramType(SUB_PIPELINE)
 export const isFileParam = paramType(CUSTOM_FILE)
+
+export const getParamsGroupByLabel = (list) => {
+    // 将参数列表按照分组进行分组,未分组的参数放到一个分组里
+    const notGroupedKey = (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('notGrouped')) || '未分组'
+    const listMap = list.reduce((acc, item) => {
+        const categoryKey = item.category || notGroupedKey
+        if (!acc[categoryKey]) {
+            acc[categoryKey] = []
+        }
+        acc[categoryKey].push(item)
+        return acc
+    }, {})
+    
+    const sortedCategories = Object.keys(listMap).sort((a, b) => {
+        if (a === notGroupedKey) return -1
+        if (b === notGroupedKey) return 1
+        const isEnglishA = /^[a-z]/i.test(a)
+        const isEnglishB = /^[a-z]/i.test(b)
+
+        if (isEnglishA && !isEnglishB) return -1
+        if (!isEnglishA && isEnglishB) return 1
+        return a.localeCompare(b, 'zh-CN', {
+            sensitivity: 'case',
+            numeric: true
+        })
+    })
+    
+    return {
+        listMap,
+        sortedCategories
+    }
+}
