@@ -150,7 +150,7 @@ class PipelineMetricsInfoDao {
     fun listInvalidPipelineProjectIds(dslContext: DSLContext, limit: Int, offset: Int): List<String> {
         with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
             return dslContext.select(PROJECT_ID).from(this)
-                .where(INVALID_PIPELINE.eq(true))
+                .where(INVALID_PIPELINE_FLAG.eq(true))
                 .groupBy(PROJECT_ID)
                 .orderBy(PROJECT_ID.desc())
                 .limit(limit).offset(offset)
@@ -168,7 +168,7 @@ class PipelineMetricsInfoDao {
                 .from(this)
                 .where(STATISTICS_TIME.eq(statisticsTime))
                 .and(PROJECT_ID.eq(projectId))
-                .and(INVALID_PIPELINE.eq(true))
+                .and(INVALID_PIPELINE_FLAG.eq(true))
                 .fetch()
         }
     }
@@ -179,7 +179,7 @@ class PipelineMetricsInfoDao {
                 dslContext.insertInto(this)
                     .set(it)
                     .onDuplicateKeyUpdate()
-                    .set(INVALID_PIPELINE, it.invalidPipeline)
+                    .set(INVALID_PIPELINE_FLAG, it.invalidPipelineFlag)
                     .set(URL, it.url)
                     .set(PIPELINE_NAME, it.pipelineName)
             }
