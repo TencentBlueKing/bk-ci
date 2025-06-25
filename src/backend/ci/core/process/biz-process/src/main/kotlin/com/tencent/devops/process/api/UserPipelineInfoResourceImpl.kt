@@ -100,8 +100,20 @@ class UserPipelineInfoResourceImpl @Autowired constructor(
     }
 
     @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
-    override fun getPipelineInfo(userId: String, projectId: String, pipelineId: String): Result<PipelineDetailInfo?> {
-        return Result(pipelineListFacadeService.getPipelineDetail(userId, projectId, pipelineId))
+    override fun getPipelineInfo(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        archiveFlag: Boolean?
+    ): Result<PipelineDetailInfo?> {
+        return Result(
+            pipelineListFacadeService.getPipelineDetail(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                archiveFlag = archiveFlag
+            )
+        )
     }
 
     fun checkParam(userId: String, projectId: String) {

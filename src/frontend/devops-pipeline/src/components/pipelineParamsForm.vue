@@ -10,13 +10,13 @@
         >
             <template v-if="sortCategory">
                 <renderSortCategoryParams
-                    v-for="(list, key) in renderParamList"
+                    v-for="key in sortedCategories"
                     :key="key"
                     :name="key"
                 >
                     <template slot="content">
                         <form-field
-                            v-for="param in list"
+                            v-for="param in paramsListMap[key]"
                             :key="param.id"
                             v-if="param.show"
                             :required="param.required"
@@ -126,6 +126,7 @@
         CONTAINER_TYPE,
         ENUM,
         getBranchOption,
+        getParamsGroupByLabel,
         GIT_REF,
         isArtifactoryParam,
         isBuildResourceParam,
@@ -310,7 +311,14 @@
                 }
                 const { [key]: value, ...rest } = listMap
                 return { [key]: value, ...rest }
+            },
+            paramsListMap () {
+                return getParamsGroupByLabel(this.paramList)?.listMap ?? {}
+            },
+            sortedCategories () {
+                return getParamsGroupByLabel(this.paramList)?.sortedCategories ?? []
             }
+            
         },
         methods: {
             isArtifactoryParam,

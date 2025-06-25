@@ -31,6 +31,7 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLLimit
@@ -1548,6 +1549,12 @@ class PipelineListFacadeService @Autowired constructor(
             projectId = projectId, pipelineIds = pipelineIds.toList()
         )
 
+        // 获取归档中的流水线信息
+        val pipelineArchivingFlagMap = redisOperation.isMember(
+            key = BkApiUtil.getMigratingPipelinesRedisKey(SystemModuleEnum.PROCESS.name),
+            items = pipelineIds.toTypedArray()
+        )
+
         // 完善数据
         finalPipelines(
             pipelines = pipelines,
@@ -1561,7 +1568,8 @@ class PipelineListFacadeService @Autowired constructor(
             buildTaskTotalCountMap = buildTaskTotalCountMap,
             buildTaskFinishCountMap = buildTaskFinishCountMap,
             pipelineYamlExistMap = pipelineYamlExistMap,
-            queryByWeb = queryByWeb
+            queryByWeb = queryByWeb,
+            pipelineArchivingFlagMap = pipelineArchivingFlagMap
         )
 
         return pipelines
@@ -1579,7 +1587,8 @@ class PipelineListFacadeService @Autowired constructor(
         buildTaskTotalCountMap: Map<String, Int>,
         buildTaskFinishCountMap: Map<String, Int>,
         pipelineYamlExistMap: Map<String, Boolean>,
-        queryByWeb: Boolean
+        queryByWeb: Boolean,
+        pipelineArchivingFlagMap: Map<String, Boolean>?
     ) {
         pipelines.forEach {
             val pipelineId = it.pipelineId
@@ -1661,6 +1670,7 @@ class PipelineListFacadeService @Autowired constructor(
                 it.buildNumRule = pipelineSettingRecord.get(tSetting.BUILD_NUM_RULE)
             }
             it.yamlExist = pipelineYamlExistMap[pipelineId] ?: false
+            it.archivingFlag = pipelineArchivingFlagMap?.get(pipelineId)
         }
     }
 
