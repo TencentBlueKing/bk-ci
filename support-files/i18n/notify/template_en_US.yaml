@@ -906,7 +906,7 @@
 - index: 42
   id: "ea98239a51a74f8db0a012a809bc2018"
   templateCode: "MIGRATE_PROCESS_PIPELINE_DATA_FAIL_TEMPLATE"
-  templateName: "Data migration failure reminder for the pipeline under the project"
+  templateName: "Reminder of data migration or archiving failure in the project pipeline"
   notifyTypeScope:
     - "WEWORK"
   priority: 0
@@ -914,14 +914,14 @@
   weworkTemplate:
     id: "390987c50179422388dd742924fc2003"
     sender: "DevOps"
-    title: "Failed to migrate data of pipeline [${pipelineId}] under project [${projectId}]"
-    body: "Failed to migrate data of pipeline [${pipelineId}] under project [${projectId}]. Failure reason: ${failMsg}"
+    title: "Data ${operate} failed for pipeline [${pipelineId}] under project [${projectId}]"
+    body: "Data ${operate} failed for pipeline [${pipelineId}] under project [${projectId}]. Failure reason: ${failMsg}"
   creator: "system"
   modifior: "system"
 - index: 43
   id: "ea98239a51a74f8db0a012a809bc2019"
   templateCode: "MIGRATE_PROCESS_PIPELINE_DATA_SUCCESS_TEMPLATE"
-  templateName: "Reminder of successful data migration in the pipeline under the project"
+  templateName: "Successful data migration or archiving reminder for the project's next pipeline"
   notifyTypeScope:
     - "WEWORK"
   priority: 0
@@ -929,8 +929,8 @@
   weworkTemplate:
     id: "390987c50179422388dd742924fc2004"
     sender: "DevOps"
-    title: "The data of the pipeline [${pipelineId}] under the project [${projectId}] was successfully migrated"
-    body: "The data of the pipeline [${pipelineId}] under the project [${projectId}] was successfully migrated, and there was a total of 1 successfully migrated pipeline."
+    title: "Successfully ${operate} project [${projectId}] pipeline [${pipelineId}] data"
+    body: "Data for pipeline [${pipelineId}] under project [${projectId}] has been successfully ${operated}, with a total of 1 pipelines ${operated}."
   creator: "system"
   modifior: "system"
 - index: 44

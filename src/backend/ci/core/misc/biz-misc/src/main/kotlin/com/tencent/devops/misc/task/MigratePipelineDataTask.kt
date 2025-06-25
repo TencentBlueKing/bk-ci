@@ -49,19 +49,19 @@ class MigratePipelineDataTask constructor(
             // 1、获取是否允许执行的信号量
             semaphore?.acquire()
             logger.info("migrateProjectData project[$projectId],pipeline[$pipelineId] start..............")
+            if (cancelFlag) {
+                // 2、取消未结束的构建
+                handleUnFinishPipelines(RETRY_NUM)
+                Thread.sleep(DEFAULT_THREAD_SLEEP_TINE)
+            }
+            // 检查构建是否结束
+            isBuildCompleted(
+                dslContext = dslContext,
+                processDao = processDao,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
             try {
-                if (cancelFlag) {
-                    // 2、取消未结束的构建
-                    handleUnFinishPipelines(RETRY_NUM)
-                    Thread.sleep(DEFAULT_THREAD_SLEEP_TINE)
-                }
-                // 检查构建是否结束
-                isBuildCompleted(
-                    dslContext = dslContext,
-                    processDao = processDao,
-                    projectId = projectId,
-                    pipelineId = pipelineId
-                )
                 // 3、开始迁移流水线的数据
                 // 迁移T_PIPELINE_INFO表数据
                 migratePipelineInfoData(
@@ -408,23 +408,6 @@ class MigratePipelineDataTask constructor(
 
             // 存在运行中的构建时禁止迁移
             if (runningCount > 0) {
-                throw ErrorCodeException(
-                    errorCode = MiscMessageCode.ERROR_MIGRATING_PIPELINE_STATUS_INVALID,
-                    defaultMessage = I18nUtil.getCodeLanMessage(
-                        messageCode = MiscMessageCode.ERROR_MIGRATING_PIPELINE_STATUS_INVALID
-                    )
-                )
-            }
-
-            // 统计未成功完成的STAGE_SUCCESS状态数量
-            val unCompletedStageSuccessCount = processDao.countUnCompletedStageSuccess(
-                dslContext = transactionContext,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )
-
-            // 存在未成功完成的STAGE_SUCCESS状态构建时禁止迁移
-            if (unCompletedStageSuccessCount > 0) {
                 throw ErrorCodeException(
                     errorCode = MiscMessageCode.ERROR_MIGRATING_PIPELINE_STATUS_INVALID,
                     defaultMessage = I18nUtil.getCodeLanMessage(
