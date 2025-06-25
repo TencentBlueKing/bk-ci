@@ -614,7 +614,8 @@ class ProjectDao {
         projectId: String?,
         authEnglishNameList: List<String>,
         offset: Int,
-        limit: Int
+        limit: Int,
+        tenantId: String?
     ): Result<Record4<String, String, String, String>> {
         return with(TProject.T_PROJECT) {
             dslContext.select(PROJECT_NAME, ENGLISH_NAME, ROUTER_TAG, TENANT_ID).from(this)
@@ -628,6 +629,7 @@ class ProjectDao {
                             .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PRIVATE.value))
                     )
                 )
+                .let { if (useTenantCondition(tenantId)) it.and(TENANT_ID.eq(tenantId)) else it }
                 .let {
                     it.takeIf { projectName != null }?.and(
                         lower(PROJECT_NAME).like("%${projectName!!.trim().lowercase(Locale.getDefault())}%")

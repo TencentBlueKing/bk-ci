@@ -957,7 +957,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             projectId = projectId?.let { TenantUtils.parseEnglishName(tenantId, it) },
             authEnglishNameList = hasVisitPermissionProjectIds,
             offset = sqlLimit.offset,
-            limit = sqlLimit.limit
+            limit = sqlLimit.limit,
+            tenantId = tenantId
         ).forEach {
             projectsResp.add(
                 ProjectByConditionDTO(
