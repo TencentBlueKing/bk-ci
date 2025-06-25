@@ -90,17 +90,25 @@
             return {
                 isLoading: false,
                 parameters: [],
-                subParamsKeyList: []
+                subParamsKeyList: [],
+                pipelineRequiredParams: {}
             }
         },
         computed: {
             ...mapState('atom', [
-                'pipelineInfo'
+                'pipelineInfo',
+                'pipeline',
+                'template'
             ]),
             paramValues () {
                 const { atomValue = {}, $route: { params = {} } } = this
+                const isTemplate = Object.prototype.hasOwnProperty.call(params, 'templateId')
                 return {
                     bkPoolType: this?.container?.dispatchType?.buildType,
+                    pipelineId: isTemplate ? params.templateId : '',
+                    templateVersion: isTemplate ? this.template?.currentVersion?.version : '',
+                    version: this.pipelineInfo?.version,
+                    isTemplate,
                     ...params,
                     ...atomValue
                 }
@@ -114,19 +122,40 @@
                     })
                 })
                 return map
+            },
+            container () {
+                return this.pipeline?.stages[0]?.containers[0] || {}
+            },
+            requiredParams () {
+                const requiredParamList = this.container?.params?.filter(item => !item.constant && item.required) || []
+                return requiredParamList.reduce((acc, current) => {
+                    acc[current.id] = isObject(current.defaultValue) ? '' : current.defaultValue
+                    acc[`variables.${current.id}`] = isObject(current.defaultValue) ? '' : current.defaultValue
+                    if (isObject(current.defaultValue)) {
+                        Object.keys(current.defaultValue).forEach(key => {
+                            acc[`${current.id}.${key}`] = current.defaultValue[key]
+                            acc[`variables.${current.id}.${key}`] = current.defaultValue[key]
+                        })
+                    }
+                    return acc
+                }, {})
             }
         },
 
         watch: {
             paramValues: {
                 handler (value, oldValue) {
-                    if (value.subPip !== oldValue.subPip) {
+                    this.pipelineRequiredParams.branch = typeof value.branch === 'string' && value.branch.isBkVar()
+                        ? this.requiredParams[value.branch.extractBkVar()]
+                        : value.branch
+                    if ((value?.subPip !== oldValue?.subPip) || (value?.branch !== oldValue?.branch)) {
                         this.atomValue[this.name] = []
                         this.getParametersList()
                         this.initData()
                     }
                 },
-                deep: true
+                deep: true,
+                immediate: true
             },
             subParamsKeyList (newVal) {
                 if (newVal) {
@@ -206,11 +235,13 @@
 
                 const urlQuery = this.param.urlQuery || {}
                 Object.keys(urlQuery).forEach((key, index) => {
-                    const value = typeof this.paramValues[key] === 'undefined' ? urlQuery[key] : this.paramValues[key]
+                    const value = typeof this.paramValues[key] === 'undefined'
+                        ? urlQuery[key]
+                        : this.pipelineRequiredParams[key] ?? this.paramValues[key]
                     url += `${index <= 0 ? '?' : '&'}${key}=${value}`
                 })
                 const pipelineInfoQuery = this.param.pipelineInfoQuery || {}
-                Object.keys(pipelineInfoQuery).forEach(key => {
+                this.pipelineInfo && Object.keys(pipelineInfoQuery).forEach(key => {
                     const value = typeof this.pipelineInfo[key] === 'undefined' ? pipelineInfoQuery[key] : this.pipelineInfo[key]
                     Object.keys(urlQuery).length ? url += `&${key}=${value}` : url += `?${key}=${value}`
                 })
