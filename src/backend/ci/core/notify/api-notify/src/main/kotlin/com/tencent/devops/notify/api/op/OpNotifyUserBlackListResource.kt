@@ -24,34 +24,44 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.notify.resources
+package com.tencent.devops.notify.api.op
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.notify.api.annotation.BkCheckBlackListInterface
-import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
-import com.tencent.devops.notify.pojo.NotifyContext
-import com.tencent.devops.notify.pojo.NotifyMessageContextRequest
-import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
-import com.tencent.devops.notify.service.NotifyMessageTemplateService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.core.MediaType
 
-@RestResource
-class ServiceNotifyMessageTemplateResourceImpl @Autowired constructor(
-    private val notifyMessageTemplateService: NotifyMessageTemplateService
-) : ServiceNotifyMessageTemplateResource {
+@Tag(name = "OP_NOTIFIES_BLACKLIST", description = "通知-用户黑名单")
+@Path("/op/notifies/blacklist")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
+interface OpNotifyUserBlackListResource {
 
-    @BkCheckBlackListInterface
-    override fun sendNotifyMessageByTemplate(request: SendNotifyMessageTemplateRequest): Result<Boolean> {
-        return notifyMessageTemplateService.sendNotifyMessageByTemplate(request)
-    }
+    @Operation(summary = "批量添加用户到黑名单")
+    @POST
+    @Path("/batchAdd")
+    fun batchAddToBlacklist(
+        @Parameter(description = "用户ID列表", required = true)
+        userIds: List<String>
+    ): Result<Boolean>
 
-    override fun getNotifyMessageByTemplate(request: NotifyMessageContextRequest): Result<NotifyContext?> {
-        return notifyMessageTemplateService.getNotifyMessageByTemplate(request)
-    }
+    @Operation(summary = "批量移除黑名单用户")
+    @POST
+    @Path("/batchRemove")
+    fun batchRemoveFromBlacklist(
+        @Parameter(description = "用户ID列表", required = true)
+        userIds: List<String>
+    ): Result<Boolean>
 
-    @BkCheckBlackListInterface
-    override fun completeNotifyMessageByTemplate(request: SendNotifyMessageTemplateRequest): Result<Boolean> {
-        return notifyMessageTemplateService.completeNotifyMessageByTemplate(request)
-    }
+    @Operation(summary = "获取所有黑名单用户")
+    @GET
+    @Path("/list")
+    fun getBlacklist(): Result<List<String>>
 }

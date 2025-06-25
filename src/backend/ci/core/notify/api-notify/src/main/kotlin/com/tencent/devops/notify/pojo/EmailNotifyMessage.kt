@@ -31,6 +31,7 @@ import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.notify.enums.EnumEmailType
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
+import com.tencent.devops.notify.api.annotation.BkNotifyReceivers
 import com.tencent.devops.notify.constant.NotifyMQ.NOTIFY_EMAIL
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -48,6 +49,7 @@ open class EmailNotifyMessage(
     var type: EnumEmailType = EnumEmailType.OUTER_MAIL
 
     @get:Schema(title = "通知接收者")
+    @BkNotifyReceivers
     private val receivers: LinkedHashSet<String> = LinkedHashSet()
 
     @get:Schema(title = "邮件抄送接收者")

@@ -29,6 +29,7 @@ package com.tencent.devops.notify.resources
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.notify.api.annotation.BkCheckBlackListInterface
 import com.tencent.devops.notify.api.op.OpNotifyResource
 import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_INVALID_NOTIFY_TYPE
 import com.tencent.devops.notify.pojo.BaseMessage
@@ -53,24 +54,28 @@ class OpNotifyResourceImpl @Autowired constructor(
     private val wechatService: WechatService
 ) : OpNotifyResource {
 
+    @BkCheckBlackListInterface
     override fun sendRtxNotify(message: RtxNotifyMessage): Result<Boolean> {
         MessageCheckUtil.checkRtxMessage(message)
         rtxService.sendMqMsg(message)
         return Result(true)
     }
 
+    @BkCheckBlackListInterface
     override fun sendEmailNotify(message: EmailNotifyMessage): Result<Boolean> {
         MessageCheckUtil.checkEmailMessage(message)
         emailService.sendMqMsg(message)
         return Result(true)
     }
 
+    @BkCheckBlackListInterface
     override fun sendWechatNotify(message: WechatNotifyMessage): Result<Boolean> {
         MessageCheckUtil.checkWechatMessage(message)
         wechatService.sendMqMsg(message)
         return Result(true)
     }
 
+    @BkCheckBlackListInterface
     override fun sendSmsNotify(message: SmsNotifyMessage): Result<Boolean> {
         MessageCheckUtil.checkSmsMessage(message)
         smsService.sendMqMsg(message)
