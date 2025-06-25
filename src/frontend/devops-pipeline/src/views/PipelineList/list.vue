@@ -93,6 +93,7 @@
                 }
                 > span {
                     font-weight: bold;
+                    color: #313238;
                 }
                 h5 {
                     color: #313238;

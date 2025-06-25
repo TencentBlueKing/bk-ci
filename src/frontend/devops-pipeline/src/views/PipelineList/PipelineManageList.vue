@@ -230,7 +230,6 @@
             :pipeline-list="pipelineActionState.activePipelineList"
             @done="refresh"
             @cancel="closeArchiveDialog"
-            @updatePipelineData="updatePipelineData"
         />
         <delete-archived-dialog
             :is-show-delete-archived-dialog="pipelineActionState.isShowDeleteArchivedDialog"
@@ -540,9 +539,6 @@
                 this.filters = {
                     filterByPipelineName
                 }
-            },
-            updatePipelineData (pipelines) {
-                this.$refs.pipelineBox?.updatePipelineData(pipelines)
             }
         }
     }
