@@ -93,9 +93,6 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
                 val rabbitPropPrefix = "spring.cloud.stream.rabbit.bindings.$bindingName"
                 setProperty("$rabbitPropPrefix.producer.delayedExchange", "true")
                 setProperty("$rabbitPropPrefix.producer.exchangeType", ExchangeTypes.TOPIC)
-                if (event.type == RabbitQueueType.STREAM) {
-                    setProperty("$rabbitPropPrefix.producer.producerType", ProducerType.STREAM_ASYNC.name)
-                }
                 val prefix = "spring.cloud.stream.bindings.$bindingName"
                 setProperty("$prefix.destination", event.destination)
                 setProperty("$prefix.binder", event.binder)
@@ -160,11 +157,7 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
         setProperty("$rabbitPropPrefix.consumer.maxConcurrency", concurrencyExpression)
         setProperty("$rabbitPropPrefix.consumer.delayedExchange", "true")
         setProperty("$rabbitPropPrefix.consumer.exchangeType", ExchangeTypes.TOPIC)
-        // 当Event中指定了队列的类型为 stream 时增加对应消费者的配置
-        // 注意：配置会随 spring-cloud-stream 升级而变化，升级框架时注意参数变化
-        if (event.type == RabbitQueueType.STREAM) {
-            setProperty("$rabbitPropPrefix.consumer.containerType", ContainerType.STREAM.name)
-        } else if (RabbitQueueType.parse(rabbitQueueTypeExpression) == RabbitQueueType.QUORUM) {
+        if (RabbitQueueType.parse(rabbitQueueTypeExpression) == RabbitQueueType.QUORUM) {
             setProperty("$rabbitPropPrefix.consumer.quorum.enabled", "true")
         }
     }
