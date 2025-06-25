@@ -197,8 +197,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     @Value("\${store.defaultAtomErrorCodePrefix:8}")
     private lateinit var defaultAtomErrorCodePrefix: String
 
-    @Value("\${store.defaultAtomPublisherReviewers:#{null}}")
-    private val defaultAtomPublisherReviewers: String? = null
+    @Value("\${store.defaultAtomPublishReviewers:#{null}}")
+    private val defaultAtomPublishReviewers: String? = null
 
 
     companion object {
@@ -1136,7 +1136,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             // 通过websocket推送状态变更消息
             storeWebsocketService.sendWebsocketMessage(userId, atomId)
             // 研发商店插件上架进入审核阶段时通知管理员审批
-            if (atomName !== null && !defaultAtomPublisherReviewers.isNullOrBlank()) {
+            if (atomName !== null && !defaultAtomPublishReviewers.isNullOrBlank()) {
                 sendPendingReview(
                     userId = userId,
                     atomName = atomName,
@@ -1510,7 +1510,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             "version" to version,
         )
 
-        val receivers = defaultAtomPublisherReviewers!!
+        val receivers = defaultAtomPublishReviewers!!
             .split(",")
             .map { it.trim() }
             .toMutableSet()
