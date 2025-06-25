@@ -1509,19 +1509,16 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             "atomName" to atomName,
             "version" to version,
         )
-
         val receivers = defaultAtomPublishReviewers!!
             .split(",")
             .map { it.trim() }
             .toMutableSet()
-
         val request = SendNotifyMessageTemplateRequest(
             templateCode = "BK_STORE_ATOM_AUDIT_NOTIFY",
             receivers = receivers,
             bodyParams = bodyParams,
             notifyType = mutableSetOf(NotifyType.WEWORK.name)
         )
-
         try {
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
         } catch (ignored: Throwable) {
