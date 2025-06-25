@@ -651,7 +651,6 @@ interface ServiceBuildResource {
 
     @Operation(summary = "批量获取构建详情")
     @POST
-    // @Path("/projects/{projectId}/batchStatus")
     @Path("/{projectId}/batchGetBuildStatus")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun batchGetBuildStatus(
