@@ -153,10 +153,10 @@ class TxPipelineMetricsCronService @Autowired constructor(
                 metricsData(records)
                 pageNum++
                 failedPageAttempts = 0
-            } catch (e: Exception) {
-                logger.warn("Process page $pageNum failed", e)
+            } catch (ignored: Throwable) {
+                logger.warn("Process page $pageNum failed: ${ignored.message}")
                 when {
-                    e is RemoteServiceException -> throw e
+                    ignored is RemoteServiceException -> throw ignored
                     ++failedPageAttempts >= 3 -> {
                         logger.warn("Skipping page $pageNum after 3 attempts")
                         break
@@ -239,8 +239,8 @@ class TxPipelineMetricsCronService @Autowired constructor(
                     )
                 )
             )
-        } catch (e: Exception) {
-            logger.warn("handle pipeline high failure rate30d data fail", e)
+        } catch (ignored: Throwable) {
+            logger.warn("handle pipeline high failure rate30d data fail: ${ignored.message}")
         }
         logger.info("end handleHighFailureRate30d")
     }
@@ -265,8 +265,8 @@ class TxPipelineMetricsCronService @Autowired constructor(
                     pipelineMetricsInfoDao.batchSaveConsecutiveFailures90dData(dslContext, records)
                 }
             )
-        } catch (e: Exception) {
-            logger.warn("handle consecutive failures90d data fail", e)
+        } catch (ignored: Throwable) {
+            logger.warn("handle consecutive failures90d data fail: ${ignored.message}")
         }
         logger.info("end handleConsecutiveFailures90d")
     }
@@ -291,8 +291,8 @@ class TxPipelineMetricsCronService @Autowired constructor(
                     pipelineMetricsInfoDao.batchSaveScheduledTriggerNoCodeChangeData(dslContext, records)
                 }
             )
-        } catch (e: Exception) {
-            logger.warn("handle scheduled trigger no code change data fail", e)
+        } catch (ignored: Throwable) {
+            logger.warn("handle scheduled trigger no code change data fail: ${ignored.message}")
         }
         logger.info("end handleScheduledTriggerNoCodeChange")
     }
@@ -334,9 +334,9 @@ class TxPipelineMetricsCronService @Autowired constructor(
                     pipelineMetricsInfoDao.batchSaveInvalidPipelineData(dslContext, records)
                 }
             )
-        } catch (e: Exception) {
-            logger.warn("handle process invalid pipeline data fail", e)
-            throw e
+        } catch (ignored: Throwable) {
+            logger.warn("handle process invalid pipeline data fail: ${ignored.message}")
+            throw ignored
         }
         logger.info("end processInvalidPipelineData")
     }
@@ -447,8 +447,8 @@ class TxPipelineMetricsCronService @Autowired constructor(
                 sendProjectReport(projectId, projectPipelineInfo)
             }
             logger.info("report email for the project [$projectId] was successfully sent")
-        } catch (e: Exception) {
-            logger.error("Failed to send project [$projectId] report email", e)
+        } catch (ignored: Throwable) {
+            logger.error("Failed to send project [$projectId] report email", ignored.message)
         }
     }
 
@@ -500,9 +500,9 @@ class TxPipelineMetricsCronService @Autowired constructor(
                     throw RemoteServiceException("send email fail: ${result.message}")
                 }
             }
-        } catch (e: Exception) {
-            logger.warn("send project[${info.projectId}] invalid pipeline email fail", e)
-            throw e
+        } catch (ignored: Throwable) {
+            logger.warn("send project[${info.projectId}] invalid pipeline email fail", ignored.message)
+            throw ignored
         }
     }
 

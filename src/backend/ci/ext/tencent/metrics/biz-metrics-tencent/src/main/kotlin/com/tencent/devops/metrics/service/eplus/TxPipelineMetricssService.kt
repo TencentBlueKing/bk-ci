@@ -126,7 +126,7 @@ class TxPipelineMetricssService@Autowired constructor(
                 )
             }
         } catch (ignored: Throwable) {
-            logger.warn("Failed to update whitelist for  project $projectId", ignored.message)
+            logger.warn("Failed to update whitelist for  project $projectId: ${ignored.message}")
             return false
         }
         return true
