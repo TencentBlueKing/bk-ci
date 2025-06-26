@@ -29,14 +29,16 @@ package com.tencent.devops.auth.api.service
 
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BK_TENANT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
@@ -88,4 +90,15 @@ interface ServiceDeptResource {
         @Parameter(description = "用户名称", required = true)
         name: String
     ): Result<Boolean>
+
+    @POST
+    @Path("/listUserInfos")
+    @Operation(summary = "获取用户信息列表")
+    fun listUserInfos(
+        @Parameter(description = "用户ID列表", required = true)
+        memberIds: List<String>,
+        @Parameter(description = "租户ID", required = true)
+        @HeaderParam(AUTH_HEADER_BK_TENANT_ID)
+        tenantId: String?
+    ): Result<List<UserAndDeptInfoVo>>
 }

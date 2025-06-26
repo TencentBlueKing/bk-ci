@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
@@ -34,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
@@ -41,6 +43,7 @@ import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.pojo.BuildNoUpdateReq
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserPipelineVersionResource
@@ -48,6 +51,7 @@ import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineOperationDetail
+import com.tencent.devops.process.pojo.PipelineOperator
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
@@ -57,8 +61,8 @@ import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.PipelineRecentUseService
 import com.tencent.devops.process.service.PipelineVersionFacadeService
-import org.springframework.beans.factory.annotation.Autowired
 import jakarta.ws.rs.core.Response
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 @Suppress("ALL")
@@ -68,7 +72,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
     private val auditService: AuditService,
     private val pipelineVersionFacadeService: PipelineVersionFacadeService,
     private val pipelineOperationLogService: PipelineOperationLogService,
-    private val pipelineRecentUseService: PipelineRecentUseService
+    private val pipelineRecentUseService: PipelineRecentUseService,
+    private val client: Client
 ) : UserPipelineVersionResource {
 
     override fun getPipelineVersionDetail(
@@ -421,6 +426,14 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String
     ): Result<List<String>> {
+        return Result(operatorListForTenant(userId, projectId, pipelineId).data?.map { it.userId } ?: emptyList())
+    }
+
+    override fun operatorListForTenant(
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ): Result<List<PipelineOperator>> {
         checkParam(userId, projectId)
         val permission = AuthPermission.VIEW
         pipelinePermissionService.validPipelinePermission(
@@ -439,10 +452,19 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 )
             )
         )
-        val result = pipelineOperationLogService.getOperatorInPage(
+        val memberIds = pipelineOperationLogService.getOperatorInPage(
             projectId = projectId,
             pipelineId = pipelineId
         )
+        val result = if (TenantUtils.isMultiTenantMode()) {
+            client.get(ServiceDeptResource::class).listUserInfos(
+                memberIds = memberIds,
+                tenantId = TenantUtils.getTenantIdByEnglishName(projectId)
+            ).data?.map { PipelineOperator(it.name, it.displayName) }
+                ?: memberIds.map { PipelineOperator(it, it) }
+        } else {
+            memberIds.map { PipelineOperator(it, it) }
+        }
         return Result(result)
     }
 

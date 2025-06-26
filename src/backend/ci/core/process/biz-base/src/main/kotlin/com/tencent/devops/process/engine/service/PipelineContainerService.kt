@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.devops.auth.util.TC
 import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.JooqUtils
@@ -51,6 +52,7 @@ import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElemen
 import com.tencent.devops.common.pipeline.utils.ElementUtils
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.tenant.TenantUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_MANUALLY_SKIPPED
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_START_USER
@@ -72,11 +74,11 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_NAME
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 /**
  * 流水线Container相关的服务
@@ -613,8 +615,8 @@ class PipelineContainerService @Autowired constructor(
         }
         logger.info(
             "prepareBuildContainerTasks|buildId=${context.buildId}|containerId=${container.id}|" +
-                "matrixGroupFlag=${container.matrixGroupFlag}|needUpdateContainer=$needUpdateContainer|" +
-                "needStartVM=$needStartVM|startVMTaskSeq=$startVMTaskSeq|"
+                    "matrixGroupFlag=${container.matrixGroupFlag}|needUpdateContainer=$needUpdateContainer|" +
+                    "needStartVM=$needStartVM|startVMTaskSeq=$startVMTaskSeq|"
         )
         if (needUpdateContainer) {
             container.resetBuildOption(context.executeCount)
@@ -646,7 +648,7 @@ class PipelineContainerService @Autowired constructor(
                         inFinallyStage = stage.finally,
                         mutexGroup = container.mutexGroup?.also { s ->
                             s.linkTip = "${context.pipelineId}_Pipeline" +
-                                "[${context.variables[PIPELINE_NAME]}]Job[${container.name}]"
+                                    "[${context.variables[PIPELINE_NAME]}]Job[${container.name}]"
                             s.runtimeMutexGroup = null
                         },
                         containPostTaskFlag = container.containPostTaskFlag
@@ -658,7 +660,7 @@ class PipelineContainerService @Autowired constructor(
                         inFinallyStage = stage.finally,
                         mutexGroup = container.mutexGroup?.also { s ->
                             s.linkTip = "${context.pipelineId}_Pipeline" +
-                                "[${context.variables[PIPELINE_NAME]}]Job[${container.name}]"
+                                    "[${context.variables[PIPELINE_NAME]}]Job[${container.name}]"
                             s.runtimeMutexGroup = null
                         },
                         containPostTaskFlag = container.containPostTaskFlag
@@ -1070,10 +1072,13 @@ class PipelineContainerService @Autowired constructor(
 //                        status = BuildStatus.SUCCEED.name, timestamps = mapOf(), originClassType = null
 //                    )
 //                )
+                val tenantId = TenantUtils.getTenantIdByEnglishName(context.projectId)
                 buildLogPrinter.addLine(
                     buildId = context.buildId,
-                    message = "${I18nUtil.getCodeLanMessage(BK_TRIGGER_USER)}: ${context.triggerUser}," +
-                            " ${I18nUtil.getCodeLanMessage(BK_START_USER)}: ${context.userId}",
+                    message = "${I18nUtil.getCodeLanMessage(BK_TRIGGER_USER)}: " +
+                            TC.uid2Name(context.triggerUser, tenantId) +
+                            ", ${I18nUtil.getCodeLanMessage(BK_START_USER)}: " +
+                            TC.uid2Name(context.userId, tenantId),
                     tag = context.firstTaskId,
                     containerHashId = container.id,
                     executeCount = context.executeCount,

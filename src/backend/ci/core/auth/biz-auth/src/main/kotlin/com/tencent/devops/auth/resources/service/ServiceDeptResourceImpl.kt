@@ -27,6 +27,7 @@
 
 package com.tencent.devops.auth.resources.service
 
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
@@ -53,5 +54,12 @@ class ServiceDeptResourceImpl @Autowired constructor(
 
     override fun checkUserDeparted(name: String): Result<Boolean> {
         return Result(deptService.isUserDeparted(name))
+    }
+
+    override fun listUserInfos(
+        memberIds: List<String>,
+        tenantId: String?
+    ): Result<List<UserAndDeptInfoVo>> {
+        return Result(deptService.listMemberInfos(memberIds, ManagerScopesEnum.USER, tenantId))
     }
 }

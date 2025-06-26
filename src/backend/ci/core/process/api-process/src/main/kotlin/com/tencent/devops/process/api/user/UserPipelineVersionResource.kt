@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineOperationDetail
+import com.tencent.devops.process.pojo.PipelineOperator
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
@@ -308,6 +309,21 @@ interface UserPipelineVersionResource {
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<List<String>>
+
+    @Operation(summary = "多租户下获取流水线操作人列表（分页）")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/operatorListForTenant")
+    fun operatorListForTenant(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String
+    ): Result<List<PipelineOperator>>
 
     @Operation(summary = "回滚到指定的历史版本并覆盖草稿")
     @POST
