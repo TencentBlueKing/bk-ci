@@ -29,6 +29,7 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
@@ -85,16 +86,20 @@ class SubPipelineElementBizPluginService @Autowired constructor(
                 elements = elements,
                 contextMap = contextMap
             )
+            val watcher = Watcher("batch check sub pipeline|${param.pipelineId}")
+            watcher.start("check permission")
             checkPermission(
                 param = param,
                 subPipelineElementMap = subPipelineElementMap,
                 errors = errors
             )
+            watcher.start("check cycle")
             checkCycle(
                 param = param,
                 subPipelineElementMap = subPipelineElementMap,
                 errors = errors
             )
+            watcher.stop()
         }
         if (errors.isNotEmpty()) {
             val failedReason = PipelineCheckFailedErrors(

@@ -1755,5 +1755,6 @@
   "groupLabel": "Group labels",
   "groupLabelTips": "Variables with the same label will be displayed in the same group in the view and execution preview interface",
   "notGrouped": "Not grouped",
-  "noArchivedPipelines": "No archived pipelines for now, no action needed"
+  "noArchivedPipelines": "No archived pipelines for now, no action needed",
+  "notParamsTip": "This parameter is no longer an input parameter or has been deleted and cannot be passed during execution. You can manually delete it, or it will be automatically removed from the parameter list after saving."
 }

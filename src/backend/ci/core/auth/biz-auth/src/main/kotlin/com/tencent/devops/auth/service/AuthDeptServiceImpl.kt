@@ -476,8 +476,7 @@ class AuthDeptServiceImpl(
             bk_username = userId
         )
         val deptInfoStr = callUserCenter(LIST_PROFILE_DEPARTMENTS, deptSearch)
-        if (deptInfoStr.isBlank()) return null
-        return objectMapper.readValue<List<BkDeptDetailsVo>>(deptInfoStr)[0]
+        return objectMapper.readValue<List<BkDeptDetailsVo>>(deptInfoStr).firstOrNull()
     }
 
     private fun getAndRefreshDeptUser(deptId: Int, accessToken: String?): List<String> {
