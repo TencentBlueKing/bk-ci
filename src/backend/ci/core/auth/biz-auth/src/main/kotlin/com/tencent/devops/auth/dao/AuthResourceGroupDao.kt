@@ -301,7 +301,6 @@ class AuthResourceGroupDao {
         }
     }
 
-
     fun listIamGroupIdsByConditions(
         dslContext: DSLContext,
         projectCode: String,
