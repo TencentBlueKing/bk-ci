@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomEnvInfo
+import com.tencent.devops.model.store.tables.TAtomVersionLog
 import com.tencent.devops.model.store.tables.TStorePipelineRel
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
@@ -44,15 +45,17 @@ import com.tencent.devops.store.pojo.common.KEY_CREATOR
 import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
 import com.tencent.devops.store.pojo.common.KEY_PROJECT_CODE
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
-import com.tencent.devops.store.pojo.common.STORE_CODE
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.jooq.Record4
+import org.jooq.Record5
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository(value = "ATOM_COMMON_DAO")
 class AtomCommonDao : AbstractStoreCommonDao() {
@@ -199,5 +202,90 @@ class AtomCommonDao : AbstractStoreCommonDao() {
         return with(TAtom.T_ATOM) {
             dslContext.select(ATOM_CODE).from(this).where(ID.eq(storeId)).fetchOne(0, String::class.java)
         }
+    }
+
+    override fun getStoreComponentVersionLogs(
+        dslContext: DSLContext,
+        storeCode: String,
+        page: Int,
+        pageSize: Int
+    ): Result<Record5<String, String, LocalDateTime, String, String>>? {
+        val atom = TAtom.T_ATOM
+        val atomVersionLog = TAtomVersionLog.T_ATOM_VERSION_LOG
+        val baseStep = dslContext.select(
+            atom.VERSION,
+            atomVersionLog.CONTENT,
+            atom.UPDATE_TIME,
+            atomVersionLog.MODIFIER,
+            atomVersionLog.PACKAGE_SIZE
+        )
+            .from(atom)
+            .join(atomVersionLog)
+            .on(atom.ID.eq(atomVersionLog.ATOM_ID))
+            .where(atom.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()).and(atom.ATOM_CODE.eq(storeCode)))
+            .orderBy(atom.UPDATE_TIME.desc())
+            .limit((page - 1) * pageSize, pageSize)
+
+        return baseStep.fetch()
+    }
+
+    override fun countStoreComponentVersionLogs(dslContext: DSLContext, storeCode: String): Long {
+
+        val atom = TAtom.T_ATOM
+        val atomVersionLog = TAtomVersionLog.T_ATOM_VERSION_LOG
+        val baseStep = dslContext.selectCount()
+            .from(atom)
+            .join(atomVersionLog)
+            .on(atom.ID.eq(atomVersionLog.ATOM_ID))
+            .where(atom.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()).and(atom.ATOM_CODE.eq(storeCode)))
+
+        return baseStep.fetchOne(0, Long::class.java) ?: 0L
+    }
+
+    fun updateComponentVersionInfo(dslContext: DSLContext, storeId: String, pkgSize: String) {
+        val atomVersionLog = TAtomVersionLog.T_ATOM_VERSION_LOG
+        dslContext.update(atomVersionLog).set(atomVersionLog.PACKAGE_SIZE, pkgSize)
+            .where(atomVersionLog.ATOM_ID.eq(storeId)).execute()
+    }
+
+    fun getComponentVersionSizeInfo(dslContext: DSLContext, storeId: String): String? {
+        val atomVersionLog = TAtomVersionLog.T_ATOM_VERSION_LOG
+        return dslContext.select(atomVersionLog.PACKAGE_SIZE).from(atomVersionLog)
+            .where(atomVersionLog.ATOM_ID.eq(storeId)).orderBy(atomVersionLog.CREATE_TIME.desc()).limit(1)
+            .fetchOne(0, String::class.java)
+    }
+
+    fun countComponent(dslContext: DSLContext, storeStatus: Byte): Long {
+        with(TAtom.T_ATOM) {
+            return dslContext.selectCount().from(this).where(ATOM_STATUS.eq(storeStatus))
+                .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun selectComponentIds(dslContext: DSLContext, offset: Long, batchSize: Long): List<String>? {
+        with(TAtom.T_ATOM) {
+            return dslContext.select(ID).from(this).where(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
+                .limit(offset, batchSize)
+                .fetch().into(String::class.java)
+        }
+    }
+
+    fun selectComponentEnvInfoByStoreIds(
+        dslContext: DSLContext,
+        storeIds: List<String>
+    ): Result<Record4<String, String, String, String>>? {
+        with(TAtomEnvInfo.T_ATOM_ENV_INFO) {
+            return dslContext.select(ATOM_ID, PKG_PATH, OS_NAME, OS_ARCH).from(this)
+                .where(ATOM_ID.`in`(storeIds)).fetch()
+        }
+    }
+
+    fun getComponentSizeByVersionAndCode(dslContext: DSLContext, storeCode: String, version: String): String? {
+        val atomVersionLog = TAtomVersionLog.T_ATOM_VERSION_LOG
+        val atom = TAtom.T_ATOM
+        return dslContext.select(atomVersionLog.PACKAGE_SIZE).from(atom)
+            .join(atomVersionLog).on(atom.ID.eq(atomVersionLog.ATOM_ID))
+            .where(atom.ATOM_CODE.eq(storeCode).and(atom.VERSION.eq(version)))
+            .fetchOne(0, String::class.java)
     }
 }
