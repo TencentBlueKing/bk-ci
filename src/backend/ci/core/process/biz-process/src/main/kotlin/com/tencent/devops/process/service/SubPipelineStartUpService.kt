@@ -77,7 +77,6 @@ import com.tencent.devops.process.utils.PIPELINE_START_PIPELINE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PipelineVarUtil
-import com.tencent.devops.process.yaml.PipelineYamlService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -98,8 +97,7 @@ class SubPipelineStartUpService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineUrlBean: PipelineUrlBean,
     private val templateFacadeService: TemplateFacadeService,
-    private val subPipelineRefService: SubPipelineRefService,
-    private val pipelineYamlService: PipelineYamlService
+    private val subPipelineRefService: SubPipelineRefService
 ) {
 
     companion object {
