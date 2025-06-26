@@ -540,7 +540,7 @@ class IdeAtomDao {
             return dslContext.select(ATOM_CODE, CREATOR)
                 .from(this)
                 .where(VERSION.eq(INIT_VERSION))
-                .groupBy(ATOM_CODE)
+                .orderBy(CREATE_TIME.asc())
                 .limit(limit).offset(offset)
                 .fetch()
         }

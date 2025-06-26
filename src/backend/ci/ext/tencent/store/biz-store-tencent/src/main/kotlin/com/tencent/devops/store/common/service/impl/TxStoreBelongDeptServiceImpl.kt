@@ -113,7 +113,7 @@ class TxStoreBelongDeptServiceImpl @Autowired constructor(
                 val storeBelongDeptRelList = mutableListOf<StoreBelongDeptRel>()
                 listStoreInitCreator.forEach { storeInitCreator ->
                     val storeCode = storeInitCreator.value1()
-                    val creator = storeInitCreator.value1()
+                    val creator = storeInitCreator.value2()
                     // 获取用户组织架构
                     val userDeptInfo = getUserDeptInfo(creator)
                     userDeptInfo?.let {

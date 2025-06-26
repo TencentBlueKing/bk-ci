@@ -50,7 +50,7 @@ class TxStoreBaseQueryDao {
                 .from(this)
                 .where(STORE_TYPE.eq(storeTypeEnum.type.toByte()))
                 .and(VERSION.eq(INIT_VERSION))
-                .groupBy(STORE_CODE)
+                .orderBy(CREATE_TIME.asc())
                 .limit(limit).offset(offset)
                 .fetch()
         }

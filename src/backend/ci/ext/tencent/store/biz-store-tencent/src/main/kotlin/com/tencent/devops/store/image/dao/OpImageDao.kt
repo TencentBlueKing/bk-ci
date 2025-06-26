@@ -390,7 +390,7 @@ class OpImageDao @Autowired constructor() {
             return dslContext.select(IMAGE_CODE, CREATOR)
                 .from(this)
                 .where(VERSION.eq(INIT_VERSION))
-                .groupBy(IMAGE_CODE)
+                .orderBy(CREATE_TIME.asc())
                 .limit(limit).offset(offset)
                 .fetch()
         }

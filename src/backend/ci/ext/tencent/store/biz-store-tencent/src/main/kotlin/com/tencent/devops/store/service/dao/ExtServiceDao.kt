@@ -875,7 +875,7 @@ class ExtServiceDao {
             return dslContext.select(SERVICE_CODE, CREATOR)
                 .from(this)
                 .where(VERSION.eq(INIT_VERSION))
-                .groupBy(SERVICE_CODE)
+                .orderBy(CREATE_TIME.asc())
                 .limit(limit).offset(offset)
                 .fetch()
         }
