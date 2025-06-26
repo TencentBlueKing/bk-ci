@@ -29,7 +29,6 @@
 package com.tencent.devops.auth.provider.rbac.service.migrate
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
 import com.tencent.bk.sdk.iam.dto.manager.ManagerPath
 import com.tencent.bk.sdk.iam.dto.manager.ManagerResources
@@ -41,8 +40,9 @@ import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
+import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.provider.rbac.pojo.migrate.MigrateTaskDataResult
-import com.tencent.devops.auth.provider.rbac.service.RbacCacheService
+import com.tencent.devops.auth.provider.rbac.service.RbacCommonService
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateIamApiService.Companion.GROUP_API_POLICY
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateIamApiService.Companion.GROUP_WEB_POLICY
 import com.tencent.devops.auth.provider.rbac.service.migrate.MigrateIamApiService.Companion.USER_CUSTOM_POLICY
@@ -75,7 +75,7 @@ abstract class AbMigratePolicyService(
     private val migrateIamApiService: MigrateIamApiService,
     private val authMigrationDao: AuthMigrationDao,
     private val permissionService: PermissionService,
-    private val rbacCacheService: RbacCacheService,
+    private val rbacCommonService: RbacCommonService,
     private val deptService: DeptService,
     private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService,
     private val permissionResourceMemberService: PermissionResourceMemberService
@@ -364,7 +364,7 @@ abstract class AbMigratePolicyService(
             logger.info("migrate user custom policy|${result.projectId}|${result.subject.id}")
             val userId = result.subject.id
             // 离职人员,直接忽略
-            if (deptService.getUserInfo(userId = "admin", name = userId) == null) {
+            if (deptService.getUserInfo(userId) == null) {
                 logger.warn("user has resigned, skip custom policy migration|${result.projectId}|$userId")
                 return@forEach
             }
@@ -382,7 +382,7 @@ abstract class AbMigratePolicyService(
                     permissionResourceMemberService.addGroupMember(
                         projectCode = projectCode,
                         memberId = userId,
-                        memberType = ManagerScopesEnum.getType(ManagerScopesEnum.USER),
+                        memberType = MemberType.USER.type,
                         expiredAt = System.currentTimeMillis() / MILLISECOND +
                             TimeUnit.DAYS.toSeconds(DEFAULT_EXPIRED_DAY),
                         iamGroupId = groupId
@@ -497,7 +497,7 @@ abstract class AbMigratePolicyService(
         resourceCode: String,
         userId: String
     ): Pair<Long? /*groupConfigId*/, Int? /*groupId*/> {
-        rbacCacheService.getGroupConfigAction(resourceType).forEach groupConfig@{ groupConfig ->
+        rbacCommonService.getGroupConfigAction(resourceType).forEach groupConfig@{ groupConfig ->
             if (groupConfig.actions.containsAll(actions)) {
                 val groupId = authResourceGroupDao.get(
                     dslContext = dslContext,

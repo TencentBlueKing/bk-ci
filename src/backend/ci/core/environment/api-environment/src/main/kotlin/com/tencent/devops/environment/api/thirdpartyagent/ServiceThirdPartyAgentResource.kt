@@ -59,15 +59,16 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineSeqI
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DefaultValue
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "SERVICE_ENVIRONMENT_THIRD_PARTY_AGENT", description = "第三方构建机资源")
 @Path("/service/environment/thirdPartyAgent")
@@ -315,7 +316,11 @@ interface ServiceThirdPartyAgentResource {
         @Parameter(description = "Node Hash ID/Agent Id", required = true)
         @PathParam("agentId")
         @BkField(minLength = 3, maxLength = 32)
-        agentHashId: String
+        agentHashId: String,
+        @Parameter(description = "是否校验权限", required = false)
+        @QueryParam("checkPermission")
+        @DefaultValue("false")
+        checkPermission: Boolean? = false
     ): Result<ThirdPartyAgentDetail?>
 
     @Operation(summary = "获取Gateway列表")

@@ -47,5 +47,7 @@ data class RepositoryInfo(
     @get:Schema(title = "最后更新时间", required = true)
     val updatedTime: Long,
     @get:Schema(title = "创建人", required = false)
-    val createUser: String? = null
+    val createUser: String? = null,
+    @get:Schema(title = "远程仓库ID", required = false)
+    val remoteRepoId: Long? = null
 )

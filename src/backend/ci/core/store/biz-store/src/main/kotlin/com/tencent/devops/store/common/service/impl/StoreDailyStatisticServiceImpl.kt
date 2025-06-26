@@ -35,6 +35,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatistic
 import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatisticRequest
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -102,20 +103,23 @@ class StoreDailyStatisticServiceImpl @Autowired constructor(
             storeType = storeType.type.toByte(),
             statisticsTime = storeDailyStatisticRequest.statisticsTime
         )
-        if (storeDailyStatistic != null) {
-            storeStatisticDailyDao.updateDailyStatisticData(
-                dslContext = dslContext,
-                storeCode = storeCode,
-                storeType = storeType.type.toByte(),
-                storeDailyStatisticRequest = storeDailyStatisticRequest
-            )
-        } else {
-            storeStatisticDailyDao.insertDailyStatisticData(
-                dslContext = dslContext,
-                storeCode = storeCode,
-                storeType = storeType.type.toByte(),
-                storeDailyStatisticRequest = storeDailyStatisticRequest
-            )
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            if (storeDailyStatistic != null) {
+                storeStatisticDailyDao.updateDailyStatisticData(
+                    dslContext = context,
+                    storeCode = storeCode,
+                    storeType = storeType.type.toByte(),
+                    storeDailyStatisticRequest = storeDailyStatisticRequest
+                )
+            } else {
+                storeStatisticDailyDao.insertDailyStatisticData(
+                    dslContext = context,
+                    storeCode = storeCode,
+                    storeType = storeType.type.toByte(),
+                    storeDailyStatisticRequest = storeDailyStatisticRequest
+                )
+            }
         }
         return true
     }

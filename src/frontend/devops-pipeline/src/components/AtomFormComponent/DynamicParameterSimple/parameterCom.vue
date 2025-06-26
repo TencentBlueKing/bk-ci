@@ -1,6 +1,20 @@
 <template>
     <section class="param-input-home">
         <section class="parameter-input">
+            <p
+                v-if="label && label.trim()"
+                class="input-label"
+                :title="label"
+            >
+                <label>
+                    {{ label }}
+                </label>
+                <i
+                    v-if="desc"
+                    class="bk-icon icon-info-circle label-desc"
+                    v-bk-tooltips.top="{ content: desc, allowHTML: false }"
+                />
+            </p>
             <bk-input
                 v-if="type === 'input'"
                 class="input-main"
@@ -43,6 +57,13 @@
         mixins: [mixins],
 
         props: {
+            label: {
+                type: String
+            },
+            desc: {
+                type: String,
+                default: ''
+            },
             id: {
                 type: String
             },
@@ -79,10 +100,20 @@
     .parameter-input {
         flex: 1;
         .input-label {
-            max-width: 100%;
+            display: flex;
+            align-items: center;
             overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            font-size: 12px;
+            > label {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+
+            }
+            > i {
+                margin-left: 8px;
+                flex-shrink: 0;
+            }
         }
         .input-main {
             flex: 1;
@@ -104,6 +135,7 @@
             color: #63656e;
             overflow: auto;
             max-height: 216px;
+            min-width: 100px;
             z-index: 2;
             li {
                 padding: 0 16px;

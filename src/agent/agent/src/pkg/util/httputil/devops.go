@@ -168,6 +168,7 @@ func DownloadUpgradeFile(url string, headers map[string]string, filepath string)
 			return "", errors.New("file not found")
 		}
 		if resp.StatusCode == http.StatusNotModified {
+			logs.Infof("download upgrade file %s not modified", filepath)
 			return oldFileMd5, nil
 		}
 		body, _ := io.ReadAll(resp.Body)

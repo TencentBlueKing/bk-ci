@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.InstalledPkgFileShaContentRequest
+import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -55,8 +56,9 @@ interface StoreComponentManageService {
         storeType: StoreTypeEnum,
         version: String,
         projectCode: String,
-        userId: String
-    ): Result<Boolean>
+        userId: String,
+        instanceId: String? = null
+    ): Result<StoreBaseInfo?>
 
     /**
      * 更新组件已安装包sha1摘要值
@@ -67,5 +69,14 @@ interface StoreComponentManageService {
         storeCode: String,
         version: String,
         installedPkgFileShaContentRequest: InstalledPkgFileShaContentRequest
+    ): Result<Boolean>
+
+    /**
+     * 更改组件授权人信息
+     */
+    fun updateStoreRepositoryAuthorizer(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String
     ): Result<Boolean>
 }

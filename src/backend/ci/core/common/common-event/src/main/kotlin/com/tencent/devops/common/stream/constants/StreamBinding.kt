@@ -67,6 +67,12 @@ object StreamBinding {
 
     const val PIPELINE_ARCHIVE = "engine.pipeline.archive"
 
+    const val PIPELINE_BATCH_ARCHIVE = "engine.pipeline.batch.archive"
+
+    const val PIPELINE_BATCH_ARCHIVE_PUBLISH = "engine.pipeline.batch.archive.publish"
+
+    const val PIPELINE_BATCH_ARCHIVE_FINISH = "engine.pipeline.batch.archive.finish"
+
     // 监控相关的队列
     const val PIPELINE_BUILD_MONITOR = "engine.pipeline.listener.monitor"
     const val PIPELINE_BUILD_HEART_BEAT = "engine.pipeline.build.hb"
@@ -111,6 +117,9 @@ object StreamBinding {
     // AGENT 构建排队消息队列 ====================================
     const val DISPATCH_AGENT_QUEUE = "dispatch.tp.agent.queue"
 
+    // AGENT 构建监控消息队列
+    const val DISPATCH_AGENT_MONITOR = "dispatch.tp.agent.monitor"
+
     // 无构建环境的Docker构建机启停消息队列 ====================================
     const val BUILD_LESS_AGENT_STARTUP_DISPATCH = "engine.pipeline.bl.agent.dispatch.startup"
     const val BUILD_LESS_AGENT_SHUTDOWN_DISPATCH = "engine.pipeline.bl.agent.dispatch.shutdown"
@@ -141,6 +150,9 @@ object StreamBinding {
 
     // P4代码仓库webhook请求回调
     const val REPLAY_BUILD_REQUEST_EVENT = "engine.pipeline.hook.replay.event"
+
+    // scm webhook请求回调
+    const val SCM_HOOK_BUILD_REQUEST_EVENT = "engine.pipeline.hook.scm.event"
 
     // webSocket消息
     const val WEBSOCKET_TMP_FANOUT = "websocket.fanout"
@@ -197,6 +209,9 @@ object StreamBinding {
     // 权限资源关联用户组修改事件
     const val AUTH_RESOURCE_GROUP_MODIFY = "auth.resource.group.modify"
 
+    // 权限项目级权限变更同步事件
+    const val AUTH_PROJECT_LEVEL_GROUP_PERMISSIONS_SYNC = "auth.project.level.group.permissions.sync"
+
     // 数据库分片
     const val SHARDING_ROUTING_RULE_FANOUT = "sharding.routing.rule.exchange.fanout"
 
@@ -206,4 +221,5 @@ object StreamBinding {
     const val PIPELINE_YAML_LISTENER_ENABLE = "pipeline.yaml.listener.enable"
     const val PIPELINE_YAML_LISTENER_DISABLE = "pipeline.yaml.listener.disable"
     const val PIPELINE_YAML_LISTENER_TRIGGER = "pipeline.yaml.listener.trigger"
+    const val PIPELINE_YAML_LISTENER_FILE = "pipeline.yaml.listener.file"
 }

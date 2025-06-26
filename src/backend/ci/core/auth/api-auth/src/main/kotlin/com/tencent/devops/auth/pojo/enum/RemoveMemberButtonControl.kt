@@ -37,6 +37,9 @@ enum class RemoveMemberButtonControl {
     // 通过模板加入，不允许移出组
     TEMPLATE,
 
+    // 用户通过组织 间接加入，不允许移出组
+    DEPARTMENT,
+
     // 其他，允许移出组
     OTHER
 }

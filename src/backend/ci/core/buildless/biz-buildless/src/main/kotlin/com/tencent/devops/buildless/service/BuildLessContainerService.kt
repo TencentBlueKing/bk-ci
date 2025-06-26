@@ -35,7 +35,7 @@ import com.github.dockerjava.api.model.Binds
 import com.github.dockerjava.api.model.HostConfig
 import com.github.dockerjava.api.model.Volume
 import com.github.dockerjava.core.DefaultDockerClientConfig
-import com.github.dockerjava.core.DockerClientBuilder
+import com.github.dockerjava.core.DockerClientImpl
 import com.github.dockerjava.okhttp.OkDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.buildless.config.BuildLessConfig
@@ -67,7 +67,6 @@ import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.text.SimpleDateFormat
 import java.util.TimeZone
-import kotlin.streams.toList
 
 /**
  * 无构建环境的docker服务实现
@@ -92,10 +91,7 @@ class BuildLessContainerService(
         .readTimeout(120000)
         .build()
 
-    val httpDockerCli: DockerClient = DockerClientBuilder
-        .getInstance(config)
-        .withDockerHttpClient(httpClient)
-        .build()
+    val httpDockerCli: DockerClient = DockerClientImpl.getInstance(config, httpClient)
 
     fun createContainer() {
         val volumeApps = Volume(buildLessConfig.volumeApps)
@@ -237,7 +233,8 @@ class BuildLessContainerService(
             // 是否已运行超过12小时
             val buildLessPoolInfo = redisUtils.getBuildLessPoolContainer(container.id)
             if (checkStartTime(startTime) &&
-                (buildLessPoolInfo == null || buildLessPoolInfo.status == ContainerStatus.IDLE)) {
+                (buildLessPoolInfo == null || buildLessPoolInfo.status == ContainerStatus.IDLE)
+            ) {
                 timeoutContainerList.add(container.id)
             }
         }
@@ -247,19 +244,21 @@ class BuildLessContainerService(
 
     private fun generateEnv(containerName: String, linkPath: String): List<String> {
         val envList = mutableListOf<String>()
-        envList.addAll(listOf(
-            "$ENV_KEY_GATEWAY=${buildLessConfig.gateway}",
-            "TERM=xterm-256color",
-            "$ENV_KEY_BK_TAG=${bkTag.getFinalTag()}",
-            "$ENV_DOCKER_HOST_IP=${CommonUtils.getHostIp()}",
-            "$ENV_DOCKER_HOST_PORT=${commonConfig.serverPort}",
-            "$BK_DISTCC_LOCAL_IP=${CommonUtils.getHostIp()}",
-            "$ENV_BK_CI_DOCKER_HOST_IP=${CommonUtils.getHostIp()}",
-            "$ENV_JOB_BUILD_TYPE=BUILD_LESS",
-            "$ENV_CONTAINER_NAME=$containerName",
-            "$ENV_BK_CI_DOCKER_HOST_WORKSPACE=$linkPath",
-            "$ENV_DEFAULT_LOCALE_LANGUAGE=${commonConfig.devopsDefaultLocaleLanguage}"
-        ))
+        envList.addAll(
+            listOf(
+                "$ENV_KEY_GATEWAY=${buildLessConfig.gateway}",
+                "TERM=xterm-256color",
+                "$ENV_KEY_BK_TAG=${bkTag.getFinalTag()}",
+                "$ENV_DOCKER_HOST_IP=${CommonUtils.getHostIp()}",
+                "$ENV_DOCKER_HOST_PORT=${commonConfig.serverPort}",
+                "$BK_DISTCC_LOCAL_IP=${CommonUtils.getHostIp()}",
+                "$ENV_BK_CI_DOCKER_HOST_IP=${CommonUtils.getHostIp()}",
+                "$ENV_JOB_BUILD_TYPE=BUILD_LESS",
+                "$ENV_CONTAINER_NAME=$containerName",
+                "$ENV_BK_CI_DOCKER_HOST_WORKSPACE=$linkPath",
+                "$ENV_DEFAULT_LOCALE_LANGUAGE=${commonConfig.devopsDefaultLocaleLanguage}"
+            )
+        )
 
         buildLessConfig.idcGateway?.let {
             envList.add("$ENV_DEVOPS_GATEWAY=$it")

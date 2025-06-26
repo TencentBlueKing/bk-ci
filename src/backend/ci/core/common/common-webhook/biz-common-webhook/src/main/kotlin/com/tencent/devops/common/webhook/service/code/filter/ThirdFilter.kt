@@ -5,7 +5,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.util.HttpRetryUtils
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
-import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.pojo.ThirdFilterBody
 import com.tencent.devops.common.webhook.service.code.pojo.ThirdFilterResult
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
@@ -13,7 +12,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 class ThirdFilter(
     private val projectId: String,
@@ -22,14 +21,15 @@ class ThirdFilter(
     private val changeFiles: Set<String>?,
     private val enableThirdFilter: Boolean?,
     private val thirdUrl: String?,
-    private val thirdSecretToken: String? = null,
-    private val gitScmService: GitScmService,
+    private val secretToken: Pair<Boolean, String>?,
     private val callbackCircuitBreakerRegistry: CircuitBreakerRegistry?,
-    private val failedReason: String = ""
+    private val failedReason: String = "",
+    private val eventType: String
 ) : WebhookFilter {
 
     companion object {
         private const val FILTER_TOKEN_HEADER = "X-DEVOPS-FILTER-TOKEN"
+        private const val FILTER_EVENT_TYPE_HEADER = "X-DEVOPS-EVENT-TYPE"
         private const val MAX_RETRY_COUNT = 3
         private val logger = LoggerFactory.getLogger(ThirdFilter::class.java)
     }
@@ -39,7 +39,7 @@ class ThirdFilter(
             return true
         }
         logger.info("$pipelineId|thirdUrl:$thirdUrl|third filter")
-        val filterResult = try {
+        val filterResult = secretToken != null && try {
             callbackCircuitBreakerRegistry?.let {
                 // 熔断处理
                 val breaker = callbackCircuitBreakerRegistry.circuitBreaker(thirdUrl)
@@ -63,7 +63,8 @@ class ThirdFilter(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 event = event,
-                changeFiles = changeFiles
+                changeFiles = changeFiles,
+                eventType = eventType
             )
         )
         val builder = Request.Builder()
@@ -71,12 +72,9 @@ class ThirdFilter(
             .post(
                 RequestBody.create("application/json;charset=utf-8".toMediaTypeOrNull(), body)
             )
-        if (!thirdSecretToken.isNullOrBlank()) {
-            val thirdSecretTokenValue = gitScmService.getCredential(
-                projectId = projectId,
-                credentialId = thirdSecretToken
-            )
-            builder.addHeader(FILTER_TOKEN_HEADER, thirdSecretTokenValue)
+        if (secretToken?.first == true) {
+            builder.addHeader(FILTER_TOKEN_HEADER, secretToken.second)
+            builder.addHeader(FILTER_EVENT_TYPE_HEADER, eventType)
         }
         return HttpRetryUtils.retry(MAX_RETRY_COUNT) {
             OkhttpUtils.doShortHttp(request = builder.build()).use { response ->

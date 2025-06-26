@@ -86,12 +86,25 @@ class SamplePermissionResourceGroupPermissionService : PermissionResourceGroupPe
         action: String
     ): Boolean = true
 
+    override fun isGroupsHasProjectLevelPermission(
+        projectCode: String,
+        filterIamGroupIds: List<Int>,
+        action: String
+    ): Boolean = true
+
     override fun listGroupResourcesWithPermission(
         projectCode: String,
         filterIamGroupIds: List<Int>,
         relatedResourceType: String,
         action: String
     ): Map<String, List<String>> = emptyMap()
+
+    override fun listResourcesWithPermission(
+        projectCode: String,
+        filterIamGroupIds: List<Int>,
+        relatedResourceType: String,
+        action: String
+    ): List<String> = emptyList()
 
     override fun getGroupPermissionDetail(
         iamGroupId: Int
@@ -120,4 +133,20 @@ class SamplePermissionResourceGroupPermissionService : PermissionResourceGroupPe
         resourceType: String,
         resourceCode: String
     ): Boolean = true
+
+    override fun syncProjectLevelPermissions(
+        projectCode: String,
+        iamGroupId: Int
+    ): Boolean = true
+
+    override fun syncProjectLevelPermissions(
+        projectCode: String
+    ): Boolean = true
+
+    override fun syncProjectLevelPermissionsByCondition(projectConditionDTO: ProjectConditionDTO): Boolean = true
+
+    override fun listProjectsWithPermission(
+        memberIds: List<String>,
+        action: String
+    ): List<String> = emptyList()
 }

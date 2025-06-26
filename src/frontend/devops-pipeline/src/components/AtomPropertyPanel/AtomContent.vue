@@ -185,6 +185,7 @@
                         :atom-props-model="atom.atomModal.props"
                         :set-parent-validate="setAtomValidate"
                         :disabled="!editable"
+                        :is-instance-template="isInstanceTemplate"
                         class="atom-content"
                     >
                     </div>
@@ -253,6 +254,7 @@
     import CodePullGitX from './CodePullGitX'
     import CodePullSvn from './CodePullSvn'
     import CodeSvnWebHookTrigger from './CodeSvnWebHookTrigger'
+    import CodeWebHookTrigger from './CodeWebHookTrigger'
     import CrossDistribute from './CrossDistribute'
     import FormField from './FormField'
     import IosCertInstall from './IosCertInstall'
@@ -266,9 +268,8 @@
     import ReportArchive from './ReportArchive'
     import SendWechatNotify from './SendWechatNotify'
     import SubPipelineCall from './SubPipelineCall'
-    import TimerTrigger from './TimerTrigger'
+    import TimerTrigger from './TimerTrigger/'
     import Unity3dBuild from './Unity3dBuild'
-    import CodeWebHookTrigger from './CodeWebHookTrigger'
 
     export default {
         name: 'atom-content',
@@ -561,6 +562,9 @@
                 requestGlobalEnvs()
             }
             this.toggleAtomSelectorPopup(!atomCode)
+            if (!this.isTemplatePanel) {
+                this.requestInterceptAtom()
+            }
         },
 
         methods: {
@@ -579,7 +583,7 @@
                 'updateRefreshQualityLoading'
             ]),
 
-            changePluginPause (isContinue, loadingKey) {
+            handleExecutePluginPause (isContinue, loadingKey) {
                 const postData = {
                     projectId: this.projectId,
                     pipelineId: this.pipelineId,
@@ -613,6 +617,18 @@
                 }).finally(() => {
                     this[loadingKey] = false
                 })
+            },
+            changePluginPause (isContinue, loadingKey) {
+                if (isContinue && loadingKey === 'isExeContinue') {
+                    this.handleExecutePluginPause(isContinue, loadingKey)
+                } else {
+                    this.$bkInfo({
+                        title: this.$t('isTaskTermination'),
+                        confirmFn: async () => {
+                            this.handleExecutePluginPause(isContinue, loadingKey)
+                        }
+                    })
+                }
             },
             setAtomValidate (addErrors, removeErrors) {
                 if (addErrors && addErrors.length) {

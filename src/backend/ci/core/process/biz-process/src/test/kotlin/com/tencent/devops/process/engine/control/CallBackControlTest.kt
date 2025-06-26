@@ -164,6 +164,13 @@ class CallBackControlTest : TestBase() {
                 events = events.toString()
             )
         } returns (callbacks!!)
+        every {
+            projectPipelineCallBackService.getPipelineCallback(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                event = events.toString()
+            )
+        } returns (listOf())
     }
 
     @Test

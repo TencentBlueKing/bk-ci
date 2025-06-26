@@ -61,10 +61,10 @@
                         name="default-user"
                         size="24"
                     />
-                    <span v-if="execDetail.triggerUser">
+                    <span v-if="startUser">
                         {{
                             $t("details.executorInfo", [
-                                execDetail.triggerUser,
+                                startUser,
                                 execDetail.trigger,
                                 execFormatStartTime
                             ])
@@ -256,6 +256,9 @@
             isRunning () {
                 return ['RUNNING', 'QUEUE'].includes(this.execDetail?.status)
             },
+            archiveFlag () {
+                return this.$route.query.archiveFlag
+            },
             panels () {
                 return [
                     {
@@ -265,7 +268,7 @@
                         className: 'exec-pipeline',
                         bindData: {
                             execDetail: this.execDetail,
-                            isLatestBuild: this.isLatestBuild,
+                            isLatestBuild: this.archiveFlag ? !this.archiveFlag : this.isLatestBuild,
                             matchRules: this.curMatchRules,
                             isRunning: this.isRunning
                         }
@@ -375,7 +378,10 @@
                     }
             },
             routerParams () {
-                return this.$route.params
+                return {
+                    ...this.$route.params,
+                    ...this.$route.query
+                }
             },
             curItemTab () {
                 return this.routerParams.type || 'executeDetail'
@@ -394,6 +400,21 @@
             },
             pipelineModel () {
                 return this.execDetail?.model || {}
+            },
+            executeCount () {
+                return this.execDetail?.executeCount ?? 1
+            },
+            recordList () {
+                const list = [...this.execDetail?.recordList]
+                return (
+                    list.reverse().map((record, index) => ({
+                        id: index + 1,
+                        user: record.startUser
+                    })) ?? []
+                )
+            },
+            startUser () {
+                return this.recordList.find(i => i.id === this.executeCount)?.user || ''
             }
         },
 
@@ -426,7 +447,8 @@
                     params: {
                         ...to.params,
                         type: 'executeDetail'
-                    }
+                    },
+                    query: to.query
                 })
             } else {
                 next()
@@ -534,7 +556,8 @@
                     params: {
                         ...this.routerParams,
                         type: panel.name
-                    }
+                    },
+                    query: this.$route.query
                 })
             },
             collapseSummary () {
@@ -724,6 +747,7 @@
     margin: 0 24px;
     flex: 1;
     box-shadow: 0 2px 2px 0 #00000026;
+    height: calc(100% - 205px);
     &.is-outputs-panel {
         overflow: hidden;
     }

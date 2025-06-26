@@ -6,5 +6,6 @@ data class ThirdFilterBody(
     val projectId: String,
     val pipelineId: String,
     val event: CodeWebhookEvent,
-    val changeFiles: Set<String>? = emptySet()
+    val changeFiles: Set<String>? = emptySet(),
+    val eventType: String
 )

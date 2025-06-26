@@ -51,7 +51,7 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
 ) : ApigwEnvironmentResourceV3 {
 
     @BkTimed(extraTags = ["operate", "getNode"])
-    override fun listUsableServerNodes(
+    override fun listUsableServerCMDBNodes(
         appCode: String?,
         apigwType: String?,
         userId: String,

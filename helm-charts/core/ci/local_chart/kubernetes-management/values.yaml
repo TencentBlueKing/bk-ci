@@ -16,7 +16,7 @@ multiCluster:
 # 镜像配置
 backendImage:
   pullPolicy: IfNotPresent
-  registry: registry-1.docker.io/bkci
+  registry: bkci
   repository: bkci-kubernetes-manager
   tag: 0.0.32
   pullPolicy: IfNotPresent 
@@ -153,7 +153,7 @@ kubernetesManager:
   buildlessDeployment:
     # bkci/ci:latest
     image: 
-      registry: registry-1.docker.io/bkci
+      registry: bkci
       repository: ci
       tag: latest
   apiserver:
@@ -171,7 +171,7 @@ kubernetesManager:
   docker:
     enable: false
     image: 
-      registry: registry-1.docker.io
+      registry: "docker.io"
       repository: docker
       tag: 24.0.1-dind
     resources:

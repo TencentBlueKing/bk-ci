@@ -71,7 +71,7 @@ class Join : Function() {
                     }
                 }
 
-                (1 until collection.count).forEach { i ->
+                for (i in 1 until collection.count()) {
                     // Append the separator
                     memory.add(separator)
                     result.append(separator)

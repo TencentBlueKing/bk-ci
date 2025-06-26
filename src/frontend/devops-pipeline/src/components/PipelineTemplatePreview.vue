@@ -12,6 +12,7 @@
         @cancel="handleCancel"
     >
         <mode-switch
+            style="width: 150px;"
             :is-yaml-support="isYamlSupport"
             :yaml-invalid-msg="yamlInvalidMsg"
             read-only
@@ -35,6 +36,7 @@
                 :name="panel.name"
             >
                 <component
+                    v-if="value"
                     style="pointer-events: none"
                     v-bind="panel.props"
                     :is="panel.component"

@@ -32,12 +32,12 @@ import com.tencent.devops.common.auth.enums.AuthSystemType
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.Consumes
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.PUT
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "OP_PIPELINE_VERSIONS", description = "OP-流水线-版本")
 @Path("/op/pipeline/versions")
@@ -54,6 +54,12 @@ interface OpPipelineVersionResource {
         projectChannelCode: String,
         @Parameter(description = "项目路由TAG", required = false)
         @QueryParam("routerTag")
-        routerTag: AuthSystemType? = null
+        routerTag: AuthSystemType? = null,
+        @Parameter(description = "项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String? = null,
+        @Parameter(description = "是否查询关联状态未知的版本", required = false)
+        @QueryParam("queryUnknownRelatedFlag")
+        queryUnknownRelatedFlag: Boolean? = null
     ): Result<Boolean>
 }

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import http from '@/http/api';
 import tools from '@/utils/tools';
+import { cacheProjectCode } from '@/store/useCacheProjectCode'
 import PermissionHeader from '@/components/permission-header.vue';
 import GroupSearch from './group-search.vue';
 import {
@@ -68,6 +69,7 @@ const rules = {
 };
 
 watch(() => formData.value.projectCode, (val) => {
+  cacheProjectCode.set(val);
   groupList.value = [];
   curProject.value = projectList.value.find(i => i.englishName === val)
 }, {
@@ -166,7 +168,9 @@ const getAllProjectList = async (name = '') => {
     return
   }
   const { page, pageSize, projectName } = pageInfo.value;
-  scrollLoading.value = true;
+  if (pageInfo.value.page !== 1) {
+    scrollLoading.value = true;
+  }
   await http.getAllProjectList({
     page: page,
     pageSize: pageSize,
@@ -220,7 +224,7 @@ const handleToProjectManage = (project) => {
 
 onMounted(async () => {
   formData.value.expiredAt = formatTimes(2592000);
-  formData.value.projectCode = route?.query.project_code || tools.getCookie('X-DEVOPS-PROJECT-ID') || '';
+  formData.value.projectCode = route?.params.projectCode || route?.query.projectCode || route?.query.project_code || cacheProjectCode.get() || tools.getCookie('X-DEVOPS-PROJECT-ID') || '';
   await getUserInfo();
   await getAllProjectList();
   await getProjectByName();

@@ -30,6 +30,7 @@ package com.tencent.devops.common.pipeline.pojo.setting
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.pipeline.utils.PIPELINE_RES_NUM_MIN
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
 import com.tencent.devops.common.web.annotation.BkField
@@ -84,6 +85,8 @@ data class PipelineSetting(
     var concurrencyCancelInProgress: Boolean = false,
     @get:Schema(title = "并发构建数量限制", required = false)
     var maxConRunningQueueSize: Int? = null, // MULTIPLE类型时，并发构建数量限制
+    @get:Schema(title = "是否配置流水线变量值超长时终止执行", required = false)
+    var failIfVariableInvalid: Boolean? = false,
 
     // 平台系统控制相关配置 —— 不作为生成版本的配置
     @get:Schema(title = "保存流水线编排的最大个数", required = false)
@@ -164,5 +167,18 @@ data class PipelineSetting(
             failSubscriptionList = listOf(this.failSubscription!!)
         }
         failSubscription = failSubscriptionList!!.firstOrNull()
+    }
+
+    fun copySubscriptionSettings(other: PipelineSetting) {
+        successSubscription = other.successSubscription
+        successSubscriptionList = other.successSubscriptionList
+        failSubscription = other.failSubscription
+        failSubscriptionList = other.failSubscriptionList
+    }
+
+    fun copyConcurrencyGroup(other: PipelineSetting) {
+        concurrencyGroup = other.concurrencyGroup
+        concurrencyCancelInProgress = other.concurrencyCancelInProgress
+        maxConRunningQueueSize = PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
     }
 }

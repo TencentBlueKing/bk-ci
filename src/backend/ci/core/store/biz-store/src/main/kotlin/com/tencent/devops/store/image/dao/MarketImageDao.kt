@@ -58,6 +58,7 @@ import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_REPO_NAME
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_REPO_URL
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_SIZE
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_SOURCE_TYPE
+import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_STATUS
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_SUMMARY
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_TAG
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_VERSION
@@ -85,7 +86,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record1
-import org.jooq.Record18
+import org.jooq.Record19
 import org.jooq.Result
 import org.jooq.UpdateSetFirstStep
 import org.jooq.impl.DSL
@@ -221,12 +222,10 @@ class MarketImageDao @Autowired constructor() {
         // 是否降序
         desc: Boolean?,
         page: Int?,
-        pageSize: Int?
-    ): Result<
-        Record18<String, String, String, Byte,
-            String, String, String, String,
-            String, String, Boolean, Boolean, String,
-            LocalDateTime, String, String, LocalDateTime, LocalDateTime>>? {
+        pageSize: Int?,
+        recommendFlag: Boolean? = null
+    ): Result<Record19<String, String, String, Byte, String, String, String, String, String, Byte, String, Boolean,
+            Boolean, String, LocalDateTime, String, String, LocalDateTime, LocalDateTime>> {
         val (tImage, tImageFeature, conditions) = formatConditions(
             keyword = keyword,
             imageSourceType = imageSourceType,
@@ -234,7 +233,9 @@ class MarketImageDao @Autowired constructor() {
             rdType = rdType,
             dslContext = dslContext
         )
-
+        if (recommendFlag != null) {
+            conditions.add(tImageFeature.RECOMMEND_FLAG.eq(recommendFlag))
+        }
         val baseStep = dslContext.select(
             tImage.ID.`as`(KEY_IMAGE_ID),
             tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
@@ -245,6 +246,7 @@ class MarketImageDao @Autowired constructor() {
             tImage.CLASSIFY_ID.`as`(KEY_CLASSIFY_ID),
             tImage.LOGO_URL.`as`(KEY_IMAGE_LOGO_URL),
             tImage.VERSION.`as`(KEY_IMAGE_VERSION),
+            tImage.IMAGE_STATUS.`as`(KEY_IMAGE_STATUS),
             tImage.SUMMARY.`as`(KEY_IMAGE_SUMMARY),
             tImageFeature.PUBLIC_FLAG.`as`(KEY_IMAGE_FEATURE_PUBLIC_FLAG),
             tImageFeature.RECOMMEND_FLAG.`as`(KEY_IMAGE_FEATURE_RECOMMEND_FLAG),
@@ -349,7 +351,8 @@ class MarketImageDao @Autowired constructor() {
         // 评分大于等于score的镜像
         score: Int?,
         // 来源，精确匹配
-        imageSourceType: ImageType?
+        imageSourceType: ImageType?,
+        recommendFlag: Boolean? = null
     ): Int {
         val (tImage, tImageFeature, conditions) = formatConditions(
             keyword = keyword,
@@ -358,6 +361,9 @@ class MarketImageDao @Autowired constructor() {
             rdType = rdType,
             dslContext = dslContext
         )
+        if (recommendFlag != null) {
+            conditions.add(tImageFeature.RECOMMEND_FLAG.eq(recommendFlag))
+        }
         // 查的是最近已发布版本，一个imageCode只有一条记录
         val baseStep = dslContext.select(
             DSL.count(tImage.ID)

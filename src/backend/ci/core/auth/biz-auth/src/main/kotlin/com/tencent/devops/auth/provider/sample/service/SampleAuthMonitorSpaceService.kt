@@ -16,6 +16,10 @@ class SampleAuthMonitorSpaceService : AuthMonitorSpaceService {
 
     override fun getMonitorSpaceBizId(projectCode: String): String = ""
 
+    override fun listMonitorSpaceBizIds(projectCode: List<String>): Map<String, String> {
+        return emptyMap()
+    }
+
     override fun getMonitorSpaceDetail(spaceUid: String): MonitorSpaceDetailVO? = null
 
     override fun getMonitorGroupConfig(groupCode: String): String? = null

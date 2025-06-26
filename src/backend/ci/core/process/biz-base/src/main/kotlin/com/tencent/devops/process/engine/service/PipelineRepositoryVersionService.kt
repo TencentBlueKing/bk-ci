@@ -32,8 +32,10 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.engine.control.lock.PipelineModelLock
 import com.tencent.devops.process.engine.control.lock.PipelineVersionLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
@@ -162,10 +164,11 @@ class PipelineRepositoryVersionService(
     fun getPipelineVersionSimple(
         projectId: String,
         pipelineId: String,
-        version: Int
+        version: Int,
+        archiveFlag: Boolean? = false
     ): PipelineVersionSimple? {
         return pipelineResourceVersionDao.getPipelineVersionSimple(
-            dslContext = dslContext,
+            dslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT),
             projectId = projectId,
             pipelineId = pipelineId,
             version = version
@@ -181,23 +184,27 @@ class PipelineRepositoryVersionService(
         excludeVersion: Int?,
         versionName: String?,
         creator: String?,
-        description: String?
+        description: String?,
+        buildOnly: Boolean? = false,
+        archiveFlag: Boolean? = false
     ): Pair<Int, MutableList<PipelineVersionSimple>> {
         if (pipelineInfo == null) {
             return Pair(0, mutableListOf())
         }
+        val finalDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
         // 计算包括草稿在内的总数
         var count = pipelineResourceVersionDao.count(
-            dslContext = dslContext,
+            dslContext = finalDslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             includeDraft = false,
             versionName = versionName,
             creator = creator,
-            description = description
+            description = description,
+            buildOnly = buildOnly
         )
         val result = pipelineResourceVersionDao.listPipelineVersion(
-            dslContext = dslContext,
+            dslContext = finalDslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             pipelineInfo = pipelineInfo,
@@ -207,14 +214,15 @@ class PipelineRepositoryVersionService(
             includeDraft = false,
             excludeVersion = excludeVersion,
             offset = offset,
-            limit = limit
+            limit = limit,
+            buildOnly = buildOnly
         ).toMutableList()
 
         // #8161 当过滤草稿时查到空结果是正常的，只在不过滤草稿时兼容老数据的版本表无记录
         val noSearch = versionName.isNullOrBlank() && creator.isNullOrBlank() && description.isNullOrBlank()
         if (result.isEmpty() && pipelineInfo.latestVersionStatus?.isNotReleased() != true && noSearch) {
             pipelineResourceDao.getReleaseVersionResource(
-                dslContext, projectId, pipelineId
+                finalDslContext, projectId, pipelineId
             )?.let { record ->
                 count = 1
                 result.add(
@@ -411,36 +419,53 @@ class PipelineRepositoryVersionService(
 
     fun asyncBatchUpdateReferFlag(
         projectChannelCode: String,
-        routerTag: AuthSystemType? = null
+        routerTag: AuthSystemType? = null,
+        projectId: String? = null,
+        queryUnknownRelatedFlag: Boolean? = null
     ): Boolean {
-        Executors.newFixedThreadPool(1).submit {
-            logger.info("begin asyncBatchUpdateReferFlag!!")
-            var offset = 0
-            val limit = PageUtil.DEFAULT_PAGE_SIZE
-            do {
-                val projectInfos = client.get(ServiceProjectResource::class).listProjectsByCondition(
-                    projectConditionDTO = ProjectConditionDTO(
+        val executors = Executors.newFixedThreadPool(1)
+        try {
+            executors.submit {
+                logger.info("begin asyncBatchUpdateReferFlag!!")
+                var offset = 0
+                val limit = PageUtil.DEFAULT_PAGE_SIZE
+                do {
+                    val projectConditionDTO = ProjectConditionDTO(
                         channelCode = projectChannelCode,
                         routerTag = routerTag
-                    ),
-                    limit = limit,
-                    offset = offset
-                ).data ?: break
-                projectInfos.forEach { projectInfo ->
-                    val projectId = projectInfo.englishName
-                    val pipelineIds = pipelineInfoDao.listPipelineIdByProject(dslContext, projectId)
-                    pipelineIds.forEach { pipelineId ->
-                        updatePipelineReferFlag(projectId, pipelineId)
+                    ).apply {
+                        projectId?.let { projectCodes = listOf(it) }
                     }
-                }
-                offset += limit
-            } while (projectInfos.size == limit)
-            logger.info("end asyncBatchUpdateReferFlag!!")
+                    val projectInfos = client.get(ServiceProjectResource::class).listProjectsByCondition(
+                        projectConditionDTO = projectConditionDTO,
+                        limit = limit,
+                        offset = offset
+                    ).data ?: break
+                    projectInfos.forEach { projectInfo ->
+                        val pipelineIds = pipelineInfoDao.listPipelineIdByProject(dslContext, projectInfo.englishName)
+                        pipelineIds.forEach { pipelineId ->
+                            updatePipelineReferFlag(
+                                projectId = projectInfo.englishName,
+                                pipelineId = pipelineId,
+                                queryUnknownRelatedFlag = queryUnknownRelatedFlag
+                            )
+                        }
+                    }
+                    offset += limit
+                } while (projectInfos.size == limit)
+                logger.info("end asyncBatchUpdateReferFlag!!")
+            }
+        } finally {
+            executors.shutdown()
         }
         return true
     }
 
-    private fun updatePipelineReferFlag(projectId: String, pipelineId: String) {
+    private fun updatePipelineReferFlag(
+        projectId: String,
+        pipelineId: String,
+        queryUnknownRelatedFlag: Boolean? = null
+    ) {
         var offset = 0
         val limit = PageUtil.DEFAULT_PAGE_SIZE
         val pipelineInfo = pipelineInfoDao.convert(
@@ -450,13 +475,13 @@ class PipelineRepositoryVersionService(
         try {
             lock.lock()
             do {
-                // 查询关联状态未知的版本
+                // 查询流水线版本记录
                 val pipelineVersionList = pipelineResourceVersionDao.listPipelineVersion(
                     dslContext = dslContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     pipelineInfo = pipelineInfo,
-                    queryUnknownRelatedFlag = true,
+                    queryUnknownRelatedFlag = queryUnknownRelatedFlag,
                     offset = offset,
                     limit = limit
                 )

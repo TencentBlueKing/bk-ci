@@ -31,6 +31,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 	"github.com/pkg/errors"
 	"io/fs"
 	"os"
@@ -171,15 +172,15 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 
 		if fileutil.Exists(upgradeWorkerFile) {
 			_, err := fileutil.CopyFile(upgradeWorkerFile, agentJarPath, true)
-			upgradeWorkerFileVersion := config.DetectWorkerVersion()
+			upgradeWorkerFileVersion := third_components.Worker.DetectWorkerVersion()
 			if err != nil || !strings.HasPrefix(upgradeWorkerFileVersion, "v") {
 				// #5806 宽松判断合法的版本v开头
 				errorMsg := i18n.Localize("AttemptToRestoreFailed", map[string]interface{}{"filename": agentJarPath, "dir": workDir})
 				logs.Error(errorMsg)
 				workerBuildFinish(buildInfo.ToFinish(false, errorMsg, api.RecoverRunFileErrorEnum))
 			} else { // #5806 替换后修正版本号
-				if config.GAgentEnv.SlaveVersion != upgradeWorkerFileVersion {
-					config.GAgentEnv.SlaveVersion = upgradeWorkerFileVersion
+				if third_components.Worker.GetVersion() != upgradeWorkerFileVersion {
+					third_components.Worker.SetVersion(upgradeWorkerFileVersion)
 				}
 			}
 		} else {
@@ -195,18 +196,20 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 	runUser := config.GAgentConfig.SlaveUser
 
 	goEnv := map[string]string{
-		"DEVOPS_AGENT_VERSION":  config.AgentVersion,
-		"DEVOPS_WORKER_VERSION": config.GAgentEnv.SlaveVersion,
-		"DEVOPS_PROJECT_ID":     buildInfo.ProjectId,
-		"DEVOPS_BUILD_ID":       buildInfo.BuildId,
-		"DEVOPS_VM_SEQ_ID":      buildInfo.VmSeqId,
-		"DEVOPS_SLAVE_VERSION":  config.GAgentEnv.SlaveVersion, //deprecated
-		"PROJECT_ID":            buildInfo.ProjectId,           //deprecated
-		"BUILD_ID":              buildInfo.BuildId,             //deprecated
-		"VM_SEQ_ID":             buildInfo.VmSeqId,             //deprecated
-		"DEVOPS_FILE_GATEWAY":   config.GAgentConfig.FileGateway,
-		"DEVOPS_GATEWAY":        config.GetGateWay(),
-		"BK_CI_LOCALE_LANGUAGE": config.GAgentConfig.Language,
+		"DEVOPS_AGENT_VERSION":     config.AgentVersion,
+		"DEVOPS_WORKER_VERSION":    third_components.Worker.GetVersion(),
+		"DEVOPS_PROJECT_ID":        buildInfo.ProjectId,
+		"DEVOPS_BUILD_ID":          buildInfo.BuildId,
+		"DEVOPS_VM_SEQ_ID":         buildInfo.VmSeqId,
+		"DEVOPS_SLAVE_VERSION":     third_components.Worker.GetVersion(), //deprecated
+		"PROJECT_ID":               buildInfo.ProjectId,                  //deprecated
+		"BUILD_ID":                 buildInfo.BuildId,                    //deprecated
+		"VM_SEQ_ID":                buildInfo.VmSeqId,                    //deprecated
+		"DEVOPS_FILE_GATEWAY":      config.GAgentConfig.FileGateway,
+		"DEVOPS_GATEWAY":           config.GetGateWay(),
+		"BK_CI_LOCALE_LANGUAGE":    config.GAgentConfig.Language,
+		"DEVOPS_AGENT_JDK_8_PATH":  third_components.Jdk.Jdk8.GetJavaOrNull(),
+		"DEVOPS_AGENT_JDK_17_PATH": third_components.Jdk.Jdk17.GetJavaOrNull(),
 	}
 	if config.GApiEnvVars != nil {
 		config.GApiEnvVars.RangeDo(func(k, v string) bool {

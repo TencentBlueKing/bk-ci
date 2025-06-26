@@ -28,6 +28,7 @@
 package com.tencent.devops.common.webhook.pojo.code.github
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.tencent.devops.common.webhook.enums.code.github.GithubCreateRefType
 
 @Suppress("ALL")
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -39,5 +40,13 @@ data class GithubCreateEvent(
 ) : GithubEvent(sender) {
     companion object {
         const val classType = "create"
+    }
+
+    fun createType(): GithubCreateRefType {
+        return if (ref_type == "tag") {
+            GithubCreateRefType.TAG
+        } else {
+            GithubCreateRefType.BRANCH
+        }
     }
 }

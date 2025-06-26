@@ -58,8 +58,9 @@
                                         v-for="label in row.value"
                                         :key="label"
                                         class="base-info-block-row-value-label"
+                                        @click="goPipelineManageList(row.key, label.id)"
                                     >
-                                        {{ label }}
+                                        {{ row.key === 'pipelineGroup' ? label.name : label }}
                                     </bk-tag>
                                 </template>
                                 <template v-else>
@@ -83,6 +84,8 @@
 <script>
     import { convertTime } from '@/utils/util'
     import NamingConventionTip from '@/components/namingConventionTip.vue'
+    import { mapState, mapActions } from 'vuex'
+    
     export default {
         components: {
             NamingConventionTip
@@ -99,10 +102,14 @@
                 namingStyle: {
                     CLASSIC: this.$t('CLASSIC'),
                     CONSTRAINED: this.$t('CONSTRAINED')
-                }
+                },
+                currentGroups: []
             }
         },
         computed: {
+            ...mapState('pipelines', [
+                'allPipelineGroup'
+            ]),
             panels () {
                 return [{
                     name: 'baseInfo',
@@ -116,6 +123,8 @@
                 const { basicInfo } = this
                 const { inheritedDialect, projectDialect, pipelineDialect } = basicInfo?.pipelineAsCodeSettings ?? {}
                 const namingConvention = inheritedDialect ? this.namingStyle[projectDialect] : this.namingStyle[pipelineDialect]
+                const groupList = this.allPipelineGroup.length ? this.allPipelineGroup : this.currentGroups
+                const viweNameList = groupList?.filter(item => basicInfo?.viewNames?.includes(item.name) ?? false)
                 return [
                     {
                         key: 'pipelineName',
@@ -127,7 +136,7 @@
                     },
                     {
                         key: 'pipelineGroup',
-                        value: basicInfo?.viewNames ?? []
+                        value: viweNameList ?? []
                     },
                     {
                         key: 'desc',
@@ -156,6 +165,10 @@
                     {
                         key: 'customBuildNum',
                         value: this.basicInfo?.buildNumRule ?? '--'
+                    },
+                    {
+                        key: 'settings.whenVariableExceedsLength',
+                        value: this.$t(this.basicInfo?.failIfVariableInvalid ? 'settings.errorAndHalt' : 'settings.clearTheValue')
                     },
                     {
                         key: 'parallelSetting',
@@ -220,6 +233,27 @@
                     )
                 ]
             }
+        },
+        async mounted () {
+            if (!this.allPipelineGroup.length) {
+                const res = await this.requestAllPipelineGroup({
+                    projectId: this.$route.params.projectId
+                })
+                this.currentGroups = res.data
+            }
+        },
+        methods: {
+            ...mapActions('pipelines', ['requestAllPipelineGroup']),
+            goPipelineManageList (key, viewId) {
+                if (key === 'pipelineGroup') {
+                    this.$router.push({
+                        name: 'PipelineManageList',
+                        params: {
+                            viewId
+                        }
+                    })
+                }
+            }
         }
     }
 </script>
@@ -250,8 +284,9 @@
         width: 600px;
         .parallel-conf-detail-row {
             line-height: 32px;
+            align-items: center;
+            grid-template-columns: 150px 1fr;
             > label {
-                line-height: 32px;
                 color: #63656e;
             }
             > span {

@@ -48,7 +48,7 @@ import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.service.view.PipelineViewService
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -206,6 +206,15 @@ class ServicePipelineViewResourceImpl @Autowired constructor(
     ): Result<Set<Long>> {
         return Result(
             pipelineViewGroupService.listViewIdsByPipelineId(projectId, pipelineId)
+        )
+    }
+
+    override fun listPipelineIdByViewIds(
+        projectId: String,
+        viewIdsEncode: List<String>
+    ): Result<List<String>> {
+        return Result(
+            pipelineViewGroupService.listPipelineIdsByViewIds(projectId, viewIdsEncode)
         )
     }
 }

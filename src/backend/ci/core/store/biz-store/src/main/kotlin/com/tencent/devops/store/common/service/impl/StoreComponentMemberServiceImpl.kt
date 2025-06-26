@@ -27,16 +27,28 @@
 
 package com.tencent.devops.store.common.service.impl
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.constant.RepositoryConstants.KEY_REPOSITORY_ID
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.store.common.dao.StoreBaseFeatureExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
+import com.tencent.devops.store.common.service.StoreManagementExtraService
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.member.StoreMemberReq
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
+import jakarta.ws.rs.NotFoundException
 
 @Primary
 @Service
 class StoreComponentMemberServiceImpl @Autowired constructor(
-    private val storeBaseQueryDao: StoreBaseQueryDao
+    private val storeBaseQueryDao: StoreBaseQueryDao,
+    private val storeBaseFeatureExtQueryDao: StoreBaseFeatureExtQueryDao
 ) : StoreMemberServiceImpl() {
 
     override fun getStoreName(storeCode: String, storeType: StoreTypeEnum): String {
@@ -45,5 +57,100 @@ class StoreComponentMemberServiceImpl @Autowired constructor(
             storeCode = storeCode,
             storeType = storeType
         )?.name ?: ""
+    }
+
+    override fun add(
+        userId: String,
+        storeMemberReq: StoreMemberReq,
+        storeType: StoreTypeEnum,
+        collaborationFlag: Boolean?,
+        sendNotify: Boolean,
+        checkPermissionFlag: Boolean,
+        testProjectCode: String?
+    ): Result<Boolean> {
+        val storeCode = storeMemberReq.storeCode
+        // 检查用户是否有权限操作
+        super.checkUserPermission(
+            checkPermissionFlag = checkPermissionFlag,
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType
+        )
+        val repositoryId = storeBaseFeatureExtQueryDao.getStoreBaseFeatureExt(
+            dslContext = dslContext, storeCode = storeCode, storeType = storeType, fieldName = KEY_REPOSITORY_ID
+        )?.fieldValue
+        if (!repositoryId.isNullOrBlank()) {
+            val gitToken = client.get(ServiceOauthResource::class).gitGet(userId).data
+                ?: throw NotFoundException("cannot found access token for user($userId)")
+            getStoreManagementExtraService(storeType).addComponentRepositoryUser(
+                memberType = storeMemberReq.type,
+                members = storeMemberReq.member,
+                repositoryId = repositoryId,
+                token = gitToken.accessToken,
+                tokenType = TokenTypeEnum.OAUTH
+            )
+        }
+        return super.add(
+            userId = userId,
+            storeMemberReq = storeMemberReq,
+            storeType = storeType,
+            collaborationFlag = collaborationFlag,
+            sendNotify = sendNotify,
+            checkPermissionFlag = false,
+            testProjectCode = testProjectCode
+        )
+    }
+
+    override fun delete(
+        userId: String,
+        id: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        checkPermissionFlag: Boolean
+    ): Result<Boolean> {
+        // 检查用户是否有权限操作
+        super.checkUserPermission(
+            checkPermissionFlag = checkPermissionFlag,
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType
+        )
+        val memberRecord = storeMemberDao.getById(dslContext, id) ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(id)
+        )
+        // 如果删除的是管理员，只剩一个管理员则不允许删除
+        if ((memberRecord.type).toInt() == 0) {
+            val validateAdminResult = isStoreHasAdmins(storeCode, storeType)
+            if (validateAdminResult.isNotOk()) {
+                return Result(status = validateAdminResult.status, message = validateAdminResult.message, data = false)
+            }
+        }
+        val repositoryId = storeBaseFeatureExtQueryDao.getStoreBaseFeatureExt(
+            dslContext = dslContext, storeCode = storeCode, storeType = storeType, fieldName = KEY_REPOSITORY_ID
+        )?.fieldValue
+        if (!repositoryId.isNullOrBlank()) {
+            val gitToken = client.get(ServiceOauthResource::class).gitGet(userId).data
+                ?: throw NotFoundException("cannot found access token for user($userId)")
+            getStoreManagementExtraService(storeType).deleteComponentRepositoryUser(
+                member = memberRecord.username,
+                repositoryId = repositoryId,
+                token = gitToken.accessToken,
+                tokenType = TokenTypeEnum.OAUTH
+            )
+        }
+        return super.delete(
+            userId = userId,
+            id = id,
+            storeCode = storeCode,
+            storeType = storeType,
+            checkPermissionFlag = false
+        )
+    }
+
+    private fun getStoreManagementExtraService(storeType: StoreTypeEnum): StoreManagementExtraService {
+        return SpringContextUtil.getBean(
+            StoreManagementExtraService::class.java,
+            "${storeType}_MANAGEMENT_EXTRA_SERVICE"
+        )
     }
 }

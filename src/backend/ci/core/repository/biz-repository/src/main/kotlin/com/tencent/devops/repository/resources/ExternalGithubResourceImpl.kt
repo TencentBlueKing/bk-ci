@@ -35,8 +35,8 @@ import com.tencent.devops.repository.service.github.GithubOAuthService
 import com.tencent.devops.repository.service.github.IGithubService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.UriBuilder
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.UriBuilder
 
 @RestResource
 class ExternalGithubResourceImpl @Autowired constructor(

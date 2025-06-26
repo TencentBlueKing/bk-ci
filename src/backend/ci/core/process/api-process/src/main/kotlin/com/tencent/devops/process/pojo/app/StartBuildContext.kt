@@ -32,7 +32,9 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -42,6 +44,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_IID
@@ -72,7 +75,10 @@ import com.tencent.devops.process.utils.DependOnUtils
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
+import com.tencent.devops.process.utils.PIPELINE_RETRY_RUNNING_BUILD
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
+import com.tencent.devops.process.utils.PIPELINE_RETRY_TASK_IN_CONTAINER_ID
+import com.tencent.devops.process.utils.PIPELINE_RETRY_TASK_IN_STAGE_ID
 import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
@@ -87,8 +93,8 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.utils.PipelineVarUtil.CONTEXT_PREFIX
-import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 /**
  * 启动流水线上下文类，属于非线程安全类
@@ -134,7 +140,13 @@ data class StartBuildContext(
     // 注意：该字段在 PipelineContainerService.setUpTriggerContainer 中可能会被修改
     var currentBuildNo: Int? = null,
     val debug: Boolean,
-    val debugModelStr: String?
+    val debugModelStr: String?,
+    // 重试正在运行时的构建
+    val retryOnRunningBuild: Boolean = false,
+    // 重试插件所属的stageId
+    val retryTaskInStageId: String? = null,
+    // 重试插件对应的containerId
+    val retryTaskInContainerId: String? = null
 ) {
     val watcher: Watcher = Watcher("startBuild-$buildId")
 
@@ -226,6 +238,36 @@ data class StartBuildContext(
         return needRerunStage(stage) || isRetryDependOnContainer(container)
     }
 
+    /**
+     * 应该跳过刷新stage状态当运行时重试时
+     */
+    fun shouldSkipRefreshWhenRetryRunning(stage: Stage): Boolean {
+        return retryOnRunningBuild && retryTaskInStageId != stage.id
+    }
+
+    /**
+     * 应该跳过刷新container状态当运行时重试时
+     */
+    fun shouldSkipRefreshWhenRetryRunning(container: Container): Boolean {
+        // 运行中重试, 如果当前的container依赖失败重试插件所属的container,则需要刷新
+        return if (retryOnRunningBuild && container.id != retryTaskInContainerId) {
+            val dependOnContainerId2JobIds = when (container) {
+                is VMBuildContainer -> {
+                    container.jobControlOption?.dependOnContainerId2JobIds
+                }
+
+                is NormalContainer -> {
+                    container.jobControlOption?.dependOnContainerId2JobIds
+                }
+
+                else -> null
+            } ?: emptyMap()
+            !dependOnContainerId2JobIds.keys.contains(retryTaskInContainerId)
+        } else {
+            false
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(StartBuildContext::class.java)
         private const val MAX_LENGTH = 255
@@ -247,10 +289,12 @@ data class StartBuildContext(
             triggerReviewers: List<String>? = null,
             currentBuildNo: Int? = null
         ): StartBuildContext {
-
+            val buildParam = genOriginStartParamsList(realStartParamKeys, pipelineParamMap)
             val params: Map<String, String> = pipelineParamMap.values.associate { it.key to it.value.toString() }
             // 解析出定义的流水线变量
             val retryStartTaskId = params[PIPELINE_RETRY_START_TASK_ID]
+
+            val retryOnRunningBuild = params[PIPELINE_RETRY_RUNNING_BUILD]?.toBoolean() ?: false
 
             val (actionType, executeCount, isStageRetry) = if (params[PIPELINE_RETRY_COUNT] != null) {
                 val count = try {
@@ -258,7 +302,12 @@ data class StartBuildContext(
                 } catch (ignored: NumberFormatException) {
                     0
                 }
-                Triple(ActionType.RETRY, count + 1, retryStartTaskId?.startsWith("stage-") == true)
+                val retryCount = if (retryOnRunningBuild) {
+                    count
+                } else {
+                    count + 1
+                }
+                Triple(ActionType.RETRY, retryCount, retryStartTaskId?.startsWith("stage-") == true)
             } else {
                 Triple(ActionType.START, 1, false)
             }
@@ -290,7 +339,7 @@ data class StartBuildContext(
                 currentBuildNo = currentBuildNo,
                 webhookInfo = getWebhookInfo(params),
                 buildMsg = params[PIPELINE_BUILD_MSG]?.coerceAtMaxLength(MAX_LENGTH),
-                buildParameters = genOriginStartParamsList(realStartParamKeys, pipelineParamMap),
+                buildParameters = buildParam,
                 concurrencyGroup = pipelineSetting?.takeIf { it.runLockType == PipelineRunLockType.GROUP_LOCK }
                     ?.concurrencyGroup?.let {
                         val webhookParam = webHookStartParam.values.associate { p -> p.key to p.value.toString() }
@@ -308,7 +357,10 @@ data class StartBuildContext(
                 pipelineParamMap = pipelineParamMap,
                 debug = debug,
                 debugModelStr = modelStr,
-                yamlVersion = yamlVersion
+                yamlVersion = yamlVersion,
+                retryOnRunningBuild = retryOnRunningBuild,
+                retryTaskInStageId = params[PIPELINE_RETRY_TASK_IN_STAGE_ID],
+                retryTaskInContainerId = params[PIPELINE_RETRY_TASK_IN_CONTAINER_ID],
             )
         }
 
@@ -441,12 +493,11 @@ data class StartBuildContext(
             val originStartContexts = HashMap<String, BuildParameters>(realStartParamKeys.size, /* loadFactor */ 1F)
             realStartParamKeys.forEach { key ->
                 pipelineParamMap[key]?.let { param ->
-                    originStartParams.add(param)
-                    if (key.startsWith(CONTEXT_PREFIX)) {
-                        originStartContexts[key] = param
+                    if (CascadePropertyUtils.supportCascadeParam(param.valueType)) {
+                        originStartParams.addAll(fillCascadeParam(param, originStartContexts))
                     } else {
-                        val ctxKey = CONTEXT_PREFIX + key
-                        originStartContexts[ctxKey] = param.copy(key = ctxKey)
+                        originStartParams.add(param)
+                        fillContextPrefix(param, originStartContexts)
                     }
                 }
             }
@@ -456,6 +507,49 @@ data class StartBuildContext(
             pipelineParamMap[PIPELINE_BUILD_MSG]?.let { buildMsgParam -> originStartParams.add(buildMsgParam) }
             pipelineParamMap[PIPELINE_RETRY_COUNT]?.let { retryCountParam -> originStartParams.add(retryCountParam) }
 
+            return originStartParams
+        }
+
+        private fun fillContextPrefix(
+            param: BuildParameters,
+            originStartContexts: HashMap<String, BuildParameters>
+        ) {
+            with(param) {
+                if (key.startsWith(CONTEXT_PREFIX)) {
+                    originStartContexts[key] = param
+                } else {
+                    val ctxKey = CONTEXT_PREFIX + key
+                    originStartContexts[ctxKey] = param.copy(key = ctxKey)
+                }
+            }
+        }
+
+        /**
+         * 根据原始值，填充级联参数
+         * xxx = {"repo-name": "xxx/xxx","branch":"master"}
+         * xxx.repo-name = xxx/xxx
+         * xxx.branch = master
+         */
+        private fun fillCascadeParam(
+            param: BuildParameters,
+            originStartContexts: HashMap<String, BuildParameters>
+        ): List<BuildParameters> {
+            val originStartParams = mutableListOf<BuildParameters>()
+            val key = param.key
+            val paramValue = CascadePropertyUtils.parseDefaultValue(key, param.value, param.valueType)
+            val cascadeParam = param.copy(value = paramValue)
+            originStartParams.add(cascadeParam)
+            // 填充下级参数的[variables.]
+            fillContextPrefix(cascadeParam, originStartContexts)
+            CascadePropertyUtils.getCascadeVariableKeyMap(key, param.valueType!!)
+                .forEach { (subKey, paramKey) ->
+                    val subParam = param.copy(
+                        key = paramKey,
+                        value = paramValue[subKey] ?: ""
+                    )
+                    // 填充下级参数的[variables.]
+                    fillContextPrefix(subParam, originStartContexts)
+                }
             return originStartParams
         }
     }

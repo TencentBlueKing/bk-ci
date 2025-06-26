@@ -27,7 +27,6 @@
 
 package com.tencent.devops.openapi.resources.apigw.v4.environment
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
@@ -43,7 +42,6 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.BatchFetchAgentData
 import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateAgentEnvVar
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
 import com.tencent.devops.openapi.api.apigw.v4.environment.ApigwEnvironmentAgentResourceV4
-import com.tencent.devops.openapi.constant.OpenAPIMessageCode
 import com.tencent.devops.openapi.utils.ApigwParamUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -69,21 +67,18 @@ class ApigwEnvironmentAgentResourceV4Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         projectId: String,
-        nodeHashId: String
+        nodeHashId: String?,
+        nodeName: String?,
+        agentHashId: String?
     ): Result<NodeWithPermission?> {
         logger.info("OPENAPI_ENVIRONMENT_AGENT_V4|$userId|get node status|$projectId|$nodeHashId")
         logger.info("getNodeStatus userId:$userId, projectId: $projectId, nodeHashId: $nodeHashId")
-        val nodeList = client.get(ServiceNodeResource::class).listByHashIds(
+        return client.get(ServiceNodeResource::class).getNodeStatus(
             userId = userId,
             projectId = projectId,
-            nodeHashIds = arrayListOf(nodeHashId)
-        ).data
-        if (nodeList != null && nodeList.isNotEmpty()) {
-            return Result(nodeList[0])
-        }
-        throw ErrorCodeException(
-            errorCode = OpenAPIMessageCode.ERROR_NODE_NOT_EXISTS,
-            params = arrayOf(nodeHashId)
+            nodeHashId = nodeHashId,
+            nodeName = nodeName,
+            agentHashId = agentHashId
         )
     }
 
@@ -99,7 +94,7 @@ class ApigwEnvironmentAgentResourceV4Impl @Autowired constructor(
         logger.info("OPENAPI_ENVIRONMENT_AGENT_V4|$userId|get node detail|$projectId|$nodeHashId|$agentHashId")
         if (!agentHashId.isNullOrBlank()) {
             return client.get(ServiceThirdPartyAgentResource::class).getAgentDetail(
-                userId = userId, projectId = projectId, agentHashId = agentHashId
+                userId = userId, projectId = projectId, agentHashId = agentHashId, checkPermission = true
             )
         }
         return client.get(ServiceThirdPartyAgentResource::class).getNodeDetail(

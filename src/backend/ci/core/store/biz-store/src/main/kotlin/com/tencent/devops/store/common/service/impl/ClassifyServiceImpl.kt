@@ -162,8 +162,9 @@ class ClassifyServiceImpl @Autowired constructor(
         var flag = false
         if (null != classifyRecord) {
             val classifyType = classifyRecord.type
-            val classifyService = getStoreClassifyService(StoreTypeEnum.getStoreType(classifyType.toInt()))
-            flag = classifyService.getDeleteClassifyFlag(id)
+            val storeType = StoreTypeEnum.getStoreType(classifyType.toInt())
+            val classifyService = getStoreClassifyService(storeType)
+            flag = classifyService.getDeleteClassifyFlag(id, StoreTypeEnum.valueOf(storeType))
         }
         if (flag) {
             classifyDao.delete(dslContext, id)
@@ -178,6 +179,12 @@ class ClassifyServiceImpl @Autowired constructor(
     }
 
     private fun getStoreClassifyService(storeType: String): AbstractClassifyService {
-        return SpringContextUtil.getBean(AbstractClassifyService::class.java, "${storeType}_CLASSIFY_SERVICE")
+        val beanName = "${storeType}_CLASSIFY_SERVICE"
+        return if (SpringContextUtil.isBeanExist(beanName)) {
+            SpringContextUtil.getBean(AbstractClassifyService::class.java, beanName)
+        } else {
+            // 获取默认的成员bean对象
+            SpringContextUtil.getBean(AbstractClassifyService::class.java)
+        }
     }
 }

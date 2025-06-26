@@ -99,6 +99,7 @@ class UserMarketImageResourceImpl @Autowired constructor(
         labelCode: String?,
         score: Int?,
         sortType: MarketImageSortTypeEnum?,
+        recommendFlag: Boolean?,
         page: Int?,
         pageSize: Int?
     ): Result<MarketImageResp> {
@@ -112,6 +113,7 @@ class UserMarketImageResourceImpl @Autowired constructor(
             labelCode = labelCode,
             score = score,
             sortType = sortType,
+            recommendFlag = recommendFlag,
             page = page,
             pageSize = pageSize,
             interfaceName = "/user/market/image/list"

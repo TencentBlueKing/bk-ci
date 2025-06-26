@@ -45,5 +45,7 @@ data class PipelinePermissions(
     @get:Schema(title = "下载权限", required = true)
     val canDownload: Boolean = false,
     @get:Schema(title = "分享权限", required = true)
-    val canShare: Boolean = false
+    val canShare: Boolean = false,
+    @get:Schema(title = "归档权限", required = true)
+    val canArchive: Boolean = false
 )

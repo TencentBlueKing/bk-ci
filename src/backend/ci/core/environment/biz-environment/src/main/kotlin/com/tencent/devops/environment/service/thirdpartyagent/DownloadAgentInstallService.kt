@@ -28,19 +28,26 @@
 package com.tencent.devops.environment.service.thirdpartyagent
 
 import com.tencent.devops.common.api.enums.AgentStatus
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.agent.AgentArchType
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getFileMD5
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
+import jakarta.ws.rs.NotFoundException
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.StreamingOutput
 import org.apache.commons.compress.archivers.ArchiveOutputStream
 import org.apache.commons.compress.archivers.ArchiveStreamFactory
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream
 import org.apache.commons.compress.utils.IOUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -52,10 +59,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.nio.charset.Charset
-import javax.ws.rs.NotFoundException
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.StreamingOutput
+import java.util.Locale
 
 @Service
 @Suppress("TooManyFunctions", "LongMethod")
@@ -76,12 +80,18 @@ class DownloadAgentInstallService @Autowired constructor(
     @Value("\${environment.certFilePath:#{null}}")
     private val certFilePath: String? = null
 
+    @Value("\${environment.jdkCompatibility:true}")
+    private val jdkCompatibility = true
+
     fun downloadInstallScript(agentId: String, isWinDownload: Boolean): Response {
         logger.info("Trying to download the agent($agentId) install script")
         val agentRecord = getAgentRecord(agentId)
 
         if (agentRecord.status == AgentStatus.IMPORT_OK.status) {
-            throw RuntimeException("Agent already installed. Please obtain the install url again")
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_AGENT_ALREADY_INSTALL,
+                defaultMessage = "Agent already installed. Please obtain the install url again"
+            )
         }
 
         /**
@@ -107,7 +117,7 @@ class DownloadAgentInstallService @Autowired constructor(
             logger.warn("The install script file(${scriptFile.absolutePath}) is not exist")
             throw FileNotFoundException("The install script file is not exist")
         }
-        val map = getAgentReplaceProperties(agentRecord)
+        val map = getAgentReplaceProperties(agentRecord, true)
         var result = scriptFile.readText(Charset.forName("UTF-8"))
 
         map.forEach { (t, u) ->
@@ -137,7 +147,10 @@ class DownloadAgentInstallService @Autowired constructor(
         logger.info("Get the script files (${scriptFiles.keys})")
 
         return Response.ok(StreamingOutput { output ->
-            val zipOut = ArchiveStreamFactory().createArchiveOutputStream(ArchiveStreamFactory.ZIP, output)
+            val zipOut = ArchiveStreamFactory().createArchiveOutputStream<ZipArchiveOutputStream>(
+                ArchiveStreamFactory.ZIP,
+                output
+            )
 
             if (!certFilePath.isNullOrBlank()) {
                 val certFile = File(certFilePath)
@@ -184,7 +197,12 @@ class DownloadAgentInstallService @Autowired constructor(
             .build()
     }
 
-    private fun zipBinaryFile(os: String, goAgentFile: File, fileName: String, zipOut: ArchiveOutputStream) {
+    private fun zipBinaryFile(
+        os: String,
+        goAgentFile: File,
+        fileName: String,
+        zipOut: ArchiveOutputStream<ZipArchiveEntry>
+    ) {
         val finalFilename = if (os == OS.WINDOWS.name) {
             "$fileName.exe"
         } else {
@@ -207,8 +225,14 @@ class DownloadAgentInstallService @Autowired constructor(
 
     private fun getGoAgentJarFiles(os: String, arch: AgentArchType?): List<File> {
         val agentJar = getAgentJarFile()
-        val jreFile = getJreZipFile(os, arch)
-        return listOf(agentJar, jreFile)
+        val jdk17File = getJreZipFile(os, arch, JDK17_FILENAME)
+        if (jdkCompatibility) {
+            // #10586 现阶段保持 8 和 17并行，直到没有 8 的使用
+            val jreFile = getJreZipFile(os, arch, JDK8_FILENAME)
+            return listOf(agentJar, jreFile, jdk17File)
+        } else {
+            return listOf(agentJar, jdk17File)
+        }
     }
 
     private fun getGoFile(os: String, fileName: String, arch: AgentArchType?): File {
@@ -229,10 +253,10 @@ class DownloadAgentInstallService @Autowired constructor(
         return daemonFile
     }
 
-    private fun getGoAgentScriptFiles(agentRecord: TEnvironmentThirdpartyAgentRecord): Map<String/*Name*/, String> {
-        val file = File(agentPackage, "script/${agentRecord.os.toLowerCase()}")
+    private fun getGoAgentScriptFiles(agentRecord: TEnvironmentThirdpartyAgentRecord): Map<String, String> {
+        val file = File(agentPackage, "script/${agentRecord.os.lowercase()}")
         val scripts = file.listFiles()
-        val map = getAgentReplaceProperties(agentRecord)
+        val map = getAgentReplaceProperties(agentRecord, false)
         return scripts?.associate {
             var content = it.readText(Charsets.UTF_8)
             map.forEach { (key, value) -> content = content.replace("##$key##", value) }
@@ -242,7 +266,7 @@ class DownloadAgentInstallService @Autowired constructor(
 
     private fun getPropertyFile(agentRecord: TEnvironmentThirdpartyAgentRecord): Map<String, String> {
         val file = File(agentPackage, "config").listFiles()
-        val map = getAgentReplaceProperties(agentRecord)
+        val map = getAgentReplaceProperties(agentRecord, false)
         return file?.filter { it.isFile }?.associate {
             var content = it.readText(Charsets.UTF_8)
             map.forEach { (key, value) -> content = content.replace("##$key##", value) }
@@ -253,7 +277,7 @@ class DownloadAgentInstallService @Autowired constructor(
     fun downloadJre(agentId: String, eTag: String?, arch: AgentArchType?): Response {
         logger.info("downloadJre, agentId: $agentId, eTag: $eTag")
         val record = getAgentRecord(agentId)
-        val file = getJreZipFile(record.os, arch)
+        val file = getJreZipFile(record.os, arch, JDK17_FILENAME)
 
         if (!eTag.isNullOrBlank()) {
             if (eTag == getFileMD5(file)) {
@@ -275,7 +299,10 @@ class DownloadAgentInstallService @Autowired constructor(
         return agentRecord
     }
 
-    private fun getAgentReplaceProperties(agentRecord: TEnvironmentThirdpartyAgentRecord): Map<String, String> {
+    private fun getAgentReplaceProperties(
+        agentRecord: TEnvironmentThirdpartyAgentRecord,
+        enableCheckFiles: Boolean
+    ): Map<String, String> {
         val agentId = HashUtil.encodeLongId(agentRecord.id)
         val agentUrl = agentUrlService.genAgentUrl(agentRecord)
         val gateWay = agentUrlService.genGateway(agentRecord)
@@ -289,7 +316,8 @@ class DownloadAgentInstallService @Autowired constructor(
             "fileGateway" to fileGateway,
             "landun.env" to profile.getEnv().name,
             "agentCollectorOn" to agentCollectorOn,
-            "language" to commonConfig.devopsDefaultLocaleLanguage
+            "language" to commonConfig.devopsDefaultLocaleLanguage,
+            "enableCheckFiles" to enableCheckFiles.toString()
         )
     }
 
@@ -302,13 +330,13 @@ class DownloadAgentInstallService @Autowired constructor(
         return agentJar
     }
 
-    fun getJreZipFile(os: String, arch: AgentArchType?): File {
+    fun getJreZipFile(os: String, arch: AgentArchType?, fileName: String): File {
         val archStr = if (arch == null) {
             ""
         } else {
             "_${arch.arch}"
         }
-        val file = File(agentPackage, "/jre/${os.toLowerCase()}$archStr/jre.zip")
+        val file = File(agentPackage, "/jre/${os.lowercase(Locale.getDefault())}$archStr/$fileName")
         if (!file.exists()) {
             logger.warn("The jre file(${file.absolutePath}) is not exist")
             throw FileNotFoundException("The jre file is not exist")
@@ -333,7 +361,10 @@ class DownloadAgentInstallService @Autowired constructor(
         val record = getAgentRecord(agentHashId)
 
         return Response.ok(StreamingOutput { output ->
-            val zipOut = ArchiveStreamFactory().createArchiveOutputStream(ArchiveStreamFactory.ZIP, output)
+            val zipOut = ArchiveStreamFactory().createArchiveOutputStream<ZipArchiveOutputStream>(
+                ArchiveStreamFactory.ZIP,
+                output
+            )
 
             if (!certFilePath.isNullOrBlank()) {
                 val certFile = File(certFilePath)
@@ -426,5 +457,8 @@ class DownloadAgentInstallService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(DownloadAgentInstallService::class.java)
         private const val AGENT_FILE_MODE = 0b111101101
         private const val CERT_FILE_NAME = ".cert"
+
+        private const val JDK8_FILENAME = "jre.zip"
+        private const val JDK17_FILENAME = "jdk17.zip"
     }
 }

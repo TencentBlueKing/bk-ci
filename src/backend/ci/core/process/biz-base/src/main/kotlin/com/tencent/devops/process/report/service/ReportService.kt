@@ -31,7 +31,9 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.archive.pojo.ReportListDTO
 import com.tencent.devops.common.archive.pojo.TaskReport
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.model.process.tables.records.TReportRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
@@ -49,7 +51,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.nio.file.Paths
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -151,14 +153,19 @@ class ReportService @Autowired constructor(
 
     fun listContainTask(reportListDTO: ReportListDTO): List<TaskReport> {
         val projectId = reportListDTO.projectId
+        val archiveFlag = reportListDTO.archiveFlag
         val reportRecordList = reportDao.list(
-            dslContext = dslContext,
+            dslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT),
             projectId = projectId,
             pipelineId = reportListDTO.pipelineId,
             buildId = reportListDTO.buildId
         )
         return reportRecordList.map {
-            val taskRecord = pipelineTaskService.getBuildTask(projectId, reportListDTO.buildId, it.elementId)
+            val taskRecord = if (archiveFlag == true) {
+                null
+            } else {
+                pipelineTaskService.getBuildTask(projectId, reportListDTO.buildId, it.elementId)
+            }
             val atomCode = taskRecord?.atomCode ?: ""
             val atomName = taskRecord?.taskName ?: ""
             if (it.type == ReportTypeEnum.INTERNAL.name) {

@@ -43,15 +43,15 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "OPEN_API_V4_ENVIRONMENT", description = "OPENAPI-环境管理-构建机管理")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/projects/{projectId}/environment")
@@ -78,7 +78,7 @@ interface ApigwEnvironmentAgentResourceV4 {
         projectId: String
     ): Result<List<NodeBaseInfo>>
 
-    @Operation(summary = "获取指定构建机状态", tags = ["v4_user_node_status", "v4_app_node_status"])
+    @Operation(summary = "获取指定第三方构建机状态", tags = ["v4_user_node_status", "v4_app_node_status"])
     @Path("/third_part_agent_node_status")
     @GET
     fun getNodeStatus(
@@ -94,9 +94,15 @@ interface ApigwEnvironmentAgentResourceV4 {
         @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "节点 hashId", required = true)
+        @Parameter(description = "节点 hashId (nodeHashId、nodeName、agentHashId 三个参数任选其一填入即可)", required = false)
         @QueryParam("nodeHashId")
-        nodeHashId: String
+        nodeHashId: String?,
+        @Parameter(description = "节点 别名 (nodeHashId、nodeName、agentHashId 三个参数任选其一填入即可)", required = false)
+        @QueryParam("nodeName")
+        nodeName: String?,
+        @Parameter(description = "节点 agentId (nodeHashId、nodeName、agentHashId 三个参数任选其一填入即可)", required = false)
+        @QueryParam("agentHashId")
+        agentHashId: String?
     ): Result<NodeWithPermission?>
 
     @Operation(

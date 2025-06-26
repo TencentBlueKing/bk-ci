@@ -45,7 +45,7 @@ import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
 import com.tencent.devops.auth.provider.rbac.service.ItsmService
 import com.tencent.devops.auth.provider.rbac.service.PermissionGradeManagerService
 import com.tencent.devops.auth.provider.rbac.service.PermissionSubsetManagerService
-import com.tencent.devops.auth.provider.rbac.service.RbacCacheService
+import com.tencent.devops.auth.provider.rbac.service.RbacCommonService
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
 import com.tencent.devops.auth.service.AuthProjectUserMetricsService
 import com.tencent.devops.auth.service.BkHttpRequestService
@@ -72,7 +72,7 @@ class RbacServiceConfiguration {
         iamConfiguration: IamConfiguration,
         authResourceGroupConfigDao: AuthResourceGroupConfigDao,
         authProjectUserMetricsService: AuthProjectUserMetricsService
-    ) = RbacCacheService(
+    ) = RbacCommonService(
         dslContext = dslContext,
         authResourceTypeDao = authResourceTypeDao,
         authActionDao = authActionDao,
@@ -143,7 +143,8 @@ class RbacServiceConfiguration {
         authResourceDao: AuthResourceDao,
         authResourceGroupDao: AuthResourceGroupDao,
         authResourceGroupMemberDao: AuthResourceGroupMemberDao,
-        resourceGroupPermissionService: PermissionResourceGroupPermissionService
+        resourceGroupPermissionService: PermissionResourceGroupPermissionService,
+        traceEventDispatcher: TraceEventDispatcher
     ) = AuthResourceService(
         dslContext = dslContext,
         authResourceDao = authResourceDao,

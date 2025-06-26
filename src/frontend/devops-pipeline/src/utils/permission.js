@@ -65,7 +65,8 @@ export const RESOURCE_ACTION = {
     EDIT: 'pipeline_edit',
     DOWNLOAD: 'pipeline_download',
     DELETE: 'pipeline_delete',
-    MANAGE: 'pipeline_manage'
+    MANAGE: 'pipeline_manage',
+    ARCHIVED: 'pipeline_archive'
 }
 
 export const PROJECT_RESOURCE_ACTION = {
@@ -75,7 +76,8 @@ export const PROJECT_RESOURCE_ACTION = {
     VIEWS_MANAGE: 'project_views_manage',
     CREATE: 'project_create',
     EDIT: 'project_edit',
-    ENABLE: 'project_enable'
+    ENABLE: 'project_enable',
+    ARCHIVED: 'project_manage-archived-pipeline'
 }
 
 export const TEMPLATE_RESOURCE_ACTION = {

@@ -40,5 +40,7 @@ data class ReportListDTO(
     @get:Schema(title = "构建id", required = false)
     val buildId: String,
     @get:Schema(title = "是否有操作权限", required = false)
-    val needPermission: Boolean
+    val needPermission: Boolean,
+    @get:Schema(title = "是否查询归档数据", required = false)
+    val archiveFlag: Boolean? = false
 )

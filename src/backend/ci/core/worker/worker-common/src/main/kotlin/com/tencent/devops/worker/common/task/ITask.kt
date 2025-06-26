@@ -57,12 +57,13 @@ abstract class ITask {
 
     /* 存储常量的key */
     private lateinit var constVar: List<String>
+
     /*  */
     private lateinit var dialect: IPipelineDialect
 
     companion object {
         // 有的插件输出的变量会带taskId,taskId包含-,所以需要保留
-        private const val ENGLISH_NAME_PATTERN = "[A-Za-z_][A-Za-z_0-9.-]*"
+        private const val ENGLISH_NAME_PATTERN = "[A-Za-z_0-9.-]*"
     }
 
     fun run(
@@ -119,7 +120,7 @@ abstract class ITask {
         if (errReadOnlyFlag) {
             throw TaskExecuteException(
                 errorMsg = "[Finish task] status: false, errorType: ${ErrorType.USER.num}, " +
-                        "errorCode: ${ErrorCode.USER_INPUT_INVAILD}, message: read-only cannot be modified.",
+                    "errorCode: ${ErrorCode.USER_INPUT_INVAILD}, message: read-only cannot be modified.",
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_INPUT_INVAILD
             )
@@ -128,13 +129,13 @@ abstract class ITask {
             if (errChineseVarName && !dialect.supportChineseVarName()) {
                 LoggerService.addWarnLine(
                     "Variable $errChineseVars name is illegal,Variable names can only use letters, " +
-                            "numbers and underscores, " +
-                            "and the first character cannot start with a number"
+                        "numbers and underscores, " +
+                        "and the first character cannot start with a number"
                 )
                 throw TaskExecuteException(
                     errorMsg = "[Finish task] status: false, errorType: ${ErrorType.USER.num}, " +
-                            "errorCode: ${ErrorCode.USER_INPUT_INVAILD}," +
-                            " message: variable name is illegal.",
+                        "errorCode: ${ErrorCode.USER_INPUT_INVAILD}," +
+                        " message: variable name is illegal.",
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_INPUT_INVAILD
                 )

@@ -38,15 +38,15 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "AUTH_SERVICE_PROJECT", description = "权限--项目相关接口")
 @Path("/open/service/auth/projects")
@@ -199,26 +199,6 @@ interface OpenProjectAuthResource {
         @QueryParam("roleCode")
         @Parameter(description = "用户组Code", required = true)
         roleCode: String
-    ): Result<Boolean>
-
-    @POST
-    @Path("/{projectCode}/batchCreateProjectUser/{roleCode}")
-    @Operation(summary = "批量添加用户到指定项目指定分组")
-    fun batchCreateProjectUser(
-        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @Parameter(description = "认证token", required = true)
-        token: String,
-        @Parameter(description = "用户名", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目Code", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
-        @Parameter(description = "用户组Code", required = true)
-        @PathParam("roleCode")
-        roleCode: String,
-        @Parameter(description = "添加用户集合", required = true)
-        members: List<String>
     ): Result<Boolean>
 
     @GET

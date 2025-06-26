@@ -471,6 +471,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_SETTING` (
   `VERSION` int(11) DEFAULT '1' COMMENT '设置版本',
   `SUCCESS_SUBSCRIPTION` text COMMENT '成功订阅设置',
   `FAILURE_SUBSCRIPTION` text COMMENT '失败订阅设置',
+  `FAIL_IF_VARIABLE_INVALID` bit(1) DEFAULT NULL COMMENT '是否配置流水线变量值超长时终止执行',
   PRIMARY KEY (`PIPELINE_ID`),
   UNIQUE KEY `PROJECT_ID` (`PROJECT_ID`,`NAME`,`IS_TEMPLATE`)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线基础配置表';
@@ -482,6 +483,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_SETTING` (
 CREATE TABLE IF NOT EXISTS `T_PIPELINE_TIMER` (
   `PROJECT_ID` varchar(32) NOT NULL COMMENT '项目ID',
   `PIPELINE_ID` varchar(34) NOT NULL COMMENT '流水线ID',
+  `TASK_ID` varchar(64)  DEFAULT '' COMMENT '插件ID',
   `CRONTAB` varchar(2048) NOT NULL COMMENT '任务ID',
   `CREATOR` varchar(64) NOT NULL COMMENT '创建者',
   `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -489,8 +491,8 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_TIMER` (
   `REPO_HASH_ID` varchar(64) COMMENT '代码库HASH ID',
   `BRANCHS` text  COMMENT '分支列表',
   `NO_SCM` bit(1)  DEFAULT FALSE COMMENT '源代码未更新则不触发构建',
-  PRIMARY KEY (`PROJECT_ID`,`PIPELINE_ID`),
-  UNIQUE KEY `IDX_PIPELINE_ID` (`PIPELINE_ID`)
+  `START_PARAM` text COMMENT '启动参数',
+  PRIMARY KEY (`PROJECT_ID`,`PIPELINE_ID`,`TASK_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
 
 -- ----------------------------
@@ -500,12 +502,13 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_TIMER_BRANCH`
 (
     `PROJECT_ID`   varchar(32)  not null comment '项目ID',
     `PIPELINE_ID`  varchar(34)  not null comment '流水线ID',
+    `TASK_ID`  varchar(64)  not null comment '插件ID',
     `REPO_HASH_ID` varchar(64)  not null comment '代码库HASH ID',
     `BRANCH`       varchar(255) not null comment '分支',
     `REVISION`     varchar(40)  not null comment '提交版本',
     `CREATE_TIME`  timestamp default CURRENT_TIMESTAMP not null COMMENT '创建时间',
     `UPDATE_TIME`  timestamp default CURRENT_TIMESTAMP not null COMMENT '更新时间',
-    primary key (`PROJECT_ID`, `PIPELINE_ID`, `REPO_HASH_ID`, `BRANCH`)
+    primary key (`PROJECT_ID`, `PIPELINE_ID`, `TASK_ID`, `REPO_HASH_ID`, `BRANCH`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '定时触发分支版本';
 
 -- ----------------------------
@@ -956,6 +959,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_SETTING_VERSION` (
   `SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG` bit(1) NOT NULL DEFAULT b'0',
   `FAIL_WECHAT_GROUP_MARKDOWN_FLAG` bit(1) DEFAULT b'0',
   `MAX_CON_RUNNING_QUEUE_SIZE` int(11) DEFAULT NULL COMMENT '并发构建数量限制,值为-1时表示取系统默认值。',
+  `FAIL_IF_VARIABLE_INVALID` bit(1) DEFAULT NULL COMMENT '是否配置流水线变量值超长时终止执行',
   PRIMARY KEY (`ID`),
   UNIQUE KEY `UNI_INX_TPSV_PROJECT_PIPELINE_VERSION` (`PROJECT_ID`,`PIPELINE_ID`,`VERSION`)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线基础配置版本表';
@@ -1152,6 +1156,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_TRIGGER_EVENT`
     `REPLAY_REQUEST_ID` varchar(64)   NULL COMMENT '重放请求ID',
     `REQUEST_PARAMS`  text                  DEFAULT NULL COMMENT '请求参数',
     `CREATE_TIME`      timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '事件时间',
+    `EVENT_BODY`     longtext NULL COMMENT '事件体',
     PRIMARY KEY (`EVENT_ID`, `CREATE_TIME`),
     unique UNIQ_REQUEST(`REQUEST_ID`, `EVENT_SOURCE`),
     INDEX IDX_EVENT (`PROJECT_ID`, `EVENT_SOURCE`)
@@ -1239,6 +1244,11 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_BRANCH_FILE`
     `FILE_PATH`    varchar(512) NOT NULL DEFAULT '' COMMENT '文件路径',
     `FILE_PATH_MD5`    varchar(64) NOT NULL DEFAULT '' COMMENT '文件路径MD5',
     `CREATE_TIME`  timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATE_TIME`  datetime not null  default CURRENT_TIMESTAMP comment '更新时间',
+    `COMMIT_ID` varchar(64) null comment '文件commitId',
+    `BLOB_ID`   varchar(64) not null comment '文件blob_id',
+    `COMMIT_TIME`  datetime not null default CURRENT_TIMESTAMP not null comment '提交时间',
+    `DELETED` bit not null default b'0' comment '是否删除',
     PRIMARY KEY (`PROJECT_ID`, `REPO_HASH_ID`, `BRANCH`, `FILE_PATH_MD5`),
     INDEX IDX_PROJECT_REPO_FILE(`PROJECT_ID`, `REPO_HASH_ID`, `FILE_PATH_MD5`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='yaml分支文件';
@@ -1282,5 +1292,38 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_WEBHOOK_VERSION`
     `EVENT_TYPE`         varchar(32)  not null comment '事件类型',
     UNIQUE UNI_PROJECT_PIPELINE_TASK (`PROJECT_ID`, `PIPELINE_ID`, `VERSION`, `TASK_ID`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '流水线webhook版本';
+
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_CALLBACK` (
+     `PROJECT_ID` varchar(64) NOT NULL COMMENT '蓝盾项目ID',
+     `PIPELINE_ID` varchar(64) NOT NULL COMMENT '流水线ID',
+     `NAME` varchar(255) NOT NULL COMMENT '回调名称',
+     `EVENT_TYPE` varchar(64) NOT NULL COMMENT '事件类型',
+     `REGION` varchar(32) DEFAULT NULL COMMENT '网络域',
+     `URL` varchar(256) NOT NULL COMMENT '回调地址',
+     `SECRET_TOKEN` varchar(100) DEFAULT NULL COMMENT '鉴权参数',
+     `USER_ID` varchar(100) DEFAULT NULL COMMENT '创建人',
+     `CREATE_TIME` datetime DEFAULT NULL COMMENT '创建时间',
+     `UPDATE_TIME` datetime DEFAULT NULL COMMENT '更新时间',
+     PRIMARY KEY (`PROJECT_ID`,`PIPELINE_ID`,`NAME`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线级别回调事件表';
+-- devops_process.T_PIPELINE_SUB_REF definition
+
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_SUB_REF` (
+  `PROJECT_ID` varchar(64) NOT NULL COMMENT '蓝盾项目ID',
+  `PIPELINE_ID` varchar(64) NOT NULL COMMENT '蓝盾流水线ID',
+  `TASK_ID` varchar(64) NOT NULL COMMENT 'TASKID',
+  `PIPELINE_NAME` varchar(256) DEFAULT NULL COMMENT '流水线名称',
+  `TASK_POSITION` varchar(256) DEFAULT NULL COMMENT '插件所在位置[stageIndex-containerIndex-taskIndex]',
+  `TASK_NAME` varchar(256) DEFAULT NULL COMMENT 'TASK名称',
+  `SUB_PROJECT_ID` varchar(64) DEFAULT NULL COMMENT '子流水线项目ID',
+  `SUB_PIPELINE_ID` varchar(64) DEFAULT NULL COMMENT '子流水线流水线ID',
+  `SUB_PIPELINE_NAME` varchar(256) DEFAULT NULL COMMENT '子流水线名称',
+  `TASK_PROJECT_ID` varchar(64) DEFAULT NULL COMMENT '插件源参数_projectId',
+  `TASK_PIPELINE_TYPE` varchar(32) DEFAULT NULL COMMENT '插件源参数_type',
+  `TASK_PIPELINE_ID` varchar(64) DEFAULT NULL COMMENT '插件源参数_pipelineId',
+  `TASK_PIPELINE_NAME` varchar(256) DEFAULT NULL COMMENT '插件源参数_pipelineName',
+  `CHANNEL` varchar(32) DEFAULT NULL COMMENT '流水线渠道',
+  PRIMARY KEY (`PROJECT_ID`,`PIPELINE_ID`,`TASK_ID`)
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 COMMENT='子流水线依赖关系';
 
 SET FOREIGN_KEY_CHECKS = 1;

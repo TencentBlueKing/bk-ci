@@ -23,8 +23,8 @@
 
 import Vue from 'vue'
 import App from './App'
-import enClass from './directives/focus/en-class'
-import enStyle from './directives/focus/en-style'
+import enClass from './directives/en-class'
+import enStyle from './directives/en-style'
 import focus from './directives/focus/index.js'
 import createRouter from './router'
 import store from './store'
@@ -35,7 +35,7 @@ import PortalVue from "portal-vue"; // eslint-disable-line
 import VeeValidate from 'vee-validate'
 import validationENMessages from 'vee-validate/dist/locale/en'
 import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
-import createLocale from '../../locale'
+import createLocale from '@locale'
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
 
@@ -89,7 +89,16 @@ Vue.prototype.$bkMessage = function (config) {
 /* eslint-disable */
 // 扩展字符串，判断是否为蓝盾变量格式
 String.prototype.isBkVar = function () {
-    return /\$\{{2}([\w\_\.\s-]+)\}{2}/g.test(this) || /\$\{([\w\_\.\s-]+)\}/g.test(this)
+    return (
+        /\$\{\{([\w_.-]+)\}\}/.test(this) || 
+        /\$\{([\w_.-]+)\}/.test(this)
+      )
+}
+// 提取蓝盾变量名
+String.prototype.extractBkVar = function () {
+    return this.replace(/\$\{\{([\w_.-]+)\}\}|\$\{([\w_.-]+)\}/g, (match, p1, p2) => {
+        return p1 || p2
+    })
 }
 /* eslint-disable */
 

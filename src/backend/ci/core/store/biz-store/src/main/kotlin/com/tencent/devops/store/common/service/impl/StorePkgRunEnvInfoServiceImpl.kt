@@ -27,12 +27,14 @@
 package com.tencent.devops.store.common.service.impl
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.tencent.devops.store.common.dao.StorePkgRunEnvInfoDao
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.store.atom.factory.AtomBusHandleFactory
+import com.tencent.devops.store.common.dao.StorePkgRunEnvInfoDao
+import com.tencent.devops.store.common.service.AbstractDomainService
+import com.tencent.devops.store.common.service.StorePkgRunEnvInfoService
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.env.StorePkgRunEnvInfo
 import com.tencent.devops.store.pojo.common.env.StorePkgRunEnvRequest
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.common.service.StorePkgRunEnvInfoService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -70,6 +72,7 @@ class StorePkgRunEnvInfoServiceImpl @Autowired constructor(
     }
 
     override fun getStorePkgRunEnvInfo(
+        devopsEnv: String?,
         userId: String,
         storeType: StoreTypeEnum,
         language: String,
@@ -88,7 +91,7 @@ class StorePkgRunEnvInfoServiceImpl @Autowired constructor(
         val atomBusHandleService = AtomBusHandleFactory.createAtomBusHandleService(language)
         val finalOsName = atomBusHandleService.handleOsName(osName)
         val finalOsArch = atomBusHandleService.handleOsArch(osName, osArch)
-        val key = "PkgRunEnvInfo:$storeType:$language:$finalOsName:$finalOsArch:$convertRuntimeVersion"
+        val key = "PkgRunEnvInfo:$devopsEnv:$storeType:$language:$finalOsName:$finalOsArch:$convertRuntimeVersion"
         var storePkgRunEnvInfo = pkgRunEnvInfoCache.getIfPresent(key)
         if (storePkgRunEnvInfo != null) {
             // 缓存中取到了安装包运行时环境信息则直接返回
@@ -113,6 +116,14 @@ class StorePkgRunEnvInfoServiceImpl @Autowired constructor(
             null
         } else {
             storePkgRunEnvInfo = storePkgRunEnvInfoDao.convert(storePkgRunEnvInfoRecord)
+            if (!devopsEnv.isNullOrBlank()) {
+                // 转换域名
+                val beanName = "${devopsEnv.uppercase()}_DOMAIN_SERVICE"
+                if (SpringContextUtil.isBeanExist(beanName)) {
+                    val domainService = SpringContextUtil.getBean(AbstractDomainService::class.java, beanName)
+                    storePkgRunEnvInfo.pkgDownloadPath = domainService.convertDomain(storePkgRunEnvInfo.pkgDownloadPath)
+                }
+            }
             // 把安装包运行时环境信息放入缓存
             pkgRunEnvInfoCache.put(key, storePkgRunEnvInfo)
             storePkgRunEnvInfo

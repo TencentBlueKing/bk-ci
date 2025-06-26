@@ -292,7 +292,7 @@
     import BkPipeline, { loadI18nMessages } from 'bkui-pipeline'
     import simplebar from 'simplebar-vue'
     import 'simplebar-vue/dist/simplebar.min.css'
-    import { mapActions, mapState } from 'vuex'
+    import { mapActions, mapState, mapGetters } from 'vuex'
     export default {
         components: {
             simplebar,
@@ -327,7 +327,8 @@
                 curPipeline: this.execDetail?.model,
                 pipelineErrorGuideLink: this.$pipelineDocs.PIPELINE_ERROR_GUIDE_DOC,
                 scrollElement: '.pipeline-detail-wrapper.biz-content',
-                isShowCheckDialog: false
+                isShowCheckDialog: false,
+                hasHandledRouteParams: false
             }
         },
         computed: {
@@ -339,6 +340,9 @@
                 'hideSkipExecTask',
                 'showPanelType',
                 'isPropertyPanelVisible'
+            ]),
+            ...mapGetters('atom', [
+                'getAllElements'
             ]),
             panels () {
                 return [
@@ -358,8 +362,8 @@
             errorList () {
                 return this.execDetail?.errorInfoList?.map((error, index) => ({
                 ...error,
-                errorTypeAlias: this.$t(errorTypeMap[error.errorType].title),
-                errorTypeConf: errorTypeMap[error.errorType]
+                errorTypeAlias: this.$t(errorTypeMap[error.errorType]?.title ?? errorTypeMap[0]?.title),
+                errorTypeConf: errorTypeMap[error.errorType] ?? errorTypeMap[0]
             }))
             },
             showErrorPopup () {
@@ -474,6 +478,15 @@
                     return '42px'
                 }
                 return getComputedStyle(this.$refs.errorPopup)?.height ?? '42px'
+            },
+            templateId () {
+                return this.execDetail?.templateInfo?.templateId
+            },
+            ruleIds () {
+                return this.curMatchRules?.flatMap(item => item.ruleList.map(rule => rule.ruleHashId)) || []
+            },
+            curPipelineAllElements () {
+                return this.getAllElements(this.execDetail?.model?.stages)
             }
         },
         watch: {
@@ -499,6 +512,17 @@
                         this.setShowErrorPopup()
                     }
                 })
+            },
+            curPipelineAllElements: {
+                handler (val) {
+                    if (val && !this.hasHandledRouteParams) {
+                        this.hasHandledRouteParams = true
+                        this.$nextTick(() => {
+                            this.handleRouteParams()
+                        })
+                    }
+                },
+                immediate: true
             }
         },
         updated () {
@@ -508,6 +532,10 @@
             loadI18nMessages(this.$i18n)
         },
         mounted () {
+            this.requestMatchTemplateRuleList({
+                projectId: this.routerParams.projectId,
+                templateId: this.templateId
+            })
             this.requestInterceptAtom(this.routerParams)
             if (this.errorList?.length > 0) {
                 this.setScrollBarPostion()
@@ -545,8 +573,23 @@
                 'requestPipelineExecDetail',
                 'pausePlugin'
             ]),
-            ...mapActions('common', ['requestInterceptAtom']),
+            ...mapActions('common', ['requestInterceptAtom', 'requestMatchTemplateRuleList']),
             ...mapActions('pipelines', ['requestRetryPipeline']),
+            handleRouteParams () {
+                const { reviewTaskId, reviewStageSeq } = this.$route.query
+    
+                if (reviewTaskId) {
+                    const targetElement = this.curPipelineAllElements.find(element => element.id === reviewTaskId)
+                    if (targetElement && targetElement.status === 'REVIEWING') {
+                        this.reviewAtom({ id: reviewTaskId })
+                    }
+                } else if (reviewStageSeq) {
+                    this.handleStageCheck({
+                        type: 'checkIn',
+                        stageIndex: Number(reviewStageSeq) - 1
+                    })
+                }
+            },
             renderLabel (h, name) {
                 const panel = this.panels.find((panel) => panel.name === name)
                 return h('p', {}, [
@@ -665,7 +708,8 @@
                         ...this.routerParams,
                         buildId: this.routerParams.buildNo,
                         elementId,
-                        action
+                        action,
+                        ruleIds: this.ruleIds
                     }
                     const res = await this.reviewExcuteAtom(data)
                     if (res) {
@@ -718,27 +762,35 @@
                 done
             ) {
                 if (!isContinue) {
-                    const postData = {
-                        projectId: this.routerParams.projectId,
-                        pipelineId: this.routerParams.pipelineId,
-                        buildId: this.routerParams.buildNo,
-                        stageId,
-                        containerId,
-                        taskId,
-                        isContinue,
-                        element: atom
-                    }
+                    this.$bkInfo({
+                        title: this.$t('isTaskTermination'),
+                        confirmFn: async () => {
+                            const postData = {
+                                projectId: this.routerParams.projectId,
+                                pipelineId: this.routerParams.pipelineId,
+                                buildId: this.routerParams.buildNo,
+                                stageId,
+                                containerId,
+                                taskId,
+                                isContinue,
+                                element: atom
+                            }
 
-                    try {
-                        await this.pausePlugin(postData)
-                        await this.requestPipelineExecDetail(this.routerParams)
-                    } catch (err) {
-                        this.$showTips({
-                            message: err.message || err,
-                            theme: 'error'
-                        })
-                        done()
-                    }
+                            try {
+                                await this.pausePlugin(postData)
+                                await this.requestPipelineExecDetail(this.routerParams)
+                            } catch (err) {
+                                this.$showTips({
+                                    message: err.message || err,
+                                    theme: 'error'
+                                })
+                                done()
+                            }
+                        },
+                        cancelFn: () => {
+                            done()
+                        }
+                    })
                 } else {
                     this.toggleAsidePropertyPanel({
                         isShow: true,

@@ -96,6 +96,116 @@ BEGIN
         ADD COLUMN `MAX_CON_RUNNING_QUEUE_SIZE` int(11) DEFAULT NULL COMMENT '并发构建数量限制,值为-1时表示取系统默认值。';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_TRIGGER_EVENT'
+                    AND COLUMN_NAME = 'EVENT_BODY') THEN
+        ALTER TABLE `T_PIPELINE_TRIGGER_EVENT`
+            ADD COLUMN `EVENT_BODY` longtext NULL COMMENT '事件体';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_YAML_BRANCH_FILE'
+                    AND COLUMN_NAME = 'UPDATE_TIME') THEN
+        ALTER TABLE `T_PIPELINE_YAML_BRANCH_FILE`
+            ADD COLUMN `UPDATE_TIME`  datetime not null  default CURRENT_TIMESTAMP comment '更新时间';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_YAML_BRANCH_FILE'
+                    AND COLUMN_NAME = 'COMMIT_ID') THEN
+        ALTER TABLE `T_PIPELINE_YAML_BRANCH_FILE`
+            ADD COLUMN `COMMIT_ID` varchar(64) null comment '文件commitId';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_YAML_BRANCH_FILE'
+                    AND COLUMN_NAME = 'BLOB_ID') THEN
+        ALTER TABLE `T_PIPELINE_YAML_BRANCH_FILE`
+            ADD COLUMN `BLOB_ID`   varchar(64) not null comment '文件blob_id';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_YAML_BRANCH_FILE'
+                    AND COLUMN_NAME = 'COMMIT_TIME') THEN
+        ALTER TABLE `T_PIPELINE_YAML_BRANCH_FILE`
+            ADD COLUMN `COMMIT_TIME`  datetime not null default CURRENT_TIMESTAMP not null comment '提交时间';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_YAML_BRANCH_FILE'
+                    AND COLUMN_NAME = 'DELETED') THEN
+        ALTER TABLE `T_PIPELINE_YAML_BRANCH_FILE`
+            ADD COLUMN `DELETED` bit not null default b'0' comment '是否删除';
+    END IF;
+
+
+  IF EXISTS(SELECT 1
+              FROM information_schema.statistics
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_PIPELINE_TIMER'
+                AND INDEX_NAME = 'IDX_PIPELINE_ID') THEN
+        ALTER TABLE T_PIPELINE_TIMER DROP INDEX `IDX_PIPELINE_ID`;
+  END IF;
+
+  IF NOT EXISTS(SELECT 1
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = db
+                  AND TABLE_NAME = 'T_PIPELINE_TIMER'
+                  AND COLUMN_NAME = 'TASK_ID') THEN
+    ALTER TABLE `T_PIPELINE_TIMER`
+      ADD COLUMN `TASK_ID` varchar(64) DEFAULT '' COMMENT '插件ID' AFTER PIPELINE_ID,
+        DROP PRIMARY KEY, ADD PRIMARY KEY (`PROJECT_ID`, `PIPELINE_ID`, `TASK_ID`);
+    END IF;
+
+  IF NOT EXISTS(SELECT 1
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = db
+                  AND TABLE_NAME = 'T_PIPELINE_TIMER'
+                  AND COLUMN_NAME = 'START_PARAM') THEN
+  ALTER TABLE `T_PIPELINE_TIMER`
+      ADD COLUMN `START_PARAM` text NULL COMMENT '插件启动参数';
+  END IF;
+
+  IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_TIMER_BRANCH'
+                    AND COLUMN_NAME = 'TASK_ID') THEN
+  ALTER TABLE `T_PIPELINE_TIMER_BRANCH`
+      ADD COLUMN `TASK_ID` varchar(64) DEFAULT '' COMMENT '插件ID' AFTER PIPELINE_ID,
+  DROP PRIMARY KEY, ADD PRIMARY KEY (`PROJECT_ID`, `PIPELINE_ID`, `TASK_ID`, `REPO_HASH_ID`, `BRANCH`);
+  END IF;
+
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_SETTING'
+                    AND COLUMN_NAME = 'FAIL_IF_VARIABLE_INVALID') THEN
+        ALTER TABLE `T_PIPELINE_SETTING`
+            ADD COLUMN `FAIL_IF_VARIABLE_INVALID` bit default null comment '是否配置流水线变量值超长时终止执行';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_SETTING_VERSION'
+                    AND COLUMN_NAME = 'FAIL_IF_VARIABLE_INVALID') THEN
+        ALTER TABLE `T_PIPELINE_SETTING_VERSION`
+            ADD COLUMN `FAIL_IF_VARIABLE_INVALID` bit default null comment '是否配置流水线变量值超长时终止执行';
+    END IF;
+
 COMMIT;
 
 END <CI_UBF>

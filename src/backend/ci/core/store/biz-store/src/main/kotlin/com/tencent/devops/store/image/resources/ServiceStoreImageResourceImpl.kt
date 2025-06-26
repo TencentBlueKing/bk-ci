@@ -35,6 +35,7 @@ import com.tencent.devops.store.pojo.image.response.ImageDetail
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import com.tencent.devops.store.image.service.ImageFeatureService
 import com.tencent.devops.store.image.service.ImageService
+import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -102,6 +103,16 @@ class ServiceStoreImageResourceImpl @Autowired constructor(
                 userId = userId,
                 imageCode = imageCode,
                 imageVersion = version
+            )
+        )
+    }
+
+    override fun isReleasedStatus(imageCode: String, imageVersion: String): Result<Boolean> {
+        return Result(
+            imageService.isReleasedStatus(
+                imageCode = imageCode,
+                imageVersion = imageVersion,
+                imageStatus = ImageStatusEnum.RELEASED
             )
         )
     }

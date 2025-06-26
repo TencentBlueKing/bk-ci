@@ -1,4 +1,5 @@
 import { ActionTree, ActionContext } from 'vuex'
+import { AxiosRequestConfig } from 'axios'
 import Request from '../utils/request'
 import { transformObj } from '../utils/util'
 import {
@@ -168,11 +169,36 @@ const actions: ActionTree<RootState, any> = {
     },
 
     fetchVersionsLogList () {
-        return Request.get(`${window.location.origin}/bundledVersionLog.json?t=${Date.now()}`)
+        return Request.get(`${window.location.origin}/bundledVersionLog.json?t=${Date.now()}`, {
+            originalResponse: true
+        } as AxiosRequestConfig & { originalResponse: boolean })
     },
 
     fetchVersionsLogListEn () {
-        return Request.get(`${window.location.origin}/bundledVersionLog_en.json?t=${Date.now()}`)
+        return Request.get(`${window.location.origin}/bundledVersionLog_en.json?t=${Date.now()}`, {
+            originalResponse: true
+        } as AxiosRequestConfig & { originalResponse: boolean })
+    },
+    /**
+     * 人员列表 (项目管理退出项目弹窗移交人员列表)
+     */
+    getProjectMembers (_, { projectId, params }) {
+        const query = new URLSearchParams({
+            ...params
+        }).toString()
+        return Request.get(`${AUTH_API_URL_PREFIX}/user/auth/resource/member/${projectId}/listProjectMembers?${query}`)
+    },
+    /**
+     * 用户主动退出项目检查
+     */
+    checkMemberExitsProject (_, { projectId }) {
+        return Request.get(`${AUTH_API_URL_PREFIX}/user/auth/resource/member/${projectId}/checkMemberExitsProject`)
+    },
+    /**
+     * 用户主动退出项目
+     */
+    memberExitsProject (_, { projectId, handoverParams }) {
+        return Request.post(`${AUTH_API_URL_PREFIX}/user/auth/resource/member/${projectId}/memberExitsProject`, handoverParams)
     }
 }
 

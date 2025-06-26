@@ -15,7 +15,7 @@ data class PipelineTriggerFailedMatch(
     }
 
     override fun getReasonDetailList(): List<String> {
-        return elements.map {
+        return elements.filter { it.reasonMsg.isNotBlank() }.map {
             val i18nReason = JsonUtil.to(it.reasonMsg, I18Variable::class.java).getCodeLanMessage()
             "${it.elementName} | $i18nReason"
         }

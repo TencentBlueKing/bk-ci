@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.scm.pojo.GitCodeErrorResp
 import okhttp3.Response
-import javax.ws.rs.core.Response as HttpResp
+import jakarta.ws.rs.core.Response as HttpResp
 
 object GitCodeUtils {
 

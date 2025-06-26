@@ -27,6 +27,8 @@
 
 package com.tencent.devops.auth.service
 
+import com.tencent.devops.auth.pojo.enum.OperateChannel
+import com.tencent.devops.auth.pojo.vo.AuthProjectVO
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.auth.api.pojo.ResetAllResourceAuthorizationReq
@@ -77,14 +79,30 @@ interface PermissionAuthorizationService {
      * 获取项目资源授予记录--根据条件
      */
     fun listResourceAuthorizations(
-        condition: ResourceAuthorizationConditionRequest
+        condition: ResourceAuthorizationConditionRequest,
+        operateChannel: OperateChannel? = OperateChannel.MANAGER
     ): SQLPage<ResourceAuthorizationResponse>
+
+    /**
+     * 获取用户授权相关项目
+     */
+    fun listUserProjectsWithAuthorization(
+        userId: String
+    ): List<AuthProjectVO>
 
     /**
      * 修改资源授权管理
      */
     fun modifyResourceAuthorization(
         resourceAuthorizationList: List<ResourceAuthorizationDTO>
+    ): Boolean
+
+    /**
+     * 是否用户拥有项目下授权
+     */
+    fun isUserHasProjectAuthorizations(
+        projectCode: String,
+        userId: String
     ): Boolean
 
     /**
@@ -122,6 +140,15 @@ interface PermissionAuthorizationService {
     ): Map<ResourceAuthorizationHandoverStatus, List<ResourceAuthorizationHandoverDTO>>
 
     /**
+     * 交接授权申请
+     */
+    fun handoverAuthorizationsApplication(
+        operator: String,
+        projectCode: String,
+        condition: ResourceAuthorizationHandoverConditionRequest
+    ): String
+
+    /**
      * 批量重置授权人--项目下全量
      */
     fun resetAllResourceAuthorization(
@@ -129,4 +156,15 @@ interface PermissionAuthorizationService {
         projectCode: String,
         condition: ResetAllResourceAuthorizationReq
     ): List<ResourceTypeInfoVo>
+
+    /**
+     * 检查交接人是否有代码库授权权限
+     */
+    fun checkRepertoryAuthorizationsHanover(
+        operator: String,
+        projectCode: String,
+        repertoryIds: List<String>,
+        handoverFrom: String,
+        handoverTo: String
+    )
 }

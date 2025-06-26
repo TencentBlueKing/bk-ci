@@ -56,13 +56,16 @@ const actions = {
     setHistoryPageStatus ({ commit, state }, newStatus) {
         commit('updateHistoryPageStatus', newStatus)
     },
-    resetHistoryFilterCondition ({ commit }) {
+    resetHistoryFilterCondition ({ commit, state }, { retainArchiveFlag = false } = {}) {
+        const archiveFlag = state.historyPageStatus.query.archiveFlag
+        const newQuery = retainArchiveFlag && archiveFlag ? { archiveFlag } : {}
+
         commit('updateHistoryPageStatus', {
             count: 0,
             dateTimeRange: [],
             page: 1,
             pageSize: 20,
-            query: {},
+            query: newQuery,
             searchKey: []
         })
     },
@@ -157,10 +160,11 @@ const actions = {
      *
      * @return {Promise} promise 对象
      */
-    requestPipelinesHistory ({ commit, state, dispatch }, { projectId, pipelineId, isDebug }) {
+    requestPipelinesHistory ({ commit, state, dispatch }, { projectId, pipelineId, isDebug, archiveFlag: isArchive }) {
         const { historyPageStatus: { query, searchKey, page, pageSize } } = state
+        const { archiveFlag, ...otherQuery } = query
         const conditions = {
-            ...query,
+            ...otherQuery,
             ...flatSearchKey(searchKey)
         }
         const queryMap = new URLSearchParams()
@@ -178,6 +182,9 @@ const actions = {
         }
         queryMap.append('page', page)
         queryMap.append('pageSize', pageSize)
+        if (isArchive) {
+            queryMap.append('archiveFlag', isArchive)
+        }
         console.log(conditions, queryMap, `${queryMap}`)
         return ajax.get(`${prefix}${projectId}/${pipelineId}/history/new?${queryMap}`).then(response => {
             return response.data
@@ -290,6 +297,16 @@ const actions = {
     requestMetadataInfo ({ commit, state, dispatch }, { projectId, artifactoryType, path }) {
         return ajax.get(`artifactory/api/user/artifactories/${projectId}/${artifactoryType}/show?path=${path}`).then(response => {
             return response.data
+        })
+    },
+    /**
+     * 重放流水线
+     */
+    requestRePlayPipeline ({ commit, state, dispatch }, { projectId, pipelineId, buildId, forceTrigger = false }) {
+        return ajax.post(`${prefix}${projectId}/${pipelineId}/${buildId}/replayByBuild?forceTrigger=${forceTrigger}`).then(response => {
+            return response.data
+        }).catch(e => {
+            return e
         })
     }
 }

@@ -43,6 +43,27 @@
                         show-overflow-tooltip
                     ></bk-table-column>
                     <bk-table-column
+                        :label="$t('ticket.creator')"
+                        prop="createUser"
+                        show-overflow-tooltip
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.creationTime')"
+                        prop="createTime"
+                        :formatter="convertToTime"
+                        show-overflow-tooltip
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.lastModifiedBy')"
+                        prop="updateUser"
+                    ></bk-table-column>
+                    <bk-table-column
+                        :label="$t('ticket.lastModifiedTime')"
+                        prop="updatedTime"
+                        :formatter="convertToTime"
+                        show-overflow-tooltip
+                    ></bk-table-column>
+                    <bk-table-column
                         :label="$t('ticket.operation')"
                         width="200"
                     >
@@ -111,6 +132,7 @@
     import EmptyTips from '@/components/devops/emptyTips'
     import { CRED_RESOURCE_ACTION, CRED_RESOURCE_TYPE } from '@/utils/permission'
     import { mapGetters } from 'vuex'
+    import { convertTime } from '@/utils/util'
 
     export default {
         components: {
@@ -307,6 +329,9 @@
             },
             addCredentialHandler () {
                 this.$router.push('createCredential')
+            },
+            convertToTime (row, cell, time) {
+                return convertTime(time * 1000)
             }
         }
     }

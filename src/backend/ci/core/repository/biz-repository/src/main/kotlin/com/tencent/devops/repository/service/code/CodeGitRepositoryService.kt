@@ -50,12 +50,15 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_SECRET_
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.RepoCondition
+import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.repository.pojo.enums.RepoCredentialType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
-import com.tencent.devops.repository.service.CredentialService
+import com.tencent.devops.repository.service.RepoCredentialService
 import com.tencent.devops.repository.service.permission.RepositoryAuthorizationService
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.IGitService
@@ -79,7 +82,7 @@ class CodeGitRepositoryService @Autowired constructor(
     private val repositoryDao: RepositoryDao,
     private val repositoryCodeGitDao: RepositoryCodeGitDao,
     private val dslContext: DSLContext,
-    private val credentialService: CredentialService,
+    private val credentialService: RepoCredentialService,
     private val scmService: IScmService,
     private val gitOauthService: IGitOauthService,
     private val scmOauthService: IScmOauthService,
@@ -114,7 +117,8 @@ class CodeGitRepositoryService @Autowired constructor(
                 url = repository.getFormatURL(),
                 type = ScmType.CODE_GIT,
                 atom = repository.atom,
-                enablePac = repository.enablePac
+                enablePac = repository.enablePac,
+                scmCode = ScmType.CODE_GIT.name
             )
             repositoryCodeGitDao.create(
                 dslContext = transactionContext,
@@ -123,7 +127,8 @@ class CodeGitRepositoryService @Autowired constructor(
                 userName = repository.userName,
                 credentialId = repository.credentialId,
                 authType = repository.authType,
-                gitProjectId = gitProjectId
+                gitProjectId = gitProjectId,
+                credentialType = credentialInfo.credentialType
             )
         }
         return repositoryId
@@ -204,27 +209,22 @@ class CodeGitRepositoryService @Autowired constructor(
                 userName = repository.userName,
                 credentialId = repository.credentialId,
                 authType = repository.authType,
-                gitProjectId = gitProjectId
+                gitProjectId = gitProjectId,
+                credentialType = credentialInfo.credentialType
             )
-            val repositoryCodeRecord = repositoryCodeGitDao.get(
-                dslContext = transactionContext,
-                repositoryId = repositoryId
-            )
-            if (repositoryCodeRecord.authType == RepoAuthType.OAUTH.name &&
-                repositoryCodeRecord.userName != repository.userName) {
-                repositoryAuthorizationService.batchModifyHandoverFrom(
-                    projectId = projectId,
-                    resourceAuthorizationHandoverList = listOf(
-                        ResourceAuthorizationHandoverDTO(
-                            projectCode = projectId,
-                            resourceType = AuthResourceType.CODE_REPERTORY.value,
-                            resourceName = record.aliasName,
-                            resourceCode = repositoryHashId,
-                            handoverTo = repository.userName
-                        )
+            // 重置授权管理
+            repositoryAuthorizationService.batchModifyHandoverFrom(
+                projectId = projectId,
+                resourceAuthorizationHandoverList = listOf(
+                    ResourceAuthorizationHandoverDTO(
+                        projectCode = projectId,
+                        resourceType = AuthResourceType.CODE_REPERTORY.value,
+                        resourceName = record.aliasName,
+                        resourceCode = repositoryHashId,
+                        handoverTo = repository.userName
                     )
                 )
-            }
+            )
         }
     }
 
@@ -242,7 +242,9 @@ class CodeGitRepositoryService @Autowired constructor(
             gitProjectId = record.gitProjectId,
             atom = repository.atom,
             enablePac = repository.enablePac,
-            yamlSyncStatus = repository.yamlSyncStatus
+            yamlSyncStatus = repository.yamlSyncStatus,
+            scmCode = repository.scmCode ?: ScmType.CODE_GIT.name,
+            credentialType = record.credentialType ?: RepoCredentialType.OAUTH.name
         )
     }
 
@@ -336,11 +338,21 @@ class CodeGitRepositoryService @Autowired constructor(
     }
 
     override fun pacCheckEnabled(projectId: String, userId: String, record: TRepositoryRecord, retry: Boolean) {
-        val codeGitRepository = compose(record)
-        if (codeGitRepository.authType != RepoAuthType.OAUTH) {
+        val repository = compose(record)
+        if (repository.authType != RepoAuthType.OAUTH) {
             throw ErrorCodeException(errorCode = ERROR_AUTH_TYPE_ENABLED_PAC)
         }
-        pacCheckEnabled(projectId = projectId, userId = userId, repository = codeGitRepository, retry = retry)
+        val gitProjectId =
+            pacCheckEnabled(projectId = projectId, userId = userId, repository = repository, retry = retry)
+        // 修复历史数据
+        if (repository.gitProjectId == null || repository.gitProjectId == 0L) {
+            val repositoryId = HashUtil.decodeOtherIdToLong(repository.repoHashId!!)
+            repositoryCodeGitDao.updateGitProjectId(
+                dslContext = dslContext,
+                id = repositoryId,
+                gitProjectId = gitProjectId
+            )
+        }
     }
 
     private fun pacCheckEnabled(
@@ -348,7 +360,7 @@ class CodeGitRepositoryService @Autowired constructor(
         userId: String,
         repository: CodeGitRepository,
         retry: Boolean
-    ) {
+    ): Long {
         if (repository.authType != RepoAuthType.OAUTH) {
             throw ErrorCodeException(errorCode = ERROR_AUTH_TYPE_ENABLED_PAC)
         }
@@ -392,7 +404,8 @@ class CodeGitRepositoryService @Autowired constructor(
         )
         if (member.accessLevel < GitAccessLevelEnum.MASTER.level) {
             throw ErrorCodeException(
-                errorCode = RepositoryMessageCode.ERROR_MEMBER_LEVEL_LOWER_MASTER
+                errorCode = RepositoryMessageCode.ERROR_MEMBER_LEVEL_LOWER_MASTER,
+                params = arrayOf(repository.userName)
             )
         }
         // 初始化应该新增push和mr事件
@@ -418,15 +431,7 @@ class CodeGitRepositoryService @Autowired constructor(
             userName = userId,
             event = CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
         )
-        // 修复历史数据
-        if (repository.gitProjectId == null || repository.gitProjectId == 0L) {
-            val repositoryId = HashUtil.decodeOtherIdToLong(repository.repoHashId!!)
-            repositoryCodeGitDao.updateGitProjectId(
-                dslContext = dslContext,
-                id = repositoryId,
-                gitProjectId = gitProjectInfo.id
-            )
-        }
+        return gitProjectInfo.id
     }
 
     override fun getGitFileTree(projectId: String, userId: String, record: TRepositoryRecord): List<GitFileInfo> {
@@ -474,7 +479,8 @@ class CodeGitRepositoryService @Autowired constructor(
         // 凭证信息
         return if (repository.authType == RepoAuthType.OAUTH) {
             RepoCredentialInfo(
-                token = gitOauthService.getAccessToken(repository.userName)?.accessToken ?: ""
+                token = gitOauthService.getAccessToken(repository.userName)?.accessToken ?: "",
+                credentialType = RepoCredentialType.OAUTH.name
             )
         } else {
             credentialService.getCredentialInfo(
@@ -555,6 +561,26 @@ class CodeGitRepositoryService @Autowired constructor(
                 )
             }
         }
+    }
+
+    override fun listByCondition(
+        repoCondition: RepoCondition,
+        limit: Int,
+        offset: Int
+    ): List<Repository>? {
+        return repositoryCodeGitDao.listByCondition(
+            dslContext = dslContext,
+            repoCondition = repoCondition,
+            limit = limit,
+            offset = offset
+        )
+    }
+
+    override fun countByCondition(repoCondition: RepoCondition): Long {
+        return repositoryCodeGitDao.countByCondition(
+            dslContext = dslContext,
+            repoCondition = repoCondition
+        )
     }
 
     companion object {

@@ -41,6 +41,7 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.ProjectProperties
+import com.tencent.devops.project.pojo.ProjectSortType
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -50,16 +51,16 @@ import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "SERVICE_PROJECT", description = "项目列表接口")
 @Path("/service/projects")
@@ -73,7 +74,22 @@ interface ServiceProjectResource {
     fun list(
         @Parameter(description = "用户ID", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String
+        userId: String,
+        @Parameter(description = "userId", required = false)
+        @QueryParam("productIds")
+        productIds: String? = null,
+        @Parameter(description = "渠道号,多个Id之间以,分隔", required = true)
+        @QueryParam("channelCodes")
+        channelCodes: String? = null,
+        @Parameter(description = "排序字段(支持PROJECT_NAME、ENGLISH_NAME，默认ENGLISH_NAME)", required = true)
+        @QueryParam("sort")
+        sort: ProjectSortType? = null,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int? = null,
+        @Parameter(description = "每页条数(默认10)", required = false, example = "10")
+        @QueryParam("pageSize")
+        pageSize: Int? = null
     ): Result<List<ProjectVO>>
 
     @GET

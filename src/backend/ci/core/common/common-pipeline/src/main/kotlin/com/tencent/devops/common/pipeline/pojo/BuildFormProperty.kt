@@ -29,6 +29,7 @@ package com.tencent.devops.common.pipeline.pojo
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.pojo.cascade.BuildCascadeProps
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "构建模型-表单元素属性")
@@ -42,7 +43,7 @@ data class BuildFormProperty(
     @get:Schema(title = "是否为常量", required = true)
     var constant: Boolean? = false,
     @get:Schema(title = "元素类型", required = true)
-    val type: BuildFormPropertyType,
+    var type: BuildFormPropertyType,
     @get:Schema(title = "默认值", required = true)
     var defaultValue: Any,
     @get:Schema(title = "上次构建的取值", required = true)
@@ -51,6 +52,10 @@ data class BuildFormProperty(
     var options: List<BuildFormValue>?,
     @get:Schema(title = "描述", required = false)
     var desc: String?,
+    @get:Schema(title = "分组信息", required = false)
+    val category: String? = null,
+    @get:Schema(title = "展示条件", required = false)
+    val displayCondition: Map<String, String>? = null,
 
     // 针对 SVN_TAG 新增字段
     @get:Schema(title = "repoHashId", required = false)
@@ -64,6 +69,12 @@ data class BuildFormProperty(
 
     @get:Schema(title = "自定义仓库通配符", required = false)
     val glob: String?,
+    @get:Schema(title = "开启文件版本管理", required = false)
+    val enableVersionControl: Boolean? = null,
+    @get:Schema(title = "目录随机字符串", required = false)
+    val randomStringInPath: String? = null,
+    @get:Schema(title = "最新的目录随机字符串", required = false)
+    var latestRandomStringInPath: String? = null,
     @get:Schema(title = "文件元数据", required = false)
     val properties: Map<String, String>?,
     @get:Schema(title = "元素标签", required = false)
@@ -89,5 +100,15 @@ data class BuildFormProperty(
     @get:Schema(title = "参数值是否必填", required = false)
     val valueNotEmpty: Boolean? = false,
     @get:Schema(title = "页面所需内容，后台仅保存，不做处理", required = false)
-    val payload: Any? = null
+    val payload: Any? = null,
+    @get:Schema(title = "级联选择器属性", required = false)
+    var cascadeProps: BuildCascadeProps? = null
+)
+
+@Schema(title = "构建模型-自定义路径拆分的版本控制信息")
+data class CustomFileVersionControlInfo(
+    @get:Schema(title = "完整目录", required = false)
+    var directory: String,
+    @get:Schema(title = "最新的目录随机字符串", required = false)
+    var latestRandomStringInPath: String
 )

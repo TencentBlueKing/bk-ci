@@ -1,5 +1,6 @@
 package com.tencent.devops.auth.api.service
 
+import com.tencent.devops.auth.pojo.AuthResourceGroup
 import com.tencent.devops.auth.pojo.dto.GroupAddDTO
 import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
@@ -12,16 +13,16 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "AUTH_SERVICE_RESOURCE_GROUP", description = "权限--用户组相关")
 @Path("/service/auth/resource/group")
@@ -140,4 +141,22 @@ interface ServiceResourceGroupResource {
         @QueryParam("groupId")
         groupId: Int
     ): Result<Boolean>
+
+    @GET
+    @Path("/{projectCode}/getByGroupCode")
+    @Operation(summary = "根据GroupCode获取用户组")
+    fun getByGroupCode(
+        @Parameter(description = "项目Id", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @Parameter(description = "资源类型", required = true)
+        @QueryParam("resourceType")
+        resourceType: String,
+        @Parameter(description = "资源Code", required = true)
+        @QueryParam("resourceCode")
+        resourceCode: String,
+        @Parameter(description = "组Code", required = true)
+        @QueryParam("groupCode")
+        groupCode: BkAuthGroup
+    ): Result<AuthResourceGroup?>
 }

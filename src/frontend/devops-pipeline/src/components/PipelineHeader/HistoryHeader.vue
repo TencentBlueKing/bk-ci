@@ -39,7 +39,7 @@
             class="pipeline-history-right-aside"
         >
             <VersionDiffEntry
-                v-if="!isTemplatePipeline && !isReleaseVersion"
+                v-if="!isTemplatePipeline && !editAndExecutable && !archiveFlag"
                 :text="false"
                 outline
                 :version="currentVersion"
@@ -48,7 +48,7 @@
                 {{ $t("diff") }}
             </VersionDiffEntry>
             <RollbackEntry
-                v-if="showRollback && isReleasePipeline"
+                v-if="showRollback && (isReleasePipeline || onlyBranchPipeline) && !archiveFlag"
                 :text="false"
                 :has-permission="canEdit"
                 :version="currentVersion"
@@ -58,11 +58,14 @@
                 :version-name="activePipelineVersion?.versionName"
                 :draft-base-version-name="draftBaseVersionName"
                 :is-active-draft="activePipelineVersion?.isDraft"
+                :is-active-branch-version="isActiveBranchVersion"
+                :draft-creator="activePipelineVersion?.creator"
+                :draft-create-time="activePipelineVersion?.createTime"
             >
                 {{ operateName }}
             </RollbackEntry>
             <bk-button
-                v-else-if="onlyBranchPipeline && activePipelineVersion?.version === releaseVersion"
+                v-else-if="onlyBranchPipeline && activePipelineVersion?.version === releaseVersion && !archiveFlag"
                 theme="primary"
                 outline
                 v-perm="{
@@ -79,8 +82,11 @@
             >
                 {{ $t("edit") }}
             </bk-button>
-            <template v-if="isReleaseVersion">
-                <span v-bk-tooltips="tooltip">
+            <template v-if="editAndExecutable">
+                <span
+                    v-if="!archiveFlag"
+                    v-bk-tooltips="tooltip"
+                >
                     <bk-button
                         :disabled="!executable"
                         theme="primary"
@@ -161,8 +167,14 @@
                 pipelineHistoryViewable: 'atom/pipelineHistoryViewable',
                 onlyBranchPipeline: 'atom/onlyBranchPipeline'
             }),
+            editAndExecutable () {
+                return this.isReleaseVersion || this.activePipelineVersion?.isBranchVersion
+            },
+            isActiveBranchVersion () {
+                return this.activePipelineVersion?.isBranchVersion ?? false
+            },
             showRollback () {
-                return this.isReleaseVersion || !this.pipelineInfo?.baseVersion || this.activePipelineVersion?.baseVersion !== this.pipelineInfo?.baseVersion
+                return this.editAndExecutable || !this.pipelineInfo?.baseVersion || this.activePipelineVersion?.baseVersion !== this.pipelineInfo?.baseVersion
             },
             currentVersion () {
                 return this.$route.params.version ? parseInt(this.$route.params.version) : this.releaseVersion
@@ -189,14 +201,14 @@
                 return this.pipelineInfo?.permissions?.canExecute ?? true
             },
             executable () {
-                return (!this.isCurPipelineLocked && this.canManualStartup && this.isReleasePipeline) || this.isActiveDraftVersion
+                return (!this.isCurPipelineLocked && this.canManualStartup && this.editAndExecutable) || this.isActiveDraftVersion
             },
             canManualStartup () {
                 return this.pipelineInfo?.canManualStartup ?? true
             },
             operateName () {
                 switch (true) {
-                    case this.isReleaseVersion:
+                    case this.editAndExecutable:
                         return this.$t('edit')
                     case this.pipelineInfo?.baseVersion && this.activePipelineVersion?.version === this.pipelineInfo?.baseVersion:
                         return this.$t('editCurDraft')
@@ -210,12 +222,15 @@
                         disabled: true
                     }
                     : {
-                        content: this.$t(!this.isReleasePipeline ? 'draftPipelineExecTips' : this.isCurPipelineLocked ? 'pipelineLockTips' : 'pipelineManualDisable'),
+                        content: this.$t(this.isCurPipelineLocked ? 'pipelineLockTips' : !(this.isReleasePipeline || this.onlyBranchPipeline) ? 'draftPipelineExecTips' : 'pipelineManualDisable'),
                         delay: [300, 0]
                     }
             },
             RESOURCE_ACTION () {
                 return RESOURCE_ACTION
+            },
+            archiveFlag () {
+                return this.$route.query.archiveFlag
             }
         },
         watch: {
@@ -262,11 +277,13 @@
                 try {
                     if (this.currentVersion) {
                         this.setSwitchingPipelineVersion(true)
-                        await this.requestPipeline({
+                        const urlParams = {
                             projectId: this.projectId,
                             pipelineId: this.pipelineId,
-                            version: this.currentVersion
-                        })
+                            version: this.currentVersion,
+                            archiveFlag: this.archiveFlag
+                        }
+                        await this.requestPipeline(urlParams)
                     }
                 } catch (error) {
                     this.$bkMessage({

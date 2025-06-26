@@ -146,28 +146,32 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         val vmSeqId = task.containerId
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-        Preconditions.checkNotNull(pipelineInfo, BuildTaskException(
-            errorType = ErrorType.SYSTEM,
-            errorCode = ERROR_PIPELINE_NOT_EXISTS.toInt(),
-            errorMsg =
-            I18nUtil.getCodeLanMessage(messageCode = ERROR_PIPELINE_NOT_EXISTS, params = arrayOf(pipelineId)),
-            pipelineId = pipelineId,
-            buildId = buildId,
-            taskId = taskId
-        ))
+        Preconditions.checkNotNull(pipelineInfo) {
+            BuildTaskException(
+                errorType = ErrorType.SYSTEM,
+                errorCode = ERROR_PIPELINE_NOT_EXISTS.toInt(),
+                errorMsg =
+                I18nUtil.getCodeLanMessage(messageCode = ERROR_PIPELINE_NOT_EXISTS, params = arrayOf(pipelineId)),
+                pipelineId = pipelineId,
+                buildId = buildId,
+                taskId = taskId
+            )
+        }
 
         val container = containerBuildDetailService.getBuildModel(projectId, buildId)?.getContainer(vmSeqId)
-        Preconditions.checkNotNull(container, BuildTaskException(
-            errorType = ErrorType.SYSTEM,
-            errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
-            errorMsg = I18nUtil.getCodeLanMessage(
-                messageCode = ERROR_PIPELINE_NOT_EXISTS,
-                params = arrayOf(vmSeqId)
-            ),
-            pipelineId = pipelineId,
-            buildId = buildId,
-            taskId = taskId
-        ))
+        Preconditions.checkNotNull(container) {
+            BuildTaskException(
+                errorType = ErrorType.SYSTEM,
+                errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
+                errorMsg = I18nUtil.getCodeLanMessage(
+                    messageCode = ERROR_PIPELINE_NOT_EXISTS,
+                    params = arrayOf(vmSeqId)
+                ),
+                pipelineId = pipelineId,
+                buildId = buildId,
+                taskId = taskId
+            )
+        }
 
         containerBuildRecordService.containerPreparing(
             projectId = projectId,

@@ -156,7 +156,7 @@ class PipelineWebhookService @Autowired constructor(
             repoHashId = repositoryConfig.repositoryHashId,
             repoName = repositoryConfig.repositoryName,
             taskId = element.id,
-            projectName = getProjectName(repository.projectName),
+            projectName = getExternalName(scmType = scmType, repository.projectName),
             repositoryHashId = repository.repoHashId,
             eventType = eventType?.name ?: "",
             externalId = repository.getExternalId(),
@@ -302,15 +302,46 @@ class PipelineWebhookService @Autowired constructor(
 
     fun getTriggerPipelines(
         name: String,
-        repositoryType: String,
-        yamlPipelineIds: List<String>?
+        repositoryType: ScmType,
+        yamlPipelineIds: List<String>?,
+        compatibilityRepoNames: Set<String>
     ): List<WebhookTriggerPipeline> {
-        return pipelineWebhookDao.getByProjectNameAndType(
+        val pipelineSet = mutableSetOf<WebhookTriggerPipeline>()
+        // 需要精确匹配的代码库类型
+        val needExactMatch = repositoryType in setOf(
+            ScmType.CODE_GIT,
+            ScmType.CODE_TGIT,
+            ScmType.CODE_GITLAB,
+            ScmType.GITHUB
+        ) && name != getProjectName(name)
+        // 精准匹配结果
+        val exactResults = if (needExactMatch) {
+            pipelineWebhookDao.getByProjectNamesAndType(
+                dslContext = dslContext,
+                projectNames = setOf(name),
+                repositoryType = repositoryType.name,
+                yamlPipelineIds = yamlPipelineIds
+            )?.toSet() ?: setOf()
+        } else {
+            setOf()
+        }
+        // 模糊匹配和兼容仓库名一起查
+        val repoNames = compatibilityRepoNames.map { getProjectName(it) }.toMutableSet()
+        repoNames.add(getProjectName(name))
+        // 模糊匹配结果
+        val fuzzyResults = pipelineWebhookDao.getByProjectNamesAndType(
             dslContext = dslContext,
-            projectName = getProjectName(name),
-            repositoryType = repositoryType,
+            projectNames = repoNames,
+            repositoryType = repositoryType.name,
             yamlPipelineIds = yamlPipelineIds
-        ) ?: emptyList()
+        )?.toSet() ?: setOf()
+        // projectName字段补充完毕后，模糊匹配结果应为空
+        if (needExactMatch && fuzzyResults.isNotEmpty()) {
+            logger.info("$repositoryType|$name|projectName contains dirty data|${fuzzyResults.size}")
+        }
+        pipelineSet.addAll(exactResults)
+        pipelineSet.addAll(fuzzyResults)
+        return pipelineSet.toList()
     }
 
     fun listTriggerPipeline(

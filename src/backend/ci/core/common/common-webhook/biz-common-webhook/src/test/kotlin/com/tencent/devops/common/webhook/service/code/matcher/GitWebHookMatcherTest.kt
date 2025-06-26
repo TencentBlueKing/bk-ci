@@ -52,6 +52,7 @@ import com.tencent.devops.common.webhook.service.code.handler.tgit.TGitTagPushTr
 import com.tencent.devops.common.webhook.service.code.loader.CodeWebhookHandlerRegistrar
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
@@ -89,8 +90,9 @@ class GitWebHookMatcherTest : BkCiAbstractTest() {
     fun setUp() {
         val gitScmService: GitScmService = mockk()
         val eventCacheService: EventCacheService = mockk()
+        every { gitScmService.getCredential(any(), null) } returns null
         CodeWebhookHandlerRegistrar.register(TGitPushTriggerHandler(eventCacheService, gitScmService))
-        CodeWebhookHandlerRegistrar.register(TGitTagPushTriggerHandler())
+        CodeWebhookHandlerRegistrar.register(TGitTagPushTriggerHandler(eventCacheService))
         CodeWebhookHandlerRegistrar.register(
             TGitMrTriggerHandler(
                 gitScmService = gitScmService,

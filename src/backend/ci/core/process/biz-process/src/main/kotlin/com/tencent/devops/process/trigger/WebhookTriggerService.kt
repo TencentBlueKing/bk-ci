@@ -76,8 +76,9 @@ class WebhookTriggerService(
         val yamlPipelineIds = getYamlPipelineIds(matcher, scmType)
         val triggerPipelines = pipelineWebhookService.getTriggerPipelines(
             name = matcher.getRepoName(),
-            repositoryType = scmType.name,
-            yamlPipelineIds = yamlPipelineIds
+            repositoryType = scmType,
+            yamlPipelineIds = yamlPipelineIds,
+            compatibilityRepoNames = matcher.getCompatibilityRepoName()
         )
         pipelineBuildWebhookService.dispatchTriggerPipelines(
             matcher = matcher,
@@ -86,7 +87,7 @@ class WebhookTriggerService(
         )
     }
 
-    private fun getYamlPipelineIds(
+    fun getYamlPipelineIds(
         matcher: ScmWebhookMatcher,
         scmType: ScmType
     ): List<String> {
