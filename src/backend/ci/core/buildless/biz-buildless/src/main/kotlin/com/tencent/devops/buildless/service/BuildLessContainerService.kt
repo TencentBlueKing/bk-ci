@@ -67,6 +67,7 @@ import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.text.SimpleDateFormat
 import java.util.TimeZone
+import kotlin.streams.toList
 
 /**
  * 无构建环境的docker服务实现
@@ -240,6 +241,16 @@ class BuildLessContainerService(
         }
 
         return timeoutContainerList
+    }
+
+    fun checkContainerRunning(containerId: String): Boolean {
+        try {
+            val containerInspect = httpDockerCli.inspectExecCmd(containerId).exec()
+            return containerInspect.isRunning
+        } catch (e: Exception) {
+            logger.error("===> check container running failed, containerId: $containerId, error msg: $e")
+            return false
+        }
     }
 
     private fun generateEnv(containerName: String, linkPath: String): List<String> {

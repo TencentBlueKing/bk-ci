@@ -46,7 +46,8 @@ import java.util.concurrent.Future
 class BuildLessTaskService(
     private val redisUtils: RedisUtils,
     private val dispatchClient: DispatchClient,
-    private val containerPoolExecutor: ContainerPoolExecutor
+    private val containerPoolExecutor: ContainerPoolExecutor,
+    private val buildLessContainerService: BuildLessContainerService
 ) {
 
     @Async
@@ -107,7 +108,10 @@ class BuildLessTaskService(
                 }
 
                 // 检查容器是否存活
-
+                if (!buildLessContainerService.checkContainerRunning(containerId)) {
+                    logger.info("****>Deferred container: $containerId is not running, skip claim task")
+                    return
+                }
 
                 // 校验当前容器状态是否正常
                 val buildLessPoolInfo = containerPoolExecutor.getContainerStatus(containerId)
