@@ -153,10 +153,10 @@ import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.UriBuilder
-import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 /**
  *
@@ -1732,17 +1732,12 @@ class PipelineBuildFacadeService(
         endBeginTime: String?,
         checkPermission: Boolean
     ): List<BuildHistory> {
-        val buildHistories = pipelineRuntimeService.getBuildHistoryByIds(
+        return pipelineRuntimeService.getBuildHistoryByIds(
             buildIds = buildIdSet,
             startBeginTime = startBeginTime,
             endBeginTime = endBeginTime,
             projectId = projectId
         )
-
-        if (buildHistories.isEmpty()) {
-            return emptyList()
-        }
-        return buildHistories
     }
 
     fun batchGetBuildStatus(
@@ -1768,17 +1763,12 @@ class PipelineBuildFacadeService(
                 )
             )
         }
-        val buildHistories = pipelineRuntimeService.getBuildHistoryByIds(
+        return pipelineRuntimeService.getBuildHistoryByIds(
             buildIds = buildIdSet,
             startBeginTime = startBeginTime,
             endBeginTime = endBeginTime,
             projectId = projectId
         )
-
-        if (buildHistories.isEmpty()) {
-            return emptyList()
-        }
-        return buildHistories
     }
 
     fun getBuilds(
