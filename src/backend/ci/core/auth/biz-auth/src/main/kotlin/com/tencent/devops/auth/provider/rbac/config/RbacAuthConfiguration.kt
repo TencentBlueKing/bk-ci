@@ -96,6 +96,7 @@ import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.PermissionAuthorizationService
 import com.tencent.devops.auth.service.ResourceService
 import com.tencent.devops.auth.service.SuperManagerService
+import com.tencent.devops.auth.service.TenantAuthDeptServiceImpl
 import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
 import com.tencent.devops.auth.service.iam.PermissionHandoverApplicationService
 import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
@@ -707,4 +708,8 @@ class RbacAuthConfiguration {
         resourceGroupPermissionService = resourceGroupPermissionService,
         deptService = deptService
     )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "bk", name = ["enableMultiTenantMode"], havingValue = "true")
+    fun tenantDeptServiceImpl() = TenantAuthDeptServiceImpl()
 }
