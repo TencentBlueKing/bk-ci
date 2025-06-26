@@ -75,8 +75,10 @@ class BuildLessTaskService(
                         return AsyncResult(buildLessTask)
                     } catch (e: Exception) {
                         // 异常时任务重新回队列
-                        logger.info("****> container: $containerId claim buildLessTask: $buildLessTask get error, " +
-                                        "retry.", e)
+                        logger.info(
+                            "****> container: $containerId claim buildLessTask: $buildLessTask get error, " +
+                                    "retry.", e
+                        )
                         redisUtils.leftPushBuildLessReadyTask(buildLessTask)
 
                         continue
@@ -98,25 +100,41 @@ class BuildLessTaskService(
         synchronized(containerId.intern()) {
             var loopCount = 0
             while (loopCount < 100) {
+                // 检查是否已超时
+                if (deferredResult.isSetOrExpired) {
+                    logger.info("****>Deferred container: $containerId claim task timeout before processing")
+                    return
+                }
+
+                // 检查容器是否存活
+
+
                 // 校验当前容器状态是否正常
                 val buildLessPoolInfo = containerPoolExecutor.getContainerStatus(containerId)
                 if (buildLessPoolInfo != null && buildLessPoolInfo.status == ContainerStatus.BUSY) {
-                    deferredResult.setResult(buildLessPoolInfo.buildLessTask)
+                    buildLessPoolInfo.buildLessTask?.let { deferredResult.setResult(it) }
                     return
                 }
 
                 val buildLessTask = redisUtils.popBuildLessReadyTask()
                 if (buildLessTask != null) {
-                    logger.info("****> container: $containerId claim buildLessTask: $buildLessTask")
-                    dispatchClient.updateContainerId(
-                        buildLessTask = buildLessTask,
-                        containerId = containerId
-                    )
+                    logger.info("****>Deferred container: $containerId claim buildLessTask: $buildLessTask")
+                    try {
+                        dispatchClient.updateContainerId(
+                            buildLessTask = buildLessTask,
+                            containerId = containerId
+                        )
 
-                    logger.info("****> claim task buildLessPoolKey hset $containerId ${ContainerStatus.BUSY.name}.")
-                    redisUtils.setBuildLessPoolContainer(containerId, ContainerStatus.BUSY, buildLessTask)
+                        logger.info("****>Deferred claim task buildLessPoolKey hset $containerId ${ContainerStatus.BUSY.name}.")
+                        redisUtils.setBuildLessPoolContainer(containerId, ContainerStatus.BUSY, buildLessTask)
 
-                    deferredResult.setResult(buildLessTask)
+                        deferredResult.setResult(buildLessTask)
+                    } catch (e: Exception) {
+                        logger.error("****>Deferred container: $containerId claim buildLessTask error", e)
+                        // 异常时任务重新回队列
+                        redisUtils.leftPushBuildLessReadyTask(buildLessTask)
+                    }
+
                     return
                 }
 
@@ -124,7 +142,10 @@ class BuildLessTaskService(
                 Thread.sleep(200)
             }
 
-            deferredResult.setResult(null)
+            if (!deferredResult.isSetOrExpired) {
+                logger.info("****> container: $containerId claim task failed after 100 retries")
+                deferredResult.setResult(null)
+            }
         }
     }
 

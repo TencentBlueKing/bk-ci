@@ -1,5 +1,7 @@
 package com.tencent.devops.buildless.utils
 
+import ch.qos.logback.core.CoreConstants.CORE_POOL_SIZE
+import ch.qos.logback.core.CoreConstants.MAX_POOL_SIZE
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.Executors
@@ -24,7 +26,7 @@ class ThreadPoolUtils private constructor() {
     /**
      * 核心线程数
      * */
-    private val coolPoolSize = cpuCount + 10
+    private val corePoolSize = cpuCount + 10
 
     /**
      * 最大线程数
@@ -51,13 +53,17 @@ class ThreadPoolUtils private constructor() {
         val SINGLE_HOLDER = ThreadPoolUtils()
     }
 
-    fun getThreadPool(poolName: String): ThreadPoolExecutor {
+    fun getThreadPool(
+        poolName: String,
+        corePoolSize: Int = CORE_POOL_SIZE,
+        maxPoolSize: Int = MAX_POOL_SIZE
+    ): ThreadPoolExecutor {
         var threadPoolExecutor = threadPoolMap[poolName]
         if (null == threadPoolExecutor) {
             synchronized(SingleHolder::class.java) {
                 if (null == threadPoolExecutor) {
                     threadPoolExecutor = ThreadPoolExecutor(
-                        coolPoolSize,
+                        corePoolSize,
                         maxPoolSize,
                         keepAliveTime,
                         TimeUnit.SECONDS,
