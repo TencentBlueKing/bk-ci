@@ -205,6 +205,15 @@ class NodeService @Autowired constructor(
         collation: String?,
         data: NodeFetchReq?
     ): Page<NodeWithPermission> {
+        val tagValues = if (data?.tags.isNullOrEmpty()) {
+            null
+        } else {
+            val t = mutableSetOf<Long>()
+            data.tags?.forEach { tag ->
+                t.addAll(tag.tagValues ?: return@forEach)
+            }
+            t
+        }
         val nodeRecordList =
             if (-1 != page) {
                 val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page ?: 1, pageSize ?: 20)
@@ -226,7 +235,8 @@ class NodeService @Autowired constructor(
                     latestBuildTimeStart = latestBuildTimeStart,
                     latestBuildTimeEnd = latestBuildTimeEnd,
                     sortType = sortType,
-                    collation = collation
+                    collation = collation,
+                    tagValueIds = tagValues
                 )
             } else {
                 nodeDao.listNodes(dslContext = dslContext, projectId = projectId, nodeType = nodeType)
@@ -250,7 +260,8 @@ class NodeService @Autowired constructor(
             latestBuildTimeStart = latestBuildTimeStart,
             latestBuildTimeEnd = latestBuildTimeEnd,
             sortType = sortType,
-            collation = collation
+            collation = collation,
+            tagValueIds = tagValues
         ).toLong()
         val nodes = formatNodeWithPermissions(userId, projectId, nodeRecordList)
         if (-1 != page) {

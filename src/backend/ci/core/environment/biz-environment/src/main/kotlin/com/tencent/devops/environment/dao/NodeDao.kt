@@ -32,6 +32,7 @@ import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.model.environment.tables.TNode
+import com.tencent.devops.model.environment.tables.TNodeTags
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import java.sql.Timestamp
 import java.time.LocalDateTime
@@ -84,11 +85,15 @@ class NodeDao {
         latestBuildTimeStart: Long?,
         latestBuildTimeEnd: Long?,
         sortType: String?,
-        collation: String?
+        collation: String?,
+        tagValueIds: Set<Long>?
     ): List<TNodeRecord> {
         return with(TNode.T_NODE) {
-            val query = dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+            val dsl = dslContext.select(*TNode.T_NODE.fields()).from(this)
+            if (!tagValueIds.isNullOrEmpty()) {
+                dsl.leftJoin(TNodeTags.T_NODE_TAGS).on(NODE_ID.eq(TNodeTags.T_NODE_TAGS.NODE_ID))
+            }
+            val query = dsl.where(PROJECT_ID.eq(projectId))
             conditions(
                 keywords = keywords,
                 query = query,
@@ -104,10 +109,11 @@ class NodeDao {
                 latestBuildTimeStart = latestBuildTimeStart,
                 latestBuildTimeEnd = latestBuildTimeEnd,
                 sortType = sortType,
-                collation = collation
+                collation = collation,
+                tagValueIds = tagValueIds
             )
             query.limit(limit).offset(offset)
-                .fetch()
+                .fetch() as List<TNodeRecord>
         }
     }
 
@@ -126,7 +132,8 @@ class NodeDao {
         latestBuildTimeStart: Long?,
         latestBuildTimeEnd: Long?,
         sortType: String?,
-        collation: String?
+        collation: String?,
+        tagValueIds: Set<Long>?
     ) {
         if (!keywords.isNullOrEmpty()) {
             query.and(NODE_IP.like("%$keywords%").or(DISPLAY_NAME.like("%$keywords%")))
@@ -167,6 +174,9 @@ class NodeDao {
         }
         if (latestBuildTimeEnd != null && latestBuildTimeEnd > 0) {
             query.and(LAST_BUILD_TIME.le(Timestamp(latestBuildTimeEnd).toLocalDateTime()))
+        }
+        if (!tagValueIds.isNullOrEmpty()) {
+            query.and(TNodeTags.T_NODE_TAGS.TAG_VALUE_ID.`in`(tagValueIds))
         }
         when (sortType) {
             /*别名*/"displayName" -> query.orderBy(DISPLAY_NAME.transferOrder(collation))
@@ -211,7 +221,8 @@ class NodeDao {
         latestBuildTimeStart: Long?,
         latestBuildTimeEnd: Long?,
         sortType: String?,
-        collation: String?
+        collation: String?,
+        tagValueIds: Set<Long>?
     ): Int {
         with(TNode.T_NODE) {
             val query = dslContext.selectCount()
@@ -232,7 +243,9 @@ class NodeDao {
                 latestBuildTimeStart = latestBuildTimeStart,
                 latestBuildTimeEnd = latestBuildTimeEnd,
                 sortType = sortType,
-                collation = collation
+                collation = collation,
+                tagValueIds = tagValueIds
+
             )
             return query.fetchOne(0, Int::class.java)!!
         }
@@ -389,7 +402,7 @@ class NodeDao {
         userId: String,
         agentVersion: String?
     ): Long
-        /** Node ID **/
+            /** Node ID **/
     {
         var nodeId = 0L
         with(TNode.T_NODE) {
