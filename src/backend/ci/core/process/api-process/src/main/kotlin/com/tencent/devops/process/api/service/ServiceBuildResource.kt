@@ -670,7 +670,7 @@ interface ServiceBuildResource {
         startBeginTime: String? = null,
         @QueryParam("endBeginTime")
         endBeginTime: String? = null,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(description = "构建ID列表,最大不能超过100个", required = true)
         buildIdSet: Set<String>
     ): Result<List<BuildHistory>>
 
