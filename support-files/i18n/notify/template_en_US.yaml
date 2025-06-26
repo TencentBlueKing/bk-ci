@@ -1078,3 +1078,19 @@
     body: "You have successfully executed ${successNum} tasks. A total of ${failNum} tasks failed to execute. The reasons for failure: \n${failMsg}"
   creator: "system"
   modifior: "system"
+
+- index: 51
+  id: "e166ee7f4dde4d96b2bb32addc6dd51c"
+  templateCode: "BK_STORE_ATOM_AUDIT_NOTIFY"
+  templateName: "Developer store plugin listing review notification template"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "5a8a2dff8cc949e9bee711d1c2e3d51a"
+    sender: "DevOps"
+    title: "Developer store plugin review notification"
+    body: "${userId} submitted an application to publish a plugin. Please review promptly.\nPlugin: ${atomName}\nVersion: ${version}"
+  creator: "system"
+  modifior: "system"
