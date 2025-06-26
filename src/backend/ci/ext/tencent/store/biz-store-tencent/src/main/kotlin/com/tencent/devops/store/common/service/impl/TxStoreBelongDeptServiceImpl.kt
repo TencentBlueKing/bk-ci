@@ -84,17 +84,21 @@ class TxStoreBelongDeptServiceImpl @Autowired constructor(
     }
 
     override fun initStoreBelongDept(userId: String, storeType: StoreTypeEnum, storeCode: String) {
-        val userDeptInfo = getUserDeptInfo(userId)
-        userDeptInfo?.let {
-            txStoreBelongDeptRelDao.add(
-                userId,
-                dslContext,
-                StoreBelongDeptRel(
-                    storeCode = storeCode,
-                    storeType = storeType,
-                    storeDeptInfo = it
+        try {
+            val userDeptInfo = getUserDeptInfo(userId)
+            userDeptInfo?.let {
+                txStoreBelongDeptRelDao.add(
+                    userId,
+                    dslContext,
+                    StoreBelongDeptRel(
+                        storeCode = storeCode,
+                        storeType = storeType,
+                        storeDeptInfo = it
+                    )
                 )
-            )
+            }
+        } catch (ignored: Throwable) {
+            logger.warn("initStoreBelongDept error: ${ignored.message}")
         }
     }
 
