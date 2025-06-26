@@ -32,6 +32,7 @@ const envDetail = () => import(/* webpackChunkName: 'envDetail' */ '../views/env
 
 // 节点列表
 const nodeList = () => import(/* webpackChunkName: 'nodeList' */ '../views/node_list')
+const nodeEntry = () => import(/* webpackChunkName: 'nodeList' */ '../views/node_entry')
 
 // 节点详情
 const nodeDetail = () => import(/* webpackChunkName: 'nodeDetail' */ '../views/node_detail')
@@ -42,7 +43,7 @@ const routes = [
         component: envHome,
         children: [
             {
-                path: '',
+                path: 'envList',
                 name: 'envList',
                 component: envList,
                 meta: {
@@ -76,27 +77,37 @@ const routes = [
                 }
             },
             {
-                path: 'nodeList',
-                name: 'nodeList',
-                component: nodeList,
-                meta: {
-                    title: 'nodeList',
-                    logo: 'environment',
-                    header: 'environmentManage',
-                    to: 'envList',
-                    webSocket: ['^\/console\/environment\/[^\/]+\/nodeList$']
-                }
-            },
-            {
-                path: 'nodeDetail/:nodeHashId',
-                name: 'nodeDetail',
-                component: nodeDetail,
-                meta: {
-                    title: 'nodeDetail',
-                    logo: 'environment',
-                    header: 'environmentManage',
-                    to: 'envList'
-                }
+                path: 'nodeEntry',
+                name: 'nodeEntry',
+                component: nodeEntry,
+                redirect: {
+                    name: 'nodeList'
+                },
+                children: [
+                    {
+                        path: 'nodeList',
+                        name: 'nodeList',
+                        component: nodeList,
+                        meta: {
+                            title: 'nodeList',
+                            logo: 'environment',
+                            header: 'environmentManage',
+                            to: 'envList',
+                            webSocket: ['^\/console\/environment\/[^\/]+\/nodeList$']
+                        }
+                    },
+                    {
+                        path: 'nodeDetail/:nodeHashId',
+                        name: 'nodeDetail',
+                        component: nodeDetail,
+                        meta: {
+                            title: 'nodeDetail',
+                            logo: 'environment',
+                            header: 'environmentManage',
+                            to: 'envList'
+                        }
+                    }
+                ]
             }
         ]
     }

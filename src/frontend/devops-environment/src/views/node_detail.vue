@@ -274,5 +274,11 @@
                 }
             }
         }
+
+        .sub-view-port {
+            height: calc(100vh - 210px);
+            overflow: auto;
+            padding: 20px;
+        }
     }
 </style>

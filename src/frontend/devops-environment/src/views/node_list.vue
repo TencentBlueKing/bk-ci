@@ -66,6 +66,11 @@
                     @sort-change="handleSortChange"
                 >
                     <bk-table-column
+                        type="selection"
+                        fixed="left"
+                        width="40"
+                    ></bk-table-column>
+                    <bk-table-column
                         :label="$t('environment.nodeInfo.displayName')"
                         sortable="custom"
                         prop="displayName"
@@ -300,8 +305,8 @@
                     </bk-table-column>
                     <bk-table-column
                         :label="$t('environment.operation')"
-                        width="180"
                         fixed="right"
+                        width="180"
                     >
                         <template slot-scope="props">
                             <template v-if="props.row.canUse">
@@ -778,6 +783,7 @@
                     this.$router.push({
                         name: 'nodeDetail',
                         params: {
+                            projectId: this.$route.params.projectId,
                             nodeHashId: node.nodeHashId
                         }
                     })
@@ -1238,7 +1244,6 @@
     }
 
     .node-list-wrapper {
-        min-width: 1126px;
         height: 100%;
         overflow: hidden;
 
@@ -1377,7 +1382,7 @@
 
         .node-table-wrapper {
             margin-top: 20px;
-            td:first-child {
+            td:nth-child(2) {
                 position: relative;
                 color: $primaryColor;
                 .node-name {
