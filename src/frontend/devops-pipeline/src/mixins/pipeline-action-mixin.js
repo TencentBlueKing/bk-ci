@@ -139,6 +139,7 @@ export default {
 
                     if (otherViews) {
                         return Object.assign(archiveObj, {
+                            latestBuildUserId: item.latestBuildUserId,
                             progress: this.calcProgress(item),
                             pipelineActions: this.getPipelineActions(item, index),
                             disabled: this.isDisabledPipeline(item),
