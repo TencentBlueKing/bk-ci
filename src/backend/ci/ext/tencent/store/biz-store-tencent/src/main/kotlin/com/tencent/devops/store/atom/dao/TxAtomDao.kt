@@ -27,11 +27,8 @@
 
 package com.tencent.devops.store.atom.dao
 
-import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.model.store.tables.TAtom
 import org.jooq.DSLContext
-import org.jooq.Record2
-import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository

@@ -27,7 +27,6 @@
 
 package com.tencent.devops.store.image.dao
 
-import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.model.store.tables.TCategory
