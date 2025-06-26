@@ -317,8 +317,8 @@ class TxPipelineMetricsCronService @Autowired constructor(
 
     @Scheduled(cron = "0 0 8 * * ?")
     fun processInvalidPipelineData() {
+        if (!enableFlag) return
         logger.info("start processInvalidPipelineData")
-
         try {
             queryAndProcessCardData(
                 cardId = invalidBuildPipeline,
