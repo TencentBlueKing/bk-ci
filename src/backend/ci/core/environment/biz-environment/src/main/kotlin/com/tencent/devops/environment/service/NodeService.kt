@@ -70,6 +70,7 @@ import com.tencent.devops.environment.dao.slave.SlaveGatewayDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.NodeFetchReq
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
@@ -201,7 +202,8 @@ class NodeService @Autowired constructor(
         latestBuildTimeStart: Long?,
         latestBuildTimeEnd: Long?,
         sortType: String?,
-        collation: String?
+        collation: String?,
+        data: NodeFetchReq?
     ): Page<NodeWithPermission> {
         val nodeRecordList =
             if (-1 != page) {
@@ -305,6 +307,7 @@ class NodeService @Autowired constructor(
         latestBuildTimeEnd: Long?,
         sortType: String?,
         collation: String?,
+        data: NodeFetchReq,
         response: HttpServletResponse
     ) {
         var page = 1
@@ -330,7 +333,8 @@ class NodeService @Autowired constructor(
                 latestBuildTimeStart = latestBuildTimeStart,
                 latestBuildTimeEnd = latestBuildTimeEnd,
                 sortType = sortType,
-                collation = collation
+                collation = collation,
+                data = data
             )
             count = res.count
             page++

@@ -1,11 +1,11 @@
 package com.tencent.devops.environment.dao
 
-import com.tencent.devops.common.api.constant.ID
 import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.NodeTagValue
 import com.tencent.devops.model.environment.tables.TNodeTagKey
 import com.tencent.devops.model.environment.tables.TNodeTagValues
 import com.tencent.devops.model.environment.tables.TNodeTags
+import com.tencent.devops.model.environment.tables.records.TNodeTagsRecord
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -170,5 +170,58 @@ class NodeTagDao {
                 )
             }
         return resM.map { it.key to it.value.values.toList() }.toMap()
+    }
+
+    fun deleteNodesTags(dslContext: DSLContext, projectId: String, nodeId: Long) {
+        with(TNodeTags.T_NODE_TAGS) {
+            dslContext.deleteFrom(this).where(PROJECT_ID.eq(projectId)).and(NODE_ID.eq(nodeId)).execute()
+        }
+    }
+
+    fun batchAddNodeTags(
+        dslContext: DSLContext,
+        projectId: String,
+        nodeId: Long,
+        valueAndKeyIds: Map<Long, Long>
+    ) {
+        with(TNodeTags.T_NODE_TAGS) {
+            val dsls = valueAndKeyIds.map { (v, k) ->
+                dslContext.insertInto(
+                    this,
+                    PROJECT_ID,
+                    NODE_ID,
+                    TAG_VALUE_ID,
+                    TAG_KEY_ID
+                ).values(
+                    projectId,
+                    nodeId,
+                    v,
+                    k
+                )
+            }
+            dslContext.batch(dsls).execute()
+        }
+    }
+
+    fun fetchNodeTagByKeyOrValue(
+        dslContext: DSLContext,
+        projectId: String,
+        tagKeyId: Long?,
+        tagValueId: Long?
+    ): List<TNodeTagsRecord>? {
+        with(TNodeTags.T_NODE_TAGS) {
+            if (tagKeyId == null && tagValueId == null) {
+                return null
+            }
+            val dsl = dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+            if (tagValueId != null) {
+                dsl.and(TAG_VALUE_ID.eq(tagValueId))
+            }
+            if (tagKeyId != null) {
+                dsl.and(TAG_KEY_ID.eq(tagKeyId))
+            }
+            return dsl.fetch()
+        }
     }
 }

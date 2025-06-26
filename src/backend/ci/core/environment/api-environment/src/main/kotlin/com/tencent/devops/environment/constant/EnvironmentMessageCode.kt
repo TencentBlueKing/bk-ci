@@ -107,6 +107,8 @@ object EnvironmentMessageCode {
     const val ERROR_NODE_NOT_BELONG_TO_PROJECT = "2105057" // 环境管理: IP {0} 未被作为节点导入项目 {1}，请到【环境管理-节点】导入测试机后重试
     const val ERROR_AGENT_ALREADY_INSTALL = "2105058" // 环境管理: Agent重复安装报错
     const val ERROR_NODE_TAG_EXIST = "2105059" // 环境管理: 标签已经存在
+    const val ERROR_NODE_TAG_HAS_NODE = "2105060" // 环境管理: 当前标签还存在标记的节点
+    const val ERROR_NODE_TAG_ONLY_SUP_THIRD = "2105061" // 环境管理: 标签功能仅支持第三方构建机
 
     const val BK_NORMAL_VERSION = "bkNormalVersion" // 8核16G（普通版）
     const val BK_INTEL_XEON_SKYLAKE_PROCESSOR = "bkIntelXeonSkylakeProcessor" // 2.5GHz 64核 Intel Xeon Skylake 6133处理器

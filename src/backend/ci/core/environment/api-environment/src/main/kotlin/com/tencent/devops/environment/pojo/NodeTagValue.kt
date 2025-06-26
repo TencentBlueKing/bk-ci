@@ -23,3 +23,26 @@ data class NodeTagValue(
     @get:Schema(title = "标签包含的节点数量")
     val nodeCount: Int?
 )
+
+@Schema(title = "标签搜索参数")
+data class NodeTagFetchReq(
+    @get:Schema(title = "节点标签名ID")
+    val tagKeyId: Long,
+    @get:Schema(title = "节点标签值列表")
+    val tagValues: List<Long>?
+)
+
+@Schema(title = "添加或删除节点上标签")
+data class UpdateNodeTag(
+    @get:Schema(title = "需要操作的节点")
+    val nodeId: Long,
+    @get:Schema(title = "标签列表")
+    val tags: List<NodeTagAddOrDeleteTagItem>
+)
+
+data class NodeTagAddOrDeleteTagItem(
+    @get:Schema(title = "节点标签名ID")
+    val tagKeyId: Long,
+    @get:Schema(title = "节点标签值列表")
+    val tagValueId: Long
+)
