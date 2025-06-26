@@ -47,15 +47,4 @@ class TxAtomDao {
                 .fetchInto(String::class.java)
         }
     }
-
-    fun listAtomInitCreator(dslContext: DSLContext, offset: Int, limit: Int): Result<Record2<String, String>> {
-        with(TAtom.T_ATOM) {
-            return dslContext.select(ATOM_CODE, CREATOR)
-                .from(this)
-                .where(VERSION.eq(INIT_VERSION))
-                .orderBy(CREATE_TIME.asc())
-                .limit(limit).offset(offset)
-                .fetch()
-        }
-    }
 }

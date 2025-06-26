@@ -29,9 +29,10 @@ package com.tencent.devops.store.common.service.impl
 
 import com.tencent.devops.common.api.constant.DEVOPS
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.store.atom.dao.TxAtomDao
-import com.tencent.devops.store.common.dao.TxStoreBaseQueryDao
+import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.dao.TxStoreBelongDeptRelDao
 import com.tencent.devops.store.common.service.TxStoreBelongDeptService
 import com.tencent.devops.store.ideatom.dao.IdeAtomDao
@@ -44,12 +45,9 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum.DEVX
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum.IDE_ATOM
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum.IMAGE
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum.SERVICE
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum.TEMPLATE
 import com.tencent.devops.store.service.dao.ExtServiceDao
 import java.util.concurrent.Executors
 import org.jooq.DSLContext
-import org.jooq.Record2
-import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -63,7 +61,7 @@ class TxStoreBelongDeptServiceImpl @Autowired constructor(
     private val ideAtomDao: IdeAtomDao,
     private val extServiceDao: ExtServiceDao,
     private val opImageDao: OpImageDao,
-    private val txStoreBaseQueryDao: TxStoreBaseQueryDao
+    private val storeProjectRelDao: StoreProjectRelDao
 ) : TxStoreBelongDeptService {
 
     companion object {
@@ -109,56 +107,45 @@ class TxStoreBelongDeptServiceImpl @Autowired constructor(
             logger.info("begin initAtomBelongDept!!")
             var offset = 0
             do {
-                val listStoreInitCreator = listStoreInitCreator(storeTypeEnum, offset)
+                val listStoreInitPrjectInfo = storeProjectRelDao.listStoreInitProjectCode(
+                    dslContext = dslContext,
+                    storeType = storeTypeEnum.type.toByte(),
+                    limit = DEFAULT_PAGE_SIZE,
+                    offset = offset
+                )
+                val initProjectCodes = listStoreInitPrjectInfo.map { it.value2() }.toSet()
                 val storeBelongDeptRelList = mutableListOf<StoreBelongDeptRel>()
-                listStoreInitCreator.forEach { storeInitCreator ->
-                    val storeCode = storeInitCreator.value1()
-                    val creator = storeInitCreator.value2()
-                    // 获取用户组织架构
-                    val userDeptInfo = getUserDeptInfo(creator)
-                    userDeptInfo?.let {
+                val projectInfoList =
+                    client.get(ServiceProjectResource::class).listOnlyByProjectCode(initProjectCodes).data
+                projectInfoList ?: return@submit
+                listStoreInitPrjectInfo.forEach { storeInitProject ->
+                    val storeCode = storeInitProject.value1()
+                    val initProjectCode = storeInitProject.value2()
+                    // 获取初始化项目组织架构
+                    projectInfoList.find { it.englishName == initProjectCode }?.let {
                         storeBelongDeptRelList.add(
                             StoreBelongDeptRel(
                                 storeCode = storeCode,
                                 storeType = storeTypeEnum,
-                                storeDeptInfo = it
+                                storeDeptInfo = StoreDeptInfo(
+                                    bgId = it.bgId!!,
+                                    bgName = it.bgName!!,
+                                    deptId = it.deptId,
+                                    deptName = it.deptName,
+                                    centerId = it.centerId,
+                                    centerName = it.centerName,
+                                    businessLineId = it.businessLineId,
+                                    businessLineName = it.businessLineName
+                                )
                             )
                         )
                     }
+
                 }
                 txStoreBelongDeptRelDao.batchAdd(DEVOPS, dslContext, storeBelongDeptRelList)
                 offset += DEFAULT_PAGE_SIZE
-            } while (listStoreInitCreator.size == DEFAULT_PAGE_SIZE)
+            } while (listStoreInitPrjectInfo.size == DEFAULT_PAGE_SIZE)
             logger.info("end initAtomBelongDept!!")
-        }
-    }
-
-    private fun listStoreInitCreator(storeType: StoreTypeEnum, offset: Int): Result<Record2<String, String>> {
-        return when (storeType) {
-            ATOM -> {
-                txAtomDao.listAtomInitCreator(dslContext, offset, DEFAULT_PAGE_SIZE)
-            }
-            IDE_ATOM -> {
-                ideAtomDao.listAtomInitCreator(dslContext, offset, DEFAULT_PAGE_SIZE)
-            }
-            SERVICE -> {
-                extServiceDao.listServiceInitCreator(dslContext, offset, DEFAULT_PAGE_SIZE)
-            }
-            IMAGE -> {
-                opImageDao.listImageInitCreator(dslContext, offset, DEFAULT_PAGE_SIZE)
-            }
-            DEVX -> {
-                txStoreBaseQueryDao.listStoreInitCreator(
-                    dslContext = dslContext,
-                    storeTypeEnum = DEVX,
-                    offset = offset,
-                    limit = DEFAULT_PAGE_SIZE
-                )
-            }
-
-            TEMPLATE -> {
-                txStoreBaseQueryDao.listTempLateInitCreator(dslContext, offset, DEFAULT_PAGE_SIZE)
-            }
         }
     }
 

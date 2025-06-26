@@ -44,9 +44,9 @@ data class StoreDeptInfo(
     @get:Schema(title = "中心名称", required = false)
     val centerName: String?,
     @get:Schema(title = "组ID", required = false)
-    val groupId: String?,
+    val groupId: String? = null,
     @get:Schema(title = "组名称", required = false)
-    val groupName: String?,
+    val groupName: String? = null,
     @get:Schema(title = "业务线ID", required = false)
     val businessLineId: String?,
     @get:Schema(title = "业务线名称", required = false)

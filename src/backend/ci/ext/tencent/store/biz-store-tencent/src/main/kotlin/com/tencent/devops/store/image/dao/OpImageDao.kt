@@ -385,16 +385,5 @@ class OpImageDao @Autowired constructor() {
             .fetch()
     }
 
-    fun listImageInitCreator(dslContext: DSLContext, offset: Int, limit: Int): Result<Record2<String, String>> {
-        with(TImage.T_IMAGE) {
-            return dslContext.select(IMAGE_CODE, CREATOR)
-                .from(this)
-                .where(VERSION.eq(INIT_VERSION))
-                .orderBy(CREATE_TIME.asc())
-                .limit(limit).offset(offset)
-                .fetch()
-        }
-    }
-
     private val logger = LoggerFactory.getLogger(OpImageDao::class.java)
 }
