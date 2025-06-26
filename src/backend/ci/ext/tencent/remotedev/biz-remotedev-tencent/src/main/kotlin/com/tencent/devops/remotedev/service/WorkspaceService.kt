@@ -1387,10 +1387,11 @@ class WorkspaceService @Autowired constructor(
 
     fun projectAccessDevicePermissions(
         userId: String,
-        macAddress: String
+        macAddress: String,
+        projectId: String?
     ): Map<String, ProjectAccessDevicePermissionsResp> {
         // 获取用户当前的项目列表
-        val projects = workspaceJoinDao.fetchProjectFromUser(dslContext, userId)
+        val projects = projectId?.let { listOf(it) } ?: workspaceJoinDao.fetchProjectFromUser(dslContext, userId)
         if (projects.isEmpty()) {
             logger.debug("projectAccessDevicePermissions|userId|$userId|empty projects")
             return emptyMap()
