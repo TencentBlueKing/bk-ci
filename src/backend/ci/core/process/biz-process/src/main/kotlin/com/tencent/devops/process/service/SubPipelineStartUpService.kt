@@ -172,14 +172,15 @@ class SubPipelineStartUpService @Autowired constructor(
         val watcher = Watcher("subPipeline start up")
         try {
             watcher.start("start check circular dependency")
-            val existsLink = subPipelineRefService.exists(
-                projectId = projectId,
-                pipelineId = parentPipelineId,
-                subProjectId = fixProjectId,
-                subPipelineId = callPipelineId
-            )
-            if (existsLink) {
-                // 链路已归档，则说明不存在递归调用的情况
+            if (subPipelineResource != null &&
+                    subPipelineRefService.exists(
+                        projectId = projectId,
+                        pipelineId = parentPipelineId,
+                        subProjectId = fixProjectId,
+                        subPipelineId = callPipelineId
+                    )
+            ) {
+                // 链路已归档(分支版本resource仍需校验，后续优化)，则说明不存在递归调用的情况
                 logger.info(
                     "pipeline link already verified|" +
                             "[$projectId|$parentPipelineId]->[$fixProjectId|$callPipelineId]"
