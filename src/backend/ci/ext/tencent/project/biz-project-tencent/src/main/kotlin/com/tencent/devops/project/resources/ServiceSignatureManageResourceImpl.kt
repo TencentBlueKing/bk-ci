@@ -25,13 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:auth:api-auth"))
-    api(project(":core:project:api-project"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":core:common:common-client"))
-}
+package com.tencent.devops.project.resources
 
-plugins {
-    `task-deploy-to-maven`
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.service.service.ServiceSignatureManageResource
+import com.tencent.devops.project.api.service.user.UserSignatureManageResource
+import com.tencent.devops.project.pojo.UserSignatureStatusResponse
+import com.tencent.devops.project.service.ProjectSignatureManageService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ServiceSignatureManageResourceImpl @Autowired constructor(
+    private val signatureManageService: ProjectSignatureManageService
+) : ServiceSignatureManageResource {
+    override fun getSignatureStatus(userId: String, projectId: String): Result<UserSignatureStatusResponse> {
+        return Result(
+            signatureManageService.getSignatureStatus(
+                projectId = projectId,
+                userId = userId
+            )
+        )
+    }
 }

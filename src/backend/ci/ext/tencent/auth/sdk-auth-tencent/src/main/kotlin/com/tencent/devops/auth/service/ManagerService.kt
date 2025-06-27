@@ -39,6 +39,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.api.service.service.ServiceSignatureManageResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
@@ -169,25 +170,58 @@ class ManagerService @Autowired constructor(
         projectId: String,
         userId: String
     ) {
-        val projectsOfSignature = redisOperation.get(PROJECTS_OF_SIGNATURE)?.split(",") ?: emptyList()
-        // 未签署保密合同的用户不允许访问
-        if (projectsOfSignature.contains(projectId)) {
-            val isUserSigned = redisOperation.get(USER_SIGNATURE_STATUS_CHECK.plus(userId))?.toBoolean()
-            if (isUserSigned != true) {
-                logger.warn(
-                    "The user cannot access the project because the contract has not been signed.$projectId|$userId"
-                )
-                throw ErrorCodeException(
-                    errorCode = ERROR_USER_CONTRACT_NOT_SIGNED,
-                    params = arrayOf(userId, "${config.devopsHostGateway}/console/pipeline/$projectId")
-                )
+        val preProcessProjects = redisOperation.get(
+            PROJECTS_OF_SIGNATURE_PRE_PROCESSING
+        )?.split(",") ?: emptyList()
+
+        if (preProcessProjects.isNotEmpty()) {
+            if (preProcessProjects.contains(projectId)) {
+                val cache = redisOperation.get(USER_SIGNATURE_STATUS_CHECK.plus(userId))
+                val isUserSigned = cache?.toBoolean() ?: (
+                    client.get(ServiceSignatureManageResource::class)
+                        .getSignatureStatus(
+                            projectId = projectId,
+                            userId = userId
+                        ).data?.signed ?: false)
+
+                if (!isUserSigned) {
+                    logger.warn(
+                        "Pre-process-the user cannot access the project " +
+                            "because the contract has not been signed.$projectId|$userId"
+                    )
+                }else{
+                    logger.info("Pre-process-The user has signed the contract.$projectId|$userId")
+                }
+            }
+        } else {
+            val projectsOfSignature = redisOperation.get(PROJECTS_OF_SIGNATURE)?.split(",") ?: emptyList()
+            // 未签署保密合同的用户不允许访问
+            if (projectsOfSignature.contains(projectId)) {
+                val cache = redisOperation.get(USER_SIGNATURE_STATUS_CHECK.plus(userId))
+                val isUserSigned = cache?.toBoolean() ?: (
+                    client.get(ServiceSignatureManageResource::class)
+                        .getSignatureStatus(
+                            projectId = projectId,
+                            userId = userId
+                        ).data?.signed ?: false)
+
+                if (!isUserSigned) {
+                    logger.warn(
+                        "The user cannot access the project because the contract has not been signed.$projectId|$userId"
+                    )
+                    throw ErrorCodeException(
+                        errorCode = ERROR_USER_CONTRACT_NOT_SIGNED,
+                        params = arrayOf(userId, "${config.devopsHostGateway}/console/pipeline/$projectId")
+                    )
+                }
             }
         }
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(ManagerService::class.java)
+        private val logger = LoggerFactory.getLogger(ManagerService::class.java)
         private const val PROJECTS_OF_SIGNATURE = "projects.signature.check"
+        private const val PROJECTS_OF_SIGNATURE_PRE_PROCESSING = "projects.signature.check.pre.process"
         private const val USER_SIGNATURE_STATUS_CHECK = "user.signature.status.check."
     }
 }
