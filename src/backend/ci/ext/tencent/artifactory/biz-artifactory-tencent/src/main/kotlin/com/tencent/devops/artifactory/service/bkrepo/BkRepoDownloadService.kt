@@ -813,11 +813,11 @@ open class BkRepoDownloadService(
                 accessUserId = pipelineOauthUser
             }
             projectDownloadErrorMsg = I18nUtil.getCodeLanMessage(
-                messageCode = ArtifactoryMessageCode.LAST_MODIFY_USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
+                messageCode = ArtifactoryMessageCode.HANDOVER_TO_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
                 params = arrayOf(accessUserId, targetProjectId)
             )
             pipelineDownloadErrorMsg = I18nUtil.getCodeLanMessage(
-                messageCode = ArtifactoryMessageCode.LAST_MODIFY_USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
+                messageCode = ArtifactoryMessageCode.HANDOVER_TO_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
                 params = arrayOf(accessUserId, targetProjectId, targetPipelineId)
             )
         }

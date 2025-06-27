@@ -8,13 +8,7 @@
     >
         <div slot="title">
             <span>{{ $t('pipelineProblemTips.observing') }}</span>
-            <i18n
-                v-if="pipelineProblemDetail.failureRateCount"
-                path="pipelineProblemTips.failureRateTips"
-            >
-                <span class="red-highlight">{{ pipelineProblemDetail.failureRateCount }}</span>
-                <span class="red-highlight">90%</span>
-            </i18n>
+            <span v-if="pipelineProblemDetail.failureRateCount">{{ $t('pipelineProblemTips.failureRateTips') }}</span>
             <i18n
                 v-if="pipelineProblemDetail?.consecutiveFailuresCount"
                 path="pipelineProblemTips.consecutiveFailuresTips"
@@ -47,6 +41,9 @@
     import { mapActions } from 'vuex'
     const PIPELINE_PROBLEM_CLOSE_TIME = 'PIPELINE_PROBLEM_CLOSE_TIME'
     export default {
+        props: {
+            updateTableHeight: Function
+        },
         data () {
             return {
                 pipelineProblemDetail: {}
@@ -78,6 +75,9 @@
                     projectId: this.projectId
                 })
                 this.pipelineProblemDetail = res ?? {}
+                this.$nextTick(() => {
+                    this.updateTableHeight()
+                })
             },
             handleClosePipelineProblemTips () {
                 const currentTime = this.getCurrentTime()

@@ -31,6 +31,7 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLLimit
@@ -551,6 +552,7 @@ class PipelineListFacadeService @Autowired constructor(
                 filterByViewIds = filterByViewIds
             )
             val includeDelete = showDelete && (PIPELINE_VIEW_RECENT_USE == viewId || !DEFAULT_VIEW_IDS.contains(viewId))
+
             // 查询有权限查看的流水线总数
             val totalAvailablePipelineSize = pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
                 dslContext = dslContext,
@@ -567,7 +569,8 @@ class PipelineListFacadeService @Autowired constructor(
             )
             val pipelineList = mutableListOf<Pipeline>()
             val isPipelineListPermissionControl = pipelinePermissionService.isControlPipelineListPermission(projectId)
-            if (includeDelete) {
+            if (isPipelineListPermissionControl) {
+                // 开启了不展示无权限流水线
                 handlePipelineQueryList(
                     pipelineList = pipelineList,
                     projectId = projectId,
@@ -581,13 +584,38 @@ class PipelineListFacadeService @Autowired constructor(
                     permissionFlag = true,
                     page = page,
                     pageSize = pageSize,
+                    includeDelete = includeDelete,
+                    collation = collation,
+                    userId = userId,
+                    queryByWeb = queryByWeb
+                )
+            } else if (includeDelete) {
+                // 流水线组逻辑
+                val specialAuthPipelines = if (pipelineIdsFilterByView.isNotEmpty()) {
+                    authPipelines + pipelineIdsFilterByView
+                } else {
+                    authPipelines
+                }
+                handlePipelineQueryList(
+                    pipelineList = pipelineList,
+                    projectId = projectId,
+                    channelCode = channelCode,
+                    sortType = sortType,
+                    pipelineIds = pipelineIdsFilterByView,
+                    favorPipelines = favorPipelines,
+                    authPipelines = specialAuthPipelines,
+                    viewId = viewId,
+                    pipelineFilterParamList = pipelineFilterParamList,
+                    permissionFlag = true,
+                    page = page,
+                    pageSize = pageSize,
                     includeDelete = true,
                     collation = collation,
                     userId = userId,
                     queryByWeb = queryByWeb
                 )
-            } else if (!isPipelineListPermissionControl) {
-                // 无列表权限控制下的流水线获取方法
+            } else {
+                // 默认逻辑
                 listPipelineWithoutPermission(
                     userId = userId,
                     projectId = projectId,
@@ -606,26 +634,6 @@ class PipelineListFacadeService @Autowired constructor(
                     includeDelete = includeDelete,
                     page = page,
                     pageSize = pageSize
-                )
-            } else {
-                // 列表权限控制下的流水线获取方法
-                handlePipelineQueryList(
-                    pipelineList = pipelineList,
-                    projectId = projectId,
-                    channelCode = channelCode,
-                    sortType = sortType,
-                    pipelineIds = pipelineIdsFilterByView,
-                    favorPipelines = favorPipelines,
-                    authPipelines = authPipelines,
-                    viewId = viewId,
-                    pipelineFilterParamList = pipelineFilterParamList,
-                    permissionFlag = true,
-                    page = page,
-                    pageSize = pageSize,
-                    includeDelete = includeDelete,
-                    collation = collation,
-                    userId = userId,
-                    queryByWeb = queryByWeb
                 )
             }
             watcher.stop()
@@ -1541,6 +1549,12 @@ class PipelineListFacadeService @Autowired constructor(
             projectId = projectId, pipelineIds = pipelineIds.toList()
         )
 
+        // 获取归档中的流水线信息
+        val pipelineArchivingFlagMap = redisOperation.isMember(
+            key = BkApiUtil.getMigratingPipelinesRedisKey(SystemModuleEnum.PROCESS.name),
+            items = pipelineIds.toTypedArray()
+        )
+
         // 完善数据
         finalPipelines(
             pipelines = pipelines,
@@ -1554,7 +1568,8 @@ class PipelineListFacadeService @Autowired constructor(
             buildTaskTotalCountMap = buildTaskTotalCountMap,
             buildTaskFinishCountMap = buildTaskFinishCountMap,
             pipelineYamlExistMap = pipelineYamlExistMap,
-            queryByWeb = queryByWeb
+            queryByWeb = queryByWeb,
+            pipelineArchivingFlagMap = pipelineArchivingFlagMap
         )
 
         return pipelines
@@ -1572,7 +1587,8 @@ class PipelineListFacadeService @Autowired constructor(
         buildTaskTotalCountMap: Map<String, Int>,
         buildTaskFinishCountMap: Map<String, Int>,
         pipelineYamlExistMap: Map<String, Boolean>,
-        queryByWeb: Boolean
+        queryByWeb: Boolean,
+        pipelineArchivingFlagMap: Map<String, Boolean>?
     ) {
         pipelines.forEach {
             val pipelineId = it.pipelineId
@@ -1654,6 +1670,7 @@ class PipelineListFacadeService @Autowired constructor(
                 it.buildNumRule = pipelineSettingRecord.get(tSetting.BUILD_NUM_RULE)
             }
             it.yamlExist = pipelineYamlExistMap[pipelineId] ?: false
+            it.archivingFlag = pipelineArchivingFlagMap?.get(pipelineId)
         }
     }
 

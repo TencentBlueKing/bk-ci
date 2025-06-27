@@ -15,7 +15,10 @@
                 <i class="devops-icon icon-exclamation" />
             </span>
             <div class="archive-title">
-                <span>{{ $t('deletePipelineConfirm') }}</span>
+                <span v-if="isArchiveBatch">
+                    {{ $t('deleteTheNumberOfPipelineConfirm', [pipelineList.length]) }}
+                </span>
+                <span v-else>{{ $t('deletePipelineConfirm') }}</span>
             </div>
         </template>
         <main>

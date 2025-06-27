@@ -58,8 +58,9 @@
                     theme: 'primary',
                     size: 'normal'
                 }
+                const isArchive = this.$route.params.viewId === 'archiveLibrary'
 
-                const isInGroup = !(this.fixedGroupIdSet.has(this.$route.params.viewId) || this.isPatch)
+                const isInGroup = !(this.fixedGroupIdSet.has(this.$route.params.viewId) || this.isPatch || isArchive)
                 return this.hasFilter
                     ? {
                         desc: this.$t('newlist.knowMore'),
@@ -73,7 +74,7 @@
                         ]
                     }
                     : {
-                        desc: this.$t(isInGroup ? 'newlist.otherEmptyDesc' : 'empty'),
+                        desc: this.$t(isInGroup ? 'newlist.otherEmptyDesc' : isArchive ? 'noArchivedPipelines' : 'empty'),
                         imgType: '',
                         btns: isInGroup
                             ? [
@@ -83,13 +84,15 @@
                                     text: this.$t('newlist.addPipelineToGroup')
                                 }
                             ]
-                            : [
-                                {
-                                    btnProps,
-                                    handler: this.refreshList,
-                                    text: this.$t('retry')
-                                }
-                            ]
+                            : isArchive
+                                ? []
+                                : [
+                                    {
+                                        btnProps,
+                                        handler: this.refreshList,
+                                        text: this.$t('retry')
+                                    }
+                                ]
                     }
             }
         }

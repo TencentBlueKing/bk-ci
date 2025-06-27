@@ -256,6 +256,9 @@
             isRunning () {
                 return ['RUNNING', 'QUEUE'].includes(this.execDetail?.status)
             },
+            archiveFlag () {
+                return this.$route.query.archiveFlag
+            },
             panels () {
                 return [
                     {
@@ -265,7 +268,7 @@
                         className: 'exec-pipeline',
                         bindData: {
                             execDetail: this.execDetail,
-                            isLatestBuild: this.isLatestBuild,
+                            isLatestBuild: this.archiveFlag ? !this.archiveFlag : this.isLatestBuild,
                             matchRules: this.curMatchRules,
                             isRunning: this.isRunning
                         }

@@ -135,6 +135,7 @@ interface StoreCommonService {
      * 获取回显版本信息
      */
     fun getStoreShowVersionInfo(
+        storeType: StoreTypeEnum,
         cancelFlag: Boolean,
         releaseType: ReleaseTypeEnum?,
         version: String?

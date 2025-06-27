@@ -1327,7 +1327,7 @@ class PipelineRepositoryService constructor(
         val template = templatePipelineDao.get(finalDslContext, projectId, pipelineId)
         val srcTemplate = template?.let { t ->
             templateDao.getTemplate(
-                dslContext = finalDslContext, templateId = t.templateId
+                dslContext = dslContext, templateId = t.templateId
             )
         }
         val templateId = template?.templateId
@@ -2383,4 +2383,12 @@ class PipelineRepositoryService constructor(
             pipelineId = pipelineId
         )
     }
+
+    fun getTemplateVersionRecord(templateId: String, version: Long?) = templateDao.getTemplate(
+        dslContext = dslContext,
+        templateId = templateId,
+        version = version
+    ) ?: throw ErrorCodeException(
+        errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
+    )
 }

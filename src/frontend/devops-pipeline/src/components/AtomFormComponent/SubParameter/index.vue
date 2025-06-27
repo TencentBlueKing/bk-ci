@@ -21,28 +21,45 @@
                     class="param-input"
                     v-for="(parameter, index) in parameters"
                     :key="parameter.key"
+                    v-bk-tooltips="{
+                        content: $t('notParamsTip'),
+                        disabled: !parameter.disabled,
+                        placements: ['left']
+                    }"
                 >
-                    <bk-select
-                        class="input-com"
-                        :disabled="disabled"
-                        :value="parameter.key"
-                        @change="(val) => handleChangeKey(val, index)"
-                    >
-                        <bk-option
-                            v-for="option in subParamsKeyList"
-                            :key="option.key"
-                            :id="option.key"
-                            :name="option.key"
-                            :disabled="parameters.find(i => i.key === option.key)"
+                    <template v-if="parameter.hasKey">
+                        <bk-select
+                            class="input-com"
+                            :disabled="disabled"
+                            :value="parameter.key"
+                            @change="(val) => handleChangeKey(val, index)"
+                        >
+                            <bk-option
+                                v-for="option in subParamsKeyList"
+                                :key="option.key"
+                                :id="option.key"
+                                :name="option.key"
+                                :disabled="parameters.find(i => i.key === option.key)"
+                            />
+                        </bk-select>
+                    </template>
+                    <template v-else>
+                        <bk-input
+                            v-model="parameter.key"
+                            class="input-com param-not-key-input"
+                            disabled
+                            :title="parameter.key"
                         />
-                    </bk-select>
+                    </template>
                     <span class="input-seg">=</span>
                     <bk-input
                         v-model="parameter.value"
                         :type="getInputType(parameter.type)"
                         :precision="0"
-                        class="input-com"
-                        :disabled="disabled"
+                        :class="['input-com', {
+                            'param-not-key-input': parameter.disabled
+                        }]"
+                        :disabled="disabled || parameter.disabled"
                         :title="parameter.value"
                         @change="(val) => handleChangeValue(val, index)"
                     />
@@ -73,17 +90,25 @@
             return {
                 isLoading: false,
                 parameters: [],
-                subParamsKeyList: []
+                subParamsKeyList: [],
+                pipelineRequiredParams: {}
             }
         },
         computed: {
             ...mapState('atom', [
-                'pipelineInfo'
+                'pipelineInfo',
+                'pipeline',
+                'template'
             ]),
             paramValues () {
                 const { atomValue = {}, $route: { params = {} } } = this
+                const isTemplate = Object.prototype.hasOwnProperty.call(params, 'templateId')
                 return {
                     bkPoolType: this?.container?.dispatchType?.buildType,
+                    pipelineId: isTemplate ? params.templateId : '',
+                    templateVersion: isTemplate ? this.template?.currentVersion?.version : '',
+                    version: this.pipelineInfo?.version,
+                    isTemplate,
                     ...params,
                     ...atomValue
                 }
@@ -97,19 +122,40 @@
                     })
                 })
                 return map
+            },
+            container () {
+                return this.pipeline?.stages[0]?.containers[0] || {}
+            },
+            requiredParams () {
+                const requiredParamList = this.container?.params?.filter(item => !item.constant && item.required) || []
+                return requiredParamList.reduce((acc, current) => {
+                    acc[current.id] = isObject(current.defaultValue) ? '' : current.defaultValue
+                    acc[`variables.${current.id}`] = isObject(current.defaultValue) ? '' : current.defaultValue
+                    if (isObject(current.defaultValue)) {
+                        Object.keys(current.defaultValue).forEach(key => {
+                            acc[`${current.id}.${key}`] = current.defaultValue[key]
+                            acc[`variables.${current.id}.${key}`] = current.defaultValue[key]
+                        })
+                    }
+                    return acc
+                }, {})
             }
         },
 
         watch: {
             paramValues: {
                 handler (value, oldValue) {
-                    if (value.subPip !== oldValue.subPip) {
+                    this.pipelineRequiredParams.branch = typeof value.branch === 'string' && value.branch.isBkVar()
+                        ? this.requiredParams[value.branch.extractBkVar()]
+                        : value.branch
+                    if ((value.subPip !== oldValue.subPip) || (value.branch !== oldValue.branch)) {
                         this.atomValue[this.name] = []
                         this.getParametersList()
                         this.initData()
                     }
                 },
-                deep: true
+                deep: true,
+                immediate: true
             },
             subParamsKeyList (newVal) {
                 if (newVal) {
@@ -129,17 +175,21 @@
                 if (!Array.isArray(values)) values = JSON.parse(values)
 
                 this.parameters = values.map(i => {
+                    const type = this.typeMap.get(i.key)?.type
                     return {
                         ...i,
-                        type: this.typeMap.get(i.key).type || 'text',
-                        value: isObject(i.value) ? JSON.stringify(i.value) : i.value
+                        type: type || i.key || 'text',
+                        value: isObject(i.value) ? JSON.stringify(i.value) : i.value,
+                        hasKey: !!type,
+                        disabled: !type && i.key
                     }
                 })
             },
             addParam () {
                 this.parameters.push({
                     key: '',
-                    value: ''
+                    value: '',
+                    hasKey: true
                 })
             },
             cutParam (index) {
@@ -185,11 +235,13 @@
 
                 const urlQuery = this.param.urlQuery || {}
                 Object.keys(urlQuery).forEach((key, index) => {
-                    const value = typeof this.paramValues[key] === 'undefined' ? urlQuery[key] : this.paramValues[key]
+                    const value = typeof this.paramValues[key] === 'undefined'
+                        ? urlQuery[key]
+                        : this.pipelineRequiredParams[key] ?? this.paramValues[key]
                     url += `${index <= 0 ? '?' : '&'}${key}=${value}`
                 })
                 const pipelineInfoQuery = this.param.pipelineInfoQuery || {}
-                Object.keys(pipelineInfoQuery).forEach(key => {
+                this.pipelineInfo && Object.keys(pipelineInfoQuery).forEach(key => {
                     const value = typeof this.pipelineInfo[key] === 'undefined' ? pipelineInfoQuery[key] : this.pipelineInfo[key]
                     Object.keys(urlQuery).length ? url += `&${key}=${value}` : url += `?${key}=${value}`
                 })
@@ -226,6 +278,7 @@
         margin-bottom: 10px;
         display: flex;
         align-items: center;
+      
         .input-com {
             flex: 1;
         }
@@ -237,6 +290,14 @@
             font-size: 14px;
             margin-left: 5px;
             cursor: pointer;
+        }
+    }
+</style>
+
+<style lang="scss">
+  .param-not-key-input {
+        .bk-form-input {
+            text-decoration: line-through !important;
         }
     }
 </style>

@@ -1,6 +1,8 @@
 <template>
     <main class="pipeline-list-main">
-        <pipeline-problem-tips />
+        <pipeline-problem-tips
+            :update-table-height="updateTableHeight"
+        />
         <div
             class="recycle-bin-header"
             v-if="isDeleteView"
@@ -228,7 +230,6 @@
             :pipeline-list="pipelineActionState.activePipelineList"
             @done="refresh"
             @cancel="closeArchiveDialog"
-            @updatePipelineData="updatePipelineData"
         />
         <delete-archived-dialog
             :is-show-delete-archived-dialog="pipelineActionState.isShowDeleteArchivedDialog"
@@ -538,9 +539,6 @@
                 this.filters = {
                     filterByPipelineName
                 }
-            },
-            updatePipelineData (pipelines) {
-                this.$refs.pipelineBox?.updatePipelineData(pipelines)
             }
         }
     }

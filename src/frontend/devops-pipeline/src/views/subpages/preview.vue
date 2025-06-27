@@ -828,5 +828,8 @@ $header-height: 36px;
             }
         }
     }
+    .pipeline-optional-model {
+        height: calc(100vh - 160px) !important;
+    }
 }
 </style>

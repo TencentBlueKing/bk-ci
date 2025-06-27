@@ -12,6 +12,7 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
+import com.tencent.devops.auth.dao.AuthResourceSyncDao
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
@@ -45,6 +46,7 @@ class RbacPermissionResourceMemberService(
     private val authResourceGroupMemberDao: AuthResourceGroupMemberDao,
     private val dslContext: DSLContext,
     private val deptService: DeptService,
+    private val authResourceSyncDao: AuthResourceSyncDao,
     private val traceEventDispatcher: TraceEventDispatcher
 ) : PermissionResourceMemberService {
     override fun getResourceGroupMembers(
@@ -88,26 +90,29 @@ class RbacPermissionResourceMemberService(
         resourceType: String,
         resourceCode: String
     ): List<BkAuthGroupAndUserList> {
-        val groupId2Members = authResourceGroupMemberDao.listResourceGroupMember(
+        // 已经同步过的项目（启用中的项目），直接从数据库查询，否则调iam接口查询
+        val isSync = authResourceSyncDao.get(dslContext, projectCode) != null
+        val resourceGroups = authResourceGroupDao.listByResourceCode(
             dslContext = dslContext,
             projectCode = projectCode,
             resourceType = resourceType,
-            resourceCode = resourceCode,
-            minExpiredTime = LocalDateTime.now()
-        ).groupBy { it.iamGroupId }
-        val resourceGroupInfos = authResourceGroupDao.listByRelationId(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            iamGroupIds = groupId2Members.keys.map { it.toString() }
+            resourceCode = resourceCode
         )
-        val result = mutableListOf<BkAuthGroupAndUserList>()
+        return if (isSync) {
+            val groupId2Members = authResourceGroupMemberDao.listResourceGroupMember(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                minExpiredTime = LocalDateTime.now()
+            ).groupBy { it.iamGroupId }
 
-        groupId2Members.forEach { (groupId, members) ->
-            val userMembers = members.filter { it.memberType == MemberType.USER.type }
-            val deptMembers = members.filter { it.memberType == MemberType.DEPARTMENT.type }
-            val groupName = resourceGroupInfos.firstOrNull { it.relationId.toInt() == groupId }?.groupName
-                ?: return@forEach
-            result.add(
+            resourceGroups.map { groupInfo ->
+                val groupId = groupInfo.relationId.toInt()
+                val groupName = groupInfo.groupName
+                val members = groupId2Members[groupId] ?: emptyList()
+                val userMembers = members.filter { it.memberType == MemberType.USER.type }
+                val deptMembers = members.filter { it.memberType == MemberType.DEPARTMENT.type }
                 BkAuthGroupAndUserList(
                     displayName = groupName,
                     roleId = groupId,
@@ -118,12 +123,17 @@ class RbacPermissionResourceMemberService(
                             id = deptInfo.memberId
                             name = deptInfo.memberName
                         }
-                    },
-                    type = ""
+                    }
                 )
-            )
+            }
+        } else {
+            resourceGroups.map {
+                getMembersUnderGroupByIam(
+                    groupId = it.relationId.toInt(),
+                    groupName = it.groupName
+                )
+            }
         }
-        return result
     }
 
     override fun getProjectMemberCount(projectCode: String): ResourceMemberCountVO {
@@ -497,12 +507,15 @@ class RbacPermissionResourceMemberService(
         }
     }
 
-    private fun getUsersUnderGroup(groupInfo: V2ManagerRoleGroupInfo): BkAuthGroupAndUserList {
+    private fun getMembersUnderGroupByIam(
+        groupId: Int,
+        groupName: String
+    ): BkAuthGroupAndUserList {
         val pageInfoDTO = V2PageInfoDTO().apply {
             pageSize = 1000
             page = 1
         }
-        val groupMemberInfoList = iamV2ManagerService.getRoleGroupMemberV2(groupInfo.id, pageInfoDTO).results
+        val groupMemberInfoList = iamV2ManagerService.getRoleGroupMemberV2(groupId, pageInfoDTO).results
 
         val nowTimestamp = System.currentTimeMillis() / 1000
         val (members, deptInfoList) = groupMemberInfoList
@@ -510,17 +523,16 @@ class RbacPermissionResourceMemberService(
             .partition { it.type == MemberType.USER.type }
 
         return BkAuthGroupAndUserList(
-            displayName = groupInfo.name,
-            roleId = groupInfo.id,
-            roleName = groupInfo.name,
+            displayName = groupName,
+            roleId = groupId,
+            roleName = groupName,
             userIdList = members.map { it.id },
             deptInfoList = deptInfoList.map { memberInfo ->
                 RoleGroupMemberInfo().apply {
                     id = memberInfo.id
                     name = memberInfo.name
                 }
-            },
-            type = ""
+            }
         )
     }
 
