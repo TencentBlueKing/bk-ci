@@ -172,7 +172,7 @@ class SubPipelineStartUpService @Autowired constructor(
         val watcher = Watcher("subPipeline start up")
         try {
             watcher.start("start check circular dependency")
-            if (subPipelineResource != null &&
+            if (subPipelineResource == null &&
                     subPipelineRefService.exists(
                         projectId = projectId,
                         pipelineId = parentPipelineId,
