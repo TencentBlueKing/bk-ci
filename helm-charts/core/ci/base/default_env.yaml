@@ -56,3 +56,5 @@ bkCiBuildDataClearSwitch: false
 bkCiOpenapiApiAuth: false
 bkCiMqDefaultBinder: core-rabbit
 bkTenantEnabled: false
+bkApigwUserUrl: http://bkapi.example.com
+bkApigwCmsiUrl: http://bkapi.example.com

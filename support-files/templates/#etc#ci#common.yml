@@ -365,6 +365,13 @@ codeoa:
 bk:
   paas:
     host: __BK_PAAS_PRIVATE_URL__
+  apigw:
+    appCode: __BK_CI_APP_CODE__
+    appSecret: __BK_CI_APP_TOKEN__
+    user: 
+      host: __BK_APIGW_USER_URL__
+    cmsi: 
+      host: __BK_APIGW_CMSI_URL__
   enableMultiTenantMode: __BK_TENANT_ENABLED__
 
 bkci:
