@@ -486,17 +486,32 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
         }
         // 判断最近一个版本的状态，如果不是首次发布，则只有处于终态的组件状态才允许添加新的版本
         checkAddVersionCondition(dbVersion = dbVersion, releaseType = releaseType, dbStatus = dbStatus, name = name)
-        // 判断版本号是否存在
-        val versionExists = storeBaseQueryDao.getComponentId(dslContext, storeCode, version, storeType) != null
-        if (versionExists) {
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_EXIST, params = arrayOf(version)
-            )
+        // 版本存在性校验
+        when {
+            releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE -> {
+                if (version != dbVersion) {
+                    throw ErrorCodeException(
+                        errorCode = StoreMessageCode.STORE_VERSION_IS_INVALID, params = arrayOf(version)
+                    )
+                }
+            }
+            releaseType != ReleaseTypeEnum.NEW -> {
+                val versionExists = storeBaseQueryDao.getComponentId(
+                    dslContext = dslContext,
+                    storeCode = storeCode,
+                    version = version,
+                    storeType = storeType
+                ) != null
+                if (versionExists) {
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                        params = arrayOf(version)
+                    )
+                }
+            }
         }
-        if (storeType == StoreTypeEnum.DEVX) {
-            // DEVX组件无需执行后续逻辑校验
-            return
-        }
+        // 如果是DEVX类型组件，跳过后续校验
+        if (storeType == StoreTypeEnum.DEVX) return
 
         val dbVersionParts = parseVersion(dbVersion)
         val reqVersionParts = parseVersion(version)
@@ -521,10 +536,6 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
                             storeType = storeType,
                             version = version
                         )
-            }
-
-            ReleaseTypeEnum.CANCEL_RE_RELEASE -> {
-                version == dbVersion
             }
 
             ReleaseTypeEnum.HIS_VERSION_UPGRADE -> {

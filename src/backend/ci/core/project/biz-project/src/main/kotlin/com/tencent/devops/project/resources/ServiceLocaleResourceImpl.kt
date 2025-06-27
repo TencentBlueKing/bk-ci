@@ -42,4 +42,8 @@ class ServiceLocaleResourceImpl @Autowired constructor(
     override fun getUserLocale(userId: String): Result<LocaleInfo> {
         return Result(userLocaleService.getUserLocale(userId))
     }
+
+    override fun updateUserLocale(userId: String, localeInfo: LocaleInfo): Result<Boolean> {
+        return Result(userLocaleService.updateUserLocale(userId, localeInfo.language))
+    }
 }
