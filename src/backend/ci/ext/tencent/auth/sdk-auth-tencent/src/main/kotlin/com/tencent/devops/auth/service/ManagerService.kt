@@ -174,38 +174,20 @@ class ManagerService @Autowired constructor(
             PROJECTS_OF_SIGNATURE_PRE_PROCESSING
         )?.split(",") ?: emptyList()
 
-        if (preProcessProjects.isNotEmpty()) {
-            if (preProcessProjects.contains(projectId)) {
-                val cache = redisOperation.get(USER_SIGNATURE_STATUS_CHECK.plus(userId))
-                val isUserSigned = cache?.toBoolean() ?: (
-                    client.get(ServiceSignatureManageResource::class)
-                        .getSignatureStatus(
-                            projectId = projectId,
-                            userId = userId
-                        ).data?.signed ?: false)
-
-                if (!isUserSigned) {
-                    logger.warn(
-                        "Pre-process-the user cannot access the project " +
-                            "because the contract has not been signed.$projectId|$userId"
-                    )
-                }else{
-                    logger.info("Pre-process-The user has signed the contract.$projectId|$userId")
-                }
+        if (preProcessProjects.isNotEmpty() && preProcessProjects.contains(projectId)) {
+            if (!isUserSigned(projectId, userId)) {
+                logger.warn(
+                    "Pre-process-the user cannot access the project " +
+                        "because the contract has not been signed.$projectId|$userId"
+                )
+            } else {
+                logger.info("Pre-process-The user has signed the contract.$projectId|$userId")
             }
         } else {
             val projectsOfSignature = redisOperation.get(PROJECTS_OF_SIGNATURE)?.split(",") ?: emptyList()
             // 未签署保密合同的用户不允许访问
             if (projectsOfSignature.contains(projectId)) {
-                val cache = redisOperation.get(USER_SIGNATURE_STATUS_CHECK.plus(userId))
-                val isUserSigned = cache?.toBoolean() ?: (
-                    client.get(ServiceSignatureManageResource::class)
-                        .getSignatureStatus(
-                            projectId = projectId,
-                            userId = userId
-                        ).data?.signed ?: false)
-
-                if (!isUserSigned) {
+                if (!isUserSigned(projectId, userId)) {
                     logger.warn(
                         "The user cannot access the project because the contract has not been signed.$projectId|$userId"
                     )
@@ -216,6 +198,19 @@ class ManagerService @Autowired constructor(
                 }
             }
         }
+    }
+
+    private fun isUserSigned(
+        projectId: String,
+        userId: String
+    ): Boolean {
+        val cache = redisOperation.get(USER_SIGNATURE_STATUS_CHECK.plus(userId))
+        return cache?.toBoolean() ?: (
+            client.get(ServiceSignatureManageResource::class)
+                .getSignatureStatus(
+                    projectId = projectId,
+                    userId = userId
+                ).data?.signed ?: false)
     }
 
     companion object {
