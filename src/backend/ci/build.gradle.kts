@@ -1,9 +1,8 @@
-import java.net.URI
-
 plugins {
     id("com.tencent.devops.boot") version "1.0.0"
     detektCheck
-    `task-license-report` // 检查License合规
+    nexusPublishing
+    licenseReport // 检查License合规
 }
 
 allprojects {
@@ -25,8 +24,8 @@ allprojects {
 
     // 新增maven 仓库
     repositories {
-        add(maven { url = URI("https://repo.jenkins-ci.org/releases") })
-        add(maven { url = URI("https://bkrepo.woa.com/maven/bkrepo/maven-local/") })
+        add(maven { url = uri("https://repo.jenkins-ci.org/releases") })
+        add(maven { url = uri("https://bkrepo.woa.com/maven/bkrepo/maven-local/") })
     }
 
     // 版本管理

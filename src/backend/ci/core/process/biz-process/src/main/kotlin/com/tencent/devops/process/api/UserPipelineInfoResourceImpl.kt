@@ -74,14 +74,16 @@ class UserPipelineInfoResourceImpl @Autowired constructor(
     override fun searchByName(
         userId: String,
         projectId: String,
-        pipelineName: String?
+        pipelineName: String?,
+        archiveFlag: Boolean?
     ): Result<List<PipelineIdAndName>> {
         checkParam(userId, projectId)
         val pipelineInfos = pipelineListFacadeService.searchIdAndName(
             projectId = projectId,
             pipelineName = pipelineName,
             page = null,
-            pageSize = null
+            pageSize = null,
+            archiveFlag = archiveFlag
         )
         return Result(pipelineInfos)
     }
@@ -98,8 +100,20 @@ class UserPipelineInfoResourceImpl @Autowired constructor(
     }
 
     @AuditEntry(actionId = ActionId.PIPELINE_VIEW)
-    override fun getPipelineInfo(userId: String, projectId: String, pipelineId: String): Result<PipelineDetailInfo?> {
-        return Result(pipelineListFacadeService.getPipelineDetail(userId, projectId, pipelineId))
+    override fun getPipelineInfo(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        archiveFlag: Boolean?
+    ): Result<PipelineDetailInfo?> {
+        return Result(
+            pipelineListFacadeService.getPipelineDetail(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                archiveFlag = archiveFlag
+            )
+        )
     }
 
     fun checkParam(userId: String, projectId: String) {
