@@ -139,7 +139,7 @@ class UserNodeResourceImpl @Autowired constructor(
         latestBuildTimeEnd: Long?,
         sortType: String?,
         collation: String?,
-        data: NodeFetchReq
+        data: NodeFetchReq?
     ): Result<Page<NodeWithPermission>> {
         return Result(
             nodeService.listNew(
@@ -183,7 +183,7 @@ class UserNodeResourceImpl @Autowired constructor(
         latestBuildTimeEnd: Long?,
         sortType: String?,
         collation: String?,
-        data: NodeFetchReq,
+        data: NodeFetchReq?,
         response: HttpServletResponse
     ) {
         nodeService.listNewExport(

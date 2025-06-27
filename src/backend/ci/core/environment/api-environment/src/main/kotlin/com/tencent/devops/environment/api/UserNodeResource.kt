@@ -213,7 +213,7 @@ interface UserNodeResource {
         @Parameter(description = "正序ASC/倒序DESC (默认倒序)", required = false)
         @QueryParam("collation")
         collation: String?,
-        data: NodeFetchReq
+        data: NodeFetchReq?
     ): Result<Page<NodeWithPermission>>
 
     @Operation(summary = "导出节点管理列表相关信息csv文件")
@@ -268,7 +268,7 @@ interface UserNodeResource {
         @Parameter(description = "正序ASC/倒序DESC (默认倒序)", required = false)
         @QueryParam("collation")
         collation: String?,
-        data: NodeFetchReq,
+        data: NodeFetchReq?,
         @Context
         response: HttpServletResponse
     )

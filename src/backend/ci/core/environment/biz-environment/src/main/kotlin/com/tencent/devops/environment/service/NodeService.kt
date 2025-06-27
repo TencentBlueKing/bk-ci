@@ -209,7 +209,7 @@ class NodeService @Autowired constructor(
             null
         } else {
             val t = mutableSetOf<Long>()
-            data.tags?.forEach { tag ->
+            data?.tags?.forEach { tag ->
                 t.addAll(tag.tagValues ?: return@forEach)
             }
             t
@@ -318,7 +318,7 @@ class NodeService @Autowired constructor(
         latestBuildTimeEnd: Long?,
         sortType: String?,
         collation: String?,
-        data: NodeFetchReq,
+        data: NodeFetchReq?,
         response: HttpServletResponse
     ) {
         var page = 1
