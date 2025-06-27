@@ -110,6 +110,7 @@ object EnvironmentMessageCode {
     const val ERROR_NODE_TAG_HAS_NODE = "2105060" // 环境管理: 当前标签还存在标记的节点
     const val ERROR_NODE_TAG_ONLY_SUP_THIRD = "2105061" // 环境管理: 标签功能仅支持第三方构建机
     const val ERROR_NODE_TAG_NO_ALLOW_VALUES = "2105062" // 环境管理: 标签[{0}]不支持一个节点添加多个值
+    const val ERROR_NODE_TAG_NO_EDIT_PERMISSSION = "2105063" // 环境管理：没有标签编辑权限
 
     const val BK_NORMAL_VERSION = "bkNormalVersion" // 8核16G（普通版）
     const val BK_INTEL_XEON_SKYLAKE_PROCESSOR = "bkIntelXeonSkylakeProcessor" // 2.5GHz 64核 Intel Xeon Skylake 6133处理器

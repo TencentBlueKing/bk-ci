@@ -97,6 +97,12 @@ object ActionAuditContent {
     const val ENV_NODE_LIST_CONTENT = "list environment node $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val ENV_NODE_USE_CONTENT = "use environment node $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
 
+    // 环境节点标签
+    const val ENV_NODE_TAG_CREATE_CONTENT = "create environment tag $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val ENV_NODE_TAG_EDIT_CONTENT = "edit environment tag $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val ENV_NODE_TAG_DELETE_CONTENT = "delete environment tag $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val ENV_NODE_TAG_UPDATE_CONTENT = "update environment tag $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+
     // 质量红线
     const val RULE_CREATE_CONTENT = "create rule $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val RULE_DELETE_CONTENT = "delete rule $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"

@@ -20,6 +20,7 @@ class UserNodeTagResourceImpl @Autowired constructor(
         data: NodeTagReq
     ): Result<Boolean> {
         nodeTagService.createTag(
+            userId = userId,
             projectId = projectId,
             tagKey = data.tagKeyName,
             tagValues = data.tagValues,
@@ -40,7 +41,7 @@ class UserNodeTagResourceImpl @Autowired constructor(
         projectId: String,
         data: UpdateNodeTag
     ): Result<Boolean> {
-        nodeTagService.addNodeTag(projectId, data)
+        nodeTagService.addNodeTag(userId = userId, projectId = projectId, data = data)
         return Result(true)
     }
 
@@ -50,7 +51,7 @@ class UserNodeTagResourceImpl @Autowired constructor(
         tagKeyId: Long,
         tagValueId: Long?
     ): Result<Boolean> {
-        nodeTagService.deleteTag(projectId = projectId, tagKey = tagKeyId, tagValueId = tagValueId)
+        nodeTagService.deleteTag(userId = userId, projectId = projectId, tagKey = tagKeyId, tagValueId = tagValueId)
         return Result(true)
     }
 
@@ -62,6 +63,7 @@ class UserNodeTagResourceImpl @Autowired constructor(
         data: UpdateTagReq
     ): Result<Boolean> {
         nodeTagService.updateTag(
+            userId = userId,
             projectId = projectId,
             tagKey = tagKeyId,
             tagValueId = tagValueId,
