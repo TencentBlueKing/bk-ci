@@ -153,10 +153,10 @@ import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.UriBuilder
-import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 /**
  *
@@ -1732,17 +1732,43 @@ class PipelineBuildFacadeService(
         endBeginTime: String?,
         checkPermission: Boolean
     ): List<BuildHistory> {
-        val buildHistories = pipelineRuntimeService.getBuildHistoryByIds(
+        return pipelineRuntimeService.getBuildHistoryByIds(
             buildIds = buildIdSet,
             startBeginTime = startBeginTime,
             endBeginTime = endBeginTime,
             projectId = projectId
         )
+    }
 
-        if (buildHistories.isEmpty()) {
-            return emptyList()
+    fun batchGetBuildStatus(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildIdSet: Set<String>,
+        channelCode: ChannelCode,
+        startBeginTime: String?,
+        endBeginTime: String?,
+        checkPermission: Boolean
+    ): List<BuildHistory> {
+        if (checkPermission) {
+            pipelinePermissionService.validPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW,
+                message = MessageUtil.getMessageByLocale(
+                    ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_BUILD_STATUS))
+                )
+            )
         }
-        return buildHistories
+        return pipelineRuntimeService.getBuildHistoryByIds(
+            buildIds = buildIdSet,
+            startBeginTime = startBeginTime,
+            endBeginTime = endBeginTime,
+            projectId = projectId
+        )
     }
 
     fun getBuilds(

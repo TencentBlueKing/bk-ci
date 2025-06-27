@@ -221,7 +221,8 @@ const routes = [
                                     name: to.name,
                                     params: Object.assign(to.params, {
                                         type: 'history'
-                                    })
+                                    }),
+                                    query: to.query
                                 })
                             } else {
                                 next(true)
