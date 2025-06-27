@@ -28,6 +28,7 @@
 package com.tencent.devops.process.trigger.scm.converter
 
 import com.tencent.devops.process.pojo.trigger.WebhookChangeFiles
+import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.pojo.YamlFileActionType
 import com.tencent.devops.scm.api.pojo.Change
 
@@ -61,6 +62,8 @@ object WebhookConverterUtils {
                 }
             }
         }
+        // 文件移出.ci目录也算删除
+        deletedFiles.addAll(getRemovedCiFiles(renamedOldFiles))
         return WebhookChangeFiles(
             allFiles = allFiles,
             addedFiles = addedFiles,
@@ -81,5 +84,15 @@ object WebhookConverterUtils {
                 else -> YamlFileActionType.TRIGGER
             }
         }
+    }
+
+    /**
+     * 获取[重命名]场景下移出.ci目录的yaml文件
+     */
+    private fun getRemovedCiFiles(renamedOldFiles: Map<String, String>): List<String> {
+        return renamedOldFiles.filter { (oldFile, newFile) ->
+            GitActionCommon.isCiFile(oldFile) &&
+                    !GitActionCommon.isCiFile(newFile)
+        }.map { it.key }
     }
 }
