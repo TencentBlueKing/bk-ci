@@ -46,3 +46,19 @@ data class NodeTagAddOrDeleteTagItem(
     @get:Schema(title = "节点标签值列表")
     val tagValueId: Long
 )
+
+@Schema(title = "创建节点标签请求")
+data class NodeTagReq(
+    @get:Schema(title = "节点标签名")
+    val tagKeyName: String,
+    @get:Schema(title = "当前节点标签是否支持一个节点多个标签值")
+    val tagAllowMulValue: Boolean?,
+    @get:Schema(title = "节点标签值")
+    val tagValues: List<String>
+)
+
+@Schema(title = "修改节点标签请求")
+data class UpdateTagReq(
+    @get:Schema(title = "被修改的名称")
+    val name: String?
+)
