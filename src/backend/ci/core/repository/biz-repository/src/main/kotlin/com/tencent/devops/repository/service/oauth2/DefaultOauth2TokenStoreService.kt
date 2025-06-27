@@ -28,8 +28,10 @@
 package com.tencent.devops.repository.service.oauth2
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.security.util.BkCryptoUtil
+import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.dao.RepositoryScmTokenDao
 import com.tencent.devops.repository.pojo.enums.TokenAppTypeEnum
 import com.tencent.devops.repository.pojo.oauth.OauthTokenInfo
@@ -83,7 +85,8 @@ class DefaultOauth2TokenStoreService(
                 appType = TokenAppTypeEnum.OAUTH2.name,
                 accessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, accessToken),
                 refreshToken = refreshToken?.let { BkCryptoUtil.encryptSm4ButAes(aesKey, it) } ?: "",
-                expiresIn = expiresIn ?: 0L
+                expiresIn = expiresIn ?: 0L,
+                operator = operator ?: userId
             )
             repositoryScmTokenDao.saveAccessToken(
                 dslContext = dslContext,
@@ -92,11 +95,37 @@ class DefaultOauth2TokenStoreService(
         }
     }
 
-    override fun delete(userId: String, scmCode: String) {
+    override fun delete(userId: String, scmCode: String, username: String) {
+        get(username, scmCode)?.let {
+            // 非OAUTH授权代持人不得删除
+            if (it.operator != userId) {
+                throw ErrorCodeException(
+                    errorCode = RepositoryMessageCode.ERROR_NOT_OAUTH_PROXY_FORBIDDEN_DELETE
+                )
+            }
+        }
         repositoryScmTokenDao.delete(
             dslContext = dslContext,
-            userId = userId,
+            userId = username,
             scmCode = scmCode
         )
+    }
+
+    override fun list(userId: String, scmCode: String): List<OauthTokenInfo> {
+        return repositoryScmTokenDao.list(
+            dslContext = dslContext,
+            scmCode = scmCode,
+            operator = userId
+        ).map {
+            OauthTokenInfo(
+                accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.accessToken),
+                tokenType = it.appType,
+                expiresIn = it.expiresIn,
+                refreshToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.refreshToken),
+                createTime = it.createTime.timestampmilli(),
+                userId = it.userId,
+                operator = it.operator
+            )
+        }
     }
 }
