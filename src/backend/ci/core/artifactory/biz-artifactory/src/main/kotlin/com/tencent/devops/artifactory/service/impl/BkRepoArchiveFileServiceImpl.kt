@@ -261,6 +261,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             repoNames = listOf(REPO_NAME_PIPELINE, REPO_NAME_CUSTOM, REPO_NAME_IMAGE),
             fileNames = listOf(),
             metadata = searchProps.props,
+            qualityMetadata = searchProps.qualityMetadata.map { Pair(it.key, it.value) },
             page = page ?: 1,
             pageSize = pageSize ?: DEFAULT_PAGE_SIZE
         ).records

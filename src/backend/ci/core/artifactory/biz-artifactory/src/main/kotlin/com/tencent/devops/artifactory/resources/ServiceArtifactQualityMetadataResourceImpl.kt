@@ -25,16 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo
+package com.tencent.devops.artifactory.resources
 
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.artifactory.api.service.ServiceArtifactQualityMetadataResource
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.bkrepo.repository.pojo.metadata.label.MetadataLabelDetail
+import com.tencent.devops.common.web.RestResource
 
-@Schema(title = "版本仓库-搜索元数据")
-data class SearchProps(
-    @get:Schema(title = "匹配文件列表(支持模糊匹配)", required = true)
-    val fileNames: List<String>?,
-    @get:Schema(title = "元数据列表", required = true)
-    val props: Map<String, String>,
-    @get:Schema(title = "查询元数据", required = false)
-    val qualityMetadata: List<Property> = emptyList()
-)
+@RestResource
+class ServiceArtifactQualityMetadataResourceImpl(
+    private val bkRepoClient: BkRepoClient
+) : ServiceArtifactQualityMetadataResource {
+    override fun list(
+        userId: String,
+        projectId: String
+    ): Result<List<MetadataLabelDetail>> {
+        return Result(bkRepoClient.listArtifactQualityMetadataLabels(userId, projectId))
+    }
+}
