@@ -66,6 +66,7 @@ import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.dao.NodeTagDao
 import com.tencent.devops.environment.dao.slave.SlaveGatewayDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
@@ -105,7 +106,8 @@ class NodeService @Autowired constructor(
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val slaveGatewayService: SlaveGatewayService,
     private val environmentPermissionService: EnvironmentPermissionService,
-    private val slaveGatewayDao: SlaveGatewayDao
+    private val slaveGatewayDao: SlaveGatewayDao,
+    private val nodeTagDao: NodeTagDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(NodeService::class.java)
@@ -427,6 +429,11 @@ class NodeService @Autowired constructor(
         } else {
             emptyMap()
         }
+        val tagMaps = if (thirdPartyAgentNodeIds.isNotEmpty()) {
+            nodeTagDao.fetchNodesTags(dslContext, projectId, thirdPartyAgentNodeIds.toSet())
+        } else {
+            emptyMap()
+        }
 
         val nodeEnvs = envNodeDao.listNodeIds(dslContext, projectId, nodeListResult.map { it.nodeId })
         val envInfos = envDao.listServerEnvByIdsAllType(
@@ -487,7 +494,8 @@ class NodeService @Autowired constructor(
                     ""
                 } else {
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastBuildTime)
-                }
+                },
+                tags = tagMaps[it.nodeId]
             )
         }
     }
