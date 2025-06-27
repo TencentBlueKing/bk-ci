@@ -15,7 +15,6 @@ import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.pipeline.SubPipelineIdAndName
 import com.tencent.devops.process.pojo.pipeline.SubPipelineRef
 import com.tencent.devops.process.engine.service.SubPipelineRefService
-import com.tencent.devops.process.yaml.PipelineYamlService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -30,8 +29,7 @@ import jakarta.ws.rs.core.Response
 class SubPipelineCheckService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val subPipelineRefService: SubPipelineRefService,
-    private val subPipelineTaskService: SubPipelineTaskService,
-    private val pipelineYamlService: PipelineYamlService
+    private val subPipelineTaskService: SubPipelineTaskService
 ) {
 
     /**
@@ -179,12 +177,7 @@ class SubPipelineCheckService @Autowired constructor(
         val errorDetails = mutableSetOf<String>()
         val rootPipelineKey = "$projectId|$pipelineId"
         subPipelineElementMap.filter {
-            // 分支版本子流水线不校验递归引用
-            checkBranchVersion(
-                projectId = it.key.projectId,
-                pipelineId = it.key.pipelineId,
-                branch = it.key.branch
-            )
+            it.key.branch.isNullOrBlank()
         }.forEach { (subPipeline, elements) ->
             val subProjectId = subPipeline.projectId
             val subPipelineId = subPipeline.pipelineId
@@ -312,6 +305,40 @@ class SubPipelineCheckService @Autowired constructor(
         }
     }
 
+    fun batchCheckBranchVersion(
+        projectId: String,
+        pipelineId: String,
+        subPipelineElementMap: Map<SubPipelineIdAndName, MutableList<ElementHolder>>
+    ): Set<String> {
+        val errorDetails = mutableSetOf<String>()
+        subPipelineElementMap.filter {
+            !it.key.branch.isNullOrBlank()
+        }.forEach { (subPipeline, _) ->
+            val subProjectId = subPipeline.projectId
+            val subPipelineId = subPipeline.pipelineId
+            val subPipelineBranch = subPipeline.branch!!
+            val subPipelineName = subPipeline.pipelineName
+            val branchVersionResource = checkBranchVersion(
+                projectId = subProjectId,
+                pipelineId = subPipelineId,
+                branch = subPipelineBranch
+            )
+            if (branchVersionResource == null) {
+                errorDetails.add(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH,
+                        params = arrayOf(
+                            "/console/pipeline/$projectId/$pipelineId",
+                            subPipelineName,
+                            subPipelineBranch
+                        )
+                    )
+                )
+            }
+        }
+        return errorDetails
+    }
+
     private fun pipelineEditUrl(projectId: String, pipelineId: String) =
         "/console/pipeline/$projectId/$pipelineId/edit"
 
@@ -376,13 +403,12 @@ class SubPipelineCheckService @Autowired constructor(
     private fun checkBranchVersion(
         projectId: String,
         pipelineId: String,
-        branch: String?
-    ) = if (!branch.isNullOrBlank()) {
-        subPipelineTaskService.getBranchVersionResource(projectId, pipelineId, branch)
-        false
-    } else {
-        true
-    }
+        branch: String
+    ) = subPipelineTaskService.getBranchVersionResource(
+        projectId = projectId,
+        pipelineId = pipelineId,
+        branchName = branch
+    )
 
     companion object {
         private val logger = LoggerFactory.getLogger(SubPipelineCheckService::class.java)

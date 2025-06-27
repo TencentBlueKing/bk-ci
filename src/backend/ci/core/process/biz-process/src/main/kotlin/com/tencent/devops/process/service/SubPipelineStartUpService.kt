@@ -47,7 +47,6 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SUB_PIPELINE_NOT_ALLOWED_CIRCULAR_CALL
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
@@ -421,7 +420,8 @@ class SubPipelineStartUpService @Autowired constructor(
         val existModel = pipelineResource?.model ?: pipelineRepositoryService.getPipelineResourceVersion(
             projectId, pipelineId, pipeline.version
         )?.model ?: return
-
+        // 子流水线的启动参数
+        val triggerParams = pipelineRepositoryService.getTriggerParams(existModel)
         val currentExistPipelines = HashSet(existPipelines)
         existModel.stages.forEachIndexed stage@{ index, stage ->
             if (index == 0) {
@@ -446,7 +446,11 @@ class SubPipelineStartUpService @Autowired constructor(
                         }
                         val msg = map["input"] as? Map<*, *> ?: return@element
                         val subPip = msg["subPip"]?.toString() ?: return@element
-                        val subBranch = msg["branch"]?.toString() ?: return@element
+                        // 分支参数以变量形式输入
+                        val subBranch = EnvUtils.parseEnv(
+                            command = msg["branch"]?.toString() ?: "",
+                            data = triggerParams
+                        )
                         logger.info(
                             "callPipelineStartup|supProjectId:${msg["projectId"]},subPipelineId:$subPip," +
                                     "subElementId:${element.id},subBranch:$subBranch,parentProjectId:$projectId, " +
@@ -566,17 +570,27 @@ class SubPipelineStartUpService @Autowired constructor(
         pipelineId: String,
         branch: String?
     ): PipelineResourceVersion? {
-        return if (branch.isNullOrBlank()) {
-            null
-        } else {
-            pipelineRepositoryService.getBranchVersionResource(
+        return if (!branch.isNullOrBlank()) {
+            val branchVersionResource = pipelineRepositoryService.getBranchVersionResource(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 branchName = branch
-            ) ?: throw ErrorCodeException(
-                errorCode = ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH,
-                params = arrayOf(branch)
             )
+            if (branchVersionResource == null) {
+                val pipelineInfo = getPipelineInfo(projectId, pipelineId)
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH,
+                    params = arrayOf(
+                        "/console/pipeline/$projectId/$pipelineId",
+                        pipelineInfo.pipelineName,
+                        branch
+                    )
+                )
+            } else {
+                branchVersionResource
+            }
+        } else {
+            null
         }
     }
 

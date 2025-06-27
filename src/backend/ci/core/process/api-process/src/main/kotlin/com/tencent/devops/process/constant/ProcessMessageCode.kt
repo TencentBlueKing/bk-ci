@@ -386,7 +386,10 @@ object ProcessMessageCode {
     const val ERROR_MAX_BATCH_GET_BUILD_STATUS_ID_SIZE = "2101282" // 批量获取构建状态buildId数量不能超过{0}
 
     const val ERROR_TASK_REVIEW_NOT_FOUND_OR_NOT_RUNNING = "2101279" // 插件【ID:{0}】不存在或者不是可审核状态
-    const val ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH = "2101278" // 流水线分支版本[{0}]不存在
+    // 流水线[<a href="{0}" target="_blank">{1}</a>]分支版本[{2}]不存在
+    const val ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH = "2101278"
+    // 分支版本不存在异常标题
+    const val ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH_TITLE = "2101283"
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
