@@ -143,7 +143,12 @@ object I18nUtil {
         "zh-mo" to "zh_MO",
         "zh-MO" to "zh_MO",
         "zh-sg" to "zh_SG",
-        "zh-SG" to "zh_SG"
+        "zh-SG" to "zh_SG",
+        "ja_JP" to "ja_JP",
+        "ja-JP" to "ja_JP",
+        "ja-jp" to "ja_JP",
+        "ja" to "ja_JP",
+
     )
 
     /**
