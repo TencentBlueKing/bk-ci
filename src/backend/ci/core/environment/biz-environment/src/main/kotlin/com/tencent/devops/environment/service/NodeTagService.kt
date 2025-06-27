@@ -88,7 +88,12 @@ class NodeTagService @Autowired constructor(
         val records = nodeTagDao.fetchNodeTagByKeyOrValue(
             dslContext = dslContext,
             projectId = projectId,
-            tagKeyId = tagKey,
+            // key 传错误的可能导致未校验成功
+            tagKeyId = if (tagValueId != null) {
+                null
+            } else {
+                tagKey
+            },
             tagValueId = tagValueId
         )
         if (!records.isNullOrEmpty()) {
@@ -106,7 +111,12 @@ class NodeTagService @Autowired constructor(
         val records = nodeTagDao.fetchNodeTagByKeyOrValue(
             dslContext = dslContext,
             projectId = projectId,
-            tagKeyId = tagKey,
+            // key 传错误的可能导致未校验成功
+            tagKeyId = if (tagValueId != null) {
+                null
+            } else {
+                tagKey
+            },
             tagValueId = tagValueId
         )
         if (!records.isNullOrEmpty()) {
