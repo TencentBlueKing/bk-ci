@@ -27,10 +27,12 @@
 
 package com.tencent.devops.remotedev.api.user
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.DEVX_HEADER_CDS_TOKEN
+import com.tencent.devops.common.api.pojo.LocaleInfo
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.ClientTips
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
@@ -52,6 +54,7 @@ import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.PUT
 
 @Tag(name = "USER_WORKSPACE", description = "用户-工作空间,apiType:内网传user，离岸传desktop")
 @Path("/{apiType:user|desktop}/remotedev")
@@ -221,4 +224,24 @@ interface UserRemoteDevResource {
         @QueryParam("projectId")
         projectId: String
     ): Result<List<String>>
+
+    @GET
+    @Path("/users/locale/get")
+    @Operation(summary = "获取用户国际化信息")
+    fun getUserLocale(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String
+    ): Result<LocaleInfo>
+
+    @PUT
+    @Path("/locale/update")
+    @Operation(summary = "更新用户国际化信息")
+    fun updateUserLocale(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "国际化信息", required = true)
+        localeInfo: LocaleInfo
+    ): Result<Boolean>
 }
