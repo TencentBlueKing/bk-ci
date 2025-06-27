@@ -13,10 +13,10 @@ import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
+import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.SubPipelineRef
 import com.tencent.devops.process.pojo.pipeline.SubPipelineTaskParam
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -257,17 +257,6 @@ class SubPipelineTaskService @Autowired constructor(
                 invalidTaskIds.add(it.taskId)
                 return@forEach
             }
-            // 分支版本的流水线插件无需记录
-            val branchName = subPipelineTaskParam.branch
-            if (!branchName.isNullOrBlank()) {
-                // 分支版本不存在则报错
-                getBranchVersionResource(
-                    projectId = subPipelineTaskParam.projectId,
-                    pipelineId = subPipelineTaskParam.pipelineId,
-                    branchName = branchName
-                )
-                return@forEach
-            }
             validRefList.add(
                 SubPipelineRef(
                     projectId = it.projectId,
@@ -370,14 +359,13 @@ class SubPipelineTaskService @Autowired constructor(
     fun getBranchVersionResource(
         projectId: String,
         pipelineId: String,
-        branchName: String
-    ) = pipelineRepositoryService.getBranchVersionResource(
+        pipelineName: String,
+        branchName: String?
+    ) = pipelineRepositoryService.checkBranchVersionResource(
         projectId = projectId,
         pipelineId = pipelineId,
+        pipelineName = pipelineName,
         branchName = branchName
-    ) ?: throw ErrorCodeException(
-        errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH,
-        params = arrayOf(branchName)
     )
 
     companion object {

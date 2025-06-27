@@ -15,7 +15,6 @@ import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.pipeline.SubPipelineIdAndName
 import com.tencent.devops.process.pojo.pipeline.SubPipelineRef
 import com.tencent.devops.process.engine.service.SubPipelineRefService
-import com.tencent.devops.process.yaml.PipelineYamlService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -30,8 +29,7 @@ import jakarta.ws.rs.core.Response
 class SubPipelineCheckService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val subPipelineRefService: SubPipelineRefService,
-    private val subPipelineTaskService: SubPipelineTaskService,
-    private val pipelineYamlService: PipelineYamlService
+    private val subPipelineTaskService: SubPipelineTaskService
 ) {
 
     /**
@@ -183,6 +181,7 @@ class SubPipelineCheckService @Autowired constructor(
             checkBranchVersion(
                 projectId = it.key.projectId,
                 pipelineId = it.key.pipelineId,
+                pipelineName = it.key.pipelineName,
                 branch = it.key.branch
             )
         }.forEach { (subPipeline, elements) ->
@@ -376,9 +375,10 @@ class SubPipelineCheckService @Autowired constructor(
     private fun checkBranchVersion(
         projectId: String,
         pipelineId: String,
+        pipelineName: String,
         branch: String?
     ) = if (!branch.isNullOrBlank()) {
-        subPipelineTaskService.getBranchVersionResource(projectId, pipelineId, branch)
+        subPipelineTaskService.getBranchVersionResource(projectId, pipelineId, pipelineName, branch)
         false
     } else {
         true

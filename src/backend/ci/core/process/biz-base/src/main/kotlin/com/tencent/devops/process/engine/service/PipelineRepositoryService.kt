@@ -2418,4 +2418,31 @@ class PipelineRepositoryService constructor(
         // 填充前缀
         return PipelineVarUtil.fillVariableMap(startParams)
     }
+
+    fun checkBranchVersionResource(
+        projectId: String,
+        pipelineId: String,
+        pipelineName: String,
+        branchName: String?
+    ) = if (!branchName.isNullOrBlank()) {
+        val branchVersionResource = getBranchVersionResource(projectId, pipelineId, branchName)
+        if (branchVersionResource == null) {
+            val finalPipelineName = pipelineName.ifBlank {
+                getPipelineInfo(projectId, pipelineId)?.pipelineName ?: throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
+                )
+            }
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH,
+                params = arrayOf(
+                    "/console/pipeline/$projectId/$pipelineId",
+                    finalPipelineName,
+                    branchName
+                )
+            )
+        }
+        branchVersionResource
+    } else {
+        null
+    }
 }

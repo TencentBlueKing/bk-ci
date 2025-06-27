@@ -47,7 +47,6 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SUB_PIPELINE_NOT_ALLOWED_CIRCULAR_CALL
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
@@ -570,20 +569,12 @@ class SubPipelineStartUpService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         branch: String?
-    ): PipelineResourceVersion? {
-        return if (branch.isNullOrBlank()) {
-            null
-        } else {
-            pipelineRepositoryService.getBranchVersionResource(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                branchName = branch
-            ) ?: throw ErrorCodeException(
-                errorCode = ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH,
-                params = arrayOf(branch)
-            )
-        }
-    }
+    ) = pipelineRepositoryService.checkBranchVersionResource(
+        projectId = projectId,
+        pipelineId = pipelineId,
+        pipelineName = "",
+        branchName = branch
+    )
 
     private fun getPipelineInfo(projectId: String, pipelineId: String) = pipelineRepositoryService.getPipelineInfo(
         projectId = projectId,
