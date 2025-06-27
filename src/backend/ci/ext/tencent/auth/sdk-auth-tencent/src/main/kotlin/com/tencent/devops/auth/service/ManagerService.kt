@@ -39,6 +39,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.api.service.service.ServiceSignatureManageResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
@@ -62,6 +63,11 @@ class ManagerService @Autowired constructor(
         .maximumSize(50000)
         .expireAfterWrite(60, TimeUnit.MINUTES)
         .build<String/*userId*/, ProjectOrgInfo?>()
+
+    private val user2ESignStatus = CacheBuilder.newBuilder()
+        .maximumSize(50000)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build<String/*userId*/, Boolean>()
 
     @Suppress("CyclomaticComplexMethod", "NestedBlockDepth", "ComplexMethod")
     fun isManagerPermission(
@@ -165,15 +171,25 @@ class ManagerService @Autowired constructor(
         return isManagerPermission
     }
 
-    fun checkUserSignatureStatus(
+    fun checkUserESignStatus(
         projectId: String,
         userId: String
     ) {
-        val projectsOfSignature = redisOperation.get(PROJECTS_OF_SIGNATURE)?.split(",") ?: emptyList()
-        // 未签署保密合同的用户不允许访问
-        if (projectsOfSignature.contains(projectId)) {
-            val isUserSigned = redisOperation.get(USER_SIGNATURE_STATUS_CHECK.plus(userId))?.toBoolean()
-            if (isUserSigned != true) {
+        val preCheckProject = getProjectIdsFromRedis(PROJECTS_OF_SIGNATURE_PRE_CHECK).contains(projectId)
+        if (preCheckProject) {
+            if (!isUserSigned(userId)) {
+                logger.warn(
+                    "Pre-process | The user cannot access the project " +
+                        "because the contract has not been signed.$projectId|$userId"
+                )
+            } else {
+                logger.info("Pre-process | The user has signed the contract.$projectId|$userId")
+            }
+            return
+        }
+        val checkProject = getProjectIdsFromRedis(PROJECTS_OF_SIGNATURE).contains(projectId)
+        if (checkProject) {
+            if (!isUserSigned(userId)) {
                 logger.warn(
                     "The user cannot access the project because the contract has not been signed.$projectId|$userId"
                 )
@@ -185,9 +201,45 @@ class ManagerService @Autowired constructor(
         }
     }
 
+    private fun isUserSigned(userId: String): Boolean {
+        // 1. 优先查询本地缓存
+        val localCacheValue = user2ESignStatus.getIfPresent(userId)
+        if (localCacheValue != null) {
+            return localCacheValue
+        }
+
+        // 2. 本地缓存未命中，查询Redis
+        val redisCacheKey = USER_SIGNATURE_STATUS_CHECK + userId
+        val redisValue = redisOperation.get(redisCacheKey)?.toBooleanStrictOrNull()
+        if (redisValue != null) {
+            user2ESignStatus.put(userId, redisValue) // 回填本地缓存
+            return redisValue
+        }
+        // 3. Redis未命中，调用第三方接口
+        return runCatching {
+            client.get(ServiceSignatureManageResource::class)
+                .fetchUserLiveESignStatus(userId).data?.signed ?: false
+        }.onSuccess { signed ->
+            user2ESignStatus.put(userId, signed) // 仅写入本地缓存（不写Redis！）
+        }.onFailure { e ->
+            logger.error("查询用户[$userId]签署状态失败: ${e.message}", e)
+            user2ESignStatus.put(userId, false) // 降级：异常时缓存false防穿透
+        }.getOrDefault(false)
+    }
+
+    private fun getProjectIdsFromRedis(redisKey: String): List<String> {
+        val projectIdsString = redisOperation.get(redisKey)
+        return if (projectIdsString.isNullOrBlank()) {
+            emptyList()
+        } else {
+            projectIdsString.split(",")
+        }
+    }
+
     companion object {
-        val logger = LoggerFactory.getLogger(ManagerService::class.java)
+        private val logger = LoggerFactory.getLogger(ManagerService::class.java)
         private const val PROJECTS_OF_SIGNATURE = "projects.signature.check"
+        private const val PROJECTS_OF_SIGNATURE_PRE_CHECK = "projects.signature.check.pre.check"
         private const val USER_SIGNATURE_STATUS_CHECK = "user.signature.status.check."
     }
 }
