@@ -26,7 +26,7 @@ import jakarta.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserNodeTagResource {
-    @Operation(summary = "获取用户有权限使用的服务器列表")
+    @Operation(summary = "创建便签")
     @POST
     @Path("/create")
     fun createTag(
@@ -64,7 +64,7 @@ interface UserNodeTagResource {
         data: UpdateNodeTag
     ): Result<Boolean>
 
-    @Operation(summary = "删除节点标签")
+    @Operation(summary = "删除标签")
     @DELETE
     @Path("/deleteTag")
     fun deleteTag(
@@ -82,7 +82,7 @@ interface UserNodeTagResource {
         tagValueId: Long?
     ): Result<Boolean>
 
-    @Operation(summary = "修改节点标签")
+    @Operation(summary = "修改标签")
     @PUT
     @Path("/updateTag")
     fun updateTag(

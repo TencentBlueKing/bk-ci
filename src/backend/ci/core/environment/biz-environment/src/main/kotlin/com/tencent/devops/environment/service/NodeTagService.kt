@@ -91,7 +91,7 @@ class NodeTagService @Autowired constructor(
             tagKeyId = tagKey,
             tagValueId = tagValueId
         )
-        if (records.isNullOrEmpty()) {
+        if (!records.isNullOrEmpty()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_HAS_NODE)
         }
         if (tagValueId != null) {
@@ -109,7 +109,7 @@ class NodeTagService @Autowired constructor(
             tagKeyId = tagKey,
             tagValueId = tagValueId
         )
-        if (records.isNullOrEmpty()) {
+        if (!records.isNullOrEmpty()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_HAS_NODE)
         }
         if (tagValueId != null) {
