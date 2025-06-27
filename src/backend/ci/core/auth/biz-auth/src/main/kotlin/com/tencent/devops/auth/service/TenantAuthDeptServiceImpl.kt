@@ -205,10 +205,10 @@ class TenantAuthDeptServiceImpl : DeptService {
     }
 
     companion object {
-        const val LIST_USER_DEPARTMENT = "api/bk-user/prod/api/v3/open/tenant/users/{bk_username}/departments/"
-        const val RETRIEVE_USER = "api/bk-user/prod/api/v3/open/tenant/users/{bk_username}/"
-        const val BATCH_QUERY_USER_DISPLAY_INFO = "/api/bk-user/prod/api/v3/open/tenant/users/-/display_info/"
-        const val BATCH_LOOKUP_DEPARTMENT = "api/bk-user/prod/api/v3/open/tenant/departments/-/lookup/"
+        const val LIST_USER_DEPARTMENT = "/api/v3/open/tenant/users/{bk_username}/departments/"
+        const val RETRIEVE_USER = "/api/v3/open/tenant/users/{bk_username}/"
+        const val BATCH_QUERY_USER_DISPLAY_INFO = "/api/v3/open/tenant/users/-/display_info/"
+        const val BATCH_LOOKUP_DEPARTMENT = "/api/v3/open/tenant/departments/-/lookup/"
         private val logger = LoggerFactory.getLogger(TenantAuthDeptServiceImpl::class.java)
     }
 

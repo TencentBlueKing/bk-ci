@@ -165,10 +165,10 @@ class TenantNotifyService(cmsApi: CMSApi) : NotifyService(cmsApi) {
 
     companion object {
         val logger = LoggerFactory.getLogger(TenantNotifyService::class.java)
-        private const val SEND_MAIL = "api/bk-cmsi/prod/v1/send_mail/"
-        private const val SEND_SMS = "api/bk-cmsi/prod/v1/send_sms/"
-        private const val SEND_VOICE = "api/bk-cmsi/prod/v1/send_voice/"
-        private const val SEND_WEIXIN = "api/bk-cmsi/prod/v1/send_weixin/"
+        private const val SEND_MAIL = "v1/send_mail/"
+        private const val SEND_SMS = "v1/send_sms/"
+        private const val SEND_VOICE = "v1/send_voice/"
+        private const val SEND_WEIXIN = "v1/send_weixin/"
     }
 
     data class SendResp(
