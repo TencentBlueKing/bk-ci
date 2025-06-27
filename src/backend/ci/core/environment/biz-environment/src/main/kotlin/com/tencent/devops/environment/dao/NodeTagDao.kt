@@ -112,16 +112,8 @@ class NodeTagDao {
         nodeCount: Int?
     ) {
         val id = keyId
-        if (resM.containsKey(id)) {
-            resM[id]?.tagValues?.add(
-                NodeTagValue(
-                    tagValueId = valueId,
-                    tagValueName = valueName,
-                    nodeCount = nodeCount
-                )
-            )
-        } else {
-            resM[id] = NodeTag(
+        resM.putIfAbsent(
+            id, NodeTag(
                 tagKeyId = id,
                 tagKeyName = keyName,
                 tagAllowMulValue = allowMulVal,
@@ -133,7 +125,13 @@ class NodeTagDao {
                     )
                 )
             )
-        }
+        )?.tagValues?.add(
+            NodeTagValue(
+                tagValueId = valueId,
+                tagValueName = valueName,
+                nodeCount = nodeCount
+            )
+        )
     }
 
     // 查询节点有哪些标签

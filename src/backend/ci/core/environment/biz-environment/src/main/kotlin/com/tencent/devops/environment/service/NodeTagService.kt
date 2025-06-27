@@ -52,6 +52,25 @@ class NodeTagService @Autowired constructor(
         if (nodeDao.get(dslContext, projectId, data.nodeId)?.nodeType != NodeType.THIRDPARTY.name) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_ONLY_SUP_THIRD)
         }
+        // 检查标签是否支持多个值同时添加
+        val tagKeys = nodeTagKeyDao.fetchNodeKeyByIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            keyIds = data.tags.map { it.tagKeyId }.toSet()
+        ).associate { it.id to Pair((it.allowMulValues ?: false), it.keyName) }
+        val tagsMap = mutableMapOf<Long, MutableSet<Long>>()
+        data.tags.forEach { tag ->
+            tagsMap.putIfAbsent(tag.tagKeyId, mutableSetOf(tag.tagValueId))?.add(tag.tagValueId)
+        }
+        data.tags.forEach { tag ->
+            if (tagKeys[tag.tagKeyId]?.first == false && (tagsMap[tag.tagKeyId]?.size ?: 0) > 1) {
+                throw ErrorCodeException(
+                    errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_NO_ALLOW_VALUES,
+                    params = arrayOf(tagKeys[tag.tagKeyId]?.second ?: "")
+                )
+            }
+        }
+
         dslContext.transaction { config ->
             val ctx = DSL.using(config)
             nodeTagDao.deleteNodesTags(ctx, projectId, data.nodeId)

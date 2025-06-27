@@ -35,4 +35,10 @@ class NodeTagKeyDao {
             return dslContext.selectFrom(this).where(KEY_NAME.eq(keyName)).and(PROJECT_ID.eq(projectId)).fetchAny()
         }
     }
+
+    fun fetchNodeKeyByIds(dslContext: DSLContext, projectId: String, keyIds: Set<Long>): List<TNodeTagKeyRecord> {
+        with(TNodeTagKey.T_NODE_TAG_KEY) {
+            return dslContext.selectFrom(this).where(ID.`in`(keyIds)).and(PROJECT_ID.eq(projectId)).fetch()
+        }
+    }
 }
