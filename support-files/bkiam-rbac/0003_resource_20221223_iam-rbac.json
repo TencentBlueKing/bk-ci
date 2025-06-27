@@ -283,6 +283,42 @@
     {
       "operation": "upsert_resource_type",
       "data": {
+        "id": "scc_task",
+        "name": "SCC任务",
+        "name_en": "SCC Task",
+        "parents": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          }
+        ],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "scc_scan_schema",
+        "name": "SCC扫描方案",
+        "name_en": "SCC Scan Schema",
+        "parents": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          }
+        ],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
         "id": "cgs",
         "name": "云桌面",
         "name_en": "Cgs",
