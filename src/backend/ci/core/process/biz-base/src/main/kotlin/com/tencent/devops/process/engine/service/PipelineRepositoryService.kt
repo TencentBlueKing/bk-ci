@@ -70,6 +70,7 @@ import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
+import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import com.tencent.devops.common.pipeline.utils.MatrixYamlCheckUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
@@ -125,6 +126,7 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
@@ -2391,4 +2393,29 @@ class PipelineRepositoryService constructor(
     ) ?: throw ErrorCodeException(
         errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
     )
+
+    /**
+     * 根据model获取触发参数，兼容级联参数
+     */
+    fun getTriggerParams(model: Model): Map<String, String> {
+        val startParams = mutableMapOf<String, String>()
+        model.getTriggerContainer().params.forEach { param ->
+            val paramKey = param.id
+            val paramDefaultValue = param.defaultValue
+            val paramType = param.type
+            if (CascadePropertyUtils.supportCascadeParam(paramType)) {
+                CascadePropertyUtils.parseDefaultValue(
+                    key = paramKey,
+                    defaultValue = paramDefaultValue,
+                    type = paramType
+                ).forEach {
+                    startParams["$paramKey.${it.key}"] = it.value
+                }
+            } else {
+                startParams[paramKey] = paramDefaultValue.toString()
+            }
+        }
+        // 填充前缀
+        return PipelineVarUtil.fillVariableMap(startParams)
+    }
 }
