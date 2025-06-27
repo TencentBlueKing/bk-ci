@@ -113,7 +113,7 @@ class NodeDao {
                 tagValueIds = tagValueIds
             )
             query.limit(limit).offset(offset)
-                .fetch() as List<TNodeRecord>
+                .fetchInto(this)
         }
     }
 
