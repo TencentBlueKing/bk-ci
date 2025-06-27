@@ -263,7 +263,12 @@
                 icon: 'english',
                 name: 'English',
                 id: 'en-US'
-            }
+            },
+            {
+                icon: 'japanese',
+                name: '日本語',
+                id: 'ja-JP'
+            },
         ]
  
         get headerLogoName (): string {
