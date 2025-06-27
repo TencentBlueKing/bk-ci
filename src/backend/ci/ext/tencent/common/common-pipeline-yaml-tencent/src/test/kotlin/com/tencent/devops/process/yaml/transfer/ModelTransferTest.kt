@@ -356,7 +356,7 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         val modelAndSetting = JsonUtil.to(file, object : TypeReference<PipelineModelAndSetting>() {})
 
         val invalidElement = mutableListOf<String>()
-        val defaultAspects = PipelineTransferAspectLoader.checkInvalidElement(invalidElement)
+        val defaultAspects = PipelineTransferAspectLoader.checkInvalidElement(invalidElement, invalidElement)
         PipelineTransferAspectLoader.sharedEnvTransfer(defaultAspects)
         val watcher = Watcher(id = "yaml and model transfer watcher")
         watcher.start("step_1|FULL_MODEL2YAML V3 start")
