@@ -131,5 +131,7 @@ data class Pipeline(
     @get:Schema(title = "流水线权限", required = false)
     val permissions: PipelinePermissions? = null,
     @get:Schema(title = "yaml在默认分支是否存在", required = false)
-    var yamlExist: Boolean? = false
+    var yamlExist: Boolean? = false,
+    @get:Schema(title = "是否处于归档中", required = false)
+    var archivingFlag: Boolean? = null
 )

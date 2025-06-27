@@ -127,9 +127,7 @@
                             projectId: $route.params.projectId,
                             pipelineId
                         },
-                        query: {
-                            archiveFlag: this.$route.query.archiveFlag
-                        }
+                        query: $route.query
                     })
                     // 清空搜索
                     const list = await this.search()

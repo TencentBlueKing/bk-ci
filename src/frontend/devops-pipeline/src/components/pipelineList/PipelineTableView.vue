@@ -179,7 +179,7 @@
             </div>
         </bk-table-column>
         <bk-table-column
-            v-if="allRenderColumnMap.label"
+            v-if="allRenderColumnMap.label && !isArchiveView"
             :label="$t('label')"
             :width="tableWidthMap.groupLabel"
             min-width="200"
@@ -418,7 +418,7 @@
                 </div>
             </bk-table-column>
             <bk-table-column
-                v-if="allRenderColumnMap.creator && !isArchiveView"
+                v-if="allRenderColumnMap.creator"
                 :width="tableWidthMap.creator"
                 :label="$t('creator')"
                 prop="creator"
@@ -553,7 +553,7 @@
             </div>
         </bk-table-column>
         <bk-table-column
-            v-if="!isPatchView && !isDeleteView"
+            v-if="!isPatchView && !isDeleteView && !isArchiveView"
             type="setting"
         >
             <bk-table-setting-content
@@ -638,17 +638,20 @@
             ...mapState('pipelines', [
                 'isManage'
             ]),
+            viewId () {
+                return this.$route.params.viewId
+            },
             isAllPipelineView () {
-                return this.$route.params.viewId === ALL_PIPELINE_VIEW_ID
+                return this.viewId === ALL_PIPELINE_VIEW_ID
             },
             isDeleteView () {
-                return this.$route.params.viewId === DELETED_VIEW_ID
+                return this.viewId === DELETED_VIEW_ID
             },
             isArchiveView () {
-                return this.$route.params.viewId === ARCHIVE_VIEW_ID
+                return this.viewId === ARCHIVE_VIEW_ID
             },
             isRecentView () {
-                return this.$route.params.viewId === RECENT_USED_VIEW_ID
+                return this.viewId === RECENT_USED_VIEW_ID
             },
             pipelineGroups () {
                 const res = this.pipelineList.map((pipeline, index) => {
@@ -903,7 +906,7 @@
                     const { count, page, records } = await this.getPipelines({
                         page: String(this.pagination.current),
                         pageSize: String(this.pagination.limit),
-                        viewId: this.$route.params.viewId,
+                        viewId: this.viewId,
                         ...this.filterParams,
                         ...query
                     })
@@ -942,7 +945,7 @@
             calcOverPosGroup () {
                 const tagMargin = 6
 
-                this.visibleTagCountList = this.pipelineList.reduce((acc, pipeline, index) => {
+                this.visibleTagCountList = this.pipelineList?.reduce((acc, pipeline, index) => {
                     if (Array.isArray(pipeline.viewNames)) {
                         const groupNameBoxWidth = this.$refs[`belongsGroupBox_${index}`]?.clientWidth * 2
                         const groupNameLength = pipeline.viewNames.length
@@ -967,7 +970,7 @@
             calcOverPosTable () {
                 const tagMargin = 6
 
-                this.visibleLabelCountList = this.pipelineList.reduce((acc, pipeline, index) => {
+                this.visibleLabelCountList = this.pipelineList?.reduce((acc, pipeline, index) => {
                     if (Array.isArray(pipeline?.groupLabel)) {
                         const labelBoxWidth = this.$refs[`belongsLabelBox_${index}`]?.clientWidth * 2
                         const labelLength = pipeline?.groupLabel.length
@@ -1031,9 +1034,6 @@
                 list.forEach(item => {
                     this.$refs.pipelineTable.toggleRowSelection(item, false)
                 })
-            },
-            updatePipelineData (pipelineIds) {
-                this.pipelineList = this.pipelineList.filter(item => !pipelineIds.includes(item.pipelineId))
             }
         }
     }

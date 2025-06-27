@@ -105,6 +105,9 @@ interface UserMarketImageResource {
         @Parameter(description = "镜像排序字段", required = false)
         @QueryParam("sortType")
         sortType: MarketImageSortTypeEnum?,
+        @Parameter(description = "是否推荐， TRUE：是 FALSE：不是", required = false)
+        @QueryParam("recommendFlag")
+        recommendFlag: Boolean?,
         @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,

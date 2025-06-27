@@ -272,6 +272,9 @@
             projectId () {
                 return this.$route.params.projectId
             },
+            currentViewId () {
+                return this.$route.params.viewId
+            },
             groupNameRules () {
                 return [{
                     validator: this.checkGroupNameValid,
@@ -581,13 +584,15 @@
             switchViewId (viewId) {
                 if (viewId !== this.$route.params.viewId) {
                     this.updateGroupPipelineCount(viewId)
-
+                    
                     cacheViewId(this.projectId, viewId)
+                    const newParams = this.currentViewId === 'archiveLibrary'
+                        ? { ...this.$route.params, viewId, type: undefined }
+                        : { ...this.$route.params, viewId }
+
                     this.$router.push({
-                        params: {
-                            ...this.$route.params,
-                            viewId
-                        }
+                        name: 'PipelineManageList',
+                        params: newParams
                     })
                 }
             },
