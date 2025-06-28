@@ -38,12 +38,21 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceSignatureManageResourceImpl @Autowired constructor(
     private val signatureManageService: ProjectSignatureManageService
 ) : ServiceSignatureManageResource {
-    override fun getSignatureStatus(userId: String, projectId: String): Result<UserSignatureStatusResponse> {
+    override fun getSignatureStatus(
+        userId: String,
+        projectId: String
+    ): Result<UserSignatureStatusResponse> {
         return Result(
             signatureManageService.getSignatureStatus(
                 projectId = projectId,
                 userId = userId
             )
+        )
+    }
+
+    override fun fetchUserLiveESignStatus(userId: String): Result<UserSignatureStatusResponse> {
+        return Result(
+            signatureManageService.fetchUserLiveESignStatus(userId)
         )
     }
 }

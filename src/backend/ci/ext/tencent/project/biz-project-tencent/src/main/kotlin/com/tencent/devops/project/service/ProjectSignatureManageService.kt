@@ -27,6 +27,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import kotlin.math.log
 
 @Service
 class ProjectSignatureManageService(
@@ -88,74 +89,95 @@ class ProjectSignatureManageService(
                 signed = true
             )
         }
-        val url = "$signatureUrl/api/v1/signature/signature_status"
-        val nonce = generateRandomString(12)
-        val timestamp = System.currentTimeMillis()
-        val token = cryptoToken(
-            nonce = nonce,
-            timestamp = timestamp
-        )
-        val userNickName = client.get(ServiceDeptResource::class).getUserInfo(
-            userId = userId,
-            name = userId
-        ).data?.displayName ?: throw ErrorCodeException(
-            errorCode = ProjectMessageCode.FAILED_USER_INFORMATION,
-            params = arrayOf(userId)
-        )
-
-        val body = SignatureStatusQueryReq(
-            user = userId,
-            nick = userNickName,
-            tof_id = userId
-        )
-        val requestBody = objectMapper.writeValueAsString(body).toRequestBody(mediaType)
-
-        val request = Request.Builder()
-            .url(url)
-            .post(requestBody)
-            .addHeader("Smoba-Clientid", clientId)
-            .addHeader("Smoba-Nonce", nonce)
-            .addHeader("Smoba-Timestamp", timestamp.toString())
-            .addHeader("Smoba-Signature", token)
-            .build()
-        OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body!!.string()
-            if (!response.isSuccessful) {
-                logger.warn("get signature status failed, uri:($url)|response: ($response)")
-                throw RemoteServiceException("get signature status request failed, response:($response)")
-            }
-            val queryResponse = JsonUtil.to(responseContent, ResponseDTO::class.java)
-            logger.info("get signature status response :$queryResponse")
-            if (queryResponse.result != "success") {
-                logger.warn("get signature status failed, url:($url)|response:($response)")
-                throw RemoteServiceException("get signature status request failed, response:(${response.message})")
-            }
-            val data = queryResponse.data ?: throw OperationException(
-                I18nUtil.getCodeLanMessage(
-                    messageCode = ProjectMessageCode.QUERY_DEPARTMENT_FAIL
-                )
-            )
-            return if (data.whitelistUser || data.status == SUCCESS_STATUS) {
-                redisOperation.set(USER_SIGNATURE_STATUS_CHECK.plus(userId), "true")
-                UserSignatureStatusResponse(
-                    userId = data.user,
-                    signed = true
-                )
+        val userLiveStatus = fetchUserLiveESignStatus(userId)
+        return if (userLiveStatus.signed) {
+            userLiveStatus
+        } else {
+            val targetLanguage = I18nUtil.getLanguage(userId)
+            val projectNamesLocalized = if (targetLanguage == DEFAULT_LOCALE_LANGUAGE) {
+                projectNames
             } else {
-                val targetLanguage = I18nUtil.getLanguage(userId)
-                val projectNamesLocalized = if (targetLanguage == DEFAULT_LOCALE_LANGUAGE) {
-                    projectNames
-                } else {
-                    projectsNeedToCheck
-                }
-                val projectInformation = buildProjectInfo(projectNamesLocalized)
-                UserSignatureStatusResponse(
-                    userId = data.user,
-                    signed = false,
-                    schemeQrcodeUrl = data.schemeQrcodeUrl,
-                    projectInformation = projectInformation
-                )
+                projectsNeedToCheck
             }
+            val projectInformation = buildProjectInfo(projectNamesLocalized)
+            UserSignatureStatusResponse(
+                userId = userLiveStatus.userId,
+                signed = false,
+                schemeQrcodeUrl = userLiveStatus.schemeQrcodeUrl,
+                projectInformation = projectInformation
+            )
+        }
+    }
+
+    fun fetchUserLiveESignStatus(userId: String): UserSignatureStatusResponse {
+        try {
+            val url = "$signatureUrl/api/v1/signature/signature_status"
+            val nonce = generateRandomString(12)
+            val timestamp = System.currentTimeMillis()
+            val token = cryptoToken(
+                nonce = nonce,
+                timestamp = timestamp
+            )
+            val userNickName = client.get(ServiceDeptResource::class).getUserInfo(
+                userId = userId,
+                name = userId
+            ).data?.displayName ?: throw ErrorCodeException(
+                errorCode = ProjectMessageCode.FAILED_USER_INFORMATION,
+                params = arrayOf(userId)
+            )
+
+            val body = SignatureStatusQueryReq(
+                user = userId,
+                nick = userNickName,
+                tof_id = userId
+            )
+            val requestBody = objectMapper.writeValueAsString(body).toRequestBody(mediaType)
+
+            val request = Request.Builder()
+                .url(url)
+                .post(requestBody)
+                .addHeader("Smoba-Clientid", clientId)
+                .addHeader("Smoba-Nonce", nonce)
+                .addHeader("Smoba-Timestamp", timestamp.toString())
+                .addHeader("Smoba-Signature", token)
+                .build()
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                if (!response.isSuccessful) {
+                    logger.warn("get signature status failed, uri:($url)|response: ($response)")
+                    throw RemoteServiceException("get signature status request failed, response:($response)")
+                }
+                val queryResponse = JsonUtil.to(responseContent, ResponseDTO::class.java)
+                logger.info("get signature status response :$queryResponse")
+                if (queryResponse.result != "success") {
+                    logger.warn("get signature status failed, url:($url)|response:($response)")
+                    throw RemoteServiceException("get signature status request failed, response:(${response.message})")
+                }
+                val data = queryResponse.data ?: throw OperationException(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ProjectMessageCode.QUERY_DEPARTMENT_FAIL
+                    )
+                )
+                return if (data.whitelistUser || data.status == SUCCESS_STATUS) {
+                    redisOperation.set(USER_SIGNATURE_STATUS_CHECK.plus(userId), "true")
+                    UserSignatureStatusResponse(
+                        userId = data.user,
+                        signed = true
+                    )
+                } else {
+                    UserSignatureStatusResponse(
+                        userId = data.user,
+                        signed = false,
+                        schemeQrcodeUrl = data.schemeQrcodeUrl
+                    )
+                }
+            }
+        } catch (ex: Exception) {
+            logger.error("fetch user live status failed:$userId|$ex")
+            return UserSignatureStatusResponse(
+                userId = userId,
+                signed = true
+            )
         }
     }
 

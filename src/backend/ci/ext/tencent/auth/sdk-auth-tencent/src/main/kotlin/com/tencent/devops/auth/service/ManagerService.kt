@@ -64,6 +64,11 @@ class ManagerService @Autowired constructor(
         .expireAfterWrite(60, TimeUnit.MINUTES)
         .build<String/*userId*/, ProjectOrgInfo?>()
 
+    private val user2ESignStatus = CacheBuilder.newBuilder()
+        .maximumSize(50000)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build<String/*userId*/, Boolean>()
+
     @Suppress("CyclomaticComplexMethod", "NestedBlockDepth", "ComplexMethod")
     fun isManagerPermission(
         userId: String,
@@ -166,51 +171,69 @@ class ManagerService @Autowired constructor(
         return isManagerPermission
     }
 
-    fun checkUserSignatureStatus(
+    fun checkUserESignStatus(
         projectId: String,
         userId: String
     ) {
-        val preProcessProjects = redisOperation.get(
-            PROJECTS_OF_SIGNATURE_PRE_PROCESSING
-        )?.split(",") ?: emptyList()
-
-        if (preProcessProjects.isNotEmpty() && preProcessProjects.contains(projectId)) {
-            if (!isUserSigned(projectId, userId)) {
+        val preCheckProject = getProjectIdsFromRedis(PROJECTS_OF_SIGNATURE_PRE_PROCESSING).contains(projectId)
+        if (preCheckProject) {
+            if (!isUserSigned(userId)) {
                 logger.warn(
-                    "Pre-process-the user cannot access the project " +
+                    "Pre-process | The user cannot access the project " +
                         "because the contract has not been signed.$projectId|$userId"
                 )
             } else {
-                logger.info("Pre-process-The user has signed the contract.$projectId|$userId")
+                logger.info("Pre-process | The user has signed the contract.$projectId|$userId")
             }
-        } else {
-            val projectsOfSignature = redisOperation.get(PROJECTS_OF_SIGNATURE)?.split(",") ?: emptyList()
-            // 未签署保密合同的用户不允许访问
-            if (projectsOfSignature.contains(projectId)) {
-                if (!isUserSigned(projectId, userId)) {
-                    logger.warn(
-                        "The user cannot access the project because the contract has not been signed.$projectId|$userId"
-                    )
-                    throw ErrorCodeException(
-                        errorCode = ERROR_USER_CONTRACT_NOT_SIGNED,
-                        params = arrayOf(userId, "${config.devopsHostGateway}/console/pipeline/$projectId")
-                    )
-                }
+            return
+        }
+        val checkProject = getProjectIdsFromRedis(PROJECTS_OF_SIGNATURE).contains(projectId)
+        if (checkProject) {
+            if (!isUserSigned(userId)) {
+                logger.warn(
+                    "The user cannot access the project because the contract has not been signed.$projectId|$userId"
+                )
+                throw ErrorCodeException(
+                    errorCode = ERROR_USER_CONTRACT_NOT_SIGNED,
+                    params = arrayOf(userId, "${config.devopsHostGateway}/console/pipeline/$projectId")
+                )
             }
         }
     }
 
-    private fun isUserSigned(
-        projectId: String,
-        userId: String
-    ): Boolean {
-        val cache = redisOperation.get(USER_SIGNATURE_STATUS_CHECK.plus(userId))
-        return cache?.toBoolean() ?: (
+    private fun isUserSigned(userId: String): Boolean {
+        // 1. 优先查询本地缓存
+        val localCacheValue = user2ESignStatus.getIfPresent(userId)
+        if (localCacheValue != null) {
+            return localCacheValue
+        }
+
+        // 2. 本地缓存未命中，查询Redis
+        val redisCacheKey = USER_SIGNATURE_STATUS_CHECK + userId
+        val redisValue = redisOperation.get(redisCacheKey)?.toBooleanStrictOrNull()
+        if (redisValue != null) {
+            user2ESignStatus.put(redisCacheKey, redisValue) // 回填本地缓存
+            return redisValue
+        }
+        // 3. Redis未命中，调用第三方接口
+        return runCatching {
             client.get(ServiceSignatureManageResource::class)
-                .getSignatureStatus(
-                    projectId = projectId,
-                    userId = userId
-                ).data?.signed ?: false)
+                .fetchUserLiveESignStatus(userId).data?.signed ?: false
+        }.onSuccess { signed ->
+            user2ESignStatus.put(userId, signed) // 仅写入本地缓存（不写Redis！）
+        }.onFailure { e ->
+            logger.error("查询用户[$userId]签署状态失败: ${e.message}", e)
+            user2ESignStatus.put(userId, false) // 降级：异常时缓存false防穿透
+        }.getOrDefault(false)
+    }
+
+    private fun getProjectIdsFromRedis(redisKey: String): List<String> {
+        val projectIdsString = redisOperation.get(redisKey)
+        return if (projectIdsString.isNullOrBlank()) {
+            emptyList()
+        } else {
+            projectIdsString.split(",")
+        }
     }
 
     companion object {
