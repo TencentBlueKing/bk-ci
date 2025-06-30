@@ -129,7 +129,8 @@ class BuildLessTaskService(
                             containerId = containerId
                         )
 
-                        logger.info("****>Deferred claim task buildLessPoolKey hset $containerId ${ContainerStatus.BUSY.name}.")
+                        logger.info("****>Deferred claim task buildLessPoolKey hset $containerId " +
+                                "${ContainerStatus.BUSY.name}.")
                         redisUtils.setBuildLessPoolContainer(containerId, ContainerStatus.BUSY, buildLessTask)
 
                         deferredResult.setResult(buildLessTask)

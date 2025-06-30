@@ -1,11 +1,7 @@
 package com.tencent.devops.buildless.utils
 
-import ch.qos.logback.core.CoreConstants.CORE_POOL_SIZE
-import ch.qos.logback.core.CoreConstants.MAX_POOL_SIZE
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ArrayBlockingQueue
-import java.util.concurrent.Executors
-import java.util.concurrent.RejectedExecutionHandler
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
@@ -55,32 +51,45 @@ class ThreadPoolUtils private constructor() {
 
     fun getThreadPool(
         poolName: String,
-        corePoolSize: Int = CORE_POOL_SIZE,
-        maxPoolSize: Int = MAX_POOL_SIZE
+        corePoolSize: Int = 0,
+        maxPoolSize: Int = 0
     ): ThreadPoolExecutor {
+        val newCorePoolSize = if (corePoolSize == 0) this.corePoolSize else corePoolSize
+        val newMaxPoolSize = if (maxPoolSize == 0) this.maxPoolSize else maxPoolSize
+
         var threadPoolExecutor = threadPoolMap[poolName]
         if (null == threadPoolExecutor) {
             synchronized(SingleHolder::class.java) {
+                // 双重检查锁定
+                threadPoolExecutor = threadPoolMap[poolName]
                 if (null == threadPoolExecutor) {
                     threadPoolExecutor = ThreadPoolExecutor(
-                        corePoolSize,
-                        maxPoolSize,
-                        keepAliveTime,
-                        TimeUnit.SECONDS,
-                        ArrayBlockingQueue(queueSize),
-                        Executors.defaultThreadFactory(),
-                        RejectedExecutionHandler { _, _ ->
-                            logger.info("$ThreadPoolUtils  RejectedExecutionHandler----")
+                        /* corePoolSize = */ newCorePoolSize,
+                        /* maximumPoolSize = */ newMaxPoolSize,
+                        /* keepAliveTime = */ keepAliveTime,
+                        /* unit = */ TimeUnit.SECONDS,
+                        /* workQueue = */ ArrayBlockingQueue(queueSize),
+                        // 自定义线程工厂，添加线程池名称前缀
+                        /* threadFactory = */ { r ->
+                            Thread(r).apply {
+                                name = "pool-$poolName-thread-${id}"
+                            }
+                        },
+                        // 拒绝策略记录线程池名称
+                        /* handler = */ { _, _ ->
+                            logger.info("Thread pool $poolName rejected execution")
                         }
-                    )
-                    // 允许核心线程闲置超时时被回收
-                    threadPoolExecutor!!.allowCoreThreadTimeOut(true)
-                    threadPoolMap[poolName] = threadPoolExecutor!!
+                    ).apply {
+                        // 允许核心线程超时回收
+                        allowCoreThreadTimeOut(true)
+                        // 注册到线程池映射
+                        threadPoolMap[poolName] = this
+                    }
                 }
             }
         }
 
-        return threadPoolExecutor!!
+        return threadPoolExecutor ?: throw IllegalStateException("Thread pool $poolName initialization failed")
     }
 
     /**
