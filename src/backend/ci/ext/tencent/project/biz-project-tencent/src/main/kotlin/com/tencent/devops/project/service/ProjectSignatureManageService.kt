@@ -72,8 +72,8 @@ class ProjectSignatureManageService(
             throw PermissionForbiddenException("The user does not have permission to visit the project.")
         }
         logger.info("get signature status :$projectId|$userId")
-        val isUserSigned = redisOperation.get(USER_SIGNATURE_STATUS_CHECK.plus(userId))?.toBooleanStrictOrNull()
-        if (isUserSigned == true) {
+        val isUserSigned = redisOperation.isMember(USER_SIGNATURE_STATUS_CACHE_KEY, userId)
+        if (isUserSigned) {
             return UserSignatureStatusResponse(
                 userId = userId,
                 signed = true
@@ -162,7 +162,7 @@ class ProjectSignatureManageService(
                     )
                 )
                 return if (data.whitelistUser || data.status == SUCCESS_STATUS) {
-                    redisOperation.set(USER_SIGNATURE_STATUS_CHECK.plus(userId), "true")
+                    redisOperation.addSetValue(USER_SIGNATURE_STATUS_CACHE_KEY, userId)
                     UserSignatureStatusResponse(
                         userId = data.user,
                         signed = true
@@ -218,11 +218,10 @@ class ProjectSignatureManageService(
         if (signature != cryptoToken(nonce, timestamp.toLong())) {
             throw InvalidParamException(message = "call back token invalid!")
         }
-        val redisKey = USER_SIGNATURE_STATUS_CHECK + callbackInfo.user
         if (callbackInfo.whitelistUser || callbackInfo.status == SUCCESS_STATUS) {
-            redisOperation.set(redisKey, "true")
+            redisOperation.addSetValue(USER_SIGNATURE_STATUS_CACHE_KEY, callbackInfo.user)
         } else {
-            redisOperation.delete(redisKey)
+            redisOperation.removeSetMember(USER_SIGNATURE_STATUS_CACHE_KEY, callbackInfo.user)
         }
         return SignatureCallbackResponse.success()
     }
@@ -256,5 +255,6 @@ class ProjectSignatureManageService(
         private const val USER_SIGNATURE_STATUS_CHECK = "user.signature.status.check."
         private const val PROJECT_NEED_TO_CHECK = "projects.signature.check"
         private const val SUCCESS_STATUS = 2
+        private const val USER_SIGNATURE_STATUS_CACHE_KEY = "user:signature:status:Smoba:cache"
     }
 }
