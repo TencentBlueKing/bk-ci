@@ -298,14 +298,20 @@ class PipelineTaskService @Autowired constructor(
         )
     }
 
-    fun getBuildTask(projectId: String, buildId: String, taskId: String?, stepId: String? = null): PipelineBuildTask? {
+    fun getBuildTask(
+        projectId: String,
+        buildId: String,
+        taskId: String?,
+        stepId: String? = null,
+        executeCount: Int? = null
+    ): PipelineBuildTask? {
         return pipelineBuildTaskDao.get(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
             taskId = taskId,
             stepId = stepId,
-            executeCount = null
+            executeCount = executeCount
         )
     }
 

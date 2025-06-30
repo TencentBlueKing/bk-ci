@@ -10,7 +10,8 @@ BUILD_FLAGS := -ldflags="-w -s -X github.com/TencentBlueKing/bk-ci/agent/src/pkg
 # 编译内部出包版本时需要设置当前变量不为out
 BUILD_OUT_TAG=inner
 
-format: 
+format:
+	goimports -w .
 	find ./ -name "*.go" | xargs gofmt -w
 
 test: test-unit

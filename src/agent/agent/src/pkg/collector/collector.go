@@ -31,9 +31,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/pkg/errors"
 	"text/template"
 	"time"
+
+	"github.com/pkg/errors"
 
 	telegrafconf "github.com/TencentBlueKing/bk-ci/agent/src/pkg/collector/telegrafConf"
 	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"

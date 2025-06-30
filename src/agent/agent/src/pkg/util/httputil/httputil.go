@@ -32,12 +32,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"io"
 	"net/http"
 	"net/url"
 	"reflect"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 

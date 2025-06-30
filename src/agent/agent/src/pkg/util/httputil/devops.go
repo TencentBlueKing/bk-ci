@@ -29,12 +29,13 @@ package httputil
 
 import (
 	"encoding/json"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
-	"github.com/pkg/errors"
 	"io"
 	"net/http"
 	"os"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
+	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	innerFileUtil "github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/fileutil"
