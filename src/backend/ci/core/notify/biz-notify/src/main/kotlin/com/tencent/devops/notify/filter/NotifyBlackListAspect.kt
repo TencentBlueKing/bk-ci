@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.notify.service.filter
+package com.tencent.devops.notify.filter
 
 import com.tencent.devops.notify.api.annotation.BkCheckBlackListInterface
 import com.tencent.devops.notify.api.annotation.BkNotifyReceivers
