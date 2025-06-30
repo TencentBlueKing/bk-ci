@@ -101,6 +101,24 @@ class ServiceNodeResourceImpl @Autowired constructor(
         return Result(nodeService.listByHashIds(userId, projectId, nodeHashIds))
     }
 
+    override fun getNodeStatus(
+        userId: String,
+        projectId: String,
+        nodeHashId: String?,
+        nodeName: String?,
+        agentHashId: String?
+    ): Result<NodeWithPermission> {
+        return Result(
+            nodeService.getNodeStatus(
+                userId = userId,
+                projectId = projectId,
+                nodeHashId = nodeHashId,
+                nodeName = nodeName,
+                agentHashId = agentHashId
+            )
+        )
+    }
+
     @BkTimed(extraTags = ["operate", "getNode"])
     override fun listNodeByType(userId: String, projectId: String, type: String): Result<List<NodeBaseInfo>> {
         return Result(nodeService.listByType(userId, projectId, type))

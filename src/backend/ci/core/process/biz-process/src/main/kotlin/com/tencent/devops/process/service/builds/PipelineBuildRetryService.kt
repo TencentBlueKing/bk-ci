@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service.builds
 
+import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.MessageUtil
@@ -257,25 +258,18 @@ class PipelineBuildRetryService @Autowired constructor(
         if (buildInfo.isStageSuccess()) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT)
         }
-        val retryTaskStageId = paramMap[PIPELINE_RETRY_TASK_IN_STAGE_ID]?.value?.toString()
-            ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT)
+        val retryTaskInStageId = paramMap[PIPELINE_RETRY_TASK_IN_STAGE_ID]?.value?.toString()
+            ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                params = arrayOf(PIPELINE_RETRY_TASK_IN_STAGE_ID)
+            )
         // 运行中重试,需要判断当前的stage的状态,防止当前stage已经执行完成,准备往下一个stage执行,那么运行中重试就会导致执行异常
-        val stageIdLock = StageIdLock(redisOperation, buildInfo.buildId, retryTaskStageId)
+        val stageIdLock = StageIdLock(redisOperation, buildInfo.buildId, retryTaskInStageId)
         stageIdLock.use {
             if (!stageIdLock.tryLock()) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT)
             }
-            val stage = pipelineStageService.getStage(pipeline.projectId, buildInfo.buildId, retryTaskStageId) ?: run {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY
-                )
-            }
-            // 只有stage是running状态才运行插件级重试
-            if (stage.status.isFinish()) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_RETRY_STAGE_NOT_RUNNING
-                )
-            }
+            checkStatus(pipeline = pipeline, buildInfo = buildInfo, paramMap = paramMap)
 
             return pipelineBuildService.startPipeline(
                 userId = userId,
@@ -466,6 +460,71 @@ class PipelineBuildRetryService @Autowired constructor(
             logger.info("the project has not registered api operation permission:$userId|$projectId|$ignore")
             false
         }
+    }
+
+    private fun checkStatus(
+        pipeline: PipelineInfo,
+        buildInfo: BuildInfo,
+        paramMap: MutableMap<String, BuildParameters>,
+    ) {
+        val retryTaskInStageId = paramMap[PIPELINE_RETRY_TASK_IN_STAGE_ID]?.value?.toString()
+            ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                params = arrayOf(PIPELINE_RETRY_TASK_IN_STAGE_ID)
+            )
+        val retryTaskInContainerId = paramMap[PIPELINE_RETRY_TASK_IN_CONTAINER_ID]?.value?.toString()
+            ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                params = arrayOf(PIPELINE_RETRY_TASK_IN_CONTAINER_ID)
+            )
+        val retryTaskId = paramMap[PIPELINE_RETRY_START_TASK_ID]?.value?.toString()
+            ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                params = arrayOf(PIPELINE_RETRY_START_TASK_ID)
+            )
+
+        val stage = pipelineStageService.getStage(
+            projectId = pipeline.projectId,
+            buildId = buildInfo.buildId,
+            stageId = retryTaskInStageId
+        ) ?: run {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY
+            )
+        }
+        // retry/skip的 task 所在的 stage 必须是运行中，否则无法被重试或者跳过
+        Preconditions.checkTrue(
+            condition = stage.status.isRunning(),
+            exception = ErrorCodeException(errorCode = ProcessMessageCode.ERROR_RETRY_TASK_IN_STAGE_NOT_RUNNING)
+        )
+        val container = pipelineContainerService.getContainer(
+            projectId = pipeline.projectId,
+            buildId = buildInfo.buildId,
+            stageId = retryTaskInStageId,
+            containerId = retryTaskInContainerId
+        ) ?: run {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY
+            )
+        }
+        // retry/skip的 task 所在的 Job 必须是结束状态，否则无法被重试或者跳过
+        Preconditions.checkTrue(
+            condition = container.status.isFinish(),
+            exception = ErrorCodeException(errorCode = ProcessMessageCode.ERROR_RETRY_TASK_IN_CONTAINER_NOT_FINISHED)
+        )
+        val task = pipelineTaskService.getByTaskId(
+            projectId = pipeline.projectId,
+            buildId = buildInfo.buildId,
+            taskId = retryTaskId
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY
+        )
+
+        // retry/skip的 task 必须是失败或者被取消的状态，否则无法被重试或者跳过
+        Preconditions.checkTrue(
+            condition = task.status.isFailure() || task.status.isCancel(),
+            exception = ErrorCodeException(errorCode = ProcessMessageCode.ERROR_RETRY_TASK_NOT_FAILED)
+        )
     }
 
     companion object {

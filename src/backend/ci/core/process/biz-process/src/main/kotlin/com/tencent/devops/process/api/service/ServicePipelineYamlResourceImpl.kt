@@ -81,4 +81,13 @@ class ServicePipelineYamlResourceImpl @Autowired constructor(
         )
         return Result(true)
     }
+
+    override fun yamlExistInDefaultBranch(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
+        return Result(
+            pipelineYamlFacadeService.yamlExistInDefaultBranch(
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
+        )
+    }
 }

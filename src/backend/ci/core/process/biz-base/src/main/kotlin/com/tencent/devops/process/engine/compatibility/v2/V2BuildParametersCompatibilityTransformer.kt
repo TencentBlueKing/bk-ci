@@ -98,10 +98,21 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
                 }
             }
             if (param.valueNotEmpty == true && value.toString().isEmpty()) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_BUILD_START_PARAM_NO_EMPTY,
-                    params = arrayOf(param.id)
-                )
+                // 判断是否因条件不满足而隐藏（隐藏则跳过校验）
+                val isHidden = param.displayCondition?.let { conditionMap ->
+                    // 检查是否有任意条件不满足（隐藏条件成立）
+                    conditionMap.any { (key, conditionValue) ->
+                        paramValues[key] != conditionValue
+                    }
+                } ?: false // 若无条件，默认不隐藏（需校验）
+
+                // 参数未被隐藏（即展示）时，抛出异常
+                if (!isHidden) {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_PIPELINE_BUILD_START_PARAM_NO_EMPTY,
+                        params = arrayOf(param.id)
+                    )
+                }
             }
 
             paramsMap[key] = BuildParameters(

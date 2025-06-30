@@ -45,8 +45,6 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
         else
             if ngx.var.devops_region == 'DEVNET' then
                 kubernetes_domain = config.kubernetes.devnetDomain
-            elseif self:is_recovery_project(devops_project_id) then
-                kubernetes_domain = config.kubernetes.recovery.domain
             else
                 kubernetes_domain = config.kubernetes.domain
             end
@@ -171,37 +169,6 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
     end
 
     return ips[math.random(#ips)] .. ":" .. port
-end
-
-function _M:is_recovery_project(devops_project_id)
-    if config.kubernetes.recovery.switchAll then
-        return true
-    end
-
-    local recovery_project_cache = ngx.shared.router_srv_store
-    local local_cache_key = "ci_recovery_" .. devops_project_id
-    local is_recovery = recovery_project_cache:get(local_cache_key)
-    if is_recovery == nil then
-        -- 从redis获取
-        local red, err = redisUtil:new()
-        if not red then
-            ngx.log(ngx.ERR, "tag failed to new redis ", err)
-            return false
-        end
-        local red_key = "ci:recovery:project:" .. devops_project_id
-        is_recovery = red:get(red_key)
-        if is_recovery ~= "1" then
-            is_recovery = "0"
-        end
-        recovery_project_cache:set(local_cache_key, is_recovery, 120)
-        red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
-    end
-
-    if is_recovery == "1" then
-        return true
-    else
-        return false
-    end
 end
 
 return _M
