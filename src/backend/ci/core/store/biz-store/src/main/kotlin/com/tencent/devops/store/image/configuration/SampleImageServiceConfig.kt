@@ -28,8 +28,10 @@
 package com.tencent.devops.store.image.configuration
 
 import com.tencent.devops.store.image.service.ImageNotifyService
+import com.tencent.devops.store.image.service.ImageReleaseService
 import com.tencent.devops.store.image.service.ImageService
 import com.tencent.devops.store.image.service.impl.SampleImageNotifyService
+import com.tencent.devops.store.image.service.impl.SampleImageReleaseService
 import com.tencent.devops.store.image.service.impl.SampleImageService
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
@@ -42,9 +44,9 @@ class SampleImageServiceConfig {
     @ConditionalOnMissingBean(ImageNotifyService::class)
     fun imageNotifyService() = SampleImageNotifyService()
 
-//    @Bean
-//    @ConditionalOnMissingBean(ImageReleaseService::class)
-//    fun imageReleaseService() = SampleImageReleaseService()
+    @Bean
+    @ConditionalOnMissingBean(ImageReleaseService::class)
+    fun imageReleaseService() = SampleImageReleaseService()
 
     @Bean
     @ConditionalOnMissingBean(ImageService::class)
