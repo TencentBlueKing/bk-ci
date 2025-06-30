@@ -72,15 +72,6 @@ class ProjectSignatureManageService(
             throw PermissionForbiddenException("The user does not have permission to visit the project.")
         }
         logger.info("get signature status :$projectId|$userId")
-        val projectNames = try {
-            projectService.list(projectsNeedToCheck).map { it.projectName }
-        } catch (e: Exception) {
-            logger.error("Failed to get project names", e)
-            return UserSignatureStatusResponse(
-                userId = userId,
-                signed = true
-            )
-        }
         val isUserSigned = redisOperation.get(USER_SIGNATURE_STATUS_CHECK.plus(userId))?.toBooleanStrictOrNull()
         if (isUserSigned == true) {
             return UserSignatureStatusResponse(
@@ -95,6 +86,15 @@ class ProjectSignatureManageService(
                 signed = true
             )
         } else {
+            val projectNames = try {
+                projectService.list(projectsNeedToCheck).map { it.projectName }
+            } catch (e: Exception) {
+                logger.error("Failed to get project names", e)
+                return UserSignatureStatusResponse(
+                    userId = userId,
+                    signed = true
+                )
+            }
             val targetLanguage = I18nUtil.getLanguage(userId)
             val projectNamesLocalized = if (targetLanguage == DEFAULT_LOCALE_LANGUAGE) {
                 projectNames
