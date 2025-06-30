@@ -47,13 +47,7 @@ class NotifyUserBlacklistDao {
         val table = TNotifyUserBlacklist.T_NOTIFY_USER_BLACKLIST
         with(table) {
             if (userIds.isEmpty()) return 0
-
-            val existingUsers = listAllBlacklistUsers(dslContext)
-            val newUsers = userIds.filter { !existingUsers.contains(it) }
-            if (newUsers.isEmpty()) return 0
-
-            val now = LocalDateTime.now()
-            val queries = newUsers.map { userId ->
+            val queries = userIds.map { userId ->
                 dslContext.insertInto(
                     this,
                     ID,
@@ -62,8 +56,8 @@ class NotifyUserBlacklistDao {
                 ).values(
                     UUIDUtil.generate(),
                     userId,
-                    now
-                )
+                    LocalDateTime.now()
+                ).onDuplicateKeyIgnore()
             }
 
             return dslContext.batch(queries).execute().sum()
@@ -85,20 +79,6 @@ class NotifyUserBlacklistDao {
             return dslContext.deleteFrom(this)
                 .where(USER_ID.`in`(userIds))
                 .execute()
-        }
-    }
-
-    /**
-     * 获取所有黑名单用户
-     * @return 黑名单用户记录列表
-     */
-    fun listAllBlacklistUsers(
-        dslContext: DSLContext
-    ): List<String> {
-        with(TNotifyUserBlacklist.T_NOTIFY_USER_BLACKLIST) {
-            return dslContext.select(USER_ID)
-                .from(this)
-                .fetchInto(String::class.java)
         }
     }
 
@@ -128,7 +108,7 @@ class NotifyUserBlacklistDao {
     /**
      * 获取指定用户的黑名单
      */
-    fun listBlacklistForUser(
+    fun getBlacklistForUser(
         dslContext: DSLContext,
         userId: String
     ): String? {

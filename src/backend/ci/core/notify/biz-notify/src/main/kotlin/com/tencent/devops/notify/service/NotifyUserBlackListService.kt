@@ -110,7 +110,7 @@ class NotifyUserBlackListService @Autowired constructor(
         try {
             return notifyUserBlackListCache.get(notifyUserBlackListCacheKeyPrefix + userId) {
                 logger.info("Updating blacklist cache for user: $userId")
-                notifyUserBlacklistDao.listBlacklistForUser(dslContext, userId)
+                notifyUserBlacklistDao.getBlacklistForUser(dslContext, userId)
             }
         } catch (ignored: Throwable) {
             logger.warn("Failed to get blacklist for user $userId，${ignored.message}")
