@@ -209,11 +209,10 @@ class ManagerService @Autowired constructor(
         }
 
         // 2. 本地缓存未命中，查询Redis
-        val redisCacheKey = USER_SIGNATURE_STATUS_CHECK + userId
-        val redisValue = redisOperation.get(redisCacheKey)?.toBooleanStrictOrNull()
-        if (redisValue != null) {
-            user2ESignStatus.put(userId, redisValue) // 回填本地缓存
-            return redisValue
+        val redisValue = redisOperation.isMember(USER_SIGNATURE_STATUS_CACHE_KEY, userId)
+        if (redisValue) {
+            user2ESignStatus.put(userId, true) // 回填本地缓存
+            return true
         }
         // 3. Redis未命中，调用第三方接口
         return runCatching {
@@ -240,6 +239,6 @@ class ManagerService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ManagerService::class.java)
         private const val PROJECTS_OF_SIGNATURE = "projects.signature.check"
         private const val PROJECTS_OF_SIGNATURE_PRE_CHECK = "projects.signature.check.pre.check"
-        private const val USER_SIGNATURE_STATUS_CHECK = "user.signature.status.check."
+        private const val USER_SIGNATURE_STATUS_CACHE_KEY = "user:signature:status:Smoba:cache"
     }
 }
