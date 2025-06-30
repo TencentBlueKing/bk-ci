@@ -28,6 +28,8 @@ package com.tencent.devops.notify.api.op
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -70,6 +72,7 @@ interface OpNotifyUserBlackListResource {
         @QueryParam("page")
         page: Int,
         @Parameter(description = "每页数量", required = true)
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Page<String>>
