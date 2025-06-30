@@ -29,6 +29,7 @@ package installer
 
 import (
 	"fmt"
+
 	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 	"github.com/pkg/errors"
 
