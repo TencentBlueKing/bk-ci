@@ -548,7 +548,12 @@ class ThirdPartyAgentService @Autowired constructor(
         }
 
         // 有些并发情况可能会导致在finish时AgentBuild状态没有被置为Done在这里改一下
-        val buildRecord = thirdPartyAgentBuildDao.get(dslContext, buildInfo.buildId, buildInfo.vmSeqId)
+        val buildRecord = thirdPartyAgentBuildDao.getWithExecuteCount(
+            dslContext,
+            buildInfo.buildId,
+            buildInfo.vmSeqId,
+            executeCount = buildInfo.executeCount
+        )
         if (buildRecord != null && (
                     buildRecord.status != PipelineTaskStatus.DONE.status ||
                             buildRecord.status != PipelineTaskStatus.FAILURE.status
