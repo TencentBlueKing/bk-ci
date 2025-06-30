@@ -175,7 +175,7 @@ class ManagerService @Autowired constructor(
         projectId: String,
         userId: String
     ) {
-        val preCheckProject = getProjectIdsFromRedis(PROJECTS_OF_SIGNATURE_PRE_PROCESSING).contains(projectId)
+        val preCheckProject = getProjectIdsFromRedis(PROJECTS_OF_SIGNATURE_PRE_CHECK).contains(projectId)
         if (preCheckProject) {
             if (!isUserSigned(userId)) {
                 logger.warn(
@@ -212,7 +212,7 @@ class ManagerService @Autowired constructor(
         val redisCacheKey = USER_SIGNATURE_STATUS_CHECK + userId
         val redisValue = redisOperation.get(redisCacheKey)?.toBooleanStrictOrNull()
         if (redisValue != null) {
-            user2ESignStatus.put(redisCacheKey, redisValue) // 回填本地缓存
+            user2ESignStatus.put(userId, redisValue) // 回填本地缓存
             return redisValue
         }
         // 3. Redis未命中，调用第三方接口
@@ -239,7 +239,7 @@ class ManagerService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(ManagerService::class.java)
         private const val PROJECTS_OF_SIGNATURE = "projects.signature.check"
-        private const val PROJECTS_OF_SIGNATURE_PRE_PROCESSING = "projects.signature.check.pre.process"
+        private const val PROJECTS_OF_SIGNATURE_PRE_CHECK = "projects.signature.check.pre.check"
         private const val USER_SIGNATURE_STATUS_CHECK = "user.signature.status.check."
     }
 }
