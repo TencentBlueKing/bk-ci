@@ -46,7 +46,7 @@ class NotifyUserBlackListService @Autowired constructor(
     val notifyUserBlacklistDao: NotifyUserBlacklistDao
 ) {
 
-    @Value("\${sharding.routing.cacheSize:50000}")
+    @Value("\${notify.userBlackList.cacheSize:50000}")
     val notifyUserBlackListCacheSize: Long = 50000
 
     companion object {
