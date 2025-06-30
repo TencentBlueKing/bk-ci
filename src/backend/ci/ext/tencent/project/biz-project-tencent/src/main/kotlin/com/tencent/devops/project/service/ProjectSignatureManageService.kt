@@ -81,8 +81,8 @@ class ProjectSignatureManageService(
                 signed = true
             )
         }
-        val isUserSigned = redisOperation.get(USER_SIGNATURE_STATUS_CHECK.plus(userId))
-        if (isUserSigned?.toBoolean() == true) {
+        val isUserSigned = redisOperation.get(USER_SIGNATURE_STATUS_CHECK.plus(userId))?.toBooleanStrictOrNull()
+        if (isUserSigned == true) {
             return UserSignatureStatusResponse(
                 userId = userId,
                 signed = true
@@ -90,7 +90,10 @@ class ProjectSignatureManageService(
         }
         val userLiveStatus = fetchUserLiveESignStatus(userId)
         return if (userLiveStatus.signed) {
-            userLiveStatus
+            UserSignatureStatusResponse(
+                userId = userId,
+                signed = true
+            )
         } else {
             val targetLanguage = I18nUtil.getLanguage(userId)
             val projectNamesLocalized = if (targetLanguage == DEFAULT_LOCALE_LANGUAGE) {
@@ -100,8 +103,9 @@ class ProjectSignatureManageService(
             }
             val projectInformation = buildProjectInfo(projectNamesLocalized)
             UserSignatureStatusResponse(
-                userId = userLiveStatus.userId,
+                userId = userId,
                 signed = false,
+                // 二维码
                 schemeQrcodeUrl = userLiveStatus.schemeQrcodeUrl,
                 projectInformation = projectInformation
             )
