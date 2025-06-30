@@ -49,7 +49,7 @@ class NotifyUserBlackListService @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(NotifyUserBlackListService::class.java)
-        val notifyUserBlackListCacheKeyPrefix = "notify_user_blacklist_cache_key_"
+        const val NOTIFY_USER_BLACK_LIST_CACHE_KEY_PREFIX = "notify_user_blacklist_cache_key_"
     }
 
     private val notifyUserBlackListCache = Caffeine.newBuilder()
@@ -68,7 +68,7 @@ class NotifyUserBlackListService @Autowired constructor(
             if (count > 0) {
                 // 清除相关用户缓存
                 userIds.forEach { userId ->
-                    notifyUserBlackListCache.invalidate(notifyUserBlackListCacheKeyPrefix + userId)
+                    notifyUserBlackListCache.invalidate(NOTIFY_USER_BLACK_LIST_CACHE_KEY_PREFIX + userId)
                 }
             }
             true
@@ -89,7 +89,7 @@ class NotifyUserBlackListService @Autowired constructor(
             if (count > 0) {
                 // 清除相关用户缓存
                 userIds.forEach { userId ->
-                    notifyUserBlackListCache.invalidate(notifyUserBlackListCacheKeyPrefix + userId)
+                    notifyUserBlackListCache.invalidate(NOTIFY_USER_BLACK_LIST_CACHE_KEY_PREFIX + userId)
                 }
             }
             true
@@ -106,7 +106,7 @@ class NotifyUserBlackListService @Autowired constructor(
      */
     fun getBlacklistUser(userId: String): String? {
         try {
-            return notifyUserBlackListCache.get(notifyUserBlackListCacheKeyPrefix + userId) {
+            return notifyUserBlackListCache.get(NOTIFY_USER_BLACK_LIST_CACHE_KEY_PREFIX + userId) {
                 logger.info("Updating blacklist cache for user: $userId")
                 notifyUserBlacklistDao.getBlacklistForUser(dslContext, userId)
             }
