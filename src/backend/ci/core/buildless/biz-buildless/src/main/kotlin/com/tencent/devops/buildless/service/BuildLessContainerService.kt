@@ -245,8 +245,16 @@ class BuildLessContainerService(
 
     fun checkContainerRunning(containerId: String): Boolean {
         try {
-            val containerInspect = httpDockerCli.inspectExecCmd(containerId).exec()
-            return containerInspect.isRunning
+            val containerInfo = httpDockerCli
+                .listContainersCmd()
+                .withStatusFilter(setOf("running"))
+                .withLabelFilter(mapOf(BUILDLESS_POOL_PREFIX to ""))
+                .exec()
+
+            return containerInfo.any {
+                val shortId = if (it.id.length > 12) it.id.substring(0, 12) else it.id
+                shortId == containerId
+            }
         } catch (e: Exception) {
             logger.error("===> check container running failed, containerId: $containerId, error msg: $e")
             return false
