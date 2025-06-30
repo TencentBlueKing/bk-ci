@@ -28,30 +28,23 @@ package com.tencent.devops.notify.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.notify.api.annotation.BkCheckBlackListInterface
-import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
-import com.tencent.devops.notify.pojo.NotifyContext
-import com.tencent.devops.notify.pojo.NotifyMessageContextRequest
-import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
-import com.tencent.devops.notify.service.NotifyMessageTemplateService
+import com.tencent.devops.notify.api.op.OpNotifyUserBlackListResource
+import com.tencent.devops.notify.service.NotifyUserBlackListService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceNotifyMessageTemplateResourceImpl @Autowired constructor(
-    private val notifyMessageTemplateService: NotifyMessageTemplateService
-) : ServiceNotifyMessageTemplateResource {
-
-    @BkCheckBlackListInterface
-    override fun sendNotifyMessageByTemplate(request: SendNotifyMessageTemplateRequest): Result<Boolean> {
-        return notifyMessageTemplateService.sendNotifyMessageByTemplate(request)
+class OpNotifyUserBlackListResourceImpl @Autowired constructor(
+    private val notifyUserBlackListService: NotifyUserBlackListService
+) : OpNotifyUserBlackListResource {
+    override fun batchAddToBlacklist(userIds: List<String>): Result<Boolean> {
+        return Result(notifyUserBlackListService.batchAddToBlacklist(userIds))
     }
 
-    override fun getNotifyMessageByTemplate(request: NotifyMessageContextRequest): Result<NotifyContext?> {
-        return notifyMessageTemplateService.getNotifyMessageByTemplate(request)
+    override fun batchRemoveFromBlacklist(userIds: List<String>): Result<Boolean> {
+        return Result(notifyUserBlackListService.batchRemoveFromBlacklist(userIds))
     }
 
-    @BkCheckBlackListInterface
-    override fun completeNotifyMessageByTemplate(request: SendNotifyMessageTemplateRequest): Result<Boolean> {
-        return notifyMessageTemplateService.completeNotifyMessageByTemplate(request)
+    override fun getBlacklist(): Result<List<String>> {
+        return Result(notifyUserBlackListService.getBlacklist())
     }
 }
