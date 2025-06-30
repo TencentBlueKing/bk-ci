@@ -293,8 +293,8 @@ importers:
   bk-pipeline:
     dependencies:
       '@tencent/bk-magic-vue':
-        specifier: 2.5.9-beta.6
-        version: 2.5.9-beta.6(vue@2.7.16)
+        specifier: 2.5.10-beta.6
+        version: 2.5.10-beta.6(vue@2.7.16)
       uuid:
         specifier: ~8.1.0
         version: 8.1.0
@@ -1341,8 +1341,8 @@ importers:
         specifier: ^0.1.13
         version: 0.1.19
       '@tencent/bk-magic-vue':
-        specifier: 2.5.9-beta.6
-        version: 2.5.9-beta.6(vue@2.7.16)
+        specifier: 2.5.10-beta.6
+        version: 2.5.10-beta.6(vue@2.7.16)
       axios:
         specifier: 0.28.0
         version: 0.28.0
@@ -1652,8 +1652,8 @@ importers:
         specifier: ^0.2.1
         version: 0.2.1
       '@tencent/bk-magic-vue':
-        specifier: 2.5.9-beta.6
-        version: 2.5.9-beta.6(vue@2.7.16)
+        specifier: 2.5.10-beta.6
+        version: 2.5.10-beta.6(vue@2.7.16)
       axios:
         specifier: 0.28.0
         version: 0.28.0
@@ -2153,8 +2153,8 @@ importers:
         specifier: ^1.0.6
         version: 1.0.14
       '@tencent/bk-magic-vue':
-        specifier: 2.5.9-beta.6
-        version: 2.5.9-beta.6(vue@2.7.16)
+        specifier: 2.5.10-beta.6
+        version: 2.5.10-beta.6(vue@2.7.16)
       '@vue/babel-preset-jsx':
         specifier: ^1.2.4
         version: 1.4.0(@babel/core@7.24.6)(vue@2.7.16)
@@ -2742,8 +2742,8 @@ importers:
   locale:
     dependencies:
       '@tencent/bk-magic-vue':
-        specifier: 2.5.9-beta.6
-        version: 2.5.9-beta.6(vue@2.7.16)
+        specifier: 2.5.10-beta.6
+        version: 2.5.10-beta.6(vue@2.7.16)
       axios:
         specifier: 0.28.0
         version: 0.28.0
@@ -5982,8 +5982,9 @@ packages:
   '@swc/helpers@0.5.12':
     resolution: {integrity: sha512-KMZNXiGibsW9kvZAO1Pam2JPTDBm+KSHMMHWdsyI/1DbIZjT2A6Gy3hblVXUMEDvUAKq+e0vL0X0o54owWji7g==}
 
-  '@tencent/bk-magic-vue@2.5.9-beta.6':
-    resolution: {integrity: sha512-BJtjFcm7ITmVwAnLspchDFyzXDoSWcQ8leI1We/rMdGpdC8qshAC8b9L0D5JVkWuqwlbHgTWVrGN+vEp4FWV8A==, tarball: https://mirrors.tencent.com/npm/@tencent/bk-magic-vue/-/@tencent/bk-magic-vue-2.5.9-beta.6.tgz}
+  '@tencent/bk-magic-vue@2.5.10-beta.6':
+    resolution: {integrity: sha512-bWiOzIHe7VFoQr9bG2gIpzl0r2buCL83WY1WiCk6NyCWpCV+Elgv2e5QP6nPyc2U6LQOd8aKrqyim2jHwg4UqQ==, tarball: https://mirrors.tencent.com/npm/@tencent/bk-magic-vue/-/@tencent/bk-magic-vue-2.5.10-beta.6.tgz}
+    engines: {node: <= 16.14}
     peerDependencies:
       vue: ^2.6.0
 
@@ -12885,7 +12886,7 @@ packages:
     engines: {node: '>=10'}
 
   ms@2.0.0:
-    resolution: {integrity: sha512-Tpp60P6IUJDTuOq/5Z8cdskzJujfwqfOTkrwIwj7IRISpnkJnT6SyJ4PCPnGMoFjC9ddhal5KVIYtAt97ix05A==}
+    resolution: {integrity: sha1-VgiurfwAvmwpAd9fmGF4jeDVl8g=, tarball: https://mirrors.cloud.tencent.com/npm/ms/-/ms-2.0.0.tgz}
 
   ms@2.1.2:
     resolution: {integrity: sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==}
@@ -21948,7 +21949,7 @@ snapshots:
     dependencies:
       tslib: 2.6.2
 
-  '@tencent/bk-magic-vue@2.5.9-beta.6(vue@2.7.16)':
+  '@tencent/bk-magic-vue@2.5.10-beta.6(vue@2.7.16)':
     dependencies:
       clipboard: 2.0.11
       highlight.js: 10.7.3
