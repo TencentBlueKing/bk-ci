@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.notify.resources
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.notify.api.op.OpNotifyUserBlackListResource
@@ -44,7 +45,7 @@ class OpNotifyUserBlackListResourceImpl @Autowired constructor(
         return Result(notifyUserBlackListService.batchRemoveFromBlacklist(userIds))
     }
 
-    override fun getBlacklist(): Result<List<String>> {
-        return Result(notifyUserBlackListService.getBlacklist())
+    override fun getBlacklist(page: Int, pageSize: Int): Result<Page<String>> {
+        return Result(notifyUserBlackListService.getBlacklistByPage(page, pageSize))
     }
 }

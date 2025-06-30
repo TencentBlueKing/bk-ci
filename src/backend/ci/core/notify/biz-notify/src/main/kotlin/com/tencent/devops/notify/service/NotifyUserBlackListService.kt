@@ -28,6 +28,8 @@
 package com.tencent.devops.notify.service
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.notify.dao.NotifyUserBlacklistDao
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
@@ -105,5 +107,22 @@ class NotifyUserBlackListService @Autowired constructor(
             logger.warn("Failed to get blacklist，${ignored.message}")
             emptyList()
         }
+    }
+
+    /**
+     * 分页获取黑名单用户
+     * @return Pair<总数量, 当前页用户列表>
+     */
+    fun getBlacklistByPage(page: Int = 1, pageSize: Int = 100): Page<String> {
+
+        val (totalCount, records) = notifyUserBlacklistDao.listBlacklistUsersByPage(dslContext, page, pageSize)
+        val totalPages = PageUtil.calTotalPage(pageSize, totalCount)
+        return Page(
+            count = totalCount,
+            page = page,
+            pageSize = pageSize,
+            totalPages = totalPages.toInt(),
+            records = records
+        )
     }
 }

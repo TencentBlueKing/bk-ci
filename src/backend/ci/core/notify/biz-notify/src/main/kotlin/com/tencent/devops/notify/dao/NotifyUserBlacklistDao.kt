@@ -103,4 +103,28 @@ class NotifyUserBlacklistDao {
                 .fetchInto(String::class.java)
         }
     }
+
+    /**
+     * 分页获取黑名单用户
+     * @return Pair<总数量, 当前页用户列表>
+     */
+    fun listBlacklistUsersByPage(
+        dslContext: DSLContext,
+        page: Int,
+        pageSize: Int
+    ): Pair<Long, List<String>> {
+        val table = TNotifyUserBlacklist.T_NOTIFY_USER_BLACKLIST
+        with(table) {
+            val total = dslContext.selectCount()
+                .from(table)
+                .fetchOne(0, Long::class.java) ?: 0L
+
+            val users = dslContext.select(table.USER_ID)
+                .from(table)
+                .limit((page - 1) * pageSize, pageSize)
+                .fetchInto(String::class.java)
+
+            return Pair(total, users)
+        }
+    }
 }
