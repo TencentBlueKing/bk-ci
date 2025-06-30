@@ -72,7 +72,7 @@ class ThreadPoolUtils private constructor() {
                         // 自定义线程工厂，添加线程池名称前缀
                         /* threadFactory = */ { r ->
                             Thread(r).apply {
-                                name = "pool-$poolName-thread-${id}"
+                                name = "pool-$poolName-thread-$id"
                             }
                         },
                         // 拒绝策略记录线程池名称
