@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.notify.api.op
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -35,6 +36,7 @@ import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "OP_NOTIFIES_BLACKLIST", description = "通知-用户黑名单")
@@ -63,5 +65,12 @@ interface OpNotifyUserBlackListResource {
     @Operation(summary = "获取所有黑名单用户")
     @GET
     @Path("/list")
-    fun getBlacklist(): Result<List<String>>
+    fun getBlacklist(
+        @Parameter(description = "页码", required = true)
+        @QueryParam("page")
+        page: Int,
+        @Parameter(description = "每页数量", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<Page<String>>
 }
