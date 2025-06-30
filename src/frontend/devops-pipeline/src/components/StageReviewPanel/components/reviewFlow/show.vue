@@ -66,7 +66,10 @@
                             <section class="stage-review-content">
                                 <p class="review-title">
                                     <span class="content-subtitle">{item.name}</span>
-                                    <span class="review-normal"> { this.$t('stageReview.approver') }{item.reviewers.join(',')}</span>
+                                    <span class="review-normal">
+                                        { this.$t('stageReview.approver') }
+                                        <bk-user-display-name user-id={item.reviewers}></bk-user-display-name>
+                                    </span>
                                 </p>
                             </section>
                         )

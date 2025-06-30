@@ -30,7 +30,11 @@
             <bk-table-column
                 :label="$t('environment.operateUser')"
                 prop="creator"
-            ></bk-table-column>
+            >
+                <template v-slot="props">
+                    <bk-user-display-name :user-id="props.row.creator" />
+                </template>
+            </bk-table-column>
             <bk-table-column
                 :label="$t('environment.operateTime')"
                 prop="updateTime"

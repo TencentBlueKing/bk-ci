@@ -143,6 +143,7 @@
     import Logo from '@/components/Logo'
     import EmptyException from '@/components/common/exception'
     import { VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
+    import TenantSingleton from '@/utils/tenant'
     import { convertTime, navConfirm } from '@/utils/util'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
@@ -230,7 +231,8 @@
                     id: 'description'
                 }, {
                     name: this.$t('audit.operator'),
-                    id: 'creator'
+                    id: 'creator',
+                    remoteMethod: TenantSingleton.fetchTenantUsers
                 }]
             },
             filterQuery () {

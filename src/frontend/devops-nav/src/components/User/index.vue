@@ -11,7 +11,7 @@
         <div
             class="user-entry"
         >
-            {{ username }}
+            <bk-user-display-name :user-id="username"></bk-user-display-name>
             <i class="devops-icon icon-down-shape ml5" />
         </div>
         <template slot="content">

@@ -21,6 +21,7 @@ import createLocale from '../../locale'
 import '@/assets/scss/index.scss'
 import Undeploy from '@/components/Undeploy/index.vue'
 import bsWebSocket from '@/utils/bsWebSocket.js'
+// @ts-ignore
 import { BkPermission, PermissionDirective, handleNoPermission } from 'bk-permission'
 import 'bk-permission/dist/main.css'
 import VeeValidate from 'vee-validate'
@@ -29,6 +30,7 @@ import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
 import './assets/scss/icon/iconcool'
 import ExtendsCustomRules from './utils/customRules'
 import { handleProjectNoPermission } from './utils/permission'
+import TenantSingleton from './utils/tenant'
 import { judgementLsVersion } from './utils/util'
 import validDictionary from './utils/validDictionary'
 
@@ -49,7 +51,7 @@ declare module 'vue/types/vue' {
 }
 
 Vue.use(bkMagic)
-Vue.use(PermissionDirective(handleProjectNoPermission))
+Vue.use(PermissionDirective(handleProjectNoPermission, `https://devops.bk-tenant-dev.woa.com`))
 
 Vue.component('AsideNav', AsideNav)
 Vue.component('ContentHeader', ContentHeader)
@@ -167,12 +169,20 @@ Vue.mixin({
     }
 })
 
-window.devops = new Vue({
-    el: '#devops-root',
-    i18n,
-    router,
-    store,
-    render (h) {
-        return h(App)
-    }
-})
+async function main () {
+    const data = await new TenantSingleton().init()
+    Vue.prototype.$tenant = TenantSingleton
+    Vue.prototype.$tenantId = data.tenantId
+    Vue.prototype.$tenantApiBaseUrl = data.apiBaseUrl
+    window.devops = new Vue({
+        el: '#devops-root',
+        i18n,
+        router,
+        store,
+        render (h) {
+            return h(App)
+        }
+    })
+}
+
+main()

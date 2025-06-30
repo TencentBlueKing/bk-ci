@@ -36,7 +36,10 @@
                         class="template-logo"
                     ></logo>
                     <div class="template-name">{{ template.templateName }}</div>
-                    <div class="template-creator"><span>{{ $t('creator') }}：</span>{{ template.creator }}</div>
+                    <div class="template-creator">
+                        <span>{{ $t('creator') }}：</span>
+                        <bk-user-display-name :user-id="template.creator" />
+                    </div>
                     <div class="template-brief">
                         <label>{{ $t('desc') }}：</label>
                         <p>{{ template.description }}</p>
@@ -272,17 +275,17 @@
 </template>
 
 <script>
+    import AlertTips from '@/components/AlertTips.vue'
     import Logo from '@/components/Logo'
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import innerHeader from '@/components/devops/inner_header'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import instanceMessage from '@/components/template/instance-message.vue'
     import instancePipelineName from '@/components/template/instance-pipeline-name.vue'
-    import AlertTips from '@/components/AlertTips.vue'
-    import { allVersionKeyList } from '@/utils/pipelineConst'
-    import { mapGetters } from 'vuex'
-    import { getParamsValuesMap, isObject } from '@/utils/util'
     import { isFileParam, isMultipleParam } from '@/store/modules/atom/paramsConfig'
+    import { allVersionKeyList } from '@/utils/pipelineConst'
+    import { getParamsValuesMap, isObject } from '@/utils/util'
+    import { mapGetters } from 'vuex'
 
     export default {
         components: {

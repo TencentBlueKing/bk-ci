@@ -112,7 +112,7 @@ export default (r, initSetLocale = false) => {
         if (loadedModule[localeModuleId]) {
             return Promise.resolve()
         }
-        return axios.get(`${window.PUBLIC_URL_PREFIX}/${module}/${locale}.json?t=${+new Date()}`, {
+        return axios.get(`${window.PUBLIC_URL_PREFIX}/${module}/${localeAliasMap[locale]}.json?t=${+new Date()}`, {
             crossdomain: true
         }).then(response => {
             const messages = response.data
@@ -204,7 +204,10 @@ function importAll (r) {
 }
 
 function jsonpLocale (language) {
-    if (!window.BK_PAAS_PRIVATE_URL) return
+    // detect is a valid url
+    if (!/^https?:\/\/.*/.test(window.BK_PAAS_PRIVATE_URL)) {
+        return Promise.resolve(false)
+    }
     return new Promise((resolve) => {
         try {
             const callbackName = `jsonp_callback_${Math.round(100000 * Math.random())}`
@@ -213,7 +216,7 @@ function jsonpLocale (language) {
                 document.body.removeChild(script)
                 resolve(data)
             }
-
+            
             const script = document.createElement('script')
             script.src = `${window.BK_PAAS_PRIVATE_URL}/api/c/compapi/v2/usermanage/fe_update_user_language?language=${language}&callback=${callbackName}`
             document.body.appendChild(script)

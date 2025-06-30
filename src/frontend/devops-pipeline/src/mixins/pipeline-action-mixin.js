@@ -86,6 +86,7 @@ export default {
                     })
                 } else {
                     if (!isShallowEqual(queryParams, this.$route.query)) {
+                        console.log('getPipelines', queryParams)
                         this.$router.replace({
                             query: queryParams
                         })

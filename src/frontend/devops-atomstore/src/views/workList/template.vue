@@ -88,7 +88,11 @@
                     :label="$t('store.修改人')"
                     prop="modifier"
                     show-overflow-tooltip
-                ></bk-table-column>
+                >
+                    <template v-slot="props">
+                        <bk-user-display-name :user-id="props.row.modifier" />
+                    </template>
+                </bk-table-column>
                 <bk-table-column
                     :label="$t('store.修改时间')"
                     prop="updateTime"
@@ -337,9 +341,9 @@
 </template>
 
 <script>
-    import { getQueryString, debounce } from '@/utils/index'
     import formTips from '@/components/common/formTips/index'
     import { templateStatusList } from '@/store/constants'
+    import { debounce, getQueryString } from '@/utils/index'
 
     export default {
         components: {

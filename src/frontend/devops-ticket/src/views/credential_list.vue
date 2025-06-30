@@ -46,7 +46,11 @@
                         :label="$t('ticket.creator')"
                         prop="createUser"
                         show-overflow-tooltip
-                    ></bk-table-column>
+                    >
+                        <template v-slot="props">
+                            <bk-user-display-name :user-id="props.row.createUser" />
+                        </template>
+                    </bk-table-column>
                     <bk-table-column
                         :label="$t('ticket.creationTime')"
                         prop="createTime"
@@ -56,7 +60,11 @@
                     <bk-table-column
                         :label="$t('ticket.lastModifiedBy')"
                         prop="updateUser"
-                    ></bk-table-column>
+                    >
+                        <template v-slot="props">
+                            <bk-user-display-name :user-id="props.row.updateUser" />
+                        </template>
+                    </bk-table-column>
                     <bk-table-column
                         :label="$t('ticket.lastModifiedTime')"
                         prop="updatedTime"
@@ -131,8 +139,8 @@
 <script>
     import EmptyTips from '@/components/devops/emptyTips'
     import { CRED_RESOURCE_ACTION, CRED_RESOURCE_TYPE } from '@/utils/permission'
-    import { mapGetters } from 'vuex'
     import { convertTime } from '@/utils/util'
+    import { mapGetters } from 'vuex'
 
     export default {
         components: {

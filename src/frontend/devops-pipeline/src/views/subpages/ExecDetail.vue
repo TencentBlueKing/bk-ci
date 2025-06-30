@@ -62,9 +62,9 @@
                         size="24"
                     />
                     <span v-if="startUser">
+                        <bk-user-display-name :user-id="startUser" />
                         {{
                             $t("details.executorInfo", [
-                                startUser,
                                 execDetail.trigger,
                                 execFormatStartTime
                             ])

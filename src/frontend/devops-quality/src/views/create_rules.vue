@@ -510,9 +510,8 @@
                                             :desc="$t('quality.请输入通知人员，支持输入流水线变量，默认发给流水线触发人')"
                                         >
                                             <user-input
-                                                :handle-change="handleChange"
-                                                name="attacher"
-                                                :value="createRuleForm.notifyUserList"
+                                                multiple
+                                                v-model="createRuleForm.notifyUserList"
                                                 :placeholder="$t('quality.请输入通知人员，支持输入流水线变量，默认发给流水线触发人')"
                                             ></user-input>
                                         </bk-form-item>
@@ -530,9 +529,8 @@
                                             :required="true"
                                         >
                                             <user-input
-                                                :handle-change="handleChange"
-                                                name="reviewer"
-                                                :value="createRuleForm.auditUserList"
+                                                multiple
+                                                v-model="createRuleForm.auditUserList"
                                                 :placeholder="$t('quality.请输入审核人，支持输入流水线变量')"
                                             ></user-input>
                                         </bk-form-item>
@@ -672,7 +670,6 @@
             :node-select-conf="nodeSelectConf"
             :create-group-form="createGroupForm"
             :loading="dialogLoading"
-            :on-change="handleChange"
             :error-handler="errorHandler"
             @confirmFn="confirmFn"
             :cancel-fn="cancelFn"
@@ -1240,7 +1237,7 @@
 
                     this.createRuleForm = JSON.parse(JSON.stringify(this.baseForm))
                     Object.assign(this.createRuleForm, res)
-
+                    
                     // 指标处理
                     this.createRuleForm.indicators.forEach(item => {
                         item.operationList = item.operationList.map(operation => {
@@ -1406,15 +1403,6 @@
             },
             closePipelineList () {
                 this.showPipelineList = false
-            },
-            handleChange (name, value) {
-                if (name === 'reviewer') {
-                    this.createRuleForm.auditUserList = value
-                } else if (name === 'attacher') {
-                    this.createRuleForm.notifyUserList = value
-                } else if (name === 'innerList') {
-                    this.createGroupForm.internal_list = value
-                }
             },
             toCreateGroup () {
                 this.createGroupForm = {

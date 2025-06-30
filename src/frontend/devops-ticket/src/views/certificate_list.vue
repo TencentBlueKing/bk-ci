@@ -34,7 +34,11 @@
                     <bk-table-column
                         :label="$t('ticket.cert.uploader')"
                         prop="creator"
-                    ></bk-table-column>
+                    >
+                        <template v-slot="props">
+                            <bk-user-display-name :user-id="props.row.creator" />
+                        </template>
+                    </bk-table-column>
                     <bk-table-column
                         :label="$t('ticket.cert.expireDate')"
                         prop="expireTime"
@@ -111,8 +115,8 @@
 </template>
 
 <script>
-    import { convertTime } from '@/utils/util'
     import emptyTips from '@/components/devops/emptyTips'
+    import { convertTime } from '@/utils/util'
     import { CERT_RESOURCE_ACTION, CERT_RESOURCE_TYPE } from '../utils/permission'
 
     export default {

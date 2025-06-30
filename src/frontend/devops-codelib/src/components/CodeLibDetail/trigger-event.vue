@@ -80,12 +80,12 @@
     </section>
 </template>
 <script>
+    import '@blueking/search-select/dist/styles/index.css'
     import {
         mapActions
     } from 'vuex'
     import EmptyTableStatus from '../empty-table-status.vue'
     import TimelineCollapse from './timeline-collapse.vue'
-    import '@blueking/search-select/dist/styles/index.css'
 
     export default {
         name: 'basicSetting',
@@ -172,7 +172,8 @@
                     },
                     {
                         name: this.$t('codelib.触发人'),
-                        id: 'triggerUser'
+                        id: 'triggerUser',
+                        remoteMethod: this.$tenant.fetchTenantUsers
                     },
                     {
                         name: this.$t('codelib.流水线名称'),

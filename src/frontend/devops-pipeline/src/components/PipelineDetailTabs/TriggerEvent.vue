@@ -44,9 +44,10 @@
 <script>
     import InfiniteScroll from '@/components/InfiniteScroll'
     import EmptyException from '@/components/common/exception'
+    import TenantSingleton from '@/utils/tenant'
+    import { weekAgo } from '@/utils/util'
     import SearchSelect from '@blueking/search-select'
     import { mapActions } from 'vuex'
-    import { weekAgo } from '@/utils/util'
     import TriggerEventTimeline from './TriggerEventTimeline.vue'
 
     import '@blueking/search-select/dist/styles/index.css'
@@ -90,7 +91,8 @@
                     },
                     {
                         name: this.$t('details.trigger'),
-                        id: 'triggerUser'
+                        id: 'triggerUser',
+                        remoteMethod: TenantSingleton.fetchTenantUsers
                     },
                     {
                         name: this.$t('details.triggerResult'),

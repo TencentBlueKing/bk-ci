@@ -266,7 +266,11 @@
                 :width="tableWidthMap.creator"
                 :label="$t('creator')"
                 prop="creator"
-            />
+            >
+                <template v-slot="props">
+                    <bk-user-display-name :user-id="props.row.creator" />
+                </template>
+            </bk-table-column>
         </template>
         <template v-else-if="isDeleteView">
             <bk-table-column
@@ -291,7 +295,11 @@
                 key="lastModifyUser"
                 :label="$t('restore.deleter')"
                 prop="lastModifyUser"
-            ></bk-table-column>
+            >
+                <template v-slot="props">
+                    <bk-user-display-name :user-id="props.row.lastModifyUser" />
+                </template>
+            </bk-table-column>
         </template>
         <template v-else>
             <bk-table-column
@@ -341,7 +349,7 @@
                                         :name="props.row.startType"
                                         size="16"
                                     />
-                                    <span>{{ props.row.latestBuildUserId }}</span>
+                                    <bk-user-display-name :user-id="props.row.latestBuildUserId" />
                                 </span>
                                 <span
                                     v-if="props.row.webhookAliasName"
@@ -419,7 +427,11 @@
                 :width="tableWidthMap.creator"
                 :label="$t('creator')"
                 prop="creator"
-            />
+            >
+                <template v-slot="props">
+                    <bk-user-display-name :user-id="props.row.creator" />
+                </template>
+            </bk-table-column>
             <bk-table-column
                 v-if="allRenderColumnMap.createTime"
                 :width="tableWidthMap.createTime"
@@ -574,6 +586,12 @@
         RESOURCE_ACTION,
         handlePipelineNoPermission
     } from '@/utils/permission'
+    // import {
+    //     ,
+    //     PIPELINE_FILTER_LABELS,
+    //     PIPELINE_FILTER_PIPELINENAME,
+    //     PIPELINE_FILTER_VIEWIDS
+    // } from '@/utils/pipelineConst'
     import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
     import { convertTime, isShallowEqual, prettyDateTimeFormat } from '@/utils/util'
     import { mapGetters, mapState } from 'vuex'
@@ -884,6 +902,7 @@
 
                 try {
                     this.pipelineList = []
+
                     const { count, page, records } = await this.getPipelines({
                         page: String(this.pagination.current),
                         pageSize: String(this.pagination.limit),

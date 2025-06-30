@@ -246,7 +246,11 @@
                         prop="createdUser"
                         min-width="120"
                         show-overflow-tooltip
-                    ></bk-table-column>
+                    >
+                        <template v-slot="props">
+                            <bk-user-display-name :user-id="props.row.createdUser" />
+                        </template>
+                    </bk-table-column>
                     <bk-table-column
                         v-if="allRenderColumnMap.lastModifyBy"
                         :label="$t('environment.lastModifier')"
@@ -254,7 +258,11 @@
                         prop="lastModifiedUser"
                         min-width="120"
                         show-overflow-tooltip
-                    ></bk-table-column>
+                    >
+                        <template v-slot="props">
+                            <bk-user-display-name :user-id="props.row.lastModifiedUser" />
+                        </template>
+                    </bk-table-column>
                     <bk-table-column
                         v-if="allRenderColumnMap.lastModifyTime"
                         :label="$t('environment.nodeInfo.lastModifyTime')"
@@ -373,12 +381,12 @@
 
 <script>
     import thirdConstruct from '@/components/devops/environment/third-construct-dialog'
-    import { getQueryString } from '@/utils/util'
-    import webSocketMessage from '../utils/webSocketMessage.js'
-    import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
     import EmptyTableStatus from '@/components/empty-table-status'
+    import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
+    import { getQueryString } from '@/utils/util'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
+    import webSocketMessage from '../utils/webSocketMessage.js'
     const NODE_TABLE_COLUMN_CACHE = 'node_list_columns'
     const ENV_NODE_TABLE_LIMIT_CACHE = 'env_node_table_limit_cache'
     export default {

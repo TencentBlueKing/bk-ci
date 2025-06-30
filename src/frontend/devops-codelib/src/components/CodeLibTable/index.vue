@@ -141,6 +141,9 @@
                 prop="updatedUser"
                 show-overflow-tooltip
             >
+                <template v-slot="props">
+                    <bk-user-display-name :user-id="props.row.updatedUser" />
+                </template>
             </bk-table-column>
             <bk-table-column
                 v-if="allColumnMap.lastModifiedTime"
@@ -236,19 +239,19 @@
 </template>
 
 <script>
-    import { mapActions, mapState } from 'vuex'
-    import { RESOURCE_ACTION, RESOURCE_TYPE } from '@/utils/permission'
-    import {
-        TABLE_COLUMN_CACHE,
-        CODE_REPOSITORY_CACHE,
-        CODE_REPOSITORY_SEARCH_VAL,
-        CACHE_CODELIB_TABLE_WIDTH_MAP,
-        listColumnsCache
-    } from '../../config/'
     import {
         getOffset,
         prettyDateTimeFormat
     } from '@/utils/'
+    import { RESOURCE_ACTION, RESOURCE_TYPE } from '@/utils/permission'
+    import { mapActions, mapState } from 'vuex'
+    import {
+        CACHE_CODELIB_TABLE_WIDTH_MAP,
+        CODE_REPOSITORY_CACHE,
+        CODE_REPOSITORY_SEARCH_VAL,
+        listColumnsCache,
+        TABLE_COLUMN_CACHE
+    } from '../../config/'
     import EmptyTableStatus from '../empty-table-status.vue'
     import UsingPipelinesDialog from '../UsingPipelinesDialog.vue'
     

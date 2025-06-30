@@ -47,14 +47,6 @@
                     {{ $t('template.addTemplate') }}
                 </bk-button>
             </template>
-            <div class="devops-template-table">
-                <template-table
-                    ref="selfTemp"
-                    :has-create-permission="hasCreatePermission"
-                    @getApiData="getTempFromSelf"
-                >
-                </template-table>
-            </div>
             <empty-tips
                 v-if="showSelfEmpty"
                 :title="$t('template.noTemplate')"
@@ -66,6 +58,17 @@
                 :permission-data="emptyTipsConfig.permissionData"
             >
             </empty-tips>
+            <div
+                v-else
+                class="devops-template-table"
+            >
+                <template-table
+                    ref="selfTemp"
+                    :has-create-permission="hasCreatePermission"
+                    @getApiData="getTempFromSelf"
+                >
+                </template-table>
+            </div>
         </div>
 
         <bk-dialog

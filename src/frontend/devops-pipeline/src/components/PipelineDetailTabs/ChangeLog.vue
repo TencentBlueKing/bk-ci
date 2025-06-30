@@ -14,7 +14,8 @@
                     :key="creator"
                     :id="creator"
                     :name="creator"
-                />
+                >
+                </bk-option>
             </bk-select>
         </header>
         <section
@@ -32,7 +33,14 @@
                     v-for="column in columns"
                     :key="column.key"
                     v-bind="column"
-                />
+                >
+                    <template
+                        v-if="column.prop === 'operator'"
+                        v-slot="props"
+                    >
+                        <bk-user-display-name :user-id="props.row.operator"></bk-user-display-name>
+                    </template>
+                </bk-table-column>
             </bk-table>
         </section>
     </main>

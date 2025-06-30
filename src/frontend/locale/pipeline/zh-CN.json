@@ -186,9 +186,9 @@
     "abortRes": "取消执行，立即标记为Stage成功状态",
     "approvalOpinion": "审核意见",
     "opinionTips": "请输入审核意见，驳回时必填",
-    "pendingApproval": "审批中，处理人：{0}",
-    "approved": "已审批，处理人：{0}",
-    "waitApproval": "待审批，处理人：{0}",
+    "pendingApproval": "审批中，处理人：",
+    "approved": "已审批，处理人：",
+    "waitApproval": "待审批，处理人：",
     "opinionRequired": "驳回时，审核意见必填",
     "userInputTips": "请输入一个或多个审核人，支持输入变量",
     "userGroupInputTips": "请输入一个或多个用户组，支持输入变量",
@@ -654,7 +654,7 @@
     "versionSelectorDisableTips": " 1. 存在 PAC 分支版本时，可选择分支版本执行<br/>2. 没有 PAC 分支版本时，始终执行当前最新版本"
   },
   "details": {
-    "executorInfo": "{0} {1}触发于 {2}",
+    "executorInfo": "{1}触发于 {2}",
     "pipelineVersionDiffTips": "流水线编排版本号已发生变化",
     "executeDetail": "执行详情",
     "outputs": "产出物",

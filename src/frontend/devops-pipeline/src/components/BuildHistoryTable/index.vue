@@ -252,7 +252,7 @@
                                 size="14"
                                 :name="props.row.startType"
                             />
-                            <span>{{ props.row.userId }}</span>
+                            <bk-user-display-name :user-id="props.row.userId"></bk-user-display-name>
                         </p>
                     </template>
                     <template

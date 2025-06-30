@@ -80,7 +80,11 @@
                             <bk-table-column
                                 :label="$t('lastUpdater')"
                                 prop="creator"
-                            ></bk-table-column>
+                            >
+                                <template v-slot="props">
+                                    <bk-user-display-name :user-id="props.row.creator" />
+                                </template>
+                            </bk-table-column>
                             <bk-table-column
                                 :label="$t('operate')"
                                 width="150"
