@@ -30,6 +30,7 @@ package com.tencent.devops.common.event.pojo.pipeline
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.pojo.IEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.common.stream.rabbit.RabbitQueueType
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
@@ -37,7 +38,10 @@ import io.swagger.v3.oas.annotations.media.Schema
  *
  * @version 1.0
  */
-@Event(StreamBinding.PIPELINE_BATCH_ARCHIVE)
+@Event(
+    destination = StreamBinding.PIPELINE_BATCH_ARCHIVE,
+    type = RabbitQueueType.QUORUM
+)
 data class PipelineBatchArchiveEvent(
     @get:Schema(title = "来源")
     val source: String,

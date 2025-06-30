@@ -32,8 +32,12 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.common.stream.rabbit.RabbitQueueType
 
-@Event(StreamBinding.PIPELINE_AGENT_DEMOTE_STARTUP)
+@Event(
+    destination = StreamBinding.PIPELINE_AGENT_DEMOTE_STARTUP,
+    type = RabbitQueueType.QUORUM
+)
 data class PipelineAgentStartupDemoteEvent(
     override val source: String,
     override val projectId: String,

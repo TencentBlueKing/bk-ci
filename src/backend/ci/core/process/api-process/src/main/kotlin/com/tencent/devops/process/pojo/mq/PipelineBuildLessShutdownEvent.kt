@@ -31,8 +31,12 @@ import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.common.stream.rabbit.RabbitQueueType
 
-@Event(StreamBinding.BUILD_LESS_AGENT_SHUTDOWN_DISPATCH)
+@Event(
+    destination = StreamBinding.BUILD_LESS_AGENT_SHUTDOWN_DISPATCH,
+    type = RabbitQueueType.QUORUM
+)
 data class PipelineBuildLessShutdownEvent(
     override val source: String,
     override val projectId: String,

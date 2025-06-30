@@ -31,13 +31,17 @@ import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.stream.rabbit.RabbitQueueType
 
 /**
  * Stage事件
  *
  * @version 1.0
  */
-@Event(StreamBinding.PIPELINE_BUILD_STAGE)
+@Event(
+    destination = StreamBinding.PIPELINE_BUILD_STAGE,
+    type = RabbitQueueType.QUORUM
+)
 data class PipelineBuildStageEvent(
     override val source: String,
     override val projectId: String,

@@ -31,8 +31,12 @@ import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.stream.rabbit.RabbitQueueType
 
-@Event(StreamBinding.PIPELINE_PAUSE_TASK_EXECUTE)
+@Event(
+    destination = StreamBinding.PIPELINE_PAUSE_TASK_EXECUTE,
+    type = RabbitQueueType.QUORUM
+)
 data class PipelineTaskPauseEvent(
     override var actionType: ActionType,
     override val source: String,
