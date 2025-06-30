@@ -218,10 +218,11 @@ class ProjectSignatureManageService(
         if (signature != cryptoToken(nonce, timestamp.toLong())) {
             throw InvalidParamException(message = "call back token invalid!")
         }
+        val redisKey = USER_SIGNATURE_STATUS_CHECK + callbackInfo.user
         if (callbackInfo.whitelistUser || callbackInfo.status == SUCCESS_STATUS) {
-            redisOperation.set(USER_SIGNATURE_STATUS_CHECK.plus(callbackInfo.user), "true")
+            redisOperation.set(redisKey, "true")
         } else {
-            redisOperation.delete(USER_SIGNATURE_STATUS_CHECK.plus(callbackInfo.user))
+            redisOperation.delete(redisKey)
         }
         return SignatureCallbackResponse.success()
     }
