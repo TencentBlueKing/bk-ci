@@ -27,24 +27,33 @@
 
 package com.tencent.devops.notify.service
 
-import com.tencent.devops.common.redis.RedisOperation
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.notify.dao.NotifyUserBlacklistDao
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 class NotifyUserBlackListService @Autowired constructor(
     val dslContext: DSLContext,
-    val notifyUserBlacklistDao: NotifyUserBlacklistDao,
-    val redisOperation: RedisOperation
+    val notifyUserBlacklistDao: NotifyUserBlacklistDao
 ) {
+
+    @Value("\${sharding.routing.cacheSize:50000}")
+    val notifyUserBlackListCacheSize: Long = 50000
 
     companion object {
         val logger = LoggerFactory.getLogger(NotifyUserBlackListService::class.java)
-        const val BLACKLIST_REDIS_KEY = "bkci:notify:blackList:"
+        private const val NOTIFY_USER_BLACK_LIST_CACHE_KEY = "notifyUserBlackListCache"
     }
+
+    private val notifyUserBlackListCache = Caffeine.newBuilder()
+        .maximumSize(notifyUserBlackListCacheSize)
+        .expireAfterWrite(1000, TimeUnit.DAYS)
+        .build<String, List<String>>()
 
     /**
      * 批量添加用户到黑名单
@@ -55,7 +64,7 @@ class NotifyUserBlackListService @Autowired constructor(
         return try {
             val count = notifyUserBlacklistDao.batchAddToBlacklist(dslContext, userIds)
             if (count > 0) {
-                refreshBlacklistCache()
+                notifyUserBlackListCache.invalidate(NOTIFY_USER_BLACK_LIST_CACHE_KEY)
             }
             true
         } catch (ignored: Throwable) {
@@ -73,7 +82,7 @@ class NotifyUserBlackListService @Autowired constructor(
         return try {
             val count = notifyUserBlacklistDao.batchRemoveFromBlacklist(dslContext, userIds)
             if (count > 0) {
-                refreshBlacklistCache()
+                notifyUserBlackListCache.invalidate(NOTIFY_USER_BLACK_LIST_CACHE_KEY)
             }
             true
         } catch (ignored: Throwable) {
@@ -83,33 +92,15 @@ class NotifyUserBlackListService @Autowired constructor(
     }
 
     /**
-     * 刷新缓存中的黑名单数据
-     */
-    private fun refreshBlacklistCache() {
-        try {
-            val blacklist = notifyUserBlacklistDao.listAllBlacklistUsers(dslContext)
-            redisOperation.set(BLACKLIST_REDIS_KEY, blacklist.joinToString(","))
-        } catch (ignored: Throwable) {
-            logger.warn("Failed to refresh blacklist cache，${ignored.message}")
-        }
-    }
-
-    /**
      * 获取所有黑名单用户
      * @return 黑名单用户列表
      */
     fun getBlacklist(): List<String> {
         return try {
-            val cached = redisOperation.get(BLACKLIST_REDIS_KEY)
-            if (cached != null) {
-                return if (cached.isEmpty()) emptyList() else cached.split(",")
-            }
-
-            val blacklist = notifyUserBlacklistDao.listAllBlacklistUsers(dslContext)
-            if (blacklist.isNotEmpty()) {
-                redisOperation.set(BLACKLIST_REDIS_KEY, blacklist.joinToString(","))
-            }
-            blacklist
+            notifyUserBlackListCache.get(NOTIFY_USER_BLACK_LIST_CACHE_KEY) {
+                logger.info("notifyUserBlackListCache update")
+                notifyUserBlacklistDao.listAllBlacklistUsers(dslContext)
+            } ?: emptyList()
         } catch (ignored: Throwable) {
             logger.warn("Failed to get blacklist，${ignored.message}")
             emptyList()
