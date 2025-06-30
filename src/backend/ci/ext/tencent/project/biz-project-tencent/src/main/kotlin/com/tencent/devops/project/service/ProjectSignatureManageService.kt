@@ -179,7 +179,7 @@ class ProjectSignatureManageService(
             logger.error("fetch user live status failed:$userId|$ex")
             return UserSignatureStatusResponse(
                 userId = userId,
-                signed = true
+                signed = false
             )
         }
     }
