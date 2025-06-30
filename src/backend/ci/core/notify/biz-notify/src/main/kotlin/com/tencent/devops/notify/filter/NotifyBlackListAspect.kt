@@ -110,7 +110,7 @@ class NotifyBlackListAspect constructor(
      * 过滤黑名单用户
      */
     private fun filterReceivers(receivers: Set<String>): Set<String> {
-        val blacklist = mutableListOf<String>()
+        val blacklist = mutableSetOf<String>()
         receivers.forEach {
             val blacklistUser = notifyUserBlackListService.getBlacklistUser(it)
             if (blacklistUser != null) {
@@ -118,7 +118,7 @@ class NotifyBlackListAspect constructor(
             }
         }
 
-        return receivers - blacklist.toSet()
+        return receivers.minus(blacklist)
     }
 
     companion object {
