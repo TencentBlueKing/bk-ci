@@ -1,27 +1,5 @@
 <template>
     <div class="node-list-wrapper">
-        <content-header class="env-header">
-            <div slot="left">{{ $t('environment.node') }}</div>
-            <div
-                slot="right"
-                v-if="nodeList.length > 0"
-            >
-                <bk-button
-                    v-perm="{
-                        permissionData: {
-                            projectId: projectId,
-                            resourceType: NODE_RESOURCE_TYPE,
-                            resourceCode: projectId,
-                            action: NODE_RESOURCE_ACTION.CREATE
-                        }
-                    }"
-                    theme="primary"
-                    @click="toImportNode('construct')"
-                >
-                    {{ $t('environment.nodeInfo.importNode') }}
-                </bk-button>
-            </div>
-        </content-header>
         <section
             class="sub-view-port"
             v-bkloading="{
@@ -31,6 +9,24 @@
         >
             <template>
                 <section class="filter-bar">
+                    <bk-button
+                        v-perm="{
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: NODE_RESOURCE_TYPE,
+                                resourceCode: projectId,
+                                action: NODE_RESOURCE_ACTION.CREATE
+                            }
+                        }"
+                        theme="primary"
+                        class="mr10"
+                        @click="toImportNode('construct')"
+                    >
+                        <span class="import-btn">
+                            <i class="devops-icon icon-plus"></i>
+                            {{ $t('environment.nodeInfo.importNode') }}
+                        </span>
+                    </bk-button>
                     <SearchSelect
                         class="search-input"
                         v-model="searchValue"
@@ -54,309 +50,22 @@
                         {{ $t('environment.导出') }}
                     </bk-button>
                 </section>
-                <bk-table
-                    v-bkloading="{ isLoading: tableLoading }"
-                    :size="tableSize"
-                    class="node-table-wrapper"
-                    row-class-name="node-item-row"
-                    :data="nodeList"
+
+                <list-table
+                    ref="listTable"
+                    :node-list="nodeList"
+                    :table-loading="tableLoading"
                     :pagination="pagination"
+                    :search-value="searchValue"
+                    :date-time-range="dateTimeRange"
                     @page-change="handlePageChange"
                     @page-limit-change="handlePageLimitChange"
                     @sort-change="handleSortChange"
-                >
-                    <bk-table-column
-                        type="selection"
-                        fixed="left"
-                        width="40"
-                    ></bk-table-column>
-                    <bk-table-column
-                        :label="$t('environment.nodeInfo.displayName')"
-                        sortable="custom"
-                        prop="displayName"
-                        min-width="160"
-                    >
-                        <template slot-scope="props">
-                            <div
-                                class="bk-form-content node-item-content"
-                                v-if="props.row.isEnableEdit"
-                            >
-                                <div class="edit-content">
-                                    <input
-                                        type="text"
-                                        class="bk-form-input env-name-input"
-                                        maxlength="30"
-                                        name="nodeName"
-                                        v-validate="'required'"
-                                        v-model="curEditNodeDisplayName"
-                                        :class="{ 'is-danger': errors.has('nodeName') }"
-                                    >
-                                    <div class="handler-btn">
-                                        <span
-                                            class="edit-base save"
-                                            @click="saveEdit(props.row)"
-                                        >{{ $t('environment.save') }}</span>
-                                        <span
-                                            class="edit-base cancel"
-                                            @click="cancelEdit(props.row.nodeHashId)"
-                                        >{{ $t('environment.cancel') }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div
-                                class="table-node-item node-item-id"
-                                v-else
-                            >
-                                <span
-                                    v-perm="canShowDetail(props.row) ? {
-                                        hasPermission: props.row.canView,
-                                        disablePermissionApi: true,
-                                        permissionData: {
-                                            projectId: projectId,
-                                            resourceType: NODE_RESOURCE_TYPE,
-                                            resourceCode: props.row.nodeHashId,
-                                            action: NODE_RESOURCE_ACTION.VIEW
-                                        }
-                                    } : {}"
-                                    class="node-name"
-                                    :class="{ 'pointer': canShowDetail(props.row), 'useless': !canShowDetail(props.row) || !props.row.canUse }"
-                                    :title="props.row.displayName"
-                                    @click="toNodeDetail(props.row)"
-                                >
-                                    {{ props.row.displayName || '-' }}
-                                </span>
-                                <span
-                                    v-perm="{
-                                        hasPermission: props.row.canEdit,
-                                        disablePermissionApi: true,
-                                        permissionData: {
-                                            projectId: projectId,
-                                            resourceType: NODE_RESOURCE_TYPE,
-                                            resourceCode: props.row.nodeHashId,
-                                            action: NODE_RESOURCE_ACTION.EDIT
-                                        }
-                                    }"
-                                >
-                                    <i
-                                        class="devops-icon icon-edit"
-                                        v-if="!isEditNodeStatus"
-                                        @click="editNodeName(props.row)"
-                                    ></i>
-                                </span>
-                            </div>
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column
-                        label="IP"
-                        sortable="custom"
-                        prop="nodeIp"
-                        min-width="120"
-                        show-overflow-tooltip
-                    >
-                        <template slot-scope="props">
-                            {{ props.row.ip || '-' }}
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column
-                        v-if="allRenderColumnMap.os"
-                        sortable="custom"
-                        :label="$t('environment.nodeInfo.os')"
-                        min-width="120"
-                        prop="osName"
-                    >
-                        <template slot-scope="props">
-                            {{ props.row.osName || '-' }}
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column
-                        v-if="allRenderColumnMap.nodeStatus"
-                        :label="`${$t('environment.status')}(${$t('environment.version')})`"
-                        sortable="custom"
-                        width="180"
-                        prop="nodeStatus"
-                    >
-                        <template slot-scope="props">
-                            <div
-                                class="table-node-item node-item-status"
-                                v-if="props.row.nodeStatus === 'BUILDING_IMAGE'"
-                            >
-                                <span class="node-status-icon normal-stutus-icon"></span>
-                                <span class="node-status">{{ $t('environment.nodeInfo.normal') }}</span>
-                            </div>
-                            <div class="table-node-item node-item-status">
-                                <!-- 状态icon -->
-                                <span
-                                    class="node-status-icon normal-stutus-icon"
-                                    v-if="successStatus.includes(props.row.nodeStatus)"
-                                ></span>
-                                <span
-                                    class="node-status-icon abnormal-stutus-icon"
-                                    v-if="failStatus.includes(props.row.nodeStatus)"
-                                >
-                                </span>
-                                <span
-                                    v-if="runningStatus.includes(props.row.nodeStatus)"
-                                    class="loading-icon"
-                                >
-                                    <bk-loading
-                                        theme="primary"
-                                        mode="spin"
-                                        size="mini"
-                                        is-loading
-                                    />
-                                </span>
-                                <!-- 状态值 -->
-                                <span
-                                    class="install-agent"
-                                    v-if="props.row.nodeStatus === 'RUNNING'"
-                                    @click="installAgent(props.row)"
-                                >
-                                    {{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}
-                                </span>
-                                <span
-                                    class="node-status"
-                                    v-else
-                                >
-                                    {{ $t('environment.nodeStatusMap')[props.row.nodeStatus] || props.row.nodeStatus }}
-                                </span>
-                                <div
-                                    class="install-agent"
-                                    v-if="['THIRDPARTY'].includes(props.row.nodeType) && props.row.nodeStatus === 'ABNORMAL'"
-                                    @click="installAgent(props.row)"
-                                >
-                                    {{ `（${$t('environment.install')}Agent）` }}
-                                </div>
-                                <span v-if="props.row.agentVersion">
-                                    ({{ props.row.agentVersion }})
-                                </span>
-                            </div>
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column
-                        v-if="allRenderColumnMap.usage"
-                        :label="$t('environment.nodeInfo.usage')"
-                        sortable="custom"
-                        prop="nodeType"
-                        min-width="80"
-                        show-overflow-tooltip
-                    >
-                        <template slot-scope="props">
-                            {{ usageMap[props.row.nodeType] || '-' }}
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column
-                        v-if="allRenderColumnMap.createdUser"
-                        :label="$t('environment.nodeInfo.importer')"
-                        sortable="custom"
-                        prop="createdUser"
-                        min-width="120"
-                        show-overflow-tooltip
-                    ></bk-table-column>
-                    <bk-table-column
-                        v-if="allRenderColumnMap.lastModifyBy"
-                        :label="$t('environment.lastModifier')"
-                        sortable="custom"
-                        prop="lastModifiedUser"
-                        min-width="120"
-                        show-overflow-tooltip
-                    ></bk-table-column>
-                    <bk-table-column
-                        v-if="allRenderColumnMap.lastModifyTime"
-                        :label="$t('environment.nodeInfo.lastModifyTime')"
-                        :width="180"
-                        sortable="custom"
-                        prop="lastModifiedTime"
-                        min-width="80"
-                        show-overflow-tooltip
-                    >
-                        <template slot-scope="props">
-                            {{ props.row.lastModifyTime || '-' }}
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column
-                        v-if="allRenderColumnMap.latestBuildPipeline"
-                        :label="$t('environment.nodeInfo.lastRunPipeline')"
-                        :width="180"
-                        sortable="custom"
-                        prop="latestBuildPipelineId"
-                        show-overflow-tooltip
-                    >
-                        <template slot-scope="props">
-                            <span
-                                class="pipeline-name"
-                                @click="handleToPipelineDetail(props.row.latestBuildDetail)"
-                            >
-                                {{ props.row?.latestBuildDetail?.pipelineName }}
-                            </span>
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column
-                        v-if="allRenderColumnMap.latestBuildTime"
-                        :width="180"
-                        :label="$t('environment.nodeInfo.lastRunAs')"
-                        prop="latestBuildTime"
-                        sortable="custom"
-                        min-width="80"
-                        show-overflow-tooltip
-                    >
-                        <template slot-scope="props">
-                            {{ props.row.lastBuildTime || '--' }}
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column
-                        :label="$t('environment.operation')"
-                        fixed="right"
-                        width="180"
-                    >
-                        <template slot-scope="props">
-                            <template v-if="props.row.canUse">
-                                <div class="table-node-item node-item-handler">
-                                    <span
-                                        v-if="!['TSTACK'].includes(props.row.nodeType)"
-                                        v-perm="{
-                                            hasPermission: props.row.canDelete,
-                                            disablePermissionApi: true,
-                                            permissionData: {
-                                                projectId: projectId,
-                                                resourceType: NODE_RESOURCE_TYPE,
-                                                resourceCode: props.row.nodeHashId,
-                                                action: NODE_RESOURCE_ACTION.DELETE
-                                            }
-                                        }"
-                                        class="node-handle delete-node-text"
-                                        @click.stop="confirmDelete(props.row, index)"
-                                    >
-                                        {{ $t('environment.delete') }}
-                                    </span>
-                                </div>
-                            </template>
-                            <template v-else>
-                                <bk-button
-                                    v-if="!['TSTACK'].includes(props.row.nodeType)"
-                                    theme="primary"
-                                    outline
-                                    @click="handleApplyPermission(props.row)"
-                                >
-                                    {{ $t('environment.applyPermission') }}
-                                </bk-button>
-                            </template>
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column type="setting">
-                        <bk-table-setting-content
-                            :fields="tableColumn"
-                            :selected="selectedTableColumn"
-                            :size="tableSize"
-                            @setting-change="handleSettingChange"
-                        />
-                    </bk-table-column>
-                    <template #empty>
-                        <EmptyTableStatus
-                            :type="(searchValue.length || !!dateTimeRange[1]) ? 'search-empty' : 'empty'"
-                            @clear="clearFilter"
-                        />
-                    </template>
-                </bk-table>
+                    @refresh="requestList"
+                    @updataCurEditNodeItem="updataCurEditNodeItem"
+                    @install-agent="installAgent"
+                    @clear-filter="clearFilter"
+                />
             </template>
         </section>
         <third-construct
@@ -379,18 +88,18 @@
 <script>
     import thirdConstruct from '@/components/devops/environment/third-construct-dialog'
     import { getQueryString } from '@/utils/util'
-    import webSocketMessage from '../utils/webSocketMessage.js'
+    import webSocketMessage from '@/utils/webSocketMessage.js'
     import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
-    import EmptyTableStatus from '@/components/empty-table-status'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
-    const NODE_TABLE_COLUMN_CACHE = 'node_list_columns'
+    import ListTable from './list_table.vue'
     const ENV_NODE_TABLE_LIMIT_CACHE = 'env_node_table_limit_cache'
+
     export default {
         components: {
+            ListTable,
             thirdConstruct,
-            SearchSelect,
-            EmptyTableStatus
+            SearchSelect
         },
         data () {
             return {
@@ -490,12 +199,6 @@
             userInfo () {
                 return window.userInfo
             },
-            allRenderColumnMap () {
-                return this.selectedTableColumn.reduce((result, item) => {
-                    result[item.id] = true
-                    return result
-                }, {})
-            },
             filterData () {
                 const data = [
                     {
@@ -507,6 +210,16 @@
                         name: 'IP',
                         id: 'nodeIp',
                         default: true
+                    },
+                    {
+                        name: this.$t('environment.标签'),
+                        id: 'label',
+                        children: [
+                            {
+                                id: 'os',
+                                name: 'window'
+                            }
+                        ]
                     },
                     {
                         name: this.$t('environment.alias'),
@@ -628,70 +341,6 @@
             }
         },
         created () {
-            this.tableColumn = [
-                {
-                    id: 'displayName',
-                    label: this.$t('environment.nodeInfo.displayName'),
-                    disabled: true
-                },
-                {
-                    id: 'ip',
-                    label: 'IP',
-                    disabled: true
-                },
-                {
-                    id: 'os',
-                    label: this.$t('environment.nodeInfo.os')
-                },
-                {
-                    id: 'nodeStatus',
-                    label: this.$t('environment.status')
-                },
-                {
-                    id: 'usage',
-                    label: this.$t('environment.nodeInfo.usage')
-                },
-                {
-                    id: 'createdUser',
-                    label: this.$t('environment.nodeInfo.importer')
-                },
-                {
-                    id: 'lastModifyBy',
-                    label: this.$t('environment.nodeInfo.lastModifyBy')
-                },
-                {
-                    id: 'lastModifyTime',
-                    label: this.$t('environment.nodeInfo.lastModifyTime')
-                },
-                {
-                    id: 'latestBuildPipeline',
-                    label: this.$t('environment.nodeInfo.lastRunPipeline')
-                },
-                {
-                    id: 'latestBuildTime',
-                    label: this.$t('environment.nodeInfo.lastRunAs')
-                }
-
-            ]
-            const columnsCache = JSON.parse(localStorage.getItem(NODE_TABLE_COLUMN_CACHE))
-            if (columnsCache) {
-                this.selectedTableColumn = Object.freeze(columnsCache.columns)
-                this.tableSize = columnsCache.size
-            } else {
-                this.selectedTableColumn = Object.freeze([
-                    { id: 'displayName' },
-                    { id: 'ip' },
-                    { id: 'os' },
-                    { id: 'nodeStatus' },
-                    { id: 'usage' },
-                    { id: 'createdUser' },
-                    { id: 'lastModifyBy' },
-                    { id: 'lastModifyTime' },
-                    { id: 'latestBuildPipeline' },
-                    { id: 'latestBuildTime' }
-                ])
-            }
-
             const urlParams = getQueryString('type')
             if (urlParams) {
                 this.constructImportForm.model = urlParams
@@ -778,69 +427,8 @@
                     this.isDropdownShow = false
                 }
             },
-            toNodeDetail (node) {
-                if (this.canShowDetail(node)) {
-                    this.$router.push({
-                        name: 'nodeDetail',
-                        params: {
-                            projectId: this.$route.params.projectId,
-                            nodeHashId: node.nodeHashId
-                        }
-                    })
-                }
-            },
-            handleApplyPermission (node) {
-                this.handleNoPermission({
-                    projectId: this.projectId,
-                    resourceType: NODE_RESOURCE_TYPE,
-                    resourceCode: node.nodeHashId,
-                    action: NODE_RESOURCE_ACTION.USE
-                })
-            },
-            /**
-             * 删除节点
-             */
-            async confirmDelete (row, index) {
-                const params = []
-                const id = row.nodeHashId
-
-                params.push(id)
-
-                this.$bkInfo({
-                    theme: 'warning',
-                    type: 'warning',
-                    title: this.$t('environment.delete'),
-                    subTitle: `${this.$t('environment.nodeInfo.deleteNodetips', [row.displayName])}`,
-                    confirmFn: async () => {
-                        let message, theme
-                        try {
-                            await this.$store.dispatch('environment/toDeleteNode', {
-                                projectId: this.projectId,
-                                params
-                            })
-
-                            message = this.$t('environment.successfullyDeleted')
-                            theme = 'success'
-
-                            message && this.$bkMessage({
-                                message,
-                                theme
-                            })
-                        } catch (e) {
-                            this.handleError(
-                                e,
-                                {
-                                    projectId: this.projectId,
-                                    resourceType: NODE_RESOURCE_TYPE,
-                                    resourceCode: row.nodeHashId,
-                                    action: NODE_RESOURCE_ACTION.DELETE
-                                }
-                            )
-                        } finally {
-                            this.requestList()
-                        }
-                    }
-                })
+            updataCurEditNodeItem (item) {
+                this.curEditNodeItem = item
             },
             /**
              * 构建机信息
@@ -1074,85 +662,6 @@
                     this.constructToolConf.importText = this.$t('environment.import')
                 }
             },
-            editNodeName (node) {
-                this.curEditNodeDisplayName = node.displayName
-                this.isEditNodeStatus = true
-                this.curEditNodeItem = node.nodeHashId
-                this.nodeList.forEach(val => {
-                    if (val.nodeHashId === node.nodeHashId) {
-                        val.isEnableEdit = true
-                    }
-                })
-            },
-            async saveEdit (node) {
-                const valid = await this.$validator.validate()
-                const displayName = this.curEditNodeDisplayName.trim()
-                if (valid) {
-                    let message, theme
-                    const params = {
-                        displayName
-                    }
-
-                    try {
-                        await this.$store.dispatch('environment/updateDisplayName', {
-                            projectId: this.projectId,
-                            nodeHashId: node.nodeHashId,
-                            params
-                        })
-
-                        message = this.$t('environment.successfullyModified')
-                        theme = 'success'
-                    } catch (e) {
-                        this.handleError(
-                            e,
-                            {
-                                projectId: this.projectId,
-                                resourceType: NODE_RESOURCE_TYPE,
-                                resourceCode: node.nodeHashId,
-                                action: NODE_RESOURCE_ACTION.EDIT
-                            }
-                        )
-                    } finally {
-                        if (theme === 'success') {
-                            message && this.$bkMessage({
-                                message,
-                                theme
-                            })
-                            this.nodeList.forEach(val => {
-                                if (val.nodeHashId === node.nodeHashId) {
-                                    val.isEnableEdit = false
-                                    val.displayName = this.curEditNodeDisplayName
-                                }
-                            })
-                            this.isEditNodeStatus = false
-                            this.curEditNodeItem = ''
-                            this.curEditNodeDisplayName = ''
-                            this.requestList()
-                        }
-                    }
-                }
-            },
-            cancelEdit (nodeId) {
-                this.isEditNodeStatus = false
-                this.curEditNodeItem = ''
-                this.curEditNodeDisplayName = ''
-                this.nodeList.forEach(val => {
-                    if (val.nodeHashId === nodeId) {
-                        val.isEnableEdit = false
-                    }
-                })
-            },
-            canShowDetail (row) {
-                return row.nodeType === 'THIRDPARTY'
-            },
-            handleSettingChange ({ fields, size }) {
-                this.selectedTableColumn = Object.freeze(fields)
-                this.tableSize = size
-                localStorage.setItem(NODE_TABLE_COLUMN_CACHE, JSON.stringify({
-                    columns: fields,
-                    size
-                }))
-            },
             handlePageChange (page) {
                 this.pagination.current = page
                 this.requestList(this.requestParams)
@@ -1236,7 +745,7 @@
 </script>
 
 <style lang="scss">
-    @import './../scss/conf';
+    @import '@/scss/conf';
 
     %flex {
         display: flex;
@@ -1379,67 +888,6 @@
         .node-item-id {
             display: flex;
         }
-
-        .node-table-wrapper {
-            margin-top: 20px;
-            td:nth-child(2) {
-                position: relative;
-                color: $primaryColor;
-                .node-name {
-                    line-height: 14px;
-                    display: inline-block;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                }
-                .pointer {
-                    cursor: pointer;
-                }
-                .useless {
-                  color: $fontLigtherColor;
-                }
-                .icon-edit {
-                    position: relative;
-                    left: 4px;
-                    color: $fontColor;
-                    cursor: pointer;
-                    display: none;
-                }
-                &:hover {
-                    .icon-edit {
-                        display: inline-block;
-                    }
-                }
-            }
-
-            .th-handler,
-            td:last-child {
-                padding-right: 30px;
-            }
-
-            td:last-child {
-                cursor: pointer;
-            }
-
-            .edit-node-item {
-                width: 24%;
-            }
-
-            .node-item-row {
-              &.node-row-useless {
-                cursor: url('../images/cursor-lock.png'), auto;
-                color: $fontLigtherColor;
-                .node-count-item {
-                  color: $fontLigtherColor;
-                }
-              }
-            }
-
-            .install-agent {
-                color: $primaryColor;
-                cursor: pointer;
-            }
-        }
     }
 
     .node-reset-info {
@@ -1452,8 +900,18 @@
     .filter-bar {
         display: flex;
         align-items: center;
+        
+        .devops-icon.icon-plus {
+            vertical-align: middle;
+            font-size: 11px;
+            margin-right: 8px;
+        }
+        .import-btn {
+            display: flex;
+            align-items: center;
+        }
         .search-input {
-            width: 680px;
+            width: 650px;
             background: #fff;
             margin-right: 10px;
             ::placeholder {

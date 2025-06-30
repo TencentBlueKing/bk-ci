@@ -30,9 +30,11 @@ const createEnv = () => import(/* webpackChunkName: 'createEnv' */ '../views/cre
 // 环境详情
 const envDetail = () => import(/* webpackChunkName: 'envDetail' */ '../views/env_detail')
 
+// 节点入口
+const nodeEntry = () => import(/* webpackChunkName: 'nodeEntry' */ '../views/node/index')
+
 // 节点列表
-const nodeList = () => import(/* webpackChunkName: 'nodeList' */ '../views/node_list')
-const nodeEntry = () => import(/* webpackChunkName: 'nodeList' */ '../views/node_entry')
+const nodeList = () => import(/* webpackChunkName: 'nodeList' */ '../views/node/node_list.vue')
 
 // 节点详情
 const nodeDetail = () => import(/* webpackChunkName: 'nodeDetail' */ '../views/node_detail')
@@ -43,7 +45,7 @@ const routes = [
         component: envHome,
         children: [
             {
-                path: 'envList',
+                path: '',
                 name: 'envList',
                 component: envList,
                 meta: {
@@ -77,15 +79,12 @@ const routes = [
                 }
             },
             {
-                path: 'nodeEntry',
+                path: 'nodeList',
                 name: 'nodeEntry',
                 component: nodeEntry,
-                redirect: {
-                    name: 'nodeList'
-                },
                 children: [
                     {
-                        path: 'nodeList',
+                        path: ':asideId',
                         name: 'nodeList',
                         component: nodeList,
                         meta: {
@@ -94,6 +93,19 @@ const routes = [
                             header: 'environmentManage',
                             to: 'envList',
                             webSocket: ['^\/console\/environment\/[^\/]+\/nodeList$']
+                        },
+                        beforeEnter (to, from, next) {
+                            if (!to.params.asideId) {
+                                next({
+                                    name: to.name,
+                                    params: {
+                                        ...to.params,
+                                        asideId: 'allNode'
+                                    }
+                                })
+                            } else {
+                                next(true)
+                            }
                         }
                     },
                     {

@@ -289,5 +289,8 @@
     "version": "Version",
     "选择最近执行时间范围": "Select the recent execution time range",
     "导出": "Export",
-    "开启构建机监控": "Enable Build Machine Monitoring"
+    "开启构建机监控": "Enable Build Machine Monitoring",
+    "新增标签": "Add Tag",
+    "修改标签": "Edit Tag",
+    "标签": "Tag"
 }

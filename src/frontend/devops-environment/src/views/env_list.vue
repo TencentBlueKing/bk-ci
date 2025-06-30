@@ -277,8 +277,9 @@
 
     .environment-list-wrapper {
         width: 100%;
-        height: 100%;
-        overflow: hidden;
+        height: calc(100vh - 120px);
+        padding: 20px;
+        overflow-y: auto;
         .env-header {
             display: flex;
             justify-content: space-between;

@@ -228,7 +228,7 @@
 
         .env-detail-container {
             padding: 20px;
-            height: calc(100vh - 208px);
+            height: calc(100vh - 175px);
             overflow: auto;
         }
 

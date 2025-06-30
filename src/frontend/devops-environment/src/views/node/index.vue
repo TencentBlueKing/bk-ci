@@ -3,13 +3,14 @@
         ref="resizeLayout"
         :initial-divide="initialDivide"
         collapsible
+        :border="false"
         :min="240"
         :max="360"
         class="resize"
         @collapse-change="handleCollapseChange"
         @after-resize="afterResize"
     >
-        <div slot="aside">aside</div>
+        <GroupAside slot="aside" />
         <div
             slot="main"
             class="main-content"
@@ -24,7 +25,12 @@
         NODE_LIST_ASIDE_WIDTH_CACHE,
         NODE_LIST_ASIDE_PANEL_TOGGLE
     } from '@/store/constants'
+    import GroupAside from './group_aside.vue'
+
     export default {
+        components: {
+            GroupAside
+        },
         computed: {
             initialDivide () {
                 return Number(localStorage.getItem(NODE_LIST_ASIDE_WIDTH_CACHE)) || 240
@@ -48,11 +54,11 @@
 
 <style lang="scss" scoped>
 .resize {
-  width: calc(100vw - 40px);
-  height: calc(100vh - 148px);
+  width: 100vw;
+  height: calc(100vh - 110px);
 
-  .sub-view-port {
-      margin: 24px;
+  .main-content {
+    padding: 24px;
   }
 }
 </style>

@@ -10,8 +10,9 @@
         </p>
         <bk-tab
             :active="activePanel"
-            :label-height="48"
+            :label-height="60"
             type="unborder-card"
+            :active-bar="activeBar"
             ext-cls="env-tab"
             @tab-change="handleTabChange"
             :validate-active="false"
@@ -46,7 +47,11 @@
     export default {
         data () {
             return {
-                environmentUrl
+                environmentUrl,
+                activeBar: {
+                    position: 'top',
+                    height: '4px'
+                }
             }
         },
 
@@ -104,6 +109,13 @@
     .bk-tab-label-wrapper {
         text-align: center;
     }
+    .bk-tab-section {
+        padding: 0;
+    }
+    .bk-tab-header {
+        background-color: #FFFFFF;
+        box-shadow: 0 2px 5px 0 #333c4808;
+    }
 }
 </style>
 
@@ -111,11 +123,13 @@
 .biz-container {
     position: relative;
     width: 100%;
+    box-sizing: border-box;
 
     .environment-tit {
         position: absolute;
         left: 24px;
-        line-height: 48px;
+        line-height: 60px;
+        z-index: 1;
         img {
             vertical-align: middle;
         }
