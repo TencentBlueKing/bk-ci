@@ -37,7 +37,7 @@ import com.tencent.devops.notify.model.VoiceNotifyMessageWithOperation
 import com.tencent.devops.notify.model.WechatNotifyMessageWithOperation
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
 import com.tencent.devops.notify.service.NotifyUserBlackListService
-import com.tencent.devops.notify.service.filter.NotifyBlackListAspect
+import com.tencent.devops.notify.filter.NotifyBlackListAspect
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
