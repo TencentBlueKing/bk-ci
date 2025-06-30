@@ -38,6 +38,7 @@ interface Window {
     GLOBAL_PID: string
     BK_CI_VERSION: string
     PUBLIC_URL_PREFIX: string
+    BK_APIGW_USER_WEB_URL: string
     getLoginUrl: Function
     attachEvent(event: string, listener: EventListener): boolean
     detachEvent(event: string, listener: EventListener): void

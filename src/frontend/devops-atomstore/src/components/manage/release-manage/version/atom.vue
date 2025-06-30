@@ -35,7 +35,11 @@
                 :label="$t('store.创建人')"
                 prop="creator"
                 show-overflow-tooltip
-            ></bk-table-column>
+            >
+                <template v-slot="props">
+                    <bk-user-display-name :user-id="props.row.creator" />
+                </template>
+            </bk-table-column>
             <bk-table-column
                 :label="$t('store.创建时间')"
                 prop="createTime"

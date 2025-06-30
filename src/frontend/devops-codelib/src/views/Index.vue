@@ -74,7 +74,7 @@
                 v-for="item in codelibTypes"
                 :key="item.scmType"
                 :ext-cls="{
-                    'is-disabled': item.status !== 'OK'
+                    'is-disabled': item.status !== 'SUCCESS'
                 }"
                 @click="createCodelib(item.scmType, item.scmCode)"
             >
@@ -116,8 +116,8 @@
     import {
         CODE_REPOSITORY_CACHE,
         CODE_REPOSITORY_SEARCH_VAL,
-        getCodelibConfig,
         convertToCamelCase,
+        getCodelibConfig,
         isGit,
         isGitLab,
         isGithub,

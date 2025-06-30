@@ -24,7 +24,11 @@
                         :label="$t('store.申请人')"
                         prop="applicant"
                         show-overflow-tooltip
-                    ></bk-table-column>
+                    >
+                        <template v-slot="props">
+                            <bk-user-display-name :user-id="props.row.applicant" />
+                        </template>
+                    </bk-table-column>
                     <bk-table-column
                         :label="$t('store.审批状态')"
                         prop="approveStatus"
@@ -155,9 +159,9 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
-    import { convertTime } from '@/utils/index'
     import formTips from '@/components/common/formTips/index'
+    import { convertTime } from '@/utils/index'
+    import { mapGetters } from 'vuex'
 
     export default {
         components: {

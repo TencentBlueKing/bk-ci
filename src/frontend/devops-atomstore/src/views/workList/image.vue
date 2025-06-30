@@ -91,7 +91,11 @@
                     :label="$t('store.修改人')"
                     prop="modifier"
                     show-overflow-tooltip
-                ></bk-table-column>
+                >
+                    <template v-slot="props">
+                        <bk-user-display-name :user-id="props.row.modifier" />
+                    </template>
+                </bk-table-column>
                 <bk-table-column
                     :label="$t('store.修改时间')"
                     prop="updateTime"

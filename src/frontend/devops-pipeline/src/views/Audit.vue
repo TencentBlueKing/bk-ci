@@ -82,7 +82,11 @@
                 <bk-table-column
                     :label="$t('audit.operator')"
                     prop="userId"
-                ></bk-table-column>
+                >
+                    <template slot-scope="props">
+                        <bk-user-display-name :user-id="props.row.userId" />
+                    </template>
+                </bk-table-column>
                 <bk-table-column
                     :label="$t('audit.operateTime')"
                     :prop="'updatedTime'"

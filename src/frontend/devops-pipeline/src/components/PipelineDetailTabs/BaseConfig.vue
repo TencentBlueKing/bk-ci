@@ -67,7 +67,7 @@
                                 </template>
                             </template>
                             <template v-else-if="['namingConvention', 'modificationDetail', 'creatorDetail'].includes(row.key)">
-                                <span>{{ row.value || '--' }}</span>
+                                <bk-user-display-name :user-id="row.value"></bk-user-display-name>
                                 <span class="base-info-block-row-value-gray">{{ row.grayDesc }}</span>
                             </template>
                             <template v-else>
@@ -81,8 +81,9 @@
     </bk-collapse>
 </template>
 <script>
-    import { convertTime } from '@/utils/util'
     import NamingConventionTip from '@/components/namingConventionTip.vue'
+    import { convertTime } from '@/utils/util'
+    
     export default {
         components: {
             NamingConventionTip

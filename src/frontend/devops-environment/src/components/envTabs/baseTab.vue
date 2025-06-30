@@ -197,7 +197,9 @@
             <div class="bk-form-item create-user-item">
                 <label class="bk-label env-item-label env-desc-label">{{ $t('environment.envInfo.creator') }}</label>
                 <div class="bk-form-content env-item-content">
-                    <p class="env-base">{{ curEnvDetail.createdUser }}</p>
+                    <p class="env-base">
+                        <bk-user-display-name :user-id="curEnvDetail.createdUser" />
+                    </p>
                 </div>
             </div>
         </form>
@@ -205,8 +207,8 @@
 </template>
 
 <script>
-    import { convertTime } from '@/utils/util'
     import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '@/utils/permission'
+    import { convertTime } from '@/utils/util'
     export default {
         name: 'base-tab',
         props: {

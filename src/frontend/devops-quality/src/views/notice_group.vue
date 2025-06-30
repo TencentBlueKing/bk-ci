@@ -57,10 +57,7 @@
                                     <span class="handler-inner">{{ props.row.innerUsersCount }}</span>
                                     <template slot="content">
                                         <p style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
-                                            <span
-                                                v-for="(entry, index) in props.row.innerUsers"
-                                                :key="index"
-                                            >{{ entry.replace('"', '') }}<span v-if="index !== (props.row.innerUsers.length - 1)">,</span></span>
+                                            <bk-user-display-name :user-id="props.row.innerUsers" />
                                         </p>
                                     </template>
                                 </bk-popover>
@@ -75,7 +72,7 @@
                             prop="creator"
                         >
                             <template slot-scope="props">
-                                <span>{{ props.row.creator }}</span>
+                                <bk-user-display-name :user-id="props.row.creator" />
                             </template>
                         </bk-table-column>
                         <bk-table-column
@@ -154,10 +151,10 @@
 
 <script>
     import createGroup from '@/components/devops/create_group'
-    import { getQueryString } from '@/utils/util'
     import { QUALITY_GROUP_RESOURCE_ACTION, QUALITY_GROUP_RESOURCE_TYPE } from '@/utils/permission.js'
-    import emptyData from './empty_data'
+    import { getQueryString } from '@/utils/util'
     import { mapGetters } from 'vuex'
+    import emptyData from './empty_data'
 
     export default {
         components: {

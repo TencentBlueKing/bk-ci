@@ -26,7 +26,11 @@
                     :label="$t('store.成员')"
                     prop="userName"
                     show-overflow-tooltip
-                ></bk-table-column>
+                >
+                    <template v-slot="props">
+                        <bk-user-display-name :user-id="props.row.userName" />
+                    </template>
+                </bk-table-column>
                 <bk-table-column
                     :label="$t('store.调试项目')"
                     show-overflow-tooltip
@@ -177,9 +181,9 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
-    import labelList from '@/components/labelList.vue'
     import api from '@/api'
+    import labelList from '@/components/labelList.vue'
+    import { mapGetters } from 'vuex'
 
     export default {
         components: {

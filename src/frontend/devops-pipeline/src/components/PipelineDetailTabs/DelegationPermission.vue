@@ -47,7 +47,7 @@
                             'reset-row': !resourceAuthData.executePermission
                         }"
                     >
-                        <span
+                        <bk-user-display-name
                             :class="{
                                 'name': true,
                                 'not-permission': !resourceAuthData.executePermission
@@ -56,9 +56,9 @@
                                 content: $t('delegation.expiredTips'),
                                 disabled: resourceAuthData.executePermission
                             }"
+                            :user-id="resourceAuthData.handoverFrom"
                         >
-                            {{ resourceAuthData.handoverFrom }}
-                        </span>
+                        </bk-user-display-name>
                         <bk-tag
                             theme="danger"
                             v-if="!resourceAuthData?.executePermission && !isLoading"
@@ -166,11 +166,11 @@
 
 <script>
     import Logo from '@/components/Logo'
-    import { mapActions, mapState } from 'vuex'
-    import { convertTime } from '@/utils/util'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
+    import { convertTime } from '@/utils/util'
+    import { mapActions, mapState } from 'vuex'
     export default {
         components: {
             Logo

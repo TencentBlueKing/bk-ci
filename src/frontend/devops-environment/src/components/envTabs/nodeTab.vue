@@ -55,7 +55,9 @@
                 >
                     <template slot-scope="props">
                         <span class="node-name">{{ props.row.nodeType }}</span>
-                        <span>({{ props.row.createdUser }})</span>
+                        (<bk-user-display-name
+                            :user-id="props.row.createdUser"
+                        />)
                     </template>
                 </bk-table-column>
                 <bk-table-column

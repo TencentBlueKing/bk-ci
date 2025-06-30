@@ -149,6 +149,9 @@
                 width="180"
                 prop="creator"
             >
+                <template v-slot="props">
+                    <bk-user-display-name :user-id="props.row.creator" />
+                </template>
             </bk-table-column>
             <bk-table-column
                 :label="$t('template.lastModifiedDate')"

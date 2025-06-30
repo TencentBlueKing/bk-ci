@@ -176,7 +176,9 @@
                             size="16"
                             :name="pipeline.startType"
                         />
-                        <span>{{ pipeline.latestBuildUserId }}</span>
+                        <bk-user-display-name
+                            :user-id="pipeline.latestBuildUserId"
+                        />
                     </span>
                     <span v-if="pipeline.webhookAliasName">
                         <logo

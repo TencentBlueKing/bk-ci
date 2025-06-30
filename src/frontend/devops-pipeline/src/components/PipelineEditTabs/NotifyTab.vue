@@ -71,7 +71,17 @@
                                 <div class="info-label">
                                     {{ field.label }}
                                 </div>
-                                <div class="info-content">
+                                
+                                <bk-user-display-name
+                                    v-if="field.col === 'users'"
+                                    :user-id="item[field.col]"
+                                ></bk-user-display-name>
+
+                                    
+                                <div
+                                    class="info-content"
+                                    v-else
+                                >
                                     {{ getShowContent(field.col, item[field.col]) }}
                                 </div>
                             </div>
@@ -132,9 +142,9 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
-    import { deepCopy } from '@/utils/util'
     import NotifySetting from '@/components/pipelineSetting/NotifySetting'
+    import { deepCopy } from '@/utils/util'
+    import { mapActions } from 'vuex'
 
     const defaultSuc = {
         types: [],

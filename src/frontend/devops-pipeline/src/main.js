@@ -38,6 +38,7 @@ import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
 import createLocale from '@locale'
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
+import TenantSingleton from './utils/tenant'
 
 import {
     handlePipelineNoPermission,
@@ -114,13 +115,18 @@ if (!isInIframe) {
     location.href = `${WEB_URL_PREFIX}${location.pathname}`;
 }
 
-global.pipelineVue = new Vue({
-    el: "#app",
-    router: createRouter(store, isInIframe),
-    i18n,
-    store,
-    components: {
-        App
-    },
-    template: '<App/>'
+new TenantSingleton().init().then(() => {
+    
+    global.pipelineVue = new Vue({
+        el: "#app",
+        router: createRouter(store, isInIframe),
+        i18n,
+        store,
+        components: {
+            App
+        },
+        template: '<App/>'
+    })
 })
+
+
