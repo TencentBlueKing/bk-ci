@@ -135,6 +135,7 @@ class NotifyUserBlacklistDao {
         with(TNotifyUserBlacklist.T_NOTIFY_USER_BLACKLIST) {
             return dslContext.select(USER_ID)
                 .from(this)
+                .where(USER_ID.eq(userId))
                 .fetchOne(0,String::class.java)
         }
     }
