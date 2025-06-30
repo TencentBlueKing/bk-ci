@@ -1,6 +1,7 @@
 package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
@@ -13,7 +14,9 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
+import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.SubPipelineRef
 import com.tencent.devops.process.pojo.pipeline.SubPipelineTaskParam
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -34,7 +37,8 @@ class SubPipelineTaskService @Autowired constructor(
     private val pipelineResDao: PipelineResourceDao,
     @Lazy
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val subPipelineRefService: SubPipelineRefService
+    private val subPipelineRefService: SubPipelineRefService,
+    private val pipelineYamlVersionDao: PipelineYamlVersionDao
 ) {
     /**
      * 支持的元素
@@ -126,6 +130,10 @@ class SubPipelineTaskService @Autowired constructor(
             "NAME" -> SubPipelineType.NAME
             else -> return null
         }
+        // 分支版本
+        val branch = inputMap["branch"]?.toString().let {
+            EnvUtils.parseEnv(it, contextMap)
+        }
         val (finalProjectId, finalPipelineId, finalPipeName) = getSubPipelineParam(
             projectId = projectId,
             subProjectId = subProjectId,
@@ -141,7 +149,8 @@ class SubPipelineTaskService @Autowired constructor(
             taskPipelineName = subPipelineName,
             projectId = finalProjectId,
             pipelineId = finalPipelineId,
-            pipelineName = finalPipeName
+            pipelineName = finalPipeName,
+            branch = branch
         )
     }
 
@@ -346,6 +355,18 @@ class SubPipelineTaskService @Autowired constructor(
         val supportElement = supportAtomCode(this.atomCode) || this.taskAtom == SubPipelineCallElement.TASK_ATOM
         return elementEnable && supportElement
     }
+
+    fun getBranchVersionResource(
+        projectId: String,
+        pipelineId: String,
+        pipelineName: String,
+        branchName: String?
+    ) = pipelineRepositoryService.checkBranchVersionResource(
+        projectId = projectId,
+        pipelineId = pipelineId,
+        pipelineName = pipelineName,
+        branchName = branchName
+    )
 
     companion object {
         val logger = LoggerFactory.getLogger(SubPipelineTaskService::class.java)

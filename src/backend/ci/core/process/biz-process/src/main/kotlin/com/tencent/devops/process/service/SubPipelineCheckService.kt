@@ -95,7 +95,8 @@ class SubPipelineCheckService @Autowired constructor(
             val subPipeline = SubPipelineIdAndName(
                 projectId = subPipelineTaskParam.projectId,
                 pipelineId = subPipelineTaskParam.pipelineId,
-                pipelineName = subPipelineTaskParam.pipelineName
+                pipelineName = subPipelineTaskParam.pipelineName,
+                branch = subPipelineTaskParam.branch
             )
             subPipelineElementMap.getOrPut(subPipeline) { mutableListOf() }.add(holder)
         }
@@ -175,7 +176,15 @@ class SubPipelineCheckService @Autowired constructor(
     ): Set<String> {
         val errorDetails = mutableSetOf<String>()
         val rootPipelineKey = "$projectId|$pipelineId"
-        subPipelineElementMap.forEach { (subPipeline, elements) ->
+        subPipelineElementMap.filter {
+            // 分支版本子流水线不校验递归引用
+            checkBranchVersion(
+                projectId = it.key.projectId,
+                pipelineId = it.key.pipelineId,
+                pipelineName = it.key.pipelineName,
+                branch = it.key.branch
+            )
+        }.forEach { (subPipeline, elements) ->
             val subProjectId = subPipeline.projectId
             val subPipelineId = subPipeline.pipelineId
             val existsLink = subPipelineRefService.exists(
@@ -361,6 +370,18 @@ class SubPipelineCheckService @Autowired constructor(
                 .append("\n")
         }
         return stringBuilder.toString()
+    }
+
+    private fun checkBranchVersion(
+        projectId: String,
+        pipelineId: String,
+        pipelineName: String,
+        branch: String?
+    ) = if (!branch.isNullOrBlank()) {
+        subPipelineTaskService.getBranchVersionResource(projectId, pipelineId, pipelineName, branch)
+        false
+    } else {
+        true
     }
 
     companion object {
