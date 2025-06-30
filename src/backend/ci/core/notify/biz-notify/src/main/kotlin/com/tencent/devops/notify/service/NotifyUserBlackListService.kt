@@ -51,13 +51,13 @@ class NotifyUserBlackListService @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(NotifyUserBlackListService::class.java)
-        private const val NOTIFY_USER_BLACK_LIST_CACHE_KEY = "notifyUserBlackListCache"
+        val notifyUserBlackListCacheKeyPrefix = "notify_user_blacklist_cache_key_"
     }
 
     private val notifyUserBlackListCache = Caffeine.newBuilder()
         .maximumSize(notifyUserBlackListCacheSize)
-        .expireAfterWrite(1000, TimeUnit.DAYS)
-        .build<String, List<String>>()
+        .expireAfterWrite(3, TimeUnit.HOURS)
+        .build<String, String>()
 
     /**
      * 批量添加用户到黑名单
@@ -68,7 +68,10 @@ class NotifyUserBlackListService @Autowired constructor(
         return try {
             val count = notifyUserBlacklistDao.batchAddToBlacklist(dslContext, userIds)
             if (count > 0) {
-                notifyUserBlackListCache.invalidate(NOTIFY_USER_BLACK_LIST_CACHE_KEY)
+                // 清除相关用户缓存
+                userIds.forEach { userId ->
+                    notifyUserBlackListCache.invalidate(notifyUserBlackListCacheKeyPrefix + userId)
+                }
             }
             true
         } catch (ignored: Throwable) {
@@ -86,7 +89,10 @@ class NotifyUserBlackListService @Autowired constructor(
         return try {
             val count = notifyUserBlacklistDao.batchRemoveFromBlacklist(dslContext, userIds)
             if (count > 0) {
-                notifyUserBlackListCache.invalidate(NOTIFY_USER_BLACK_LIST_CACHE_KEY)
+                // 清除相关用户缓存
+                userIds.forEach { userId ->
+                    notifyUserBlackListCache.invalidate(notifyUserBlackListCacheKeyPrefix + userId)
+                }
             }
             true
         } catch (ignored: Throwable) {
@@ -96,19 +102,20 @@ class NotifyUserBlackListService @Autowired constructor(
     }
 
     /**
-     * 获取所有黑名单用户
+     * 获取指定用户的黑名单
+     * @param userId 用户ID
      * @return 黑名单用户列表
      */
-    fun getBlacklist(): List<String> {
-        return try {
-            notifyUserBlackListCache.get(NOTIFY_USER_BLACK_LIST_CACHE_KEY) {
-                logger.info("notifyUserBlackListCache update")
-                notifyUserBlacklistDao.listAllBlacklistUsers(dslContext)
-            } ?: emptyList()
+    fun getBlacklistUser(userId: String): String? {
+        try {
+            return notifyUserBlackListCache.get(notifyUserBlackListCacheKeyPrefix + userId) {
+                logger.info("Updating blacklist cache for user: $userId")
+                notifyUserBlacklistDao.listBlacklistForUser(dslContext, userId)
+            }
         } catch (ignored: Throwable) {
-            logger.warn("Failed to get blacklist，${ignored.message}")
-            emptyList()
+            logger.warn("Failed to get blacklist for user $userId，${ignored.message}")
         }
+        return null
     }
 
     /**

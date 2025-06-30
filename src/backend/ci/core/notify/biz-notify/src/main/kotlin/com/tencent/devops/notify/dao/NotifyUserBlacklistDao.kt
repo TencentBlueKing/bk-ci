@@ -79,12 +79,11 @@ class NotifyUserBlacklistDao {
         dslContext: DSLContext,
         userIds: List<String>
     ): Int {
-        val table = TNotifyUserBlacklist.T_NOTIFY_USER_BLACKLIST
-        with(table) {
+        with(TNotifyUserBlacklist.T_NOTIFY_USER_BLACKLIST) {
             if (userIds.isEmpty()) return 0
 
-            return dslContext.deleteFrom(table)
-                .where(table.USER_ID.`in`(userIds))
+            return dslContext.deleteFrom(this)
+                .where(USER_ID.`in`(userIds))
                 .execute()
         }
     }
@@ -96,10 +95,9 @@ class NotifyUserBlacklistDao {
     fun listAllBlacklistUsers(
         dslContext: DSLContext
     ): List<String> {
-        val table = TNotifyUserBlacklist.T_NOTIFY_USER_BLACKLIST
-        with(table) {
-            return dslContext.select(table.USER_ID)
-                .from(table)
+        with(TNotifyUserBlacklist.T_NOTIFY_USER_BLACKLIST) {
+            return dslContext.select(USER_ID)
+                .from(this)
                 .fetchInto(String::class.java)
         }
     }
@@ -113,18 +111,31 @@ class NotifyUserBlacklistDao {
         page: Int,
         pageSize: Int
     ): Pair<Long, List<String>> {
-        val table = TNotifyUserBlacklist.T_NOTIFY_USER_BLACKLIST
-        with(table) {
+        with(TNotifyUserBlacklist.T_NOTIFY_USER_BLACKLIST) {
             val total = dslContext.selectCount()
-                .from(table)
+                .from(this)
                 .fetchOne(0, Long::class.java) ?: 0L
 
-            val users = dslContext.select(table.USER_ID)
-                .from(table)
+            val users = dslContext.select(USER_ID)
+                .from(this)
                 .limit((page - 1) * pageSize, pageSize)
                 .fetchInto(String::class.java)
 
             return Pair(total, users)
+        }
+    }
+
+    /**
+     * 获取指定用户的黑名单
+     */
+    fun listBlacklistForUser(
+        dslContext: DSLContext,
+        userId: String
+    ): String? {
+        with(TNotifyUserBlacklist.T_NOTIFY_USER_BLACKLIST) {
+            return dslContext.select(USER_ID)
+                .from(this)
+                .fetchOne(0,String::class.java)
         }
     }
 }
