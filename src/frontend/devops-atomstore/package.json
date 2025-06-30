@@ -66,6 +66,10 @@
   "nx": {
     "targets": {
       "public:master": {
+        "inputs": [
+          "{workspaceRoot}/locale/store/*.json",
+          "{projectRoot}"
+        ],
         "outputs": [
           "{workspaceRoot}/frontend/store",
           "{workspaceRoot}/frontend/entry's"
