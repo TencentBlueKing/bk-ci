@@ -54,8 +54,8 @@ class BuildBuildLessMvcResourceImpl @Autowired constructor(
         // 异步线程执行业务逻辑
         ThreadPoolUtils.getInstance().getThreadPool(
             poolName = ThreadPoolName.CLAIM_TASK.name,
-            corePoolSize = buildLessConfig.maxContainerPool,
-            maxPoolSize = buildLessConfig.maxContainerPool
+            corePoolSize = buildLessConfig.maxContainerPool + 10,
+            maxPoolSize = buildLessConfig.maxContainerPool + 10
         ).submit {
             buildLessTaskService.claimBuildLessTaskDeferred(containerId, deferredResult)
         }
