@@ -28,6 +28,8 @@
 package com.tencent.devops.notify.service
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.devops.common.api.constant.CommonMessageCode.PARAM_ERROR
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.notify.dao.NotifyUserBlacklistDao
@@ -114,7 +116,9 @@ class NotifyUserBlackListService @Autowired constructor(
      * @return Pair<总数量, 当前页用户列表>
      */
     fun getBlacklistByPage(page: Int = 1, pageSize: Int = 100): Page<String> {
-
+        if (page < 1 || pageSize < 1) {
+            throw ErrorCodeException(errorCode = PARAM_ERROR)
+        }
         val (totalCount, records) = notifyUserBlacklistDao.listBlacklistUsersByPage(dslContext, page, pageSize)
         val totalPages = PageUtil.calTotalPage(pageSize, totalCount)
         return Page(
