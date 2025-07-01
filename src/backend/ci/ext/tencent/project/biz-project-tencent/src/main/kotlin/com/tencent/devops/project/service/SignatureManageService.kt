@@ -67,7 +67,7 @@ class SignatureManageService(
             ?: return UserSignatureStatusResponse(userId = userId, signed = true)
         // 4. 检查缓存中是否已有签名状态
         if (isUserSignedInCache(buildUserStatusCacheKey(platform), userId)) {
-            UserSignatureStatusResponse(userId = userId, signed = true)
+            return UserSignatureStatusResponse(userId = userId, signed = true)
         }
         // 5. 调用外部服务查询实时签名状态
         return fetchLiveSignatureStatus(userId, projectId)
