@@ -92,7 +92,7 @@ class StartCloudRemoteDevService @Autowired constructor(
         }
 
         // 生产创建start资源的订单号
-        val orderId = checkNotNull(event.appName) + "_" + event.projectId + "_${UUIDUtil.generate().takeLast(16)}"
+        val orderId = event.projectId + "_${UUIDUtil.generate().takeLast(16)}"
         val zoneId = if (event.devFile.cgsId.isNullOrBlank()) {
             event.devFile.zoneId
         } else {
