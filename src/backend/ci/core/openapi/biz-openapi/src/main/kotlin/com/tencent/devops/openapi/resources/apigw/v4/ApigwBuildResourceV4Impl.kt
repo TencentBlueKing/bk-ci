@@ -270,6 +270,28 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         )
     }
 
+    override fun batchGetBuildStatus(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        startBeginTime: String?,
+        endBeginTime: String?,
+        buildIdSet: Set<String>
+    ): Result<List<BuildHistory>> {
+        logger.info("OPENAPI_BUILD_V4|$userId|batch get build status|$projectId|$pipelineId")
+        return client.get(ServiceBuildResource::class).batchGetBuildStatus(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            startBeginTime = startBeginTime,
+            endBeginTime = endBeginTime,
+            buildIdSet = buildIdSet,
+            channelCode = apiGatewayUtil.getChannelCode()
+        )
+    }
+
     override fun manualStartStage(
         appCode: String?,
         apigwType: String?,

@@ -210,7 +210,8 @@ class StartCloudRemoteDevService @Autowired constructor(
                 uid = getEnvironmentUid(workspaceName),
                 appName = appName,
                 userId = userId,
-                pipelineId = workspaceRedisUtils.getStartCloudOrder(workspaceName)
+                pipelineId = workspaceRedisUtils.getStartCloudOrder(workspaceName),
+                force = true
             )
         )
         return resp.taskUid

@@ -201,7 +201,8 @@ class SubPipelineCallAtom constructor(
                 "syn"
             },
             values = startParams,
-            executeCount = task.executeCount
+            executeCount = task.executeCount,
+            branch = null
         )
 
         if (result.isNotOk()) {

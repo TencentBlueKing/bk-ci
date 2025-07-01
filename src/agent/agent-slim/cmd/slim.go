@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 	"github.com/TencentBlueKing/bk-ci/agentslim/pkg"
 	"github.com/TencentBlueKing/bk-ci/agentslim/pkg/config"
-	"os"
-	"path/filepath"
 )
 
 func main() {

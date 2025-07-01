@@ -80,6 +80,8 @@ data class PipelineInfo(
     var latestBuildNum: Int? = null,
     @get:Schema(title = "最后构建ID", required = false)
     var latestBuildId: String? = null,
+    @get:Schema(title = "最后一次构建的构建信息", required = false)
+    var lastBuildMsg: String? = null,
     @get:Schema(title = "触发方式", required = false)
     var trigger: String? = null,
     @get:Schema(title = "约束模式下的模板信息", required = false)

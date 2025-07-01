@@ -27,6 +27,7 @@
 
 package com.tencent.devops.metrics.api
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.metrics.service.eplus.TxPipelineMetricssService
 import org.springframework.beans.factory.annotation.Autowired
@@ -38,5 +39,21 @@ class TxOpPipelineMetricsResourceImpl @Autowired constructor(
 
     override fun runAllSyncDataTasks(userId: String) {
         txPipelineMetricsService.runAllSyncDataTasks()
+    }
+
+    override fun updatePipelineWhitelist(
+        userId: String,
+        projectId: String,
+        pipelineIds: List<String>,
+        isAdd: Boolean
+    ): Result<Boolean> {
+        return Result(
+            txPipelineMetricsService.updatePipelineWhitelist(
+                userId = userId,
+                projectId = projectId,
+                pipelineIds = pipelineIds,
+                isAdd = isAdd
+            )
+        )
     }
 }

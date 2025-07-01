@@ -373,13 +373,20 @@
                 })).slice(start, start + this.pagination.limit)
             },
             memberNames () {
-                return this.createGroupForm.members.map(item => item.name)
+                return this.createGroupForm.members.map(item => item.id)
             },
             nameFilter () {
-                return this.memberNames.map(item => ({
-                    text: item,
-                    value: item
-                }))
+                const nameSet = new Set()
+                return this.createGroupForm.members.reduce((acc, item) => {
+                    if (!nameSet.has(item.name)) {
+                        nameSet.add(item.name)
+                        acc.push({
+                            text: item.name,
+                            value: item.name
+                        })
+                    }
+                    return acc
+                }, [])
             },
             userSet () {
                 return new Set(this.memberNames)
@@ -475,12 +482,12 @@
                     switch (this.importType) {
                         case 3: {
                             if (!this.innerOrg) return
-                            if (this.userSet.has(this.innerOrg.name)) {
+                            if (this.userSet.has(this.innerOrg.id)) {
                                 this.$bkMessage({
                                     message: `内部组织${this.innerOrg.name}已存在`,
                                     theme: 'error'
                                 })
-                            this.$refs.inputComp?.clear?.()
+                                this.$refs.inputComp?.clear?.()
                                 this.innerOrg = null
                                 return
                             }
@@ -497,8 +504,9 @@
                                     ...this.createGroupForm.members
                                 ]
                             )
-                        this.$refs.inputComp?.clear?.()
+                            this.$refs.inputComp?.clear?.()
                             this.innerOrg = null
+                            this.clearFilter()
                             break
                         }
                         

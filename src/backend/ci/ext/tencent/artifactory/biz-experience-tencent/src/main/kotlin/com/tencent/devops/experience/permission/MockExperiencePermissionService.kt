@@ -1,5 +1,7 @@
 package com.tencent.devops.experience.permission
 
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.auth.pojo.vo.AuthApplyRedirectInfoVo
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.GroupDao
@@ -93,7 +95,8 @@ class MockExperiencePermissionService(
             dslContext = dslContext,
             projectId = projectId,
             offset = 0,
-            limit = 1000).map { it.id }
+            limit = 1000
+        ).map { it.id }
         val experienceMap = mutableMapOf<AuthPermission, List<Long>>()
         authPermissions.forEach {
             experienceMap[it] = groupIds
@@ -108,4 +111,10 @@ class MockExperiencePermissionService(
     ) = groupRecordIds
 
     override fun deleteExperienceResource(projectId: String, experienceId: Long) = Unit
+    override fun getApplyPermissionInformation(
+        user: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        artifactoryPath: String
+    ): AuthApplyRedirectInfoVo? = null
 }

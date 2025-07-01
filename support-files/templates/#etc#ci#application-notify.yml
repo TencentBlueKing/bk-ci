@@ -16,6 +16,8 @@ notify:
     secretId: __BK_CI_NOTIFY_TENCENT_CLOUD_SECRET_ID__ # 腾讯云SECRET_ID
     secretKey: __BK_CI_NOTIFY_TENCENT_CLOUD_SECRET_KEY__ # 腾讯云SECRET_KEY
     emailRegion: __BK_CI_NOTIFY_TENCENT_CLOUD_EMAIL_REGION__ # 腾讯云邮件服务Region地区
+  userBlackList:
+    cacheSize: __BK_CI_NOTIFY_USER_BLACK_LIST_CACHE_SIZE__
 
 wework:
   corpId:

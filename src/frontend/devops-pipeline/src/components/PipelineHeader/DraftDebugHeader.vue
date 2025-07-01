@@ -44,7 +44,8 @@
                     this.isLoading = true
                     const res = await this.fetchPipelineByVersion({
                         ...this.$route.params,
-                        version: this.pipelineInfo?.version
+                        version: this.pipelineInfo?.version,
+                        archiveFlag: this.$route.query?.archiveFlag
                     })
                     this.pipelineName = res?.modelAndSetting?.model?.name ?? '--'
                 } catch (error) {

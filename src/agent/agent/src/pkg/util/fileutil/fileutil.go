@@ -28,12 +28,13 @@
 package fileutil
 
 import (
-	"github.com/TencentBlueKing/bk-ci/agent/internal/third_party/dep/fs"
-	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/TencentBlueKing/bk-ci/agent/internal/third_party/dep/fs"
+	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
 
 func AtomicWriteFile(filename string, reader io.Reader, mode os.FileMode) error {

@@ -653,7 +653,7 @@ interface ServiceGitResource {
         @Parameter(description = "pageSize", required = true)
         @QueryParam("pageSize")
         pageSize: Int = 20,
-        @Parameter(description = "搜索用户关键字", required = true)
+        @Parameter(description = "搜索用户关键字", required = false)
         @QueryParam("search")
         search: String?,
         @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)

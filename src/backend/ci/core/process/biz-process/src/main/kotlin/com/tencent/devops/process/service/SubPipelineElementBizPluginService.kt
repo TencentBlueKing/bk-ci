@@ -29,6 +29,7 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
@@ -85,16 +86,26 @@ class SubPipelineElementBizPluginService @Autowired constructor(
                 elements = elements,
                 contextMap = contextMap
             )
+            val watcher = Watcher("batch check sub pipeline|${param.pipelineId}")
+            watcher.start("check branch version resource")
+            checkBranchVersion(
+                param = param,
+                subPipelineElementMap = subPipelineElementMap,
+                errors = errors
+            )
+            watcher.start("check permission")
             checkPermission(
                 param = param,
                 subPipelineElementMap = subPipelineElementMap,
                 errors = errors
             )
+            watcher.start("check cycle")
             checkCycle(
                 param = param,
                 subPipelineElementMap = subPipelineElementMap,
                 errors = errors
             )
+            watcher.stop()
         }
         if (errors.isNotEmpty()) {
             val failedReason = PipelineCheckFailedErrors(
@@ -150,6 +161,29 @@ class SubPipelineElementBizPluginService @Autowired constructor(
                 val errorInfo = PipelineCheckFailedErrors.ErrorInfo(
                     errorTitle = I18nUtil.getCodeLanMessage(
                         messageCode = ProcessMessageCode.BK_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_TITLE
+                    ),
+                    errorDetails = errorDetails
+                )
+                errors.add(errorInfo)
+            }
+        }
+    }
+
+    fun checkBranchVersion(
+        param: ElementBatchCheckParam,
+        subPipelineElementMap: Map<SubPipelineIdAndName, MutableList<ElementHolder>>,
+        errors: MutableList<PipelineCheckFailedErrors.ErrorInfo>
+    ) {
+        with(param) {
+            val errorDetails = subPipelineCheckService.batchCheckBranchVersion(
+                projectId = projectId!!,
+                pipelineId = pipelineId,
+                subPipelineElementMap = subPipelineElementMap
+            )
+            if (errorDetails.isNotEmpty()) {
+                val errorInfo = PipelineCheckFailedErrors.ErrorInfo(
+                    errorTitle = I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH_TITLE
                     ),
                     errorDetails = errorDetails
                 )

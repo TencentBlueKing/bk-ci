@@ -1,5 +1,3 @@
-//go:build linux || darwin
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -27,8 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package config
+package com.tencent.devops.scm.pojo
 
-func GetWinTaskType() string {
-	return ""
-}
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(title = "git tag 信息")
+data class GitTagInfo(
+    val name: String = "",
+    val message: String = "",
+    val description: String? = "",
+    @JsonProperty("created_at")
+    val createdAt: String? = "",
+    val commit: GitCommit
+)

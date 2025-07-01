@@ -36,6 +36,7 @@ import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.auth.api.service.ServiceMonitorSpaceResource
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLLimit
+import com.tencent.devops.common.api.pojo.LocaleInfo
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
@@ -48,6 +49,7 @@ import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.service.ServiceLocaleResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.devx.ServiceDEVXResource
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
@@ -1387,10 +1389,11 @@ class WorkspaceService @Autowired constructor(
 
     fun projectAccessDevicePermissions(
         userId: String,
-        macAddress: String
+        macAddress: String,
+        projectId: String?
     ): Map<String, ProjectAccessDevicePermissionsResp> {
         // 获取用户当前的项目列表
-        val projects = workspaceJoinDao.fetchProjectFromUser(dslContext, userId)
+        val projects = projectId?.let { listOf(it) } ?: workspaceJoinDao.fetchProjectFromUser(dslContext, userId)
         if (projects.isEmpty()) {
             logger.debug("projectAccessDevicePermissions|userId|$userId|empty projects")
             return emptyMap()
@@ -1497,10 +1500,37 @@ class WorkspaceService @Autowired constructor(
         )
     }
 
+    fun getUserLocale(userId: String): LocaleInfo {
+        logger.info("getUserLocale|$userId")
+
+        return kotlin.runCatching {
+            client.get(ServiceLocaleResource::class).getUserLocale(userId).data
+        }.onFailure {
+            logger.error("error in workspaceService::getUserDEVXEnv|$userId", it)
+        }.getOrNull() ?: kotlin.run {
+            logger.error("fail to get user locale|$userId")
+            LocaleInfo(DEFAULT_LOCALE_LANGUAGE)
+        }
+    }
+
+    fun updateUserLocale(userId: String, language: String): Boolean {
+        logger.info("updateUserLocale|$userId|$language")
+
+        return kotlin.runCatching {
+            client.get(ServiceLocaleResource::class).updateUserLocale(userId, LocaleInfo(language = language)).data
+        }.onFailure {
+            logger.error("error in workspaceService::updateUserLocale|$userId", it)
+        }.getOrNull() ?: kotlin.run {
+            logger.error("fail to updateUserLocale|$userId")
+            false
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
         private const val DEFAULT_PAGE_SIZE = 20
+        private const val DEFAULT_LOCALE_LANGUAGE = "zh_CN"
 
         private fun String.removeSuffixNumb(): String {
             for (i in this.lastIndex downTo 0) {

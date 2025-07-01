@@ -137,7 +137,8 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         search: WorkspaceSearch
     ): Result<Page<Workspace>> {
         val updatedSearch = search.apply {
-            notStatus = notStatus?.plus(WorkspaceStatus.DISTRIBUTING) ?: listOf(WorkspaceStatus.DISTRIBUTING)
+            notStatus = notStatus?.plus(WorkspaceStatus.DISTRIBUTING)?.plus(WorkspaceStatus.PREPARING)
+                ?: listOf(WorkspaceStatus.DISTRIBUTING, WorkspaceStatus.PREPARING)
         }
         return Result(workspaceService.getWorkspaceList(userId, page, pageSize, updatedSearch))
     }
@@ -225,9 +226,10 @@ class UserWorkspaceResourceImpl @Autowired constructor(
 
     override fun projectAccessDevicePermissions(
         userId: String,
-        macAddress: String
+        macAddress: String,
+        projectId: String?
     ): Result<Map<String, ProjectAccessDevicePermissionsResp>> {
-        return Result(workspaceService.projectAccessDevicePermissions(userId, macAddress))
+        return Result(workspaceService.projectAccessDevicePermissions(userId, macAddress, projectId))
     }
 
     override fun checkMoa2fa(userId: String, workspaceName: String): Result<Boolean> {

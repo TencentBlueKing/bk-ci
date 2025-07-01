@@ -294,7 +294,10 @@ interface UserWorkspaceResource {
         userId: String,
         @Parameter(description = "MAC地址", required = true)
         @QueryParam("macAddress")
-        macAddress: String
+        macAddress: String,
+        @Parameter(description = "项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String?
     ): Result<Map<String, ProjectAccessDevicePermissionsResp>>
 
     @Operation(summary = "校验是否需要moa 2fa二次验证，true：需求；false：不需要")
