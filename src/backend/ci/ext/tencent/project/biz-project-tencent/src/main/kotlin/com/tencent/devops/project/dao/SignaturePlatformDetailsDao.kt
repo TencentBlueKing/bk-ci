@@ -71,7 +71,7 @@ class SignaturePlatformDetailsDao {
             platformSecret = record.platformSecret,
             platformName = record.platformName,
             url = record.url,
-            information = record.url,
+            information = record.information,
             projectCodes = record.projectCodes.split(",")
         )
     }
