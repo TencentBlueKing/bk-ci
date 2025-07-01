@@ -9,46 +9,49 @@
         >
             <template>
                 <section class="filter-bar">
-                    <bk-button
-                        v-perm="{
-                            permissionData: {
-                                projectId: projectId,
-                                resourceType: NODE_RESOURCE_TYPE,
-                                resourceCode: projectId,
-                                action: NODE_RESOURCE_ACTION.CREATE
-                            }
-                        }"
-                        theme="primary"
-                        class="mr10"
-                        @click="toImportNode('construct')"
-                    >
-                        <span class="import-btn">
-                            <i class="devops-icon icon-plus"></i>
-                            {{ $t('environment.nodeInfo.importNode') }}
-                        </span>
-                    </bk-button>
-                    <SearchSelect
-                        class="search-input"
-                        v-model="searchValue"
-                        :placeholder="filterPlaceHolder"
-                        :data="filterData"
-                        :show-condition="false"
-                        clearable
-                    ></SearchSelect>
-                    <bk-date-picker
-                        ref="dateTimeRangeRef"
-                        v-model="dateTimeRange"
-                        :placeholder="$t('environment.选择最近执行时间范围')"
-                        :type="'datetimerange'"
-                        @change="handleDateRangeChange"
-                    >
-                    </bk-date-picker>
-                    <bk-button
-                        class="export-btn"
-                        @click="handleExportCSV"
-                    >
-                        {{ $t('environment.导出') }}
-                    </bk-button>
+                    <div class="btn-part">
+                        <bk-button
+                            v-perm="{
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: NODE_RESOURCE_TYPE,
+                                    resourceCode: projectId,
+                                    action: NODE_RESOURCE_ACTION.CREATE
+                                }
+                            }"
+                            theme="primary"
+                            @click="toImportNode('construct')"
+                        >
+                            <span class="import-btn">
+                                <i class="devops-icon icon-plus"></i>
+                                {{ $t('environment.nodeInfo.importNode') }}
+                            </span>
+                        </bk-button>
+                        <bk-button
+                            class="mr10"
+                            @click="handleExportCSV"
+                        >
+                            {{ $t('environment.导出') }}
+                        </bk-button>
+                    </div>
+                    <div class="search-part">
+                        <SearchSelect
+                            class="search-input"
+                            v-model="searchValue"
+                            :placeholder="filterPlaceHolder"
+                            :data="filterData"
+                            :show-condition="false"
+                            clearable
+                        ></SearchSelect>
+                        <bk-date-picker
+                            ref="dateTimeRangeRef"
+                            v-model="dateTimeRange"
+                            :placeholder="$t('environment.选择最近执行时间范围')"
+                            :type="'datetimerange'"
+                            @change="handleDateRangeChange"
+                        >
+                        </bk-date-picker>
+                    </div>
                 </section>
 
                 <list-table
@@ -808,85 +811,12 @@
             margin-right: 10px;
         }
 
-        .node-status-icon {
-            display: inline-block;
-            margin-left: 2px;
-            width: 10px;
-            height: 10px;
-            border: 2px solid #30D878;
-            border-radius: 50%;
-            -webkit-border-radius: 50%;
-        }
-
-        .loading-icon {
-            display: inline-block;
-            position: relative;
-            width: 12px;
-            top: -12px;
-            margin-right: 5px;
-        }
-
-        .abnormal-stutus-icon {
-            border-color: $failColor;
-        }
-
-        .delete-node-text {
-            position: relative;
-            padding-right: 9px;
-        }
-
         .normal-status-node {
             color: #30D878;
         }
 
         .abnormal-status-node {
             color: $failColor;
-        }
-
-        .node-item-content {
-            position: absolute;
-            top: 12px;
-            display: flex;
-            width: 90%;
-            min-width: 280px;
-            margin-right: 12px;
-            z-index: 2;
-            .edit-content {
-                display: flex;
-                width: 100%;
-            }
-            .bk-form-input {
-                height: 30px;
-                font-size: 12px;
-                min-width: 280px;
-                padding-right: 74px;
-            }
-            .error-tips {
-                font-size: 12px;
-            }
-            .handler-btn {
-                display: flex;
-                align-items: center;
-                margin-left: 10px;
-                position: absolute;
-                right: 11px;
-                top: 8px;
-                .edit-base {
-                    cursor: pointer;
-                }
-                .save {
-                    margin-right: 8px;
-                }
-            }
-            .is-danger {
-                border-color: #ff5656;
-                background-color: #fff4f4;
-                
-            }
-        }
-
-        .node-item-id {
-            display: flex;
         }
     }
 
@@ -900,6 +830,19 @@
     .filter-bar {
         display: flex;
         align-items: center;
+        justify-content: space-between;
+
+        .btn-part {
+            display: flex;
+        }
+
+        .search-part {
+            display: flex;
+
+            .bk-date-picker.long {
+                max-width: 180px;
+            }
+        }
         
         .devops-icon.icon-plus {
             vertical-align: middle;
@@ -911,21 +854,13 @@
             align-items: center;
         }
         .search-input {
-            width: 650px;
+            min-width: 500px;
+            max-width: 650px;
             background: #fff;
             margin-right: 10px;
             ::placeholder {
                 color: #c4c6cc;
             }
-        }
-        .export-btn {
-            margin-left: 10px;
-        }
-    }
-    .pipeline-name {
-        cursor: pointer;
-        &:hover {
-            color: $primaryColor;
         }
     }
 </style>

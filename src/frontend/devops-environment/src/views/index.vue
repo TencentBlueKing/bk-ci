@@ -35,7 +35,11 @@
             </bk-tab-panel>
     
             <template slot="setting">
-                <span class="enable-monitoring">{{ $t('开启构建机监控') }}</span>
+                <span class="enable-monitoring">{{ $t('environment.开启构建机监控') }}</span>
+                <!-- <p v-else class="enable-monitoring">
+                    <span>{{ $t('environment.构建机监控') }}</span>
+                    <span class="enabled">{{ $t('environment.已开启') }}</span>
+                </p> -->
             </template>
         </bk-tab>
     </div>
@@ -124,6 +128,7 @@
     position: relative;
     width: 100%;
     box-sizing: border-box;
+    overflow: hidden;
 
     .environment-tit {
         position: absolute;
@@ -143,6 +148,16 @@
             font-size: 12px;
             color: #3A84FF;
             cursor: pointer;
+        }
+        .enabled {
+            display: inline-block;
+            margin-left: 8px;
+            width: 56px;
+            height: 22px;
+            line-height: 22px;
+            background: #EDF4FF;
+            text-align: center;
+            border-radius: 2px;
         }
     }
 }

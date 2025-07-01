@@ -166,6 +166,7 @@
         "refreshing": "Refreshing",
         "removeNodetips": "Confirm to remove agent ( {0} ) ?",
         "deleteNodetips": "Confirm to delete agent ( {0} ) ?",
+        "stopAgentProcessOnly": "When deleting, only stop the Agent process. Please uninstall the Agent manually.",
         "importing": "Importing",
         "submitting": "Submitting",
         "emptyNode": "Import your first agent",
@@ -292,5 +293,13 @@
     "开启构建机监控": "Enable Build Machine Monitoring",
     "新增标签": "Add Tag",
     "修改标签": "Edit Tag",
-    "标签": "Tag"
+    "标签": "Tag",
+    "设置标签": "Set Tags",
+    "全部节点": "All Nodes",
+    "私有构建节点": "Private Build Nodes",
+    "部署节点": "Deployment Nodes",
+    "按节点标签": "By Node Tags",
+    "确认删除标签": "Confirm delete tag [{0}]?",
+    "构建机监控": "Build Machine Monitoring",
+    "已开启": "Enabled"
 }

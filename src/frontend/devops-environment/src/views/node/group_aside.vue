@@ -9,7 +9,10 @@
                 v-if="group.type === 'label_type'"
             >
                 <span>{{ group.tltle }}</span>
-                <p class="title-right">
+                <p
+                    class="title-right"
+                    @click="handleChangeTag(true)"
+                >
                     <i class="devops-icon icon-plus"></i>
                     <span>{{ $t('environment.新增标签') }}</span>
                 </p>
@@ -68,10 +71,12 @@
                                 class="bk-dropdown-list"
                                 slot="dropdown-content"
                             >
-                                <li @click="handleEditLabel(groupItem.id)">
+                                <li
+                                    @click="handleChangeTag(false, groupItem)"
+                                >
                                     <a href="javascript:;">{{ $t('environment.修改标签') }}</a>
                                 </li>
-                                <li @click="handleDeleteLabel(groupItem.id)">
+                                <li @click="handleDeleteLabel(groupItem)">
                                     <a href="javascript:;">{{ $t('environment.delete') }}</a>
                                 </li>
                             </ul>
@@ -100,18 +105,114 @@
                 </li>
             </ul>
         </div>
+
+        <bk-dialog
+            v-model="isShowTagChange"
+            :render-directive="'if'"
+            :mask-close="false"
+            :width="480"
+            header-position="left"
+            :title="tagTitle"
+            ext-cls="tag-change"
+            :style="{ '--dialog-top-translateY': `translateY(${dialogTopOffset}px)` }"
+        >
+            <div class="tag-dialog-content">
+                <bk-form
+                    :label-width="100"
+                    :model="formData"
+                    :rules="rules"
+                    ref="tagForm"
+                >
+                    <bk-form-item
+                        label="标签label"
+                        :required="true"
+                        property="label"
+                    >
+                        <bk-input
+                            v-model="formData.label"
+                            :clearable="true"
+                        ></bk-input>
+                    </bk-form-item>
+
+                    <bk-form-item
+                        label="标签value"
+                        style="margin-top: 24px;"
+                    >
+                        <div
+                            class="value-content"
+                            :style="{ 'max-height': `${ulMaxHeight}px` }"
+                        >
+                            <div
+                                v-for="(item, index) in formData.values"
+                                :key="index"
+                                class="value-row"
+                            >
+                                <bk-input
+                                    v-model="item.value"
+                                    :clearable="true"
+                                ></bk-input>
+                                <i
+                                    class="devops-icon icon-plus-circle"
+                                    @click="addTagValueRow"
+                                ></i>
+                                <i
+                                    class="devops-icon icon-minus-circle"
+                                    v-if="formData.values.length > 1"
+                                    @click="deleteTagValueRow(index)"
+                                ></i>
+                            </div>
+                        </div>
+                    </bk-form-item>
+                </bk-form>
+            </div>
+            <div
+                slot="footer"
+                class="dialog-footer"
+            >
+                <bk-button
+                    theme="primary"
+                    :disabled="!formData.label"
+                    @click="handleConfirm"
+                >
+                    {{ $t('environment.save') }}
+                </bk-button>
+                <bk-button @click="handleCancel">{{ $t('environment.cancel') }}</bk-button>
+            </div>
+        </bk-dialog>
     </div>
 </template>
   
 <script>
+    import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
+
     export default {
         name: 'NodeGroupTree',
         data () {
             return {
-                expandedGroupIds: []
+                NODE_RESOURCE_TYPE,
+                NODE_RESOURCE_ACTION,
+                expandedGroupIds: [],
+                isAdd: false,
+                isShowTagChange: false,
+                dialogTopOffset: null,
+                rules: {
+                    label: [{ required: true, trigger: 'blur', message: this.$t('environment.requiredField') }]
+                },
+                formData: {
+                    label: '',
+                    values: [
+                        { value: '' }
+                    ]
+                }
             }
         },
         computed: {
+            projectId () {
+                return this.$route.params.projectId
+            },
+            ulMaxHeight () {
+                return window.innerHeight * 0.8 - 184
+            },
             nodeGroup () {
                 return [
                     {
@@ -148,11 +249,26 @@
             allGroupIds () {
                 const labelGroup = this.nodeGroup.find(g => g.type === 'label_type')
                 return labelGroup ? labelGroup.groups.map(g => g.id) : []
+            },
+            tagTitle () {
+                return this.isAdd ? this.$t('environment.新增标签') : this.$t('environment.修改标签')
             }
         },
         watch: {
             nodeGroup () {
                 this.expandedGroupIds = this.allGroupIds
+            },
+            'formData.values': {
+                handler (newVal) {
+                    if (newVal) {
+                        const ITEM_HEIGHT = 48
+                        const DIALOG_EXTRA_HEIGHT = 184
+                        const totalListHeight = newVal.length * ITEM_HEIGHT
+                        const listHeight = Math.min(totalListHeight, this.ulMaxHeight)
+                        this.dialogTopOffset = -Math.round((listHeight + DIALOG_EXTRA_HEIGHT) / 2)
+                    }
+                },
+                immediate: true
             }
         },
         created () {
@@ -169,18 +285,86 @@
                     this.expandedGroupIds.push(groupId)
                 }
             },
+            handleChangeTag (type, groupItem) {
+                this.isShowTagChange = true
+                this.isAdd = type
+                if (groupItem) {
+                    this.formData = {
+                        label: groupItem.name,
+                        values: groupItem.children.map(child => ({ value: child.name }))
+                    }
+                }
+            },
             handleNodeClick (asideId) {
                 this.$router.push({ name: 'nodeList', params: { asideId } })
             },
-            handleEditLabel (id) {
-                console.log('🚀 ~ handleEditLabel ~ id:', id)
+            handleDeleteLabel (groupItem) {
+                this.$bkInfo({
+                    theme: 'warning',
+                    type: 'warning',
+                    title: `${this.$t('environment.确认删除标签', [groupItem.name])}`,
+                    confirmFn: async () => {
+                        try {
+                            // await this.$store.dispatch('environment/toDeleteNode', {
+                            //     projectId: this.projectId,
+                            //     params
+                            // })
+                            // this.$bkMessage({
+                            //     message: this.$t('environment.successfullyDeleted'),
+                            //     theme: 'success'
+                            // })
+                        } catch (e) {
+                            this.handleError(
+                                e,
+                                {
+                                    projectId: this.projectId,
+                                    resourceType: NODE_RESOURCE_TYPE,
+                                    resourceCode: this.projectId,
+                                    action: NODE_RESOURCE_ACTION.DELETE
+                                }
+                            )
+                        }
+                    }
+                })
             },
-            handleDeleteLabel (id) {
-                console.log('🚀 ~ handleDeleteLabel ~ id:', id)
+            addTagValueRow () {
+                this.formData.values.push({ value: '' })
+            },
+            deleteTagValueRow (index) {
+                if (this.formData.values.length > 1) {
+                    this.formData.values.splice(index, 1)
+                }
+            },
+            async handleConfirm () {
+                const valid = await this.$refs.tagForm.validate()
+                if (valid) {
+                    if (this.isAdd) {
+                        console.log('新增', this.formData)
+                    } else {
+                        console.log('编辑')
+                    }
+                    this.isShowTagChange = false
+                }
+            },
+            handleCancel () {
+                this.isShowTagChange = false
+                this.formData = {
+                    label: '',
+                    values: [
+                        { value: '' }
+                    ]
+                }
             }
         }
     }
 </script>
+
+<style lang="scss">
+.tag-change .bk-dialog {
+    top: 50% !important;
+    transform: var(--dialog-top-translateY) !important;
+}
+</style>
   
 <style scoped lang="scss">
   .node-group-tree {
@@ -311,5 +495,38 @@
   .sub-node-item {
     margin-top: 0;
     padding-left: 40px;
+  }
+
+  .tag-dialog-content {
+    padding: 0 16px;
+
+    .bk-form-control {
+        width: 250px;
+    }
+
+    .icon-plus-circle {
+        margin: 0 8px;
+    }
+
+    i {
+        color: #979BA5;
+    }
+
+    .value-content {
+        overflow: auto;
+
+        .value-row {
+          display: flex;
+          align-items: center;
+    
+          &:not(:first-child) {
+            margin-top: 16px;
+          }
+        }
+    }
+  }
+
+  .dialog-footer {
+    text-align: right;
   }
 </style>
