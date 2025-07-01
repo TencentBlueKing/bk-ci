@@ -116,7 +116,7 @@ class NotifyUserBlacklistDao {
             return dslContext.select(USER_ID)
                 .from(this)
                 .where(USER_ID.eq(userId))
-                .fetchOne(0,String::class.java)
+                .fetchOne(0, String::class.java)
         }
     }
 }

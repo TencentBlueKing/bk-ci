@@ -57,6 +57,7 @@ import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.pipeline.PipelineBuildParamFormProp
+import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
@@ -124,10 +125,16 @@ class SubPipelineStartUpService @Autowired constructor(
         runMode: String,
         channelCode: ChannelCode? = null,
         values: Map<String, String>,
-        executeCount: Int?
+        executeCount: Int?,
+        branch: String?
     ): Result<ProjectBuildId> {
         val fixProjectId = callProjectId.ifBlank { projectId }
-
+        // 获取分支版本Model
+        val subPipelineResource = getBranchVersionResource(
+            projectId = fixProjectId,
+            pipelineId = callPipelineId,
+            branch = branch
+        )
         // 通过 runVariables获取 userId 和 channelCode
         val runVariables = buildVariableService.getAllVariable(projectId, parentPipelineId, buildId)
         val userId =
@@ -164,24 +171,26 @@ class SubPipelineStartUpService @Autowired constructor(
         val watcher = Watcher("subPipeline start up")
         try {
             watcher.start("start check circular dependency")
-            val existsLink = subPipelineRefService.exists(
-                projectId = projectId,
-                pipelineId = parentPipelineId,
-                subProjectId = fixProjectId,
-                subPipelineId = callPipelineId
-            )
-            if (existsLink) {
-                // 链路已归档，则说明不存在递归调用的情况
+            if (subPipelineResource == null &&
+                    subPipelineRefService.exists(
+                        projectId = projectId,
+                        pipelineId = parentPipelineId,
+                        subProjectId = fixProjectId,
+                        subPipelineId = callPipelineId
+                    )
+            ) {
+                // 链路已归档(分支版本resource仍需校验，后续优化)，则说明不存在递归调用的情况
                 logger.info(
                     "pipeline link already verified|" +
                             "[$projectId|$parentPipelineId]->[$fixProjectId|$callPipelineId]"
                 )
             } else {
                 checkSub(
-                    atomCode,
+                    atomCode = atomCode,
                     projectId = fixProjectId,
                     pipelineId = callPipelineId,
-                    existPipelines = existPipelines
+                    existPipelines = existPipelines,
+                    pipelineResource = subPipelineResource
                 )
             }
         } catch (e: OperationException) {
@@ -206,7 +215,8 @@ class SubPipelineStartUpService @Autowired constructor(
             parameters = startParams,
             triggerUser = triggerUser,
             runMode = runMode,
-            parentExecuteCount = executeCount
+            parentExecuteCount = executeCount,
+            pipelineResource = subPipelineResource
         )
         pipelineTaskService.updateSubBuildId(
             projectId = projectId,
@@ -241,10 +251,21 @@ class SubPipelineStartUpService @Autowired constructor(
         isMobile: Boolean = false,
         triggerUser: String? = null,
         runMode: String,
-        parentExecuteCount: Int?
+        parentExecuteCount: Int?,
+        pipelineResource: PipelineResourceVersion?
     ): BuildId {
-        val (readyToBuildPipelineInfo, resource, _) = pipelineRepositoryService.getBuildTriggerInfo(
-            projectId, pipelineId, null
+        val readyToBuildPipelineInfo = getPipelineInfo(
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+        // 没有分支版本则以正式版本
+        val resource = pipelineResource ?: pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
+            params = arrayOf(pipelineId)
         )
         if (readyToBuildPipelineInfo.locked == true) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
@@ -252,13 +273,9 @@ class SubPipelineStartUpService @Autowired constructor(
         if (readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
         )
-        val parentPipelineInfo = pipelineRepositoryService.getPipelineInfo(
+        val parentPipelineInfo = getPipelineInfo(
             projectId = parentProjectId,
             pipelineId = parentPipelineId
-        ) ?: throw ErrorCodeException(
-            statusCode = Response.Status.NOT_FOUND.statusCode,
-            params = arrayOf(parentPipelineId),
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
         )
 
         val parentBuildInfo = pipelineRuntimeService.getBuildInfo(
@@ -341,7 +358,8 @@ class SubPipelineStartUpService @Autowired constructor(
                 channelCode = channelCode,
                 isMobile = isMobile,
                 resource = resource,
-                frequencyLimit = false
+                frequencyLimit = false,
+                signPipelineVersion = resource.version
             )
             // 更新父流水线关联子流水线构建id
             pipelineTaskService.updateSubBuildId(
@@ -377,10 +395,19 @@ class SubPipelineStartUpService @Autowired constructor(
      * @param pipelineId 子流水线ID
      * @param existPipelines 保存当前递归次时父流水线的ID
      */
-    private fun checkSub(atomCode: String, projectId: String, pipelineId: String, existPipelines: HashSet<String>) {
-
+    private fun checkSub(
+        atomCode: String,
+        projectId: String,
+        pipelineId: String,
+        existPipelines: HashSet<String>,
+        branch: String? = "",
+        pipelineResource: PipelineResourceVersion? = null
+    ) {
         if (existPipelines.contains(pipelineId)) {
-            logger.warn("subPipeline does not allow loop calls|projectId:$projectId|pipelineId:$pipelineId")
+            logger.warn(
+                "subPipeline does not allow loop calls|" +
+                        "projectId:$projectId|pipelineId:$pipelineId|version:${pipelineResource?.versionNum}"
+            )
             throw OperationException(
                 I18nUtil.getCodeLanMessage(
                     messageCode = ERROR_SUB_PIPELINE_NOT_ALLOWED_CIRCULAR_CALL,
@@ -390,10 +417,11 @@ class SubPipelineStartUpService @Autowired constructor(
         }
         existPipelines.add(pipelineId)
         val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId) ?: return
-        val existModel = pipelineRepositoryService.getPipelineResourceVersion(
+        val existModel = pipelineResource?.model ?: pipelineRepositoryService.getPipelineResourceVersion(
             projectId, pipelineId, pipeline.version
         )?.model ?: return
-
+        // 子流水线的启动参数
+        val triggerParams = pipelineRepositoryService.getTriggerParams(existModel)
         val currentExistPipelines = HashSet(existPipelines)
         existModel.stages.forEachIndexed stage@{ index, stage ->
             if (index == 0) {
@@ -418,14 +446,26 @@ class SubPipelineStartUpService @Autowired constructor(
                         }
                         val msg = map["input"] as? Map<*, *> ?: return@element
                         val subPip = msg["subPip"]?.toString() ?: return@element
+                        // 分支参数以变量形式输入
+                        val subBranch = EnvUtils.parseEnv(
+                            command = msg["branch"]?.toString() ?: "",
+                            data = triggerParams
+                        )
                         logger.info(
-                            "callPipelineStartup|" +
-                                "supProjectId:${msg["projectId"]},subPipelineId:$subPip,subElementId:${element.id}," +
-                                "parentProjectId:$projectId, parentPipelineId:$pipelineId"
+                            "callPipelineStartup|supProjectId:${msg["projectId"]},subPipelineId:$subPip," +
+                                    "subElementId:${element.id},subBranch:$subBranch,parentProjectId:$projectId, " +
+                                    "parentPipelineId:$pipelineId,parentBranch:$branch"
                         )
                         val subProj = msg["projectId"]?.toString()?.ifBlank { projectId } ?: projectId
+                        val subPipelineResource = getBranchVersionResource(subProj, subPip, subBranch)
                         val exist = HashSet(currentExistPipelines)
-                        checkSub(atomCode, projectId = subProj, pipelineId = subPip, existPipelines = exist)
+                        checkSub(
+                            atomCode = atomCode,
+                            projectId = subProj,
+                            pipelineId = subPip,
+                            existPipelines = exist,
+                            pipelineResource = subPipelineResource
+                        )
                         existPipelines.addAll(exist)
                     }
                 }
@@ -467,7 +507,8 @@ class SubPipelineStartUpService @Autowired constructor(
         includeConst: Boolean?,
         includeNotRequired: Boolean?,
         parentProjectId: String = "",
-        parentPipelineId: String = ""
+        parentPipelineId: String = "",
+        branch: String?
     ): Result<List<PipelineBuildParamFormProp>> {
         if (pipelineId.isBlank() || projectId.isBlank()) {
             return Result(ArrayList())
@@ -480,14 +521,16 @@ class SubPipelineStartUpService @Autowired constructor(
         } else {
             userId
         }
+        val subPipelineResource = getBranchVersionResource(projectId, pipelineId, branch)
         val parameter = pipelineBuildFacadeService.getBuildParamFormProp(
             projectId = projectId,
             pipelineId = pipelineId,
             includeConst = includeConst,
             includeNotRequired = includeNotRequired,
             userId = oauthUser,
+            isTemplate = null,
             version = null,
-            isTemplate = null
+            subModel = subPipelineResource?.model
         )
         return Result(parameter)
     }
@@ -521,4 +564,42 @@ class SubPipelineStartUpService @Autowired constructor(
     fun getSubPipelineStatus(projectId: String, buildId: String): Result<SubPipelineStatus> {
         return Result(subPipelineStatusService.getSubPipelineStatus(projectId, buildId))
     }
+
+    private fun getBranchVersionResource(
+        projectId: String,
+        pipelineId: String,
+        branch: String?
+    ): PipelineResourceVersion? {
+        return if (!branch.isNullOrBlank()) {
+            val branchVersionResource = pipelineRepositoryService.getBranchVersionResource(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                branchName = branch
+            )
+            if (branchVersionResource == null) {
+                val pipelineInfo = getPipelineInfo(projectId, pipelineId)
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH,
+                    params = arrayOf(
+                        "/console/pipeline/$projectId/$pipelineId",
+                        pipelineInfo.pipelineName,
+                        branch
+                    )
+                )
+            } else {
+                branchVersionResource
+            }
+        } else {
+            null
+        }
+    }
+
+    private fun getPipelineInfo(projectId: String, pipelineId: String) = pipelineRepositoryService.getPipelineInfo(
+        projectId = projectId,
+        pipelineId = pipelineId
+    ) ?: throw ErrorCodeException(
+        statusCode = Response.Status.NOT_FOUND.statusCode,
+        errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+        params = arrayOf(pipelineId)
+    )
 }
