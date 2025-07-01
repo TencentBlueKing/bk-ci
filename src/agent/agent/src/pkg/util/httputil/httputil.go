@@ -36,6 +36,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"reflect"
 	"time"
 
@@ -61,13 +62,16 @@ type HttpResult struct {
 	IgnoreDupLog bool
 }
 
-func IsSuccess(status int) bool {
-	return status >= 200 && status < 400
+var client = &http.Client{}
+
+// newClient 替换客户端，重置连接池
+func newClient() {
+	client = &http.Client{}
 }
 
 func NewHttpClient() *HttpClient {
 	return &HttpClient{
-		client:    http.DefaultClient,
+		client:    client,
 		header:    make(map[string]string),
 		formValue: make(map[string]string),
 	}
@@ -156,6 +160,10 @@ func (r *HttpClient) Execute(ignoreDupLogResp *IgnoreDupLogResp) *HttpResult {
 	defer cancel()
 	req, err := http.NewRequestWithContext(withTimeout, r.method, r.url, r.body)
 	if err != nil {
+		if os.IsTimeout(err) || errors.Is(err, context.DeadlineExceeded) {
+			logs.Warn(fmt.Sprintf("%s|http request time out, replace client", r.url))
+			newClient()
+		}
 		result.Error = err
 		return result
 	}
