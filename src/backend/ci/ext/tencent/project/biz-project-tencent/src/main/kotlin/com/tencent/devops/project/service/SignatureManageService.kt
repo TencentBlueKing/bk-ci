@@ -161,7 +161,9 @@ class SignatureManageService(
                     logger.warn(
                         "Signature service indicates failure. URL: ${request.url}, Message: ${queryResponse.message}"
                     )
-                    throw RemoteServiceException("Signature service returned a failure result: ${queryResponse.message}")
+                    throw RemoteServiceException(
+                        "Signature service returned a failure result: ${queryResponse.message}"
+                    )
                 }
 
                 queryResponse.data ?: throw OperationException("Signature service returned null data.")
