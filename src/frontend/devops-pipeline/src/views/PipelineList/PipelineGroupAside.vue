@@ -222,9 +222,9 @@
     import Logo from '@/components/Logo'
     import ExtMenu from '@/components/pipelineList/extMenu'
     import {
+        ARCHIVE_VIEW_ID,
         CACHE_PIPELINE_GROUP_NAV_STATUS,
         DELETED_VIEW_ID,
-        ARCHIVE_VIEW_ID,
         UNCLASSIFIED_PIPELINE_VIEW_ID
     } from '@/store/constants'
     import {
@@ -689,6 +689,7 @@
 
             .pipeline-group-header-name {
                 flex: 1;
+                @include ellipsis();
             }
             .add-pipeline-group-btn {
                 display: flex;
