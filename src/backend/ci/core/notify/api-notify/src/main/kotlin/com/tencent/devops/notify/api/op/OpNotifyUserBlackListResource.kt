@@ -24,52 +24,56 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.notify.api.service
+package com.tencent.devops.notify.api.op
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.notify.pojo.NotifyContext
-import com.tencent.devops.notify.pojo.NotifyMessageContextRequest
-import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
-@Tag(name = "SERVICE_NOTIFY_MESSAGE_TEMPLATE", description = "通知模板")
-@Path("/service/notify/message/template")
+@Tag(name = "OP_NOTIFIES_BLACKLIST", description = "通知-用户黑名单")
+@Path("/op/notifies/blacklist")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceNotifyMessageTemplateResource {
+@Suppress("ALL")
+interface OpNotifyUserBlackListResource {
 
-    @Operation(summary = "使用模板发送消息通知")
+    @Operation(summary = "批量添加用户到黑名单")
     @POST
-    @Path("/send")
-    fun sendNotifyMessageByTemplate(
-        @Parameter(description = "使用模板发送消息通知请求报文体", required = true)
-        request: SendNotifyMessageTemplateRequest
+    @Path("/batchAdd")
+    fun batchAddToBlacklist(
+        @Parameter(description = "用户ID列表", required = true)
+        userIds: List<String>
     ): Result<Boolean>
 
-    @Operation(summary = "获取模板填充后消息内容")
+    @Operation(summary = "批量移除黑名单用户")
     @POST
-    @Path("/getContext")
-    fun getNotifyMessageByTemplate(
-        @Parameter(description = "使用模板获取消息内容请求", required = true)
-        request: NotifyMessageContextRequest
-    ): Result<NotifyContext?>
-
-    /**
-     * 使用模板取消消息通知
-     * @param request 使用模板发送消息通知请求报文体
-     */
-    @Operation(summary = "使用模板发送消息取消通知")
-    @POST
-    @Path("/complete")
-    fun completeNotifyMessageByTemplate(
-        @Parameter(description = "使用模板获取消息内容请求", required = true)
-        request: SendNotifyMessageTemplateRequest
+    @Path("/batchRemove")
+    fun batchRemoveFromBlacklist(
+        @Parameter(description = "用户ID列表", required = true)
+        userIds: List<String>
     ): Result<Boolean>
+
+    @Operation(summary = "获取所有黑名单用户")
+    @GET
+    @Path("/list")
+    fun getBlacklist(
+        @Parameter(description = "页码", required = true)
+        @QueryParam("page")
+        page: Int,
+        @Parameter(description = "每页数量", required = true)
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<Page<String>>
 }
