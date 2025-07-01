@@ -215,10 +215,10 @@ interface UserRemoteDevResource {
         projectId: String?
     ): Result<List<ClientTips>>
 
-    @Operation(summary = "获取云研发项目的云研发管理员")
+    @Operation(summary = "获取云研发项目的云研发审批管理员")
     @GET
     @Path("/managers")
-    fun remoteManagers(
+    fun remoteAuditManagers(
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("projectId")
