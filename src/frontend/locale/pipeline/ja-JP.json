@@ -1389,7 +1389,7 @@
     "codeConfig": "コード設定",
     "goOutputs": "製品の詳細を表示",
     "versionDesc": "バージョンの説明",
-    "rollback": "このバージョンに回復",
+    "rollback": "ロールバックバージョン",
     "materialRepo": "材料コードライブラリ",
     "materialBranch": "材料ブランチ",
     "triggerBranch": "トリガーブランチ",

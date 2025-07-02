@@ -639,6 +639,10 @@
         align-items: center;
         cursor: pointer;
         font-size: 12px !important;
+        display: inline-block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
         i {
             font-size: 12px !important;
         }
