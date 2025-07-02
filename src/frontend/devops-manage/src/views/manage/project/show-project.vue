@@ -49,7 +49,7 @@ const panels = computed(() => [
     name: 'projectSettings',
     label: '项目信息',
     activeCollapse: ['baseInfo', 'permission'],
-    collapsePanels: [{
+    panels: [{
       name: 'baseInfo',
       title: '基础信息',
     }, {
@@ -60,8 +60,7 @@ const panels = computed(() => [
   {
     name: 'pipelineSettings',
     label: '流水线设置',
-    activeCollapse: ['pipeline'],
-    collapsePanels: [
+    panels: [
       ...projectData.value.properties ? [{
         name: 'pipeline',
         title: '流水线',
@@ -71,8 +70,7 @@ const panels = computed(() => [
   {
     name: 'artifactorySettings',
     label: '制品库设置',
-    activeCollapse: ['artifactory'],
-    collapsePanels: [{
+    panels: [{
       name: 'artifactory',
       title: '制品库',
     }]
@@ -253,7 +251,7 @@ const fetchOperationalList = async (bgName) => {
   isLoading.value = false;
 }
 
-const getOperational = id => operationalList.value.find(i => String(i.ProductId) === String(id));
+// const getOperational = id => operationalList.value.find(i => String(i.ProductId) === String(id));
 
 /**
  * 取消更新项目
@@ -454,19 +452,20 @@ onMounted(async () => {
             class="detail-content-form"
             v-if="hasPermission && projectData.projectCode"
           >
+          <template v-if="item.name === 'projectSettings'">
             <bk-collapse
               v-model="item.activeCollapse"
               :hasHeaderHover="false"
             >
               <bk-collapse-panel
-                v-for="(panel, index) in item.collapsePanels"
+                v-for="(panel, index) in item.panels"
                 :key="panel.name"
                 :name="panel.name"
                 icon="right-shape"
               >
                 <span class="title">{{ t(panel.title) }}</span>
                 <template #content>
-                  <div :class="[{'project-tab': item.name !== 'artifactorySettings'}, { 'has-bottom-border': index !== item.collapsePanels.length - 1 }]">
+                  <div :class="['project-tab', { 'has-bottom-border': index !== item.panels.length - 1 }]">
                     <template v-if="panel.name === 'baseInfo'">
                       <bk-form label-position="right" :label-width="200">
                         <bk-form-item :label="t('项目名称')" property="projectName">
@@ -569,71 +568,80 @@ onMounted(async () => {
                         </bk-form-item>
                       </bk-form>
                     </template>
-                    <template v-if="panel.name === 'pipeline'">
-                      <bk-form lable-position="right" :label-width="200">
-                        <bk-form-item
-                          v-if="projectData.properties"
-                          property="pipelineDialect"
-                        >
-                          <template #label>
-                            <dialect-popover-table />
-                          </template>
-                          <div>
-                            <span>{{ t(projectData.properties.pipelineDialect) }}</span>
-                            <div class="diff-content" v-if="projectData.afterPipelineDialect">
-                              <p class="update-title">
-                                {{ t('本次更新：') }}
-                              </p>
-                              <span>{{ t(projectData.afterPipelineDialect) }}</span>
-                            </div>
-                          </div>
-                        </bk-form-item>
-                        <bk-form-item
-                          :label="t('命名规范提示')"
-                          property="pipelineNameFormat"
-                        >
-                          <span class="item-value">
-                            {{ projectData.properties.enablePipelineNameTips ? (projectData.properties.pipelineNameFormat || '--') : t('未开启') }}
-                          </span>
-                          <div class="diff-content" v-if="projectData.afterPipelineNameFormat">
-                            <p class="update-title">
-                              {{ t('本次更新：') }}
-                            </p>
-                            <span>{{ projectData.afterPipelineNameFormat }}</span>
-                          </div>
-                        </bk-form-item>
-                        <bk-form-item
-                          :label="t('构建日志归档阈值')"
-                          property="loggingLineLimit"
-                          :description="t('单个步骤(Step)日志达到阈值时，将压缩并归档到日志仓库。可下载日志文件到本地查看。')"
-                        >
-                          <span class="item-value">
-                            {{ projectData.properties.loggingLineLimit || '--' }}
-                            <span v-if="projectData.properties.loggingLineLimit">
-                              {{ t('万行') }}
-                            </span>
-                          </span>
-                          <div class="diff-content" v-if="projectData.afterLoggingLineLimit">
-                            <p class="update-title">
-                              {{ t('本次更新：') }}
-                            </p>
-                            <span>{{ `${projectData.afterLoggingLineLimit} ${t('万行')}` }}</span>
-                          </div>
-                        </bk-form-item>
-                      </bk-form>
-                    </template>
-                    <template v-if="panel.name === 'artifactory'">
-                      <bk-form label-position="right" :label-width="200">
-                        <ArtifactoryContent 
-                          :data="projectData"
-                          type="show"
-                        />
-                      </bk-form>
-                    </template>
                   </div>
                 </template>
               </bk-collapse-panel>
             </bk-collapse>
+          </template>
+          <template v-else>
+            <div
+              v-for="panel in item.panels"
+              :key="panel.name"
+              style="padding: 9px 0;"
+            >
+              <template v-if="panel.name === 'pipeline'">
+                <bk-form lable-position="right" :label-width="200">
+                  <bk-form-item
+                    v-if="projectData.properties"
+                    property="pipelineDialect"
+                  >
+                    <template #label>
+                      <dialect-popover-table />
+                    </template>
+                    <div>
+                      <span>{{ t(projectData.properties.pipelineDialect) }}</span>
+                      <div class="diff-content" v-if="projectData.afterPipelineDialect">
+                        <p class="update-title">
+                          {{ t('本次更新：') }}
+                        </p>
+                        <span>{{ t(projectData.afterPipelineDialect) }}</span>
+                      </div>
+                    </div>
+                  </bk-form-item>
+                  <bk-form-item
+                    :label="t('命名规范提示')"
+                    property="pipelineNameFormat"
+                  >
+                    <span class="item-value">
+                      {{ projectData.properties.enablePipelineNameTips ? (projectData.properties.pipelineNameFormat || '--') : t('未开启') }}
+                    </span>
+                    <div class="diff-content" v-if="projectData.afterPipelineNameFormat">
+                      <p class="update-title">
+                        {{ t('本次更新：') }}
+                      </p>
+                      <span>{{ projectData.afterPipelineNameFormat }}</span>
+                    </div>
+                  </bk-form-item>
+                  <bk-form-item
+                    :label="t('构建日志归档阈值')"
+                    property="loggingLineLimit"
+                    :description="t('单个步骤(Step)日志达到阈值时，将压缩并归档到日志仓库。可下载日志文件到本地查看。')"
+                  >
+                    <span class="item-value">
+                      {{ projectData.properties.loggingLineLimit || '--' }}
+                      <span v-if="projectData.properties.loggingLineLimit">
+                        {{ t('万行') }}
+                      </span>
+                    </span>
+                    <div class="diff-content" v-if="projectData.afterLoggingLineLimit">
+                      <p class="update-title">
+                        {{ t('本次更新：') }}
+                      </p>
+                      <span>{{ `${projectData.afterLoggingLineLimit} ${t('万行')}` }}</span>
+                    </div>
+                  </bk-form-item>
+                </bk-form>
+              </template>
+              <template v-if="panel.name === 'artifactory'">
+                <bk-form label-position="right" :label-width="200">
+                  <ArtifactoryContent 
+                    :data="projectData"
+                    type="show"
+                  />
+                </bk-form>
+              </template>
+            </div>
+          </template>
           </bk-loading>
         </bk-tab-panel>
       </bk-tab>
