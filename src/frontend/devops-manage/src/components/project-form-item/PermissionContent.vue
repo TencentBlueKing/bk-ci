@@ -8,7 +8,7 @@
       <bk-tag
         v-for="(subjectScope, index) in projectData.subjectScopes"
         :key="index"
-        class="mr4"
+        class="tag"
       >
         {{ subjectScope.id === '*' ? t('全员') : subjectScope.name }}
       </bk-tag>
@@ -107,5 +107,8 @@ onBeforeUnmount(() => {
 }
 .edit-line {
   cursor: pointer;
+}
+.tag {
+  margin: 0 2px;
 }
 </style>
