@@ -18,3 +18,5 @@
  */
 
 export const SET_ENVIRONMENT_EXTENSIONS = 'SET_ENVIRONMENT_EXTENSIONS'
+export const NODE_LIST_ASIDE_WIDTH_CACHE = 'node_list_aside_width_cache'
+export const NODE_LIST_ASIDE_PANEL_TOGGLE = 'node_list_aside_panel_toggle'

@@ -244,7 +244,7 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     @import './../scss/conf';
     .node-detail-wrapper {
         height: 100%;
@@ -321,6 +321,11 @@
                 position: relative;
                 top: 2px;
             }
+        }
+        .sub-view-port {
+            height: calc(100vh - 194px);
+            overflow: auto;
+            padding: 20px;
         }
     }
 </style>
