@@ -276,14 +276,10 @@ class SignatureManageService(
             .mapNotNull { headerName ->
                 when {
                     // 优先匹配固定平台标识
-                    headerName.equals(PLATFORM_PLACEHOLDER, ignoreCase = true) ->
-                        request.getHeader(headerName)
-
+                    headerName.equals(PLATFORM_PLACEHOLDER, ignoreCase = true) -> request.getHeader(headerName)
                     // 次优先匹配包含clientId标识的header
                     headerName.contains(CLIENT_ID_PLACEHOLDER, ignoreCase = true) ->
-                        headerName.lowercase().substringBefore(
-                            CLIENT_ID_PLACEHOLDER.lowercase()
-                        ).takeIf(String::isNotBlank)
+                        headerName.substringBeforeIgnoreCase(CLIENT_ID_PLACEHOLDER).takeIf(String::isNotBlank)
 
                     else -> null
                 }
@@ -305,6 +301,13 @@ class SignatureManageService(
             timestamp = findHeaderByPattern(headerMap, timestampPattern, "timestamp").toLong(),
             signature = findHeaderByPattern(headerMap, signaturePattern, "signature")
         )
+    }
+
+    fun String.substringBeforeIgnoreCase(delimiter: String): String {
+        val lowerInput = this.lowercase()
+        val lowerDelimiter = delimiter.lowercase()
+        val index = lowerInput.indexOf(lowerDelimiter)
+        return if (index >= 0) this.substring(0, index) else this
     }
 
     private fun findHeaderByPattern(
