@@ -210,6 +210,7 @@
                 baseId: releaseBaseId.value
             })
             releaseRes.value = res.data
+            releaseStatus.value = res.data.status
             if ([RELEASE_STATUS.INIT, RELEASE_STATUS.INSTANCING].includes(releaseStatus.value)) {
                 timer.value = setTimeout(() => {
                     fetchReleaseTaskStatus()

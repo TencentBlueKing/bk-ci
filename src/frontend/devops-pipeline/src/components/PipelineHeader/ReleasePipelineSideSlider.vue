@@ -272,7 +272,7 @@
                             </header>
 
                             <bk-form-item
-                                required
+                                :required="releaseParams.enablePac"
                                 :label="$t('versionDesc')"
                                 property="description"
                             >
@@ -379,7 +379,7 @@
                         {{ $t("release") }}
                     </bk-button>
                     <version-diff-entry
-                        v-if="releaseParams.enablePac && !isTemplateInstanceMode"
+                        v-if="!isTemplateInstanceMode"
                         :text="false"
                         theme=""
                         :disabled="releasing"
@@ -550,13 +550,19 @@
                             }
                             : null
                     ),
-                    description: [
-                        {
-                            required: true,
-                            message: this.$t('stageReview.requireRule', [this.$t('versionDesc')]),
-                            trigger: 'blur'
-                        }
-                    ],
+                    ...(
+                        this.releaseParams.enabledPac
+                            ? {
+                                description: [
+                                    {
+                                        required: true,
+                                        message: this.$t('stageReview.requireRule', [this.$t('versionDesc')]),
+                                        trigger: 'blur'
+                                    }
+                                ]
+                            }
+                            : null
+                    ),
                     targetAction: [
                         {
                             required: true,
