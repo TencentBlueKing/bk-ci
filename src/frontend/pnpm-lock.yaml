@@ -1341,8 +1341,8 @@ importers:
         specifier: ^0.1.13
         version: 0.1.19
       '@tencent/bk-magic-vue':
-        specifier: 2.5.10-beta.6
-        version: 2.5.10-beta.6(vue@2.7.16)
+        specifier: 2.5.10-beta.7
+        version: 2.5.10-beta.7(vue@2.7.16)
       axios:
         specifier: 0.28.0
         version: 0.28.0
@@ -2153,8 +2153,8 @@ importers:
         specifier: ^1.0.6
         version: 1.0.14
       '@tencent/bk-magic-vue':
-        specifier: 2.5.10-beta.6
-        version: 2.5.10-beta.6(vue@2.7.16)
+        specifier: 2.5.10-beta.7
+        version: 2.5.10-beta.7(vue@2.7.16)
       '@vue/babel-preset-jsx':
         specifier: ^1.2.4
         version: 1.4.0(@babel/core@7.24.6)(vue@2.7.16)
@@ -2742,8 +2742,8 @@ importers:
   locale:
     dependencies:
       '@tencent/bk-magic-vue':
-        specifier: 2.5.10-beta.6
-        version: 2.5.10-beta.6(vue@2.7.16)
+        specifier: 2.5.10-beta.7
+        version: 2.5.10-beta.7(vue@2.7.16)
       axios:
         specifier: 0.28.0
         version: 0.28.0
@@ -10495,7 +10495,7 @@ packages:
     resolution: {integrity: sha512-oWb1Z6mkHIskLzEJ/XWX0srkpkTQ7vaopMQkyaEIoq0fmtFVxOthb8cCxeT+p3ynTdkk/RZwbgG4brR5BeWECw==}
     engines: {node: '>= 4.0'}
     os: [darwin]
-    deprecated: Upgrade to fsevents v2 to mitigate potential security issues
+    deprecated: The v1 package contains DANGEROUS / INSECURE binaries. Upgrade to safe fsevents v2
 
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}

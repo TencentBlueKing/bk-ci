@@ -1441,7 +1441,7 @@
     "codeConfig": "コード設定",
     "goOutputs": "成果物詳細を表示",
     "versionDesc": "バージョン説明",
-    "rollback": "このバージョンにロールバック",
+    "rollback": "ロールバックバージョン",
     "materialRepo": "ソースコードリポジトリ",
     "materialBranch": "ソースブラン奇",
     "triggerBranch": "トリガーブラン奇",
