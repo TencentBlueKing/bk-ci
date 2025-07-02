@@ -160,10 +160,6 @@ func (r *HttpClient) Execute(ignoreDupLogResp *IgnoreDupLogResp) *HttpResult {
 	defer cancel()
 	req, err := http.NewRequestWithContext(withTimeout, r.method, r.url, r.body)
 	if err != nil {
-		if os.IsTimeout(err) || errors.Is(err, context.DeadlineExceeded) {
-			logs.Warn(fmt.Sprintf("%s|http request time out, replace client", r.url))
-			newClient()
-		}
 		result.Error = err
 		return result
 	}
@@ -181,6 +177,10 @@ func (r *HttpClient) Execute(ignoreDupLogResp *IgnoreDupLogResp) *HttpResult {
 	req.Form = value
 	resp, err := r.client.Do(req)
 	if err != nil {
+		if os.IsTimeout(err) || errors.Is(err, context.DeadlineExceeded) {
+			logs.Warn("http request time out, replace client")
+			newClient()
+		}
 		result.Error = err
 		return result
 	}
