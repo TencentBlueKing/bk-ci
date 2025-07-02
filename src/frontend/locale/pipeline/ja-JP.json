@@ -263,7 +263,7 @@
         "creatorTips": "作成者は必須です",
         "labelTips": "拉ベルは必須です",
         "addConditions": "ビュー条件を追加",
-        "typeTips": "プロジェクトビューはプロジェクト管理者のみが追加、編itte、削除できます",
+        "typeTips": "プロジェクトビューはプロジェクト管理者のみが追加、編集、削除できます",
         "conditionEmpty": "ビュー条件は必須です",
         "deleteViewTips": "ビュー ({0}) を削除しますか?"
     },
@@ -1707,7 +1707,7 @@
         "goReset": "リセットへ",
         "baselineValue": "ベースライン値：",
         "currentValue": "現在の値：",
-        "resetBuildNo": "ビルド番号をリセット",
+        "resetBuildNo": "リセット",
         "isSureReset": "ビルド番号をリセットしますか？",
         "confirm": "リセットを確定",
         "CONSISTENT": "リセット後、以降的ビルドは {0} にロックされます",
