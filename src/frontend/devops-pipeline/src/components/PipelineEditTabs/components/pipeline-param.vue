@@ -24,6 +24,7 @@
                 </bk-button>
             </template>
             <bk-input
+                class="search-input"
                 v-model="searchStr"
                 :clearable="true"
                 :placeholder="$t('newui.pipelineParam.searchPipelineVar')"
@@ -273,7 +274,11 @@
             justify-content: space-between;
             .var-btn {
                 min-width: 88px;
+                width: -webkit-fill-available;
                 margin-right: 8px;
+            }
+            .search-input {
+                min-width: 215px;
             }
         }
         .variable-content {

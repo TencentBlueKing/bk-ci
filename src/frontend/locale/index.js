@@ -19,7 +19,7 @@ const localeAliasMap = {
     'zh-CN': 'zh-CN',
     'zh-cn': 'zh-CN',
     'ja-JP': 'ja-JP',
-    'ja': 'ja-JP',
+    ja: 'ja-JP',
     zh_CN: 'zh-CN',
     cn: 'zh-CN',
     'en-US': 'en-US',
@@ -90,11 +90,11 @@ function setLsLocale (locale) {
     }
 }
 
-function getLanguageCode(lang) {
-    const languageCodeMatch = lang.match(/^[A-Za-z]{2}/);
+function getLanguageCode (lang) {
+    const languageCodeMatch = lang.match(/^[A-Za-z]{2}/)
     
     if (languageCodeMatch) {
-        return languageCodeMatch[0].toUpperCase();
+        return languageCodeMatch[0].toUpperCase()
     }
 
     return 'ZH'
