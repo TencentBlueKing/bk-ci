@@ -134,9 +134,11 @@ interface ServiceImageResource {
         @Parameter(description = "镜像repo", required = true)
         @QueryParam("imageRepo")
         imageRepo: String,
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-
+        @Parameter(description = "镜像名称", required = true)
+        @QueryParam("imageName")
         imageName: String,
         @Parameter(description = "开始索引", required = false)
         @QueryParam("tagStart")
