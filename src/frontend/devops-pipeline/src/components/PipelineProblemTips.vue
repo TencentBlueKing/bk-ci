@@ -71,13 +71,17 @@
                 'getPipelineProblemDetail'
             ]),
             async fetchPipelineProblemDetail () {
-                const res = await this.getPipelineProblemDetail({
-                    projectId: this.projectId
-                })
-                this.pipelineProblemDetail = res ?? {}
-                this.$nextTick(() => {
-                    this.updateTableHeight()
-                })
+                try {
+                    const res = await this.getPipelineProblemDetail({
+                        projectId: this.projectId
+                    })
+                    this.pipelineProblemDetail = res ?? {}
+                    this.$nextTick(() => {
+                        this.updateTableHeight()
+                    })
+                } catch (e) {
+                    console.error(e)
+                }
             },
             handleClosePipelineProblemTips () {
                 const currentTime = this.getCurrentTime()

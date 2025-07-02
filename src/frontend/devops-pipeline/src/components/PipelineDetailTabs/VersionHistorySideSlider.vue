@@ -91,8 +91,9 @@
                         </template>
                     </bk-table-column>
                     <bk-table-column
-                        :width="280"
                         :label="$t('operate')"
+                        prop="operate"
+                        fixed="right"
                     >
                         <div
                             slot-scope="props"

@@ -37,7 +37,12 @@
                                 'icon-right-shape': !block.show
                             }]"
                         />
-                        <span class="pipeline-group-header-name">{{ block.title }}</span>
+                        <span
+                            class="pipeline-group-header-name"
+                            v-bk-overflow-tips
+                        >
+                            {{ block.title }}
+                        </span>
                         <span v-bk-tooltips="block.tooltips">
                             <bk-button
                                 v-perm="block.isCheckPermission ?
