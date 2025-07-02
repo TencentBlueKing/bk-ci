@@ -25,24 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.resources
+package com.tencent.devops.project.api.service
 
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.SignatureCallbackResource
 import com.tencent.devops.project.pojo.SignatureCallbackInfo
 import com.tencent.devops.project.pojo.SignatureCallbackResponse
-import com.tencent.devops.project.service.SignatureManageService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.core.MediaType
 
-@RestResource
-class SignatureCallbackResourceImpl @Autowired constructor(
-    private val signatureManageService: SignatureManageService
-) : SignatureCallbackResource {
-    override fun callback(
+@Tag(name = "SIGNATURE_CALLBACK", description = "签名回调接口")
+@Path("/external/signature")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ExternalSignatureCallbackResource {
+    @POST
+    @Path("/callback")
+    @Operation(summary = "回调接口")
+    fun callback(
+        @Parameter(description = "回调请求体", required = true)
         callbackInfo: SignatureCallbackInfo
-    ): SignatureCallbackResponse {
-        return signatureManageService.callback(
-            callbackInfo = callbackInfo
-        )
-    }
+    ): SignatureCallbackResponse
 }

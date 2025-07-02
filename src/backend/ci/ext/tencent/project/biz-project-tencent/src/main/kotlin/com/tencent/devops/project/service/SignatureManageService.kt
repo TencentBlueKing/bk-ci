@@ -404,7 +404,6 @@ class SignatureManageService(
             }
             if (toAddRecords.isNotEmpty()) {
                 redisOperation.sadd(PROJECTS_REQUIRING_SIGNATURE_PRE_CHECK, *toAddRecords.toTypedArray())
-                redisOperation.sadd(PROJECTS_REQUIRING_SIGNATURE_VERIFICATION, *toAddRecords.toTypedArray())
             }
         } finally {
             redisLock.unlock()
