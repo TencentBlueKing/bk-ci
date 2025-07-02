@@ -35,6 +35,7 @@ data class SignaturePlatformDetails(
     var platformSecret: String,
     val platformName: String,
     val url: String,
-    val information: String,
-    val projectCodes: List<String>
+    val informationCn: String,
+    val informationEn: String,
+    val projectIds: List<String>
 )

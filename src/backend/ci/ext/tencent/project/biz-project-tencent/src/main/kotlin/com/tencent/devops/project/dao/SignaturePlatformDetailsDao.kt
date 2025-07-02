@@ -21,20 +21,23 @@ class SignaturePlatformDetailsDao {
                 PLATFORM_SECRET,
                 PLATFORM_NAME,
                 URL,
-                INFORMATION,
-                PROJECT_CODES
+                INFORMATION_CN,
+                INFORMATION_EN,
+                PROJECT_IDS
             ).values(
                 details.platform,
                 details.platformSecret,
                 details.platformName,
                 details.url,
-                details.information,
-                details.projectCodes.joinToString(",")
+                details.informationCn,
+                details.informationEn,
+                details.projectIds.joinToString(",")
             ).onDuplicateKeyUpdate()
                 .set(PLATFORM_NAME, details.platformName)
                 .set(URL, details.url)
-                .set(INFORMATION, details.information)
-                .set(PROJECT_CODES, details.projectCodes.joinToString(","))
+                .set(INFORMATION_CN, details.informationCn)
+                .set(INFORMATION_EN, details.informationEn)
+                .set(PROJECT_IDS, details.projectIds.joinToString(","))
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .execute()
         }
@@ -71,8 +74,9 @@ class SignaturePlatformDetailsDao {
             platformSecret = record.platformSecret,
             platformName = record.platformName,
             url = record.url,
-            information = record.information,
-            projectCodes = record.projectCodes.split(",")
+            informationCn = record.informationCn,
+            informationEn = record.informationEn,
+            projectIds = record.projectIds.split(",")
         )
     }
 }

@@ -2,6 +2,7 @@ package com.tencent.devops.project.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.auth.api.service.ServiceDeptResource
+import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.exception.CustomMessageException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
@@ -16,6 +17,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.security.util.BkCryptoUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.SignaturePlatformDetailsDao
 import com.tencent.devops.project.pojo.SignatureCallbackInfo
@@ -208,12 +210,18 @@ class SignatureManageService(
                 signed = true
             )
         } else {
+            val targetLanguage = I18nUtil.getLanguage(userId)
+            val information = if (targetLanguage == DEFAULT_LOCALE_LANGUAGE) {
+                platformDetails.informationCn
+            } else {
+                platformDetails.informationEn
+            }
             UserSignatureStatusResponse(
                 userId = userId,
                 signed = false,
                 schemeQrcodeUrl = statusData.schemeQrcodeUrl,
                 qrCodeUrl = statusData.qrCodeUrl,
-                projectInformation = platformDetails.information
+                projectInformation = information
             )
         }
     }
@@ -375,16 +383,16 @@ class SignatureManageService(
             redisLock.lock()
             val oldProjectsVerificationRequired = signaturePlatformDetailsDao.list(
                 dslContext = dslContext
-            ).flatMap { it.projectCodes }.distinct()
+            ).flatMap { it.projectIds }.distinct()
             details.platformSecret = BkCryptoUtil.encryptSm4ButAes(aesKey, details.platformSecret)
             // 更新数据库
             signaturePlatformDetailsDao.createOrUpdate(dslContext, details)
             // 刷新缓存
             val latestClientDetails = signaturePlatformDetailsDao.list(dslContext)
-            val latestProjectsVerificationRequired = latestClientDetails.flatMap { it.projectCodes }.distinct()
+            val latestProjectsVerificationRequired = latestClientDetails.flatMap { it.projectIds }.distinct()
             latestClientDetails.forEach {
-                it.projectCodes.forEach { projectCode ->
-                    val key = String.format(PROJECT_SIGNATURE_PLATFORM_KEY, projectCode)
+                it.projectIds.forEach { projectId ->
+                    val key = String.format(PROJECT_SIGNATURE_PLATFORM_KEY, projectId)
                     redisOperation.set(key, it.platform)
                 }
             }
@@ -410,16 +418,17 @@ class SignatureManageService(
             expiredTimeInSeconds = 10
         )
         try {
+            redisLock.lock()
             val clientDetails = signaturePlatformDetailsDao.get(dslContext, platform)
                 ?: throw CustomMessageException("platform not exist :$platform")
-            val projectCodes = clientDetails.projectCodes
+            val projectIds = clientDetails.projectIds
             // 刷新缓存
-            projectCodes.forEach { projectCode ->
+            projectIds.forEach { projectCode ->
                 redisOperation.delete(String.format(PROJECT_SIGNATURE_PLATFORM_KEY, projectCode))
             }
-            if (projectCodes.isNotEmpty()) {
-                redisOperation.sremove(PROJECTS_REQUIRING_SIGNATURE_VERIFICATION, *projectCodes.toTypedArray())
-                redisOperation.sremove(PROJECTS_REQUIRING_SIGNATURE_PRE_CHECK, *projectCodes.toTypedArray())
+            if (projectIds.isNotEmpty()) {
+                redisOperation.sremove(PROJECTS_REQUIRING_SIGNATURE_VERIFICATION, *projectIds.toTypedArray())
+                redisOperation.sremove(PROJECTS_REQUIRING_SIGNATURE_PRE_CHECK, *projectIds.toTypedArray())
             }
             signaturePlatformDetailsDao.delete(dslContext, platform)
         } finally {
