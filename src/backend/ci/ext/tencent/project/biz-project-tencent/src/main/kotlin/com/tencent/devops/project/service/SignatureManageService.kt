@@ -421,6 +421,7 @@ class SignatureManageService(
                 redisOperation.sremove(PROJECTS_REQUIRING_SIGNATURE_VERIFICATION, *projectCodes.toTypedArray())
                 redisOperation.sremove(PROJECTS_REQUIRING_SIGNATURE_PRE_CHECK, *projectCodes.toTypedArray())
             }
+            signaturePlatformDetailsDao.delete(dslContext, platform)
         } finally {
             redisLock.unlock()
         }

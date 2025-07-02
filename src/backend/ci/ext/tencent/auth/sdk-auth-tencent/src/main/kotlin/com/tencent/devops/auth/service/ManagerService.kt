@@ -67,7 +67,7 @@ class ManagerService @Autowired constructor(
     private val user2ESignStatus = CacheBuilder.newBuilder()
         .maximumSize(50000)
         .expireAfterWrite(1, TimeUnit.MINUTES)
-        .build<String/*platform-userId*/, Boolean>()
+        .build<String/*platform:userId*/, Boolean>()
 
     @Suppress("CyclomaticComplexMethod", "NestedBlockDepth", "ComplexMethod")
     fun isManagerPermission(
@@ -217,7 +217,7 @@ class ManagerService @Autowired constructor(
         userId: String
     ): Boolean {
         val platform = getPlatformByProjectId(projectId) ?: return true
-        val localCacheKey = platform + userId
+        val localCacheKey = "$platform:$userId"
         //  优先查询本地缓存
         val localCacheValue = user2ESignStatus.getIfPresent(localCacheKey)
         if (localCacheValue != null) {
