@@ -174,8 +174,7 @@ class ManagerService @Autowired constructor(
         projectId: String,
         userId: String
     ) {
-        val needESignPreCheck = needESignPreCheck(projectId)
-        if (needESignPreCheck) {
+        if (needESignPreCheck(projectId)) {
             if (!isUserSigned(projectId, userId)) {
                 logger.warn(
                     "Pre-process | The user cannot access the project " +
@@ -186,8 +185,7 @@ class ManagerService @Autowired constructor(
             }
             return
         }
-        val needESignVerification = needESignVerification(projectId)
-        if (needESignVerification) {
+        if (needESignVerification(projectId)) {
             if (!isUserSigned(projectId, userId)) {
                 logger.warn(
                     "The user cannot access the project because the contract has not been signed.$projectId|$userId"
@@ -201,7 +199,13 @@ class ManagerService @Autowired constructor(
     }
 
     private fun needESignVerification(projectId: String): Boolean {
-        return redisOperation.isMember(PROJECTS_REQUIRING_SIGNATURE_VERIFICATION, projectId)
+        val eSignControl = try {
+            redisOperation.get(E_SIGNATURE_VERIFICATION_CONTROL)?.toBooleanStrict() == true
+        } catch (ex: Exception) {
+            logger.error("e Sign Control failed!")
+            false
+        }
+        return eSignControl && redisOperation.isMember(PROJECTS_REQUIRING_SIGNATURE_VERIFICATION, projectId)
     }
 
     private fun needESignPreCheck(projectId: String): Boolean {
@@ -256,6 +260,7 @@ class ManagerService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(ManagerService::class.java)
         private const val PROJECTS_REQUIRING_SIGNATURE_VERIFICATION = "projects:signature:verification:required"
+        private const val E_SIGNATURE_VERIFICATION_CONTROL = "e:signature:verification:control"
         private const val PROJECTS_REQUIRING_SIGNATURE_PRE_CHECK = "projects:signature:pre:check"
         private const val PROJECT_SIGNATURE_PLATFORM_KEY = "projects:signature:%s:platform"
         private const val USER_SIGNATURE_STATUS_CACHE_KEY = "user:signature:status:%s:cache"

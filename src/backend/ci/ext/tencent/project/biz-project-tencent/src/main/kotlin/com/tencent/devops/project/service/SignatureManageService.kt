@@ -51,7 +51,11 @@ class SignatureManageService(
     private lateinit var bkCiClientId: String
 
     fun listSignatureProjects(): List<String> {
-        return redisOperation.getSetMembers(PROJECTS_REQUIRING_SIGNATURE_VERIFICATION)?.toList() ?: emptyList()
+        return if (eSignControl()) {
+            redisOperation.getSetMembers(PROJECTS_REQUIRING_SIGNATURE_VERIFICATION)?.toList() ?: emptyList()
+        } else {
+            emptyList()
+        }
     }
 
     fun getSignatureStatus(projectId: String, userId: String): UserSignatureStatusResponse {
@@ -88,7 +92,7 @@ class SignatureManageService(
     }
 
     private fun isSignatureVerificationRequired(projectId: String): Boolean {
-        return redisOperation.isMember(PROJECTS_REQUIRING_SIGNATURE_VERIFICATION, projectId)
+        return eSignControl() && redisOperation.isMember(PROJECTS_REQUIRING_SIGNATURE_VERIFICATION, projectId)
     }
 
     private fun verifyUserProjectPermission(userId: String, projectId: String) {
@@ -422,6 +426,15 @@ class SignatureManageService(
         }
     }
 
+    private fun eSignControl(): Boolean {
+        return try {
+            return redisOperation.get(E_SIGNATURE_VERIFICATION_CONTROL)?.toBooleanStrict() == true
+        } catch (ex: Exception) {
+            logger.error("e Sign Control failed!")
+            return false
+        }
+    }
+
     data class SignatureStatusQueryReq(
         val user: String,
         val nick: String,
@@ -445,6 +458,8 @@ class SignatureManageService(
 
         // 电子签校验的项目ID名单
         private const val PROJECTS_REQUIRING_SIGNATURE_VERIFICATION = "projects:signature:verification:required"
+
+        private const val E_SIGNATURE_VERIFICATION_CONTROL = "e:signature:verification:control"
 
         // 项目所属的平台
         private const val PROJECT_SIGNATURE_PLATFORM_KEY = "projects:signature:%s:platform"
