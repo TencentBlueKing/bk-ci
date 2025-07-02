@@ -347,7 +347,7 @@
     "构建日志归档阈值": "Build log archival threshold",
     "制品库": "Artifact Library",
     "制品质量元数据": "Artifact Quality Metadata",
-    "当制品标记了此配置中的元数据时，在构建历史，构建详情总结界面，将展示对应的质量标签，便于用户快速了解构建产出的制品质量。": "When the artifact is tagged with the metadata from this configuration, the corresponding quality label will be displayed in the build history and build details summary interface, allowing users to quickly understand the quality of the artifacts produced.",
+    "当制品标记了分组为质量的元数据时，在构建历史，构建详情界面，将展示对应的质量标签，便于用户快速了解流水线产出的制品质量。": "When the artifact is tagged with metadata grouped as 'quality', the corresponding quality label will be displayed in the build history and build details interface, allowing users to quickly understand the quality of the artifacts produced by the pipeline.",
     "添加": "Add",
     "元数据键": "Metadata Key",
     "枚举值": "Enumeration Values",

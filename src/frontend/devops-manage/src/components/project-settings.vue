@@ -19,7 +19,7 @@ const panels = [
     name: 'projectSettings',
     label: '项目信息',
     activeCollapse: ['baseInfo', 'permission'],
-    collapsePanels: [{
+    panels: [{
       name: 'baseInfo',
       title: '基础信息',
       component: BaseInfoContent,
@@ -33,8 +33,7 @@ const panels = [
   {
     name: 'pipelineSettings',
     label: '流水线设置',
-    activeCollapse: ['pipeline'],
-    collapsePanels: [
+    panels: [
       ...projectData.value.properties ? [{
         name: 'pipeline',
         title: '流水线',
@@ -46,8 +45,7 @@ const panels = [
   {
     name: 'artifactorySettings',
     label: '制品库设置',
-    activeCollapse: ['artifactory'],
-    collapsePanels: [{
+    panels: [{
       name: 'artifactory',
       title: '制品库',
       component: ArtifactoryContent,
@@ -83,14 +81,14 @@ const handleClearValidate = () => {
             :hasHeaderHover="false"
           >
             <bk-collapse-panel
-              v-for="(panel, index) in item.collapsePanels"
+              v-for="(panel, index) in item.panels"
               :key="panel.name"
               :name="panel.name"
               icon="right-shape"
             >
                 <span class="title">{{ t(panel.title) }}</span>
                 <template #content>
-                  <div :class="['project-tab', { 'has-bottom-border': index !== item.collapsePanels.length - 1 }]">
+                  <div :class="['project-tab', { 'has-bottom-border': index !== item.panels.length - 1 }]">
                     <component
                       :is="panel.component"
                       :type="type"
@@ -106,7 +104,7 @@ const handleClearValidate = () => {
           </bk-collapse>
           <div
             v-else
-            v-for="(panel, index) in item.collapsePanels"
+            v-for="(panel, index) in item.panels"
             :key="panel.name"
             class="other-setting"
           >
