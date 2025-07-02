@@ -247,6 +247,8 @@
         cursor: pointer;
         font-size: 14px;
         color: #63656e;
+        margin: 0 8px;
+        @include ellipsis();
         &.actived {
           color: #3a84ff;
           border-bottom: 2px solid #3a84ff;

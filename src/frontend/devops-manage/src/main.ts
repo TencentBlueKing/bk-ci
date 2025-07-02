@@ -22,17 +22,34 @@ import { handleProjectManageNoPermission } from './utils/permission';
 import { createI18n } from 'vue-i18n';
 import EnUS from '../../locale/manage/en-US.json';
 import ZhCN from '../../locale/manage/zh-CN.json';
+import JaJP from '../../locale/manage/ja-JP.json';
 import { getCookies } from './common/util';
 
+const localeAliasMap = {
+    'zh-CN': 'zh-CN',
+    'zh-cn': 'zh-CN',
+    'ja-JP': 'ja-JP',
+    ja: 'ja-JP',
+    zh_CN: 'zh-CN',
+    zh_cn: 'zh-CN',
+    cn: 'zh-CN',
+    'en-US': 'en-US',
+    'en-us': 'en-US',
+    en: 'en-US',
+    us: 'en-US',
+    en_US: 'en-US',
+    en_us: 'en-US'
+}
 const cookiesObj = getCookies() || {};
 const i18n = createI18n({
   legacy: false,
   globalInjection: true,
-  locale: ['en', 'en-us', 'en_us'].includes((cookiesObj.blueking_language || '').toLowerCase()) ? 'en-US' : 'zh-CN',
+  locale: localeAliasMap[cookiesObj.blueking_language] || 'zh-CN',
   fallbackLocale: 'zh-CN',
   messages: {
     'zh-CN': ZhCN,
     'en-US': EnUS,
+    'ja-JP': JaJP,
   },
 });
 
