@@ -224,6 +224,9 @@ interface UserBuildParametersResource {
         includeNotRequired: Boolean? = true,
         @Parameter(description = "当前流水线版本", required = false, example = "")
         @QueryParam("version")
-        version: Int? = null
+        version: Int? = null,
+        @Parameter(description = "是否为模板", required = false, example = "")
+        @QueryParam("isTemplate")
+        isTemplate: Boolean? = false
     ): Result<List<PipelineBuildParamFormProp>>
 }

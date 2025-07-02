@@ -28,7 +28,9 @@
 package com.tencent.devops.store.common.utils
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.artifactory.api.ServiceArchiveAtomFileResource
 import com.tencent.devops.artifactory.api.ServiceArchiveComponentFileResource
+import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
 import com.tencent.devops.artifactory.pojo.ArchiveStorePkgRequest
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -165,6 +167,34 @@ object StoreFileAnalysisUtil {
         }
     }
 
+    fun serviceArchiveAtomFile(
+        client: Client,
+        userId: String,
+        archiveAtomRequest: ArchiveAtomRequest,
+        file: File
+    ): Result<Boolean?> {
+        val serviceUrlPrefix = client.getServiceUrl(ServiceArchiveAtomFileResource::class)
+        val serviceUrl = StringBuilder("$serviceUrlPrefix/service/artifactories/archiveAtom?userId=$userId" +
+                "&projectCode=${archiveAtomRequest.projectCode}&atomCode=${archiveAtomRequest.atomCode}" +
+                "&version=${archiveAtomRequest.version}")
+        archiveAtomRequest.releaseType?.let {
+            serviceUrl.append("&releaseType=${archiveAtomRequest.releaseType!!.name}")
+        }
+        archiveAtomRequest.os?.let {
+            serviceUrl.append("&os=${archiveAtomRequest.os}")
+        }
+        OkhttpUtils.uploadFile(serviceUrl.toString(), file).use { response ->
+            response.body!!.string()
+            if (!response.isSuccessful) {
+                return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.SYSTEM_ERROR,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            }
+            return Result(true)
+        }
+    }
+
     fun buildStoreArchivePath(storeDir: String) =
         "${getStoreBasePath()}$fileSeparator$BK_CI_STORE_DIR$fileSeparator$storeDir"
 
@@ -207,7 +237,11 @@ object StoreFileAnalysisUtil {
             val storePath = buildStoreArchivePath("${storeCode}_${storeType.name}") + "$fileSeparator$uuid"
             if (!File(storePath).exists()) {
                 File(storePath).mkdirs()
-                ZipUtil.unZipFile(file, storePath, true)
+                ZipUtil.unZipFile(
+                    srcFile = file,
+                    destDirPath = storePath,
+                    createRootDirFlag = false // 解压时去掉根目录
+                )
             }
 
             return Pair(storePath, file)

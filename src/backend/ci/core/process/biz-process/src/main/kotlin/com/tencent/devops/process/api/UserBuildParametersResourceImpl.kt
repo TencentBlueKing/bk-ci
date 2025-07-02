@@ -78,6 +78,14 @@ class UserBuildParametersResourceImpl @Autowired constructor(
                     params = TriggerBuildParamUtils.getBasicBuildParams().map {
                         it.copy(name = paramToContext[it.name] ?: it.name)
                     }.sortedBy { it.name }
+                ),
+                BuildParameterGroup(
+                    name = TriggerBuildParamUtils.getJobParamName(),
+                    params = TriggerBuildParamUtils.getJobBuildParams()
+                ),
+                BuildParameterGroup(
+                    name = TriggerBuildParamUtils.getStepParamName(),
+                    params = TriggerBuildParamUtils.getStepBuildParams()
                 )
             )
         )
@@ -257,7 +265,7 @@ class UserBuildParametersResourceImpl @Autowired constructor(
         ).data ?: listOf()
         result.addAll(branches)
         result.addAll(tags)
-        return result
+        return result.distinct()
     }
 
     override fun buildParamFormProp(
@@ -266,7 +274,8 @@ class UserBuildParametersResourceImpl @Autowired constructor(
         pipelineId: String,
         includeConst: Boolean?,
         includeNotRequired: Boolean?,
-        version: Int?
+        version: Int?,
+        isTemplate: Boolean?
     ): Result<List<PipelineBuildParamFormProp>> {
         val buildParamFormProp = pipelineBuildFacadeService.getBuildParamFormProp(
             projectId = projectId,
@@ -274,7 +283,8 @@ class UserBuildParametersResourceImpl @Autowired constructor(
             includeConst = includeConst,
             includeNotRequired = includeNotRequired,
             userId = userId,
-            version = version
+            version = version,
+            isTemplate = isTemplate
         )
         return Result(buildParamFormProp)
     }

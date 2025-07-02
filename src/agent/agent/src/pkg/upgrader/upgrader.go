@@ -31,13 +31,14 @@ package upgrader
 
 import (
 	"fmt"
+	"os"
+	"strconv"
+	"time"
+
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	innerFileUtil "github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 	"github.com/pkg/errors"
-	"os"
-	"strconv"
-	"time"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 

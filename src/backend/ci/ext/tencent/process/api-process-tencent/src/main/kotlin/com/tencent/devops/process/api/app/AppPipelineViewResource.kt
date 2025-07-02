@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineSortType
+import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.classify.PipelineViewSettings
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -138,4 +139,22 @@ interface AppPipelineViewResource {
         @PathParam("projectId")
         projectId: String
     ): Result<PipelineViewSettings>
+
+    @Operation(summary = "获取视图列表")
+    @GET
+    @Path("/projects/{projectId}/list")
+    fun listView(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @QueryParam("projected")
+        @Parameter(description = "是否为项目流水线组 , 为空时不区分", required = false)
+        projected: Boolean? = null,
+        @QueryParam("viewType")
+        @Parameter(description = "流水线组类型 , 1--动态, 2--静态 , 为空时不区分", required = false)
+        viewType: Int? = null
+    ): Result<List<PipelineNewViewSummary>>
 }

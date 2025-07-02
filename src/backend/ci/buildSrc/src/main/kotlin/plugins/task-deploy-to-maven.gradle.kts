@@ -24,7 +24,6 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-import java.net.URI
 
 plugins {
     `maven-publish`
@@ -97,76 +96,14 @@ publishing {
                     developerConnection.set("scm:git:git@github.com:Tencent/bk-ci.git")
                 }
             }
-        }
-    }
-    repositories {
-        maven {
-            name = "oss"
 
-            // 正式包
-            var mavenRepoDeployUrl = System.getProperty("mavenRepoDeployUrl")
-            var mavenRepoUsername = System.getProperty("mavenRepoUsername")
-            var mavenRepoPassword = System.getProperty("mavenRepoPassword")
-
-            if (mavenRepoDeployUrl == null) {
-                mavenRepoDeployUrl = System.getenv("build_mavenRepoDeployUrl")
-            }
-
-            if (mavenRepoUsername == null) {
-                mavenRepoUsername = System.getenv("build_mavenRepoUsername")
-            }
-
-            if (mavenRepoPassword == null) {
-                mavenRepoPassword = System.getenv("build_mavenRepoPassword")
-            }
-
-            if (mavenRepoDeployUrl == null) {
-                mavenRepoDeployUrl = project.extra["MAVEN_REPO_DEPLOY_URL"]?.toString()
-            }
-
-            if (mavenRepoUsername == null) {
-                mavenRepoUsername = project.extra["MAVEN_REPO_USERNAME"]?.toString()
-            }
-
-            if (mavenRepoPassword == null) {
-                mavenRepoPassword = project.extra["MAVEN_REPO_PASSWORD"]?.toString()
-            }
-
-            // 快照包
-            var snapshotMavenRepoDeployUrl = System.getProperty("snapshotMavenRepoDeployUrl")
-            var snapshotMavenRepoUsername = System.getProperty("snapshotMavenRepoUsername")
-            var snapshotMavenRepoPassword = System.getProperty("snapshotMavenRepoPassword")
-
-            if (snapshotMavenRepoDeployUrl == null) {
-                snapshotMavenRepoDeployUrl = System.getenv("build_snapshotMavenRepoDeployUrl")
-            }
-
-            if (snapshotMavenRepoUsername == null) {
-                snapshotMavenRepoUsername = System.getenv("build_snapshotMavenRepoUsername")
-            }
-
-            if (snapshotMavenRepoPassword == null) {
-                snapshotMavenRepoPassword = System.getenv("build_snapshotMavenRepoPassword")
-            }
-
-            if (snapshotMavenRepoDeployUrl == null) {
-                snapshotMavenRepoDeployUrl = project.extra["MAVEN_REPO_SNAPSHOT_DEPLOY_URL"]?.toString()
-            }
-
-            if (snapshotMavenRepoUsername == null) {
-                snapshotMavenRepoUsername = project.extra["MAVEN_REPO_SNAPSHOT_USERNAME"]?.toString()
-            }
-
-            if (snapshotMavenRepoPassword == null) {
-                snapshotMavenRepoPassword = project.extra["MAVEN_REPO_SNAPSHOT_PASSWORD"]?.toString()
-            }
-
-            url = URI(if (System.getProperty("snapshot") == "true") snapshotMavenRepoDeployUrl else mavenRepoDeployUrl)
-            credentials {
-                username =
-                    if (System.getProperty("snapshot") == "true") snapshotMavenRepoUsername else mavenRepoUsername
-                password =
-                    if (System.getProperty("snapshot") == "true") snapshotMavenRepoPassword else mavenRepoPassword
+            versionMapping {
+                usage("java-api") {
+                    fromResolutionOf("runtimeClasspath")
+                }
+                usage("java-runtime") {
+                    fromResolutionResult()
+                }
             }
         }
     }
@@ -179,99 +116,8 @@ signing {
 val shouldPublish = project.the<SourceSetContainer>()["main"].allSource.files.isNotEmpty() ||
         project.name == "common-dependencies"
 
-tasks.getByName("publish") {
-    onlyIf { shouldPublish }
-}
-
-tasks.getByName("generateMetadataFileForMavenJavaPublication") {
-    onlyIf { shouldPublish }
-}
-
-tasks.getByName("generatePomFileForMavenJavaPublication") {
-    onlyIf { shouldPublish }
-}
-
-tasks.getByName("publishMavenJavaPublicationToOssRepository") {
-    onlyIf { shouldPublish }
-}
-
-tasks.getByName("publishMavenJavaPublicationToMavenLocal") {
-    onlyIf { shouldPublish }
-}
-
-tasks.getByName("publishToMavenLocal") {
-    onlyIf { shouldPublish }
-}
-
-tasks.getByName("signMavenJavaPublication") {
-    onlyIf {
-        project.the<SourceSetContainer>()["main"].allSource.files.isNotEmpty()
+tasks.forEach {
+    if (it.group == "publish") {
+        it.onlyIf { shouldPublish }
     }
 }
-
-//tasks.getByName<Upload>("uploadArchives") {
-//    var mavenRepoDeployUrl: String? = System.getProperty("mavenRepoDeployUrl")
-//    var mavenRepoUsername = System.getProperty("mavenRepoUsername")
-//    var mavenRepoPassword = System.getProperty("mavenRepoPassword")
-//
-//    if (mavenRepoDeployUrl == null) {
-//        mavenRepoDeployUrl = System.getenv("mavenRepoDeployUrl")
-//    }
-//
-//    if (mavenRepoUsername == null) {
-//        mavenRepoUsername = System.getenv("mavenRepoUsername")
-//    }
-//
-//    if (mavenRepoPassword == null) {
-//        mavenRepoPassword = System.getenv("mavenRepoPassword")
-//    }
-//
-//    if (mavenRepoDeployUrl == null) {
-//        mavenRepoDeployUrl = project.extra["MAVEN_REPO_DEPLOY_URL"]?.toString()
-//    }
-//
-//    if (mavenRepoUsername == null) {
-//        mavenRepoUsername = project.extra["MAVEN_REPO_USERNAME"]?.toString()
-//    }
-//
-//    if (mavenRepoPassword == null) {
-//        mavenRepoPassword = project.extra["MAVEN_REPO_PASSWORD"]?.toString()
-//    }
-//
-//    // if snapshot repository is null
-//    var snapshotRepositoryUrl = project.extra["MAVEN_REPO_SNAPSHOT_DEPLOY_URL"]?.toString()
-//    var snapshotRepositoryUsername = project.extra["MAVEN_REPO_SNAPSHOT_USERNAME"]?.toString()
-//    var snapshotRepositoryPassword = project.extra["MAVEN_REPO_SNAPSHOT_PASSWORD"]?.toString()
-//
-//    if (snapshotRepositoryUrl == null || snapshotRepositoryUrl.isEmpty()) {
-//        snapshotRepositoryUrl = mavenRepoDeployUrl
-//    }
-//    if (snapshotRepositoryUsername == null || snapshotRepositoryUsername.isEmpty()) {
-//        snapshotRepositoryUsername = mavenRepoUsername
-//    }
-//    if (snapshotRepositoryPassword == null || snapshotRepositoryPassword.isEmpty()) {
-//        snapshotRepositoryPassword = mavenRepoPassword
-//    }
-//
-//    repositories.withGroovyBuilder {
-//        "mavenDeployer" {
-//            "repository"("url" to mavenRepoDeployUrl) {
-//                "authentication"("userName" to mavenRepoUsername, "password" to mavenRepoPassword)
-//            }
-//
-//            "snapshotRepository"("url" to snapshotRepositoryUrl) {
-//                "authentication"("userName" to snapshotRepositoryUsername, "password" to snapshotRepositoryPassword)
-//            }
-//        }
-//    }
-//
-//    onlyIf {
-//        project.the<SourceSetContainer>()["main"].allSource.files.isNotEmpty()
-//    }
-//}
-
-//tasks.getByName("install") {
-//    onlyIf {
-//        project.the<SourceSetContainer>()["main"].allSource.files.isNotEmpty()
-//    }
-//}

@@ -28,6 +28,7 @@
 package com.tencent.devops.process.api
 
 import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -44,6 +45,7 @@ import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
@@ -79,7 +81,10 @@ class ServiceBuildResourceImpl @Autowired constructor(
     private val containerBuildRecordService: ContainerBuildRecordService
 ) : ServiceBuildResource {
 
-    private val logger = LoggerFactory.getLogger(ServiceBuildResourceImpl::class.java)
+    companion object {
+        private val logger = LoggerFactory.getLogger(ServiceBuildResourceImpl::class.java)
+        private const val MAX_BATCH_GET_BUILD_STATUS_ID_SIZE = 100
+    }
 
     override fun getPipelineIdFromBuildId(projectId: String, buildId: String): Result<String> {
         if (buildId.isBlank()) {
@@ -576,6 +581,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         return Result(pipelineBuildFacadeService.batchServiceBasic(buildIds))
     }
 
+    @Deprecated("use batchGetBuildStatus instead")
     override fun getBatchBuildStatus(
         projectId: String,
         buildId: Set<String>,
@@ -590,6 +596,37 @@ class ServiceBuildResourceImpl @Autowired constructor(
             pipelineBuildFacadeService.getBatchBuildStatus(
                 projectId = projectId,
                 buildIdSet = buildId,
+                channelCode = channelCode,
+                startBeginTime = startBeginTime,
+                endBeginTime = endBeginTime,
+                checkPermission = ChannelCode.isNeedAuth(channelCode)
+            )
+        )
+    }
+
+    override fun batchGetBuildStatus(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        channelCode: ChannelCode,
+        startBeginTime: String?,
+        endBeginTime: String?,
+        buildIdSet: Set<String>
+    ): Result<List<BuildHistory>> {
+        checkUserId(userId)
+        checkParam(projectId, pipelineId)
+        if (buildIdSet.size > MAX_BATCH_GET_BUILD_STATUS_ID_SIZE) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_MAX_BATCH_GET_BUILD_STATUS_ID_SIZE,
+                params = arrayOf(MAX_BATCH_GET_BUILD_STATUS_ID_SIZE.toString())
+            )
+        }
+        return Result(
+            pipelineBuildFacadeService.batchGetBuildStatus(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildIdSet = buildIdSet,
                 channelCode = channelCode,
                 startBeginTime = startBeginTime,
                 endBeginTime = endBeginTime,

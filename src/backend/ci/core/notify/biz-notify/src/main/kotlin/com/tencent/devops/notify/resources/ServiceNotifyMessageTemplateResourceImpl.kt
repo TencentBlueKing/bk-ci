@@ -28,6 +28,7 @@ package com.tencent.devops.notify.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.notify.api.annotation.BkCheckBlackListInterface
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.NotifyContext
 import com.tencent.devops.notify.pojo.NotifyMessageContextRequest
@@ -40,6 +41,7 @@ class ServiceNotifyMessageTemplateResourceImpl @Autowired constructor(
     private val notifyMessageTemplateService: NotifyMessageTemplateService
 ) : ServiceNotifyMessageTemplateResource {
 
+    @BkCheckBlackListInterface
     override fun sendNotifyMessageByTemplate(request: SendNotifyMessageTemplateRequest): Result<Boolean> {
         return notifyMessageTemplateService.sendNotifyMessageByTemplate(request)
     }
@@ -48,6 +50,7 @@ class ServiceNotifyMessageTemplateResourceImpl @Autowired constructor(
         return notifyMessageTemplateService.getNotifyMessageByTemplate(request)
     }
 
+    @BkCheckBlackListInterface
     override fun completeNotifyMessageByTemplate(request: SendNotifyMessageTemplateRequest): Result<Boolean> {
         return notifyMessageTemplateService.completeNotifyMessageByTemplate(request)
     }

@@ -655,7 +655,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     /**
      * 根据插件版本ID获取版本基本信息、发布信息
      */
-    @Suppress("UNCHECKED_CAST")
     override fun getAtomById(atomId: String, userId: String): Result<AtomVersion?> {
         return getAtomVersion(atomId, userId)
     }
@@ -684,7 +683,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         } else {
             null
         }
-        val showVersionInfo = storeCommonService.getStoreShowVersionInfo(cancelFlag, showReleaseType, showVersion)
+        val showVersionInfo = storeCommonService.getStoreShowVersionInfo(
+            storeType = StoreTypeEnum.ATOM,
+            cancelFlag = cancelFlag,
+            releaseType = showReleaseType,
+            version = showVersion
+        )
         return Result(showVersionInfo)
     }
 

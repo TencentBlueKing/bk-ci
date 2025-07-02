@@ -31,13 +31,14 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
-	"github.com/pkg/errors"
 	"io/fs"
 	"os"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
+	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 

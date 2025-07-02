@@ -33,12 +33,13 @@ package fs
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"io"
 	"os"
 	"path/filepath"
 	"runtime"
 	"syscall"
+
+	"github.com/pkg/errors"
 )
 
 // fs contains a copy of a few functions from dep tool code to avoid a dependency on golang/dep.

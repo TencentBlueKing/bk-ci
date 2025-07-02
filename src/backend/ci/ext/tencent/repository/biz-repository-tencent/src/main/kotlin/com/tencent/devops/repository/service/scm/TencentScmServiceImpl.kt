@@ -46,9 +46,11 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.GitTagInfo
 import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -461,6 +463,40 @@ class TencentScmServiceImpl @Autowired constructor(
                 url = url
             )
         ).data
+    }
+
+    override fun getTag(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        tagName: String
+    ): GitTagInfo? {
+        return client.getScm(ServiceScmResource::class).getTagInfo(
+            projectName = projectName,
+            url = url,
+            type = type,
+            token = token,
+            tagName = tagName
+        ).data
+    }
+
+    override fun getTapdWorkItems(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        refType: String,
+        iid: Long
+    ): List<TapdWorkItem> {
+        return client.getScm(ServiceScmResource::class).getTapdWorkItems(
+            projectName = projectName,
+            url = url,
+            type = type,
+            token = token,
+            refType = refType,
+            iid = iid
+        ).data ?: listOf()
     }
 
     companion object{

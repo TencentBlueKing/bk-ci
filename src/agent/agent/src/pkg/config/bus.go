@@ -1,8 +1,9 @@
 package config
 
 import (
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 	"sync"
+
+	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 )
 
 type DataEvent struct {

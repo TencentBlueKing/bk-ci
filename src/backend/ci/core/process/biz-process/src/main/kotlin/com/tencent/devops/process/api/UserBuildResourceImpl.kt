@@ -376,7 +376,8 @@ class UserBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildNum: Int,
-        debugVersion: Int?
+        debugVersion: Int?,
+        archiveFlag: Boolean?
     ): Result<ModelRecord> {
         checkParam(userId, projectId, pipelineId)
         if (buildNum <= 0) {
@@ -389,7 +390,8 @@ class UserBuildResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 buildNum = buildNum,
                 channelCode = ChannelCode.BS,
-                debugVersion = debugVersion
+                debugVersion = debugVersion,
+                archiveFlag = archiveFlag
             )
         )
     }
