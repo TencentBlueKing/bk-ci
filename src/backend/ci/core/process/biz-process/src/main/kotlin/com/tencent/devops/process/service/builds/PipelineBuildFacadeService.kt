@@ -2405,7 +2405,8 @@ class PipelineBuildFacadeService(
             val startUpVMTask = pipelineTaskService.getBuildTask(
                 projectId = projectCode,
                 buildId = buildId,
-                taskId = VMUtils.genStartVMTaskId(vmSeqId)
+                taskId = VMUtils.genStartVMTaskId(vmSeqId),
+                executeCount = executeCount
             )
             if (startUpVMTask?.status?.isRunning() == true) {
                 msg = "$msg| ${
@@ -2433,7 +2434,8 @@ class PipelineBuildFacadeService(
                 val startUpVMTask = pipelineTaskService.getBuildTask(
                     projectId = projectCode,
                     buildId = buildId,
-                    taskId = VMUtils.genStartVMTaskId(vmSeqId)
+                    taskId = VMUtils.genStartVMTaskId(vmSeqId),
+                    executeCount = executeCount
                 )
                 if (startUpVMTask?.status?.isRunning() == true) {
                     val taskParam = startUpVMTask.taskParams
@@ -2775,7 +2777,8 @@ class PipelineBuildFacadeService(
         includeNotRequired: Boolean?,
         userId: String,
         version: Int?,
-        isTemplate: Boolean?
+        isTemplate: Boolean?,
+        subModel: Model? = null
     ): List<PipelineBuildParamFormProp> {
         val model = if (isTemplate == true) {
             // 模板触发器
@@ -2792,8 +2795,8 @@ class PipelineBuildFacadeService(
                 )
             }
         } else {
-            pipelineRepositoryService.getBuildTriggerInfo(
-                projectId, pipelineId, version
+            subModel ?: pipelineRepositoryService.getBuildTriggerInfo(
+                projectId, pipelineId, null
             ).second.model
         }
         val triggerContainer = model.getTriggerContainer()

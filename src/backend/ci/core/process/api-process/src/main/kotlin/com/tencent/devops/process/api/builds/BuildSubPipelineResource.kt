@@ -104,7 +104,10 @@ interface BuildSubPipelineResource {
         values: Map<String, String>,
         @Parameter(description = "当前流水线执行次数", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_EXECUTE_COUNT)
-        executeCount: Int? = 1
+        executeCount: Int? = 1,
+        @Parameter(description = "分支版本", required = false)
+        @QueryParam("branch")
+        branch: String?
     ): Result<ProjectBuildId>
 
     @Operation(summary = "从构建机启动指定项目的子流水线")
@@ -140,7 +143,10 @@ interface BuildSubPipelineResource {
         values: Map<String, String>,
         @Parameter(description = "当前流水线执行次数", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_EXECUTE_COUNT)
-        executeCount: Int? = 1
+        executeCount: Int? = 1,
+        @Parameter(description = "分支版本", required = false)
+        @QueryParam("branch")
+        branch: String?
     ): Result<ProjectBuildId>
 
     @Operation(summary = "获取子流水线启动参数")
@@ -167,7 +173,10 @@ interface BuildSubPipelineResource {
         parentProjectId: String,
         @Parameter(description = "当前流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
-        parentPipelineId: String
+        parentPipelineId: String,
+        @Parameter(description = "分支版本", required = false)
+        @QueryParam("branch")
+        branch: String?
     ): Result<List<PipelineBuildParamFormProp>>
 
     @Operation(summary = "根据流水线名称获取流水线ID")

@@ -1,5 +1,3 @@
-//go:build windows
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -26,39 +24,28 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.notify.resources
 
-package config
+import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.notify.api.op.OpNotifyUserBlackListResource
+import com.tencent.devops.notify.service.NotifyUserBlackListService
+import org.springframework.beans.factory.annotation.Autowired
 
-import (
-	"fmt"
+@RestResource
+class OpNotifyUserBlackListResourceImpl @Autowired constructor(
+    private val notifyUserBlackListService: NotifyUserBlackListService
+) : OpNotifyUserBlackListResource {
+    override fun batchAddToBlacklist(userIds: List<String>): Result<Boolean> {
+        return Result(notifyUserBlackListService.batchAddToBlacklist(userIds))
+    }
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/wintask"
-	"github.com/capnspacehook/taskmaster"
-	"golang.org/x/sys/windows"
-)
+    override fun batchRemoveFromBlacklist(userIds: List<String>): Result<Boolean> {
+        return Result(notifyUserBlackListService.batchRemoveFromBlacklist(userIds))
+    }
 
-func GetWinTaskType() string {
-	serviceName := "devops_agent_" + GAgentConfig.AgentId
-	ok := wintask.FindService(serviceName)
-	if ok {
-		return string(wintask.ServiceStart)
-	}
-	task, taskOk := wintask.FindTask(serviceName)
-	if taskOk {
-		// 启用了的task才能进行升级后的启动，否则不能升级Daemon
-		if task.Enabled && (task.State == taskmaster.TASK_STATE_READY || task.State == taskmaster.TASK_STATE_RUNNING) {
-			return string(wintask.TaskStart)
-		} else {
-			return string(wintask.TaskStart) + "_DISABLE"
-		}
-	}
-	return string(wintask.ManualStart)
-}
-
-func GetOsVersion() (string, error) {
-	version := windows.RtlGetVersion()
-	if version == nil {
-		return "", fmt.Errorf("failed to get Windows version is nil")
-	}
-	return fmt.Sprintf("%d.%d.%d", version.MajorVersion, version.MinorVersion, version.BuildNumber), nil
+    override fun getBlacklist(page: Int, pageSize: Int): Result<Page<String>> {
+        return Result(notifyUserBlackListService.getBlacklistByPage(page, pageSize))
+    }
 }

@@ -5,9 +5,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/docker/docker/api/types/registry"
 	"os"
 	"strings"
+
+	"github.com/docker/docker/api/types/registry"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/docker/docker/api/types/container"

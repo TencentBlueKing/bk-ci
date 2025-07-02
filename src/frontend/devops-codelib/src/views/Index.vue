@@ -368,7 +368,7 @@
                         svnType: defaultCredentialType.authType,
                         authType: defaultCredentialType.authType,
                         credentialType: defaultCredentialType.credentialType,
-                        scmCode: providerConfig?.scmCode
+                        scmCode
                     }
                     this.toggleCodelibDialog(CodelibDialog)
                 } else {
@@ -378,7 +378,8 @@
                         projectId: this.projectId,
                         credentialTypes,
                         typeName,
-                        svnType: 'ssh'
+                        svnType: 'ssh',
+                        scmCode
                     }
                     if (isGit(typeName) || isGithub(typeName)) {
                         Object.assign(CodelibDialog, { authType: 'OAUTH' })

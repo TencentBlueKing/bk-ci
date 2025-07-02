@@ -24,49 +24,56 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.notify.api.op
 
-package com.tencent.devops.common.web.service
-
-import com.tencent.devops.common.api.annotation.ServiceInterface
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
-import com.tencent.devops.common.api.pojo.LocaleInfo
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.v3.oas.annotations.tags.Tag
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
-import jakarta.ws.rs.HeaderParam
-import jakarta.ws.rs.PUT
+import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
-import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
-@Tag(name = "SERVICE_LOCALE", description = "SERVICE-国际化")
-@Path("/service/locales")
+@Tag(name = "OP_NOTIFIES_BLACKLIST", description = "通知-用户黑名单")
+@Path("/op/notifies/blacklist")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@ServiceInterface("project")
-interface ServiceLocaleResource {
+@Suppress("ALL")
+interface OpNotifyUserBlackListResource {
 
-    @GET
-    @Path("/users/{userId}/get")
-    @Operation(summary = "获取用户国际化信息")
-    fun getUserLocale(
-        @Parameter(description = "用户ID", required = true)
-        @PathParam("userId")
-        userId: String
-    ): Result<LocaleInfo>
-
-    @PUT
-    @Path("/update")
-    @Operation(summary = "更新用户国际化信息")
-    fun updateUserLocale(
-        @Parameter(description = "userId", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @Parameter(description = "国际化信息", required = true)
-        localeInfo: LocaleInfo
+    @Operation(summary = "批量添加用户到黑名单")
+    @POST
+    @Path("/batchAdd")
+    fun batchAddToBlacklist(
+        @Parameter(description = "用户ID列表", required = true)
+        userIds: List<String>
     ): Result<Boolean>
+
+    @Operation(summary = "批量移除黑名单用户")
+    @POST
+    @Path("/batchRemove")
+    fun batchRemoveFromBlacklist(
+        @Parameter(description = "用户ID列表", required = true)
+        userIds: List<String>
+    ): Result<Boolean>
+
+    @Operation(summary = "获取所有黑名单用户")
+    @GET
+    @Path("/list")
+    fun getBlacklist(
+        @Parameter(description = "页码", required = true)
+        @QueryParam("page")
+        page: Int,
+        @Parameter(description = "每页数量", required = true)
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<Page<String>>
 }
