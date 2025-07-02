@@ -3,7 +3,7 @@
     <bk-form-item
       :label="t('元数据')"
       property="metadatas"
-      :label-width="130"
+      :label-width="90"
       :description="t('当制品标记了此配置中的元数据时，在构建历史，构建详情总结界面，将展示对应的质量标签，便于用户快速了解构建产出的制品质量。')"
     >
       <p

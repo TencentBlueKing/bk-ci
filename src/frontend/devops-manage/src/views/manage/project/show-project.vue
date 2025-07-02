@@ -466,7 +466,7 @@ onMounted(async () => {
               >
                 <span class="title">{{ t(panel.title) }}</span>
                 <template #content>
-                  <div :class="['project-tab', { 'has-bottom-border': index !== item.collapsePanels.length - 1 }]">
+                  <div :class="[{'project-tab': item.name !== 'artifactorySettings'}, { 'has-bottom-border': index !== item.collapsePanels.length - 1 }]">
                     <template v-if="panel.name === 'baseInfo'">
                       <bk-form label-position="right" :label-width="200">
                         <bk-form-item :label="t('项目名称')" property="projectName">
@@ -832,7 +832,6 @@ onMounted(async () => {
     box-shadow: 0 2px 2px 0 rgb(0 0 0 / 15%);
     ::v-deep .bk-form-label {
       font-size: 12px;
-      text-align: left;
       color: #979BA5;
     }
     .title {

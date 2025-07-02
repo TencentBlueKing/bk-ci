@@ -604,7 +604,7 @@
                 handler (newVal) {
                     this.qualityMetadata = {
                         labelKey: newVal,
-                        values: this.$route.query.metadataValues.split(',')
+                        values: this.$route.query.metadataValues?.split(',')
                     }
                     this.initializeArtifactValue()
                 },
