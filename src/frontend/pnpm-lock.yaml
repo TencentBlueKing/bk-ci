@@ -5982,14 +5982,15 @@ packages:
   '@swc/helpers@0.5.12':
     resolution: {integrity: sha512-KMZNXiGibsW9kvZAO1Pam2JPTDBm+KSHMMHWdsyI/1DbIZjT2A6Gy3hblVXUMEDvUAKq+e0vL0X0o54owWji7g==}
 
-  '@tencent/bk-magic-vue@2.5.10-beta.7':
-    resolution: {integrity: sha512-M/tFi5q01Z7VOdihiYd0Azo08DEyHiFLo3N+UwbN+7H3OueX6fV19NFPc2lyV1wnGhJ/kttsI646k+eNLiX1ug==, tarball: https://mirrors.tencent.com/npm/@tencent/bk-magic-vue/-/@tencent/bk-magic-vue-2.5.10-beta.7.tgz}
+  '@tencent/bk-magic-vue@2.5.10-beta.6':
+    resolution: {integrity: sha512-bWiOzIHe7VFoQr9bG2gIpzl0r2buCL83WY1WiCk6NyCWpCV+Elgv2e5QP6nPyc2U6LQOd8aKrqyim2jHwg4UqQ==, tarball: https://mirrors.tencent.com/npm/@tencent/bk-magic-vue/-/@tencent/bk-magic-vue-2.5.10-beta.6.tgz}
     engines: {node: <= 16.14}
     peerDependencies:
       vue: ^2.6.0
 
-  '@tencent/bk-magic-vue@2.5.9-beta.6':
-    resolution: {integrity: sha512-BJtjFcm7ITmVwAnLspchDFyzXDoSWcQ8leI1We/rMdGpdC8qshAC8b9L0D5JVkWuqwlbHgTWVrGN+vEp4FWV8A==, tarball: https://mirrors.tencent.com/npm/@tencent/bk-magic-vue/-/@tencent/bk-magic-vue-2.5.9-beta.6.tgz}
+  '@tencent/bk-magic-vue@2.5.10-beta.7':
+    resolution: {integrity: sha512-M/tFi5q01Z7VOdihiYd0Azo08DEyHiFLo3N+UwbN+7H3OueX6fV19NFPc2lyV1wnGhJ/kttsI646k+eNLiX1ug==, tarball: https://mirrors.tencent.com/npm/@tencent/bk-magic-vue/-/@tencent/bk-magic-vue-2.5.10-beta.7.tgz}
+    engines: {node: <= 16.14}
     peerDependencies:
       vue: ^2.6.0
 
@@ -10494,7 +10495,7 @@ packages:
     resolution: {integrity: sha512-oWb1Z6mkHIskLzEJ/XWX0srkpkTQ7vaopMQkyaEIoq0fmtFVxOthb8cCxeT+p3ynTdkk/RZwbgG4brR5BeWECw==}
     engines: {node: '>= 4.0'}
     os: [darwin]
-    deprecated: The v1 package contains DANGEROUS / INSECURE binaries. Upgrade to safe fsevents v2
+    deprecated: Upgrade to fsevents v2 to mitigate potential security issues
 
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
@@ -12891,7 +12892,7 @@ packages:
     engines: {node: '>=10'}
 
   ms@2.0.0:
-    resolution: {integrity: sha1-VgiurfwAvmwpAd9fmGF4jeDVl8g=, tarball: https://mirrors.cloud.tencent.com/npm/ms/-/ms-2.0.0.tgz}
+    resolution: {integrity: sha512-Tpp60P6IUJDTuOq/5Z8cdskzJujfwqfOTkrwIwj7IRISpnkJnT6SyJ4PCPnGMoFjC9ddhal5KVIYtAt97ix05A==}
 
   ms@2.1.2:
     resolution: {integrity: sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==}
@@ -21954,7 +21955,7 @@ snapshots:
     dependencies:
       tslib: 2.6.2
 
-  '@tencent/bk-magic-vue@2.5.10-beta.7(vue@2.7.16)':
+  '@tencent/bk-magic-vue@2.5.10-beta.6(vue@2.7.16)':
     dependencies:
       clipboard: 2.0.11
       highlight.js: 10.7.3
@@ -21964,7 +21965,7 @@ snapshots:
       tinycolor2: 1.6.0
       vue: 2.7.16
 
-  '@tencent/bk-magic-vue@2.5.9-beta.6(vue@2.7.16)':
+  '@tencent/bk-magic-vue@2.5.10-beta.7(vue@2.7.16)':
     dependencies:
       clipboard: 2.0.11
       highlight.js: 10.7.3
