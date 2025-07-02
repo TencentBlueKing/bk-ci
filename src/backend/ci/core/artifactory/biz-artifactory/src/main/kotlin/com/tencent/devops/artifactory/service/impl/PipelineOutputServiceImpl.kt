@@ -36,7 +36,7 @@ class PipelineOutputServiceImpl(
                     "pipelineId" to pipelineId,
                     "buildId" to buildId
                 ),
-                qualityMetadata = option?.qualityMetadata?: emptyList()
+                qualityMetadata = option?.qualityMetadata ?: emptyList()
             )
             artifacts.addAll(
                 archiveFileService.searchFileList(
