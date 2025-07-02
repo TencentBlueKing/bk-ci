@@ -124,7 +124,7 @@
                 const { inheritedDialect, projectDialect, pipelineDialect } = basicInfo?.pipelineAsCodeSettings ?? {}
                 const namingConvention = inheritedDialect ? this.namingStyle[projectDialect] : this.namingStyle[pipelineDialect]
                 const groupList = this.allPipelineGroup.length ? this.allPipelineGroup : this.currentGroups
-                const viweNameList = groupList?.filter(item => basicInfo?.viewNames.includes(item.name))
+                const viweNameList = groupList?.filter(item => basicInfo?.viewNames?.includes(item.name) ?? false)
                 return [
                     {
                         key: 'pipelineName',

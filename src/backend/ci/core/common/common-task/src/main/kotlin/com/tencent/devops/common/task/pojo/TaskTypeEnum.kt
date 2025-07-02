@@ -1,5 +1,3 @@
-//go:build linux || darwin
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -27,8 +25,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package config
+package com.tencent.devops.common.task.pojo
 
-func GetWinTaskType() string {
-	return ""
+enum class TaskTypeEnum {
+    PIPELINE_ARCHIVE // 流水线归档
 }

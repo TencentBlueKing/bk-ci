@@ -686,6 +686,11 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                 dslContext = transactionContext,
                 ids = records.map { it.id!! }
             )
+            authResourceGroupMemberDao.deleteByIamGroupIds(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                iamGroupIds = records.map { it.relationId }
+            )
         }
         permissionResourceGroupPermissionService.deleteByGroupIds(
             projectCode = projectCode,

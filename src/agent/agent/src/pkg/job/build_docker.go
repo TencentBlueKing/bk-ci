@@ -30,14 +30,15 @@ package job
 import (
 	"context"
 	"fmt"
-	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
-	"github.com/pkg/errors"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
+	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 

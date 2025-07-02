@@ -30,11 +30,13 @@ package com.tencent.devops.process.engine.service
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.BUILD_QUEUE
 import com.tencent.devops.common.api.enums.BuildReviewType
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCancelBroadCastEvent
@@ -63,6 +65,7 @@ import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.ElementUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
@@ -192,6 +195,7 @@ class PipelineRuntimeService @Autowired constructor(
         private const val TRIGGER_STAGE = "stage-1"
         private const val TAG = "startVM-0"
         private const val JOB_ID = "0"
+        private const val BUILD_REMARK_MAX_LENGTH = 4096
     }
 
     fun cancelPendingTask(projectId: String, pipelineId: String, userId: String) {
@@ -431,6 +435,12 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun updateBuildRemark(projectId: String, pipelineId: String, buildId: String, remark: String?) {
+        if (!remark.isNullOrEmpty() && remark.length >= BUILD_REMARK_MAX_LENGTH) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_BUILD_REMARK_MAX_LENGTH,
+                params = arrayOf(BUILD_REMARK_MAX_LENGTH.toString())
+            )
+        }
         pipelineBuildDao.updateBuildRemark(dslContext, projectId, pipelineId, buildId, remark)
     }
 
@@ -2088,10 +2098,11 @@ class PipelineRuntimeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildNum: Int,
-        debugVersion: Int?
+        debugVersion: Int? = null,
+        archiveFlag: Boolean? = false
     ): String? {
         return pipelineBuildDao.getBuildByBuildNum(
-            dslContext = dslContext,
+            dslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT),
             projectId = projectId,
             pipelineId = pipelineId,
             buildNum = buildNum,

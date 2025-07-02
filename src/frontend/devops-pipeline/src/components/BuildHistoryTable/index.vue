@@ -22,47 +22,49 @@
                             {{ $t(row) }}
                         </p>
                     </div>
-                    <bk-button
-                        v-if="!isReleasePipeline && !isDebug"
-                        @click="goEdit"
-                        theme="primary"
-                        size="large"
-                        v-perm="{
-                            hasPermission: canEdit,
-                            disablePermissionApi: true,
-                            permissionData: {
-                                projectId,
-                                resourceType: 'pipeline',
-                                resourceCode: pipelineId,
-                                action: RESOURCE_ACTION.EDIT
-                            }
-                        }"
-                    >
-                        {{ $t('goEdit') }}
-                    </bk-button>
-                    <span
-                        v-else
-                        v-bk-tooltips="tooltip"
-                    >
+                    <template v-if="!archiveFlag">
                         <bk-button
-                            :disabled="!executable"
-                            @click="buildNow"
+                            v-if="!isReleasePipeline && !isDebug"
+                            @click="goEdit"
                             theme="primary"
                             size="large"
                             v-perm="{
-                                hasPermission: canExecute,
+                                hasPermission: canEdit,
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId,
                                     resourceType: 'pipeline',
                                     resourceCode: pipelineId,
-                                    action: RESOURCE_ACTION.EXECUTE
+                                    action: RESOURCE_ACTION.EDIT
                                 }
                             }"
                         >
-                            {{ $t(isDebug ? 'debugNow' : 'buildNow') }}
+                            {{ $t('goEdit') }}
                         </bk-button>
-                    </span>
+                        <span
+                            v-else
+                            v-bk-tooltips="tooltip"
+                        >
+                            <bk-button
+                                :disabled="!executable"
+                                @click="buildNow"
+                                theme="primary"
+                                size="large"
+                                v-perm="{
+                                    hasPermission: canExecute,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId,
+                                        resourceType: 'pipeline',
+                                        resourceCode: pipelineId,
+                                        action: RESOURCE_ACTION.EXECUTE
+                                    }
+                                }"
+                            >
+                                {{ $t(isDebug ? 'debugNow' : 'buildNow') }}
+                            </bk-button>
+                        </span>
+                    </template>
                 </div>
             </div>
         </bk-exception>
@@ -349,6 +351,7 @@
                                     {{ props.row.remark || "--" }}
                                 </span>
                                 <i
+                                    v-if="!archiveFlag"
                                     class="devops-icon icon-edit-line remark-entry"
                                     @click.stop="activeRemarkInput(props.row)"
                                 />
@@ -398,36 +401,38 @@
                         <span v-else>--</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column
-                    v-if="!isDebug"
-                    :label="$t('operate')"
-                    fixed="right"
-                    width="80"
-                >
-                    <template v-slot="props">
-                        <bk-button
-                            v-if="retryable(props.row)"
-                            text
-                            theme="primary"
-                            size="small"
-                            @click.stop="retry(props.row.id)"
-                        >
-                            {{ $t(isDebug ? 'reDebug' : 'history.reBuild') }}
-                        </bk-button>
-                    </template>
-                </bk-table-column>
-                <bk-table-column
-                    type="setting"
-                    :tippy-options="{ zIndex: 3000 }"
-                >
-                    <TableColumnSetting
-                        ref="tableSetting"
-                        :selected-column-keys="tableColumnKeys"
-                        :all-table-column-map="allTableColumnMap"
-                        @change="handleColumnChange"
-                        @reset="handleColumnReset"
-                    />
-                </bk-table-column>
+                <template v-if="!archiveFlag">
+                    <bk-table-column
+                        v-if="!isDebug"
+                        :label="$t('operate')"
+                        fixed="right"
+                        width="80"
+                    >
+                        <template v-slot="props">
+                            <bk-button
+                                v-if="retryable(props.row)"
+                                text
+                                theme="primary"
+                                size="small"
+                                @click.stop="retry(props.row.id)"
+                            >
+                                {{ $t(isDebug ? 'reDebug' : 'history.reBuild') }}
+                            </bk-button>
+                        </template>
+                    </bk-table-column>
+                    <bk-table-column
+                        type="setting"
+                        :tippy-options="{ zIndex: 3000 }"
+                    >
+                        <TableColumnSetting
+                            ref="tableSetting"
+                            :selected-column-keys="tableColumnKeys"
+                            :all-table-column-map="allTableColumnMap"
+                            @change="handleColumnChange"
+                            @reset="handleColumnReset"
+                        />
+                    </bk-table-column>
+                </template>
                 <empty-exception
                     slot="empty"
                     type="search-empty"
@@ -842,6 +847,9 @@
             },
             dialogWidth () {
                 return window.innerWidth * 0.8
+            },
+            archiveFlag () {
+                return this.$route.query.archiveFlag
             }
         },
         watch: {
@@ -921,7 +929,8 @@
                     const res = await this.requestPipelinesHistory({
                         projectId,
                         pipelineId,
-                        isDebug: this.isDebug
+                        isDebug: this.isDebug,
+                        archiveFlag: this.archiveFlag
                     })
                     this.setHistoryPageStatus({
                         count: res.count
@@ -1072,7 +1081,10 @@
                         buildNo,
                         ...(type ? { type } : {})
                     },
-                    hash: codelib ? `#${codelib}` : ''
+                    hash: codelib ? `#${codelib}` : '',
+                    query: {
+                        ...(this.archiveFlag ? { archiveFlag: this.archiveFlag } : {})
+                    }
                 }
             },
 
@@ -1232,7 +1244,7 @@
                 })
             },
             clearFilter () {
-                this.resetHistoryFilterCondition()
+                this.resetHistoryFilterCondition({ retainArchiveFlag: true })
                 this.$nextTick(() => {
                     this.requestHistory()
                 })
