@@ -25,16 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo
+package com.tencent.devops.common.api.exception
 
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.constant.CommonMessageCode.CUSTOM_MESSAGE_EXCEPTION
 
-@Schema(title = "版本仓库-搜索元数据")
-data class SearchProps(
-    @get:Schema(title = "匹配文件列表(支持模糊匹配)", required = true)
-    val fileNames: List<String>?,
-    @get:Schema(title = "元数据列表", required = true)
-    val props: Map<String, String>,
-    @get:Schema(title = "查询元数据", required = false)
-    val qualityMetadata: List<Property> = emptyList()
-)
+class CustomMessageException(
+    message: String?,
+    errorCode: String = CUSTOM_MESSAGE_EXCEPTION,
+    params: Array<String>? = null
+) : ErrorCodeException(errorCode = errorCode, defaultMessage = message, params = params)
