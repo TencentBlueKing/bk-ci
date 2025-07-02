@@ -878,7 +878,7 @@ class BkRepoClient constructor(
         repoNames: List<String>, // eq or
         fileNames: List<String>, // match or
         metadata: Map<String, String>, // eq and
-        qualityMetadata: List<Pair<String, String>>, //eq or
+        qualityMetadata: List<Pair<String, String>>, // eq or
         page: Int,
         pageSize: Int
     ): QueryData {

@@ -25,7 +25,7 @@ allprojects {
     // 新增maven 仓库
     repositories {
         add(maven { url = uri("https://repo.jenkins-ci.org/releases") })
-        add(maven { url = URI("https://bkrepo.woa.com/maven/bkrepo/maven-local/") })
+        add(maven { url = uri("https://bkrepo.woa.com/maven/bkrepo/maven-local/") })
     }
 
     // 版本管理
