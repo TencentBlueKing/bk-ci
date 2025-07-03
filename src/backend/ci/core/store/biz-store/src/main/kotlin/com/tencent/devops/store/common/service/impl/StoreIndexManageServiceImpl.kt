@@ -51,6 +51,16 @@ import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.service.StoreIndexManageService
 import com.tencent.devops.store.common.service.StoreIndexPipelineService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
+import com.tencent.devops.store.pojo.common.BK_ATOM_QUALITY_INDEX
+import com.tencent.devops.store.pojo.common.BK_ATOM_SLA
+import com.tencent.devops.store.pojo.common.BK_ATOM_SLA_INDEX
+import com.tencent.devops.store.pojo.common.BK_CODE_QUALITY
+import com.tencent.devops.store.pojo.common.BK_COMPLIANCE_RATE
+import com.tencent.devops.store.pojo.common.BK_NOT_UP_TO_PAR
+import com.tencent.devops.store.pojo.common.BK_NO_FAIL_DATA
+import com.tencent.devops.store.pojo.common.BK_STORE_TRUSTWORTHY_INDEX
+import com.tencent.devops.store.pojo.common.BK_STORE_TRUSTWORTHY_TIPS
+import com.tencent.devops.store.pojo.common.BK_UP_TO_PAR
 import com.tencent.devops.store.pojo.common.STORE_CODE
 import com.tencent.devops.store.pojo.common.enums.IndexExecuteTimeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.IndexOperationTypeEnum
@@ -238,14 +248,82 @@ class StoreIndexManageServiceImpl @Autowired constructor(
                         StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(iconUrl) as? String
                     } ?: "",
                     description = it[tStoreIndexBaseInfo.DESCRIPTION],
-                    indexLevelName = it[tStoreIndexLevelInfo.LEVEL_NAME],
-                    hover = it[tStoreIndexResult.ICON_TIPS]
+                    indexLevelName = I18nUtil.getCodeLanMessage(
+                        messageCode = it[tStoreIndexLevelInfo.LEVEL_NAME],
+                        language = I18nUtil.getDefaultLocaleLanguage(),
+                        defaultMessage = it[tStoreIndexLevelInfo.LEVEL_NAME]
+                    ),
+                    hover = handleHover(storeCode, it[tStoreIndexResult.INDEX_CODE])
                 )
             )
             storeIndexInfosMap[storeCode] = storeIndexInfos
         }
 
         return storeIndexInfosMap
+    }
+
+    fun handleHover(storeCode: String, indexCode: String): String {
+        val elementDeilResult = storeIndexManageInfoDao.getElementDeilByStoreCode(dslContext, storeCode, indexCode)
+        if (elementDeilResult.isEmpty()) return ""
+        return when (indexCode) {
+            BK_ATOM_QUALITY_INDEX -> buildQualityIndexHover(elementDeilResult)
+            BK_ATOM_SLA_INDEX -> buildSlaIndexHover(elementDeilResult)
+            BK_STORE_TRUSTWORTHY_INDEX -> {
+                buildTrustworthyIndexHover(elementDeilResult)
+            }
+            else -> ""
+        }
+    }
+
+    private fun buildQualityIndexHover(elementDeilResult: List<TStoreIndexElementDetailRecord>): String {
+        val complianceRateValue =
+            elementDeilResult.find { it.elementCode == BK_COMPLIANCE_RATE }?.elementValue?.toDoubleOrNull()
+        val codeQualityValue =
+            elementDeilResult.find { it.elementCode == BK_CODE_QUALITY }?.elementValue?.toDoubleOrNull() ?: 0.0
+
+        val complianceRateTips = complianceRateValue?.let {
+            val resultCode = if (it >= 99.9) BK_UP_TO_PAR else BK_NOT_UP_TO_PAR
+            "$it%(${I18nUtil.getCodeLanMessage(resultCode)})"
+        } ?: I18nUtil.getCodeLanMessage(BK_NO_FAIL_DATA)
+
+        val qualityIndexResult = I18nUtil.getCodeLanMessage(
+            if (codeQualityValue == 100.0) BK_UP_TO_PAR else BK_NOT_UP_TO_PAR
+        )
+
+        return """
+        <span style="line-height: 18px">
+            <span>${I18nUtil.getCodeLanMessage(BK_COMPLIANCE_RATE)}：$complianceRateTips</span>
+            </br>
+            <span>${I18nUtil.getCodeLanMessage(BK_CODE_QUALITY)}：$codeQualityValue（$qualityIndexResult）</span>
+        </span>
+    """.trimIndent()
+    }
+
+    private fun buildSlaIndexHover(elementDeilResult: List<TStoreIndexElementDetailRecord>): String {
+        val slaValue = elementDeilResult.find { it.elementCode == BK_ATOM_SLA_INDEX }?.elementValue?.toDoubleOrNull()
+
+        val slaTips = slaValue?.let {
+            val resultCode = if (it >= 99.9) BK_UP_TO_PAR else BK_NOT_UP_TO_PAR
+            "$it%(${I18nUtil.getCodeLanMessage(resultCode)})"
+        }
+
+        return """
+        <span style="line-height: 18px">
+            <span>${I18nUtil.getCodeLanMessage(BK_ATOM_SLA)}：$slaTips</span>
+        </span>
+    """.trimIndent()
+    }
+
+    private fun buildTrustworthyIndexHover(elementDeilResult: List<TStoreIndexElementDetailRecord>): String {
+        val trustworthyValue = elementDeilResult.find { it.elementCode == BK_STORE_TRUSTWORTHY_INDEX }?.elementValue
+        trustworthyValue?.let {
+            return """
+        <span style="line-height: 18px">
+            <span>${I18nUtil.getCodeLanMessage(BK_STORE_TRUSTWORTHY_TIPS)}</span>
+        </span>
+        """.trimIndent()
+        }
+        return ""
     }
 
     override fun getStoreIndexInfosByStoreCode(

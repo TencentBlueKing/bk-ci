@@ -278,6 +278,19 @@ class StoreIndexManageInfoDao {
         }
     }
 
+    fun getElementDeilByStoreCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        indexCode: String
+    ): Result<TStoreIndexElementDetailRecord> {
+        with(TStoreIndexElementDetail.T_STORE_INDEX_ELEMENT_DETAIL) {
+            return dslContext.selectFrom(this)
+                .where(STORE_CODE.eq(storeCode))
+                .and(INDEX_CODE.eq(indexCode))
+                .fetch()
+        }
+    }
+
     fun deleteStoreIndexResultByStoreCode(
         dslContext: DSLContext,
         indexCode: String,
