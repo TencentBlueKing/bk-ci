@@ -112,7 +112,7 @@
         v-if="showCreateGroup && projectCode"
         :class="{ 'group-item': true, 'group-active': activeTab === '' }"
         @click="handleCreateGroup">
-        <span class="add-group-btn">
+        <span class="add-group-btn" :title="t('新建用户组')">
           <i class="manage-icon manage-icon-add-fill add-icon"></i>
           {{ t('新建用户组') }}
         </span>
@@ -692,6 +692,10 @@ export default {
 .add-group-btn {
   display: flex;
   align-items: center;
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .add-icon {
   margin-right: 10px;
