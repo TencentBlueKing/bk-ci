@@ -20,10 +20,25 @@ import JaJP from '../../locale/permission/ja-JP.json';
 import bkuiZhCn from 'bkui-vue/dist/locale/zh-cn.esm'
 import bkuiEn from 'bkui-vue/dist/locale/en.esm'
 
+const localeAliasMap = {
+  'zh-CN': 'zh-CN',
+  'zh-cn': 'zh-CN',
+  'ja-JP': 'ja-JP',
+  ja: 'ja-JP',
+  zh_CN: 'zh-CN',
+  zh_cn: 'zh-CN',
+  cn: 'zh-CN',
+  'en-US': 'en-US',
+  'en-us': 'en-US',
+  en: 'en-US',
+  us: 'en-US',
+  en_US: 'en-US',
+  en_us: 'en-US'
+}
 const cookiesObj = getCookies() || {};
 const i18n = createI18n({
   legacy: false,
-  locale: ['en', 'en-us', 'en_us'].includes((cookiesObj.blueking_language || '').toLowerCase()) ? 'en-US' : 'zh-CN',
+  locale: localeAliasMap[cookiesObj.blueking_language] || 'zh-CN',
   fallbackLocale: 'zh-CN',
   messages: {
     'zh-CN': ZhCN,

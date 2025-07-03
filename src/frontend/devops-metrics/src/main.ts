@@ -14,15 +14,33 @@ import { getCookie } from '@/common/util'
 import { createI18n } from 'vue-i18n'
 import ZhCN from '../../locale/metrics/zh-CN.json'
 import EnUS from '../../locale/metrics/en-US.json'
+import JaJp from '../../locale/metrics/ja-JP.json'
+
+const localeAliasMap = {
+  'zh-CN': 'zh-CN',
+  'zh-cn': 'zh-CN',
+  'ja-JP': 'ja-JP',
+  ja: 'ja-JP',
+  zh_CN: 'zh-CN',
+  zh_cn: 'zh-CN',
+  cn: 'zh-CN',
+  'en-US': 'en-US',
+  'en-us': 'en-US',
+  en: 'en-US',
+  us: 'en-US',
+  en_US: 'en-US',
+  en_us: 'en-US'
+}
 
 const i18nLocale = getCookie('blueking_language') || ''
 const i18n = createI18n({
   legacy: false,
-  locale: ['en', 'en-us', 'en_us'].includes(i18nLocale.toLowerCase()) ? 'en-US' : 'zh-CN',
+  locale: localeAliasMap[i18nLocale.toLowerCase()] || 'zh-CN',
   fallbackLocale: 'zh-CN',
   messages: {
     'zh-CN': ZhCN,
-    'en-US': EnUS
+    'en-US': EnUS,
+    'ja-JP': JaJp,
   }
 })
 

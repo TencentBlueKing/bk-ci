@@ -751,7 +751,7 @@ function closeDeptListPermissionDialog () {
 
     .manage-aside {
       position: relative;
-      width: 230px;
+      width: 240px;
       background: #FFFFFF;
       box-shadow: 0 2px 4px 0 #1919290d;
       flex-shrink: 0;
