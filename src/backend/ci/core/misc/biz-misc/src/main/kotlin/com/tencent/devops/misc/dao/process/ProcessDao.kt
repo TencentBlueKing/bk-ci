@@ -39,7 +39,6 @@ import com.tencent.devops.model.process.tables.TPipelineDataClear
 import com.tencent.devops.model.process.tables.TPipelineInfo
 import com.tencent.devops.model.process.tables.TPipelineOperationLog
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
-import com.tencent.devops.process.enums.OperationLogType
 import com.tencent.devops.process.pojo.PipelineOperationLog
 import org.jooq.Condition
 import org.jooq.DSLContext

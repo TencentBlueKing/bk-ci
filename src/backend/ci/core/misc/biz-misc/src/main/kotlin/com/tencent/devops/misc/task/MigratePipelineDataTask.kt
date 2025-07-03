@@ -1,7 +1,6 @@
 package com.tencent.devops.misc.task
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -19,7 +18,6 @@ import org.apache.commons.collections4.ListUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
 
 @Suppress("TooManyFunctions", "LongMethod", "LargeClass", "ComplexMethod", "LongParameterList")
 class MigratePipelineDataTask constructor(
