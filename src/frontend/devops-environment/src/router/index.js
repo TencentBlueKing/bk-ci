@@ -90,7 +90,7 @@ const routes = [
                 component: nodeEntry,
                 children: [
                     {
-                        path: ':asideId',
+                        path: ':nodeType',
                         name: 'nodeList',
                         component: nodeList,
                         meta: {
@@ -101,12 +101,12 @@ const routes = [
                             webSocket: ['^\/console\/environment\/[^\/]+\/nodeList$']
                         },
                         beforeEnter (to, from, next) {
-                            if (!to.params.asideId) {
+                            if (!to.params.nodeType) {
                                 next({
                                     name: to.name,
                                     params: {
                                         ...to.params,
-                                        asideId: 'allNode'
+                                        nodeType: 'allNode'
                                     }
                                 })
                             } else {
