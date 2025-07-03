@@ -670,7 +670,7 @@ class NodeDao {
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .groupBy(NODE_TYPE)
-                .fetch().map { NodeType.parseByTypeName(it[NODE_TYPE] as String) to it["COUNT"] as Int }.toMap()
+                .fetch().map { NodeType.get(it[NODE_TYPE] as String) to it["COUNT"] as Int }.toMap()
         }
     }
 }

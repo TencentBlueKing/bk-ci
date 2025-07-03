@@ -41,6 +41,10 @@ enum class NodeType(val typeName: String) {
             return values().find { it.name == nodeType }?.typeName ?: UNKNOWN.typeName
         }
 
+        fun get(nodeType: String): NodeType {
+            return values().find { it.name == nodeType } ?: UNKNOWN
+        }
+
         fun parseByTypeName(typeName: String): NodeType {
             return values().find { it.typeName == typeName } ?: UNKNOWN
         }
