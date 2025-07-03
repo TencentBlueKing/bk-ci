@@ -55,17 +55,18 @@ class BuildTaskService @Autowired constructor(
         logger.info("publicKey:$publicKey")
         logger.info("realIp:$realIp")
         val passwordOrigin = getPasswordOrigin(realIp)
+        if (passwordOrigin.isNullOrBlank()) {
+            throw RuntimeException("The vm Ip's password is not existed")
+        }
 
         val publicKeyByteArray = Base64.getDecoder().decode(publicKey)
         val serverDHKeyPair = DHUtil.initKey(publicKeyByteArray)
         val serverPublicKeyByteArray = serverDHKeyPair.publicKey
         val serverPrivateKeyByteArray = serverDHKeyPair.privateKey
         val serverBase64PublicKey = String(Base64.getEncoder().encode(serverPublicKeyByteArray))
-        if (passwordOrigin.isNullOrBlank()) {
-            throw RuntimeException("The vm Ip's password is not existed")
-        }
+
         val password = encryptCredential(
-            aesEncryptedCredential = passwordOrigin!!,
+            aesEncryptedCredential = passwordOrigin,
             publicKeyByteArray = publicKeyByteArray,
             serverPrivateKeyByteArray = serverPrivateKeyByteArray
         )
@@ -93,12 +94,12 @@ class BuildTaskService @Autowired constructor(
     }
 
     private fun getPasswordOrigin(realIp: String): String? {
-        val builTaskRecord = buildTaskDao.getByVmIp(dslContext, realIp)
-        val encryptPassword = if (builTaskRecord == null) {
-            logger.info("builTask does not has this ip:$realIp, use default password.")
+        val buildTaskRecord = buildTaskDao.getByVmIp(dslContext, realIp)
+        val encryptPassword = if (buildTaskRecord == null) {
+            logger.info("buildTask does not has this ip:$realIp, use default password.")
             defaultPassword
         } else {
-            val devcloudVmInfoRecord = devcloudVirtualMachineDao.getByVmId(dslContext, builTaskRecord.vmId)
+            val devcloudVmInfoRecord = devcloudVirtualMachineDao.getByVmId(dslContext, buildTaskRecord.vmId)
             if (devcloudVmInfoRecord == null) {
                 logger.info("devcloud macos does not has this ip:$realIp")
                 null
