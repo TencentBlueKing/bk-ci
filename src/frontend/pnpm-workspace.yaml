@@ -18,4 +18,4 @@ catalogs:
   webpack5:
     webpack: "~5.76.1"
   bkMagicVue:
-    "@tencent/bk-magic-vue": "2.5.10-beta.8"
+    "@tencent/bk-magic-vue": "2.5.10-beta.11"

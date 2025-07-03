@@ -569,7 +569,6 @@
                     justify-content: space-between;
                     .default-value {
                         color: #979BA5;
-                        max-width: 300px;
                         .dafault-value-current {
                             // margin-left: 16px;
                             .dafault-value-reset {
