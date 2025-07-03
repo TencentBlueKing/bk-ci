@@ -30,6 +30,9 @@ class BuildTaskService @Autowired constructor(
     @Value("\${macos.devCloud.rsaPrivateKey:}")
     private lateinit var rsaPrivateKey: String
 
+    @Value("\${macos.devCloud.defaultPassword:}")
+    private lateinit var defaultPassword: String
+
     companion object {
         private val logger = LoggerFactory.getLogger(BuildTaskService::class.java)
     }
@@ -51,26 +54,7 @@ class BuildTaskService @Autowired constructor(
     ): PasswordInfo? {
         logger.info("publicKey:$publicKey")
         logger.info("realIp:$realIp")
-        val builTaskRecord = buildTaskDao.getByVmIp(dslContext, realIp)
-        if (builTaskRecord == null) {
-            logger.info("builTask does not has this ip:$realIp")
-            return null
-        }
-        logger.info("builTaskRecord:$builTaskRecord")
-
-        logger.info("ip comes from devcloud:$realIp")
-        val devcloudVmInfoRecord = devcloudVirtualMachineDao.getByVmId(dslContext, builTaskRecord.vmId)
-        val passwordOrigin = if (devcloudVmInfoRecord == null) {
-            logger.info("devcloud macos does not has this ip:$realIp")
-            null
-        } else {
-            val keyFactory = KeyFactory.getInstance("RSA")
-            val privateKey =
-                keyFactory.generatePrivate(PKCS8EncodedKeySpec(Base64.getMimeDecoder().decode(rsaPrivateKey)))
-            val passwordDevcloud = RSAUtils.decryptByPrivateKey(devcloudVmInfoRecord.password, privateKey)
-            logger.info("devcloud macos ip:$realIp,password:$passwordDevcloud")
-            AESUtil.encrypt(aesKey, passwordDevcloud)
-        }
+        val passwordOrigin = getPasswordOrigin(realIp)
 
         val publicKeyByteArray = Base64.getDecoder().decode(publicKey)
         val serverDHKeyPair = DHUtil.initKey(publicKeyByteArray)
@@ -106,5 +90,33 @@ class BuildTaskService @Autowired constructor(
         } catch (ignored: Throwable) {
             throw ignored
         }
+    }
+
+    private fun getPasswordOrigin(realIp: String): String? {
+        val builTaskRecord = buildTaskDao.getByVmIp(dslContext, realIp)
+        val encryptPassword = if (builTaskRecord == null) {
+            logger.info("builTask does not has this ip:$realIp, use default password.")
+            defaultPassword
+        } else {
+            val devcloudVmInfoRecord = devcloudVirtualMachineDao.getByVmId(dslContext, builTaskRecord.vmId)
+            if (devcloudVmInfoRecord == null) {
+                logger.info("devcloud macos does not has this ip:$realIp")
+                null
+            } else {
+                devcloudVmInfoRecord.password
+            }
+        }
+
+        if (encryptPassword == null) {
+            logger.info("devcloud macos ip:$realIp,password is null")
+            return null
+        }
+
+        val keyFactory = KeyFactory.getInstance("RSA")
+        val privateKey =
+            keyFactory.generatePrivate(PKCS8EncodedKeySpec(Base64.getMimeDecoder().decode(rsaPrivateKey)))
+        val passwordDevcloud = RSAUtils.decryptByPrivateKey(encryptPassword, privateKey)
+        logger.info("devcloud macos ip:$realIp,password:$passwordDevcloud")
+        return AESUtil.encrypt(aesKey, passwordDevcloud)
     }
 }
