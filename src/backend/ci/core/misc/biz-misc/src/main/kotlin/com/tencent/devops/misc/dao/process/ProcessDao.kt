@@ -37,7 +37,10 @@ import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.TPipelineBuildHistoryDebug
 import com.tencent.devops.model.process.tables.TPipelineDataClear
 import com.tencent.devops.model.process.tables.TPipelineInfo
+import com.tencent.devops.model.process.tables.TPipelineOperationLog
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
+import com.tencent.devops.process.enums.OperationLogType
+import com.tencent.devops.process.pojo.PipelineOperationLog
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -406,5 +409,33 @@ class ProcessDao {
                 .fetchOne(0, Int::class.java) ?: 0
         }
         return queryTableCount(T_PIPELINE_BUILD_HISTORY) + queryTableCount(T_PIPELINE_BUILD_HISTORY_DEBUG)
+    }
+
+    fun addPipelineOperationLog(
+        dslContext: DSLContext,
+        pipelineOperationLog: PipelineOperationLog
+    ) {
+        with(TPipelineOperationLog.T_PIPELINE_OPERATION_LOG) {
+            dslContext.insertInto(
+                this,
+                ID,
+                PROJECT_ID,
+                PIPELINE_ID,
+                VERSION,
+                OPERATOR,
+                OPERATION_TYPE,
+                PARAMS,
+                DESCRIPTION
+            ).values(
+                pipelineOperationLog.id,
+                pipelineOperationLog.projectId,
+                pipelineOperationLog.pipelineId,
+                pipelineOperationLog.version,
+                pipelineOperationLog.operator,
+                pipelineOperationLog.operationLogType.name,
+                pipelineOperationLog.params,
+                pipelineOperationLog.description
+            ).execute()
+        }
     }
 }
