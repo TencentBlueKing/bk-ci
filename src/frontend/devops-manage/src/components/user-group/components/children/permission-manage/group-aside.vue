@@ -578,6 +578,7 @@ export default {
 .saide-content {
   height: 100%;
   overflow-y: auto;
+  background-color: #fff;
 }
 .group-list {
   max-height: calc(100% - 70px);
