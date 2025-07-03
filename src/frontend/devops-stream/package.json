@@ -49,7 +49,7 @@
     "acorn": "^6.0.5",
     "axios": "0.28.0",
     "babel-loader": "^8.0.2",
-    "bk-magic-vue": "2.5.10-beta.7",
+    "bk-magic-vue": "2.5.10-beta.8",
     "bkui-pipeline": "workspace:bk-pipeline",
     "codemirror": "^5.61.0",
     "core-js": "^3.14.0",

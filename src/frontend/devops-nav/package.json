@@ -72,7 +72,7 @@
     "@blueking/platform-config": "^1.0.4",
     "@icon-cool/bk-icon-devops": "^0.1.13",
     "axios": "0.28.0",
-    "bk-magic-vue": "2.5.10-beta.7",
+    "bk-magic-vue": "2.5.10-beta.8",
     "bk-permission": "workspace:bk-permission",
     "bluebird": "^3.5.1",
     "js-cookie": "^3.0.1",
