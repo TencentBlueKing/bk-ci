@@ -946,7 +946,6 @@ class ServiceRemoteDevResourceImpl(
     }
 
     override fun createCvm(userId: String, data: CreateCvmData): Result<CreateCvmResp?> {
-        TODO("Not yet implemented")
+        return Result(expertSupportService.createCvm(data))
     }
-
 }

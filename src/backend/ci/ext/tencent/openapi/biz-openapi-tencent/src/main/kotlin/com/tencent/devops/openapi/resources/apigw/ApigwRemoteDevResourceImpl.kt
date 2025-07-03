@@ -704,7 +704,8 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     }
 
     override fun createCvm(userId: String, data: CreateCvmData): Result<CreateCvmResp?> {
-        TODO("Not yet implemented")
+        logger.info("createCvm |$userId|$data")
+        return client.get(ServiceRemoteDevResource::class).createCvm(userId, data)
     }
 
 }
