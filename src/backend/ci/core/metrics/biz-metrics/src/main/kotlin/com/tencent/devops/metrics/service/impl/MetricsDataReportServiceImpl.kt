@@ -113,7 +113,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         val (projectId, pipelineId, buildId) = buildEndPipelineMetricsData.run {
             Triple(projectId, pipelineId, buildId)
         }
-        logger.info("[${projectId}|${pipelineId}|${buildId}]|start metricsDataReport")
+        logger.info("[$projectId|$pipelineId|$buildId]|start metricsDataReport")
         val currentTime = LocalDateTime.now() // 统一使用当前时间保证时间一致性
         // 遍历流水线所有阶段进行指标上报
         buildEndPipelineMetricsData.stages.forEach { stage ->
@@ -192,10 +192,9 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             )
         }
 
-        logger.info("[${projectId}|${pipelineId}|${buildId}]|end metricsDataReport")
+        logger.info("[$projectId|$pipelineId|$buildId]|end metricsDataReport")
         return true
     }
-
 
     private inline fun withRedisLock(
         lockKey: String,
@@ -211,7 +210,6 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             action()
         }
     }
-
 
     override fun saveDispatchJobMetrics(dispatchJobMetricsDataList: List<DispatchJobMetricsData>): Boolean {
         // 批量插入时获取批量的自增ID
