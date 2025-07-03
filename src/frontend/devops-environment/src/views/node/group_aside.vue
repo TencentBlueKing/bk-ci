@@ -26,13 +26,13 @@
                     v-for="item in group.groups"
                     :key="item.id"
                     class="node-item"
-                    :class="{ 'active': $route.params.asideId === item.id }"
+                    :class="{ 'active': $route.params.nodeType === item.id }"
                     @click="handleNodeClick(item.id)"
                 >
                     <span class="node-name">{{ item.name }}</span>
                     <span
                         class="count-tag"
-                        :class="{ 'active': $route.params.asideId === item.id }"
+                        :class="{ 'active': $route.params.nodeType === item.id }"
                     >{{ item.count }}</span>
                 </li>
             </ul>
@@ -92,13 +92,13 @@
                             v-for="child in groupItem.children"
                             :key="child.id"
                             class="node-item sub-node-item"
-                            :class="{ 'active': $route.params.asideId === child.id }"
+                            :class="{ 'active': $route.params.nodeType === child.id }"
                             @click="handleNodeClick(child.id)"
                         >
                             <span class="node-name">{{ child.name }}</span>
                             <span
                                 class="count-tag"
-                                :class="{ 'active': $route.params.asideId === child.id }"
+                                :class="{ 'active': $route.params.nodeType === child.id }"
                             >{{ child.count }}</span>
                         </li>
                     </ul>
@@ -219,8 +219,8 @@
                         type: 'node_type',
                         groups: [
                             { id: 'allNode', name: this.$t('environment.全部节点'), count: 20 },
-                            { id: 'privateNode', name: this.$t('environment.私有构建节点'), count: 5 },
-                            { id: 'deployNode', name: this.$t('environment.部署节点'), count: 15 }
+                            { id: 'THIRDPART_AGENT', name: this.$t('environment.私有构建节点'), count: 5 },
+                            { id: 'CMDB', name: this.$t('environment.部署节点'), count: 15 }
                         ]
                     },
                     {
@@ -295,8 +295,8 @@
                     }
                 }
             },
-            handleNodeClick (asideId) {
-                this.$router.push({ name: 'nodeList', params: { asideId } })
+            handleNodeClick (nodeType) {
+                this.$router.push({ name: 'nodeList', params: { nodeType } })
             },
             handleDeleteLabel (groupItem) {
                 this.$bkInfo({

@@ -82,8 +82,9 @@ const actions = {
     /**
      * 节点列表
      */
-    requestNodeList ({ commit }, { projectId, params }) {
-        return vue.$ajax.get(`${prefix}/user/envnode/${projectId}/listNew`, { params }).then(response => {
+    requestNodeList ({ commit }, { projectId, params, tags }) {
+        const query = new URLSearchParams(params).toString()
+        return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/fetchNodes?${query}`, tags).then(response => {
             return response
         })
     },

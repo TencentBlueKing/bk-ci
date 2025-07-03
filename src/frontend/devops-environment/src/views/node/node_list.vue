@@ -387,9 +387,18 @@
                         projectId: this.projectId,
                         params: {
                             ...params,
+                            // nodeType: ,
                             page: this.pagination.current,
                             pageSize: this.pagination.limit
                         }
+                        // tags: [
+                        //     {
+                        //         tagKeyId: 0,
+                        //         tagValues: [
+                        //             0
+                        //         ]
+                        //     }
+                        // ]
                     })
 
                     this.pagination.count = res.count
