@@ -94,7 +94,7 @@ class NodeTagDao {
                     keyId = (tag["KEY_ID"] as Long?) ?: return@forEach,
                     keyName = tag[TNodeTagKey.T_NODE_TAG_KEY.KEY_NAME],
                     allowMulVal = tag[TNodeTagKey.T_NODE_TAG_KEY.ALLOW_MUL_VALUES],
-                    valueId = tag["VALUE_ID"] as Long,
+                    valueId = (tag["VALUE_ID"] as Long?) ?: return@forEach,
                     valueName = tag[TNodeTagValues.T_NODE_TAG_VALUES.VALUE_NAME],
                     nodeCount = tag["COUNT"] as Int?
                 )
