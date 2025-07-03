@@ -129,6 +129,8 @@ import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.util.TempNotifyTemplateUtils
+import com.tencent.devops.process.utils.BK_EMPTY_PIPELINE
+import com.tencent.devops.process.utils.EMPTY_PIPELINE
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_TEMPLATE_ID
 import com.tencent.devops.process.utils.PipelineVersionUtils.differ
@@ -1228,7 +1230,7 @@ class TemplateFacadeService @Autowired constructor(
             val logoUrl = record[tTemplate.LOGO_URL]
             val categoryStr = record[tTemplate.CATEGORY]
             OptionalTemplate(
-                name = setting?.pipelineName ?: model.name,
+                name = generateI18nTemplateName(name = setting?.pipelineName ?: model.name, templateType = type),
                 templateId = templateId,
                 projectId = templateRecord[tTemplate.PROJECT_ID],
                 version = version,
@@ -2635,6 +2637,13 @@ class TemplateFacadeService @Autowired constructor(
 
     fun enableTemplatePermissionManage(projectId: String): Boolean {
         return pipelineTemplatePermissionService.enableTemplatePermissionManage(projectId)
+    }
+
+    private fun generateI18nTemplateName(name: String, templateType: String): String {
+        if (templateType == TemplateType.PUBLIC.name && name == EMPTY_PIPELINE) {
+            return I18nUtil.getCodeLanMessage(messageCode = BK_EMPTY_PIPELINE)
+        }
+        return name
     }
 
     companion object {
