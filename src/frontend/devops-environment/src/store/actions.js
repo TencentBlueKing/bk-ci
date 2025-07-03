@@ -89,6 +89,34 @@ const actions = {
         })
     },
     /**
+     * 节点标签列表
+     */
+    requestNodeTagList ({ commit }, { projectId }) {
+        return vue.$ajax.get(`${prefix}/user/nodetag/fetchTag?projectId=${projectId}`).then(response => {
+            return response
+        })
+    },
+    requestGetCounts ({ commit }, { projectId }) {
+        return vue.$ajax.get(`${prefix}/user/envnode/${projectId}/nodesCount`).then(response => {
+            return response
+        })
+    },
+    createdNodeTag ({ commit }, { projectId, params }) {
+        return vue.$ajax.post(`${prefix}/user/nodetag/create?projectId=${projectId}`, params).then(response => {
+            return response
+        })
+    },
+    deleteNodeTag ({ commit }, { projectId, tagKeyId }) {
+        return vue.$ajax.delete(`${prefix}/user/nodetag/deleteTag?projectId=${projectId}&tagKeyId=${tagKeyId}`).then(response => {
+            return response
+        })
+    },
+    editNodeTag ({ commit }, { projectId, tagKeyId, params }) {
+        return vue.$ajax.put(`${prefix}/user/nodetag/updateTag?projectId=${projectId}&tagKeyId=${tagKeyId}`, params).then(response => {
+            return response
+        })
+    },
+    /**
      * 环境的节点列表
      */
     requestEnvNodeList ({ commit }, { projectId, envHashId }) {
