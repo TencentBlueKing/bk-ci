@@ -357,7 +357,6 @@
   }
 }
 .more-operation-dropmenu {
-  width: 120px;
   > ul {
     &:first-child {
       border-bottom: 1px solid #dcdee5;

@@ -16,4 +16,4 @@ catalogs:
   webpack5:
     webpack: "~5.76.1"
   bkMagicVue:
-    bk-magic-vue: "2.5.10-beta.8"
+    bk-magic-vue: "2.5.10-beta.10"

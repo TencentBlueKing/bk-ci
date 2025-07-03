@@ -58,8 +58,8 @@ importers:
         specifier: 0.28.0
         version: 0.28.0
       bk-magic-vue:
-        specifier: 2.5.10-beta.8
-        version: 2.5.10-beta.8(vue@3.5.17(typescript@3.4.5))
+        specifier: 2.5.10-beta.10
+        version: 2.5.10-beta.10(vue@3.5.17(typescript@3.4.5))
       js-cookie:
         specifier: ^3.0.1
         version: 3.0.1
@@ -258,8 +258,8 @@ importers:
   bk-pipeline:
     dependencies:
       bk-magic-vue:
-        specifier: 2.5.10-beta.8
-        version: 2.5.10-beta.8(vue@2.7.16)
+        specifier: 2.5.10-beta.10
+        version: 2.5.10-beta.10(vue@2.7.16)
       uuid:
         specifier: ~8.1.0
         version: 8.1.0
@@ -1047,8 +1047,8 @@ importers:
         specifier: 0.28.0
         version: 0.28.0
       bk-magic-vue:
-        specifier: 2.5.10-beta.8
-        version: 2.5.10-beta.8(vue@2.7.16)
+        specifier: 2.5.10-beta.10
+        version: 2.5.10-beta.10(vue@2.7.16)
       bk-permission:
         specifier: workspace:bk-permission
         version: link:../bk-permission
@@ -1349,8 +1349,8 @@ importers:
         specifier: 0.28.0
         version: 0.28.0
       bk-magic-vue:
-        specifier: 2.5.10-beta.8
-        version: 2.5.10-beta.8(vue@2.7.16)
+        specifier: 2.5.10-beta.10
+        version: 2.5.10-beta.10(vue@2.7.16)
       bk-permission:
         specifier: workspace:bk-permission
         version: link:../bk-permission
@@ -1744,8 +1744,8 @@ importers:
         specifier: ^8.0.2
         version: 8.4.1(@babel/core@7.28.0)(webpack@5.99.9)
       bk-magic-vue:
-        specifier: 2.5.10-beta.8
-        version: 2.5.10-beta.8(vue@2.7.16)
+        specifier: 2.5.10-beta.10
+        version: 2.5.10-beta.10(vue@2.7.16)
       bkui-pipeline:
         specifier: workspace:bk-pipeline
         version: link:../bk-pipeline
@@ -6070,7 +6070,7 @@ packages:
     peerDependencies:
       vue: ^2.5.22
 
-  bk-magic-vue@2.5.10-beta.8:
+  bk-magic-vue@2.5.10-beta.10:
     resolution: {integrity: sha512-q3e/n/A56PVrOzhHnr12kGjRhH/REpDO3e8dEnmZayzY4ecTW/bV6QwSohIuJ9pi4cYP1/PPYONbKDWGO0iNcA==}
     engines: {node: <= 16.14}
     peerDependencies:
@@ -21681,7 +21681,7 @@ snapshots:
       tinycolor2: 1.6.0
       vue: 2.7.16
 
-  bk-magic-vue@2.5.10-beta.8(vue@2.7.16):
+  bk-magic-vue@2.5.10-beta.10(vue@2.7.16):
     dependencies:
       clipboard: 2.0.11
       highlight.js: 10.7.3
@@ -21691,7 +21691,7 @@ snapshots:
       tinycolor2: 1.6.0
       vue: 2.7.16
 
-  bk-magic-vue@2.5.10-beta.8(vue@3.5.17(typescript@3.4.5)):
+  bk-magic-vue@2.5.10-beta.10(vue@3.5.17(typescript@3.4.5)):
     dependencies:
       clipboard: 2.0.11
       highlight.js: 10.7.3
