@@ -16,6 +16,7 @@ import { getCookies } from './common/util';
 import { createI18n } from 'vue-i18n';
 import ZhCN from '../../locale/permission/zh-CN.json';
 import EnUS from '../../locale/permission/en-US.json';
+import JaJP from '../../locale/permission/ja-JP.json';
 import bkuiZhCn from 'bkui-vue/dist/locale/zh-cn.esm'
 import bkuiEn from 'bkui-vue/dist/locale/en.esm'
 
@@ -27,6 +28,7 @@ const i18n = createI18n({
   messages: {
     'zh-CN': ZhCN,
     'en-US': EnUS,
+    'ja-JP': JaJP,
   },
 });
 
