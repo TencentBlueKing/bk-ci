@@ -216,6 +216,11 @@ interface UserNodeResource {
         data: NodeFetchReq?
     ): Result<Page<NodeWithPermission>>
 
+    @Operation(summary = "项目节点个数")
+    @GET
+    @Path("/{projectId}/nodesCount")
+    fun fetchNodesCount(@PathParam("projectId") projectId: String): Result<Map<NodeType, Int>>
+
     @Operation(summary = "导出节点管理列表相关信息csv文件")
     @POST
     @Path("/{projectId}/listNew_export")

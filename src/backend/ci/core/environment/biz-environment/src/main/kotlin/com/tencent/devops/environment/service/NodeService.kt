@@ -303,6 +303,10 @@ class NodeService @Autowired constructor(
         )
     }
 
+    fun fetchNodesCount(projectId: String): Map<NodeType, Int> {
+        return nodeDao.fetchProjectNodeCount(dslContext, projectId)
+    }
+
     fun listNewExport(
         userId: String,
         projectId: String,
