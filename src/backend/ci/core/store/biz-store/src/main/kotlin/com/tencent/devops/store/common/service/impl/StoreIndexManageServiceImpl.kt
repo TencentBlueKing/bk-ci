@@ -293,7 +293,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         return """
         <span style="line-height: 18px">
             <span>${I18nUtil.getCodeLanMessage(BK_COMPLIANCE_RATE)}：$complianceRateTips</span>
-            </br>
+            <br>
             <span>${I18nUtil.getCodeLanMessage(BK_CODE_QUALITY)}：$codeQualityValue（$qualityIndexResult）</span>
         </span>
     """.trimIndent()
