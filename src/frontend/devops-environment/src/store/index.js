@@ -19,7 +19,7 @@
 
 import actions from './actions'
 import mutations from './mutations'
-import { nodeTypeMap, nodeStatusMap } from './constants'
+// import { nodeTypeMap, nodeStatusMap } from './constants'
 
 const store = {
     namespaced: true,
@@ -27,8 +27,10 @@ const store = {
         publicDockerList: [],
         customizeDockerList: [],
         nodeDetails: {},
-        nodeTypes: nodeTypeMap,
-        nodeStatus: nodeStatusMap,
+        // nodeTypes: nodeTypeMap,
+        // nodeStatus: nodeStatusMap,
+        nodeTypes: null,
+        nodeStatus: null,
         devCloudVmQuta: {},
         currentSelectedModel: {}
     },
