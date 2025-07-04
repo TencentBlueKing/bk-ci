@@ -1123,27 +1123,31 @@ class PipelineBuildFacadeService(
                 cc.elements.forEach { el ->
                     if (el is ManualReviewUserTaskElement && el.id == elementId) {
                         return reviewParam(
-                            el = el,
                             projectId = projectId,
                             buildId = buildId,
                             userId = userId,
-                            pipelineId = pipelineId
+                            pipelineId = pipelineId,
+                            reviewUsers = el.reviewUsers,
+                            params = el.params,
+                            desc = el.desc ?: ""
                         )
                     }
                 }
                 if (cc.matrixGroupFlag == true) {
                     cc.fetchGroupContainers()?.forEach { gc ->
                         gc.elements.forEach { el ->
-                            if (e is MatrixStatusElement &&
-                                e.originClassType == ManualReviewUserTaskElement.classType &&
+                            if (el is MatrixStatusElement &&
+                                el.originClassType == ManualReviewUserTaskElement.classType &&
                                 el.id == elementId
                             ) {
                                 return reviewParam(
-                                    el = el,
                                     projectId = projectId,
                                     buildId = buildId,
                                     userId = userId,
-                                    pipelineId = pipelineId
+                                    pipelineId = pipelineId,
+                                    reviewUsers = el.reviewUsers ?: emptyList(),
+                                    params = el.params ?: mutableListOf(),
+                                    desc = el.desc ?: ""
                                 )
                             }
                         }
@@ -1155,20 +1159,22 @@ class PipelineBuildFacadeService(
     }
 
     private fun reviewParam(
-        el: ManualReviewUserTaskElement,
         projectId: String,
         buildId: String,
         userId: String,
-        pipelineId: String
+        pipelineId: String,
+        reviewUsers: List<String>,
+        params: MutableList<ManualReviewParam>,
+        desc: String,
     ): ReviewParam {
         val reviewUser = mutableListOf<String>()
-        el.reviewUsers.forEach { user ->
+        reviewUsers.forEach { user ->
             reviewUser.addAll(
                 buildVariableService.replaceTemplate(projectId, buildId, user)
                     .split(",")
             )
         }
-        el.params.forEach { param ->
+        params.forEach { param ->
             when (param.valueType) {
                 ManualReviewParamType.BOOLEAN, ManualReviewParamType.CHECKBOX -> {
                     param.value = param.value ?: false
@@ -1183,7 +1189,6 @@ class PipelineBuildFacadeService(
                 }
             }
         }
-        el.desc = buildVariableService.replaceTemplate(projectId, buildId, el.desc)
         if (!reviewUser.contains(userId)) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_QUALITY_REVIEWER_NOT_MATCH,
@@ -1196,9 +1201,9 @@ class PipelineBuildFacadeService(
             buildId = buildId,
             reviewUsers = reviewUser,
             status = null,
-            desc = el.desc,
+            desc = buildVariableService.replaceTemplate(projectId, buildId, desc),
             suggest = "",
-            params = el.params
+            params = params
         )
         logger.info("reviewParam : $reviewParam")
         return reviewParam
