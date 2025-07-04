@@ -1,6 +1,5 @@
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
-import { getCookies } from './common/util';
 import router from './router';
 import App from './app.vue';
 import './css/index.css';
@@ -20,7 +19,6 @@ import bkuiZhCn from 'bkui-vue/dist/locale/zh-cn.esm'
 import bkuiEn from 'bkui-vue/dist/locale/en.esm'
 import bkuiJp from 'bkui-vue/dist/locale/ja-jp.esm'
 
-const cookiesObj = getCookies() || {};
 const localeAliasMap = {
     'zh-CN': 'zh-CN',
     'zh-cn': 'zh-CN',
@@ -67,7 +65,7 @@ createApp(App)
   .use(router)
   .use(createPinia())
   .use(bkui, {
-    locale: bkUiLocaleAliasMap[cookiesObj.blueking_language] || bkuiZhCn
+    locale: bkUiLocaleAliasMap[i18nLocale.toLowerCase()] || bkuiZhCn
   })
   .use(i18n)
   .mount('.app');
