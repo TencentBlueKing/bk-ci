@@ -1146,7 +1146,6 @@ class PipelineBuildFacadeService(
                     }
                 }
             }
-
         }
         return ReviewParam()
     }
