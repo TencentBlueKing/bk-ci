@@ -69,6 +69,7 @@ import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
+import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
@@ -1133,7 +1134,10 @@ class PipelineBuildFacadeService(
                 if (cc.matrixGroupFlag == true) {
                     cc.fetchGroupContainers()?.forEach { gc ->
                         gc.elements.forEach { el ->
-                            if (el is ManualReviewUserTaskElement && el.id == elementId) {
+                            if (e is MatrixStatusElement &&
+                                e.originClassType == ManualReviewUserTaskElement.classType &&
+                                el.id == elementId
+                            ) {
                                 return reviewParam(
                                     el = el,
                                     projectId = projectId,
