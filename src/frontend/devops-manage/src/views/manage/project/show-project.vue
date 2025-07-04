@@ -425,7 +425,6 @@ onMounted(async () => {
                 <bk-form-item
                   v-if="projectData.properties"
                   property="pipelineDialect"
-                  :label="t('变量语法风格')"
                 >
                   <template #label>
                     <dialect-popover-table />

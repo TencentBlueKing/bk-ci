@@ -475,7 +475,6 @@ onBeforeUnmount(() => {
         />
       </bk-form-item>
       <bk-form-item
-        :label="t('变量语法风格')"
         property="pipelineDialect"
         v-if="projectData.properties"
       >
