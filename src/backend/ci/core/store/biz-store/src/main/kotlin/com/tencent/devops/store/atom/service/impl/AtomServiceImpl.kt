@@ -344,13 +344,13 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             )?.map { it.value1() }
         }
         pipelineAtoms?.forEach {
-//            val name = it[NAME] as String
-            val name = generateAtomName(
-                atomCode = it[KEY_ATOM_CODE] as String,
-                atomName = it[NAME] as String,
-                category = AtomCategoryEnum.getAtomCategory((it[KEY_CATEGORY] as Byte).toInt())
-            )
             val atomCode = it[KEY_ATOM_CODE] as String
+            val name = getAtomFieldI18nMessage(
+                StoreTypeEnum.ATOM,
+                atomCode = atomCode,
+                fieldName = NAME,
+                defaultValue = it[NAME] as String
+            )
             val version = it[VERSION] as String
             val branchTestFlag = it[KEY_BRANCH_TEST_FLAG] as Boolean
             val defaultVersion = if (branchTestFlag) {
@@ -390,7 +390,18 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 userId = userId,
                 visibleList = atomVisibleDataMap?.get(atomCode),
                 userDeptList = userDeptList!!) else null
-            val description = it[KEY_DESCRIPTION] as? String
+            val description = getAtomFieldI18nMessage(
+                StoreTypeEnum.ATOM,
+                atomCode = atomCode,
+                fieldName = KEY_DESCRIPTION,
+                defaultValue = it[KEY_DESCRIPTION] as? String ?: ""
+            )
+            val summary = getAtomFieldI18nMessage(
+                StoreTypeEnum.ATOM,
+                atomCode = atomCode,
+                fieldName = KEY_SUMMARY,
+                defaultValue = it[KEY_SUMMARY] as? String ?: ""
+            )
             val pipelineAtomRespItem = AtomRespItem(
                 name = name,
                 atomCode = atomCode,
@@ -406,7 +417,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 classifyCode = classifyCode,
                 classifyName = classifyLanName,
                 category = AtomCategoryEnum.getAtomCategory(categoryFlag.toInt()),
-                summary = it[KEY_SUMMARY] as? String,
+                summary = summary,
                 docsLink = it[KEY_DOCSLINK] as? String,
                 atomType = AtomTypeEnum.getAtomType(atomType.toInt()),
                 atomStatus = AtomStatusEnum.getAtomStatus(atomStatus.toInt()),
@@ -707,17 +718,38 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 val versionList = getPipelineAtomVersions(projectCode, atomCode).data
                 val atomLabelList = atomLabelService.getLabelsByAtomId(pipelineAtomRecord.id)
                 val atomFeature = atomFeatureDao.getAtomFeature(dslContext, atomCode)
+                val recordAtomCode = pipelineAtomRecord.atomCode
+                val name = getAtomFieldI18nMessage(
+                    storeTypeEnum = StoreTypeEnum.ATOM,
+                    atomCode = recordAtomCode,
+                    fieldName = NAME,
+                    defaultValue = pipelineAtomRecord.name
+                )
+                val description = getAtomFieldI18nMessage(
+                    storeTypeEnum = StoreTypeEnum.ATOM,
+                    atomCode = recordAtomCode,
+                    fieldName = KEY_DESCRIPTION,
+                    defaultValue = pipelineAtomRecord.description ?: ""
+                ).let {
+                    StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+                }
+                val summary = getAtomFieldI18nMessage(
+                    storeTypeEnum = StoreTypeEnum.ATOM,
+                    atomCode = recordAtomCode,
+                    fieldName = KEY_SUMMARY,
+                    defaultValue = pipelineAtomRecord.summary ?: ""
+                )
                 PipelineAtom(
                     id = pipelineAtomRecord.id,
-                    name = pipelineAtomRecord.name,
-                    atomCode = pipelineAtomRecord.atomCode,
+                    name = name,
+                    atomCode = recordAtomCode,
                     version = pipelineAtomRecord.version,
                     classType = pipelineAtomRecord.classType,
                     logoUrl = pipelineAtomRecord.logoUrl?.let {
                         StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
                     },
                     icon = pipelineAtomRecord.icon,
-                    summary = pipelineAtomRecord.summary,
+                    summary = summary,
                     serviceScope =
                     JsonUtil.toOrNull(pipelineAtomRecord.serviceScope, List::class.java) as List<String>?,
                     jobType = pipelineAtomRecord.jobType,
@@ -729,9 +761,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     category = AtomCategoryEnum.getAtomCategory(pipelineAtomRecord.categroy.toInt()),
                     atomType = AtomTypeEnum.getAtomType(pipelineAtomRecord.atomType.toInt()),
                     atomStatus = AtomStatusEnum.getAtomStatus(pipelineAtomRecord.atomStatus.toInt()),
-                    description = pipelineAtomRecord.description?.let {
-                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
-                    },
+                    description = description,
                     versionList = versionList!!,
                     atomLabelList = atomLabelList,
                     creator = pipelineAtomRecord.creator,
@@ -1449,12 +1479,18 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         return Result(versionInfo)
     }
 
-
-    private fun generateAtomName(atomCode: String, atomName: String?, category: String): String {
-        return if (category == "TRIGGER") {
-            I18nUtil.getCodeLanMessage(atomCode)
-        } else {
-            atomName!!
-        }
+    /**
+     * 获取atom组件的国际化文案，默认使用数据库字段文案
+     */
+    private fun getAtomFieldI18nMessage(
+        storeTypeEnum: StoreTypeEnum,
+        atomCode: String,
+        fieldName: String,
+        defaultValue: String
+    ): String {
+        return I18nUtil.getCodeLanMessage(
+            messageCode = "${storeTypeEnum.name}.$atomCode.field.$fieldName",
+            defaultMessage = defaultValue
+        )
     }
 }
