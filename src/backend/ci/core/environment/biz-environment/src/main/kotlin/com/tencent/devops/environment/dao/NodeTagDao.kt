@@ -17,7 +17,7 @@ class NodeTagDao {
         dslContext: DSLContext,
         projectId: String,
         tagName: String,
-        tagValue: List<String>,
+        tagValue: Set<String>,
         allowMulVal: Boolean
     ) {
         dslContext.transaction { config ->

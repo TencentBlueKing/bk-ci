@@ -73,13 +73,14 @@ class NodeTagService @Autowired constructor(
         if (nodeTagKeyDao.fetchNodeKey(dslContext, projectId, tagKey) != null) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_EXIST)
         }
+        val tagValuesSet = tagValues.toSet()
         ActionAuditContext.current()
-            .addInstanceInfo(tagKey, tagValues.joinToString(separator = ","), null, null)
+            .addInstanceInfo(tagKey, tagValuesSet.joinToString(separator = ","), null, null)
         nodeTagDao.createTag(
             dslContext = dslContext,
             projectId = projectId,
             tagName = tagKey,
-            tagValue = tagValues,
+            tagValue = tagValuesSet,
             allowMulVal = allowMulValue ?: false
         )
     }
