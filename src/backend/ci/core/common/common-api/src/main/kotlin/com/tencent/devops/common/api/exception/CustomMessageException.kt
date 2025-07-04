@@ -25,37 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.api.service.service
+package com.tencent.devops.common.api.exception
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.project.pojo.UserSignatureStatusResponse
-import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.tags.Tag
-import jakarta.ws.rs.Consumes
-import jakarta.ws.rs.GET
-import jakarta.ws.rs.HeaderParam
-import jakarta.ws.rs.Path
-import jakarta.ws.rs.PathParam
-import jakarta.ws.rs.Produces
-import jakarta.ws.rs.core.MediaType
+import com.tencent.devops.common.api.constant.CommonMessageCode.CUSTOM_MESSAGE_EXCEPTION
 
-@Tag(name = "SERVICE_SIGNATURE_MANAGE", description = "用户电子合同签署-服务接口")
-@Path("/service/signature")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceSignatureManageResource {
-    @GET
-    @Path("/{projectId}/getSignatureStatus")
-    @Operation(summary = "获取状态")
-    fun fetchLiveSignatureStatus(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String
-    ): Result<UserSignatureStatusResponse>
-}
+class CustomMessageException(
+    message: String?,
+    errorCode: String = CUSTOM_MESSAGE_EXCEPTION,
+    params: Array<String>? = null
+) : ErrorCodeException(errorCode = errorCode, defaultMessage = message, params = params)
