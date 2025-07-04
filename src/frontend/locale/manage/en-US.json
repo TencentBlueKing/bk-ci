@@ -301,5 +301,6 @@
     "所属服务": "Associated Service",
     "资源": "Resource",
     "选择项目": "Select Project",
-    "同步中": "Synching"
+    "同步中": "Synching",
+    "请选择组织/用户": "Please select organization/user"
 }

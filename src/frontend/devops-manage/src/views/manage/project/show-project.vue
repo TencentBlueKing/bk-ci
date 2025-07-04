@@ -422,7 +422,11 @@ onMounted(async () => {
                     </bk-tag>
                   </div>
                 </bk-form-item>
-                <bk-form-item property="pipelineDialect" v-if="projectData.properties">
+                <bk-form-item
+                  v-if="projectData.properties"
+                  property="pipelineDialect"
+                  :label="t('变量语法风格')"
+                >
                   <template #label>
                     <dialect-popover-table />
                   </template>
