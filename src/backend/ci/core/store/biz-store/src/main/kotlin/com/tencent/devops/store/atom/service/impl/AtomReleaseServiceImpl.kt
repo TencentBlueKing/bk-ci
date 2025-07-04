@@ -1509,7 +1509,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     }
 
     private fun sendPendingReview(userId: String, atomName: String, version: String, atomId: String) {
-
+        val atomReleaseStatusUrl = "${config.devopsHostGateway}/console/store/releaseProgress/upgrade/%s"
         val bodyParams = mapOf(
             "userId" to userId,
             "atomName" to atomName,
@@ -1535,6 +1535,4 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             logger.warn("Failed to send notify message", ignored)
         }
     }
-
-    private val atomReleaseStatusUrl = "${config.devopsHostGateway}/console/store/releaseProgress/upgrade/%s"
 }
