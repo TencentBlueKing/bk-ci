@@ -1160,7 +1160,7 @@ importers:
     dependencies:
       '@blueking/date-picker':
         specifier: 2.0.0-beta.26
-        version: 2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.1-beta.43(highlight.js@11.11.1)(vue@3.4.38(typescript@4.9.5)))(dayjs@1.11.13)(vue@3.4.38(typescript@4.9.5))
+        version: 2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.44(highlight.js@11.11.1)(vue@3.4.38(typescript@4.9.5)))(dayjs@1.11.13)(vue@3.4.38(typescript@4.9.5))
       '@icon-cool/bk-icon-bk-biz-components':
         specifier: 0.0.4
         version: 0.0.4
@@ -1171,8 +1171,8 @@ importers:
         specifier: workspace:bk-permission
         version: link:../bk-permission
       bkui-vue:
-        specifier: 2.0.1-beta.43
-        version: 2.0.1-beta.43(highlight.js@11.11.1)(vue@3.4.38(typescript@4.9.5))
+        specifier: 2.0.2-beta.44
+        version: 2.0.2-beta.44(highlight.js@11.11.1)(vue@3.4.38(typescript@4.9.5))
       dayjs:
         specifier: ^1.11.2
         version: 1.11.13
@@ -1265,8 +1265,8 @@ importers:
         specifier: 3.7.0-beta.2
         version: 3.7.0-beta.2(@octokit/core@6.1.2)(@types/babel__core@7.20.5)(bufferutil@4.0.9)(chart.js@4.4.3)(encoding@0.1.13)(tslib@2.8.1)(utf-8-validate@5.0.10)(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.9)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.2)(webpack@5.99.9))
       bkui-vue:
-        specifier: 0.0.1-beta.416
-        version: 0.0.1-beta.416(highlight.js@11.11.1)(vue@3.4.38(typescript@4.9.5))
+        specifier: 2.0.2-beta.44
+        version: 2.0.2-beta.44(highlight.js@11.11.1)(vue@3.4.38(typescript@4.9.5))
       dayjs:
         specifier: ^1.11.2
         version: 1.11.13
@@ -1547,13 +1547,13 @@ importers:
     dependencies:
       '@blueking/date-picker':
         specifier: 2.0.0-beta.26
-        version: 2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.1-beta.42(highlight.js@11.11.1)(vue@3.4.38(typescript@4.9.5)))(dayjs@1.11.13)(vue@3.4.38(typescript@4.9.5))
+        version: 2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.44(highlight.js@11.11.1)(vue@3.4.38(typescript@4.9.5)))(dayjs@1.11.13)(vue@3.4.38(typescript@4.9.5))
       axios:
         specifier: 0.28.0
         version: 0.28.0
       bkui-vue:
-        specifier: 2.0.1-beta.42
-        version: 2.0.1-beta.42(highlight.js@11.11.1)(vue@3.4.38(typescript@4.9.5))
+        specifier: 2.0.2-beta.44
+        version: 2.0.2-beta.44(highlight.js@11.11.1)(vue@3.4.38(typescript@4.9.5))
       dayjs:
         specifier: ^1.11.2
         version: 1.11.13
@@ -1698,7 +1698,7 @@ importers:
         version: 1.5.1
       simplebar-vue:
         specifier: ^2.3.3
-        version: 2.4.1(@vue/composition-api@1.7.2(vue@2.7.16))(vue@2.7.16)
+        version: 2.4.2(@vue/composition-api@1.7.2(vue@2.7.16))(vue@2.7.16)
       sockjs-client:
         specifier: ^1.3.0
         version: 1.6.1
@@ -1884,8 +1884,8 @@ importers:
   devops-platform:
     dependencies:
       bkui-vue:
-        specifier: 2.0.1-beta.94
-        version: 2.0.1-beta.94(highlight.js@11.11.1)(vue@3.5.17(typescript@5.4.5))
+        specifier: 2.0.2-beta.44
+        version: 2.0.2-beta.44(highlight.js@11.11.1)(vue@3.5.17(typescript@5.4.5))
       dayjs:
         specifier: ^1.11.2
         version: 1.11.13
@@ -1970,10 +1970,10 @@ importers:
         version: 2.0.12
       stylelint:
         specifier: ^16.13.2
-        version: 16.21.0(typescript@5.4.5)
+        version: 16.21.1(typescript@5.4.5)
       stylelint-config-standard:
         specifier: ^37.0.0
-        version: 37.0.0(stylelint@16.21.0(typescript@5.4.5))
+        version: 37.0.0(stylelint@16.21.1(typescript@5.4.5))
       tailwindcss:
         specifier: ^3.4.17
         version: 3.4.17(ts-node@10.9.1(@types/node@20.19.4)(typescript@5.4.5))
@@ -4550,14 +4550,8 @@ packages:
     resolution: {integrity: sha512-EI552lf0aG2nOV8NnZpTxNo2PcXKPmDbF9K8eCBFQdIZwHNGN/mi815fxtmUMa2wTa1yndotICIDt/V0vpEx2w==}
     deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
-  '@floating-ui/core@0.7.3':
-    resolution: {integrity: sha512-buc8BXHmG9l82+OQXOFU3Kr2XQx9ys01U/Q9HMIrZ300iLc8HLMgh7dcCqgYzAzf4BkoQvDcXf5Y+CuEZ5JBYg==}
-
   '@floating-ui/core@1.7.2':
     resolution: {integrity: sha512-wNB5ooIKHQc+Kui96jE/n69rHFWAVoxn5CAzL1Xdd8FG03cgY3MLO+GF9U3W737fYDSgPWA6MReKhBQBop6Pcw==}
-
-  '@floating-ui/dom@0.5.4':
-    resolution: {integrity: sha512-419BMceRLq0RrmTSDxn8hf9R3VCJv2K9PUfugh5JyEFmdjzDo+e8U5EdR8nzKq8Yj1htzLm3b6eQEEam3/rrtg==}
 
   '@floating-ui/dom@1.5.4':
     resolution: {integrity: sha512-jByEsHIY+eEdCjnTVu+E3ephzTOzkQ8hgUfGwos+bg7NlH33Zc5uO+QHz1mrQUOgIKKDD1RtS201P9NvAfq3XQ==}
@@ -4577,6 +4571,7 @@ packages:
   '@humanwhocodes/config-array@0.13.0':
     resolution: {integrity: sha512-DZLEEqFWQFiyK6h5YIeynKx7JlvCYWL0cImfSRXZ9l4Sg2efkFGTuFf6vzXjK1cq6IYkU+Eg/JizXw+TD2vRNw==}
     engines: {node: '>=10.10.0'}
+    deprecated: Use @eslint/config-array instead
 
   '@humanwhocodes/config-array@0.5.0':
     resolution: {integrity: sha512-FagtKFz74XrTl7y6HCzQpwDfXP0yhxe9lHLD1UZxjvZIcbyRz8zTFF/yYNfSfzU414eDwZ1SrO0Qvtyf+wFMQg==}
@@ -5711,7 +5706,7 @@ packages:
     resolution: {integrity: sha512-5IKx/Y13RsYd+sauPb2x+U/xZikHjolzfuDgTAl/Tdf3Q8rslRvC19NKDLgAJQ6wsqADk10ntlv08nPFw/gO/A==}
 
   '@tencent/bk-magic-vue@2.5.10-beta.11':
-    resolution: {integrity: sha512-uD1AzMsnFeENFrT//GXQbubAok7W3qFvy5IL8m5EpplScfTYgRzHhbVsIPtKz4WD7SvxeFVG4dY9U+uS3TXubw==, tarball: https://mirrors.tencent.com/npm/@tencent/bk-magic-vue/-/@tencent/bk-magic-vue-2.5.10-beta.11.tgz}
+    resolution: {integrity: sha512-9SULqJiAkTQVkxSwgwuoX2RU2vm3LOzj/A1CqR/OvNwfKfA7AkKIQQREvewRfDu+GioUcf4oT+qTi/6eokEHMw==, tarball: https://mirrors.tencent.com/npm/@tencent/bk-magic-vue/-/@tencent/bk-magic-vue-2.5.10-beta.11.tgz}
     engines: {node: <= 16.14}
     peerDependencies:
       vue: ^2.6.0
@@ -5838,8 +5833,8 @@ packages:
   '@types/minimist@1.2.5':
     resolution: {integrity: sha512-hov8bUuiLiyFPGyFPE1lwWhmzYbirOXQNNo40+y3zow8aFVTeyn3VWL0VFFfdNddA8S4Vf0Tc062rzyNr7Paag==}
 
-  '@types/node-forge@1.3.11':
-    resolution: {integrity: sha512-FQx220y22OKNTqaByeBGqHWYz4cl94tpcxeFdvBo3wjG6XPBuZ0BNgNZRV5J5TFmmcsJ4IzsLkmGRiQbnYsBEQ==}
+  '@types/node-forge@1.3.12':
+    resolution: {integrity: sha512-a0ToKlRVnUw3aXKQq2F+krxZKq7B8LEQijzPn5RdFAMatARD2JX9o8FBpMXOOrjob0uc13aN+V/AXniOXW4d9A==}
 
   '@types/node@20.19.4':
     resolution: {integrity: sha512-OP+We5WV8Xnbuvw0zC2m4qfB/BJvjyCwtNjhHdJxV1639SGSKrLmJkc3fMnp2Qy8nJyHp8RO6umxELN/dS1/EA==}
@@ -7332,26 +7327,8 @@ packages:
     peerDependencies:
       vue: ^2.5.22
 
-  bkui-vue@0.0.1-beta.416:
-    resolution: {integrity: sha512-DOc3MsQP6ew89rmTe9dLmUVw3dX8qoByLC4zEWtAsHcMQjtEutcIBuaYXRYoJZnFv+LDF7C8cgVrO18uDyDMdQ==}
-    peerDependencies:
-      highlight.js: ~11.5.0
-      vue: ^3.2.0
-
-  bkui-vue@2.0.1-beta.42:
-    resolution: {integrity: sha512-LMhV7imIkSiaOYnHHaFKB1p74itGxuNqjj0hEX8JdwYNJSPYRO/v8VDnJk1QEqTB9ppaIVwrEDEc/TPdrdIapQ==}
-    peerDependencies:
-      highlight.js: ~11.5.0
-      vue: ^3.2.0
-
-  bkui-vue@2.0.1-beta.43:
-    resolution: {integrity: sha512-twVRp/f9lx+Sh+IBtum5PWAfeMuERYx/oIV90xFf541+hbjGoH9X5LgNFqhZgq53leDiVjCyniwtiVvyVQTqJg==}
-    peerDependencies:
-      highlight.js: ~11.5.0
-      vue: ^3.2.0
-
-  bkui-vue@2.0.1-beta.94:
-    resolution: {integrity: sha512-SbJAvGNMNK8tNcUm0JkwVAYxTYYu79i8+kX5HrKuLTLCQP8REg2wRH5IrTbre0prs9GQZ+TqoPUY3xCNnQ+vKA==}
+  bkui-vue@2.0.2-beta.44:
+    resolution: {integrity: sha512-kDQdWdTnNlsaa1bXGPY31Z6PH7cTYM55OkxBd5aL0ZHkWFCKO1OQRwUhfkyR5k2g1gFm/xkFqv/9LAq9dfOavw==}
     peerDependencies:
       highlight.js: ~11.5.0
       vue: ^3.2.0
@@ -8713,10 +8690,6 @@ packages:
   data-view-byte-offset@1.0.1:
     resolution: {integrity: sha512-BS8PfmtDGnrgYdOonGZQdLZslWIeCGFP9tpan0hi1Co2Zr2NKADsvGYA8XxuG/4UWgJ6Cjtv+YJnB6MM69QGlQ==}
     engines: {node: '>= 0.4'}
-
-  date-fns@2.28.0:
-    resolution: {integrity: sha512-8d35hViGYx/QH0icHYCeLmsLmMUheMmTyV9Fcm6gvNwdw31yXXH+O85sOBJ+OLnLQMKZowvpKb6FgMIQjcpvQw==}
-    engines: {node: '>=0.11'}
 
   date-fns@2.30.0:
     resolution: {integrity: sha512-fnULvOpxnC5/Vg3NCiWelDsLiUc9bRwAPs/+LfTLNvetFCtCTN+yQz15C/fs4AwX1R9K5GLtLfn8QW+dWisaAw==}
@@ -10106,6 +10079,7 @@ packages:
 
   fs-write-stream-atomic@1.0.10:
     resolution: {integrity: sha512-gehEzmPn2nAwr39eay+x3X34Ra+M2QlVUTLhkXPjWdeO8RF9kszk116avgBJM3ZyNHgHXBNx+VmPaFC36k0PzA==}
+    deprecated: This package is no longer supported.
 
   fs.realpath@1.0.0:
     resolution: {integrity: sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==}
@@ -10114,7 +10088,7 @@ packages:
     resolution: {integrity: sha512-oWb1Z6mkHIskLzEJ/XWX0srkpkTQ7vaopMQkyaEIoq0fmtFVxOthb8cCxeT+p3ynTdkk/RZwbgG4brR5BeWECw==}
     engines: {node: '>= 4.0'}
     os: [darwin]
-    deprecated: Upgrade to fsevents v2 to mitigate potential security issues
+    deprecated: The v1 package contains DANGEROUS / INSECURE binaries. Upgrade to safe fsevents v2
 
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
@@ -10278,9 +10252,6 @@ packages:
     resolution: {integrity: sha512-2Nim7dha1KVkaiF4q6Dj+ngPPMdfvLJEOpZk/jKiUAkqKebpGAWQXAq9z1xu9HKu5lWfqw/FASuccEjyznjPaA==}
     engines: {node: 20 || >=22}
     hasBin: true
-
-  glob@7.2.2:
-    resolution: {integrity: sha512-NzDgHDiJwKYByLrL5lONmQFpK/2G78SMMfo+E9CuGlX4IkvfKDsiQSNPwAYxEy+e6p7ZQ3uslSLlwlJcqezBmQ==}
 
   glob@7.2.3:
     resolution: {integrity: sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q==}
@@ -15221,11 +15192,11 @@ packages:
   simple-swizzle@0.2.2:
     resolution: {integrity: sha512-JA//kQgZtbuY83m+xT+tXJkmJncGMTFT+C+g2h2R9uxkYIrE2yy9sgmcLhCnw57/WSD+Eh3J97FPEDFnbXnDUg==}
 
-  simplebar-core@1.3.1:
-    resolution: {integrity: sha512-d2JFNivCgxykWz9//MhUbpmxXmL4qDfZpUulmeY4KE1cq2amr+6rZhIOv6JyCprWP3yFlayYb0J5ApKV81r6Sg==}
+  simplebar-core@1.3.2:
+    resolution: {integrity: sha512-qKgTTuTqapjsFGkNhCjyPhysnbZGpQqNmjk0nOYjFN5ordC/Wjvg+RbYCyMSnW60l/Z0ZS82GbNltly6PMUH1w==}
 
-  simplebar-vue@2.4.1:
-    resolution: {integrity: sha512-MEAWVjTNrIrQA+DaZFlmd/nOye54sPcXXuoUcxzDghcpskDdqjTLk3awqodxKsVruw++D3HLNMetGSSMoHZ/Iw==}
+  simplebar-vue@2.4.2:
+    resolution: {integrity: sha512-QQKzQ6wQdld5Nwop4Bfd7hitzmWqwfhRaJbtgan/xu7V6WcvspXrAH9fapJNH2Lqny34P43m4rRREp97NcdiiQ==}
     peerDependencies:
       vue: '>=2.5.17'
 
@@ -15718,8 +15689,8 @@ packages:
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     hasBin: true
 
-  stylelint@16.21.0:
-    resolution: {integrity: sha512-ki3PpJGG7xhm3WtINoWGnlvqAmbqSexoRMbEMJzlwewSIOqPRKPlq452c22xAdEJISVi80r+I7KL9GPUiwFgbg==}
+  stylelint@16.21.1:
+    resolution: {integrity: sha512-WCXdXnYK2tpCbebgMF0Bme3YZH/Rh/UXerj75twYo4uLULlcrLwFVdZTvTEF8idFnAcW21YUDJFyKOfaf6xJRw==}
     engines: {node: '>=18.12.0'}
     hasBin: true
 
@@ -16000,9 +15971,6 @@ packages:
 
   tinybench@2.9.0:
     resolution: {integrity: sha512-0+DUvqWMValLmha6lr4kD8iAMK1HzV0/aKnCtWb9v9641TnP/MFb7Pc2bxoxQjTXAErryXVgUOfv2YqNllqGeg==}
-
-  tinycolor2@1.4.2:
-    resolution: {integrity: sha512-vJhccZPs965sV/L2sU4oRQVAos0pQXwsvTLkWYdqJ+a8Q5kPFzJTuOFwy7UniPli44NKQGAglksjvOcpo95aZA==}
 
   tinycolor2@1.6.0:
     resolution: {integrity: sha512-XPaBkWQJdsf3pLKJV9p4qN/S+fm2Oj8AIPo1BTUhg5oxkvm9+SVEGFdhyOz7tTdUTfvxMiAs4sp6/eZO2Ew+pw==}
@@ -18615,17 +18583,10 @@ snapshots:
     dependencies:
       chalk: 4.1.2
 
-  '@blueking/date-picker@2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.1-beta.42(highlight.js@11.11.1)(vue@3.4.38(typescript@4.9.5)))(dayjs@1.11.13)(vue@3.4.38(typescript@4.9.5))':
+  '@blueking/date-picker@2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.44(highlight.js@11.11.1)(vue@3.4.38(typescript@4.9.5)))(dayjs@1.11.13)(vue@3.4.38(typescript@4.9.5))':
     dependencies:
       '@blueking/bkui-library': 0.0.0-beta.6
-      bkui-vue: 2.0.1-beta.42(highlight.js@11.11.1)(vue@3.4.38(typescript@4.9.5))
-      dayjs: 1.11.13
-      vue: 3.4.38(typescript@4.9.5)
-
-  '@blueking/date-picker@2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.1-beta.43(highlight.js@11.11.1)(vue@3.4.38(typescript@4.9.5)))(dayjs@1.11.13)(vue@3.4.38(typescript@4.9.5))':
-    dependencies:
-      '@blueking/bkui-library': 0.0.0-beta.6
-      bkui-vue: 2.0.1-beta.43(highlight.js@11.11.1)(vue@3.4.38(typescript@4.9.5))
+      bkui-vue: 2.0.2-beta.44(highlight.js@11.11.1)(vue@3.4.38(typescript@4.9.5))
       dayjs: 1.11.13
       vue: 3.4.38(typescript@4.9.5)
 
@@ -19493,15 +19454,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@floating-ui/core@0.7.3': {}
-
   '@floating-ui/core@1.7.2':
     dependencies:
       '@floating-ui/utils': 0.2.10
-
-  '@floating-ui/dom@0.5.4':
-    dependencies:
-      '@floating-ui/core': 0.7.3
 
   '@floating-ui/dom@1.5.4':
     dependencies:
@@ -21338,7 +21293,7 @@ snapshots:
 
   '@types/minimist@1.2.5': {}
 
-  '@types/node-forge@1.3.11':
+  '@types/node-forge@1.3.12':
     dependencies:
       '@types/node': 24.0.10
 
@@ -21811,7 +21766,7 @@ snapshots:
     dependencies:
       debug: 4.4.1
       eslint-visitor-keys: 1.3.0
-      glob: 7.2.2
+      glob: 7.2.3
       is-glob: 4.0.3
       lodash: 4.17.21
       semver: 7.7.2
@@ -21824,7 +21779,7 @@ snapshots:
   '@typescript-eslint/typescript-estree@2.7.0(typescript@3.7.5)':
     dependencies:
       debug: 4.4.1
-      glob: 7.2.2
+      glob: 7.2.3
       is-glob: 4.0.3
       lodash.unescape: 4.0.1
       semver: 7.7.2
@@ -23942,19 +23897,7 @@ snapshots:
       tinycolor2: 1.6.0
       vue: 2.7.16
 
-  bkui-vue@0.0.1-beta.416(highlight.js@11.11.1)(vue@3.4.38(typescript@4.9.5)):
-    dependencies:
-      '@floating-ui/dom': 0.5.4
-      '@popperjs/core': 2.11.8
-      date-fns: 2.28.0
-      highlight.js: 11.11.1
-      js-calendar: 1.2.3
-      lodash: 4.17.21
-      tinycolor2: 1.4.2
-      vue: 3.4.38(typescript@4.9.5)
-      vue-types: 4.1.1(vue@3.4.38(typescript@4.9.5))
-
-  bkui-vue@2.0.1-beta.42(highlight.js@11.11.1)(vue@3.4.38(typescript@4.9.5)):
+  bkui-vue@2.0.2-beta.44(highlight.js@11.11.1)(vue@3.4.38(typescript@4.9.5)):
     dependencies:
       '@floating-ui/dom': 1.5.4
       '@popperjs/core': 2.11.8
@@ -23967,20 +23910,7 @@ snapshots:
       vue: 3.4.38(typescript@4.9.5)
       vue-types: 4.1.1(vue@3.4.38(typescript@4.9.5))
 
-  bkui-vue@2.0.1-beta.43(highlight.js@11.11.1)(vue@3.4.38(typescript@4.9.5)):
-    dependencies:
-      '@floating-ui/dom': 1.5.4
-      '@popperjs/core': 2.11.8
-      date-fns: 2.30.0
-      highlight.js: 11.11.1
-      js-calendar: 1.2.3
-      json-formatter-js: 2.3.4
-      lodash: 4.17.21
-      tinycolor2: 1.6.0
-      vue: 3.4.38(typescript@4.9.5)
-      vue-types: 4.1.1(vue@3.4.38(typescript@4.9.5))
-
-  bkui-vue@2.0.1-beta.94(highlight.js@11.11.1)(vue@3.5.17(typescript@5.4.5)):
+  bkui-vue@2.0.2-beta.44(highlight.js@11.11.1)(vue@3.5.17(typescript@5.4.5)):
     dependencies:
       '@floating-ui/dom': 1.5.4
       '@popperjs/core': 2.11.8
@@ -24173,7 +24103,7 @@ snapshots:
       bluebird: 3.7.2
       chownr: 1.1.4
       figgy-pudding: 3.5.2
-      glob: 7.2.2
+      glob: 7.2.3
       graceful-fs: 4.2.11
       infer-owner: 1.0.4
       lru-cache: 5.1.1
@@ -24192,7 +24122,7 @@ snapshots:
       '@npmcli/move-file': 1.1.2
       chownr: 2.0.0
       fs-minipass: 2.1.0
-      glob: 7.2.2
+      glob: 7.2.3
       infer-owner: 1.0.4
       lru-cache: 6.0.0
       minipass: 3.3.6
@@ -25546,8 +25476,6 @@ snapshots:
       call-bound: 1.0.4
       es-errors: 1.3.0
       is-data-view: 1.0.2
-
-  date-fns@2.28.0: {}
 
   date-fns@2.30.0:
     dependencies:
@@ -27803,7 +27731,7 @@ snapshots:
   glob-stream@6.1.0:
     dependencies:
       extend: 3.0.2
-      glob: 7.2.2
+      glob: 7.2.3
       glob-parent: 5.1.2
       is-negated-glob: 1.0.0
       ordered-read-streams: 1.0.1
@@ -27844,15 +27772,6 @@ snapshots:
       minipass: 7.1.2
       package-json-from-dist: 1.0.1
       path-scurry: 2.0.0
-
-  glob@7.2.2:
-    dependencies:
-      fs.realpath: 1.0.0
-      inflight: 1.0.6
-      inherits: 2.0.4
-      minimatch: 3.1.2
-      once: 1.4.0
-      path-is-absolute: 1.0.1
 
   glob@7.2.3:
     dependencies:
@@ -27932,7 +27851,7 @@ snapshots:
     dependencies:
       array-union: 1.0.2
       dir-glob: 2.2.2
-      glob: 7.2.2
+      glob: 7.2.3
       ignore: 3.3.10
       pify: 3.0.0
       slash: 1.0.0
@@ -27942,7 +27861,7 @@ snapshots:
       array-union: 1.0.2
       dir-glob: 2.0.0
       fast-glob: 2.2.7
-      glob: 7.2.2
+      glob: 7.2.3
       ignore: 3.3.10
       pify: 3.0.0
       slash: 1.0.0
@@ -33315,15 +33234,15 @@ snapshots:
 
   rimraf@2.6.3:
     dependencies:
-      glob: 7.2.2
+      glob: 7.2.3
 
   rimraf@2.7.1:
     dependencies:
-      glob: 7.2.2
+      glob: 7.2.3
 
   rimraf@3.0.2:
     dependencies:
-      glob: 7.2.2
+      glob: 7.2.3
 
   ripemd160@2.0.1:
     dependencies:
@@ -33531,7 +33450,7 @@ snapshots:
 
   selfsigned@2.4.1:
     dependencies:
-      '@types/node-forge': 1.3.11
+      '@types/node-forge': 1.3.12
       node-forge: 1.3.1
 
   semver-compare@1.0.0: {}
@@ -33676,7 +33595,7 @@ snapshots:
 
   shelljs@0.8.5:
     dependencies:
-      glob: 7.2.2
+      glob: 7.2.3
       interpret: 1.4.0
       rechoir: 0.6.2
 
@@ -33726,14 +33645,14 @@ snapshots:
     dependencies:
       is-arrayish: 0.3.2
 
-  simplebar-core@1.3.1:
+  simplebar-core@1.3.2:
     dependencies:
       lodash: 4.17.21
       lodash-es: 4.17.21
 
-  simplebar-vue@2.4.1(@vue/composition-api@1.7.2(vue@2.7.16))(vue@2.7.16):
+  simplebar-vue@2.4.2(@vue/composition-api@1.7.2(vue@2.7.16))(vue@2.7.16):
     dependencies:
-      simplebar-core: 1.3.1
+      simplebar-core: 1.3.2
       vue: 2.7.16
       vue-demi: 0.13.11(@vue/composition-api@1.7.2(vue@2.7.16))(vue@2.7.16)
     transitivePeerDependencies:
@@ -34238,9 +34157,9 @@ snapshots:
     optionalDependencies:
       postcss: 8.4.49
 
-  stylelint-config-recommended@15.0.0(stylelint@16.21.0(typescript@5.4.5)):
+  stylelint-config-recommended@15.0.0(stylelint@16.21.1(typescript@5.4.5)):
     dependencies:
-      stylelint: 16.21.0(typescript@5.4.5)
+      stylelint: 16.21.1(typescript@5.4.5)
 
   stylelint-config-recommended@9.0.0(stylelint@14.16.1):
     dependencies:
@@ -34259,10 +34178,10 @@ snapshots:
       stylelint: 14.16.1
       stylelint-config-recommended: 9.0.0(stylelint@14.16.1)
 
-  stylelint-config-standard@37.0.0(stylelint@16.21.0(typescript@5.4.5)):
+  stylelint-config-standard@37.0.0(stylelint@16.21.1(typescript@5.4.5)):
     dependencies:
-      stylelint: 16.21.0(typescript@5.4.5)
-      stylelint-config-recommended: 15.0.0(stylelint@16.21.0(typescript@5.4.5))
+      stylelint: 16.21.1(typescript@5.4.5)
+      stylelint-config-recommended: 15.0.0(stylelint@16.21.1(typescript@5.4.5))
 
   stylelint-order@4.1.0(stylelint@13.13.1):
     dependencies:
@@ -34392,7 +34311,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  stylelint@16.21.0(typescript@5.4.5):
+  stylelint@16.21.1(typescript@5.4.5):
     dependencies:
       '@csstools/css-parser-algorithms': 3.0.5(@csstools/css-tokenizer@3.0.4)
       '@csstools/css-tokenizer': 3.0.4
@@ -34454,7 +34373,7 @@ snapshots:
     dependencies:
       '@adobe/css-tools': 4.4.3
       debug: 4.4.1
-      glob: 7.2.2
+      glob: 7.2.3
       sax: 1.2.4
       source-map: 0.7.4
     transitivePeerDependencies:
@@ -34464,7 +34383,7 @@ snapshots:
     dependencies:
       '@adobe/css-tools': 4.3.3
       debug: 4.4.1
-      glob: 7.2.2
+      glob: 7.2.3
       sax: 1.3.0
       source-map: 0.7.4
     transitivePeerDependencies:
@@ -34855,8 +34774,6 @@ snapshots:
   tiny-emitter@2.1.0: {}
 
   tinybench@2.9.0: {}
-
-  tinycolor2@1.4.2: {}
 
   tinycolor2@1.6.0: {}
 
