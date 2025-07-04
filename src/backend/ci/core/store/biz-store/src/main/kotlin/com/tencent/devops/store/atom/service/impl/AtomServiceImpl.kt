@@ -402,6 +402,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 fieldName = KEY_SUMMARY,
                 defaultValue = it[KEY_SUMMARY] as? String ?: ""
             )
+            val publisher = getAtomFieldI18nMessage(
+                StoreTypeEnum.ATOM,
+                atomCode = atomCode,
+                fieldName = KEY_PUBLISHER,
+                defaultValue = it[KEY_PUBLISHER] as? String ?: ""
+            )
             val pipelineAtomRespItem = AtomRespItem(
                 name = name,
                 atomCode = atomCode,
@@ -424,7 +430,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 description = description?.let {
                     StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(description) as? String
                 },
-                publisher = it[KEY_PUBLISHER] as? String,
+                publisher = publisher,
                 creator = it[KEY_CREATOR] as String,
                 modifier = it[KEY_MODIFIER] as String,
                 createTime = DateTimeUtil.toDateTime(it[KEY_CREATE_TIME] as LocalDateTime),
