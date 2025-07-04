@@ -29,12 +29,14 @@ package com.tencent.devops.notify.pojo
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
+import com.tencent.devops.notify.api.annotation.BkNotifyReceivers
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "rtx消息类型")
 open class RtxNotifyMessage : BaseMessage() {
 
     @get:Schema(title = "通知接收者")
+    @BkNotifyReceivers
     private val receivers: MutableSet<String> = mutableSetOf()
     @get:Schema(title = "RTX通知内容")
     var body: String = ""

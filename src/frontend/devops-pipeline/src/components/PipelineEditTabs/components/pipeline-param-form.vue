@@ -245,7 +245,7 @@
                 }
                 const ids = new Set()
                 return this.globalParams.reduce((uniqueItems, item) => {
-                    if (!ids.has(item.category)) {
+                    if (!ids.has(item.category) && item.category) {
                         ids.add(item.category)
                         uniqueItems.push({
                             id: item.category,

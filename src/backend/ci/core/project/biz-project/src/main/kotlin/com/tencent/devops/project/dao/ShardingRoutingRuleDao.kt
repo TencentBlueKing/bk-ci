@@ -62,7 +62,7 @@ class ShardingRoutingRuleDao {
                     shardingRoutingRule.moduleCode.name,
                     shardingRoutingRule.type.name,
                     shardingRoutingRule.dataSourceName,
-                    shardingRoutingRule.tableName,
+                    shardingRoutingRule.tableName ?: "",
                     shardingRoutingRule.routingName,
                     shardingRoutingRule.routingRule,
                     userId,

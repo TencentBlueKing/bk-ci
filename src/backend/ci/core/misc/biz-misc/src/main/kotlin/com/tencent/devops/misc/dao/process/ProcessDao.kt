@@ -407,36 +407,4 @@ class ProcessDao {
         }
         return queryTableCount(T_PIPELINE_BUILD_HISTORY) + queryTableCount(T_PIPELINE_BUILD_HISTORY_DEBUG)
     }
-
-    fun countUnCompletedStageSuccess(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String
-    ): Int {
-        val tPipelineBuildHistory = TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY
-        fun queryTableCount(table: Table<*>): Int {
-            val startTimeField = table.field(tPipelineBuildHistory.START_TIME.name, LocalDateTime::class.java)!!
-            val endTimeField = table.field(tPipelineBuildHistory.END_TIME.name, LocalDateTime::class.java)!!
-            val timeConditions = DSL.or(
-                startTimeField.isNull,
-                endTimeField.isNull,
-                startTimeField.gt(endTimeField)
-            )
-            // 构造通用查询条件
-            val conditions = listOf(
-                table.field(tPipelineBuildHistory.PROJECT_ID.name, String::class.java)!!.eq(projectId),
-                table.field(tPipelineBuildHistory.PIPELINE_ID.name, String::class.java)!!.eq(pipelineId),
-                table.field(tPipelineBuildHistory.STATUS.name, Int::class.java)!!.eq(BuildStatus.STAGE_SUCCESS.ordinal),
-                timeConditions
-            )
-
-            return dslContext.selectCount()
-                .from(table)
-                .where(conditions)
-                .fetchOne(0, Int::class.java) ?: 0
-        }
-
-        // 分别查询两个表并求和
-        return queryTableCount(T_PIPELINE_BUILD_HISTORY) + queryTableCount(T_PIPELINE_BUILD_HISTORY_DEBUG)
-    }
 }

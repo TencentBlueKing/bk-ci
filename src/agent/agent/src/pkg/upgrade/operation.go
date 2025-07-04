@@ -28,11 +28,12 @@
 package upgrade
 
 import (
-	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 

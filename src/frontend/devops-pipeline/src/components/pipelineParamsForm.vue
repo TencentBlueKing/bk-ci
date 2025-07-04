@@ -10,13 +10,13 @@
         >
             <template v-if="sortCategory">
                 <renderSortCategoryParams
-                    v-for="(list, key) in renderParamList"
+                    v-for="key in sortedCategories"
                     :key="key"
                     :name="key"
                 >
                     <template slot="content">
                         <form-field
-                            v-for="param in list"
+                            v-for="param in paramsListMap[key]"
                             :key="param.id"
                             v-if="param.show"
                             :required="param.required"
@@ -128,7 +128,8 @@
         STRING,
         SUB_PIPELINE,
         SVN_TAG,
-        TEXTAREA
+        TEXTAREA,
+        getParamsGroupByLabel
     } from '@/store/modules/atom/paramsConfig'
     import { isObject } from '@/utils/util'
 
@@ -252,24 +253,13 @@
                     }
                 })
             },
-            renderParamList () {
-                // 将参数列表按照分组进行分组,未分组的参数放到一个分组里
-                const key = this.$t('notGrouped')
-                const listMap = this.paramList.reduce((acc, item) => {
-                    const categoryKey = item.category || key
-                    if (!acc[categoryKey]) {
-                        acc[categoryKey] = []
-                    }
-                    acc[categoryKey].push(item)
-                    return acc
-                }, {})
-                
-                if (!(key in listMap)) {
-                    return listMap
-                }
-                const { [key]: value, ...rest } = listMap
-                return { [key]: value, ...rest }
+            paramsListMap () {
+                return getParamsGroupByLabel(this.paramList)?.listMap ?? {}
+            },
+            sortedCategories () {
+                return getParamsGroupByLabel(this.paramList)?.sortedCategories ?? []
             }
+            
         },
         methods: {
             isObject,

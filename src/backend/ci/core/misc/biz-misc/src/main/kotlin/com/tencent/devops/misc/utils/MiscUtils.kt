@@ -37,13 +37,4 @@ object MiscUtils {
     fun getMigratingProjectsRedisKey(moduleCode: String): String {
         return "$moduleCode:migrating:projects"
     }
-
-    /**
-     * 获取正在迁移流水线列表的redis键
-     * @param moduleCode 模块标识
-     * @return 正在迁移流水线列表的redis键
-     */
-    fun getMigratingPipelinesRedisKey(moduleCode: String): String {
-        return "$moduleCode:migrating:pipelines"
-    }
 }

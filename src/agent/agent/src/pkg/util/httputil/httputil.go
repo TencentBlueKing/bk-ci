@@ -32,12 +32,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"reflect"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
@@ -61,13 +63,16 @@ type HttpResult struct {
 	IgnoreDupLog bool
 }
 
-func IsSuccess(status int) bool {
-	return status >= 200 && status < 400
+var client = &http.Client{}
+
+// newClient 替换客户端，重置连接池
+func newClient() {
+	client = &http.Client{}
 }
 
 func NewHttpClient() *HttpClient {
 	return &HttpClient{
-		client:    http.DefaultClient,
+		client:    client,
 		header:    make(map[string]string),
 		formValue: make(map[string]string),
 	}
@@ -173,6 +178,10 @@ func (r *HttpClient) Execute(ignoreDupLogResp *IgnoreDupLogResp) *HttpResult {
 	req.Form = value
 	resp, err := r.client.Do(req)
 	if err != nil {
+		if os.IsTimeout(err) || errors.Is(err, context.DeadlineExceeded) {
+			logs.Warn("http request time out, replace client")
+			newClient()
+		}
 		result.Error = err
 		return result
 	}

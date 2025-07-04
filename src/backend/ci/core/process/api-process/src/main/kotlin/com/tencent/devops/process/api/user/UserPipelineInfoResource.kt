@@ -142,6 +142,9 @@ interface UserPipelineInfoResource {
         projectId: String,
         @Parameter(description = "流水线Id")
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @Parameter(description = "归档库标识", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<PipelineDetailInfo?>
 }
