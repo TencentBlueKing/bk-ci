@@ -32,13 +32,17 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.stream.rabbit.RabbitQueueType
 
 /**
  * Container事件
  *
  * @version 1.0
  */
-@Event(StreamBinding.PIPELINE_BUILD_CONTAINER)
+@Event(
+    destination = StreamBinding.PIPELINE_BUILD_CONTAINER,
+    type = RabbitQueueType.QUORUM
+)
 data class PipelineBuildContainerEvent(
     override val source: String,
     override val projectId: String,
