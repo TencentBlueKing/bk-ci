@@ -218,7 +218,7 @@ class NodeTagService @Autowired constructor(
         scopeId = "#projectId",
         content = ActionAuditContent.ENV_NODE_TAG_UPDATE_CONTENT
     )
-    fun updateTag(userId: String, projectId: String, tagKey: Long, data: NodeTagUpdateReq) {
+    fun updateTag(userId: String, projectId: String, data: NodeTagUpdateReq) {
         if (!authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
             throw PermissionForbiddenException(
                 message = I18nUtil.getCodeLanMessage(
@@ -227,10 +227,10 @@ class NodeTagService @Autowired constructor(
                 )
             )
         }
-        val lock = RedisLock(redisOperation, genUpdateNodeTagLockKey(projectId, tagKey), 5)
+        val lock = RedisLock(redisOperation, genUpdateNodeTagLockKey(projectId, data.tagKeyId), 5)
 
         // 获取老的节点标签
-        val tags = nodeTagDao.fetchTag(dslContext, projectId, tagKey) ?: run {
+        val tags = nodeTagDao.fetchTag(dslContext, projectId, data.tagKeyId) ?: run {
             // 为空说明之前的标签已经被删除了，直接修改即可，理论上不会出现，先返回
             throw PermissionForbiddenException(
                 message = I18nUtil.getCodeLanMessage(
@@ -256,11 +256,11 @@ class NodeTagService @Autowired constructor(
                 val dslCtx = DSL.using(config)
                 // 检验是否修改了 key
                 if (data.tagKeyName != oldTagKeyName) {
-                    checkUsedTagNode(projectId, tagKey, null)
+                    checkUsedTagNode(projectId, data.tagKeyId, null)
                     nodeTagKeyDao.updateNodeTagKey(
                         dslContext = dslCtx,
                         projectId = projectId,
-                        tagKeyId = tagKey,
+                        tagKeyId = data.tagKeyId,
                         tagName = data.tagKeyName,
                         // 暂时先写死，等二期
                         allowMulValue = null
@@ -285,7 +285,7 @@ class NodeTagService @Autowired constructor(
                 nodeTagValueDao.deleteTagValue(dslCtx, projectId, deletedTagValueIds)
                 // 修改和新增values
                 val createValue = data.tagValues!!.filter { it.tagValueId == null }.map { it.tagValueName }.toSet()
-                nodeTagValueDao.batchCreateTagValue(dslCtx, projectId, tagKey, createValue)
+                nodeTagValueDao.batchCreateTagValue(dslCtx, projectId, data.tagKeyId, createValue)
                 updateValues.forEach {
                     nodeTagValueDao.updateNodeTagValue(dslCtx, projectId, it.key, it.value)
                 }

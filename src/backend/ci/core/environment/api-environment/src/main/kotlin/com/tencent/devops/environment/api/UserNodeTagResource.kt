@@ -92,9 +92,6 @@ interface UserNodeTagResource {
         @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(description = "标签名ID", required = true)
-        @QueryParam("tagKeyId")
-        tagKeyId: Long,
         data: NodeTagUpdateReq
     ): Result<Boolean>
 }

@@ -58,13 +58,11 @@ class UserNodeTagResourceImpl @Autowired constructor(
     override fun updateTag(
         userId: String,
         projectId: String,
-        tagKeyId: Long,
         data: NodeTagUpdateReq
     ): Result<Boolean> {
         nodeTagService.updateTag(
             userId = userId,
             projectId = projectId,
-            tagKey = tagKeyId,
             data = data
         )
         return Result(true)
