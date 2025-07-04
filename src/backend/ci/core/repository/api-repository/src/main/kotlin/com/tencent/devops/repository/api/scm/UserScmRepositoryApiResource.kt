@@ -64,6 +64,9 @@ interface UserScmRepositoryApiResource {
         scmCode: String,
         @Parameter(description = "代码库名", required = false)
         @QueryParam("search")
-        search: String? = null
+        search: String? = null,
+        @Parameter(description = "授权账号", required = false)
+        @QueryParam("username")
+        username: String? = null
     ): Result<AuthorizeResult>
 }
