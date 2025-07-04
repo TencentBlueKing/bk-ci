@@ -1753,6 +1753,12 @@
   "groupLabel": "分组标签",
   "groupLabelTips": "拥有相同标签的变量，在查看和执行预览界面将在同一个分组下展示",
   "notGrouped": "未分组",
+  "attributeValue": "属性值",
+  "attributeName": "属性名",
+  "metadataAttributeName": "元数据属性名",
+  "metadataAttributeValue": "元数据属性值",
+  "artifactQuality": "制品质量",
+  "totalArtifactCount": "共 {0} 个",
   "noArchivedPipelines": "暂无已存档流水线，不用操作",
   "notParamsTip": "该参数已不再是入参或已被删除，执行时不能再传入。可手动删除，或保存后自动从此参数列表中删除。"
 }
