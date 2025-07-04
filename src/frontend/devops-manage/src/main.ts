@@ -11,7 +11,7 @@ import bkui from 'bkui-vue';
 import bkuiEn from 'bkui-vue/dist/locale/en.esm';
 import bkuiZhCn from 'bkui-vue/dist/locale/zh-cn.esm';
 import bkuiJp from 'bkui-vue/dist/locale/ja-jp.esm'
-import 'bkui-vue/dist/style.css';
+import 'bkui-vue/dist/cli.css';
 import { bkTooltips } from 'bkui-vue/lib/directives';
 
 // 引入权限指令相关资源
