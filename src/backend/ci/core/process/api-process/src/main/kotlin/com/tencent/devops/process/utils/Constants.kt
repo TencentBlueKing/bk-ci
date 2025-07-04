@@ -254,3 +254,7 @@ const val KEY_JOB = "job"
 const val KEY_TASK = "task"
 
 const val KEY_TASK_ATOM = "taskAtom"
+
+const val EMPTY_PIPELINE= "空白流水线"
+
+const val BK_EMPTY_PIPELINE="bkEmptyPipeline"

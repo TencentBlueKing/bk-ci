@@ -344,7 +344,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             )?.map { it.value1() }
         }
         pipelineAtoms?.forEach {
-            val name = it[NAME] as String
+//            val name = it[NAME] as String
+            val name = generateAtomName(
+                atomCode = it[KEY_ATOM_CODE] as String,
+                atomName = it[NAME] as String,
+                category = AtomCategoryEnum.getAtomCategory((it[KEY_CATEGORY] as Byte).toInt())
+            )
             val atomCode = it[KEY_ATOM_CODE] as String
             val version = it[VERSION] as String
             val branchTestFlag = it[KEY_BRANCH_TEST_FLAG] as Boolean
@@ -1442,5 +1447,14 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             )
         }
         return Result(versionInfo)
+    }
+
+
+    private fun generateAtomName(atomCode: String, atomName: String?, category: String): String {
+        return if (category == "TRIGGER") {
+            I18nUtil.getCodeLanMessage(atomCode)
+        } else {
+            atomName!!
+        }
     }
 }
