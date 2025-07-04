@@ -69,6 +69,7 @@ import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
+import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
@@ -153,10 +154,10 @@ import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.UriBuilder
+import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 /**
  *
@@ -772,36 +773,49 @@ class PipelineBuildFacadeService(
                     if (!stepId.isNullOrBlank() && el.stepId != stepId) return@element
                     if (el is ManualReviewUserTaskElement) {
                         trueElementId = el.id!!
-                        // Replace the review user with environment
-                        val reviewUser = mutableListOf<String>()
-                        el.reviewUsers.forEach { user ->
-                            reviewUser.addAll(
-                                buildVariableService.replaceTemplate(projectId, buildId, user)
-                                    .split(",")
-                            )
-                        }
-                        params.params.forEach {
-                            when (it.valueType) {
-                                ManualReviewParamType.BOOLEAN, ManualReviewParamType.CHECKBOX -> {
-                                    it.value = it.value ?: false
-                                }
+                        checkReviewUser(
+                            reviewUsers = el.reviewUsers,
+                            projectId = projectId,
+                            buildId = buildId,
+                            userId = userId
+                        )
+                    }
+                }
 
-                                else -> {
-                                    it.value = buildVariableService.replaceTemplate(
-                                        projectId = projectId,
-                                        buildId = buildId,
-                                        template = it.value.toString()
-                                    )
-                                }
+                if (cc.matrixGroupFlag == true) {
+                    cc.fetchGroupContainers()?.forEach { gc ->
+                        gc.elements.forEach element@{ el ->
+                            if (!elementId.isNullOrBlank() && el.id != elementId) return@element
+                            if (!stepId.isNullOrBlank() && el.stepId != stepId) return@element
+                            if (el is MatrixStatusElement &&
+                                el.originClassType == ManualReviewUserTaskElement.classType
+                            ) {
+                                trueElementId = el.id!!
+                                checkReviewUser(
+                                    projectId = projectId,
+                                    buildId = buildId,
+                                    userId = userId,
+                                    reviewUsers = el.reviewUsers ?: emptyList()
+                                )
                             }
                         }
-                        if (!reviewUser.contains(userId)) {
-                            throw ErrorCodeException(
-                                errorCode = ProcessMessageCode.ERROR_QUALITY_REVIEWER_NOT_MATCH,
-                                params = arrayOf(userId)
-                            )
-                        }
                     }
+                }
+            }
+        }
+
+        params.params.forEach {
+            when (it.valueType) {
+                ManualReviewParamType.BOOLEAN, ManualReviewParamType.CHECKBOX -> {
+                    it.value = it.value ?: false
+                }
+
+                else -> {
+                    it.value = buildVariableService.replaceTemplate(
+                        projectId = projectId,
+                        buildId = buildId,
+                        template = it.value.toString()
+                    )
                 }
             }
         }
@@ -828,6 +842,28 @@ class PipelineBuildFacadeService(
                 buildId = buildId,
                 executeCount = buildInfo.executeCount ?: 1,
                 cancelUserId = userId
+            )
+        }
+    }
+
+    private fun checkReviewUser(
+        reviewUsers: List<String>,
+        projectId: String,
+        buildId: String,
+        userId: String
+    ) {
+        // Replace the review user with environment
+        val reviewUser = mutableListOf<String>()
+        reviewUsers.forEach { user ->
+            reviewUser.addAll(
+                buildVariableService.replaceTemplate(projectId, buildId, user)
+                    .split(",")
+            )
+        }
+        if (!reviewUser.contains(userId)) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_QUALITY_REVIEWER_NOT_MATCH,
+                params = arrayOf(userId)
             )
         }
     }
@@ -1121,52 +1157,91 @@ class PipelineBuildFacadeService(
             s.containers.forEach { cc ->
                 cc.elements.forEach { el ->
                     if (el is ManualReviewUserTaskElement && el.id == elementId) {
-                        val reviewUser = mutableListOf<String>()
-                        el.reviewUsers.forEach { user ->
-                            reviewUser.addAll(
-                                buildVariableService.replaceTemplate(projectId, buildId, user)
-                                    .split(",")
-                            )
-                        }
-                        el.params.forEach { param ->
-                            when (param.valueType) {
-                                ManualReviewParamType.BOOLEAN, ManualReviewParamType.CHECKBOX -> {
-                                    param.value = param.value ?: false
-                                }
-
-                                else -> {
-                                    param.value = buildVariableService.replaceTemplate(
-                                        projectId = projectId,
-                                        buildId = buildId,
-                                        template = param.value.toString()
-                                    )
-                                }
+                        return reviewParam(
+                            projectId = projectId,
+                            buildId = buildId,
+                            userId = userId,
+                            pipelineId = pipelineId,
+                            reviewUsers = el.reviewUsers,
+                            params = el.params,
+                            desc = el.desc ?: ""
+                        )
+                    }
+                }
+                if (cc.matrixGroupFlag == true) {
+                    cc.fetchGroupContainers()?.forEach { gc ->
+                        gc.elements.forEach { el ->
+                            if (el is MatrixStatusElement &&
+                                el.originClassType == ManualReviewUserTaskElement.classType &&
+                                el.id == elementId
+                            ) {
+                                return reviewParam(
+                                    projectId = projectId,
+                                    buildId = buildId,
+                                    userId = userId,
+                                    pipelineId = pipelineId,
+                                    reviewUsers = el.reviewUsers ?: emptyList(),
+                                    params = el.params ?: mutableListOf(),
+                                    desc = el.desc ?: ""
+                                )
                             }
                         }
-                        el.desc = buildVariableService.replaceTemplate(projectId, buildId, el.desc)
-                        if (!reviewUser.contains(userId)) {
-                            throw ErrorCodeException(
-                                errorCode = ProcessMessageCode.ERROR_QUALITY_REVIEWER_NOT_MATCH,
-                                params = arrayOf(userId)
-                            )
-                        }
-                        val reviewParam = ReviewParam(
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            buildId = buildId,
-                            reviewUsers = reviewUser,
-                            status = null,
-                            desc = el.desc,
-                            suggest = "",
-                            params = el.params
-                        )
-                        logger.info("reviewParam : $reviewParam")
-                        return reviewParam
                     }
                 }
             }
         }
         return ReviewParam()
+    }
+
+    private fun reviewParam(
+        projectId: String,
+        buildId: String,
+        userId: String,
+        pipelineId: String,
+        reviewUsers: List<String>,
+        params: MutableList<ManualReviewParam>,
+        desc: String,
+    ): ReviewParam {
+        val reviewUser = mutableListOf<String>()
+        reviewUsers.forEach { user ->
+            reviewUser.addAll(
+                buildVariableService.replaceTemplate(projectId, buildId, user)
+                    .split(",")
+            )
+        }
+        params.forEach { param ->
+            when (param.valueType) {
+                ManualReviewParamType.BOOLEAN, ManualReviewParamType.CHECKBOX -> {
+                    param.value = param.value ?: false
+                }
+
+                else -> {
+                    param.value = buildVariableService.replaceTemplate(
+                        projectId = projectId,
+                        buildId = buildId,
+                        template = param.value.toString()
+                    )
+                }
+            }
+        }
+        if (!reviewUser.contains(userId)) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_QUALITY_REVIEWER_NOT_MATCH,
+                params = arrayOf(userId)
+            )
+        }
+        val reviewParam = ReviewParam(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            reviewUsers = reviewUser,
+            status = null,
+            desc = buildVariableService.replaceTemplate(projectId, buildId, desc),
+            suggest = "",
+            params = params
+        )
+        logger.info("reviewParam : $reviewParam")
+        return reviewParam
     }
 
     fun serviceShutdown(projectId: String, pipelineId: String, buildId: String, channelCode: ChannelCode) {
