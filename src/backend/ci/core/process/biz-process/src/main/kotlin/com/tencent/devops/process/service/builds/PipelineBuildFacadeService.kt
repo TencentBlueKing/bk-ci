@@ -791,7 +791,7 @@ class PipelineBuildFacadeService(
                                 el.originClassType == ManualReviewUserTaskElement.classType
                             ) {
                                 trueElementId = el.id!!
-                                return checkReviewUser(
+                                checkReviewUser(
                                     projectId = projectId,
                                     buildId = buildId,
                                     userId = userId,
