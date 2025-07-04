@@ -8,10 +8,11 @@ import './css/iconcool.js'
 // 全量引入 bkui-vue
 import bkui from 'bkui-vue';
 // 全量引入 bkui-vue 样式
+import bkuiEn from 'bkui-vue/dist/locale/en.esm';
+import bkuiZhCn from 'bkui-vue/dist/locale/zh-cn.esm';
+import bkuiJp from 'bkui-vue/dist/locale/ja-jp.esm'
 import 'bkui-vue/dist/style.css';
 import { bkTooltips } from 'bkui-vue/lib/directives';
-import bkuiZhCn from 'bkui-vue/dist/locale/zh-cn.esm';
-import bkuiEn from 'bkui-vue/dist/locale/en.esm';
 
 // 引入权限指令相关资源
 import { handleProjectManageNoPermission } from './utils/permission';
@@ -40,6 +41,21 @@ const localeAliasMap = {
   en_US: 'en-US',
   en_us: 'en-US'
 }
+const bkUiLocaleAliasMap = {
+  'zh-CN': bkuiZhCn,
+  'zh-cn': bkuiZhCn,
+  'ja-JP': bkuiJp,
+  ja: bkuiJp,
+  zh_CN: bkuiZhCn,
+  zh_cn: bkuiZhCn,
+  cn: bkuiZhCn,
+  'en-US': bkuiEn,
+  'en-us': bkuiEn,
+  en: bkuiEn,
+  us: bkuiEn,
+  en_US: bkuiEn,
+  en_us: bkuiEn
+}
 const cookiesObj = getCookies() || {};
 const i18n = createI18n({
   legacy: false,
@@ -57,7 +73,7 @@ app
   .use(router)
   .use(createPinia())
   .use(bkui, {
-    locale: ['en', 'en-us', 'en_us'].includes((cookiesObj.blueking_language || '').toLowerCase()) ? bkuiEn : bkuiZhCn
+    locale: bkUiLocaleAliasMap[cookiesObj.blueking_language] || bkuiZhCn
   })
   .use(i18n)
   .use(AuthorityDirectiveV3(handleProjectManageNoPermission))

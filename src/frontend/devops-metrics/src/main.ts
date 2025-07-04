@@ -1,5 +1,6 @@
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
+import { getCookies } from './common/util';
 import router from './router';
 import App from './app.vue';
 import './css/index.css';
@@ -15,7 +16,11 @@ import { createI18n } from 'vue-i18n'
 import ZhCN from '../../locale/metrics/zh-CN.json'
 import EnUS from '../../locale/metrics/en-US.json'
 import JaJp from '../../locale/metrics/ja-JP.json'
+import bkuiZhCn from 'bkui-vue/dist/locale/zh-cn.esm'
+import bkuiEn from 'bkui-vue/dist/locale/en.esm'
+import bkuiJp from 'bkui-vue/dist/locale/ja-jp.esm'
 
+const cookiesObj = getCookies() || {};
 const localeAliasMap = {
   'zh-CN': 'zh-CN',
   'zh-cn': 'zh-CN',
@@ -31,7 +36,21 @@ const localeAliasMap = {
   en_US: 'en-US',
   en_us: 'en-US'
 }
-
+const bkUiLocaleAliasMap = {
+  'zh-CN': bkuiZhCn,
+  'zh-cn': bkuiZhCn,
+  'ja-JP': bkuiJp,
+  ja: bkuiJp,
+  zh_CN: bkuiZhCn,
+  zh_cn: bkuiZhCn,
+  cn: bkuiZhCn,
+  'en-US': bkuiEn,
+  'en-us': bkuiEn,
+  en: bkuiEn,
+  us: bkuiEn,
+  en_US: bkuiEn,
+  en_us: bkuiEn
+}
 const i18nLocale = getCookie('blueking_language') || ''
 const i18n = createI18n({
   legacy: false,
@@ -47,6 +66,8 @@ const i18n = createI18n({
 createApp(App)
   .use(router)
   .use(createPinia())
-  .use(bkui)
+  .use(bkui, {
+    locale: bkUiLocaleAliasMap[cookiesObj.blueking_language] || bkuiZhCn
+  })
   .use(i18n)
   .mount('.app');
