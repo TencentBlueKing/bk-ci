@@ -166,10 +166,10 @@
                   "id": "scc_task_manage"
                 },
                 {
-                  "id": "scc_task_defect-manage"
+                  "id": "scc_task_manage-defect"
                 },
                 {
-                  "id": "scc_task_defect-view"
+                  "id": "scc_task_view-defect"
                 }
               ]
             }
