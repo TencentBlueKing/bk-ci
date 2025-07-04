@@ -5,8 +5,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.NodeTagReq
+import com.tencent.devops.environment.pojo.NodeTagUpdateReq
 import com.tencent.devops.environment.pojo.UpdateNodeTag
-import com.tencent.devops.environment.pojo.UpdateTagReq
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -95,9 +95,6 @@ interface UserNodeTagResource {
         @Parameter(description = "标签名ID", required = true)
         @QueryParam("tagKeyId")
         tagKeyId: Long,
-        @Parameter(description = "标签值ID,为空则修改标签名", required = true)
-        @QueryParam("tagValueId")
-        tagValueId: Long?,
-        data: UpdateTagReq
+        data: NodeTagUpdateReq
     ): Result<Boolean>
 }

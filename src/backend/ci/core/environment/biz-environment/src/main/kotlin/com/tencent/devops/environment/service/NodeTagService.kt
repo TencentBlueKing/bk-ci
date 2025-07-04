@@ -13,9 +13,12 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_TAG_NOW_UPDATING
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_TAG_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.NodeTagDao
@@ -23,6 +26,7 @@ import com.tencent.devops.environment.dao.NodeTagKeyDao
 import com.tencent.devops.environment.dao.NodeTagValueDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.NodeTag
+import com.tencent.devops.environment.pojo.NodeTagUpdateReq
 import com.tencent.devops.environment.pojo.UpdateNodeTag
 import com.tencent.devops.environment.pojo.enums.NodeType
 import org.jooq.DSLContext
@@ -33,6 +37,7 @@ import org.springframework.stereotype.Service
 @Service
 class NodeTagService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation,
     private val nodeTagDao: NodeTagDao,
     private val nodeTagKeyDao: NodeTagKeyDao,
     private val nodeTagValueDao: NodeTagValueDao,
@@ -168,17 +173,38 @@ class NodeTagService @Autowired constructor(
             } else {
                 tagKey
             },
-            tagValueId = tagValueId
+            tagValueIds = if (tagValueId == null) {
+                null
+            } else {
+                setOf(tagValueId)
+            }
         )
         if (!records.isNullOrEmpty()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_HAS_NODE)
         }
-        ActionAuditContext.current()
-            .addInstanceInfo(tagKey.toString(), tagValueId?.toString() ?: "", null, null)
-        if (tagValueId != null) {
-            nodeTagValueDao.deleteTagValue(dslContext = dslContext, projectId = projectId, tagValueId = tagValueId)
-        } else {
-            nodeTagDao.deleteTag(dslContext = dslContext, projectId = projectId, tagKeyId = tagKey)
+        val lock = RedisLock(redisOperation, genUpdateNodeTagLockKey(projectId, tagKey), 5)
+        if (!lock.tryLock()) {
+            throw PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(
+                    ERROR_NODE_TAG_NOW_UPDATING,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
+        }
+        try {
+            ActionAuditContext.current()
+                .addInstanceInfo(tagKey.toString(), tagValueId?.toString() ?: "", null, null)
+            if (tagValueId != null) {
+                nodeTagValueDao.deleteTagValue(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    tagValueIds = setOf(tagValueId)
+                )
+            } else {
+                nodeTagDao.deleteTag(dslContext = dslContext, projectId = projectId, tagKeyId = tagKey)
+            }
+        } finally {
+            lock.unlock()
         }
     }
 
@@ -192,7 +218,7 @@ class NodeTagService @Autowired constructor(
         scopeId = "#projectId",
         content = ActionAuditContent.ENV_NODE_TAG_UPDATE_CONTENT
     )
-    fun updateTag(userId: String, projectId: String, tagKey: Long, tagValueId: Long?, name: String) {
+    fun updateTag(userId: String, projectId: String, tagKey: Long, data: NodeTagUpdateReq) {
         if (!authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
             throw PermissionForbiddenException(
                 message = I18nUtil.getCodeLanMessage(
@@ -201,43 +227,96 @@ class NodeTagService @Autowired constructor(
                 )
             )
         }
+        val lock = RedisLock(redisOperation, genUpdateNodeTagLockKey(projectId, tagKey), 5)
+
+        // 获取老的节点标签
+        val tags = nodeTagDao.fetchTag(dslContext, projectId, tagKey) ?: run {
+            // 为空说明之前的标签已经被删除了，直接修改即可，理论上不会出现，先返回
+            throw PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(
+                    ERROR_NODE_TAG_NOW_UPDATING,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
+        }
+        val oldTagKeyName = tags.first
+        val oldTagValues = tags.second
+        if (!lock.tryLock()) {
+            throw PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(
+                    ERROR_NODE_TAG_NOW_UPDATING,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
+        }
+        try {
+            ActionAuditContext.current()
+                .addInstanceInfo("${data.tagKeyId}", data.tagValues?.joinToString(separator = ","), null, null)
+            dslContext.transaction { config ->
+                val dslCtx = DSL.using(config)
+                // 检验是否修改了 key
+                if (data.tagKeyName != oldTagKeyName) {
+                    checkUsedTagNode(projectId, tagKey, null)
+                    nodeTagKeyDao.updateNodeTagKey(
+                        dslContext = dslCtx,
+                        projectId = projectId,
+                        tagKeyId = tagKey,
+                        tagName = data.tagKeyName,
+                        // 暂时先写死，等二期
+                        allowMulValue = null
+                    )
+                }
+                // 检验是否修改了tag值
+                val newTagValueIds =
+                    data.tagValues?.filter { it.tagValueId != null }?.map { it.tagValueId!! }?.toSet() ?: emptySet()
+                val deletedTagValueIds = oldTagValues.keys.subtract(newTagValueIds)
+                val updateValues = data.tagValues!!.filter {
+                    it.tagValueId != null && oldTagValues[it.tagValueId] != it.tagValueName
+                }.associate { it.tagValueId!! to it.tagValueName }
+                val deletedAndUpdateTagValueIds = mutableSetOf<Long>().apply {
+                    addAll(deletedTagValueIds)
+                    addAll(updateValues.keys)
+                }
+                // 校验被删除的和被修改的是否有机器使用
+                if (deletedAndUpdateTagValueIds.isNotEmpty()) {
+                    checkUsedTagNode(projectId, null, deletedAndUpdateTagValueIds)
+                }
+                // 删除被删除的values
+                nodeTagValueDao.deleteTagValue(dslCtx, projectId, deletedTagValueIds)
+                // 修改和新增values
+                val createValue = data.tagValues!!.filter { it.tagValueId == null }.map { it.tagValueName }.toSet()
+                nodeTagValueDao.batchCreateTagValue(dslCtx, projectId, tagKey, createValue)
+                updateValues.forEach {
+                    nodeTagValueDao.updateNodeTagValue(dslCtx, projectId, it.key, it.value)
+                }
+            }
+        } finally {
+            lock.unlock()
+        }
+    }
+
+    private fun checkUsedTagNode(projectId: String, tagKey: Long?, tagValueIds: Set<Long>?) {
+        if (tagKey == null && tagValueIds.isNullOrEmpty()) {
+            return
+        }
         val records = nodeTagDao.fetchNodeTagByKeyOrValue(
             dslContext = dslContext,
             projectId = projectId,
-            // key 传错误的可能导致未校验成功
-            tagKeyId = if (tagValueId != null) {
-                null
-            } else {
-                tagKey
-            },
-            tagValueId = tagValueId
+            tagKeyId = tagKey,
+            tagValueIds = tagValueIds
         )
         if (!records.isNullOrEmpty()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_HAS_NODE)
-        }
-        ActionAuditContext.current()
-            .addInstanceInfo("$tagKey|$tagValueId", name, null, null)
-        if (tagValueId != null) {
-            nodeTagValueDao.updateNodeTagValue(
-                dslContext = dslContext,
-                projectId = projectId,
-                tagValueId = tagValueId,
-                valueName = name
-            )
-        } else {
-            nodeTagKeyDao.updateNodeTagKey(
-                dslContext = dslContext,
-                projectId = projectId,
-                tagKeyId = tagKey,
-                tagName = name,
-                // 暂时先写死，等二期
-                allowMulValue = null
-            )
         }
     }
 
     // 查询这个节点有的标签
     fun fetchNodeTags(projectId: String, nodeId: Long): List<NodeTag>? {
         return nodeTagDao.fetchNodesTags(dslContext, projectId, setOf(nodeId)).values.firstOrNull()
+    }
+
+    companion object {
+        private fun genUpdateNodeTagLockKey(projectId: String, tagKeyId: Long) =
+            "environment.nodetag.update:$projectId:$tagKeyId"
     }
 }

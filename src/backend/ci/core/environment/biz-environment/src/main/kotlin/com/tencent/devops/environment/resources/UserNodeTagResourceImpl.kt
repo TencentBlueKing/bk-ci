@@ -5,8 +5,8 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.UserNodeTagResource
 import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.NodeTagReq
+import com.tencent.devops.environment.pojo.NodeTagUpdateReq
 import com.tencent.devops.environment.pojo.UpdateNodeTag
-import com.tencent.devops.environment.pojo.UpdateTagReq
 import com.tencent.devops.environment.service.NodeTagService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -59,15 +59,13 @@ class UserNodeTagResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         tagKeyId: Long,
-        tagValueId: Long?,
-        data: UpdateTagReq
+        data: NodeTagUpdateReq
     ): Result<Boolean> {
         nodeTagService.updateTag(
             userId = userId,
             projectId = projectId,
             tagKey = tagKeyId,
-            tagValueId = tagValueId,
-            name = data.name ?: return Result(true)
+            data = data
         )
         return Result(true)
     }

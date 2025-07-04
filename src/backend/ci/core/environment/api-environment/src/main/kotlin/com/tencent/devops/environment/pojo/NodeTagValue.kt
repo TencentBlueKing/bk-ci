@@ -58,7 +58,19 @@ data class NodeTagReq(
 )
 
 @Schema(title = "修改节点标签请求")
-data class UpdateTagReq(
-    @get:Schema(title = "被修改的名称")
-    val name: String?
+data class NodeTagUpdateReq(
+    @get:Schema(title = "节点标签ID")
+    val tagKeyId: Long,
+    @get:Schema(title = "节点标签名,如果未修改则为空")
+    val tagKeyName: String,
+    @get:Schema(title = "节点标签值")
+    val tagValues: List<NodeTagUpdateReqValue>?
+)
+
+@Schema(title = "节点标签值")
+data class NodeTagUpdateReqValue(
+    @get:Schema(title = "节点值ID,如果是修改，则不为空")
+    val tagValueId: Long?,
+    @get:Schema(title = "节点值名")
+    val tagValueName: String
 )

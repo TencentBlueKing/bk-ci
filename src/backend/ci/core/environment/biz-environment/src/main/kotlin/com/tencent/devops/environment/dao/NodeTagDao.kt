@@ -205,21 +205,47 @@ class NodeTagDao {
         dslContext: DSLContext,
         projectId: String,
         tagKeyId: Long?,
-        tagValueId: Long?
+        tagValueIds: Set<Long>?
     ): List<TNodeTagsRecord>? {
         with(TNodeTags.T_NODE_TAGS) {
-            if (tagKeyId == null && tagValueId == null) {
+            if (tagKeyId == null && tagValueIds.isNullOrEmpty()) {
                 return null
             }
             val dsl = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
-            if (tagValueId != null) {
-                dsl.and(TAG_VALUE_ID.eq(tagValueId))
+            if (tagValueIds != null) {
+                dsl.and(TAG_VALUE_ID.`in`(tagValueIds))
             }
             if (tagKeyId != null) {
                 dsl.and(TAG_KEY_ID.eq(tagKeyId))
             }
             return dsl.fetch()
         }
+    }
+
+    fun fetchTag(
+        dslContext: DSLContext,
+        projectId: String,
+        tagKeyId: Long
+    ): Pair<String, Map<Long, String>>? {
+        val result = dslContext.select(
+            TNodeTagKey.T_NODE_TAG_KEY.ID,
+            TNodeTagKey.T_NODE_TAG_KEY.KEY_NAME,
+            TNodeTagValues.T_NODE_TAG_VALUES.ID,
+            TNodeTagValues.T_NODE_TAG_VALUES.VALUE_NAME
+        ).from(TNodeTagKey.T_NODE_TAG_KEY)
+            .leftJoin(TNodeTagValues.T_NODE_TAG_VALUES)
+            .on(TNodeTagKey.T_NODE_TAG_KEY.ID.eq(TNodeTagValues.T_NODE_TAG_VALUES.TAG_KEY_ID))
+            .where(TNodeTagKey.T_NODE_TAG_KEY.ID.eq(tagKeyId))
+            .and(TNodeTagKey.T_NODE_TAG_KEY.PROJECT_ID.eq(projectId))
+            .fetch()
+        if (result.isEmpty()) {
+            return null
+        }
+        val keyName = result.first()[TNodeTagKey.T_NODE_TAG_KEY.KEY_NAME]
+        val valueMap =
+            result.map { it[TNodeTagValues.T_NODE_TAG_VALUES.ID] to it[TNodeTagValues.T_NODE_TAG_VALUES.VALUE_NAME] }
+                .toMap()
+        return Pair(keyName, valueMap)
     }
 }
