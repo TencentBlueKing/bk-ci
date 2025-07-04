@@ -757,6 +757,7 @@ onBeforeUnmount(() => {
       <div v-if="projectData.properties">
         <div class="sub-title">{{ t('流水线')  }}</div>
         <bk-form-item
+          :label="t('变量语法风格')"
           property="pipelineDialect"
         >
           <template #label>
@@ -808,7 +809,7 @@ onBeforeUnmount(() => {
             class="textarea"
             v-show="projectData.properties.enablePipelineNameTips"
             v-model="projectData.properties.pipelineNameFormat"
-            :placeholder="t('请输入流水线命名规范提示说明。示例: 请遵循流水线命名规范，以\'模块名(一个/多个/场景等)_触发机制(premerge/trunk/daily等)_测试裂隙(UT/引流/DIFF等)\'的命名格式')"
+            :placeholder="t('请输入流水线命名规范提示说明')"
             :rows="3"
             :maxlength="200"
             type="textarea"
