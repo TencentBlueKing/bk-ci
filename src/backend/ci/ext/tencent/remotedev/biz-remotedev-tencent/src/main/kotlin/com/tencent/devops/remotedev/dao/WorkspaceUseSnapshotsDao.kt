@@ -75,4 +75,19 @@ class WorkspaceUseSnapshotsDao {
                 .fetch(WORKSPACE_NAME)
         }
     }
+
+    fun reduceWorkspaces(
+        dslContext: DSLContext,
+        workspaceNames: List<String>,
+        startDate: LocalDate,
+        endDate: LocalDate
+    ): Boolean {
+        with(TWorkspaceUseSnapshots.T_WORKSPACE_USE_SNAPSHOTS) {
+            return dslContext.update(this)
+                .set(NEED_REDUCED, 1)
+                .where(WORKSPACE_NAME.`in`(workspaceNames))
+                .and(DATE.between(startDate, endDate))
+                .execute() == 1
+        }
+    }
 }

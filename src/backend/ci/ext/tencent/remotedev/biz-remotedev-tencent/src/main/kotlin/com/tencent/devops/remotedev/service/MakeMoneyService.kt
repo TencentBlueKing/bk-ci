@@ -427,4 +427,12 @@ class MakeMoneyService @Autowired constructor(
         ).header("Content-disposition", "attachment;filename=makeMoneyMonthly.xlsx")
             .build()
     }
+
+    fun reduceWorkspaces(
+        workspaceNames: List<String>,
+        startDate: LocalDate,
+        endDate: LocalDate
+    ): Boolean {
+        return snapshotsDao.reduceWorkspaces(dslContext, workspaceNames, startDate, endDate)
+    }
 }
