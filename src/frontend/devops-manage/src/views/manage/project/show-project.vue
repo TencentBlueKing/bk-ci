@@ -513,7 +513,6 @@ onMounted(async () => {
                   <div class="sub-title">{{ t('流水线')  }}</div>
                   <bk-form-item
                     v-if="projectData.properties"
-                    :label="t('变量语法风格')"
                     property="pipelineDialect"
                   >
                     <template #label>

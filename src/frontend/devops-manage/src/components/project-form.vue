@@ -757,7 +757,6 @@ onBeforeUnmount(() => {
       <div v-if="projectData.properties">
         <div class="sub-title">{{ t('流水线')  }}</div>
         <bk-form-item
-          :label="t('变量语法风格')"
           property="pipelineDialect"
         >
           <template #label>
