@@ -32,17 +32,13 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.stream.rabbit.RabbitQueueType
 
 /**
  *
  *
  * @version 1.0
  */
-@Event(
-    destination = StreamBinding.PIPELINE_BUILD_CANCEL,
-    type = RabbitQueueType.QUORUM
-)
+@Event(destination = StreamBinding.PIPELINE_BUILD_CANCEL)
 data class PipelineBuildCancelEvent(
     override val source: String,
     override val projectId: String,

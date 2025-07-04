@@ -30,17 +30,13 @@ package com.tencent.devops.common.event.pojo.pipeline
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.stream.constants.StreamBinding
-import com.tencent.devops.common.stream.rabbit.RabbitQueueType
 
 /**
  * 归档流水线事件
  *
  * @version 1.0
  */
-@Event(
-    destination = StreamBinding.PIPELINE_ARCHIVE,
-    type = RabbitQueueType.QUORUM
-)
+@Event(StreamBinding.PIPELINE_ARCHIVE)
 data class PipelineArchiveEvent(
     override val source: String,
     override val projectId: String,

@@ -32,12 +32,8 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.stream.constants.StreamBinding
-import com.tencent.devops.common.stream.rabbit.RabbitQueueType
 
-@Event(
-    destination = StreamBinding.PIPELINE_AGENT_SHUTDOWN,
-    type = RabbitQueueType.QUORUM
-)
+@Event(StreamBinding.PIPELINE_AGENT_SHUTDOWN)
 data class PipelineAgentShutdownEvent(
     override val source: String,
     override val projectId: String,
