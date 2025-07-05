@@ -129,7 +129,13 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         }
     }
 
-    override fun uploadCustomize(file: File, destPath: String, buildVariables: BuildVariables, token: String?) {
+    override fun uploadCustomize(
+        file: File,
+        destPath: String,
+        buildVariables: BuildVariables,
+        token: String?,
+        metadata: Map<String, String>
+    ) {
         if (!token.isNullOrBlank()) {
             val relativePath = destPath.removePrefix("/").removePrefix("./").removeSuffix("/")
             val destFullPath = "/$relativePath/${file.name}"
@@ -147,7 +153,12 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         }
     }
 
-    override fun uploadPipeline(file: File, buildVariables: BuildVariables, token: String?) {
+    override fun uploadPipeline(
+        file: File,
+        buildVariables: BuildVariables,
+        token: String?,
+        metadata: Map<String, String>
+    ) {
         if (!token.isNullOrBlank()) {
             val destFullPath = "/${buildVariables.pipelineId}/${buildVariables.buildId}/${file.name}"
             bkrepoResourceApi.uploadFileByToken(
@@ -157,7 +168,8 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
                 destFullPath = destFullPath,
                 token = token,
                 buildVariables = buildVariables,
-                parseAppMetadata = true
+                parseAppMetadata = true,
+                metadata = metadata
             )
         } else {
             uploadBkRepoPipeline(file, buildVariables)
