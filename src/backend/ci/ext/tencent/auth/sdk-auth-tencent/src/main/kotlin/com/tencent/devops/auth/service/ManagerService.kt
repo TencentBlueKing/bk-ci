@@ -83,7 +83,8 @@ class ManagerService @Autowired constructor(
             return false
         }
         // 新老版本兼容，旧版本项目访问权限为project_view，新版本为project_visit,兼容
-        val fixAuthPermission = if (resourceType == AuthResourceType.PROJECT && authPermission == AuthPermission.VISIT) {
+        val fixAuthPermission = if (resourceType == AuthResourceType.PROJECT &&
+            authPermission == AuthPermission.VISIT) {
             AuthPermission.VIEW
         } else {
             authPermission
