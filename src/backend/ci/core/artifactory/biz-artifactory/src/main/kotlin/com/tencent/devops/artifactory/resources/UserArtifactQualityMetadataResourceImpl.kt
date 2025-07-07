@@ -31,6 +31,7 @@ import com.tencent.bkrepo.repository.pojo.metadata.label.MetadataLabelDetail
 import com.tencent.bkrepo.repository.pojo.metadata.label.UserLabelCreateRequest
 import com.tencent.bkrepo.repository.pojo.metadata.label.UserLabelUpdateRequest
 import com.tencent.devops.artifactory.api.user.UserArtifactQualityMetadataResource
+import com.tencent.devops.artifactory.pojo.MetadataLabelSimpleInfo
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.client.Client
@@ -53,6 +54,22 @@ class UserArtifactQualityMetadataResourceImpl(
                 projectId = projectId
             )
         )
+    }
+
+    override fun listSimple(
+        userId: String,
+        projectId: String
+    ): Result<List<MetadataLabelSimpleInfo>> {
+        val result = bkRepoClient.listArtifactQualityMetadataLabels(
+            userId = userId,
+            projectId = projectId
+        ).map {
+            MetadataLabelSimpleInfo(
+                key = it.labelKey,
+                values = it.labelColorMap.keys.toList()
+            )
+        }
+        return Result(result)
     }
 
     /**
