@@ -36,4 +36,6 @@ data class SignatureCallbackInfo(
     @JsonProperty("is_whitelist_user")
     val whitelistUser: Boolean,
     val status: Int
-)
+) {
+    fun isSigned(): Boolean = whitelistUser || status == 2
+}

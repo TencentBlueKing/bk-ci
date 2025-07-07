@@ -28,29 +28,19 @@
 package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.SignatureCallbackResource
+import com.tencent.devops.project.api.service.ExternalSignatureCallbackResource
 import com.tencent.devops.project.pojo.SignatureCallbackInfo
 import com.tencent.devops.project.pojo.SignatureCallbackResponse
-import com.tencent.devops.project.service.ProjectSignatureManageService
+import com.tencent.devops.project.service.SignatureManageService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class SignatureCallbackResourceImpl @Autowired constructor(
-    private val signatureManageService: ProjectSignatureManageService
-) : SignatureCallbackResource {
+class ExternalSignatureCallbackResourceImpl @Autowired constructor(
+    private val signatureManageService: SignatureManageService
+) : ExternalSignatureCallbackResource {
     override fun callback(
-        clientId: String,
-        nonce: String,
-        timestamp: String,
-        signature: String,
         callbackInfo: SignatureCallbackInfo
     ): SignatureCallbackResponse {
-        return signatureManageService.callback(
-            clientId = clientId,
-            nonce = nonce,
-            timestamp = timestamp,
-            signature = signature,
-            callbackInfo = callbackInfo
-        )
+        return signatureManageService.callback(callbackInfo)
     }
 }
