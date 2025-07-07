@@ -41,5 +41,5 @@ import java.lang.annotation.Inherited
 annotation class Event(
     val destination: String,
     val binder: String = StreamBinder.CORE_RABBIT,
-    val type: RabbitQueueType = RabbitQueueType.CLASSIC
+    val type: RabbitQueueType = RabbitQueueType.QUORUM
 )
