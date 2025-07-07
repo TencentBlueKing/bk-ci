@@ -87,7 +87,7 @@ class WorkspaceUseSnapshotsDao {
                 .set(NEED_REDUCED, 1)
                 .where(WORKSPACE_NAME.`in`(workspaceNames))
                 .and(DATE.between(startDate, endDate))
-                .execute() > 0
+                .let { if (workspaceNames.isEmpty()) false else it.execute() > 0 }
         }
     }
 }
