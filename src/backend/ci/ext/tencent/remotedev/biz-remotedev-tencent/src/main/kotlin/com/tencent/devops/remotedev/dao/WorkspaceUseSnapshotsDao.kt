@@ -82,12 +82,15 @@ class WorkspaceUseSnapshotsDao {
         startDate: LocalDate,
         endDate: LocalDate
     ): Boolean {
+        if (workspaceNames.isEmpty()) {
+            return false
+        }
         with(TWorkspaceUseSnapshots.T_WORKSPACE_USE_SNAPSHOTS) {
             return dslContext.update(this)
                 .set(NEED_REDUCED, 1)
                 .where(WORKSPACE_NAME.`in`(workspaceNames))
                 .and(DATE.between(startDate, endDate))
-                .let { if (workspaceNames.isEmpty()) false else it.execute() > 0 }
+                .execute() > 0
         }
     }
 }
