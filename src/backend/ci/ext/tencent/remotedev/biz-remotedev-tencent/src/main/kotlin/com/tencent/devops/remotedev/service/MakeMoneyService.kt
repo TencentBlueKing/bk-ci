@@ -435,6 +435,7 @@ class MakeMoneyService @Autowired constructor(
         startDate: String,
         endDate: String
     ): Boolean {
+        logger.info("reduceWorkspaceBills: $workspaceNames, $startDate, $endDate")
         return snapshotsDao.reduceWorkspaceBills(
             dslContext = dslContext,
             workspaceNames = workspaceNames,

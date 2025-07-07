@@ -214,7 +214,6 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         startDate: String,
         endDate: String
     ): Result<Boolean> {
-
         return Result(makeMoneyService.reduceWorkspaceBills(workspaceNames, startDate, endDate))
     }
 }
