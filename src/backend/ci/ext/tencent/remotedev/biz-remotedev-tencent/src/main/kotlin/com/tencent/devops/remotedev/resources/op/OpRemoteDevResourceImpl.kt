@@ -211,9 +211,10 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     override fun reduceWorkspaceBills(
         userId: String,
         workspaceNames: List<String>,
-        startDate: LocalDate,
-        endDate: LocalDate
+        startDate: String,
+        endDate: String
     ): Result<Boolean> {
+
         return Result(makeMoneyService.reduceWorkspaceBills(workspaceNames, startDate, endDate))
     }
 }

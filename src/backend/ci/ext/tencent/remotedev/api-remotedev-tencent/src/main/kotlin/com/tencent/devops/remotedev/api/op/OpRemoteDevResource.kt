@@ -309,9 +309,9 @@ interface OpRemoteDevResource {
         userId: String,
         @QueryParam("实例列表")
         workspaceNames: List<String>,
-        @QueryParam("开始日期")
-        startDate: LocalDate,
-        @QueryParam("结束日期")
-        endDate: LocalDate
+        @QueryParam("开始日期,格式yyyy-MM-dd")
+        startDate: String,
+        @QueryParam("结束日期,,格式yyyy-MM-dd")
+        endDate: String
     ): Result<Boolean>
 }
