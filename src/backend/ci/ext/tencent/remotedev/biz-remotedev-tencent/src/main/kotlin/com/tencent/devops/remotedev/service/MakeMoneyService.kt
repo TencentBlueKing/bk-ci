@@ -439,8 +439,8 @@ class MakeMoneyService @Autowired constructor(
         return snapshotsDao.reduceWorkspaceBills(
             dslContext = dslContext,
             workspaceNames = workspaceNames,
-            startDate = LocalDate.parse(startDate),
-            endDate = LocalDate.parse(endDate)
+            startDate = LocalDate.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+            endDate = LocalDate.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
         )
     }
 }
