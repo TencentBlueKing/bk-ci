@@ -3,6 +3,7 @@ package com.tencent.devops.artifactory.api.user
 import com.tencent.bkrepo.repository.pojo.metadata.label.MetadataLabelDetail
 import com.tencent.bkrepo.repository.pojo.metadata.label.UserLabelCreateRequest
 import com.tencent.bkrepo.repository.pojo.metadata.label.UserLabelUpdateRequest
+import com.tencent.devops.artifactory.pojo.MetadataLabelSimpleInfo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.v3.oas.annotations.Operation
@@ -24,7 +25,7 @@ import jakarta.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserArtifactQualityMetadataResource {
-    @Operation(summary = "获取项目制品质量元数据标签列表")
+    @Operation(summary = "获取项目制品质量元数据标签列表-详细数据")
     @GET
     @Path("/")
     fun list(
@@ -35,6 +36,18 @@ interface UserArtifactQualityMetadataResource {
         @PathParam("projectId")
         projectId: String
     ): Result<List<MetadataLabelDetail>>
+
+    @Operation(summary = "获取项目制品质量元数据标签列表-简化")
+    @GET
+    @Path("/simple")
+    fun listSimple(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<List<MetadataLabelSimpleInfo>>
 
     @Operation(summary = "获取流水线级别制品质量元数据")
     @GET
