@@ -28,7 +28,6 @@ import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
-import java.time.LocalDate
 
 @RestResource
 class OpRemoteDevResourceImpl @Autowired constructor(
