@@ -404,7 +404,7 @@ const actions = {
     },
     // 流水线操作日志列表
     requestPipelineOperatorList (_, { projectId, pipelineId, ...params }) {
-        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/operatorList`, {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/operatorListForTenant`, {
             params
         }).then(res => res.data)
     },

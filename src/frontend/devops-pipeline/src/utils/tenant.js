@@ -1,5 +1,5 @@
-import BkUserDisplayName from '@blueking/bk-user-display-name';
-import request from './request';
+import BkUserDisplayName from '@blueking/bk-user-display-name'
+import request from './request'
 
 const userApiPrefix = `${window.BK_APIGW_USER_WEB_URL}/api/v3/open-web/tenant/users/-`
 export default class TenantSingleton {
