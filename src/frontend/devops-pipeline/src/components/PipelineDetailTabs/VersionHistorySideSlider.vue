@@ -92,6 +92,7 @@
                     </bk-table-column>
                     <bk-table-column
                         :label="$t('operate')"
+                        :width="320"
                         prop="operate"
                         fixed="right"
                     >
@@ -189,10 +190,12 @@
             columns () {
                 return [{
                     prop: 'versionName',
+                    width: 120,
                     label: this.$t('versionNum'),
                     showOverflowTooltip: true
                 }, {
                     prop: 'description',
+                    width: 120,
                     label: this.$t('versionDesc'),
                     showOverflowTooltip: true
                 }, {
@@ -205,7 +208,7 @@
                     }
                 }, {
                     prop: 'creator',
-                    width: 90,
+                    width: 120,
                     label: this.$t('creator')
                 }, {
                     prop: 'updateTime',
@@ -217,7 +220,7 @@
                     }
                 }, {
                     prop: 'updater',
-                    width: 90,
+                    width: 120,
                     label: this.$t('audit.operator')
                 }]
             },
