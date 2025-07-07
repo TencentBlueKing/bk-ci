@@ -31,7 +31,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.docker.api.builds.BuildDockerResource
 import com.tencent.devops.dispatch.docker.service.vm.DockerDownloaderService
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @RestResource
 class BuildDockerResourceImpl @Autowired constructor(private val downloaderService: DockerDownloaderService) :

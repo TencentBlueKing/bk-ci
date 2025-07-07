@@ -2,8 +2,10 @@ package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
 import com.tencent.devops.auth.pojo.request.GroupMemberSingleRenewalReq
+import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.web.RestResource
@@ -14,8 +16,9 @@ import com.tencent.devops.project.pojo.ProjectDeleteUserInfo
 import java.util.concurrent.TimeUnit
 
 @RestResource
-class ServiceResourceMemberResourceImpl constructor(
-    private val permissionResourceMemberService: PermissionResourceMemberService
+class ServiceResourceMemberResourceImpl(
+    private val permissionResourceMemberService: PermissionResourceMemberService,
+    private val permissionManageFacadeService: PermissionManageFacadeService
 ) : ServiceResourceMemberResource {
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun getResourceGroupMembers(
@@ -58,7 +61,8 @@ class ServiceResourceMemberResourceImpl constructor(
         projectCreateUserInfo: ProjectCreateUserInfo
     ): Result<Boolean> {
         with(projectCreateUserInfo) {
-            val expiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(365L)
+            val now = System.currentTimeMillis() / 1000
+            val fixExpiredTime = now + TimeUnit.DAYS.toSeconds(expiredTime ?: 365L)
             return Result(
                 permissionResourceMemberService.batchAddResourceGroupMembers(
                     projectCode = projectCode,
@@ -66,9 +70,11 @@ class ServiceResourceMemberResourceImpl constructor(
                         groupId = groupId,
                         projectCode = projectCode,
                         roleName = roleName,
-                        roleId = roleId
+                        roleId = roleId,
+                        resourceCode = resourceCode ?: projectCode,
+                        resourceType = resourceType ?: AuthResourceType.PROJECT.value
                     ),
-                    expiredTime = expiredTime,
+                    expiredTime = fixExpiredTime,
                     members = userIds,
                     departments = deptIds
                 )
@@ -90,7 +96,9 @@ class ServiceResourceMemberResourceImpl constructor(
                         groupId = groupId,
                         projectCode = projectCode,
                         roleName = roleName,
-                        roleId = roleId
+                        roleId = roleId,
+                        resourceType = resourceType ?: AuthResourceType.PROJECT.value,
+                        resourceCode = resourceCode ?: projectCode
                     ),
                     members = userIds,
                     departments = deptIds
@@ -107,7 +115,7 @@ class ServiceResourceMemberResourceImpl constructor(
         renewalConditionReq: GroupMemberSingleRenewalReq
     ): Result<Boolean> {
         return Result(
-            permissionResourceMemberService.renewalGroupMember(
+            permissionManageFacadeService.renewalGroupMember(
                 userId = userId,
                 projectCode = projectCode,
                 renewalConditionReq = renewalConditionReq
@@ -118,12 +126,16 @@ class ServiceResourceMemberResourceImpl constructor(
     private fun getIamGroupId(
         groupId: Int?,
         projectCode: String,
+        resourceType: String,
+        resourceCode: String,
         roleName: String?,
         roleId: Int?
     ): Int {
         return groupId ?: permissionResourceMemberService.roleCodeToIamGroupId(
             projectCode = projectCode,
-            roleCode = roleName ?: BkAuthGroup.getByRoleId(roleId!!).value
+            roleCode = roleName ?: BkAuthGroup.getByRoleId(roleId!!).value,
+            resourceType = resourceType,
+            resourceCode = resourceCode
         )
     }
 }

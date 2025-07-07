@@ -226,12 +226,20 @@ class PipelineYamlInfoDao {
     fun countYamlPipeline(
         dslContext: DSLContext,
         projectId: String,
-        repoHashId: String
+        repoHashId: String,
+        directory: String? = null
     ): Long {
         return with(TPipelineYamlInfo.T_PIPELINE_YAML_INFO) {
             dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
+                .let {
+                    if (directory.isNullOrBlank()) {
+                        it
+                    } else {
+                        it.and(DIRECTORY.eq(directory))
+                    }
+                }
                 .fetchOne(0, Long::class.java) ?: 0L
         }
     }

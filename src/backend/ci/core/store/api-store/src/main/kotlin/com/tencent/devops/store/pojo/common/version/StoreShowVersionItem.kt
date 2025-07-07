@@ -31,8 +31,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "回显版本信息")
 data class StoreShowVersionItem(
-    @get:Schema(title = "版本号", required = true)
+    @get:Schema(title = "回显版本号", required = true)
     val version: String,
+    @get:Schema(title = "上个版本号", required = true)
+    val lastVersion: String,
     @get:Schema(title = "发布类型", required = true)
     val releaseType: String,
     @get:Schema(title = "是否默认选中", required = true)

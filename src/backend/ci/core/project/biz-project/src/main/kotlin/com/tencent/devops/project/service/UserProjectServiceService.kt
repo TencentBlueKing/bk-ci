@@ -77,4 +77,14 @@ interface UserProjectServiceService {
      * 同步将服务类别下的服务注册进来
      */
     fun syncService(userId: String, services: List<ServiceListVO>)
+
+    /**
+     * 查询服务跳转地址
+     */
+    fun getServiceUrl(
+        userId: String,
+        projectId: String?,
+        pipelineId: String?,
+        serviceId: Long
+    ): Result<String>
 }

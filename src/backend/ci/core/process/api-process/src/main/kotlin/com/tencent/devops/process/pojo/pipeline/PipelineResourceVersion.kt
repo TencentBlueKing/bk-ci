@@ -46,7 +46,7 @@ data class PipelineResourceVersion(
     @get:Schema(title = "记录版本号", required = true)
     val version: Int,
     @get:Schema(title = "JSON编排内容（POJO）", required = true)
-    val model: Model,
+    var model: Model,
     @get:Schema(title = "YAML编排内容", required = false)
     var yaml: String?,
     @get:Schema(title = "YAML编排版本", required = false)

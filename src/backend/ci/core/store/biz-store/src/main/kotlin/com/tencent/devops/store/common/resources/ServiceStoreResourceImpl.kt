@@ -30,6 +30,7 @@ package com.tencent.devops.store.common.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
+import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.service.ClassifyService
 import com.tencent.devops.store.common.service.StoreBuildService
 import com.tencent.devops.store.common.service.StoreComponentManageService
@@ -37,6 +38,7 @@ import com.tencent.devops.store.common.service.StoreErrorCodeService
 import com.tencent.devops.store.common.service.StoreMemberService
 import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.service.UserSensitiveConfService
+import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.classify.Classify
 import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -53,7 +55,8 @@ class ServiceStoreResourceImpl @Autowired constructor(
     private val storeErrorCodeService: StoreErrorCodeService,
     private val storeMemberService: StoreMemberService,
     private val classifyService: ClassifyService,
-    private val storeComponentManageService: StoreComponentManageService
+    private val storeComponentManageService: StoreComponentManageService,
+    private val storeInnerPipelineConfig: StoreInnerPipelineConfig
 ) : ServiceStoreResource {
 
     override fun uninstall(storeCode: String, storeType: StoreTypeEnum, projectCode: String): Result<Boolean> {
@@ -80,6 +83,24 @@ class ServiceStoreResourceImpl @Autowired constructor(
         )
     }
 
+    override fun isPublicProject(projectCode: String): Result<Boolean> {
+        return Result(
+            projectCode == storeInnerPipelineConfig.innerPipelineProject
+        )
+    }
+
+    override fun validatePipelineUserStorePermission(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        userId: String
+    ): Result<Boolean> {
+        return Result(
+            storeInnerPipelineConfig.innerPipelineUser == userId || storeMemberService.isStoreMember(
+                userId, storeCode, storeType.type.toByte()
+            )
+        )
+    }
+
     override fun isComplianceErrorCode(
         storeCode: String,
         storeType: StoreTypeEnum,
@@ -101,14 +122,16 @@ class ServiceStoreResourceImpl @Autowired constructor(
         storeType: StoreTypeEnum,
         version: String,
         projectCode: String,
-        userId: String
-    ): Result<Boolean> {
+        userId: String,
+        instanceId: String?
+    ): Result<StoreBaseInfo?> {
         return storeComponentManageService.validateComponentDownloadPermission(
             storeCode = storeCode,
             storeType = storeType,
             version = version,
             projectCode = projectCode,
-            userId = userId
+            userId = userId,
+            instanceId = instanceId
         )
     }
 

@@ -239,9 +239,11 @@ const atomMixin = {
          * 获取每种类型最大长度限制
          */
         getMaxLengthByType (type) {
-            const defaultLength = 1024
-            const componentItem = this.atomInputLimit.find(item => item.componentType === type) || {}
-            return componentItem.maxSize || defaultLength
+            const componentItem = this.atomInputLimit.find(item => item.componentType === type)
+                || this.atomInputLimit.find(item => item.componentType === 'default')
+                || { maxSize: 16384 }
+
+            return componentItem.maxSize
         }
     }
 }

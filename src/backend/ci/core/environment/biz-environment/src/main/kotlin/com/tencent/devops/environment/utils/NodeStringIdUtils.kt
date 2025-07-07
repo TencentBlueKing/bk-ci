@@ -43,16 +43,13 @@ object NodeStringIdUtils {
         }
     }
 
-    fun getRefineDisplayName(nodeStringId: String, displayName: String): String {
-        return if (displayName.isBlank()) {
-            nodeStringId
-        } else {
-            displayName
-        }
+    fun getRefineDisplayName(nodeStringId: String, displayName: String?): String {
+        return displayName?.ifBlank { nodeStringId } ?: nodeStringId
     }
 
     fun getNodeBaseInfo(nodeRecord: TNodeRecord): NodeBaseInfo {
         val nodeStringId = getNodeStringId(nodeRecord)
+        val displayName = getRefineDisplayName(nodeStringId, displayName = nodeRecord.displayName)
         return NodeBaseInfo(
             nodeHashId = HashUtil.encodeLongId(nodeRecord.nodeId),
             nodeId = nodeStringId,
@@ -66,8 +63,9 @@ object NodeStringIdUtils {
             operator = nodeRecord.operator,
             bakOperator = nodeRecord.bakOperator,
             gateway = "",
-            displayName = getRefineDisplayName(nodeStringId, nodeRecord.displayName),
+            displayName = displayName,
             envEnableNode = null,
+            nodeName = nodeRecord.nodeName,
             lastModifyTime = (nodeRecord.lastModifyTime ?: nodeRecord.createdTime).timestampmilli()
         )
     }

@@ -1,14 +1,15 @@
 package agent
 
 import (
-	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 	"runtime"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
+	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
@@ -63,6 +64,7 @@ func genHeartInfoAndUpgrade(
 			Arch:              runtime.GOARCH,
 			JdkVersion:        jdkVersion,
 			DockerInitFileMd5: dockerInitFile,
+			OsVersion:         config.GAgentEnv.OsVersion,
 		},
 		DockerParallelTaskCount: config.GAgentConfig.DockerParallelTaskCount,
 		DockerTaskList:          job.GBuildDockerManager.GetInstances(),

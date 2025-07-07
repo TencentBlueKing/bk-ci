@@ -34,6 +34,7 @@ import com.tencent.devops.model.auth.tables.TAuthResourceGroup
 import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupRecord
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.impl.DSL.count
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -192,6 +193,22 @@ class AuthResourceGroupDao {
         }
     }
 
+    fun getByGroupCode(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        groupCode: String
+    ): AuthResourceGroup? {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.selectFrom(this).where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_CODE.eq(resourceCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(GROUP_CODE.eq(groupCode))
+                .fetchOne()?.let { convert(it) }
+        }
+    }
+
     fun get(
         dslContext: DSLContext,
         projectCode: String,
@@ -201,6 +218,21 @@ class AuthResourceGroupDao {
             dslContext.selectFrom(this).where(PROJECT_CODE.eq(projectCode))
                 .and(RELATION_ID.eq(relationId))
                 .fetchOne()
+        }
+    }
+
+    fun getResourceType2Count(
+        dslContext: DSLContext,
+        projectCode: String,
+        iamGroupIds: List<String>
+    ): Map<String, Long> {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.select(RESOURCE_TYPE, count())
+                .from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RELATION_ID.`in`(iamGroupIds))
+                .groupBy(RESOURCE_TYPE)
+                .fetch().map { Pair(it.value1(), it.value2().toLong()) }.toMap()
         }
     }
 
@@ -254,16 +286,43 @@ class AuthResourceGroupDao {
         }
     }
 
+    fun listByResourceCode(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Result<TAuthResourceGroupRecord> {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(RESOURCE_CODE.eq(resourceCode))
+                .fetch()
+        }
+    }
+
     fun listIamGroupIdsByConditions(
         dslContext: DSLContext,
         projectCode: String,
+        ids: List<Long>? = null,
         iamGroupIds: List<String>? = null,
         groupName: String? = null,
-        iamTemplateIds: List<Int>? = null
+        iamTemplateIds: List<Int>? = null,
+        resourceType: String? = null,
+        resourceCode: String? = null,
+        iamResourceCode: String? = null,
+        excludeResourceType: String? = null,
+        limit: Int? = null,
+        offset: Int? = null
     ): List<Int> {
         return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
             dslContext.select(RELATION_ID).from(this)
                 .where(PROJECT_CODE.eq(projectCode))
+                .let {
+                    if (!ids.isNullOrEmpty())
+                        it.and(ID.`in`(ids))
+                    else it
+                }
                 .let {
                     if (!iamGroupIds.isNullOrEmpty())
                         it.and(RELATION_ID.`in`(iamGroupIds))
@@ -281,6 +340,42 @@ class AuthResourceGroupDao {
                         it.and(IAM_TEMPLATE_ID.`in`(iamTemplateIds))
                     } else
                         it
+                }
+                .let {
+                    if (resourceType != null) {
+                        it.and(RESOURCE_TYPE.eq(resourceType))
+                    } else {
+                        it
+                    }
+                }
+                .let {
+                    if (resourceCode != null) {
+                        it.and(RESOURCE_CODE.eq(resourceCode))
+                    } else {
+                        it
+                    }
+                }
+                .let {
+                    if (iamResourceCode != null) {
+                        it.and(IAM_RESOURCE_CODE.eq(iamResourceCode))
+                    } else {
+                        it
+                    }
+                }
+                .let {
+                    if (excludeResourceType != null) {
+                        it.and(RESOURCE_TYPE.ne(excludeResourceType))
+                    } else {
+                        it
+                    }
+                }
+                .orderBy(CREATE_TIME.asc())
+                .let {
+                    if (limit != null && offset != null) {
+                        it.limit(limit).offset(offset)
+                    } else {
+                        it
+                    }
                 }
                 // 同步iam时，可能会同步到极少数组ID值为null，为了防止转化报错，过滤掉该类数据。
                 .fetch().filterNot { it.value1() == NULL_PLACEHOLDER }
@@ -364,10 +459,24 @@ class AuthResourceGroupDao {
         }
     }
 
+    fun isGroupBelongToProject(
+        dslContext: DSLContext,
+        projectCode: String,
+        groupId: String
+    ): Boolean {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.selectCount()
+                .from(this).where(PROJECT_CODE.eq(projectCode))
+                .and(RELATION_ID.eq(groupId))
+                .fetchOne(0, Int::class.java)!! > 0
+        }
+    }
+
     fun listGroupByResourceType(
         dslContext: DSLContext,
         projectCode: String,
         resourceType: String,
+        iamGroupIds: List<String>? = null,
         offset: Int,
         limit: Int
     ): List<AuthResourceGroup> {
@@ -375,6 +484,14 @@ class AuthResourceGroupDao {
             val records = dslContext.selectFrom(this)
                 .where(PROJECT_CODE.eq(projectCode))
                 .and(RESOURCE_TYPE.eq(resourceType))
+                .let {
+                    if (!iamGroupIds.isNullOrEmpty()) {
+                        it.and(RELATION_ID.`in`(iamGroupIds))
+                    } else {
+                        it
+                    }
+                }
+                .orderBy(CREATE_TIME)
                 .offset(offset)
                 .limit(limit)
                 .fetch()
@@ -405,7 +522,8 @@ class AuthResourceGroupDao {
                     defaultGroup = defaultGroup,
                     relationId = relationId.toInt(),
                     createTime = createTime,
-                    updateTime = updateTime
+                    updateTime = updateTime,
+                    description = description
                 )
             } catch (ignore: Exception) {
                 logger.warn(

@@ -73,4 +73,5 @@ object StoreConstants {
     const val BK_DEFAULT_FAIL_POLICY = "defaultFailPolicy"
     const val BK_DEFAULT_RETRY_POLICY = "defaultRetryPolicy"
     const val BK_RETRY_TIMES = "retryTimes"
+    const val KEY_FRAMEWORK_CODE = "frameworkCode"
 }

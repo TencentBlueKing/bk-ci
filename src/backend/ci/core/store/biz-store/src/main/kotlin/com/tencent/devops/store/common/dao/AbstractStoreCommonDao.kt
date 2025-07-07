@@ -77,4 +77,9 @@ abstract class AbstractStoreCommonDao {
     ): StoreBaseInfo?
 
     abstract fun getStoreRepoHashIdByCode(dslContext: DSLContext, storeCode: String): String?
+
+    abstract fun getStoreCodeById(
+        dslContext: DSLContext,
+        storeId: String
+    ): String?
 }

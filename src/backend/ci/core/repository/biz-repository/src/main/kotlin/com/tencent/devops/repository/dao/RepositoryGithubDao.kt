@@ -27,15 +27,22 @@
 
 package com.tencent.devops.repository.dao
 
+import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.model.repository.tables.TRepository
 import com.tencent.devops.model.repository.tables.TRepositoryCodeGitlab
 import com.tencent.devops.model.repository.tables.TRepositoryGithub
 import com.tencent.devops.model.repository.tables.records.TRepositoryGithubRecord
+import com.tencent.devops.repository.pojo.GithubRepository
+import com.tencent.devops.repository.pojo.RepoCondition
+import com.tencent.devops.repository.pojo.RepoOauthRefVo
 import com.tencent.devops.repository.pojo.UpdateRepositoryInfoRequest
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
+import org.jooq.Condition
 
 @Repository
 class RepositoryGithubDao {
@@ -161,5 +168,147 @@ class RepositoryGithubDao {
                 .where(conditions)
                 .execute()
         }
+    }
+
+    fun countOauthRepo(
+        dslContext: DSLContext,
+        userId: String
+    ): Long {
+        val t1 = TRepository.T_REPOSITORY
+        val t2 = TRepositoryGithub.T_REPOSITORY_GITHUB
+        return dslContext.selectCount()
+            .from(t1)
+            .leftJoin(t2)
+            .on(t1.REPOSITORY_ID.eq(t2.REPOSITORY_ID))
+            .where(
+                listOf(
+                    t1.IS_DELETED.eq(false),
+                    t1.TYPE.eq(ScmType.GITHUB.name),
+                    t2.USER_NAME.eq(userId)
+                )
+            )
+            .fetchOne(0, Long::class.java)!!
+    }
+
+    fun listOauthRepo(
+        dslContext: DSLContext,
+        userId: String,
+        limit: Int,
+        offset: Int
+    ): List<RepoOauthRefVo> {
+        val t1 = TRepository.T_REPOSITORY
+        val t2 = TRepositoryGithub.T_REPOSITORY_GITHUB
+        return dslContext.select(t1.ALIAS_NAME, t1.URL, t1.PROJECT_ID, t1.REPOSITORY_HASH_ID)
+            .from(t1)
+            .leftJoin(t2)
+            .on(t1.REPOSITORY_ID.eq(t2.REPOSITORY_ID))
+            .where(
+                listOf(
+                    t1.IS_DELETED.eq(false),
+                    t1.TYPE.eq(ScmType.GITHUB.name),
+                    t2.USER_NAME.eq(userId)
+                )
+            )
+            .limit(limit)
+            .offset(offset)
+            .fetch()
+            .map {
+                RepoOauthRefVo(
+                    aliasName = it.get(0).toString(),
+                    url = it.get(1).toString(),
+                    projectId = it.get(2).toString(),
+                    hashId = it.get(3).toString()
+                )
+            }
+    }
+
+    fun listByCondition(
+        dslContext: DSLContext,
+        repoCondition: RepoCondition,
+        limit: Int,
+        offset: Int
+    ): List<GithubRepository> {
+        val t1 = TRepository.T_REPOSITORY
+        val t2 = TRepositoryGithub.T_REPOSITORY_GITHUB
+        val condition = buildCondition(t1, t2, repoCondition)
+
+        return dslContext.select(
+            t1.ALIAS_NAME,
+            t1.URL,
+            t2.PROJECT_NAME,
+            t2.USER_NAME,
+            t1.PROJECT_ID,
+            t1.REPOSITORY_ID,
+            t2.GIT_PROJECT_ID,
+            t1.ENABLE_PAC,
+            t1.YAML_SYNC_STATUS,
+            t1.SCM_CODE
+        ).from(t1)
+                .leftJoin(t2)
+                .on(t1.REPOSITORY_ID.eq(t2.REPOSITORY_ID))
+                .where(condition)
+                .limit(limit)
+                .offset(offset)
+                .map {
+                    GithubRepository(
+                        aliasName = it.value1(),
+                        url = it.value2(),
+                        credentialId = "",
+                        projectName = it.value3(),
+                        userName = it.value4(),
+                        projectId = it.value5(),
+                        repoHashId = HashUtil.encodeOtherLongId(it.value6()),
+                        gitProjectId = it.value7(),
+                        enablePac = it.value8(),
+                        yamlSyncStatus = it.value9(),
+                        scmCode = it.value10() ?: ScmType.GITHUB.name
+                    )
+                }
+    }
+
+    fun countByCondition(
+        dslContext: DSLContext,
+        repoCondition: RepoCondition
+    ): Long {
+        val t1 = TRepository.T_REPOSITORY
+        val t2 = TRepositoryGithub.T_REPOSITORY_GITHUB
+        val condition = buildCondition(t1, t2, repoCondition)
+        return dslContext.selectCount()
+                .from(t1)
+                .leftJoin(t2)
+                .on(t1.REPOSITORY_ID.eq(t2.REPOSITORY_ID))
+                .where(condition)
+                .fetchOne(0, Long::class.java) ?: 0L
+    }
+
+    private fun buildCondition(
+        t1: TRepository,
+        t2: TRepositoryGithub,
+        repoCondition: RepoCondition
+    ): MutableList<Condition> {
+        val conditions = mutableListOf<Condition>()
+        conditions.add(t1.IS_DELETED.eq(false))
+        with(repoCondition) {
+            if (!projectId.isNullOrEmpty()) {
+                conditions.add(t1.PROJECT_ID.eq(projectId))
+            }
+            if (!repoIds.isNullOrEmpty()) {
+                conditions.add(t1.REPOSITORY_ID.`in`(repoIds))
+            }
+            type?.let { conditions.add(t1.TYPE.eq(it.name)) }
+            if (!projectName.isNullOrEmpty()) {
+                conditions.add(t2.PROJECT_NAME.eq(projectName))
+            }
+            if (!oauthUserId.isNullOrEmpty()) {
+                conditions.add(t2.USER_NAME.eq(oauthUserId))
+            }
+            if (!scmCode.isNullOrEmpty()) {
+                conditions.add(t1.SCM_CODE.eq(scmCode))
+            }
+            enablePac?.let {
+                conditions.add(t1.ENABLE_PAC.eq(enablePac))
+            }
+        }
+        return conditions
     }
 }

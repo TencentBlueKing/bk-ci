@@ -55,7 +55,6 @@ import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.sql.Date
 import java.text.SimpleDateFormat
@@ -67,6 +66,7 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
+import org.slf4j.LoggerFactory
 
 @Suppress("MagicNumber", "TooManyFunctions", "ComplexMethod", "LongMethod")
 object LoggerService {
@@ -128,6 +128,7 @@ object LoggerService {
     var executeCount = 1
     var buildVariables: BuildVariables? = null
     var pipelineLogDir: File? = null
+    var loggingLineLimit: Int = LOG_TASK_LINE_LIMIT
 
     private val lock = ReentrantLock()
 
@@ -288,7 +289,7 @@ object LoggerService {
         }
 
         try {
-            if (currentTaskLineNo <= LOG_TASK_LINE_LIMIT) {
+            if (currentTaskLineNo <= loggingLineLimit) {
                 var offset = 0
                 // 上报前做长度等内容限制
                 while (offset < logMessage.message.length) {
@@ -305,7 +306,7 @@ object LoggerService {
                 )
                 this.uploadQueue.put(
                     logMessage.copy(
-                        message = "Printed logs cannot exceed 1 million lines. " +
+                        message = "Printed logs cannot exceed $loggingLineLimit lines. " +
                             "Please download logs to view."
                     )
                 )
@@ -453,6 +454,7 @@ object LoggerService {
                     logger.warn("Log service storage is unable：${result.message}")
                     disableLogUpload()
                 }
+
                 result.isNotOk() -> {
                     logger.error("Fail to send the multi logs：${result.message}")
                 }

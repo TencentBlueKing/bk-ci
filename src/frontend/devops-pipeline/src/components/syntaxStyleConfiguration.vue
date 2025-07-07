@@ -14,6 +14,7 @@
         <bk-checkbox
             :ext-cls="{ 'namingConvention-checkbox': isShowPopover }"
             v-model="inheritedDialect"
+            :disabled="disabled"
             @change="inheritedChange"
         >
             {{ $t('inheritedProject') }}
@@ -26,14 +27,14 @@
             <bk-radio
                 class="radio-label"
                 :value="'CLASSIC'"
-                :disabled="isDialectDisabled"
+                :disabled="isDialectDisabled || disabled"
             >
                 <span>{{ $t('CLASSIC') }}</span>
             </bk-radio>
             <bk-radio
                 class="radio-label"
                 :value="'CONSTRAINED'"
-                :disabled="isDialectDisabled"
+                :disabled="isDialectDisabled || disabled"
             >
                 <span>{{ $t('CONSTRAINED') }}</span>
             </bk-radio>
@@ -54,41 +55,15 @@
             isShowPopover: {
                 type: Boolean,
                 default: true
+            },
+            disabled: {
+                type: Boolean,
+                default: false
             }
         },
         computed: {
-            namingConventionData () {
-                return [
-                    {
-                        difference: this.$t('expressionFormat'),
-                        classic: this.$t('traditionalFormat'),
-                        classicExample: this.$t('traditionalFormatExample'),
-                        constrainedMode: this.$t('constraintFormat'),
-                        constrainedExample: this.$t('constraintFormatExample')
-                    },
-                    {
-                        difference: this.$t('variableValueTooLong'),
-                        classic: this.$t('traditionalValueTooLongMode'),
-                        constrainedMode: this.$t('constraintReadOnlyMode')
-                    },
-                    {
-                        difference: this.$t('variableNotFound'),
-                        classic: this.$t('traditionalNotFoundMode'),
-                        constrainedMode: this.$t('constraintReadOnlyMode')
-                    },
-                    {
-                        difference: this.$t('variableStandard'),
-                        classic: this.$t('traditionalStandardMode'),
-                        constrainedMode: this.$t('constraintStandardMode')
-                    }
-                ]
-            },
             isDialectDisabled () {
-                if (this.inheritedDialect) {
-                    return true
-                } else {
-                    return false
-                }
+                return !!this.inheritedDialect
             }
         },
         methods: {

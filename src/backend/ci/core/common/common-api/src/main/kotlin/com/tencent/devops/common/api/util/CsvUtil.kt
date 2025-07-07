@@ -28,6 +28,7 @@
 package com.tencent.devops.common.api.util
 
 import com.tencent.devops.common.api.exception.ExecuteException
+import jakarta.servlet.http.HttpServletResponse
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import org.slf4j.LoggerFactory
@@ -38,7 +39,6 @@ import java.io.OutputStream
 import java.io.OutputStreamWriter
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
-import javax.servlet.http.HttpServletResponse
 
 object CsvUtil {
 

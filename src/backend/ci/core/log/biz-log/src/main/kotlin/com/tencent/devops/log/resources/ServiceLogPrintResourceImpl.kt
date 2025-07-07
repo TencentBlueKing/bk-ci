@@ -86,6 +86,7 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
                 subTag = subTag,
                 jobId = containerHashId,
                 executeCount = executeCount,
+                logStorageMode = null,
                 userJobId = jobId,
                 stepId = stepId
             )

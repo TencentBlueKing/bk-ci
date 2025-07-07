@@ -39,7 +39,7 @@ import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 /**
  *

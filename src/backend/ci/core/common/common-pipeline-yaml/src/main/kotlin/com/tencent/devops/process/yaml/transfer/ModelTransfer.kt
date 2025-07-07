@@ -109,7 +109,8 @@ class ModelTransfer @Autowired constructor(
             failSubscriptionList = yamlNotice2Setting(
                 projectId = yamlInput.projectCode,
                 notices = yaml.notices?.filter { it.checkNotifyForFail() }
-            )
+            ),
+            failIfVariableInvalid = yaml.failIfVariableInvalid.nullIfDefault(false),
         )
     }
 
@@ -129,10 +130,12 @@ class ModelTransfer @Autowired constructor(
                 inheritedDialect = false,
                 pipelineDialect = PipelineDialectType.CLASSIC.name
             )
+
             SyntaxDialectType.CONSTRAINT.name -> PipelineAsCodeSettings(
                 inheritedDialect = false,
                 pipelineDialect = PipelineDialectType.CONSTRAINED.name
             )
+
             else -> null
         }
     }
@@ -229,6 +232,7 @@ class ModelTransfer @Autowired constructor(
                 notices = makeNoticesV3(modelInput.setting),
                 syntaxDialect = makeSyntaxDialect(modelInput.setting)
             )
+
             else -> {
                 throw PipelineTransferException(
                     YAML_NOT_VALID,
@@ -250,6 +254,7 @@ class ModelTransfer @Autowired constructor(
             YamlVersion.V2_0 -> {
                 (yaml as PreTemplateScriptBuildYamlParser).triggerOn = triggerOn.firstOrNull() as PreTriggerOn?
             }
+
             YamlVersion.V3_0 -> {
                 (yaml as PreTemplateScriptBuildYamlV3Parser).triggerOn =
                     triggerOn.ifEmpty { null }?.let { if (it.size == 1) it.first() else it }
@@ -287,7 +292,9 @@ class ModelTransfer @Autowired constructor(
         yaml.concurrency = makeConcurrency(modelInput.setting)
         yaml.customBuildNum = modelInput.setting.buildNumRule
         yaml.recommendedVersion = variableTransfer.makeRecommendedVersion(modelInput.model)
-        yaml.disablePipeline = (modelInput.setting.runLockType == PipelineRunLockType.LOCK).nullIfDefault(false)
+        yaml.disablePipeline = (modelInput.setting.runLockType == PipelineRunLockType.LOCK ||
+            modelInput.pipelineInfo?.locked == true).nullIfDefault(false)
+        yaml.failIfVariableInvalid = modelInput.setting.failIfVariableInvalid.nullIfDefault(false)
         modelInput.aspectWrapper.setYaml4Yaml(yaml, PipelineTransferAspectWrapper.AspectType.AFTER)
         return yaml
     }

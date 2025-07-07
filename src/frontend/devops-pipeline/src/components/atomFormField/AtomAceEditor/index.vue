@@ -146,7 +146,6 @@
 
 <style lang="scss">
     .ace-fullscreen {
-        top: 10px;
         right: 10px;
         position: absolute;
         z-index: 999;

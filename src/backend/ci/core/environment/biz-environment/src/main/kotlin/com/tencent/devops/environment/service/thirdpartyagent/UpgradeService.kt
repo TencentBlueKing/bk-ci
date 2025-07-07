@@ -121,7 +121,17 @@ class UpgradeService @Autowired constructor(
                 )
             )
         }
+        return checkUpgradeNew(projectId, agentId, props, os, info)
+    }
 
+    // 抽出来方便写单测
+    fun checkUpgradeNew(
+        projectId: String,
+        agentId: String,
+        props: AgentProps?,
+        os: String?,
+        info: ThirdPartyAgentUpgradeByVersionInfo
+    ): AgentResult<UpgradeItem> {
         val currentWorkerVersion = agentPropsScope.getWorkerVersion()
         val currentGoAgentVersion = agentPropsScope.getAgentVersion()
         val currentJdkVersion = agentPropsScope.getJdkVersion(os, props?.arch)
@@ -132,71 +142,63 @@ class UpgradeService @Autowired constructor(
         if (logger.isDebugEnabled) {
             logger.debug(
                 "$projectId|$agentId|canUpgrade=$canUpgrade" +
-                    "|currentWorkerVersion=$currentWorkerVersion,agent_WorkerVersion=${info.workerVersion}" +
-                    "|currentGoAgentVersion=$currentGoAgentVersion,agent_GoAgentVersion=${info.goAgentVersion}" +
-                    "|currentJdkVersion=$currentJdkVersion,agent_JdkVersion=${info.jdkVersion}" +
-                    "|currentDockerInitFileMd5=$currentDockerInitFileMd5," +
-                    "agent_DockerInitFileMd5=${info.dockerInitFileInfo?.fileMd5}"
+                        "|currentWorkerVersion=$currentWorkerVersion,agent_WorkerVersion=${info.workerVersion}" +
+                        "|currentGoAgentVersion=$currentGoAgentVersion,agent_GoAgentVersion=${info.goAgentVersion}" +
+                        "|currentJdkVersion=$currentJdkVersion,agent_JdkVersion=${info.jdkVersion}" +
+                        "|currentDockerInitFileMd5=$currentDockerInitFileMd5," +
+                        "agent_DockerInitFileMd5=${info.dockerInitFileInfo?.fileMd5}"
             )
         }
 
+        /**
+         * Agent组件的升级规则
+         * 1、判断组件版本信息是否配置，未配置不升级
+         * 2、判断组件的强制升级或者锁定升级，锁定升级不升级，强制升级判断版本信息是否一致看是否升级
+         * 3、判断组件是否符合项目升级标准，不符合则不升级
+         * 4、正常判断组件是否可以升级
+         */
+
+        val workerCheckFun = fun() = currentWorkerVersion != info.workerVersion
         val workerVersion = when {
-            !checkProjectUpgrade(projectId, AgentUpgradeType.WORKER) -> false
-            currentWorkerVersion.isBlank() -> {
-                logger.warn("The current agent version is not exist")
-                false
-            }
-
+            currentWorkerVersion.isBlank() -> false
             agentScope.checkLockUpgrade(agentId, AgentUpgradeType.WORKER) -> false
-            agentScope.checkForceUpgrade(agentId, AgentUpgradeType.WORKER) -> true
-            else -> canUpgrade && (info.workerVersion.isNullOrBlank() || (currentWorkerVersion != info.workerVersion))
+            agentScope.checkForceUpgrade(agentId, AgentUpgradeType.WORKER) && workerCheckFun() -> true
+            !checkProjectUpgrade(projectId, AgentUpgradeType.WORKER) -> false
+            else -> canUpgrade && workerCheckFun()
         }
 
-        val agentProjectCheck = checkProjectUpgrade(projectId, AgentUpgradeType.WORKER)
+        // 除了worker之外的组件都和agent走一个项目检查
+        val agentProjectCheck = checkProjectUpgrade(projectId, AgentUpgradeType.GO_AGENT)
 
+        val goAgentCheckFun = fun() = currentGoAgentVersion != info.goAgentVersion
         val goAgentVersion = when {
-            !agentProjectCheck -> false
-            currentGoAgentVersion.isBlank() -> {
-                logger.warn("The current agent master version is not exist")
-                false
-            }
-
+            currentGoAgentVersion.isBlank() -> false
             agentScope.checkLockUpgrade(agentId, AgentUpgradeType.GO_AGENT) -> false
-            agentScope.checkForceUpgrade(agentId, AgentUpgradeType.GO_AGENT) -> true
-            else -> canUpgrade &&
-                    (info.goAgentVersion.isNullOrBlank() || (currentGoAgentVersion != info.goAgentVersion))
+            agentScope.checkForceUpgrade(agentId, AgentUpgradeType.GO_AGENT) && goAgentCheckFun() -> true
+            !agentProjectCheck -> false
+            else -> canUpgrade && goAgentCheckFun()
         }
 
+        val jdkCheckFun = fun() = info.jdkVersion.isNullOrEmpty() ||
+                ((info.jdkVersion?.size ?: 0) > 2 && currentJdkVersion?.trim() != info.jdkVersion?.get(2)?.trim())
         val jdkVersion = when {
-            !agentProjectCheck -> false
-            currentJdkVersion.isNullOrBlank() -> {
-                logger.warn("project: $projectId|agent: $agentId|os: $os|arch: ${props?.arch}|current jdk is null")
-                false
-            }
-
+            currentJdkVersion.isNullOrBlank() -> false
             agentScope.checkLockUpgrade(agentId, AgentUpgradeType.JDK) -> false
-            agentScope.checkForceUpgrade(agentId, AgentUpgradeType.JDK) -> true
-            else -> canUpgrade &&
-                    (info.jdkVersion.isNullOrEmpty() ||
-                            ((info.jdkVersion?.size ?: 0) > 2 &&
-                                    currentJdkVersion.trim() != info.jdkVersion?.get(2)?.trim()))
+            agentScope.checkForceUpgrade(agentId, AgentUpgradeType.JDK) && jdkCheckFun() -> true
+            !agentProjectCheck -> false
+            else -> canUpgrade && jdkCheckFun()
         }
 
+        val dockerInitFileCheckFun = fun() = info.dockerInitFileInfo?.fileMd5 != currentDockerInitFileMd5
         val dockerInitFile = when {
-            !agentProjectCheck -> false
-            info.dockerInitFileInfo == null -> false
+            currentDockerInitFileMd5.isBlank() -> false
             // 目前存在非linux系统的不支持，旧数据或agent不使用docker构建机，所以不校验升级
+            info.dockerInitFileInfo == null -> false
             info.dockerInitFileInfo?.needUpgrade != true -> false
-            currentDockerInitFileMd5.isBlank() -> {
-                logger.warn(
-                    "project: $projectId|agent: $agentId|os: $os|arch: ${props?.arch}| docker init md5 is null"
-                )
-                false
-            }
-
             agentScope.checkLockUpgrade(agentId, AgentUpgradeType.DOCKER_INIT_FILE) -> false
-            agentScope.checkForceUpgrade(agentId, AgentUpgradeType.DOCKER_INIT_FILE) -> true
-            else -> canUpgrade && info.dockerInitFileInfo?.fileMd5 != currentDockerInitFileMd5
+            agentScope.checkForceUpgrade(agentId, AgentUpgradeType.DOCKER_INIT_FILE) && dockerInitFileCheckFun() -> true
+            !agentProjectCheck -> false
+            else -> canUpgrade && dockerInitFileCheckFun()
         }
 
         return AgentResult(

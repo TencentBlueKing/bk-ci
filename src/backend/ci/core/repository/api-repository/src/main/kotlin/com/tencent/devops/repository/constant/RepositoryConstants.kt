@@ -30,4 +30,5 @@ package com.tencent.devops.repository.constant
 
 object RepositoryConstants {
     const val CI_DIR_PATH = ".ci"
+    const val KEY_REPOSITORY_ID = "repositoryId"
 }

@@ -31,6 +31,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
@@ -93,7 +94,8 @@ class PipelineSettingDao {
                 SUCCESS_SUBSCRIPTION,
                 FAILURE_SUBSCRIPTION,
                 VERSION,
-                PIPELINE_AS_CODE_SETTINGS
+                PIPELINE_AS_CODE_SETTINGS,
+                FAIL_IF_VARIABLE_INVALID
             ).values(
                 setting.projectId,
                 setting.pipelineName,
@@ -128,7 +130,8 @@ class PipelineSettingDao {
                 JsonUtil.toJson(successSubscriptionList, false),
                 JsonUtil.toJson(failSubscriptionList, false),
                 setting.version,
-                setting.pipelineAsCodeSettings?.let { JsonUtil.toJson(it, false) }
+                setting.pipelineAsCodeSettings?.let { JsonUtil.toJson(it, false) },
+                setting.failIfVariableInvalid
             ).onDuplicateKeyUpdate()
                 .set(NAME, setting.pipelineName)
                 .set(DESC, setting.desc)
@@ -161,6 +164,7 @@ class PipelineSettingDao {
                 .set(FAILURE_SUBSCRIPTION, JsonUtil.toJson(failSubscriptionList, false))
                 .set(VERSION, setting.version)
                 .set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
+                .set(FAIL_IF_VARIABLE_INVALID, setting.failIfVariableInvalid)
             // pipelineAsCodeSettings 默认传空不更新
             setting.pipelineAsCodeSettings?.let { self ->
                 insert.set(PIPELINE_AS_CODE_SETTINGS, JsonUtil.toJson(self, false))
@@ -349,6 +353,27 @@ class PipelineSettingDao {
         }
     }
 
+    /**
+     * 获取非继承项目的流水线列表
+     */
+    fun getNonInheritedPipelineIds(
+        dslContext: DSLContext,
+        projectId: String
+    ): List<String> {
+        with(TPipelineSetting.T_PIPELINE_SETTING) {
+            var conditionsAnd = PIPELINE_AS_CODE_SETTINGS.isNotNull
+            val inheritedDialectField =
+                JooqUtils.jsonExtractAny<Boolean?>(PIPELINE_AS_CODE_SETTINGS, "$.inheritedDialect")
+            // 不是继承项目的流水线列表
+            conditionsAnd = conditionsAnd.and(inheritedDialectField.isNotNull).and(inheritedDialectField.isFalse)
+
+            return dslContext.select(PIPELINE_ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(conditionsAnd)
+                .fetch(0, String::class.java)
+        }
+    }
+
     class PipelineSettingJooqMapper : RecordMapper<TPipelineSettingRecord, PipelineSetting> {
         override fun map(record: TPipelineSettingRecord?): PipelineSetting? {
             return record?.let { t ->
@@ -413,6 +438,7 @@ class PipelineSettingDao {
                     maxQueueSize = t.maxQueueSize,
                     maxPipelineResNum = t.maxPipelineResNum,
                     maxConRunningQueueSize = t.maxConRunningQueueSize,
+                    failIfVariableInvalid = t.failIfVariableInvalid,
                     buildNumRule = t.buildNumRule,
                     concurrencyCancelInProgress = t.concurrencyCancelInProgress,
                     concurrencyGroup = t.concurrencyGroup,

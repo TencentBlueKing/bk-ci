@@ -36,6 +36,7 @@ enum class BuildFormPropertyType(val value: String) {
     BOOLEAN("boolean"),
     SVN_TAG("svn_tag"),
     GIT_REF("git_ref"),
+    REPO_REF("repo_ref"),
     MULTIPLE("multiple"),
     CODE_LIB("code_lib"),
     CONTAINER_TYPE("container_type"), // 构建机类型(公共构建机，第三方构建机，PCG构建机等)

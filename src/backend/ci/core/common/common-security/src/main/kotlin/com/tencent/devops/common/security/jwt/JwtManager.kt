@@ -33,7 +33,6 @@ import com.tencent.devops.common.security.util.EnvironmentUtil
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
-import org.jolokia.util.Base64Util
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.SchedulingConfigurer
 import org.springframework.scheduling.config.ScheduledTaskRegistrar
@@ -44,6 +43,7 @@ import java.security.PublicKey
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import java.time.Instant
+import java.util.Base64
 import java.util.Date
 import java.util.concurrent.TimeUnit
 
@@ -99,7 +99,8 @@ class JwtManager(
         }
         try {
             val claims = Jwts.parser()
-                .setSigningKey(publicKey)
+                .verifyWith(publicKey)
+                .build()
                 .parseClaimsJws(token)
                 .body
             logger.info("Verify jwt sub:${claims["sub"]}")
@@ -153,8 +154,9 @@ class JwtManager(
             authEnable = false
         } else {
             val keyFactory = KeyFactory.getInstance("RSA")
-            privateKey = keyFactory.generatePrivate(PKCS8EncodedKeySpec(Base64Util.decode(privateKeyString)))
-            publicKey = keyFactory.generatePublic(X509EncodedKeySpec(Base64Util.decode(publicKeyString)))
+            privateKey =
+                keyFactory.generatePrivate(PKCS8EncodedKeySpec(Base64.getMimeDecoder().decode(privateKeyString)))
+            publicKey = keyFactory.generatePublic(X509EncodedKeySpec(Base64.getMimeDecoder().decode(publicKeyString)))
             authEnable = enable
         }
         securityJwtInfo = SecurityJwtInfo(

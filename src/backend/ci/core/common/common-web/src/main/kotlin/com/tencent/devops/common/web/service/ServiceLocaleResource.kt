@@ -28,17 +28,20 @@
 package com.tencent.devops.common.web.service
 
 import com.tencent.devops.common.api.annotation.ServiceInterface
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.LocaleInfo
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.PUT
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "SERVICE_LOCALE", description = "SERVICE-国际化")
 @Path("/service/locales")
@@ -55,4 +58,15 @@ interface ServiceLocaleResource {
         @PathParam("userId")
         userId: String
     ): Result<LocaleInfo>
+
+    @PUT
+    @Path("/update")
+    @Operation(summary = "更新用户国际化信息")
+    fun updateUserLocale(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "国际化信息", required = true)
+        localeInfo: LocaleInfo
+    ): Result<Boolean>
 }

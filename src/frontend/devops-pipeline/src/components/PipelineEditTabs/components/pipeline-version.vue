@@ -65,7 +65,7 @@
                                 {{ `${$t('buildNoBaseline.baselineValue')}${renderBuildNo.buildNo}（${getLabelByBuildType(renderBuildNo.buildNoType)}）` }}
                                 <span
                                     class="dafault-value-current"
-                                    v-if="disabled"
+                                    v-if="pipelineModel"
                                 >
                                     {{ `${$t('buildNoBaseline.currentValue')}${buildNo.currentBuildNo}` }}
                                     <span
@@ -305,6 +305,10 @@
                 required: true
             },
             isDirectShowVersion: {
+                type: Boolean,
+                default: false
+            },
+            pipelineModel: {
                 type: Boolean,
                 default: false
             }

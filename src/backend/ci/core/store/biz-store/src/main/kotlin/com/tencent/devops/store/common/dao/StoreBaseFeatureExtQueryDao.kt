@@ -59,12 +59,16 @@ class StoreBaseFeatureExtQueryDao {
     fun queryStoreBaseFeatureExt(
         dslContext: DSLContext,
         storeCode: String,
-        storeType: StoreTypeEnum
+        storeType: StoreTypeEnum,
+        fieldNames: Set<String>? = null
     ): Result<TStoreBaseFeatureExtRecord> {
         with(TStoreBaseFeatureExt.T_STORE_BASE_FEATURE_EXT) {
             val conditions = mutableListOf<Condition>()
             conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
             conditions.add(STORE_CODE.eq(storeCode))
+            if (!fieldNames.isNullOrEmpty()) {
+                conditions.add(FIELD_NAME.`in`(fieldNames))
+            }
             return dslContext.selectFrom(this)
                 .where(conditions)
                 .fetch()

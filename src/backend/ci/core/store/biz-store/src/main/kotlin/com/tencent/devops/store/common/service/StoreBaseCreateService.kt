@@ -40,6 +40,14 @@ interface StoreBaseCreateService {
     )
 
     /**
+     * 执行新增组件请求前置业务
+     * @param storeCreateRequest 新增组件请求报文
+     */
+    fun doStoreCreatePreBus(
+        storeCreateRequest: StoreCreateRequest
+    )
+
+    /**
      * 持久化新增组件数据
      * @param storeCreateRequest 新增组件请求报文
      */

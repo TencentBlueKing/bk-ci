@@ -32,11 +32,12 @@ package job
 
 import (
 	"fmt"
-	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
-	"github.com/pkg/errors"
 	"os"
 	"os/exec"
 	"syscall"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
+	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"

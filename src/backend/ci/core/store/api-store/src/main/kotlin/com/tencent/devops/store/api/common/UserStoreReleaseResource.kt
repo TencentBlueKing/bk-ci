@@ -29,6 +29,7 @@ package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.StoreReleaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.publication.StoreCreateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreCreateResponse
@@ -38,16 +39,16 @@ import com.tencent.devops.store.pojo.common.publication.StoreUpdateResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import javax.validation.Valid
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import jakarta.validation.Valid
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "USER_STORE_RELEASE", description = "研发商店-发布管理")
 @Path("/user/store/releases")
@@ -115,6 +116,21 @@ interface UserStoreReleaseResource {
         storeId: String
     ): Result<Boolean>
 
+    @Operation(summary = "填写信息")
+    @PUT
+    @Path("/components/{storeId}/release/info/edit")
+    fun editReleaseInfo(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "storeId", required = true)
+        @PathParam("storeId")
+        storeId: String,
+        @Parameter(description = "填写信息请求报文体", required = true)
+        @Valid
+        storeReleaseInfoUpdateRequest: StoreReleaseInfoUpdateRequest
+    ): Result<Boolean>
+
     @Operation(summary = "下架组件")
     @PUT
     @Path("/component/offline")
@@ -131,6 +147,18 @@ interface UserStoreReleaseResource {
     @PUT
     @Path("/components/{storeId}/rebuild")
     fun rebuild(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "组件Id", required = true)
+        @PathParam("storeId")
+        storeId: String
+    ): Result<Boolean>
+
+    @Operation(summary = "返回上一步")
+    @PUT
+    @Path("/components/{storeId}/step/back")
+    fun back(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

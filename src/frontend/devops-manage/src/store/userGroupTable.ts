@@ -17,6 +17,7 @@ interface GroupTableType {
   operateSource: string;
   operator: string;
   removeMemberButtonControl: 'OTHER' | 'TEMPLATE' | 'UNIQUE_MANAGER' | 'UNIQUE_OWNER';
+  memberType: string;
 };
 interface Pagination {
   limit: number;
@@ -34,6 +35,7 @@ interface SourceType {
   activeFlag?: boolean;
   tableLoading?: boolean;
   scrollLoading?: boolean;
+  isRemotePagination?: boolean;
   tableData: GroupTableType[];
 }
 interface SelectedDataType {
@@ -47,6 +49,7 @@ interface CollapseListType {
 export interface AsideItem {
   id: string,
   name: string,
+  checked: boolean,
   type: "department" | "user"
 }
 export interface SearchParamsType {
@@ -119,6 +122,7 @@ export default defineStore('userGroupTable', () => {
         ...item,
         tableLoading: false,
         scrollLoading: false,
+        isRemotePagination: true,
         tableData: [],
       }))
 
@@ -274,8 +278,10 @@ export default defineStore('userGroupTable', () => {
             count: sourceItem.isAll ? sourceItem.count! : tableData.length 
           },
           ...sourceItem,
-          tableData: tableData.slice(0,11),
-          ...(!sourceItem.isAll && { groupIds: tableData.map(item => item.groupId) })
+          tableData: tableData,
+          count: sourceItem.isAll ? sourceItem.count! : tableData.length,
+          ...(!sourceItem.isAll && { groupIds: tableData.map(item => ({ id: item.groupId, memberType: item.memberType })) }),
+          ...(!sourceItem.isAll && { isRemotePagination: false }),
         };
       });
   }
@@ -344,32 +350,42 @@ export default defineStore('userGroupTable', () => {
     }
   }
   async function pageLimitChange(limit: number, resourceType: string) {
-    paginations.value[resourceType][1] = limit;
     try {
       let item = selectSourceList.value.find((item: SourceType) => item.resourceType == resourceType);
-      if(item){
+      if (item) {
+        paginations.value[resourceType][1] = limit;
         item.tableLoading = true;
-        const res = await getGroupList(resourceType, seacrhObj.value)
+        if (item.isRemotePagination) {
+          const res = await getGroupList(resourceType, seacrhObj.value)
+          item.tableData = res.records;
+        }
         item.tableLoading = false;
-        item.tableData = res.records;
       }
     } catch (error) {
       
     }
   }
   async function pageValueChange(value: number, resourceType: string) {
-    paginations.value[resourceType][0] = (value - 1) * 10 + 1;
     try {
       let item = selectSourceList.value.find((item: SourceType) => item.resourceType == resourceType);
-      if(item){
+      if (item) {
+        paginations.value[resourceType][0] = (value - 1) * 10 + 1;
         item.tableLoading = true;
-        const res = await getGroupList(resourceType, seacrhObj.value)
+        if (item.isRemotePagination) {
+          const res = await getGroupList(resourceType, seacrhObj.value)
+          item.tableData = res.records;
+        }
         item.tableLoading = false;
-        item.tableData = res.records;
       }
     } catch (error) {
       
     }
+  }
+
+  function clearPaginations() {
+    Object.keys(paginations.value).forEach(key => {
+      paginations.value[key] = [0, 10];
+    });
   }
 
   return {
@@ -398,5 +414,6 @@ export default defineStore('userGroupTable', () => {
     handleUpDateRow,
     pageLimitChange,
     pageValueChange,
+    clearPaginations,
   };
 });

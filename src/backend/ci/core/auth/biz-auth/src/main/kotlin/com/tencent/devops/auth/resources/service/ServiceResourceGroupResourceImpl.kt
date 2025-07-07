@@ -1,11 +1,12 @@
 package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServiceResourceGroupResource
+import com.tencent.devops.auth.pojo.AuthResourceGroup
 import com.tencent.devops.auth.pojo.dto.GroupAddDTO
 import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
-import com.tencent.devops.auth.service.iam.PermissionResourceGroupAndMemberFacadeService
+import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.common.api.model.SQLPage
@@ -17,7 +18,7 @@ import com.tencent.devops.common.web.RestResource
 class ServiceResourceGroupResourceImpl(
     val permissionResourceGroupService: PermissionResourceGroupService,
     val resourceGroupPermissionService: PermissionResourceGroupPermissionService,
-    val resourceGroupAndMemberFacadeService: PermissionResourceGroupAndMemberFacadeService
+    val permissionManageFacadeService: PermissionManageFacadeService
 ) : ServiceResourceGroupResource {
     override fun getGroupPermissionDetail(
         projectCode: String,
@@ -45,7 +46,7 @@ class ServiceResourceGroupResourceImpl(
         limit: Int?
     ): Result<SQLPage<GroupDetailsInfoVo>> {
         return Result(
-            resourceGroupAndMemberFacadeService.getMemberGroupsDetails(
+            permissionManageFacadeService.getMemberGroupsDetails(
                 projectId = projectCode,
                 resourceType = resourceType,
                 memberId = memberId,
@@ -115,6 +116,22 @@ class ServiceResourceGroupResourceImpl(
                 projectId = projectCode,
                 groupId = groupId,
                 resourceType = resourceType
+            )
+        )
+    }
+
+    override fun getByGroupCode(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        groupCode: BkAuthGroup
+    ): Result<AuthResourceGroup?> {
+        return Result(
+            permissionResourceGroupService.getByGroupCode(
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                groupCode = groupCode
             )
         )
     }

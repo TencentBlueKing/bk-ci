@@ -19,15 +19,14 @@
 
 import {
     PROCESS_API_URL_PREFIX,
-    STORE_API_URL_PREFIX,
-    PROJECT_API_URL_PREFIX
+    STORE_API_URL_PREFIX
 } from '@/store/constants'
 import ajax from '@/utils/request'
 
 const prefix = `/${PROCESS_API_URL_PREFIX}/user`
 
 const state = {
-    currentPipelineDialect: false
+
 }
 
 const getters = {
@@ -35,16 +34,10 @@ const getters = {
 }
 
 const mutations = {
-    getCurrentPipelineDialect (state, params) {
-        state.currentPipelineDialect = params.data
-    }
+   
 }
 
 const actions = {
-    async getPipelineDialect ({ commit }, projectId) {
-        const res = await ajax.get(`${PROJECT_API_URL_PREFIX}/user/projects/${projectId}/pipelineDialect`)
-        commit('getCurrentPipelineDialect', res)
-    },
     installPipelineTemplate (_, params) {
         return ajax.post(`${STORE_API_URL_PREFIX}/user/market/template/install`, params).then(response => {
         })

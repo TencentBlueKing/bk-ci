@@ -37,7 +37,7 @@ import com.tencent.devops.common.pipeline.enums.DependOnType
 import com.tencent.devops.common.pipeline.pojo.DependOnConfig
 import com.tencent.devops.process.constant.ProcessMessageCode
 import java.util.regex.Pattern
-import javax.ws.rs.core.Response
+import jakarta.ws.rs.core.Response
 
 @Suppress("ALL")
 object DependOnUtils {

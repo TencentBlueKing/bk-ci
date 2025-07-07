@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.UserStoreReleaseResource
 import com.tencent.devops.store.common.service.StoreReleaseService
+import com.tencent.devops.store.pojo.common.StoreReleaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreCreateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreCreateResponse
 import com.tencent.devops.store.pojo.common.publication.StoreOfflineRequest
@@ -70,11 +71,23 @@ class UserStoreReleaseResourceImpl @Autowired constructor(
         return Result(storeReleaseService.passTest(userId, storeId))
     }
 
+    override fun editReleaseInfo(
+        userId: String,
+        storeId: String,
+        storeReleaseInfoUpdateRequest: StoreReleaseInfoUpdateRequest
+    ): Result<Boolean> {
+        return Result(storeReleaseService.editReleaseInfo(userId, storeId, storeReleaseInfoUpdateRequest))
+    }
+
     override fun offlineComponent(userId: String, storeOfflineRequest: StoreOfflineRequest): Result<Boolean> {
         return Result(storeReleaseService.offlineComponent(userId, storeOfflineRequest))
     }
 
     override fun rebuild(userId: String, storeId: String): Result<Boolean> {
         return Result(storeReleaseService.rebuild(userId, storeId))
+    }
+
+    override fun back(userId: String, storeId: String): Result<Boolean> {
+        return Result(storeReleaseService.back(userId, storeId))
     }
 }

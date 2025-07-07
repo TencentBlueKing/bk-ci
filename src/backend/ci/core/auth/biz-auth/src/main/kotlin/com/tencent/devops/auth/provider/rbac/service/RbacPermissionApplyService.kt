@@ -28,6 +28,7 @@ import com.tencent.devops.auth.pojo.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionApplyService
+import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
@@ -35,6 +36,7 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
@@ -60,14 +62,15 @@ class RbacPermissionApplyService @Autowired constructor(
     val authResourceService: AuthResourceService,
     val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
     val authResourceGroupDao: AuthResourceGroupDao,
-    val rbacCacheService: RbacCacheService,
+    val rbacCommonService: RbacCommonService,
     val config: CommonConfig,
     val client: Client,
     val authResourceCodeConverter: AuthResourceCodeConverter,
     val permissionService: PermissionService,
     val itsmService: ItsmService,
     val deptService: DeptService,
-    val authResourceGroupApplyDao: AuthResourceGroupApplyDao
+    val authResourceGroupApplyDao: AuthResourceGroupApplyDao,
+    val permissionResourceMemberService: PermissionResourceMemberService
 ) : PermissionApplyService {
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
@@ -80,11 +83,11 @@ class RbacPermissionApplyService @Autowired constructor(
     private val codeccTaskDetailRedirectUri = "${config.devopsHostGateway}/console/codecc/%s/task/%s/detail?buildNum=latest"
     private val groupPermissionDetailRedirectUri = "${config.devopsHostGateway}/permission/group/detail?group_id=%s&x-devops-project-id=%s"
     override fun listResourceTypes(userId: String): List<ResourceTypeInfoVo> {
-        return rbacCacheService.listResourceTypes()
+        return rbacCommonService.listResourceTypes()
     }
 
     override fun listActions(userId: String, resourceType: String): List<ActionInfoVo> {
-        return rbacCacheService.listResourceType2Action(resourceType)
+        return rbacCommonService.listResourceType2Action(resourceType)
     }
 
     override fun listGroupsForApply(
@@ -155,7 +158,7 @@ class RbacPermissionApplyService @Autowired constructor(
 
     private fun isUserExists(userId: String) {
         // 校验新用户信息是否同步完成
-        val userExists = deptService.getUserInfo(userId = "admin", name = userId) != null
+        val userExists = deptService.getUserInfo(userId) != null
         if (!userExists) {
             logger.warn("user($userId) does not exist")
             throw ErrorCodeException(
@@ -263,7 +266,7 @@ class RbacPermissionApplyService @Autowired constructor(
         return managerRoleGroupInfoList.map { gInfo ->
             val dbGroupRecord = dbGroupRecords.find { record -> record.relationId == gInfo.id.toString() }
             val resourceType = dbGroupRecord?.resourceType ?: AuthResourceType.PROJECT.value
-            val resourceTypeName = rbacCacheService.getResourceTypeInfo(resourceType).name
+            val resourceTypeName = rbacCommonService.getResourceTypeInfo(resourceType).name
             val resourceName = dbGroupRecord?.resourceName ?: projectName
             val resourceCode = dbGroupRecord?.resourceCode ?: projectId
             val memberJoinedResult = verifyMemberJoinedResult[gInfo.id.toInt()]
@@ -326,7 +329,7 @@ class RbacPermissionApplyService @Autowired constructor(
                 itsmService.buildGroupApplyItsmValue(
                     ApplyJoinGroupFormDataInfo(
                         projectName = projectInfo.projectName,
-                        resourceTypeName = rbacCacheService.getResourceTypeInfo(resourceGroupInfo.resourceType).name,
+                        resourceTypeName = rbacCommonService.getResourceTypeInfo(resourceGroupInfo.resourceType).name,
                         resourceName = resourceGroupInfo.resourceName,
                         groupName = resourceGroupInfo.groupName,
                         validityPeriod = generateValidityPeriod(applyJoinGroupInfo.expiredAt.toLong()),
@@ -487,11 +490,11 @@ class RbacPermissionApplyService @Autowired constructor(
         )
         val groupInfoList: MutableList<AuthRedirectGroupInfoVo> = mutableListOf()
         // 判断action是否为空
-        val actionInfo = if (action != null) rbacCacheService.getActionInfo(action) else null
+        val actionInfo = if (action != null) rbacCommonService.getActionInfo(action) else null
         val iamRelatedResourceType = actionInfo?.relatedResourceType ?: resourceType
         val resourceTypeName = I18nUtil.getCodeLanMessage(
             messageCode = resourceType + AuthI18nConstants.RESOURCE_TYPE_NAME_SUFFIX,
-            defaultMessage = rbacCacheService.getResourceTypeInfo(resourceType).name
+            defaultMessage = rbacCommonService.getResourceTypeInfo(resourceType).name
         )
 
         val projectInfo = authResourceService.get(
@@ -531,6 +534,13 @@ class RbacPermissionApplyService @Autowired constructor(
                 defaultMessage = "Failed to get redirect url"
             )
         }
+        val managers = permissionResourceMemberService.getResourceGroupMembers(
+            projectCode = projectId,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            group = BkAuthGroup.MANAGER
+        )
+
         return AuthApplyRedirectInfoVo(
             auth = isEnablePermission,
             resourceTypeName = resourceTypeName,
@@ -541,7 +551,8 @@ class RbacPermissionApplyService @Autowired constructor(
                     defaultMessage = it.actionName
                 )
             },
-            groupInfoList = groupInfoList
+            groupInfoList = groupInfoList,
+            managers = managers
         )
     }
 
@@ -578,7 +589,7 @@ class RbacPermissionApplyService @Autowired constructor(
             )
         } else {
             if (isEnablePermission) {
-                rbacCacheService.getGroupConfigAction(finalResourceType).forEach {
+                rbacCommonService.getGroupConfigAction(finalResourceType).forEach {
                     if (it.actions.contains(action)) {
                         buildRedirectGroupInfo(
                             groupInfoList = groupInfoList,
@@ -589,7 +600,8 @@ class RbacPermissionApplyService @Autowired constructor(
                             resourceCode = resourceCode,
                             groupCode = it.groupCode,
                             iamResourceCode = iamResourceCode,
-                            iamRelatedResourceType = iamRelatedResourceType
+                            iamRelatedResourceType = iamRelatedResourceType,
+                            groupDesc = it.desc
                         )
                     }
                 }
@@ -603,7 +615,10 @@ class RbacPermissionApplyService @Autowired constructor(
                     resourceCode = resourceCode,
                     groupCode = DefaultGroupType.MANAGER.value,
                     iamResourceCode = iamResourceCode,
-                    iamRelatedResourceType = iamRelatedResourceType
+                    iamRelatedResourceType = iamRelatedResourceType,
+                    groupDesc = rbacCommonService.getGroupConfigAction(finalResourceType).firstOrNull {
+                        it.groupCode == DefaultGroupType.MANAGER.value
+                    }?.desc
                 )
             }
         }
@@ -618,7 +633,8 @@ class RbacPermissionApplyService @Autowired constructor(
         resourceCode: String,
         groupCode: String,
         iamResourceCode: String,
-        iamRelatedResourceType: String
+        iamRelatedResourceType: String,
+        groupDesc: String? = null
     ) {
         val projectId = projectInfo.resourceCode
         val projectName = projectInfo.resourceName
@@ -641,7 +657,9 @@ class RbacPermissionApplyService @Autowired constructor(
                         messageCode = "${resourceGroup.resourceType}.${resourceGroup.groupCode}" +
                             AUTH_RESOURCE_GROUP_CONFIG_GROUP_NAME_SUFFIX,
                         defaultMessage = resourceGroup.groupName
-                    )
+                    ),
+                    groupId = resourceGroup.relationId,
+                    groupDesc = groupDesc
                 )
             )
         }

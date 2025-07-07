@@ -55,5 +55,9 @@ data class CredentialWithPermission(
     @get:Schema(title = "最后更新者", required = true)
     val updateUser: String? = null,
     @get:Schema(title = "当前凭证是否允许跨项目使用", required = false)
-    val allowAcrossProject: Boolean = false
+    val allowAcrossProject: Boolean = false,
+    @get:Schema(title = "凭证创建者", required = true)
+    val createUser: String,
+    @get:Schema(title = "凭证创建时间", required = true)
+    val createTime: Long
 )

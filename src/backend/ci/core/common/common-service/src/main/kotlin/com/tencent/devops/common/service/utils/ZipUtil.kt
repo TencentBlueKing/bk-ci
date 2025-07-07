@@ -40,7 +40,7 @@ import java.nio.charset.Charset
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
-import javax.ws.rs.NotFoundException
+import jakarta.ws.rs.NotFoundException
 
 @Suppress("ALL")
 object ZipUtil {

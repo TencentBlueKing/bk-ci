@@ -29,9 +29,10 @@ package command
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"os"
 	"os/exec"
+
+	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 )

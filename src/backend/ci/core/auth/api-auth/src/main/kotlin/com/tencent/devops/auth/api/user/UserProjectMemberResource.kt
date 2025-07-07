@@ -28,18 +28,20 @@
 
 package com.tencent.devops.auth.api.user
 
+import com.tencent.devops.auth.pojo.DepartmentUserCount
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
+import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "USER_PROJECT_MEMBER", description = "用户组—用户")
 @Path("/user/project/members")
@@ -57,4 +59,19 @@ interface UserProjectMemberResource {
         @Parameter(description = "项目Id", required = true)
         projectId: String
     ): Result<Boolean>
+
+    @GET
+    @Path("/projectIds/{projectId}/user/department/distribution")
+    @Operation(summary = "获取项目用户部门分布情况")
+    fun getProjectUserDepartmentDistribution(
+        @Parameter(description = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        @Parameter(description = "项目Id", required = true)
+        projectId: String,
+        @QueryParam("parentDepartmentId")
+        @Parameter(description = "父部门ID", required = true)
+        parentDepartmentId: Int
+    ): Result<List<DepartmentUserCount>>
 }

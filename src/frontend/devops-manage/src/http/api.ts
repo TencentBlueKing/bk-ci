@@ -4,6 +4,8 @@ import {
   PROJECT_PERFIX,
   STORE_PERFIX,
   USER_PERFIX,
+  OPERATE_CHANNEL,
+  PIPELINES_PERFIX,
 } from './constants';
 import http from './fetch';
 export default {
@@ -314,7 +316,7 @@ export default {
    * 用户移出项目
    */
   removeMemberFromProject (projectId: string, params: any) {
-    return http.put(`${IAM_PERFIX}/member/${projectId}/removeMemberFromProject`, params);
+    return http.put(`${IAM_PERFIX}/member/${projectId}/batchRemoveMemberFromProject`, params);
   },
   /**
    * 重置资源授权管理
@@ -336,7 +338,7 @@ export default {
   },
 
   removeMemberFromProjectCheck (projectId: string, params: any) {
-    return http.post(`${IAM_PERFIX}/member/${projectId}/removeMemberFromProjectCheck`, params);
+    return http.post(`${IAM_PERFIX}/member/${projectId}/batchRemoveMemberFromProjectCheck`, params);
   },
   /**
    * 获取资源类型列表
@@ -366,5 +368,44 @@ export default {
 
   syncDeleteGroupPermissions (projectId: string, groupId: any) {
     return http.delete(`${IAM_PERFIX}/group/sync/${projectId}/${groupId}/deleteGroupPermissions`);
+  },
+  /**
+  * 单条移出
+  */
+  getIsDirectRemove(projectId: string, groupId: number, params: any) {
+    return http.DELETE(`${IAM_PERFIX}/member/${projectId}/single/${groupId}/${OPERATE_CHANNEL}/remove`, params);
+  },
+  /**
+   * 获取资源授权管理数量
+   */
+  getResourceType2CountOfHandover(params: any) {
+    return http.post(`${USER_PERFIX}/auth/handover/getResourceType2CountOfHandover`, params);
+  },
+  /**
+   * 获取交接单中授权相关
+   */
+  listAuthorizationsOfHandover(params: any) {
+    return http.post(`${USER_PERFIX}/auth/handover/listAuthorizationsOfHandover`, params);
+  },
+  /**
+   * 获取交接单中用户组相关
+   */
+  listGroupsOfHandover(params: any) {
+    return http.post(`${USER_PERFIX}/auth/handover/listGroupsOfHandover`, params);
+  },
+  /**
+   * 根据流水线方言获取流水线数量
+   */
+  countInheritedDialectPipeline(projectId: string) {
+    return http.get(`${PIPELINES_PERFIX}/${projectId}/countInheritedDialectPipeline`);
+  },
+  /**
+   * 根据流水线方言获取流水线列表
+   */
+  listInheritedDialectPipelines(projectId: string, params: any) {
+    const query = new URLSearchParams({
+      ...params,
+    }).toString();
+    return http.get(`${PIPELINES_PERFIX}/${projectId}/listInheritedDialectPipelines?${query}`);
   },
 };

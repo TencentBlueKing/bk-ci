@@ -65,9 +65,10 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
+import feign.RetryableException
+import org.slf4j.LoggerFactory
 import java.util.Date
 import java.util.concurrent.TimeUnit
-import org.slf4j.LoggerFactory
 
 @Suppress("LongParameterList", "TooManyFunctions")
 class DispatchService constructor(
@@ -172,7 +173,7 @@ class DispatchService constructor(
         executeCount: Int?,
         logTag: String?
     ): Boolean {
-        val (startBuildTask, buildContainer) = getContainerStartupInfo(
+        val (startBuildTask, buildContainer) = getContainerStartupInfoWithRetry(
             projectId = projectId,
             buildId = buildId,
             containerId = containerId,
@@ -251,7 +252,7 @@ class DispatchService constructor(
     ) {
         logger.warn("[$buildId|$vmSeqId] Container startup failure")
         try {
-            val (startBuildTask, buildContainer) = getContainerStartupInfo(
+            val (startBuildTask, buildContainer) = getContainerStartupInfoWithRetry(
                 projectId = projectId,
                 buildId = buildId,
                 containerId = vmSeqId,
@@ -315,6 +316,41 @@ class DispatchService constructor(
             )
         } catch (e: Exception) {
             logger.warn("[$pipelineId]|[$buildId]|[$vmSeqId]| sendDispatchMonitoring failed.", e.message)
+        }
+    }
+
+    /**
+     * 针对服务间调用出现 Connection refused 的异常，进行重试
+     */
+    private fun getContainerStartupInfoWithRetry(
+        projectId: String,
+        buildId: String,
+        containerId: String,
+        logTag: String?,
+        retryTimes: Int = RETRY_TIMES
+    ): Pair<PipelineBuildTask, PipelineBuildContainer> {
+        try {
+            return getContainerStartupInfo(
+                projectId = projectId,
+                buildId = buildId,
+                containerId = containerId,
+                logTag = logTag
+            )
+        } catch (e: RetryableException) {
+            if (retryTimes > 0) {
+                logger.warn("[$buildId]|[$containerId]| getContainerStartupInfo failed, " +
+                        "retryTimes=$retryTimes", e.message)
+                Thread.sleep(1000)
+                return getContainerStartupInfoWithRetry(
+                    projectId = projectId,
+                    buildId = buildId,
+                    containerId = containerId,
+                    logTag = logTag,
+                    retryTimes = retryTimes - 1
+                )
+            } else {
+                throw e
+            }
         }
     }
 
@@ -416,5 +452,7 @@ class DispatchService constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(DispatchService::class.java)
+
+        private const val RETRY_TIMES = 3
     }
 }

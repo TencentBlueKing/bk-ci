@@ -41,5 +41,7 @@ data class PipelineVersionReleaseRequest(
     @get:Schema(title = "静态流水线组", required = false)
     var staticViews: List<String> = emptyList(),
     @get:Schema(title = "流水线YAML信息", required = false)
-    val yamlInfo: PipelineYamlVo?
+    val yamlInfo: PipelineYamlVo?,
+    @get:Schema(title = "提交到指定的分支", required = false)
+    val targetBranch: String? = null
 )

@@ -28,6 +28,7 @@
 package com.tencent.devops.project.dao
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.project.tables.TTableShardingConfig
 import com.tencent.devops.model.project.tables.records.TTableShardingConfigRecord
@@ -50,6 +51,7 @@ class TableShardingConfigDao {
                 MODULE_CODE,
                 TABLE_NAME,
                 SHARDING_NUM,
+                TYPE,
                 CREATOR,
                 MODIFIER
             )
@@ -59,6 +61,7 @@ class TableShardingConfigDao {
                     tableShardingConfig.moduleCode.name,
                     tableShardingConfig.tableName,
                     tableShardingConfig.shardingNum,
+                    tableShardingConfig.type.name,
                     userId,
                     userId
                 ).onDuplicateKeyUpdate()
@@ -73,7 +76,8 @@ class TableShardingConfigDao {
         dslContext: DSLContext,
         clusterName: String,
         moduleCode: SystemModuleEnum,
-        tableName: String
+        tableName: String,
+        tableRuleType: ShardingRuleTypeEnum = ShardingRuleTypeEnum.TABLE
     ): Int {
         with(TTableShardingConfig.T_TABLE_SHARDING_CONFIG) {
             return dslContext.selectCount().from(this)
@@ -81,6 +85,7 @@ class TableShardingConfigDao {
                     CLUSTER_NAME.eq(clusterName)
                         .and(MODULE_CODE.eq(moduleCode.name))
                         .and(TABLE_NAME.eq(tableName))
+                        .and(TYPE.eq(tableRuleType.name))
                 )
                 .fetchOne(0, Int::class.java)!!
         }
@@ -106,7 +111,8 @@ class TableShardingConfigDao {
         dslContext: DSLContext,
         clusterName: String,
         moduleCode: SystemModuleEnum,
-        tableName: String
+        tableName: String,
+        tableRuleType: ShardingRuleTypeEnum = ShardingRuleTypeEnum.TABLE
     ): TTableShardingConfigRecord? {
         return with(TTableShardingConfig.T_TABLE_SHARDING_CONFIG) {
             dslContext.selectFrom(this)
@@ -114,6 +120,7 @@ class TableShardingConfigDao {
                     CLUSTER_NAME.eq(clusterName)
                         .and(MODULE_CODE.eq(moduleCode.name))
                         .and(TABLE_NAME.eq(tableName))
+                        .and(TYPE.eq(tableRuleType.name))
                 )
                 .limit(1)
                 .fetchOne()
@@ -123,12 +130,14 @@ class TableShardingConfigDao {
     fun listByModule(
         dslContext: DSLContext,
         clusterName: String,
-        moduleCode: SystemModuleEnum
+        moduleCode: SystemModuleEnum,
+        tableRuleType: ShardingRuleTypeEnum = ShardingRuleTypeEnum.TABLE
     ): Result<TTableShardingConfigRecord>? {
         return with(TTableShardingConfig.T_TABLE_SHARDING_CONFIG) {
             val conditions = mutableListOf<Condition>()
             conditions.add(CLUSTER_NAME.eq(clusterName))
             conditions.add(MODULE_CODE.eq(moduleCode.name))
+            conditions.add(TYPE.eq(tableRuleType.name))
             dslContext.selectFrom(this).where(conditions).fetch()
         }
     }

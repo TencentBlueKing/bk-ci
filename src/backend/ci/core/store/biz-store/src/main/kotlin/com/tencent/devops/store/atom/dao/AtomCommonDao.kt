@@ -44,6 +44,7 @@ import com.tencent.devops.store.pojo.common.KEY_CREATOR
 import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
 import com.tencent.devops.store.pojo.common.KEY_PROJECT_CODE
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
+import com.tencent.devops.store.pojo.common.STORE_CODE
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -191,6 +192,12 @@ class AtomCommonDao : AbstractStoreCommonDao() {
                 .from(this)
                 .where(ATOM_CODE.eq(storeCode))
                 .fetchAny()?.into(String::class.java)
+        }
+    }
+
+    override fun getStoreCodeById(dslContext: DSLContext, storeId: String): String? {
+        return with(TAtom.T_ATOM) {
+            dslContext.select(ATOM_CODE).from(this).where(ID.eq(storeId)).fetchOne(0, String::class.java)
         }
     }
 }

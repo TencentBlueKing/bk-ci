@@ -37,9 +37,9 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.messaging.simp.config.ChannelRegistration
 import org.springframework.messaging.simp.config.MessageBrokerRegistry
-import org.springframework.web.socket.config.annotation.AbstractWebSocketMessageBrokerConfigurer
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry
+import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer
 import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration
 
 @Suppress("ALL")
@@ -48,7 +48,7 @@ import org.springframework.web.socket.config.annotation.WebSocketTransportRegist
 class WebSocketConfig @Autowired constructor(
     private val bkHandshake: BKHandshakeInterceptor,
     private val redisOperation: RedisOperation
-) : AbstractWebSocketMessageBrokerConfigurer() {
+) : WebSocketMessageBrokerConfigurer {
 
     @Value("\${thread.min:8}")
     private val min: Int = 8

@@ -35,21 +35,21 @@ data class QueryComponentsParam(
     @get:Schema(title = "组件类型", required = true)
     val storeType: String,
     @get:Schema(title = "类型", required = false)
-    val type: String?,
+    val type: String? = null,
     @get:Schema(title = "store组件名称", required = false)
-    val name: String?,
+    val name: String? = null,
     @get:Schema(title = "是否处于流程中", required = false)
     val processFlag: Boolean? = null,
     @get:Schema(title = "分类", required = false)
     val classifyCode: String? = null,
     @get:Schema(title = "应用范畴，多个用逗号分隔", required = false)
-    val categoryCodes: String?,
+    val categoryCodes: String? = null,
     @get:Schema(title = "功能标签，多个用逗号分隔", required = false)
-    val labelCodes: String?,
+    val labelCodes: String? = null,
     @get:Schema(title = "排序", required = false)
-    val sortType: StoreSortTypeEnum?,
+    val sortType: StoreSortTypeEnum? = null,
     @get:Schema(title = "页码", required = true)
-    val page: Int,
+    val page: Int = 1,
     @get:Schema(title = "每页数量", required = true)
-    val pageSize: Int
+    val pageSize: Int = 10
 )

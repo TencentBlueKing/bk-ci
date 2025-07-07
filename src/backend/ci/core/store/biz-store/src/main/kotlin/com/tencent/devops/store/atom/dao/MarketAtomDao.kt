@@ -39,6 +39,7 @@ import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TAtomRecord
+import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.store.pojo.atom.ApproveReq
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
@@ -47,9 +48,6 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.common.utils.VersionUtils
-import java.math.BigDecimal
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -58,6 +56,8 @@ import org.jooq.SelectOnConditionStep
 import org.jooq.UpdateSetFirstStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.math.BigDecimal
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -112,8 +112,8 @@ class MarketAtomDao : AtomBaseDao() {
         if (!keyword.isNullOrEmpty()) {
             conditions.add(
                 ta.NAME.contains(keyword)
-                .or(ta.SUMMARY.contains(keyword))
-                .or(ta.ATOM_CODE.contains(keyword))
+                    .or(ta.SUMMARY.contains(keyword))
+                    .or(ta.ATOM_CODE.contains(keyword))
             )
         }
         if (rdType != null) {
@@ -159,6 +159,7 @@ class MarketAtomDao : AtomBaseDao() {
             ta.CATEGROY,
             ta.ATOM_CODE,
             ta.VERSION,
+            ta.ATOM_STATUS,
             ta.LOGO_URL,
             ta.PUBLISHER,
             ta.SUMMARY,
@@ -239,12 +240,12 @@ class MarketAtomDao : AtomBaseDao() {
         recommendFlag: Boolean?,
         qualityFlag: Boolean?
     ) {
-        if (labelCodeList != null && labelCodeList.isNotEmpty()) {
+        if (!labelCodeList.isNullOrEmpty()) {
             val tLabel = TLabel.T_LABEL
             val labelIdList = dslContext.select(tLabel.ID)
                 .from(tLabel)
                 .where(tLabel.LABEL_CODE.`in`(labelCodeList)).and(tLabel.TYPE.eq(storeType))
-                .fetch().map { it["ID"] as String }
+                .fetch().map { it[tLabel.ID] as String }
             val talr = TAtomLabelRel.T_ATOM_LABEL_REL
             baseStep.leftJoin(talr).on(ta.ID.eq(talr.ATOM_ID))
             conditions.add(talr.LABEL_ID.`in`(labelIdList))
@@ -257,10 +258,12 @@ class MarketAtomDao : AtomBaseDao() {
                 tas.DOWNLOADS.`as`(MarketAtomSortTypeEnum.DOWNLOAD_COUNT.name),
                 tas.RECENT_EXECUTE_NUM.`as`(MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM.name),
                 tas.SCORE_AVERAGE
-            ).from(tas).asTable("t")
-            baseStep.leftJoin(t).on(ta.ATOM_CODE.eq(t.field("STORE_CODE", String::class.java)))
-            conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java)!!.ge(BigDecimal.valueOf(score.toLong())))
-            conditions.add(t.field("STORE_TYPE", Byte::class.java)!!.eq(storeType))
+            ).from(tas)
+            baseStep.leftJoin(t).on(ta.ATOM_CODE.eq(t.field(tas.STORE_CODE.name, String::class.java)))
+            conditions.add(
+                t.field(tas.SCORE_AVERAGE.name, BigDecimal::class.java)!!.ge(BigDecimal.valueOf(score.toLong()))
+            )
+            conditions.add(t.field(tas.STORE_TYPE.name, Byte::class.java)!!.eq(storeType))
         }
         if (null != yamlFlag) {
             conditions.add(taf.YAML_FLAG.eq(yamlFlag))
@@ -370,7 +373,8 @@ class MarketAtomDao : AtomBaseDao() {
         marketAtomCreateRequest: MarketAtomCreateRequest
     ) {
         with(TAtom.T_ATOM) {
-            dslContext.insertInto(this,
+            dslContext.insertInto(
+                this,
                 ID,
                 NAME,
                 ATOM_CODE,
@@ -434,8 +438,10 @@ class MarketAtomDao : AtomBaseDao() {
         val a = TClassify.T_CLASSIFY.`as`("a")
         val classifyId = dslContext.select(a.ID)
             .from(a)
-            .where(a.CLASSIFY_CODE.eq(marketAtomUpdateRequest.classifyCode)
-                .and(a.TYPE.eq(0)))
+            .where(
+                a.CLASSIFY_CODE.eq(marketAtomUpdateRequest.classifyCode)
+                    .and(a.TYPE.eq(0))
+            )
             .fetchOne(0, String::class.java)
         with(TAtom.T_ATOM) {
             dslContext.update(this)
@@ -473,11 +479,14 @@ class MarketAtomDao : AtomBaseDao() {
         val a = TClassify.T_CLASSIFY.`as`("a")
         val classifyId = dslContext.select(a.ID)
             .from(a)
-            .where(a.CLASSIFY_CODE.eq(atomRequest.classifyCode)
-                .and(a.TYPE.eq(0)))
+            .where(
+                a.CLASSIFY_CODE.eq(atomRequest.classifyCode)
+                    .and(a.TYPE.eq(0))
+            )
             .fetchOne(0, String::class.java)
         with(TAtom.T_ATOM) {
-            dslContext.insertInto(this,
+            dslContext.insertInto(
+                this,
                 ID,
                 NAME,
                 ATOM_CODE,
@@ -512,7 +521,8 @@ class MarketAtomDao : AtomBaseDao() {
                 MODIFIER,
                 BRANCH_TEST_FLAG
             )
-                .values(id,
+                .values(
+                    id,
                     atomRequest.name,
                     atomRecord.atomCode,
                     atomRecord.serviceScope,
@@ -731,14 +741,28 @@ class MarketAtomDao : AtomBaseDao() {
         }
     }
 
-    fun setupAtomLatestTestFlag(dslContext: DSLContext, userId: String, atomCode: String, atomId: String) {
+    fun setupAtomLatestTestFlagById(
+        dslContext: DSLContext,
+        userId: String,
+        atomId: String,
+        latestFlag: Boolean
+    ) {
         with(TAtom.T_ATOM) {
             dslContext.update(this)
-                .set(
-                    LATEST_TEST_FLAG,
-                    DSL.case_().`when`(ID.eq(atomId), true).otherwise(false)
-                )
+                .set(LATEST_TEST_FLAG, latestFlag)
                 .set(MODIFIER, userId)
+                .where(ID.eq(atomId))
+                .execute()
+        }
+    }
+
+    fun resetAtomLatestTestFlagByCode(
+        dslContext: DSLContext,
+        atomCode: String
+    ) {
+        with(TAtom.T_ATOM) {
+            dslContext.update(this)
+                .set(LATEST_TEST_FLAG, false)
                 .where(ATOM_CODE.eq(atomCode))
                 .execute()
         }
@@ -748,9 +772,11 @@ class MarketAtomDao : AtomBaseDao() {
         with(TAtom.T_ATOM) {
             return dslContext.select(ID).from(this)
                 .where(ATOM_CODE.eq(atomCode).and(ID.notEqual(atomId)))
-                .and(ATOM_STATUS.`in`(
-                    listOf(AtomStatusEnum.TESTING.status.toByte(), AtomStatusEnum.AUDITING.status.toByte())
-                ))
+                .and(
+                    ATOM_STATUS.`in`(
+                        listOf(AtomStatusEnum.TESTING.status.toByte(), AtomStatusEnum.AUDITING.status.toByte())
+                    )
+                )
                 .orderBy(UPDATE_TIME.desc())
                 .limit(1)
                 .fetchOne(0, String::class.java)

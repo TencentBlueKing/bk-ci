@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserSubPipelineInfoResource
-import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
+import com.tencent.devops.process.pojo.pipeline.PipelineBuildParamFormProp
 import com.tencent.devops.process.service.SubPipelineStartUpService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -45,8 +45,9 @@ class UserSubPipelineInfoResourceImpl @Autowired constructor (
         projectId: String,
         pipelineId: String,
         includeConst: Boolean?,
-        includeNotRequired: Boolean?
-    ): Result<List<SubPipelineStartUpInfo>> {
+        includeNotRequired: Boolean?,
+        branch: String?
+    ): Result<List<PipelineBuildParamFormProp>> {
         checkParam(userId)
         if (pipelineId.isBlank() || projectId.isBlank()) {
             return Result(ArrayList())
@@ -56,7 +57,8 @@ class UserSubPipelineInfoResourceImpl @Autowired constructor (
             projectId = projectId,
             pipelineId = pipelineId,
             includeConst = includeConst,
-            includeNotRequired = includeNotRequired
+            includeNotRequired = includeNotRequired,
+            branch = branch
         )
     }
 

@@ -31,8 +31,8 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.tapd.UserTapdResource
 import com.tencent.devops.repository.sdk.tapd.service.ITapdOauthService
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.UriBuilder
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.UriBuilder
 
 @RestResource
 class UserTapdResourceImpl @Autowired constructor(

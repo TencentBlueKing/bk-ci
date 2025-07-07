@@ -31,16 +31,8 @@ enum class CodeTargetAction(val desc: String) {
 
     COMMIT_TO_MASTER("提交到主干"),
     CHECKOUT_BRANCH_AND_REQUEST_MERGE("新建分支创建MR"),
-    PUSH_BRANCH_AND_REQUEST_MERGE("在原始版本分支创建MR");
-
-    companion object {
-        fun getActionType(type: String): String {
-            return when (type) {
-                "COMMIT_TO_MASTER" -> COMMIT_TO_MASTER.name
-                "CHECKOUT_BRANCH_AND_REQUEST_MERGE" -> CHECKOUT_BRANCH_AND_REQUEST_MERGE.name
-                "PUSH_BRANCH_AND_REQUEST_MERGE" -> PUSH_BRANCH_AND_REQUEST_MERGE.name
-                else -> COMMIT_TO_MASTER.name
-            }
-        }
-    }
+    COMMIT_TO_SOURCE_BRANCH("提交到原始版本分支"),
+    COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE("提交到原始版本分支创建MR"),
+    COMMIT_TO_BRANCH("提交到指定分支"),
+    ;
 }

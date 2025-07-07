@@ -44,5 +44,7 @@ data class TemplateInstanceParams(
     @get:Schema(title = "构建号，不建议使用", required = false)
     val buildNo: BuildNo?,
     @get:Schema(title = "流水线变量列表", required = false)
-    val param: List<BuildFormProperty>
+    val param: List<BuildFormProperty>,
+    @get:Schema(title = "是否更新了推荐版本号基准值", required = false)
+    val updateBuildNo: Boolean? = null
 )

@@ -28,6 +28,7 @@
 
 package com.tencent.devops.auth.dao
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.auth.tables.TAuthResourceGroupConfig
 import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupConfigRecord
 import org.jooq.DSLContext
@@ -110,6 +111,7 @@ class AuthResourceGroupConfigDao {
             dslContext.selectFrom(this)
                 .orderBy(CREATE_TIME.desc(), RESOURCE_TYPE, GROUP_CODE)
                 .limit(pageSize).offset((page - 1) * pageSize)
+                .skipCheck()
                 .fetch()
         }
     }

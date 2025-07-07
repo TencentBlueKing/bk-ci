@@ -28,7 +28,6 @@
 
 package com.tencent.devops.auth.provider.rbac.service
 
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
@@ -46,10 +45,12 @@ import com.tencent.devops.auth.dao.AuthResourceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
+import com.tencent.devops.auth.pojo.AuthResourceGroup
 import com.tencent.devops.auth.pojo.dto.GroupAddDTO
 import com.tencent.devops.auth.pojo.dto.ListGroupConditionDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
 import com.tencent.devops.auth.pojo.enum.GroupMemberStatus
+import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
@@ -63,6 +64,7 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.enums.GroupType
 import com.tencent.devops.common.redis.RedisOperation
@@ -181,8 +183,8 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                 dslContext = dslContext,
                 projectCode = condition.projectId
             )
-            val userCount = projectMemberCount[ManagerScopesEnum.getType(ManagerScopesEnum.USER)] ?: 0
-            val departmentCount = projectMemberCount[ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)] ?: 0
+            val userCount = projectMemberCount[MemberType.USER.type] ?: 0
+            val departmentCount = projectMemberCount[MemberType.DEPARTMENT.type] ?: 0
             val allProjectMemberGroup = IamGroupInfoVo(
                 managerId = managerId,
                 defaultGroup = true,
@@ -311,11 +313,11 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                     projectCode = projectId,
                     iamGroupId = groupId
                 )
-                permissionResourceGroupPermissionService.deleteByGroupIds(
-                    projectCode = projectId,
-                    iamGroupIds = listOf(groupId)
-                )
             }
+            permissionResourceGroupPermissionService.deleteByGroupIds(
+                projectCode = projectId,
+                iamGroupIds = listOf(groupId)
+            )
         }
         return true
     }
@@ -576,6 +578,21 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         return iamGroupId
     }
 
+    override fun getByGroupCode(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        groupCode: BkAuthGroup
+    ): AuthResourceGroup? {
+        return authResourceGroupDao.getByGroupCode(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            groupCode = groupCode.value
+        )
+    }
+
     override fun syncManagerGroup(
         projectCode: String,
         managerId: Int,
@@ -669,11 +686,16 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                 dslContext = transactionContext,
                 ids = records.map { it.id!! }
             )
-            permissionResourceGroupPermissionService.deleteByGroupIds(
+            authResourceGroupMemberDao.deleteByIamGroupIds(
+                dslContext = dslContext,
                 projectCode = projectCode,
                 iamGroupIds = records.map { it.relationId }
             )
         }
+        permissionResourceGroupPermissionService.deleteByGroupIds(
+            projectCode = projectCode,
+            iamGroupIds = records.map { it.relationId }
+        )
         return true
     }
 
