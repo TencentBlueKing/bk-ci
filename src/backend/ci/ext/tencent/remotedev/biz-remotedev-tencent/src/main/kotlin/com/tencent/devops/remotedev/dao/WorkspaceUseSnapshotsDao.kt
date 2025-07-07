@@ -76,7 +76,7 @@ class WorkspaceUseSnapshotsDao {
         }
     }
 
-    fun reduceWorkspaces(
+    fun reduceWorkspaceBills(
         dslContext: DSLContext,
         workspaceNames: List<String>,
         startDate: LocalDate,

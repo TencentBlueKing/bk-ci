@@ -28,6 +28,7 @@ import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
+import java.time.LocalDate
 
 @RestResource
 class OpRemoteDevResourceImpl @Autowired constructor(
@@ -205,5 +206,14 @@ class OpRemoteDevResourceImpl @Autowired constructor(
 
     override fun deleteWhiteList(userId: String, whiteList: WhiteList): Result<Boolean> {
         return Result(whiteListService.opDeleteWhiteList(userId, whiteList))
+    }
+
+    override fun reduceWorkspaceBills(
+        userId: String,
+        workspaceNames: List<String>,
+        startDate: LocalDate,
+        endDate: LocalDate
+    ): Result<Boolean> {
+        return Result(makeMoneyService.reduceWorkspaceBills(workspaceNames, startDate, endDate))
     }
 }

@@ -45,11 +45,13 @@ import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
+import java.time.LocalDate
 
 @Tag(name = "OP_REMOTE_DEV", description = "OP-REMOTE-DEV")
 @Path("/op")
@@ -296,5 +298,20 @@ interface OpRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         whiteList: WhiteList
+    ): Result<Boolean>
+
+    @Operation(summary = "对某一时间段内实例减免")
+    @POST
+    @Path("/bills/reduce")
+    fun reduceWorkspaceBills(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("实例列表")
+        workspaceNames: List<String>,
+        @QueryParam("开始日期")
+        startDate: LocalDate,
+        @QueryParam("结束日期")
+        endDate: LocalDate
     ): Result<Boolean>
 }

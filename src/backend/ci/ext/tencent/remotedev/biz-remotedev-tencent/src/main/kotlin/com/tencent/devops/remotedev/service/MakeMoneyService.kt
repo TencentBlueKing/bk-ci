@@ -428,11 +428,11 @@ class MakeMoneyService @Autowired constructor(
             .build()
     }
 
-    fun reduceWorkspaces(
+    fun reduceWorkspaceBills(
         workspaceNames: List<String>,
         startDate: LocalDate,
         endDate: LocalDate
     ): Boolean {
-        return snapshotsDao.reduceWorkspaces(dslContext, workspaceNames, startDate, endDate)
+        return snapshotsDao.reduceWorkspaceBills(dslContext, workspaceNames, startDate, endDate)
     }
 }
