@@ -307,11 +307,10 @@ interface OpRemoteDevResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "实例列表")
-        workspaceNames: List<String>,
-        @Parameter(description = "开始日期,格式yyyy-MM-dd")
+        @QueryParam("startDate")
         startDate: String,
-        @Parameter(description = "结束日期,格式yyyy-MM-dd")
-        endDate: String
+        @QueryParam("endDate")
+        endDate: String,
+        workspaceNames: List<String>
     ): Result<Boolean>
 }
