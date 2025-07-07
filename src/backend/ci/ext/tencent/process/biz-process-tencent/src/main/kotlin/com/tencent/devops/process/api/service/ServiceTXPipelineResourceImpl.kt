@@ -29,9 +29,13 @@ package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.pojo.PipelineExportV2YamlData
+import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
+import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.service.pipelineExport.TXPipelineExportService
 import org.springframework.beans.factory.annotation.Autowired
@@ -39,7 +43,9 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServiceTXPipelineResourceImpl @Autowired constructor(
     private val pipelineExportService: TXPipelineExportService,
-    private val pipelineListFacadeService: PipelineListFacadeService
+    private val pipelineListFacadeService: PipelineListFacadeService,
+    private val pipelineInfoFacadeService: PipelineInfoFacadeService,
+    private val auditService: AuditService
 ) : ServiceTXPipelineResource {
     override fun exportPipelineGitCI(
         userId: String,
@@ -68,5 +74,34 @@ class ServiceTXPipelineResourceImpl @Autowired constructor(
         if (pipelineId.isBlank()) {
             throw ParamBlankException("Invalid pipelineId")
         }
+    }
+
+    override fun lockPipeline(
+        userId: String,
+        projectId: String,
+        pipelineIds: List<String>,
+        enable: Boolean
+    ): Result<Boolean> {
+        checkParam(userId, projectId)
+        pipelineIds.forEach {
+            val pipelineInfo = pipelineInfoFacadeService.locked(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = it,
+                locked = !enable
+            )
+            auditService.createAudit(
+                Audit(
+                    resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                    resourceId = it,
+                    resourceName = pipelineInfo.pipelineName,
+                    userId = userId,
+                    action = "edit",
+                    actionContent = if (enable) "UnLock Pipeline" else "Locked Pipeline",
+                    projectId = projectId
+                )
+            )
+        }
+        return Result(true)
     }
 }

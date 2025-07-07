@@ -36,6 +36,7 @@ import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Field
 import org.jooq.Record2
+import org.jooq.Record3
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
@@ -87,6 +88,14 @@ class PipelineMetricsInfoDao {
     ) {
         with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
             batchSaveData(dslContext, records, FAILURE_RATE_30D)
+        }
+    }
+
+    fun batchSaveConsecutiveFailures6mData(
+        dslContext: DSLContext, records: List<TEplusPipelineMetricsDataDailyRecord>
+    ) {
+        with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
+            batchSaveData(dslContext, records, CONSECUTIVE_FAILURES_6M)
         }
     }
 
@@ -158,14 +167,28 @@ class PipelineMetricsInfoDao {
         }
     }
 
+    /**
+     * 查询连续失败6个月的流水线记录
+     */
+    fun listConsecutiveFailures6mPipelines(
+        dslContext: DSLContext,
+        statisticsTime: LocalDateTime
+    ): Result<TEplusPipelineMetricsDataDailyRecord> {
+        with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
+            return dslContext.selectFrom(this)
+                .where(STATISTICS_TIME.eq(statisticsTime))
+                .and(CONSECUTIVE_FAILURES_6M.eq(true))
+                .fetch()
+        }
+    }
+
     fun listProjectInvalidPipelineInfo(
         dslContext: DSLContext,
         projectId: String,
         statisticsTime: LocalDateTime
-    ): Result<Record2<String, String>> {
+    ): Result<TEplusPipelineMetricsDataDailyRecord> {
         with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
-            return dslContext.select(PIPELINE_ID, URL)
-                .from(this)
+            return dslContext.selectFrom(this)
                 .where(STATISTICS_TIME.eq(statisticsTime))
                 .and(PROJECT_ID.eq(projectId))
                 .and(INVALID_PIPELINE_FLAG.eq(true))
