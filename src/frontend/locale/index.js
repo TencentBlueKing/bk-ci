@@ -19,7 +19,7 @@ const localeAliasMap = {
     'zh-CN': 'zh-CN',
     'zh-cn': 'zh-CN',
     'ja-JP': 'ja-JP',
-    'ja': 'ja-JP',
+    ja: 'ja-JP',
     zh_CN: 'zh-CN',
     cn: 'zh-CN',
     'en-US': 'en-US',
