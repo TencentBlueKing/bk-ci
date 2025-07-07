@@ -24,6 +24,8 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+import utils.MavenUtil
+import java.net.URI
 
 plugins {
     `maven-publish`
@@ -104,6 +106,16 @@ publishing {
                 usage("java-runtime") {
                     fromResolutionResult()
                 }
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = "nexus3"
+            url = URI(MavenUtil.getUrl(project))
+            credentials {
+                username = MavenUtil.getUserName(project)
+                password = MavenUtil.getPassword(project)
             }
         }
     }
