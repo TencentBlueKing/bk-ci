@@ -450,14 +450,38 @@ class TxPipelineMetricsCronService @Autowired constructor(
     }
 
     /**
+     * 通用分页处理方法
+     * @param fetchProjectIds 获取项目ID列表的函数
+     * @param processProject 处理单个项目的函数
+     * @param limit 每页大小
+     */
+    private fun processByProjectIdsInPages(
+        fetchProjectIds: (Int, Int) -> List<String>,
+        processProject: (String) -> Unit,
+        limit: Int = 100
+    ) {
+        var offset = 0
+        var projectIds: List<String>
+
+        do {
+            projectIds = fetchProjectIds(limit, offset)
+            projectIds.forEach { projectId ->
+                try {
+                    processProject(projectId)
+                } catch (e: Exception) {
+                    logger.error("Error processing project $projectId", e)
+                }
+            }
+            offset += limit
+        } while (projectIds.size == limit)
+    }
+
+    /**
      * 每隔两周周一10点发送项目无效流水线监控报告
      */
     @Scheduled(cron = "0 0 10 ? * MON")
     fun sendInvalidPipelineMonitorReport() {
-
-        if (!enableFlag) {
-            return
-        }
+        if (!enableFlag) return
 
         val lockKey = "SEND_INVALID_PIPELINE_MONITOR_REPORT"
         val redisLock = RedisLock(redisOperation, lockKey, 600)
@@ -466,7 +490,6 @@ class TxPipelineMetricsCronService @Autowired constructor(
         val weekNumber = today.get(WeekFields.of(Locale.getDefault()).weekOfWeekBasedYear())
 
         if (!redisLock.tryLock()) {
-            logger.info("Failed to get lock for sendInvalidPipelineMonitorReport")
             return
         }
 
@@ -477,24 +500,15 @@ class TxPipelineMetricsCronService @Autowired constructor(
             }
 
             logger.info("Starting the task of sending report emails")
-            var offset = 0
-            val limit = 100
-            var totalProjects = 0
 
-            do {
-                val projectIds = fetchInvalidPipelineProjectIds(limit, offset)
-                if (projectIds.isNotEmpty()) {
-                    projectIds.forEach { projectId ->
-                        try {
-                            sendReportForProject(projectId)
-                        } catch (e: Throwable) {
-                            logger.warn("Failed to send report for project $projectId", e)
-                        }
-                    }
-                    totalProjects += projectIds.size
+            processByProjectIdsInPages(
+                fetchProjectIds = { limit, offset ->
+                    fetchInvalidPipelineProjectIds(limit, offset)
+                },
+                processProject = { projectId ->
+                    sendReportForProject(projectId)
                 }
-                offset += limit
-            } while (projectIds.size == limit)
+            )
         } catch (e: Throwable) {
             logger.warn("Error in sendInvalidPipelineMonitorReport", e)
         } finally {
@@ -622,19 +636,15 @@ class TxPipelineMetricsCronService @Autowired constructor(
             logger.info("start disableConsecutiveFailures6mPipelines")
             val currentStatisticsTime = LocalDate.now().atStartOfDay()
 
-            // 分页获取有连续失败6个月流水线的项目ID
-            var offset = 0
-            val limit = 100
-            var projectIds: List<String>
-
-            do {
-                projectIds = pipelineMetricsInfoDao.listConsecutiveFailures6mProjectIds(
-                    dslContext = dslContext,
-                    limit = limit,
-                    offset = offset
-                )
-
-                projectIds.forEach { projectId ->
+            processByProjectIdsInPages(
+                fetchProjectIds = { limit, offset ->
+                    pipelineMetricsInfoDao.listConsecutiveFailures6mProjectIds(
+                        dslContext = dslContext,
+                        limit = limit,
+                        offset = offset
+                    )
+                },
+                processProject = processProject@{ projectId ->
                     // 获取该项目的连续失败流水线
                     val records = pipelineMetricsInfoDao.listConsecutiveFailures6mPipelines(
                         dslContext = dslContext,
@@ -642,7 +652,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
                         projectId = projectId
                     )
 
-                    if (records.isEmpty()) return@forEach
+                    if (records.isEmpty()) return@processProject
 
                     // 获取项目白名单
                     val whitelist = pipelineMetricsInfoDao.listAutoDisableWhitelist(dslContext, projectId).toSet()
@@ -673,9 +683,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
                         }
                     }
                 }
-
-                offset += limit
-            } while (projectIds.size == limit)
+            )
 
             logger.info("end disableConsecutiveFailures6mPipelines")
         } catch (e: Exception) {
