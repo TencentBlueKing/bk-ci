@@ -38,7 +38,9 @@ class BatchInstallAgentService @Autowired constructor(
         projectId: String,
         userId: String,
         os: OS,
-        zoneName: String?
+        zoneName: String?,
+        loginName: String?,
+        loginPassword: String?
     ): String {
         val now = LocalDateTime.now()
         val gateway = slaveGatewayService.getGateway(zoneName)
@@ -53,7 +55,13 @@ class BatchInstallAgentService @Autowired constructor(
                 os = os,
                 zoneName = zoneName,
                 gateway = gateway,
-                token = record.token
+                token = record.token,
+                loginName = loginName,
+                loginPassword = if (loginPassword.isNullOrBlank()) {
+                    null
+                } else {
+                    AESUtil.encrypt(ASE_SECRET, loginPassword)
+                }
             )
         }
 
@@ -75,14 +83,22 @@ class BatchInstallAgentService @Autowired constructor(
             os = os,
             zoneName = zoneName,
             gateway = gateway,
-            token = token
+            token = token,
+            loginName = loginName,
+            loginPassword = if (loginPassword.isNullOrBlank()) {
+                null
+            } else {
+                AESUtil.encrypt(ASE_SECRET, loginPassword)
+            }
         )
     }
 
     fun genAgentInstallScript(
         token: String,
         os: OS,
-        zoneName: String?
+        zoneName: String?,
+        loginName: String?,
+        loginPassword: String?
     ): Response {
         // 先校验是否可以创建
         val (projectId, userId, errorMsg) = verifyToken(token)
@@ -110,7 +126,7 @@ class BatchInstallAgentService @Autowired constructor(
         val agentHashId = HashUtil.encodeLongId(agentId)
 
         // 生成安装脚本
-        return downloadAgentInstallService.downloadInstallScript(agentHashId, true)
+        return downloadAgentInstallService.downloadInstallScript(agentHashId, true, loginName, loginPassword)
     }
 
     private fun verifyToken(token: String): Triple<String, String, String?> {

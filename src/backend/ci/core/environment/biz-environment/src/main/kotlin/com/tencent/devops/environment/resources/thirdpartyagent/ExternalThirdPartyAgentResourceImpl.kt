@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -44,7 +44,7 @@ class ExternalThirdPartyAgentResourceImpl @Autowired constructor(
     private val batchInstallAgentService: BatchInstallAgentService
 ) : ExternalThirdPartyAgentResource {
     override fun downloadAgentInstallScript(agentId: String) =
-        downloadAgentInstallService.downloadInstallScript(agentId, false)
+        downloadAgentInstallService.downloadInstallScript(agentId, false, null, null)
 
     override fun downloadAgent(agentId: String, eTag: String?, arch: String?) =
         downloadAgentInstallService.downloadAgent(
@@ -71,11 +71,19 @@ class ExternalThirdPartyAgentResourceImpl @Autowired constructor(
         return downloadAgentInstallService.downloadInstallAgentBatchFile(newAgentId)
     }
 
-    override fun batchDownloadAgentInstallScript(token: String, os: OS, zoneName: String?): Response {
+    override fun batchDownloadAgentInstallScript(
+        token: String,
+        os: OS,
+        zoneName: String?,
+        loginName: String?,
+        loginPassword: String?
+    ): Response {
         return batchInstallAgentService.genAgentInstallScript(
             token = token,
             os = os,
-            zoneName = zoneName
+            zoneName = zoneName,
+            loginName = loginName,
+            loginPassword = loginPassword
         )
     }
 }
