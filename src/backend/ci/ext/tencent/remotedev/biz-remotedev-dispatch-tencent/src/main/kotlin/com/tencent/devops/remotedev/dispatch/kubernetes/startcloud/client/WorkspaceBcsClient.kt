@@ -158,7 +158,7 @@ class WorkspaceBcsClient @Autowired constructor(
                     dispatchWorkspaceOpHisDao.createWorkspaceHistory(
                         dslContext = dslContext,
                         workspaceName = workspaceName,
-                        environmentUid = environmentOpRsp.data?.environmentUid ?: "",
+                        environmentUid = environmentOpRsp.data?.environmentUid ?: environmentOperate.uid,
                         operator = userId,
                         uid = environmentOpRsp.data!!.taskUid,
                         action = action,
