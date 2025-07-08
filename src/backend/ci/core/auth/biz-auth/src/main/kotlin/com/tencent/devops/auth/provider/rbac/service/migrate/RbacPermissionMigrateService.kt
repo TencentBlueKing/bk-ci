@@ -207,6 +207,7 @@ class RbacPermissionMigrateService(
     }
 
     // 包含修改分级管理员范围/重置项目级别默认组权限/迁移某类资源并创建用户组
+    @Suppress("NestedBlockDepth")
     private fun resetProjectPermissions(
         projectCode: String,
         migrateResource: Boolean,
@@ -265,7 +266,7 @@ class RbacPermissionMigrateService(
                 }
             }
         } catch (ex: Exception) {
-            logger.warn("reset project permissions failed :${projectCode}|$ex")
+            logger.warn("reset project permissions failed :$projectCode|$ex")
         }
     }
 
