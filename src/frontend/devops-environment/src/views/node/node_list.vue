@@ -44,6 +44,7 @@
                         </template>
                         <bk-button
                             v-else
+                            :key="projectId"
                             v-perm="{
                                 permissionData: {
                                     projectId: projectId,
@@ -61,7 +62,7 @@
                             class="mr10"
                             @click="handleExportCSV"
                         >
-                            {{ $t('environment.导出') }}
+                            {{ $t('environment.export') }}
                         </bk-button>
                         <span
                             v-if="isEnableDashboard"
@@ -86,7 +87,7 @@
                         <bk-date-picker
                             ref="dateTimeRangeRef"
                             v-model="dateTimeRange"
-                            :placeholder="$t('environment.选择最近执行时间范围')"
+                            :placeholder="$t('environment.selectRecentExecutionTimeRange')"
                             :type="'datetimerange'"
                             @change="handleDateRangeChange"
                         >
@@ -101,6 +102,7 @@
                     :pagination="pagination"
                     :search-value="searchValue"
                     :date-time-range="dateTimeRange"
+                    :node-tag-list="nodeTagList"
                     @page-change="handlePageChange"
                     @page-limit-change="handlePageLimitChange"
                     @sort-change="handleSortChange"
@@ -172,6 +174,7 @@
     import makeMirrorDialog from '@/components/devops/environment/make-mirror-dialog'
     import thirdConstruct from '@/components/devops/environment/third-construct-dialog'
     import ListTable from './list_table.vue'
+    import { mapState } from 'vuex'
     import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
     import { getQueryString } from '@/utils/util'
     import SearchSelect from '@blueking/search-select'
@@ -291,10 +294,13 @@
                 installHostId: 0,
                 installOsType: '',
                 
-                taskId: 0 // 查询安装日志 -> 安装Agent任务Id
+                taskId: 0, // 查询安装日志 -> 安装Agent任务Id
+                currentNodeType: '',
+                currentTags: []
             }
         },
         computed: {
+            ...mapState('environment', ['nodeTagList']),
             projectId () {
                 return this.$route.params.projectId
             },
@@ -311,7 +317,7 @@
                         default: true
                     },
                     {
-                        name: this.$t('environment.标签'),
+                        name: this.$t('environment.tag'),
                         id: 'label',
                         children: [
                             {
@@ -401,8 +407,19 @@
             }
         },
         watch: {
-            projectId: async function (val) {
+            projectId: function (val) {
                 this.$router.push({ name: 'envList' })
+            },
+            nodeTagList: {
+                immediate: true,
+                handler () {
+                    this.syncCurrentTags()
+                }
+            },
+            '$route.params.nodeType' (newVal) {
+                if (newVal) {
+                    this.handleNodeTypeChange()
+                }
             },
             // 构建机型变化
             'constructImportForm.model' (val) {
@@ -448,6 +465,36 @@
             await this.getEnableDashboard()
         },
         methods: {
+            findTagByValueId (tagValueId) {
+                if (!this.nodeTagList?.length) return []
+                
+                for (const tagGroup of this.nodeTagList) {
+                    const foundTag = tagGroup.tagValues?.find(tag => String(tag.tagValueId) === String(tagValueId))
+                    if (foundTag) {
+                        return [{
+                            tagKeyId: tagGroup.tagKeyId,
+                            tagValues: [foundTag.tagValueId]
+                        }]
+                    }
+                }
+                return []
+            },
+            syncCurrentTags () {
+                if (!this.$route.params.nodeType) return
+            
+                const nodeType = this.$route.params.nodeType
+                if (['allNode', 'THIRDPARTY', 'CMDB'].includes(nodeType)) {
+                    this.currentNodeType = nodeType !== 'allNode' ? nodeType : ''
+                    this.currentTags = []
+                } else {
+                    this.currentTags = this.findTagByValueId(nodeType)
+                    this.currentNodeType = ''
+                }
+            },
+            async handleNodeTypeChange () {
+                await this.syncCurrentTags()
+                await this.requestList()
+            },
             async init () {
                 const {
                     loading
@@ -457,7 +504,10 @@
                 loading.title = this.$t('environment.loadingTitle')
 
                 try {
-                    this.requestList()
+                    await this.syncCurrentTags()
+                    setTimeout(() => {
+                        this.requestList()
+                    }, 500)
                 } catch (err) {
                     this.$bkMessage({
                         message: err.message ? err.message : err,
@@ -479,18 +529,11 @@
                         projectId: this.projectId,
                         params: {
                             ...params,
-                            // nodeType: ,
+                            ...(this.currentNodeType ? { nodeType: this.currentNodeType } : {}),
                             page: this.pagination.current,
                             pageSize: this.pagination.limit
-                        }
-                        // tags: [
-                        //     {
-                        //         tagKeyId: 0,
-                        //         tagValues: [
-                        //             0
-                        //         ]
-                        //     }
-                        // ]
+                        },
+                        ...(this.currentTags.length ? { tags: this.currentTags } : {})
                     })
                     this.pagination.count = res.count
                     this.nodeList = res.records.map(i => {
@@ -502,7 +545,7 @@
                 } catch (err) {
                     const message = err.message ? err.message : err
                     const theme = 'error'
-
+                    this.nodeList = []
                     this.$bkMessage({
                         message,
                         theme

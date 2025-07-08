@@ -34,6 +34,9 @@ const mutations = {
             nodeDetails: res
         })
     },
+    setNodeTagList (state, list) {
+        state.nodeTagList = list
+    },
     [SET_ENVIRONMENT_EXTENSIONS]: (state, { extensionMap, extensions }) => {
         Object.assign(state, {
             extensionMap,
