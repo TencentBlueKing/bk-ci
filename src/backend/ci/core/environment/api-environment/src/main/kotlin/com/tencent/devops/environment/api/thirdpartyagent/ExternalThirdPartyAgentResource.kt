@@ -119,6 +119,12 @@ interface ExternalThirdPartyAgentResource {
         os: OS,
         @Parameter(description = "网关地域", required = false)
         @QueryParam("zoneName")
-        zoneName: String?
+        zoneName: String?,
+        @Parameter(description = "登录账户名", required = false)
+        @QueryParam("loginName")
+        loginName: String?,
+        @Parameter(description = "登录账户密码", required = false)
+        @QueryParam("loginPassword")
+        loginPassword: String?
     ): Response
 }

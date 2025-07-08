@@ -51,7 +51,9 @@ interface AgentUrlService {
         os: OS,
         zoneName: String?,
         gateway: String?,
-        token: String
+        token: String,
+        loginName: String?,
+        loginPassword: String?
     ): String
 
     /**

@@ -5,6 +5,8 @@ cd /d %~dp0
 set work_dir=%CD%
 set agent_id=##agentId##
 set service_name=devops_agent_%agent_id%
+set service_username = ##serviceUsername##
+set service_password = ##servicePassword##
 
 echo work_dir %work_dir%
 
@@ -51,6 +53,19 @@ GOTO :service_start
 :service_start
 echo start agent service
 sc start %service_name%
+
+if defined service_username (
+    if defined service_password (
+        echo "both service_username and service_password are defined"
+        sc config %service_name% obj= %service_username% password= %service_password%
+        if %errorlevel% equ 0 (
+            echo "service login credentials updated successfully"
+        ) else (
+            echo "failed to update service login credentials"
+        )
+    )
+)
+
 GOTO :finally_label
 
 :start_schtasks

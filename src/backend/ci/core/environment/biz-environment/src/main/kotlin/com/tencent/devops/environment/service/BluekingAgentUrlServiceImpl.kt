@@ -71,15 +71,31 @@ class BluekingAgentUrlServiceImpl constructor(
         os: OS,
         zoneName: String?,
         gateway: String?,
-        token: String
+        token: String,
+        loginName: String?,
+        loginPassword: String?
     ): String {
         val gw = fixGateway(gateway)
         if (os == OS.WINDOWS) {
-            return "\$headers = @{ \"$BATCH_TOKEN_HEADER\" = \"$token\" }; " +
+            var sc = "\$headers = @{ \"$BATCH_TOKEN_HEADER\" = \"$token\" }; " +
                     "\$response = Invoke-WebRequest " +
-                    "-Uri \"$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall\" " +
-                    "-Headers \$headers; " +
-                    "\$ps = [System.Text.Encoding]::UTF8.GetString(\$response.Content);Invoke-Expression -Command \$ps"
+                    "-Uri \"$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall"
+            var t = "?"
+            if (!zoneName.isNullOrBlank()) {
+                sc += "${t}zoneName=$zoneName"
+                t = "&"
+            }
+            if (!loginName.isNullOrBlank()) {
+                sc += "${t}loginName=$loginName"
+                t = "&"
+            }
+            if (!loginPassword.isNullOrBlank()) {
+                sc += "${t}loginPassword=$loginPassword"
+                t = "&"
+            }
+            sc += "\" -Headers \$headers; "
+            sc += "\$ps = [System.Text.Encoding]::UTF8.GetString(\$response.Content);Invoke-Expression -Command \$ps"
+            return sc
         }
         var url = "curl -H \"$BATCH_TOKEN_HEADER: $token\" " +
                 "$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall"

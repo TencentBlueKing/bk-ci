@@ -79,7 +79,9 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         os: OS,
-        zoneName: String?
+        zoneName: String?,
+        loginName: String?,
+        loginPassword: String?
     ): Result<String> {
         checkUserId(userId)
         checkProjectId(projectId)
@@ -88,7 +90,9 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
                 projectId = projectId,
                 userId = userId,
                 os = os,
-                zoneName = zoneName
+                zoneName = zoneName,
+                loginName = loginName,
+                loginPassword = loginPassword
             )
         )
     }
