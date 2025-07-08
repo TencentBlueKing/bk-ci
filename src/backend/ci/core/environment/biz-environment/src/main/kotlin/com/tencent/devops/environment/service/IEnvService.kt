@@ -41,7 +41,14 @@ interface IEnvService {
     fun checkName(projectId: String, envId: Long?, envName: String)
     fun createEnvironment(userId: String, projectId: String, envCreateInfo: EnvCreateInfo): EnvironmentId
     fun updateEnvironment(userId: String, projectId: String, envHashId: String, envUpdateInfo: EnvUpdateInfo)
-    fun listEnvironment(userId: String, projectId: String): List<EnvWithPermission>
+    fun listEnvironment(
+        userId: String,
+        projectId: String,
+        envName: String? = null,
+        envType: EnvType? = null,
+        nodeHashId: String? = null
+    ): List<EnvWithPermission>
+
     fun listUsableServerEnvs(userId: String, projectId: String): List<EnvWithPermission>
     fun listEnvironmentByType(userId: String, projectId: String, envType: EnvType): List<EnvWithNodeCount>
     fun listEnvironmentByLimit(projectId: String, offset: Int?, limit: Int?): Page<EnvWithPermission>
@@ -65,6 +72,7 @@ interface IEnvService {
         pageSize: Int?,
         envHashIds: List<String>
     ): Page<NodeBaseInfo>
+
     fun addEnvNodes(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>)
     fun deleteEnvNodes(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>)
     fun searchByName(projectId: String, envName: String, limit: Int, offset: Int): Page<EnvWithPermission>
