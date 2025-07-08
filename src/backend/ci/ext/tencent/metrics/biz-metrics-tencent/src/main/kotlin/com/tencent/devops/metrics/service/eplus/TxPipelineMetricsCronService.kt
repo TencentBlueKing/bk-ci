@@ -452,7 +452,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
     /**
      * 每隔两周周一10点发送项目无效流水线监控报告
      */
-    @Scheduled(cron = "0 0 11 ? * MON")
+    @Scheduled(cron = "0 0 10 ? * MON")
     fun sendInvalidPipelineMonitorReport() {
 
         if (!enableFlag) {
@@ -610,7 +610,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
     /**
      * 每周一10点禁用连续失败6个月的流水线
      */
-    @Scheduled(cron = "0 0 10 ? * MON")
+    @Scheduled(cron = "0 0 11 ? * MON")
     fun disableConsecutiveFailures6mPipelines() {
         if (!enableFlag) return
         val lockKey = "DISABLE_CONSECUTIVE_FAILURES_6M_PIPELINES"
