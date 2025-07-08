@@ -33,6 +33,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import kotlin.String
 
 @Repository
 class WorkspaceUseSnapshotsDao {
