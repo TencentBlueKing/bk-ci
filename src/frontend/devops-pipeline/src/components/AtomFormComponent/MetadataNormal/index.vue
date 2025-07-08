@@ -153,7 +153,7 @@
             value: {
                 handler (newVal) {
                     if (newVal) {
-                        this.parameters = newVal
+                        this.parameters = typeof newVal === 'string' ? JSON.parse(newVal) : newVal
                     } else {
                         this.$nextTick(() => {
                             this.addParam()
@@ -169,7 +169,8 @@
                 this.getOptionList()
                 this.debounceGetOptionList = debounce(this.getOptionList)
             } else {
-                this.parameters = this.value ? this.value : []
+                const value = typeof this.value === 'string' ? JSON.parse(this.value) : this.value
+                this.parameters = value || []
             }
         },
         methods: {
