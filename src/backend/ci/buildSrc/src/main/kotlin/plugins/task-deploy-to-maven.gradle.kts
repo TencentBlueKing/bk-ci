@@ -129,7 +129,7 @@ val shouldPublish = project.the<SourceSetContainer>()["main"].allSource.files.is
         project.name == "common-dependencies"
 
 tasks.forEach {
-    if (it.group == "publish") {
+    if (it.group == "publishing") {
         it.onlyIf { shouldPublish }
     }
 }
