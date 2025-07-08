@@ -2499,7 +2499,7 @@
       "data": {
         "id": "scc_task_manage-defect",
         "name": "管理SCC任务告警",
-        "name_en": "SCC Task Defect Manage",
+        "name_en": "Manage SCC Task Defect",
         "auth_type": "rbac",
         "type": "edit",
         "related_resource_types": [
@@ -2528,7 +2528,7 @@
       "data": {
         "id": "scc_task_view-defect",
         "name": "SCC任务告警查看",
-        "name_en": "SCC Task Defect View",
+        "name_en": "View SCC Task Defect",
         "auth_type": "rbac",
         "type": "view",
         "related_resource_types": [
