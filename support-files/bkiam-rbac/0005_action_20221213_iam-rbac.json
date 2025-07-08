@@ -2498,7 +2498,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "scc_task_manage-defect",
-        "name": "SCC任务告警管理",
+        "name": "管理SCC任务告警",
         "name_en": "SCC Task Defect Manage",
         "auth_type": "rbac",
         "type": "edit",
@@ -2527,7 +2527,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "scc_task_view-defect",
-        "name": "查看SCC任务告警",
+        "name": "SCC任务告警查看",
         "name_en": "SCC Task Defect View",
         "auth_type": "rbac",
         "type": "view",
