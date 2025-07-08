@@ -5,6 +5,7 @@ import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.audit.ActionAuditContent
@@ -72,6 +73,9 @@ class NodeTagService @Autowired constructor(
         }
         if (nodeTagKeyDao.fetchNodeKey(dslContext, projectId, tagKey) != null) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_EXIST)
+        }
+        if (tagValues.isEmpty()) {
+            throw ParamBlankException("tag value is empty")
         }
         val tagValuesSet = tagValues.toSet()
         ActionAuditContext.current()
