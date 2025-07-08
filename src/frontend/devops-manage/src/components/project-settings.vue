@@ -12,7 +12,7 @@ const props = defineProps({
 });
 const projectData = ref(props.data);
 const panelActive = ref('projectSettings')
-const panels = [
+const tabPanels = [
   {
     name: 'projectSettings',
     label: '项目信息',
@@ -69,9 +69,9 @@ function setProjectDeptProp (dept) {
       type="card-tab"
     >
       <bk-tab-panel
-        v-for="(item, index) in panels"
+        v-for="(item, index) in tabPanels"
         :key="item.name"
-        :label="item.label"
+        :label="t(item.label)"
         :name="item.name"
       >
         <div class="edit-form-content">

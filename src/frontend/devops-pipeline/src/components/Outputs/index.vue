@@ -602,11 +602,13 @@
             },
             '$route.query.metadataKey': {
                 handler (newVal) {
-                    this.qualityMetadata = {
-                        labelKey: newVal,
-                        values: this.$route.query.metadataValues?.split(',')
+                    if (newVal) {
+                        this.qualityMetadata = {
+                            labelKey: newVal,
+                            values: this.$route.query.metadataValues?.split(',')
+                        }
+                        this.initializeArtifactValue()
                     }
-                    this.initializeArtifactValue()
                 },
                 immediate: true
             }
@@ -628,15 +630,19 @@
                 if (!Object.keys(this.qualityMetadata).length) return
 
                 const { labelKey, values } = this.qualityMetadata
-                this.artifactValue = [{
-                    id: labelKey,
-                    name: labelKey,
-                    multiable: true,
-                    values: values.map(item => ({
-                        id: item,
-                        name: item
-                    }))
-                }]
+                if (labelKey && values) {
+                    this.artifactValue = [{
+                        id: labelKey,
+                        name: labelKey,
+                        multiable: true,
+                        values: values.map(item => ({
+                            id: item,
+                            name: item
+                        }))
+                    }]
+                } else {
+                    this.artifactValue = []
+                }
                 this.init()
             },
 
@@ -649,8 +655,8 @@
                     delete query.metadataKey
                     delete query.metadataValues
                     this.$router.replace({ query })
+                    this.init()
                 }
-                this.init()
             },
             async getArtifactDate () {
                 const repoList = await this.getMetadataLabel({
@@ -925,7 +931,7 @@
                 margin-right: 4px;
                 flex: 0 0 60%;
                 p {
-                    width: 50px;
+                    min-width: 50px;
                     text-align: center;
                     height: 32px;
                     line-height: 32px;

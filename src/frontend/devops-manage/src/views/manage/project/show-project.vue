@@ -44,7 +44,7 @@ const exceptionObj = ref({
 const showFailedEnableDialog = ref(false);
 const showDisableProjectDialog = ref(false);
 const activeTab = ref(['projectSettings']);
-const panels = computed(() => [
+const tabPanels = computed(() => [
   {
     name: 'projectSettings',
     label: '项目信息',
@@ -442,9 +442,9 @@ onMounted(async () => {
         type="card-tab"
       >
         <bk-tab-panel
-          v-for="(item, index) in panels"
+          v-for="(item, index) in tabPanels"
           :key="item.name"
-          :label="item.label"
+          :label="t(item.label)"
           :name="item.name"
         >
           <bk-loading
