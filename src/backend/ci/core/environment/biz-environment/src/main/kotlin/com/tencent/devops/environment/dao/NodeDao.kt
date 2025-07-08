@@ -225,9 +225,11 @@ class NodeDao {
         tagValueIds: Set<Long>?
     ): Int {
         with(TNode.T_NODE) {
-            val query = dslContext.selectCount()
-                .from(TNode.T_NODE)
-                .where(PROJECT_ID.eq(projectId))
+            val dsl = dslContext.selectCount().from(TNode.T_NODE)
+            if (!tagValueIds.isNullOrEmpty()) {
+                dsl.leftJoin(TNodeTags.T_NODE_TAGS).on(NODE_ID.eq(TNodeTags.T_NODE_TAGS.NODE_ID))
+            }
+            val query = dsl.where(PROJECT_ID.eq(projectId))
             conditions(
                 keywords = keywords,
                 query = query,
