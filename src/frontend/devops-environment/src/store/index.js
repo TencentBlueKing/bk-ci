@@ -32,7 +32,8 @@ const store = {
         nodeTypes: null,
         nodeStatus: null,
         devCloudVmQuta: {},
-        currentSelectedModel: {}
+        currentSelectedModel: {},
+        nodeTagList: []
     },
     getters: {},
     mutations,

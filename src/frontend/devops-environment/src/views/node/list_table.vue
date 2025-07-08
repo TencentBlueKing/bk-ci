@@ -106,14 +106,55 @@
             </bk-table-column>
             <bk-table-column
                 v-if="allRenderColumnMap.label"
-                :label="$t('environment.标签')"
+                :label="$t('environment.tag')"
                 sortable="custom"
                 prop="label"
+                :width="200"
                 show-overflow-tooltip
             >
-                <template slot-scope="props">
-                    {{ props.row.label || '-' }}
-                </template>
+                <div
+                    :ref="`belongsLabelBox_${props.$index}`"
+                    slot-scope="props"
+                    class="group-label-warpper"
+                >
+                    <template v-if="labelGroups[props.$index].visibleLabels">
+                        <span
+                            class="group-tag"
+                            v-for="(item, index) in labelGroups[props.$index].visibleLabels"
+                            :key="index"
+                            :ref="`labelName_${props.$index}`"
+                        >
+                            <bk-tag class="key">
+                                {{ item.tagKeyName }}: {{ item.tagValues[0].tagValueName }}
+                            </bk-tag>
+                        </span>
+
+                        <bk-popover
+                            placement="top"
+                            theme="light"
+                            ext-cls="group-tag-popover"
+                            v-if="labelGroups[props.$index].showMore"
+                        >
+                            <bk-tag
+                                :ref="`labelMore_${props.$index}`"
+                            >
+                                +{{ labelGroups[props.$index].showMore }}
+                            </bk-tag>
+                            <div slot="content">
+                                <div
+                                    v-for="(item, index) in labelGroups[props.$index].hiddenLabels"
+                                    class="group-tag"
+                                    :key="index"
+                                    v-bk-overflow-tips
+                                >
+                                    <bk-tag class="key">
+                                        {{ item.tagKeyName }}: {{ item.tagValues[0].tagValueName }}
+                                    </bk-tag>
+                                </div>
+                            </div>
+                        </bk-popover>
+                    </template>
+                </div>
             </bk-table-column>
             <bk-table-column
                 v-if="allRenderColumnMap.os"
@@ -284,7 +325,7 @@
                                 class="node-handle delete-node-text"
                                 @click.stop="handleSetTag(props.row)"
                             >
-                                {{ $t('environment.设置标签') }}
+                                {{ $t('environment.setTag') }}
                             </span>
                             <span
                                 v-if="!['TSTACK'].includes(props.row.nodeType)"
@@ -335,7 +376,7 @@
         <bk-sideslider
             :is-show.sync="isShowSetTagSlider"
             :show-mask="false"
-            :title="$t('environment.设置标签')"
+            :title="$t('environment.setTag')"
             :quick-close="false"
             :width="640"
             ext-cls="set-tag-slider"
@@ -349,30 +390,38 @@
                         class="form-item-row"
                     >
                         <bk-select
-                            v-model="item.selectValue"
+                            v-model="item.tagKeyId"
                             style="width: 230px;"
                             searchable
-                            :name="`select_${index}`"
+                            :name="`key_${index}`"
                             v-validate="'required'"
-                            :class="{ 'is-danger': errors.has(`select_${index}`) }"
+                            :class="{ 'is-danger': errors.has(`key_${index}`) }"
                         >
                             <bk-option
-                                v-for="option in selectOptions"
-                                :key="option.id"
-                                :id="option.id"
-                                :name="option.name"
+                                v-for="option in tagKeyIdList"
+                                :key="option.tagKeyId"
+                                :id="option.tagKeyId"
+                                :name="option.tagKeyName"
                             >
                             </bk-option>
                         </bk-select>
                         <span class="key-value">:</span>
-                        <input
-                            :clearable="true"
-                            v-model="item.inputValue"
-                            :name="`input_${index}`"
+                        <bk-select
+                            v-model="item.tagValueId"
+                            style="width: 230px;"
+                            searchable
+                            :name="`value_${index}`"
                             v-validate="'required'"
-                            class="value-input"
-                            :class="{ 'is-danger': errors.has(`input_${index}`) }"
-                        />
+                            :class="{ 'is-danger': errors.has(`value_${index}`) }"
+                        >
+                            <bk-option
+                                v-for="option in getTagValueIdList(item.tagKeyId)"
+                                :key="option.tagValueId"
+                                :id="option.tagValueId"
+                                :name="option.tagValueName"
+                            >
+                            </bk-option>
+                        </bk-select>
                         
                         <i
                             class="devops-icon icon-plus-circle set-icon"
@@ -436,6 +485,10 @@
             dateTimeRange: {
                 type: Array,
                 default: () => []
+            },
+            nodeTagList: {
+                type: Array,
+                default: () => []
             }
         },
         data () {
@@ -458,7 +511,7 @@
                     },
                     {
                         id: 'label',
-                        label: this.$t('environment.标签')
+                        label: this.$t('environment.tag')
                     },
                     {
                         id: 'os',
@@ -510,16 +563,11 @@
                 runningStatus: ['CREATING', 'STARTING', 'STOPPING', 'RESTARTING', 'DELETING', 'BUILDING_IMAGE'],
                 successStatus: ['NORMAL', 'BUILD_IMAGE_SUCCESS'],
                 failStatus: ['ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN', 'RUNNING'],
-
-                selectOptions: [
-                    { id: 'architecture', name: 'architecture' },
-                    { id: 'design', name: 'design' },
-                    { id: 'development', name: 'development' }
-                ],
-                // 表单行数据，每个对象包含下拉选中值和输入框值
                 setTagForm: [
-                    { selectValue: 'architecture', inputValue: 'X86' }
-                ]
+                    { tagKeyId: '', tagValueId: '' }
+                ],
+                currentNodeId: null,
+                visibleLabelCountList: {}
             }
         },
         computed: {
@@ -534,16 +582,74 @@
             },
             usageMap () {
                 return {
-                    DEVCLOUD: this.$t('environment.构建'),
-                    THIRDPARTY: this.$t('environment.构建'),
-                    CC: this.$t('environment.部署'),
-                    CMDB: this.$t('environment.部署'),
-                    UNKNOWN: this.$t('environment.部署'),
-                    OTHER: this.$t('environment.部署')
+                    DEVCLOUD: this.$t('environment.build'),
+                    THIRDPARTY: this.$t('environment.build'),
+                    CC: this.$t('environment.deploy'),
+                    CMDB: this.$t('environment.deploy'),
+                    UNKNOWN: this.$t('environment.deploy'),
+                    OTHER: this.$t('environment.deploy')
+                }
+            },
+            tagKeyIdList () {
+                return this.nodeTagList
+            },
+            labelGroups () {
+                const res = this.nodeList.map((item, index) => {
+                    const { tags = [] } = item
+                    const visibleCount = this.visibleLabelCountList[index]
+                    
+                    if (visibleCount >= 1) {
+                        return {
+                            visibleLabels: tags.slice(0, visibleCount),
+                            hiddenLabels: tags.slice(visibleCount),
+                            showMore: tags.length - visibleCount
+                        }
+                    }
+
+                    return {
+                        visibleLabels: tags,
+                        hiddenLabels: [],
+                        showMore: tags?.length ?? 0
+                    }
+                })
+                return res
+            }
+        },
+        watch: {
+            nodeList: function (val) {
+                if (val) {
+                    setTimeout(this.calcOverPosTable, 100)
                 }
             }
         },
         methods: {
+            calcOverPosTable () {
+                const tagMargin = 6
+                this.visibleLabelCountList = this.nodeList.reduce((acc, item, index) => {
+                    if (Array.isArray(item?.tags)) {
+                        const labelBoxWidth = this.$refs[`belongsLabelBox_${index}`]?.clientWidth * 2
+                        const labelLength = item?.tags.length
+                        const moreTag = this.$refs?.[`labelMore_${index}`]?.$el
+                        const moreTagWidth = (moreTag?.clientWidth ?? 0) + tagMargin
+                        const viewPortWidth = labelBoxWidth - (labelLength > 1 ? moreTagWidth : 0)
+                        let sumTagWidth = 0
+                        let tagVisibleCount = 0
+                        this.$refs[`labelName_${index}`]?.every((label) => {
+                            sumTagWidth += label?.offsetWidth + tagMargin
+                            const isOverSize = sumTagWidth > viewPortWidth
+                            !isOverSize && tagVisibleCount++
+                            return !isOverSize
+                        })
+
+                        acc[index] = tagVisibleCount
+                    }
+                    return acc
+                }, {})
+            },
+            getTagValueIdList (tagKeyId) {
+                const tag = this.nodeTagList.find(tag => tag.tagKeyId === tagKeyId)
+                return tag ? tag.tagValues : []
+            },
             handlePageChange (page) {
                 this.$emit('page-change', page)
             },
@@ -687,23 +793,65 @@
             },
             handleSetTag (row) {
                 this.isShowSetTagSlider = true
+                this.currentNodeId = row.nodeId
+
+                if (row.tags && row.tags.length > 0) {
+                    this.setTagForm = row.tags.flatMap(tag =>
+                        tag.tagValues.map(value => ({
+                            tagKeyId: tag.tagKeyId,
+                            tagValueId: value.tagValueId
+                        }))
+                    )
+                } else {
+                    this.setTagForm = [{
+                        tagKeyId: '',
+                        tagValueId: ''
+                    }]
+                }
             },
             addRow () {
                 this.setTagForm.push({
-                    selectValue: '',
-                    inputValue: ''
+                    tagKeyId: '',
+                    tagValueId: ''
                 })
             },
-            // 删除一行
             deleteRow (index) {
                 this.setTagForm.splice(index, 1)
             },
             async handleSetConfirm () {
-                const isValid = await this.$validator.validateAll()
-                console.log('🚀 ~ handleSetConfirm:', isValid, this.setTagForm)
+                try {
+                    const isValid = await this.$validator.validateAll()
+                    if (isValid) {
+                        const params = {
+                            nodeId: this.currentNodeId,
+                            tags: this.setTagForm
+                        }
+                        const res = await this.$store.dispatch('environment/setNodeTag', {
+                            projectId: this.projectId,
+                            params
+                        })
+                        if (res) {
+                            this.handleCancel()
+                            this.$bkMessage({
+                                message: this.$t('environment.successfullySaved'),
+                                theme: 'success'
+                            })
+                            this.$emit('refresh')
+                        }
+                    }
+                } catch (err) {
+                    this.$bkMessage({
+                        message: err.message ? err.message : err,
+                        theme: 'error'
+                    })
+                }
             },
             handleCancel () {
                 this.isShowSetTagSlider = false
+                this.setTagForm = [{
+                    tagKeyId: '',
+                    tagValueId: ''
+                }]
             },
             handleApplyPermission (node) {
                 this.handleNoPermission({
@@ -783,6 +931,13 @@
       .edit-node-item {
           width: 24%;
       }
+
+      .group-label-warpper {
+          display: flex;
+          width: 100%;
+          flex-wrap: wrap;
+          margin: 3px 0;
+       }
 
       .node-item-row {
         &.node-row-useless {

@@ -7,6 +7,7 @@
                 v-if="showContent && envList.length"
             >
                 <bk-button
+                    :key="projectId"
                     v-perm="{
                         permissionData: {
                             projectId: projectId,

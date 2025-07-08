@@ -1,47 +1,47 @@
 <template>
     <div class="biz-container">
-        <p class="environment-tit">
-            <img
-                :src="environmentUrl"
-                :width="24"
-                :height="24"
-            />
-            <span>{{ $t('environment.environmentManage') }}</span>
-        </p>
-        <bk-tab
-            :active="activePanel"
-            :label-height="60"
-            type="unborder-card"
-            :active-bar="activeBar"
-            ext-cls="env-tab"
-            @tab-change="handleTabChange"
-            :validate-active="false"
-        >
-            <bk-tab-panel
-                v-for="panel in panels"
-                render-directive="if"
-                :label="panel.label"
-                :name="panel.name"
-                :key="panel.name"
-            >
-                <template slot="label">
+        <div class="biz-header">
+            <p class="environment-tit">
+                <img
+                    :src="environmentUrl"
+                    :width="24"
+                    :height="24"
+                />
+                <span>{{ $t('environment.environmentManage') }}</span>
+            </p>
+            <span class="manage-tabs">
+                <span
+                    v-for="panel in panels"
+                    :key="panel.name"
+                    :class="{
+                        'manage-tab': true,
+                        active: activePanel === panel.name
+                    }"
+                    @click="handleChangeTab(panel)"
+                >
                     <i
                         :class="panel.icon"
                         class="panel-icon"
                     ></i>
                     <span class="panel-name">{{ panel.label }}</span>
-                </template>
-                <router-view></router-view>
-            </bk-tab-panel>
-    
-            <template slot="setting">
-                <span class="enable-monitoring">{{ $t('environment.开启构建机监控') }}</span>
-                <!-- <p v-else class="enable-monitoring">
-                    <span>{{ $t('environment.构建机监控') }}</span>
-                    <span class="enabled">{{ $t('environment.已开启') }}</span>
+                </span>
+            </span>
+            <span class="monitoring">
+                <span
+                    v-if="false"
+                    class="enable-monitoring"
+                >{{ $t('environment.enableBuildAgentMonitoring') }}</span>
+                <!-- <p
+                    v-else
+                    class="enable-monitoring"
+                >
+                    <span>{{ $t('environment.buildAgentMonitoring') }}</span>
+                    <span class="enabled">{{ $t('environment.enabled') }}</span>
                 </p> -->
-            </template>
-        </bk-tab>
+            </span>
+        </div>
+
+        <router-view class="manage-main"></router-view>
     </div>
 </template>
 
@@ -51,11 +51,7 @@
     export default {
         data () {
             return {
-                environmentUrl,
-                activeBar: {
-                    position: 'top',
-                    height: '4px'
-                }
+                environmentUrl
             }
         },
 
@@ -94,57 +90,84 @@
             }
         },
         methods: {
-            handleTabChange (name) {
-                if (this.activePanel === name) return
+            handleChangeTab (panel) {
+                if (this.activePanel === panel.name) return
 
                 const routeMap = {
                     envList: { name: 'envList' },
                     nodeList: { name: 'nodeList' }
                 }
                 
-                this.$router.push(routeMap[name])
+                this.$router.push(routeMap[panel.name])
             }
         }
     }
 </script>
 
-<style lang="scss">
-.env-tab {
-    .bk-tab-label-wrapper {
-        text-align: center;
-    }
-    .bk-tab-section {
-        padding: 0;
-    }
-    .bk-tab-header {
-        background-color: #FFFFFF;
-        box-shadow: 0 2px 5px 0 #333c4808;
-    }
-}
-</style>
-
 <style lang="scss" scoped>
 .biz-container {
-    position: relative;
     width: 100%;
     box-sizing: border-box;
     overflow: hidden;
 
-    .environment-tit {
-        position: absolute;
-        left: 24px;
-        line-height: 60px;
+    .biz-header {
+        position: relative;
         z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        height: 60px;
+        line-height: 60px;
+        padding: 0 24px;
+        background-color: #FFFFFF;
+        box-shadow: 0 2px 5px 0 #333c4808;
+        border-bottom: 1px solid #eeeff3;
+    }
+
+    .environment-tit {
         img {
             vertical-align: middle;
         }
     }
-    .env-tab {
-        .panel-icon{
-            vertical-align: middle;
+    
+    .manage-tabs {
+        display: flex;
+        align-items: center;
+        
+        .manage-tab {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 0 24px;
+            cursor: pointer;
+            position: relative;
+            
+            .panel-icon {
+                margin-right: 8px;
+            }
+            
+            &.active {
+                color: #3a84ff;
+                background: rgba(225, 236, 255, 0.5);
+                
+                &::after {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    height: 4px;
+                    background-color: #3a84ff;
+                }
+            }
         }
+    }
+
+    .monitoring {
         .enable-monitoring {
-            margin-right: 24px;
+            margin-left: auto;
             font-size: 12px;
             color: #3A84FF;
             cursor: pointer;

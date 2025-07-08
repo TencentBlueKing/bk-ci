@@ -11,6 +11,7 @@
                 <section class="filter-bar">
                     <div class="btn-part">
                         <bk-button
+                            :key="projectId"
                             v-perm="{
                                 permissionData: {
                                     projectId: projectId,
@@ -31,7 +32,7 @@
                             class="mr10"
                             @click="handleExportCSV"
                         >
-                            {{ $t('environment.导出') }}
+                            {{ $t('environment.export') }}
                         </bk-button>
                     </div>
                     <div class="search-part">
@@ -46,7 +47,7 @@
                         <bk-date-picker
                             ref="dateTimeRangeRef"
                             v-model="dateTimeRange"
-                            :placeholder="$t('environment.选择最近执行时间范围')"
+                            :placeholder="$t('environment.selectRecentExecutionTimeRange')"
                             :type="'datetimerange'"
                             @change="handleDateRangeChange"
                         >
@@ -61,6 +62,7 @@
                     :pagination="pagination"
                     :search-value="searchValue"
                     :date-time-range="dateTimeRange"
+                    :node-tag-list="nodeTagList"
                     @page-change="handlePageChange"
                     @page-limit-change="handlePageLimitChange"
                     @sort-change="handleSortChange"
@@ -96,6 +98,7 @@
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
     import ListTable from './list_table.vue'
+    import { mapState } from 'vuex'
     const ENV_NODE_TABLE_LIMIT_CACHE = 'env_node_table_limit_cache'
 
     export default {
@@ -192,10 +195,13 @@
                     limitList: [10, 50, 100, 200]
                 },
                 requestParams: {},
-                dateTimeRange: []
+                dateTimeRange: [],
+                currentNodeType: '',
+                currentTags: []
             }
         },
         computed: {
+            ...mapState('environment', ['nodeTagList']),
             projectId () {
                 return this.$route.params.projectId
             },
@@ -205,7 +211,7 @@
             filterData () {
                 const data = [
                     {
-                        name: this.$t('environment.关键字'),
+                        name: this.$t('environment.keywords'),
                         id: 'keywords',
                         default: true
                     },
@@ -215,7 +221,7 @@
                         default: true
                     },
                     {
-                        name: this.$t('environment.标签'),
+                        name: this.$t('environment.tag'),
                         id: 'label',
                         children: [
                             {
@@ -238,11 +244,11 @@
                         children: [
                             {
                                 id: 'CMDB',
-                                name: this.$t('environment.部署')
+                                name: this.$t('environment.deploy')
                             },
                             {
                                 id: 'THIRDPARTY',
-                                name: this.$t('environment.构建')
+                                name: this.$t('environment.build')
                             }
                         ]
                     },
@@ -301,18 +307,29 @@
             },
             usageMap () {
                 return {
-                    DEVCLOUD: this.$t('environment.构建'),
-                    THIRDPARTY: this.$t('environment.构建'),
-                    CC: this.$t('environment.部署'),
-                    CMDB: this.$t('environment.部署'),
-                    UNKNOWN: this.$t('environment.部署'),
-                    OTHER: this.$t('environment.部署')
+                    DEVCLOUD: this.$t('environment.build'),
+                    THIRDPARTY: this.$t('environment.build'),
+                    CC: this.$t('environment.deploy'),
+                    CMDB: this.$t('environment.deploy'),
+                    UNKNOWN: this.$t('environment.deploy'),
+                    OTHER: this.$t('environment.deploy')
                 }
             }
         },
         watch: {
-            projectId: async function (val) {
+            projectId: function (val) {
                 this.$router.push({ name: 'envList' })
+            },
+            nodeTagList: {
+                immediate: true,
+                handler () {
+                    this.syncCurrentTags()
+                }
+            },
+            '$route.params.nodeType' (newVal) {
+                if (newVal) {
+                    this.handleNodeTypeChange()
+                }
             },
             // 构建机型变化
             'constructImportForm.model' (val) {
@@ -356,6 +373,38 @@
             await this.init()
         },
         methods: {
+            findTagByValueId (tagValueId) {
+                if (!this.nodeTagList?.length) return []
+                
+                for (const tagGroup of this.nodeTagList) {
+                    const foundTag = tagGroup.tagValues?.find(tag => String(tag.tagValueId) === String(tagValueId))
+
+                    if (foundTag) {
+                        return [{
+                            tagKeyId: tagGroup.tagKeyId,
+                            tagValues: [foundTag.tagValueId]
+                        }]
+                    }
+                }
+                return []
+            },
+            syncCurrentTags () {
+                if (!this.$route.params.nodeType) return
+            
+                const nodeType = this.$route.params.nodeType
+                if (['allNode', 'THIRDPARTY', 'CMDB'].includes(nodeType)) {
+                    this.currentNodeType = nodeType !== 'allNode' ? nodeType : ''
+                    this.currentTags = []
+                } else {
+                    this.currentTags = this.findTagByValueId(nodeType)
+                    this.currentNodeType = ''
+                }
+            },
+            async handleNodeTypeChange () {
+                await this.syncCurrentTags()
+                await this.requestList()
+            },
+
             async init () {
                 const {
                     loading
@@ -365,7 +414,10 @@
                 loading.title = this.$t('environment.loadingTitle')
 
                 try {
-                    this.requestList()
+                    await this.syncCurrentTags()
+                    setTimeout(() => {
+                        this.requestList()
+                    }, 500)
                 } catch (err) {
                     this.$bkMessage({
                         message: err.message ? err.message : err,
@@ -387,18 +439,11 @@
                         projectId: this.projectId,
                         params: {
                             ...params,
-                            // nodeType: ,
+                            ...(this.currentNodeType ? { nodeType: this.currentNodeType } : {}),
                             page: this.pagination.current,
                             pageSize: this.pagination.limit
-                        }
-                        // tags: [
-                        //     {
-                        //         tagKeyId: 0,
-                        //         tagValues: [
-                        //             0
-                        //         ]
-                        //     }
-                        // ]
+                        },
+                        ...(this.currentTags.length ? { tags: this.currentTags } : {})
                     })
 
                     this.pagination.count = res.count
@@ -412,7 +457,7 @@
                 } catch (err) {
                     const message = err.message ? err.message : err
                     const theme = 'error'
-
+                    this.nodeList = []
                     this.$bkMessage({
                         message,
                         theme

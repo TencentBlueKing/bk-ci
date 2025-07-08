@@ -84,17 +84,22 @@ const actions = {
      */
     requestNodeList ({ commit }, { projectId, params, tags }) {
         const query = new URLSearchParams(params).toString()
-        return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/fetchNodes?${query}`, tags).then(response => {
+        return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/fetchNodes?${query}`, { tags }).then(response => {
             return response
         })
     },
     /**
      * 节点标签列表
      */
-    requestNodeTagList ({ commit }, { projectId }) {
-        return vue.$ajax.get(`${prefix}/user/nodetag/fetchTag?projectId=${projectId}`).then(response => {
-            return response
-        })
+    async requestNodeTagList ({ commit }, projectId) {
+        try {
+            const res = await vue.$ajax.get(`${prefix}/user/nodetag/fetchTag?projectId=${projectId}`)
+            commit('setNodeTagList', res || [])
+            return res
+        } catch (err) {
+            console.error(err)
+            return []
+        }
     },
     requestGetCounts ({ commit }, { projectId }) {
         return vue.$ajax.get(`${prefix}/user/envnode/${projectId}/nodesCount`).then(response => {
@@ -111,8 +116,13 @@ const actions = {
             return response
         })
     },
-    editNodeTag ({ commit }, { projectId, tagKeyId, params }) {
-        return vue.$ajax.put(`${prefix}/user/nodetag/updateTag?projectId=${projectId}&tagKeyId=${tagKeyId}`, params).then(response => {
+    editNodeTag ({ commit }, { projectId, params }) {
+        return vue.$ajax.put(`${prefix}/user/nodetag/updateTag?projectId=${projectId}`, params).then(response => {
+            return response
+        })
+    },
+    setNodeTag ({ commit }, { projectId, params }) {
+        return vue.$ajax.post(`${prefix}/user/nodetag/editTag?projectId=${projectId}`, params).then(response => {
             return response
         })
     },

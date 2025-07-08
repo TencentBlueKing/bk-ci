@@ -14,7 +14,7 @@
                     @click="handleChangeTag(true)"
                 >
                     <i class="devops-icon icon-plus"></i>
-                    <span>{{ $t('environment.新增标签') }}</span>
+                    <span>{{ $t('environment.addTag') }}</span>
                 </p>
             </div>
 
@@ -43,15 +43,21 @@
             >
                 <li
                     v-for="groupItem in group.groups"
-                    :key="groupItem.id"
+                    :key="groupItem.tagKeyId"
                     class="label-group"
                 >
                     <div
                         class="group-header"
                     >
-                        <p @click="toggleGroupExpand(groupItem.id)">
-                            <i :class="['devops-icon', 'icon-expanded', isGroupExpanded(groupItem.id) ? 'icon-down-shape' : 'icon-right-shape']"></i>
-                            <span class="group-name">{{ groupItem.name }}</span>
+                        <p
+                            @click="toggleGroupExpand(groupItem.tagKeyId)"
+                            class="group-label"
+                        >
+                            <i :class="['devops-icon', 'icon-expanded', isGroupExpanded(groupItem.tagKeyId) ? 'icon-down-shape' : 'icon-right-shape']"></i>
+                            <span
+                                class="group-name"
+                                v-bk-overflow-tips
+                            >{{ groupItem.tagKeyName }}</span>
                         </p>
                         
                         <bk-dropdown-menu
@@ -74,10 +80,24 @@
                                 <li
                                     @click="handleChangeTag(false, groupItem)"
                                 >
-                                    <a href="javascript:;">{{ $t('environment.修改标签') }}</a>
+                                    <a href="javascript:;">{{ $t('environment.updateTag') }}</a>
                                 </li>
-                                <li @click="handleDeleteLabel(groupItem)">
-                                    <a href="javascript:;">{{ $t('environment.delete') }}</a>
+                                <li
+                                    @click="handleDeleteLabel(groupItem)"
+                                    v-bk-tooltips="{ content: $t('environment.removeNodesBeforeDeletingLabel'), disabled: !groupItem.canDelete }"
+                                >
+                                    <a
+                                        href="javascript:;"
+                                        v-if="!groupItem.canDelete"
+                                    >{{ $t('environment.delete') }}</a>
+                                    <bk-button
+                                        v-else
+                                        text
+                                        class="no-can-delete"
+                                        :disabled="groupItem.canDelete"
+                                    >
+                                        {{ $t('environment.delete') }}
+                                    </bk-button>
                                 </li>
                             </ul>
                         </bk-dropdown-menu>
@@ -85,20 +105,23 @@
 
                     <ul
                         class="sub-node-list"
-                        v-if="groupItem.children"
-                        v-show="isGroupExpanded(groupItem.id)"
+                        v-if="groupItem.tagValues"
+                        v-show="isGroupExpanded(groupItem.tagKeyId)"
                     >
                         <li
-                            v-for="child in groupItem.children"
-                            :key="child.id"
+                            v-for="child in groupItem.tagValues"
+                            :key="child.tagValueId"
                             class="node-item sub-node-item"
-                            :class="{ 'active': $route.params.nodeType === String(child.id) }"
-                            @click="handleNodeClick(child.id)"
+                            :class="{ 'active': $route.params.nodeType === String(child.tagValueId) }"
+                            @click="handleNodeClick(child.tagValueId)"
                         >
-                            <span class="node-name">{{ child.name }}</span>
+                            <span
+                                class="node-name"
+                                v-bk-overflow-tips
+                            >{{ child.tagValueName }}</span>
                             <span
                                 class="count-tag"
-                                :class="{ 'active': $route.params.nodeType === String(child.id) }"
+                                :class="{ 'active': $route.params.nodeType === String(child.tagValueId) }"
                             >{{ child.nodeCount }}</span>
                         </li>
                     </ul>
@@ -117,6 +140,12 @@
             :style="{ '--dialog-top-translateY': `translateY(${dialogTopOffset}px)` }"
         >
             <div class="tag-dialog-content">
+                <bk-alert
+                    type="info"
+                    v-if="isNodeLabelInUse"
+                    class="tag-info"
+                    :title="$t('environment.labelInUseRemoveNodesBeforeEditOrDelete')"
+                ></bk-alert>
                 <bk-form
                     :label-width="100"
                     :model="formData"
@@ -124,18 +153,20 @@
                     ref="tagForm"
                 >
                     <bk-form-item
-                        label="标签label"
+                        :label="$t('environment.tagLabel')"
                         :required="true"
                         property="label"
                     >
                         <bk-input
                             v-model="formData.tagKeyName"
                             :clearable="true"
+                            :disabled="isNodeLabelInUse"
+                            :maxlength="64"
                         ></bk-input>
                     </bk-form-item>
 
                     <bk-form-item
-                        label="标签value"
+                        :label="$t('environment.tagValue')"
                         style="margin-top: 24px;"
                     >
                         <div
@@ -148,8 +179,10 @@
                                 class="value-row"
                             >
                                 <bk-input
-                                    v-model="formData.tagValues[index]"
+                                    v-model="formData.tagValues[index].tagValueName"
                                     :clearable="true"
+                                    :disabled="item.nodeCount > 0"
+                                    :maxlength="64"
                                 ></bk-input>
                                 <i
                                     class="devops-icon icon-plus-circle"
@@ -158,7 +191,7 @@
                                 <i
                                     class="devops-icon icon-minus-circle"
                                     v-if="formData.tagValues.length > 1"
-                                    @click="deleteTagValueRow(index)"
+                                    @click="deleteTagValueRow(index, item.nodeCount)"
                                 ></i>
                             </div>
                         </div>
@@ -184,6 +217,7 @@
   
 <script>
     import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
+    import { mapState, mapActions } from 'vuex'
 
     export default {
         name: 'NodeGroupTree',
@@ -200,9 +234,10 @@
                 },
                 formData: {
                     tagKeyName: '',
-                    tagValues: ['']
+                    tagValues: [{
+                        tagValueName: ''
+                    }]
                 },
-                tagList: [],
                 nodesCounts: {}
             }
         },
@@ -210,57 +245,46 @@
             projectId () {
                 return this.$route.params.projectId
             },
+            ...mapState('environment', ['nodeTagList']),
             ulMaxHeight () {
                 return window.innerHeight * 0.8 - 184
             },
             nodeGroup () {
                 const { CMDB = 0, THIRDPARTY = 0 } = this.nodesCounts || {}
                 const totalCount = CMDB + THIRDPARTY
-                console.log(this.tagList.map(item => ({
-                    id: item.tagKeyId,
-                    name: item.tagKeyName,
-                    children: item.tagValues.map(tag => ({
-                        ...tag,
-                        id: tag.tagValueId,
-                        name: tag.tagValueName
-                    }))
-                })))
                 return [
                     {
                         type: 'node_type',
                         groups: [
-                            { id: 'allNode', name: this.$t('environment.全部节点'), nodeCount: totalCount },
-                            { id: 'THIRDPARTY', name: this.$t('environment.私有构建节点'), nodeCount: THIRDPARTY },
-                            { id: 'CMDB', name: this.$t('environment.部署节点'), nodeCount: CMDB }
+                            { id: 'allNode', name: this.$t('environment.allNodes'), nodeCount: totalCount },
+                            { id: 'THIRDPARTY', name: this.$t('environment.privateBuildNode'), nodeCount: THIRDPARTY },
+                            { id: 'CMDB', name: this.$t('environment.deploymentNode'), nodeCount: CMDB }
                         ]
                     },
                     {
                         type: 'tag_type',
-                        tltle: this.$t('environment.按节点标签'),
-                        groups: this.tagList.map(item => ({
-                            id: item.tagKeyId,
-                            name: item.tagKeyName,
-                            children: item.tagValues.map(tag => ({
-                                nodeCount: tag.nodeCount,
-                                id: tag.tagValueId,
-                                name: tag.tagValueName
-                            }))
+                        tltle: this.$t('environment.byNodeLabel'),
+                        groups: this.nodeTagList.map(i => ({
+                            ...i,
+                            canDelete: i.tagValues.reduce((sum, tagValue) => {
+                                return sum + tagValue.nodeCount
+                            }, 0) > 0
                         }))
                     }
                 ]
             },
-            allGroupIds () {
-                const labelGroup = this.nodeGroup.find(g => g.type === 'tag_type')
-                return labelGroup ? labelGroup.groups.map(g => g.id) : []
-            },
             tagTitle () {
-                return this.isAdd ? this.$t('environment.新增标签') : this.$t('environment.修改标签')
+                return this.isAdd ? this.$t('environment.addTag') : this.$t('environment.updateTag')
+            },
+            isNodeLabelInUse () {
+                const totalNodeCount = this.formData.tagValues.reduce((sum, tagValue) => {
+                    return sum + tagValue.nodeCount
+                }, 0)
+
+                return totalNodeCount > 0
             }
         },
         watch: {
-            nodeGroup () {
-                this.expandedGroupIds = this.allGroupIds
-            },
             'formData.tagValues': {
                 handler (newVal) {
                     if (newVal) {
@@ -275,19 +299,47 @@
             }
         },
         created () {
-            this.expandedGroupIds = this.allGroupIds
+            this.setDefaultExpandedGroup()
         },
         mounted () {
             this.getNodeTypeCount()
             this.getTagTypeList()
         },
         methods: {
+            ...mapActions('environment', ['requestNodeTagList']),
+            findGroupByNodeType () {
+                const nodeType = this.$route.params.nodeType
+                if (!nodeType) return null
+                
+                const labelGroup = this.nodeGroup.find(g => g.type === 'tag_type')
+                if (!labelGroup || !labelGroup.groups.length) return null
+                
+                for (const group of labelGroup.groups) {
+                    if (group.tagValues && group.tagValues.some(v => String(v.tagValueId) === String(nodeType))) {
+                        return group.tagKeyId
+                    }
+                }
+                
+                return null
+            },
+            setDefaultExpandedGroup () {
+                const groupId = this.findGroupByNodeType()
+                if (groupId) {
+                    this.expandedGroupIds = [groupId]
+                } else {
+                    const labelGroup = this.nodeGroup.find(g => g.type === 'tag_type')
+                    if (labelGroup && labelGroup.groups.length > 0) {
+                        this.expandedGroupIds = [labelGroup.groups[0].tagKeyId]
+                    }
+                }
+            },
             async getNodeTypeCount () {
                 try {
                     const res = await this.$store.dispatch('environment/requestGetCounts', {
                         projectId: this.projectId
                     })
                     this.nodesCounts = res
+                    this.setDefaultExpandedGroup()
                 } catch (err) {
                     this.$bkMessage({
                         message: err.message ? err.message : err,
@@ -296,17 +348,8 @@
                 }
             },
             async getTagTypeList () {
-                try {
-                    const res = await this.$store.dispatch('environment/requestNodeTagList', {
-                        projectId: this.projectId
-                    })
-                    this.tagList = res
-                } catch (err) {
-                    this.$bkMessage({
-                        message: err.message ? err.message : err,
-                        theme: 'error'
-                    })
-                }
+                await this.requestNodeTagList(this.projectId)
+                this.setDefaultExpandedGroup()
             },
             isGroupExpanded (groupId) {
                 return this.expandedGroupIds.includes(groupId)
@@ -322,27 +365,31 @@
                 this.isShowTagChange = true
                 this.isAdd = type
                 if (groupItem) {
-                    this.formData = {
-                        tagKeyName: groupItem.name,
-                        tagValues: groupItem.children.map(child => (child.name))
-                    }
+                    this.formData = JSON.parse(JSON.stringify(groupItem))
                 }
             },
             handleNodeClick (nodeType) {
                 this.$router.push({ name: 'nodeList', params: { nodeType } })
             },
             handleDeleteLabel (groupItem) {
+                if (groupItem.canDelete) {
+                    return
+                }
                 this.$bkInfo({
                     theme: 'warning',
                     type: 'warning',
-                    title: `${this.$t('environment.确认删除标签', [groupItem.name])}`,
+                    title: `${this.$t('environment.confirmDeleteTag', [groupItem.tagKeyName])}`,
                     confirmFn: async () => {
                         try {
                             const res = await this.$store.dispatch('environment/deleteNodeTag', {
                                 projectId: this.projectId,
-                                tagKeyId: groupItem.id
+                                tagKeyId: groupItem.tagKeyId
                             })
                             if (res) {
+                                const currentNodeType = this.$route.params.nodeType
+                                const isDeleteCurNodeType = groupItem.tagValues.map(i => String(i.tagValueId)).includes(currentNodeType)
+                                isDeleteCurNodeType && this.handleNodeClick('allNode')
+
                                 this.getTagTypeList()
                                 this.$bkMessage({
                                     message: this.$t('environment.successfullyDeleted'),
@@ -364,9 +411,14 @@
                 })
             },
             addTagValueRow () {
-                this.formData.tagValues.push('')
+                this.formData.tagValues.push({
+                    tagValueName: ''
+                })
             },
-            deleteTagValueRow (index) {
+            deleteTagValueRow (index, nodeCount) {
+                if (nodeCount) {
+                    return
+                }
                 if (this.formData.tagValues.length > 1) {
                     this.formData.tagValues.splice(index, 1)
                 }
@@ -374,7 +426,7 @@
             async handleConfirm () {
                 const valid = await this.$refs.tagForm.validate()
                 if (valid) {
-                    const filteredValues = this.formData.tagValues.filter(value => value.trim() !== '')
+                    const filteredValues = this.formData.tagValues.map(i => i.tagValueName.trim()).filter(i => i !== '')
                     const params = {
                         ...this.formData,
                         tagValues: filteredValues
@@ -392,11 +444,12 @@
                             })
                         }
                     } else {
-                        console.log({
-                            projectId: this.projectId,
-                            tagKeyId: this.formData.id,
-                            params
-                        })
+                        const params = {
+                            tagKeyId: this.formData.tagKeyId,
+                            tagKeyName: this.formData.tagKeyName,
+                            tagValues: this.formData.tagValues.map(({ nodeCount, ...rest }) => rest)
+                        }
+
                         const res = await this.$store.dispatch('environment/editNodeTag', {
                             projectId: this.projectId,
                             params
@@ -409,14 +462,16 @@
                             })
                         }
                     }
-                    this.isShowTagChange = false
+                    this.handleCancel()
                 }
             },
             handleCancel () {
                 this.isShowTagChange = false
                 this.formData = {
                     tagKeyName: '',
-                    tagValues: ['']
+                    tagValues: [{
+                        tagValueName: ''
+                    }]
                 }
             }
         }
@@ -433,7 +488,9 @@
 <style scoped lang="scss">
   .node-group-tree {
     padding-top: 4px;
+    height: calc(100vh - 60px);
     background-color: #fff;
+    box-shadow: 1px 0 0 0 #EAEBF0;
   }
   
   .group-title {
@@ -497,6 +554,10 @@
   
   .node-name {
     flex: 1;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   
   .count-tag {
@@ -521,7 +582,9 @@
   }
   
   .group-header {
-    padding: 8px 12px;
+    height: 32px;
+    line-height: 32px;
+    padding: 0 12px;
     cursor: pointer;
     border-radius: 4px;
     display: flex;
@@ -537,12 +600,42 @@
         display: block;
     }
 
-    p {
+    .manage-icon-more-fill:hover {
+        color: #3A84FF;
+        border-radius: 50%;
+        background-color: rgba(99, 101, 110, 0.1);
+    }
+
+    .no-can-delete {
+        width: 100%;
+        text-align: left;
+        height: 32px;
+        padding: 0 16px;
+        &:hover {
+            background-color: #F5F7FA;
+        }
+    }
+
+    .group-label {
+        display: flex;
         flex: 1;
+        width: calc(100% - 12px);
+        align-items: center;
+
+        span{
+            display: inline-block;
+            flex: 1;
+            width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
     }
 
     .dropdown-trigger-btn {
         display: none;
+        color: #979BA5;
+        font-size: 16px;
     }
   }
 
@@ -563,6 +656,10 @@
 
   .tag-dialog-content {
     padding: 0 16px;
+
+    .tag-info {
+        margin-bottom: 16px;
+    }
 
     .bk-form-control {
         width: 250px;

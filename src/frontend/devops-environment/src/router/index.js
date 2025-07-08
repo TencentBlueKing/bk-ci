@@ -34,7 +34,7 @@ const envDetail = () => import(/* webpackChunkName: 'envDetail' */ '../views/env
 const nodeEntry = () => import(/* webpackChunkName: 'nodeEntry' */ '../views/node/index')
 
 // 节点列表
-const nodeList = () => import(/* webpackChunkName: 'nodeList' */ '../views/node/node_list.vue')
+const nodeList = () => import(/* webpackChunkName: 'nodeList' */ '../views/node/node_list')
 
 // 节点详情
 const nodeDetail = () => import(/* webpackChunkName: 'nodeDetail' */ '../views/node_detail')
@@ -79,8 +79,7 @@ const routes = [
                 }
             },
             {
-                path: 'nodeList',
-                name: 'nodeEntry',
+                path: 'node',
                 component: nodeEntry,
                 children: [
                     {
