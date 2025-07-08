@@ -387,5 +387,7 @@
     "全选": "Select All",
     "退出批量操作": "Exit Batch Operation",
     "确认将以下组织移出本项目吗": "Confirm to remove the following organizations from this project?",
-    "用户拥有的权限均已过期，无需交接，确定移出用户并清理过期权限吗？": "All permissions owned by the user have expired. No transfer is needed. Are you sure you want to remove the user and clear expired permissions?"
+    "用户拥有的权限均已过期，无需交接，确定移出用户并清理过期权限吗？": "All permissions owned by the user have expired. No transfer is needed. Are you sure you want to remove the user and clear expired permissions?",
+    "流水线设置": "Pipeline Settings",
+    "制品库设置": "Artifact Library Settings"
 }

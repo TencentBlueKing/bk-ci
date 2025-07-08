@@ -215,7 +215,7 @@
       >
         <bk-input
           v-model="metadataForm.description"
-          placeholder="请输入"
+          :placeholder="t('请输入')"
           :rows="3"
           :maxlength="100"
           type="textarea"

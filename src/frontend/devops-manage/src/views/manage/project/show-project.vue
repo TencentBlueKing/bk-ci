@@ -338,7 +338,7 @@ onMounted(async () => {
 });
 
 const activeTab = ref(['projectSettings']);
-const panels = computed(() => [
+const tabPanels = computed(() => [
   {
     name: 'projectSettings',
     label: '项目信息',
@@ -397,9 +397,9 @@ const panels = computed(() => [
         type="card-tab"
       >
         <bk-tab-panel
-          v-for="(item, index) in panels"
+          v-for="(item, index) in tabPanels"
           :key="item.name"
-          :label="item.label"
+          :label="t(item.label)"
           :name="item.name"
         >
           <bk-loading
