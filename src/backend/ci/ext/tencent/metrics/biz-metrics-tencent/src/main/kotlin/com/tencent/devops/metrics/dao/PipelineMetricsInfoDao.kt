@@ -35,8 +35,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Field
-import org.jooq.Record2
-import org.jooq.Record3
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
@@ -172,13 +170,34 @@ class PipelineMetricsInfoDao {
      */
     fun listConsecutiveFailures6mPipelines(
         dslContext: DSLContext,
-        statisticsTime: LocalDateTime
+        statisticsTime: LocalDateTime,
+        projectId: String? = null
     ): Result<TEplusPipelineMetricsDataDailyRecord> {
         with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
-            return dslContext.selectFrom(this)
+            val query = dslContext.selectFrom(this)
                 .where(STATISTICS_TIME.eq(statisticsTime))
                 .and(CONSECUTIVE_FAILURES_6M.eq(true))
-                .fetch()
+
+            projectId?.let {
+                query.and(PROJECT_ID.eq(it))
+            }
+
+            return query.fetch()
+        }
+    }
+
+    /**
+     * 分页查询有连续失败6个月流水线的项目ID
+     */
+    fun listConsecutiveFailures6mProjectIds(dslContext: DSLContext, limit: Int, offset: Int): List<String> {
+        with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
+            return dslContext.select(PROJECT_ID).from(this)
+                .where(CONSECUTIVE_FAILURES_6M.eq(true))
+                .and(STATISTICS_TIME.eq(currentStatisticsTime))
+                .groupBy(PROJECT_ID)
+                .orderBy(PROJECT_ID.desc())
+                .limit(limit).offset(offset)
+                .fetchInto(String::class.java)
         }
     }
 

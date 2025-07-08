@@ -608,7 +608,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
     }
 
     /**
-     * 每周一10点禁用连续失败6个月的流水线
+     * 每周一11点禁用连续失败6个月的流水线
      */
     @Scheduled(cron = "0 0 11 ? * MON")
     fun disableConsecutiveFailures6mPipelines() {
@@ -622,41 +622,60 @@ class TxPipelineMetricsCronService @Autowired constructor(
             logger.info("start disableConsecutiveFailures6mPipelines")
             val currentStatisticsTime = LocalDate.now().atStartOfDay()
 
-            val records = pipelineMetricsInfoDao.listConsecutiveFailures6mPipelines(
-                dslContext = dslContext,
-                statisticsTime = currentStatisticsTime
-            )
+            // 分页获取有连续失败6个月流水线的项目ID
+            var offset = 0
+            val limit = 100
+            var projectIds: List<String>
 
-            if (records.isEmpty()) {
-                logger.info("No consecutive failures 6m pipelines to disable")
-                return
-            }
+            do {
+                projectIds = pipelineMetricsInfoDao.listConsecutiveFailures6mProjectIds(
+                    dslContext = dslContext,
+                    limit = limit,
+                    offset = offset
+                )
 
-            // 按项目分组处理
-            records.groupBy { it.projectId }.forEach { (projectId, projectRecords) ->
-                // 获取项目白名单
-                val whitelist = pipelineMetricsInfoDao.listAutoDisableWhitelist(dslContext, projectId).toSet()
-
-                // 过滤非白名单流水线
-                val pipelineIds = projectRecords
-                    .filterNot { whitelist.contains(it.pipelineId) }
-                    .map { it.pipelineId }
-
-                if (pipelineIds.isNotEmpty()) {
-                    val result = client.get(ServiceTXPipelineResource::class).lockPipeline(
-                        userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
-                        projectId = projectId,
-                        pipelineIds = pipelineIds,
-                        enable = false
+                projectIds.forEach { projectId ->
+                    // 获取该项目的连续失败流水线
+                    val records = pipelineMetricsInfoDao.listConsecutiveFailures6mPipelines(
+                        dslContext = dslContext,
+                        statisticsTime = currentStatisticsTime,
+                        projectId = projectId
                     )
 
-                    if (result.isNotOk() || result.data != true) {
-                        logger.warn("Failed to disable pipelines in project $projectId: ${result.message}")
-                    } else {
-                        logger.info("Successfully disabled ${pipelineIds.size} pipelines in project $projectId")
+                    if (records.isEmpty()) return@forEach
+
+                    // 获取项目白名单
+                    val whitelist = pipelineMetricsInfoDao.listAutoDisableWhitelist(dslContext, projectId).toSet()
+
+                    // 获取已禁用的流水线
+                    val disabledPipelines = client.get(ServiceTXPipelineResource::class).listDisabledPipelines(projectId).data
+                        ?: emptyList<String>()
+
+                    // 过滤非白名单且未禁用的流水线
+                    val pipelineIds = records
+                        .filterNot { whitelist.contains(it.pipelineId) }
+                        .filterNot { disabledPipelines.contains(it.pipelineId) }
+                        .map { it.pipelineId }
+
+                    if (pipelineIds.isNotEmpty()) {
+                        val result = client.get(ServiceTXPipelineResource::class).lockPipeline(
+                            userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+                            projectId = projectId,
+                            pipelineIds = pipelineIds,
+                            enable = false
+                        )
+
+                        if (result.isNotOk() || result.data != true) {
+                            logger.warn("Failed to disable pipelines in project $projectId: ${result.message}")
+                        } else {
+                            logger.info("Successfully disabled ${pipelineIds.size} pipelines in project $projectId")
+                        }
                     }
                 }
-            }
+
+                offset += limit
+            } while (projectIds.size == limit)
+
             logger.info("end disableConsecutiveFailures6mPipelines")
         } catch (e: Exception) {
             logger.error("Error in disableConsecutiveFailures6mPipelines", e)
