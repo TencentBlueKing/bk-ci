@@ -36,7 +36,7 @@ import com.tencent.devops.project.pojo.mq.ProjectEnableStatusBroadCastEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
-class PermissionSyncWhenProjectEnabledListener @Autowired constructor(
+class SyncGroupAndMemberListener @Autowired constructor(
     private val resourceGroupSyncService: PermissionResourceGroupSyncService,
     private val resourceGroupPermissionService: PermissionResourceGroupPermissionService,
     private val permissionMigrateService: PermissionMigrateService
@@ -56,6 +56,6 @@ class PermissionSyncWhenProjectEnabledListener @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PermissionSyncWhenProjectEnabledListener::class.java)
+        private val logger = LoggerFactory.getLogger(SyncGroupAndMemberListener::class.java)
     }
 }
