@@ -648,8 +648,9 @@ class TxPipelineMetricsCronService @Autowired constructor(
                     val whitelist = pipelineMetricsInfoDao.listAutoDisableWhitelist(dslContext, projectId).toSet()
 
                     // 获取已禁用的流水线
-                    val disabledPipelines = client.get(ServiceTXPipelineResource::class).listDisabledPipelines(projectId).data
-                        ?: emptyList<String>()
+                    val disabledPipelines = client.get(ServiceTXPipelineResource::class).listDisabledPipelines(
+                            projectId
+                        ).data ?: emptyList<String>()
 
                     // 过滤非白名单且未禁用的流水线
                     val pipelineIds = records
