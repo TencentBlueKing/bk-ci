@@ -53,17 +53,17 @@ class MakeMoneyService @Autowired constructor(
     }
 
     /*
-    * 注意：计算当天是不在计算时间范围内的
-    *
-    * 计算顺序: a + (c - d - b) + (e - f)
-    *
-    * a: 当前在用(非PREPARING、非DELETED、非DELIVERING_FAILED)的实例
-    * b: 今天新建且成功交付的实例
-    * c: 今天删除的实例
-    * d: 今天未成功交付且删除的实例
-    * e: 昨天删除的实例
-    * f: 昨天未成功交付且删除的实例
-    * */
+     * 注意：计算当天是不在计算时间范围内的
+     *
+     * 计算顺序: a + (c - d - b) + (e - f)
+     *
+     * a: 当前在用(非PREPARING、非DELETED、非DELIVERING_FAILED)的实例
+     * b: 今天新建且成功交付的实例
+     * c: 今天删除的实例
+     * d: 今天未成功交付且删除的实例
+     * e: 昨天删除的实例
+     * f: 昨天未成功交付且删除的实例
+     * */
     fun makeMoneyLastDay(): Response {
         val now = LocalDateTime.now()
         val lastDay = now.plusDays(-1)
@@ -150,7 +150,8 @@ class MakeMoneyService @Autowired constructor(
                 notStatus = setOf(WorkspaceStatus.PREPARING, WorkspaceStatus.DELETED, WorkspaceStatus.DELIVERING_FAILED)
             )
             if (res.isEmpty()) break
-            aMap.putAll(res.associateBy({ it.name }, {
+            aMap.putAll(
+                res.associateBy({ it.name }, {
                 SaveData(
                     projectId = it.projectId,
                     projectName = it.projectName,
@@ -160,7 +161,8 @@ class MakeMoneyService @Autowired constructor(
                     creator = it.creator,
                     machineType = ""
                 )
-            }))
+            })
+            )
             page += 1
         }
         return aMap
@@ -359,13 +361,13 @@ class MakeMoneyService @Autowired constructor(
     }
 
     /*
-    * 返回数据格式参照: {"20241215": 1, "20241216": 1, "20241217": 1, "20241218": 1, "20241219": 1,
-    * "20241220": 1, "20241221": 1, "20241222": 1, "20241223": 1, "20241224": 1, "20241225": 1,
-    * "20241226": 1, "20241227": 1, "20241228": 1, "20241229": 1, "20241230": 1, "20241231": 1,
-    * "20250101": 1, "20250102": 1, "20250103": 1, "20250104": 0, "20250105": 0, "20250106": 0,
-    * "20250107": 0, "20250108": 0, "20250109": 0, "20250110": 0, "20250111": 1, "20250112": 0,
-    * "20250113": 0, "20250114": 0}
-    * */
+     * 返回数据格式参照: {"20241215": 1, "20241216": 1, "20241217": 1, "20241218": 1, "20241219": 1,
+     * "20241220": 1, "20241221": 1, "20241222": 1, "20241223": 1, "20241224": 1, "20241225": 1,
+     * "20241226": 1, "20241227": 1, "20241228": 1, "20241229": 1, "20241230": 1, "20241231": 1,
+     * "20250101": 1, "20250102": 1, "20250103": 1, "20250104": 0, "20250105": 0, "20250106": 0,
+     * "20250107": 0, "20250108": 0, "20250109": 0, "20250110": 0, "20250111": 1, "20250112": 0,
+     * "20250113": 0, "20250114": 0}
+     * */
     private fun dayDetail(number: Long, dataList: List<String>): Map<String, Int> {
         return generateSequence(number) { it shr 1 }
             .take(dataList.size)
@@ -426,5 +428,19 @@ class MakeMoneyService @Autowired constructor(
             MediaType.APPLICATION_OCTET_STREAM
         ).header("Content-disposition", "attachment;filename=makeMoneyMonthly.xlsx")
             .build()
+    }
+
+    fun reduceWorkspaceBills(
+        workspaceNames: List<String>,
+        startDate: String,
+        endDate: String
+    ): Boolean {
+        logger.info("reduceWorkspaceBills: $workspaceNames, $startDate, $endDate")
+        return snapshotsDao.reduceWorkspaceBills(
+            dslContext = dslContext,
+            workspaceNames = workspaceNames,
+            startDate = LocalDate.parse(startDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+            endDate = LocalDate.parse(endDate, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        )
     }
 }
