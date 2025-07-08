@@ -125,8 +125,14 @@ class BatchInstallAgentService @Autowired constructor(
         )
         val agentHashId = HashUtil.encodeLongId(agentId)
 
+        val decodePassword = if (loginPassword.isNullOrBlank()) {
+            null
+        } else {
+            AESUtil.decrypt(ASE_SECRET, loginPassword)
+        }
+
         // 生成安装脚本
-        return downloadAgentInstallService.downloadInstallScript(agentHashId, true, loginName, loginPassword)
+        return downloadAgentInstallService.downloadInstallScript(agentHashId, true, loginName, decodePassword)
     }
 
     private fun verifyToken(token: String): Triple<String, String, String?> {
