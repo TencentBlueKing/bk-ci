@@ -33,7 +33,7 @@ import com.tencent.devops.auth.provider.rbac.listener.AuthItsmCallbackListener
 import com.tencent.devops.auth.provider.rbac.listener.AuthProjectLevelPermissionsSyncListener
 import com.tencent.devops.auth.provider.rbac.listener.AuthResourceGroupCreateListener
 import com.tencent.devops.auth.provider.rbac.listener.AuthResourceGroupModifyListener
-import com.tencent.devops.auth.provider.rbac.listener.SyncGroupAndMemberListener
+import com.tencent.devops.auth.provider.rbac.listener.PermissionSyncWhenProjectEnabledListener
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthItsmCallbackEvent
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthProjectLevelPermissionsSyncEvent
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupCreateEvent
@@ -68,7 +68,7 @@ class RbacMQConfiguration {
         resourceGroupSyncService: PermissionResourceGroupSyncService,
         resourceGroupPermissionService: PermissionResourceGroupPermissionService,
         permissionMigrateService: PermissionMigrateService
-    ) = SyncGroupAndMemberListener(
+    ) = PermissionSyncWhenProjectEnabledListener(
         resourceGroupSyncService = resourceGroupSyncService,
         resourceGroupPermissionService = resourceGroupPermissionService,
         permissionMigrateService = permissionMigrateService
@@ -76,8 +76,10 @@ class RbacMQConfiguration {
 
     @EventConsumer
     fun syncGroupAndMemberConsumer(
-        @Autowired syncGroupAndMemberListener: SyncGroupAndMemberListener
-    ) = ScsConsumerBuilder.build<ProjectEnableStatusBroadCastEvent> { syncGroupAndMemberListener.execute(it) }
+        @Autowired permissionSyncWhenProjectEnabledListener: PermissionSyncWhenProjectEnabledListener
+    ) = ScsConsumerBuilder.build<ProjectEnableStatusBroadCastEvent> {
+        permissionSyncWhenProjectEnabledListener.execute(it)
+    }
 
     @Bean
     fun authItsmCallbackListener(
