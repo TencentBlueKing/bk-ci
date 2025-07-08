@@ -39,6 +39,7 @@ import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.pojo.enum.AuthSyncDataType
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
 import com.tencent.devops.auth.provider.rbac.service.PermissionGradeManagerService
+import com.tencent.devops.auth.provider.rbac.service.RbacCommonService
 import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
@@ -89,7 +90,8 @@ class RbacPermissionMigrateService(
     private val permissionResourceMemberService: PermissionResourceMemberService,
     private val migrateResourceAuthorizationService: MigrateResourceAuthorizationService,
     private val migrateResourceGroupService: MigrateResourceGroupService,
-    private val syncDataTaskDao: AuthSyncDataTaskDao
+    private val syncDataTaskDao: AuthSyncDataTaskDao,
+    private val rbacCommonService: RbacCommonService
 ) : PermissionMigrateService {
 
     companion object {
@@ -317,6 +319,18 @@ class RbacPermissionMigrateService(
             )
             logger.info("migrate specific resource of all projects successfully :$count")
         }
+        return true
+    }
+
+    override fun resetPermissionsWhenEnabledProject(projectCode: String): Boolean {
+        logger.info("reset permissions when enabled project:{}", projectCode)
+        resetProjectPermissions(
+            projectCode = projectCode,
+            migrateResource = true,
+            filterResourceTypes = rbacCommonService.listResourceTypes()
+                .map { it.resourceType }.filterNot { it == ResourceTypeId.PROJECT },
+            filterActions = emptyList()
+        )
         return true
     }
 

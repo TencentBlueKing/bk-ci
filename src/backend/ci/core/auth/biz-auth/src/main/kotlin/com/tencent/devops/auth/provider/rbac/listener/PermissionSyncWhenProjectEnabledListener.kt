@@ -36,18 +36,18 @@ import com.tencent.devops.project.pojo.mq.ProjectEnableStatusBroadCastEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
-class SyncGroupAndMemberListener @Autowired constructor(
+class PermissionSyncWhenProjectEnabledListener @Autowired constructor(
     private val resourceGroupSyncService: PermissionResourceGroupSyncService,
     private val resourceGroupPermissionService: PermissionResourceGroupPermissionService,
     private val permissionMigrateService: PermissionMigrateService
 ) : EventListener<ProjectEnableStatusBroadCastEvent> {
 
     override fun execute(event: ProjectEnableStatusBroadCastEvent) {
-        logger.info("sync group,group member and group permissions when enabled project $event")
+        logger.info("sync permissions when enabled project $event")
         with(event) {
             if (enabled) {
                 // 项目启用时，重新迁移/同步用户组/用户组成员/用户组权限
-                permissionMigrateService.v0ToRbacAuth(listOf(projectId))
+                permissionMigrateService.resetPermissionsWhenEnabledProject(projectId)
                 resourceGroupSyncService.syncProjectGroup(projectId)
                 resourceGroupSyncService.syncGroupAndMember(projectId)
                 resourceGroupPermissionService.syncProjectPermissions(projectId)
@@ -56,6 +56,6 @@ class SyncGroupAndMemberListener @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(SyncGroupAndMemberListener::class.java)
+        private val logger = LoggerFactory.getLogger(PermissionSyncWhenProjectEnabledListener::class.java)
     }
 }

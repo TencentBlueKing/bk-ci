@@ -61,6 +61,10 @@ class SamplePermissionMigrateService(
         return true
     }
 
+    override fun resetPermissionsWhenEnabledProject(projectCode: String): Boolean {
+        return true
+    }
+
     override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean {
         return true
     }

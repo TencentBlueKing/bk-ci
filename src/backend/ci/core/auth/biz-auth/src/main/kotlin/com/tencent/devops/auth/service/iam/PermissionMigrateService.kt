@@ -76,6 +76,8 @@ interface PermissionMigrateService {
      */
     fun resetProjectPermissions(migrateResourceDTO: MigrateResourceDTO): Boolean
 
+    fun resetPermissionsWhenEnabledProject(projectCode: String): Boolean
+
     /**
      * 授予项目下自定义用户组RBAC新增的权限
      */
