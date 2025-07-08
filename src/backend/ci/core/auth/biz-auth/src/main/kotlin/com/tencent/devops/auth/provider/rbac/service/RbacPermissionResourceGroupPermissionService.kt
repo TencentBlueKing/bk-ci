@@ -165,7 +165,7 @@ class RbacPermissionResourceGroupPermissionService(
                         when {
                             resourceTypeOfScope == ResourceTypeId.PROJECT -> {
                                 scope.actions.retainAll { action ->
-                                    filterResourceTypes.contains(action.id.substringAfterLast("_"))
+                                    filterResourceTypes.contains(action.id.substringBeforeLast("_"))
                                 }
                                 scope.actions.isNotEmpty()
                             }
@@ -187,7 +187,8 @@ class RbacPermissionResourceGroupPermissionService(
             )
             authorizationScopes.addAll(monitorAuthorizationScopes)
         }
-        logger.info("grant group permissions authorization scopes :{}", JsonUtil.toJson(authorizationScopes))
+        logger.info("grant group permissions authorization scopes :{}|{}|{}|{}",
+                    projectCode,iamGroupId,resourceType,JsonUtil.toJson(authorizationScopes))
         authorizationScopes.forEach { authorizationScope ->
             iamV2ManagerService.grantRoleGroupV2(iamGroupId, authorizationScope)
         }
