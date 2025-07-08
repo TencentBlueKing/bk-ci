@@ -304,16 +304,6 @@
             },
             filterPlaceHolder () {
                 return this.filterData.map(item => item.name).join(' / ')
-            },
-            usageMap () {
-                return {
-                    DEVCLOUD: this.$t('environment.build'),
-                    THIRDPARTY: this.$t('environment.build'),
-                    CC: this.$t('environment.deploy'),
-                    CMDB: this.$t('environment.deploy'),
-                    UNKNOWN: this.$t('environment.deploy'),
-                    OTHER: this.$t('environment.deploy')
-                }
             }
         },
         watch: {

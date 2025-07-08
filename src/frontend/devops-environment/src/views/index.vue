@@ -94,11 +94,13 @@
                 if (this.activePanel === panel.name) return
 
                 const routeMap = {
-                    envList: { name: 'envList' },
-                    nodeList: { name: 'nodeList' }
+                    envList: 'envList',
+                    nodeList: 'nodeList'
                 }
                 
-                this.$router.push(routeMap[panel.name])
+                this.$router.push({
+                    name: routeMap[panel.name]
+                })
             }
         }
     }
