@@ -113,6 +113,7 @@
         CONTAINER_TYPE,
         ENUM,
         getBranchOption,
+        getParamsGroupByLabel,
         GIT_REF,
         isCodelibParam,
         isEnumParam,
@@ -128,8 +129,7 @@
         STRING,
         SUB_PIPELINE,
         SVN_TAG,
-        TEXTAREA,
-        getParamsGroupByLabel
+        TEXTAREA
     } from '@/store/modules/atom/paramsConfig'
     import { isObject } from '@/utils/util'
 
@@ -249,7 +249,9 @@
                                 }
                                 : {}
                         ),
-                        show: Object.keys(param.displayCondition ?? {}).every((key) => this.paramValues[key] === param.displayCondition[key])
+                        // eslint-disable-next-line
+                        show: Object.keys(param.displayCondition ?? {}).every((key) => this.isEqual(this.paramValues[key], param.displayCondition[key])),
+                        
                     }
                 })
             },
@@ -264,6 +266,17 @@
         methods: {
             isObject,
             getBranchOption,
+            isEqual (a, b) {
+                try {
+                    // hack: 处理 undefined 和 '' 的情况
+                    if (typeof a === 'undefined' && b === '') {
+                        return true
+                    }
+                    return String(a) === String(b)
+                } catch (error) {
+                    return false
+                }
+            },
             getParamComponentType (param) {
                 if (isRemoteType(param)) {
                     return 'request-selector'
