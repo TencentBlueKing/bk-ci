@@ -104,4 +104,10 @@ class ServiceTXPipelineResourceImpl @Autowired constructor(
         }
         return Result(true)
     }
+
+    override fun listDisabledPipelines(
+        projectId: String
+    ): Result<List<String>> {
+        return Result(pipelineListFacadeService.listDisabledPipelines(projectId))
+    }
 }

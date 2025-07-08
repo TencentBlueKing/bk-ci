@@ -77,7 +77,7 @@ interface ServiceTXPipelineResource {
 
     @Operation(summary = "启用/禁用流水线（修改流水线的并发设置）")
     @POST
-    @Path("/projects/{projectId}/lock")
+    @Path("/projects/{projectId}/pipeline/lock")
     fun lockPipeline(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @QueryParam("userId")
@@ -91,4 +91,14 @@ interface ServiceTXPipelineResource {
         @QueryParam("enable")
         enable: Boolean
     ): Result<Boolean>
+
+    @Operation(summary = "根据项目ID获取已禁用的流水线ID列表")
+    @GET
+    @Path("/projects/{projectId}/pipeline/disabled")
+    fun listDisabledPipelines(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<List<String>>
+
 }

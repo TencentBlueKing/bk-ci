@@ -42,11 +42,9 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.metrics.constants.Constants.BK_TO_HANDLE
 import com.tencent.devops.metrics.dao.PipelineMetricsInfoDao
 import com.tencent.devops.metrics.pojo.PipelineExpirationInfo
-import com.tencent.devops.model.metrics.tables.TEplusPipelineMetricsDataDaily
 import com.tencent.devops.model.metrics.tables.records.TEplusPipelineMetricsDataDailyRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
-import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServiceTXPipelineResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import java.time.LocalDate
@@ -454,7 +452,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
     /**
      * 每隔两周周一10点发送项目无效流水线监控报告
      */
-    @Scheduled(cron = "0 0 10 ? * MON")
+    @Scheduled(cron = "0 0 11 ? * MON")
     fun sendInvalidPipelineMonitorReport() {
 
         if (!enableFlag) {
@@ -514,15 +512,19 @@ class TxPipelineMetricsCronService @Autowired constructor(
 
         if (allInvalidPipelines.isEmpty()) return
 
+        // 获取该项目的已禁用流水线ID列表
+        val disabledPipelines = client.get(ServiceTXPipelineResource::class).listDisabledPipelines(projectId).data
+            ?: emptyList()
+
         // 获取该项目的白名单流水线
         val whitelistPipelines = pipelineMetricsInfoDao.listAutoDisableWhitelist(
             dslContext = dslContext,
             projectId = projectId
         ).toSet()
 
-        // 过滤掉白名单中的流水线
+        // 过滤掉白名单和已禁用的流水线
         val filteredInvalidPipelines = allInvalidPipelines.filterKeys {
-            !whitelistPipelines.contains(it)
+            !whitelistPipelines.contains(it) && !disabledPipelines.contains(it)
         }
 
         if (filteredInvalidPipelines.isEmpty()) return
@@ -614,7 +616,6 @@ class TxPipelineMetricsCronService @Autowired constructor(
         val lockKey = "DISABLE_CONSECUTIVE_FAILURES_6M_PIPELINES"
         val redisLock = RedisLock(redisOperation, lockKey, 600)
         if (!redisLock.tryLock()) {
-            logger.info("Failed to get lock for disableConsecutiveFailures6mPipelines")
             return
         }
         try {
