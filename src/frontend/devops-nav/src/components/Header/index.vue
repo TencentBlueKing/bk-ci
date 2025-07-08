@@ -237,21 +237,21 @@
 
 <script lang="ts">
     import Vue from 'vue'
-    import { Component, Watch } from 'vue-property-decorator'
-    import { Action, Getter, State } from 'vuex-class'
-    import eventBus from '../../utils/eventBus'
-    import { isAbsoluteUrl, urlJoin } from '../../utils/util'
-    import ApplyProjectDialog from '../ApplyProjectDialog/index.vue'
-    import LocaleSwitcher from '../LocaleSwitcher/index.vue'
-    import Logo from '../Logo/index.vue'
-    import ProjectDialog from '../ProjectDialog/index.vue'
-    import RemindAssociateOperationalDialog from '../RemindAssociateOperationalDialog/index.vue'
-    import DevopsSelect from '../Select/index.vue'
-    import SystemLog from '../SystemLog/index.vue'
-    import User from '../User/index.vue'
-    import NavMenu from './NavMenu.vue'
-    import Qrcode from './Qrcode.vue'
-    import Wedev from './WeDev.vue'
+import { Component, Watch } from 'vue-property-decorator'
+import { Action, Getter, State } from 'vuex-class'
+import eventBus from '../../utils/eventBus'
+import { isAbsoluteUrl, urlJoin } from '../../utils/util'
+import ApplyProjectDialog from '../ApplyProjectDialog/index.vue'
+import LocaleSwitcher from '../LocaleSwitcher/index.vue'
+import Logo from '../Logo/index.vue'
+import ProjectDialog from '../ProjectDialog/index.vue'
+import RemindAssociateOperationalDialog from '../RemindAssociateOperationalDialog/index.vue'
+import DevopsSelect from '../Select/index.vue'
+import SystemLog from '../SystemLog/index.vue'
+import User from '../User/index.vue'
+import NavMenu from './NavMenu.vue'
+import Qrcode from './Qrcode.vue'
+import Wedev from './WeDev.vue'
 
     @Component({
         components: {
@@ -303,7 +303,7 @@
                 icon: 'japanese',
                 name: '日本語',
                 id: 'ja-JP'
-            },
+            }
         ]
  
         get headerLogoName (): string {
