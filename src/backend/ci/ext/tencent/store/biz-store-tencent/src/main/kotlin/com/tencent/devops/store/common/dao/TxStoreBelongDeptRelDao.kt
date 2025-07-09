@@ -44,6 +44,7 @@ class TxStoreBelongDeptRelDao {
         dslContext: DSLContext,
         storeBelongDeptRel: StoreBelongDeptRel
     ) = with(TStoreBelongDeptRel.T_STORE_BELONG_DEPT_REL) {
+        val storeDeptInfo = storeBelongDeptRel.storeDeptInfo
         dslContext.insertInto(
             this,
             ID,
@@ -67,31 +68,31 @@ class TxStoreBelongDeptRelDao {
             UUIDUtil.generate(),
             storeBelongDeptRel.storeCode,
             storeBelongDeptRel.storeType.type.toByte(),
-            storeBelongDeptRel.storeDeptInfo.bgId,
-            storeBelongDeptRel.storeDeptInfo.bgName,
-            storeBelongDeptRel.storeDeptInfo.deptId,
-            storeBelongDeptRel.storeDeptInfo.deptName,
-            storeBelongDeptRel.storeDeptInfo.centerId,
-            storeBelongDeptRel.storeDeptInfo.centerName,
-            storeBelongDeptRel.storeDeptInfo.groupId,
-            storeBelongDeptRel.storeDeptInfo.groupName,
-            storeBelongDeptRel.storeDeptInfo.businessLineId,
-            storeBelongDeptRel.storeDeptInfo.businessLineName,
+            storeDeptInfo.bgId,
+            storeDeptInfo.bgName,
+            storeDeptInfo.deptId,
+            storeDeptInfo.deptName,
+            storeDeptInfo.centerId,
+            storeDeptInfo.centerName,
+            storeDeptInfo.groupId,
+            storeDeptInfo.groupName,
+            storeDeptInfo.businessLineId,
+            storeDeptInfo.businessLineName,
             userId,
             userId,
             LocalDateTime.now(),
             LocalDateTime.now()
         ).onDuplicateKeyUpdate()
-            .set(BG_ID, storeBelongDeptRel.storeDeptInfo.bgId)
-            .set(BG_NAME, storeBelongDeptRel.storeDeptInfo.bgName)
-            .set(DEPT_ID, storeBelongDeptRel.storeDeptInfo.deptId)
-            .set(DEPT_NAME, storeBelongDeptRel.storeDeptInfo.deptName)
-            .set(CENTER_ID, storeBelongDeptRel.storeDeptInfo.centerId)
-            .set(CENTER_NAME, storeBelongDeptRel.storeDeptInfo.centerName)
-            .set(GROUP_ID, storeBelongDeptRel.storeDeptInfo.groupId)
-            .set(GROUP_NAME, storeBelongDeptRel.storeDeptInfo.groupName)
-            .set(BUSINESS_LINE_ID, storeBelongDeptRel.storeDeptInfo.businessLineId)
-            .set(BUSINESS_LINE_NAME, storeBelongDeptRel.storeDeptInfo.businessLineName)
+            .set(BG_ID, storeDeptInfo.bgId)
+            .set(BG_NAME, storeDeptInfo.bgName)
+            .set(DEPT_ID, storeDeptInfo.deptId)
+            .set(DEPT_NAME, storeDeptInfo.deptName)
+            .set(CENTER_ID, storeDeptInfo.centerId)
+            .set(CENTER_NAME, storeDeptInfo.centerName)
+            .set(GROUP_ID, storeDeptInfo.groupId)
+            .set(GROUP_NAME, storeDeptInfo.groupName)
+            .set(BUSINESS_LINE_ID, storeDeptInfo.businessLineId)
+            .set(BUSINESS_LINE_NAME, storeDeptInfo.businessLineName)
             .set(MODIFIER, userId)
             .set(UPDATE_TIME, LocalDateTime.now())
     }
