@@ -33,7 +33,7 @@ import com.tencent.devops.store.pojo.common.publication.StoreCreateRequest
 import org.springframework.stereotype.Service
 
 @Service
-class StorePostCreateBusHandler(
+class StoreCreatePostBusHandler(
     private val storeBaseCreateService: StoreBaseCreateService
 ) : Handler<StoreCreateRequest> {
 
