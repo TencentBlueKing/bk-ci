@@ -46,14 +46,22 @@ class ExternalThirdPartyAgentResourceImpl @Autowired constructor(
     override fun downloadAgentInstallScript(agentId: String) =
         downloadAgentInstallService.downloadInstallScript(agentId, false, null, null)
 
-    override fun downloadAgent(agentId: String, eTag: String?, arch: String?) =
+    override fun downloadAgent(
+        agentId: String,
+        eTag: String?,
+        arch: String?,
+        loginName: String?,
+        loginPassword: String?
+    ) =
         downloadAgentInstallService.downloadAgent(
             agentId = agentId,
             arch = when (arch) {
                 "arm64" -> AgentArchType.ARM64
                 "mips64" -> AgentArchType.MIPS64
                 else -> null
-            }
+            },
+            loginName = loginName,
+            loginPassword = loginPassword
         )
 
     override fun downloadJRE(agentId: String, eTag: String?, arch: String?) =
