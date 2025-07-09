@@ -26,19 +26,19 @@
                     <span class="panel-name">{{ panel.label }}</span>
                 </span>
             </span>
-            <span class="monitoring">
+            <!-- <span class="monitoring">
                 <span
                     v-if="false"
                     class="enable-monitoring"
                 >{{ $t('environment.enableBuildAgentMonitoring') }}</span>
-                <!-- <p
+                <p
                     v-else
                     class="enable-monitoring"
                 >
                     <span>{{ $t('environment.buildAgentMonitoring') }}</span>
                     <span class="enabled">{{ $t('environment.enabled') }}</span>
-                </p> -->
-            </span>
+                </p>
+            </span> -->
         </div>
 
         <router-view class="manage-main"></router-view>
@@ -185,12 +185,6 @@
             background: #EDF4FF;
             text-align: center;
             border-radius: 2px;
-        }
-
-        .jump-icon {
-            font-size: 18px;
-            position: relative;
-            top: 2px;
         }
     }
 }
