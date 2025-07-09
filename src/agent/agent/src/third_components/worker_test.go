@@ -1,10 +1,11 @@
 package third_components
 
 import (
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 )
 
 func Test_parseWorkerVersion(t *testing.T) {

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -186,6 +186,13 @@ class RedisOperation(
 
     fun isMember(key: String, item: String, isDistinguishCluster: Boolean? = false): Boolean {
         return masterRedisTemplate.opsForSet().isMember(getFinalKey(key, isDistinguishCluster), item) ?: false
+    }
+
+    fun isMember(key: String, items: Array<String>, isDistinguishCluster: Boolean? = false): Map<String, Boolean> {
+        val finalKey = getFinalKey(key, isDistinguishCluster)
+        return items.associateWith {
+            masterRedisTemplate.opsForSet().isMember(finalKey, it) ?: false
+        }
     }
 
     fun getSetMembers(key: String, isDistinguishCluster: Boolean? = false): Set<String>? {

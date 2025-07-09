@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -51,7 +51,9 @@ const state = {
         isSaveAsTemplateShow: false,
         isCopyDialogShow: false,
         addToDialogShow: false,
-        isDisableDialogShow: false
+        isDisableDialogShow: false,
+        isArchiveDialogShow: false,
+        isShowDeleteArchivedDialog: false
     }
 }
 
@@ -208,9 +210,15 @@ const actions = {
             return response.data
         })
     },
-    searchPipelineList ({ commit, state, dispatch }, { projectId, searchName = '' }) {
-        const url = `/${PROCESS_API_URL_PREFIX}/user/pipelineInfos/${projectId}/searchByName?pipelineName=${encodeURIComponent(searchName)}`
+    searchPipelineList ({ commit, state, dispatch }, { projectId, searchName = '', archiveFlag }) {
+        const params = new URLSearchParams()
+        params.append('pipelineName', searchName)
 
+        if (archiveFlag !== undefined && archiveFlag !== null) {
+            params.append('archiveFlag', archiveFlag)
+        }
+        
+        const url = `/${PROCESS_API_URL_PREFIX}/user/pipelineInfos/${projectId}/searchByName?${params.toString()}`
         return ajax.get(url).then(response => {
             return response.data
         })
@@ -378,8 +386,12 @@ const actions = {
         })
     },
     // 流水线历史版本列表
-    requestPipelineVersionList (_, { projectId, pipelineId, ...params }) {
-        return ajax.get(`${versionPrefix}/projects/${projectId}/pipelines/${pipelineId}/versions`, {
+    requestPipelineVersionList (_, { projectId, pipelineId, archiveFlag, ...params }) {
+        let url = `${versionPrefix}/projects/${projectId}/pipelines/${pipelineId}/versions`
+        if (archiveFlag !== undefined && archiveFlag !== null) {
+            url += `?archiveFlag=${encodeURIComponent(archiveFlag)}`
+        }
+        return ajax.get(url, {
             params
         }).then(res => res.data)
     },
@@ -397,14 +409,22 @@ const actions = {
         })
     },
     // 流水线操作日志列表
-    requestPipelineChangelogs (_, { projectId, pipelineId, ...params }) {
-        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/operationLog`, {
+    requestPipelineChangelogs (_, { projectId, pipelineId, archiveFlag, ...params }) {
+        let url = `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/operationLog`
+        if (archiveFlag !== undefined && archiveFlag !== null) {
+            url += `?archiveFlag=${encodeURIComponent(archiveFlag)}`
+        }
+        return ajax.get(url, {
             params
         }).then(res => res.data)
     },
     // 流水线操作日志列表
-    requestPipelineOperatorList (_, { projectId, pipelineId, ...params }) {
-        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/operatorList`, {
+    requestPipelineOperatorList (_, { projectId, pipelineId, archiveFlag, ...params }) {
+        let url = `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/operatorList`
+        if (archiveFlag !== undefined && archiveFlag !== null) {
+            url += `?archiveFlag=${encodeURIComponent(archiveFlag)}`
+        }
+        return ajax.get(url, {
             params
         }).then(res => res.data)
     },

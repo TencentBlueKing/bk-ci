@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -680,18 +680,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             }
 
             else -> {
-                val allVariable = buildVariableService.getAllVariable(task.projectId, task.pipelineId, buildId)
-                // 构造扩展变量
-                val extMap = buildExtService.buildExt(task, allVariable)
-                val buildVariable = mutableMapOf(
-                    PIPELINE_VMSEQ_ID to vmSeqId,
-                    PIPELINE_ELEMENT_ID to task.taskId
-                )
-
-                PipelineVarUtil.fillOldVar(buildVariable)
-                buildVariable.putAll(allVariable)
-                buildVariable.putAll(extMap)
-
                 // 如果状态未改变，则做认领任务动作
                 if (!task.status.isRunning()) {
                     pipelineRuntimeService.claimBuildTask(task, userId)
@@ -704,6 +692,19 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     )
                     jmxElements.execute(task.taskType)
                 }
+
+                val allVariable = buildVariableService.getAllVariable(task.projectId, task.pipelineId, buildId)
+                // 构造扩展变量
+                val extMap = buildExtService.buildExt(task, allVariable)
+                val buildVariable = mutableMapOf(
+                    PIPELINE_VMSEQ_ID to vmSeqId,
+                    PIPELINE_ELEMENT_ID to task.taskId
+                )
+
+                PipelineVarUtil.fillOldVar(buildVariable)
+                buildVariable.putAll(allVariable)
+                buildVariable.putAll(extMap)
+
                 pipelineEventDispatcher.dispatch(
                     // market task 启动
                     PipelineBuildStatusBroadCastEvent(
@@ -996,7 +997,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     pipelineTaskService.isRetryWhenFail(
                         projectId = buildInfo.projectId,
                         taskId = result.taskId,
-                        buildId = buildId
+                        buildId = buildId,
+                        failedMsg = result.message
                     ) -> {
                         // 将当前重试 task id 做记录
                         pipelineTaskService.taskRetryRecordSet(

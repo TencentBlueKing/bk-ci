@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -22,6 +22,11 @@ const optionConfigMixin = {
     data () {
         return {
             ATOM_OPTION: {}
+        }
+    },
+    computed: {
+        customExpressionsDoc () {
+            return this.$pipelineDocs.CUSTOM_EXPRESSIONS_DOC
         }
     },
     created () {
@@ -181,6 +186,7 @@ const optionConfigMixin = {
                 component: 'vuex-input',
                 default: '',
                 required: true,
+                docsLink: this.customExpressionsDoc,
                 label: this.$t('storeMap.customConditionExp'),
                 isHidden: (element) => {
                     return element?.additionalOptions?.runCondition !== 'CUSTOM_CONDITION_MATCH'

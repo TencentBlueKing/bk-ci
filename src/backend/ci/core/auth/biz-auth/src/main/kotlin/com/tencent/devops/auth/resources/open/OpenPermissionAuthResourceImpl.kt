@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -232,61 +232,6 @@ class OpenPermissionAuthResourceImpl @Autowired constructor(
                 resourceType = resourceType,
                 resourceCode = resourceCode,
                 resourceName = resourceName
-            )
-        )
-    }
-
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
-    override fun resourceModifyRelation(
-        token: String,
-        type: String?,
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String,
-        resourceName: String
-    ): Result<Boolean> {
-        return Result(
-            permissionExtService.resourceModifyRelation(
-                projectCode = projectCode,
-                resourceType = resourceType,
-                resourceCode = resourceCode,
-                resourceName = resourceName
-            )
-        )
-    }
-
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
-    override fun resourceDeleteRelation(
-        token: String,
-        type: String?,
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String
-    ): Result<Boolean> {
-        return Result(
-            permissionExtService.resourceDeleteRelation(
-                projectCode = projectCode,
-                resourceType = resourceType,
-                resourceCode = resourceCode
-            )
-        )
-    }
-
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
-    override fun resourceCancelRelation(
-        userId: String,
-        token: String,
-        type: String?,
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String
-    ): Result<Boolean> {
-        return Result(
-            permissionExtService.resourceCancelRelation(
-                userId = userId,
-                projectCode = projectCode,
-                resourceType = resourceType,
-                resourceCode = resourceCode
             )
         )
     }

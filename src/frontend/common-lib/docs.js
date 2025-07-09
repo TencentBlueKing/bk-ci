@@ -28,7 +28,8 @@ const createDocs = (lang, version) => {
         ALIAS_BUILD_NO_DOC: `${commonPrefix}/Services/Pipeline/pipeline-edit-guide/alias-buildno.md`, // 构建号别名文档
         PIPELINE_ERROR_GUIDE_DOC: `${commonPrefix}/Reference/faqs/pipelines/execute.md`, // 流水线编辑指引文档
         NAMESPACE_DOC: `${commonPrefix}/Services/Pipeline/pipeline-edit-guide/pipeline-variables/variables-custom.md`, // 命名空间文档
-        AIAnalysis: `${commonPrefix}/UserGuide/Services/Pipeline/pipeline-build-detail/ai-analysis.md`
+        AIAnalysis: `${commonPrefix}/UserGuide/Services/Pipeline/pipeline-build-detail/ai-analysis.md`,
+        CUSTOM_EXPRESSIONS_DOC: `${commonPrefix}/UserGuide/Services/Pipeline-as-Code/02-generate-pipelines/09-conditional-execution/02-expression.md` // 自定义表达式
     }
     return {
         BkciDocs,

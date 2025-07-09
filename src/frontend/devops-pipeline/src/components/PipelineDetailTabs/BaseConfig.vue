@@ -61,8 +61,9 @@
                                         v-for="label in row.value"
                                         :key="label"
                                         class="base-info-block-row-value-label"
+                                        @click="goPipelineManageList(row.key, label.id)"
                                     >
-                                        {{ label }}
+                                        {{ row.key === 'pipelineGroup' ? label.name : label }}
                                     </bk-tag>
                                 </template>
                                 <template v-else>
@@ -86,7 +87,8 @@
 <script>
     import NamingConventionTip from '@/components/namingConventionTip.vue'
     import { convertTime } from '@/utils/util'
-    import { mapGetters } from 'vuex'
+    import { mapActions, mapGetters, mapState } from 'vuex'
+    
     export default {
         components: {
             NamingConventionTip
@@ -103,12 +105,16 @@
                 namingStyle: {
                     CLASSIC: this.$t('CLASSIC'),
                     CONSTRAINED: this.$t('CONSTRAINED')
-                }
+                },
+                currentGroups: []
             }
         },
         computed: {
             ...mapGetters('atom', [
                 'isTemplate'
+            ]),
+            ...mapState('pipelines', [
+                'allPipelineGroup'
             ]),
             panels () {
                 return [{
@@ -193,6 +199,10 @@
                         value: this.basicInfo?.buildNumRule ?? '--'
                     },
                     {
+                        key: 'settings.whenVariableExceedsLength',
+                        value: this.$t(this.basicInfo?.failIfVariableInvalid ? 'settings.errorAndHalt' : 'settings.clearTheValue')
+                    },
+                    {
                         key: 'parallelSetting',
                         value: this.$t(`settings.runningOption.${runLockType ?? '--'}`)
                     },
@@ -254,6 +264,27 @@
                         : []
                     )
                 ]
+            }
+        },
+        async mounted () {
+            if (!this.allPipelineGroup.length) {
+                const res = await this.requestAllPipelineGroup({
+                    projectId: this.$route.params.projectId
+                })
+                this.currentGroups = res.data
+            }
+        },
+        methods: {
+            ...mapActions('pipelines', ['requestAllPipelineGroup']),
+            goPipelineManageList (key, viewId) {
+                if (key === 'pipelineGroup') {
+                    this.$router.push({
+                        name: 'PipelineManageList',
+                        params: {
+                            viewId
+                        }
+                    })
+                }
             }
         }
     }

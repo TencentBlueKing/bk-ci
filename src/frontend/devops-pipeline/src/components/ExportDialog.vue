@@ -77,6 +77,8 @@
             },
 
             exportList () {
+                const archiveFlag = this.$route.query?.archiveFlag
+                const queryString = archiveFlag ? `?archiveFlag=${encodeURIComponent(archiveFlag)}` : ''
                 return [
                     {
                         type: UI_MODE,
@@ -84,7 +86,7 @@
                         icon: 'export-pipeline',
                         name: `${this.pipelineName}.json`,
                         tips: this.$t('newlist.exportJsonTip'),
-                        exportUrl: `${API_URL_PREFIX}/${PROCESS_API_URL_PREFIX}/user/pipelines/${this.pipelineId}/projects/${this.projectId}/export`
+                        exportUrl: `${API_URL_PREFIX}/${PROCESS_API_URL_PREFIX}/user/pipelines/${this.pipelineId}/projects/${this.projectId}/export${queryString}`
                     },
                     {
                         type: CODE_MODE,

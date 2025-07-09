@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -55,11 +55,35 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
-    fun list(dslContext: DSLContext, buildId: String): Result<TDispatchThirdpartyAgentBuildRecord> {
+    fun getWithExecuteCount(
+        dslContext: DSLContext,
+        buildId: String,
+        vmSeqId: String,
+        executeCount: Int?
+    ): TDispatchThirdpartyAgentBuildRecord? {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.selectFrom(this)
+            val dsl = dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
-                .fetch()
+                .and(VM_SEQ_ID.eq(vmSeqId))
+            if (executeCount != null) {
+                dsl.and(EXECUTE_COUNT.eq(executeCount).or(EXECUTE_COUNT.isNull))
+            }
+            return dsl.fetchAny()
+        }
+    }
+
+    fun list(
+        dslContext: DSLContext,
+        buildId: String,
+        executeCount: Int?
+    ): Result<TDispatchThirdpartyAgentBuildRecord> {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            val dsl = dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+            if (executeCount != null) {
+                dsl.and(EXECUTE_COUNT.eq(executeCount).or(EXECUTE_COUNT.isNull))
+            }
+            return dsl.fetch()
         }
     }
 

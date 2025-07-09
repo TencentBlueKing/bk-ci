@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -50,8 +50,8 @@ import com.tencent.devops.process.dao.label.PipelineLabelPipelineDao
 import com.tencent.devops.process.dao.label.PipelineViewDao
 import com.tencent.devops.process.dao.label.PipelineViewTopDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.process.permission.group.PipelineGroupPermissionService
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
+import com.tencent.devops.process.permission.group.PipelineGroupPermissionService
 import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
 import com.tencent.devops.process.pojo.classify.PipelineViewClassify
@@ -759,6 +759,8 @@ class PipelineViewService @Autowired constructor(
                     } else {
                         false
                     }
+                } else if (filter is PipelineViewFilterByPacRepo) {
+                    false
                 } else {
                     continue
                 }

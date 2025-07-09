@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,10 +28,15 @@
 package com.tencent.devops.process.plugin.trigger.timer
 
 import com.tencent.devops.process.plugin.trigger.exception.InvalidTimerException
+import com.tencent.devops.process.plugin.trigger.timer.quartz.PipelineQuartzJob.Companion.JOB_DATA_MAP_KEY_MD5
+import com.tencent.devops.process.plugin.trigger.timer.quartz.PipelineQuartzJob.Companion.JOB_DATA_MAP_KEY_PIPELINE_ID
+import com.tencent.devops.process.plugin.trigger.timer.quartz.PipelineQuartzJob.Companion.JOB_DATA_MAP_KEY_PROJECT_ID
+import com.tencent.devops.process.plugin.trigger.timer.quartz.PipelineQuartzJob.Companion.JOB_DATA_MAP_KEY_TASK_ID
 import org.quartz.CronScheduleBuilder.cronSchedule
 import org.quartz.CronTrigger
 import org.quartz.Job
 import org.quartz.JobBuilder.newJob
+import org.quartz.JobDataMap
 import org.quartz.JobDetail
 import org.quartz.JobKey
 import org.quartz.ObjectAlreadyExistsException
@@ -58,12 +63,31 @@ abstract class SchedulerManager {
      */
     @Synchronized
     @Throws(InvalidTimerException::class)
-    fun addJob(key: String, cronExpression: String, jobBeanClass: Class<out Job>): Boolean {
+    fun addJob(
+        key: String,
+        cronExpression: String,
+        jobBeanClass: Class<out Job>,
+        projectId: String,
+        pipelineId: String,
+        taskId: String,
+        md5: String
+    ): Boolean {
         val trigger = newTrigger().withIdentity(key, this.getTriggerGroup()).withSchedule(
             cronSchedule(cronExpression)
         ).build()
         val jobKey = JobKey.jobKey(key, this.getJobGroup())
-        val jobDetail = newJob(jobBeanClass).withIdentity(jobKey).build()
+        val jobDetail = newJob(jobBeanClass).withIdentity(jobKey)
+                .setJobData(
+                    JobDataMap(
+                        mapOf(
+                            JOB_DATA_MAP_KEY_PROJECT_ID to projectId,
+                            JOB_DATA_MAP_KEY_PIPELINE_ID to pipelineId,
+                            JOB_DATA_MAP_KEY_TASK_ID to taskId,
+                            JOB_DATA_MAP_KEY_MD5 to md5
+                        )
+                    )
+                )
+                .build()
         return try {
             val nextFireTime = trigger.getFireTimeAfter(Date()) ?: throw InvalidTimerException()
             logger.info("[$key]|nextFireTime=$nextFireTime")

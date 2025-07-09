@@ -106,7 +106,7 @@
                                 {{ $t('draftExecRecords') }}
                             </bk-button>
                             <rollback-entry
-                                v-if="props.row.canRollback"
+                                v-if="props.row.canRollback && !archiveFlag"
                                 :has-permission="canEdit"
                                 :version="props.row.version"
                                 :rollback-id="isTemplate ? $route.params.ptemplateId : $route.params.pipelineId"
@@ -122,8 +122,10 @@
                                 v-if="props.row.version !== releaseVersion"
                                 :version="props.row.version"
                                 :latest-version="releaseVersion"
+                                :archive-flag="archiveFlag"
                             />
                             <bk-button
+                                v-if="!archiveFlag"
                                 text
                                 theme="primary"
                                 :disabled="releaseVersion === props.row.version"
@@ -242,6 +244,9 @@
             },
             emptyType () {
                 return this.filterKeys.length > 0 ? 'search-empty' : 'empty'
+            },
+            archiveFlag () {
+                return this.$route.query.archiveFlag
             }
         },
         mounted () {
@@ -298,6 +303,7 @@
                     page,
                     pageSize: this.pagination.limit,
                     ...param,
+                    archiveFlag: this.archiveFlag,
                     ...this.filterQuery
                 })
                 Object.assign(this.pagination, {
@@ -364,7 +370,10 @@
             },
             goDebugRecords () {
                 this.$router.push({
-                    name: 'draftDebugRecord'
+                    name: 'draftDebugRecord',
+                    query: {
+                        ...(this.archiveFlag ? { archiveFlag: this.archiveFlag } : {})
+                    }
                 })
             }
         }

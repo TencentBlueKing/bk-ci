@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -151,7 +151,7 @@ class BuildStartControl @Autowired constructor(
     }
 
     private fun PipelineBuildStartEvent.retry() {
-        LOG.info("ENGINE|$buildId|$source|$pipelineId|RETRY_TO_LOCK")
+        LOG.info("ENGINE|$buildId|$source|$pipelineId|RETRY_TO_START_LOCK")
         this.delayMills = DEFAULT_DELAY
         pipelineEventDispatcher.dispatch(this)
     }

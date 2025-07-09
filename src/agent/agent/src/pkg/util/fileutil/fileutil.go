@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,12 +28,13 @@
 package fileutil
 
 import (
-	"github.com/TencentBlueKing/bk-ci/agent/internal/third_party/dep/fs"
-	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/TencentBlueKing/bk-ci/agent/internal/third_party/dep/fs"
+	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
 
 func AtomicWriteFile(filename string, reader io.Reader, mode os.FileMode) error {

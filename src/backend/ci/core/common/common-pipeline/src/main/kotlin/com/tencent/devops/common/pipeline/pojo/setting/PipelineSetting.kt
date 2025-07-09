@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -85,6 +85,8 @@ data class PipelineSetting(
     var concurrencyCancelInProgress: Boolean = false,
     @get:Schema(title = "并发构建数量限制", required = false)
     var maxConRunningQueueSize: Int? = null, // MULTIPLE类型时，并发构建数量限制
+    @get:Schema(title = "是否配置流水线变量值超长时终止执行", required = false)
+    var failIfVariableInvalid: Boolean? = false,
 
     // 平台系统控制相关配置 —— 不作为生成版本的配置
     @get:Schema(title = "保存流水线编排的最大个数", required = false)
