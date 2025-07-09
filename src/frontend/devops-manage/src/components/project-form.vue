@@ -6,7 +6,7 @@ import { BaseInfoContent, PermissionContent, PipelineContent } from "@/component
 import ProjectSettings from "./project-settings.vue"
 
 const { t } = useI18n();
-const emits = defineEmits(['change', 'approvedChange', 'initProjectForm']);
+const emits = defineEmits(['change', 'approvedChange', 'initProjectForm', 'tabChange']);
 const props = defineProps({
   data: Object,
   type: String,
@@ -28,7 +28,7 @@ const rules = {
   ],
   bgId: [
     {
-      validator: () => projectData.value.bgId && projectData.value.deptId,
+      validator: () => !!(projectData.value.bgId && projectData.value.deptId),
       message: t('请选择项目所属组织'),
       trigger: 'blur',
     },
@@ -141,6 +141,7 @@ onMounted(async () => {
       :initPipelineDialect="initPipelineDialect"
       @change="handleChangeForm"
       @clearValidate="handleClearValidate"
+      @tab-change="$emit('tabChange', $event)"
     />
   </bk-form>
 </template>

@@ -34,6 +34,7 @@ const statusDisabledTips = {
 };
 const currentDialect = ref();
 const isDialectDialog = ref(false);
+const currentPanel = ref('projectSettings')
 
 const fetchProjectData = async () => {
   isLoading.value = true;
@@ -189,6 +190,9 @@ const handleNoPermission = () => {
     resourceCode: projectCode,
   })
 };
+function handleTabChange(panel) {
+  currentPanel.value = panel
+}
 
 onMounted(() => {
   fetchProjectData();
@@ -205,9 +209,11 @@ onMounted(() => {
         :is-change="isChange"
         :data="projectData"
         @change="handleFormChange"
-        @initProjectForm="initProjectForm">
+        @initProjectForm="initProjectForm"
+        @tab-change="handleTabChange"
+      >
       </project-form>
-      <div class="btn-group">
+      <div class="btn-group" v-if="currentPanel !== 'artifactorySettings'">
         <div class="buttons">
           <Popover
             :content="statusDisabledTips[projectData?.approvalStatus]"
