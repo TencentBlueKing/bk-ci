@@ -2,10 +2,7 @@
     <div class="node-list-wrapper">
         <content-header class="env-header">
             <div slot="left">{{ $t('environment.node') }}</div>
-            <div
-                slot="right"
-                v-if="nodeList.length > 0"
-            >
+            <div slot="right">
                 <bk-button
                     v-perm="{
                         permissionData: {
