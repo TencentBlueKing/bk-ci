@@ -299,5 +299,6 @@
     "removeNodesBeforeDeletingLabel": "请先移除标签下所有节点再删除标签",
     "labelInUseRemoveNodesBeforeEditOrDelete": "已被环境使用的标签无法修改/删除，如需操作请先移除标签下所有节点",
     "tagLabel": "标签label",
-    "tagValue": "标签value"
+    "tagValue": "标签value",
+    "pleaseEnterTag": "请输入节点标签"
 }

@@ -304,5 +304,6 @@
     "removeNodesBeforeDeletingLabel": "Please remove all nodes under the tag before deleting the tag",
     "labelInUseRemoveNodesBeforeEditOrDelete": "Tags used by environments cannot be modified/deleted. If you need to operate, please remove all nodes under the tag first",
     "tagLabel": "Tag Label",
-    "tagValue": "Tag Value"
+    "tagValue": "Tag Value",
+    "pleaseEnterTag": "Please enter node tag"
 }

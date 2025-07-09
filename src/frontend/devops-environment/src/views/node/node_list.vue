@@ -37,13 +37,22 @@
                     </div>
                     <div class="search-part">
                         <SearchSelect
-                            class="search-input"
+                            class="search-input ml15"
                             v-model="searchValue"
                             :placeholder="filterPlaceHolder"
                             :data="filterData"
                             :show-condition="false"
                             clearable
+                            key="search"
                         ></SearchSelect>
+                        <bk-search-select
+                            class="search-input"
+                            v-model="tagSearchValue"
+                            :placeholder="$t('environment.pleaseEnterTag')"
+                            :data="tagFilterData"
+                            :show-condition="false"
+                            clearable
+                        ></bk-search-select>
                         <bk-date-picker
                             ref="dateTimeRangeRef"
                             v-model="dateTimeRange"
@@ -61,6 +70,7 @@
                     :table-loading="tableLoading"
                     :pagination="pagination"
                     :search-value="searchValue"
+                    :tag-search-value="tagSearchValue"
                     :date-time-range="dateTimeRange"
                     :node-tag-list="nodeTagList"
                     @page-change="handlePageChange"
@@ -197,7 +207,8 @@
                 requestParams: {},
                 dateTimeRange: [],
                 currentNodeType: '',
-                currentTags: []
+                currentTags: [],
+                tagSearchValue: []
             }
         },
         computed: {
@@ -219,16 +230,6 @@
                         name: 'IP',
                         id: 'nodeIp',
                         default: true
-                    },
-                    {
-                        name: this.$t('environment.tag'),
-                        id: 'label',
-                        children: [
-                            {
-                                id: 'os',
-                                name: 'window'
-                            }
-                        ]
                     },
                     {
                         name: this.$t('environment.alias'),
@@ -302,6 +303,20 @@
                     return !this.searchValue.find(val => val.id === data.id)
                 })
             },
+            tagFilterData () {
+                const data = this.nodeTagList.map(item => ({
+                    name: item.tagKeyName,
+                    id: item.tagKeyId,
+                    multiable: true,
+                    children: item.tagValues.map(i => ({
+                        name: i.tagValueName,
+                        id: i.tagValueId
+                    }))
+                }))
+                return data.filter(data => {
+                    return !this.tagSearchValue.find(val => val.id === data.id)
+                })
+            },
             filterPlaceHolder () {
                 return this.filterData.map(item => item.name).join(' / ')
             }
@@ -346,6 +361,21 @@
                     this.pagination.current = 1
                 } else {
                     this.requestParams = {}
+                }
+                this.requestList(this.requestParams)
+            },
+            tagSearchValue (val) {
+                if (val.length) {
+                    const tags = val.map(item => {
+                        return {
+                            tagKeyId: item.id,
+                            tagValues: item.values.map(value => value.id)
+                        }
+                    })
+                    this.currentTags = tags
+                    this.pagination.current = 1
+                } else {
+                    this.syncCurrentTags()
                 }
                 this.requestList(this.requestParams)
             }
@@ -735,6 +765,7 @@
             clearFilter () {
                 this.$refs.dateTimeRangeRef?.handleClear()
                 this.searchValue = []
+                this.tagSearchValue = []
             },
 
             handleToPipelineDetail (param) {
@@ -882,9 +913,10 @@
 
         .search-part {
             display: flex;
+            flex: 1;
 
             .bk-date-picker.long {
-                max-width: 180px;
+                max-width: 160px;
             }
         }
         
@@ -898,8 +930,7 @@
             align-items: center;
         }
         .search-input {
-            min-width: 500px;
-            max-width: 650px;
+            flex: 1;
             background: #fff;
             margin-right: 10px;
             ::placeholder {

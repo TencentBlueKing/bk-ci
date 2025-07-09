@@ -368,7 +368,7 @@
             </bk-table-column>
             <template #empty>
                 <EmptyTableStatus
-                    :type="(searchValue.length || !!dateTimeRange[1]) ? 'search-empty' : 'empty'"
+                    :type="(searchValue.length || tagSearchValue.length || !!dateTimeRange[1]) ? 'search-empty' : 'empty'"
                     @clear="clearFilter"
                 />
             </template>
@@ -479,6 +479,10 @@
                 default: () => ({})
             },
             searchValue: {
+                type: Array,
+                default: () => []
+            },
+            tagSearchValue: {
                 type: Array,
                 default: () => []
             },
