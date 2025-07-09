@@ -28,11 +28,19 @@
             </span>
             <span class="monitoring">
                 <span
-                    v-if="false"
+                    v-if="isEnableDashboard && activePanel === 'nodeList'"
+                    class="enable-monitoring ml5"
+                >
+                    <i class="devops-icon icon-tiaozhuan jump-icon"></i>
+                    <a
+                        :href="jumpDashboardUrl"
+                        target="_blank"
+                    >{{ $t('environment.查看构建机监控') }}</a>
+                </span>
+                <!-- <span
                     class="enable-monitoring"
                 >{{ $t('environment.enableBuildAgentMonitoring') }}</span>
-                <!-- <p
-                    v-else
+                <p
                     class="enable-monitoring"
                 >
                     <span>{{ $t('environment.buildAgentMonitoring') }}</span>
@@ -52,7 +60,9 @@
     export default {
         data () {
             return {
-                environmentUrl
+                environmentUrl,
+                isEnableDashboard: false,
+                bizId: 0
             }
         },
 
@@ -63,6 +73,9 @@
             ...mapGetters('environment', {
                 hookIds: 'asideNavBarExtIds'
             }),
+            projectId () {
+                return this.$route.params.projectId
+            },
             extNav () {
                 return this.extensions.map((ext) => ({
                     name: 'extPage',
@@ -103,6 +116,9 @@
             },
             projectCode () {
                 return this.$route.params.projectId
+            },
+            jumpDashboardUrl () {
+                return `https://bkm.woa.com/?bizId=${this.bizId}#/grafana/d/bT8qy3NVa`
             }
         },
         watch: {
@@ -129,10 +145,26 @@
                 })
             }
         },
+        async mounted () {
+            await this.getEnableDashboard()
+        },
         methods: {
             ...mapActions('environment', [
                 'getEnvironmentExtensions'
             ]),
+            async getEnableDashboard () {
+                try {
+                    const res = await this.$store.dispatch('environment/checkEnableDashboard', {
+                        projectId: this.projectId
+                    })
+                    if (res) {
+                        this.isEnableDashboard = res.result
+                        this.bizId = res.bizId
+                    }
+                } catch (e) {
+                    console.err(e)
+                }
+            },
             handleChangeTab (panel) {
                 if (this.activePanel === panel.name) return
                 const item = this.panels.find(navItem => navItem.name === panel.name)
@@ -210,7 +242,9 @@
         }
     }
     .monitoring {
-        .enable-monitoring {
+        width: 200px;
+        text-align: right;
+        .enable-monitoring, a {
             margin-left: auto;
             font-size: 12px;
             color: #3A84FF;
@@ -225,6 +259,12 @@
             background: #EDF4FF;
             text-align: center;
             border-radius: 2px;
+        }
+
+        .jump-icon {
+            font-size: 18px;
+            position: relative;
+            top: 2px;
         }
     }
 }

@@ -64,16 +64,6 @@
                         >
                             {{ $t('environment.export') }}
                         </bk-button>
-                        <span
-                            v-if="isEnableDashboard"
-                            class="dashboard-entry ml5"
-                        >
-                            <i class="devops-icon icon-tiaozhuan jump-icon"></i>
-                            <a
-                                :href="jumpDashboardUrl"
-                                target="_blank"
-                            >{{ $t('environment.查看构建机监控') }}</a>
-                        </span>
                     </div>
                     <div class="search-part">
                         <SearchSelect
@@ -282,8 +272,6 @@
                         }
                     ]
                 },
-                isEnableDashboard: false,
-                bizId: 0,
                 searchValue: [],
                 importStatus: 'success',
                 importMessage: '',
@@ -415,9 +403,6 @@
             },
             filterPlaceHolder () {
                 return this.filterData.map(item => item.name).join(' / ')
-            },
-            jumpDashboardUrl () {
-                return `https://bkm.woa.com/?bizId=${this.bizId}#/grafana/d/bT8qy3NVa`
             }
         },
         watch: {
@@ -491,7 +476,6 @@
         },
         async mounted () {
             await this.init()
-            await this.getEnableDashboard()
         },
         methods: {
             findTagByValueId (tagValueId) {
@@ -581,19 +565,6 @@
                     })
                 } finally {
                     this.tableLoading = false
-                }
-            },
-            async getEnableDashboard () {
-                try {
-                    const res = await this.$store.dispatch('environment/checkEnableDashboard', {
-                        projectId: this.projectId
-                    })
-                    if (res) {
-                        this.isEnableDashboard = res.result
-                        this.bizId = res.bizId
-                    }
-                } catch (e) {
-                    console.err(e)
                 }
             },
             changeProject () {
@@ -1065,12 +1036,6 @@
                 font-size: 14px;
                 color: #3c96ff;
             }
-        }
-
-        .jump-icon {
-            font-size: 18px;
-            position: relative;
-            top: 2px;
         }
 
         .edit-operator {
