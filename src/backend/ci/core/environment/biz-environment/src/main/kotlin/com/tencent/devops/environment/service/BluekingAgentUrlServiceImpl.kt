@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.environment.constant.BATCH_TOKEN_HEADER
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
+import java.net.URLEncoder
 
 /**
  * 蓝鲸企业版/开源版专用Url实现
@@ -86,7 +87,7 @@ class BluekingAgentUrlServiceImpl constructor(
                 t = "&"
             }
             if (!loginName.isNullOrBlank()) {
-                sc += "${t}loginName=$loginName"
+                sc += "${t}loginName=${URLEncoder.encode(loginName, "UTF-8")}"
                 t = "&"
             }
             if (!loginPassword.isNullOrBlank()) {
