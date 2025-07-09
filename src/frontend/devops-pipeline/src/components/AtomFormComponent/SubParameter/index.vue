@@ -148,7 +148,7 @@
                     this.pipelineRequiredParams.branch = typeof value.branch === 'string' && value.branch.isBkVar()
                         ? this.requiredParams[value.branch.extractBkVar()]
                         : value.branch
-                    if ((value?.subPip !== oldValue?.subPip) || (value?.branch !== oldValue?.branch)) {
+                    if (oldValue !== undefined && ((value?.subPip !== oldValue?.subPip) || (value?.branch !== oldValue?.branch))) {
                         this.atomValue[this.name] = []
                         this.getParametersList()
                         this.initData()
