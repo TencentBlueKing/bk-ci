@@ -423,46 +423,59 @@
                     this.formData.tagValues.splice(index, 1)
                 }
             },
+            async createNodeTag () {
+                const filteredValues = this.formData.tagValues.map(i => i.tagValueName.trim()).filter(i => i !== '')
+                const params = {
+                    ...this.formData,
+                    tagValues: filteredValues
+                }
+                const res = await this.$store.dispatch('environment/createdNodeTag', {
+                    projectId: this.projectId,
+                    params: params
+                })
+                if (res) {
+                    this.$bkMessage({
+                        message: this.$t('environment.新增成功'),
+                        theme: 'success'
+                    })
+                }
+            },
+            async editNodeTag () {
+                const params = {
+                    tagKeyId: this.formData.tagKeyId,
+                    tagKeyName: this.formData.tagKeyName,
+                    tagValues: this.formData.tagValues.map(({ nodeCount, ...rest }) => rest)
+                }
+
+                const res = await this.$store.dispatch('environment/editNodeTag', {
+                    projectId: this.projectId,
+                    params
+                })
+                if (res) {
+                    this.$bkMessage({
+                        message: this.$t('environment.编辑成功'),
+                        theme: 'success'
+                    })
+                }
+            },
             async handleConfirm () {
                 const valid = await this.$refs.tagForm.validate()
                 if (valid) {
-                    const filteredValues = this.formData.tagValues.map(i => i.tagValueName.trim()).filter(i => i !== '')
-                    const params = {
-                        ...this.formData,
-                        tagValues: filteredValues
-                    }
-                    if (this.isAdd) {
-                        const res = await this.$store.dispatch('environment/createdNodeTag', {
-                            projectId: this.projectId,
-                            params
+                    try {
+                        if (this.isAdd) {
+                            await this.createNodeTag()
+                        } else {
+                            await this.editNodeTag()
+                        }
+                    } catch (err) {
+                        this.$bkMessage({
+                            message: err.message ? err.message : err,
+                            theme: 'error'
                         })
-                        if (res) {
-                            this.getTagTypeList()
-                            this.$bkMessage({
-                                message: this.$t('environment.新增成功'),
-                                theme: 'success'
-                            })
-                        }
-                    } else {
-                        const params = {
-                            tagKeyId: this.formData.tagKeyId,
-                            tagKeyName: this.formData.tagKeyName,
-                            tagValues: this.formData.tagValues.map(({ nodeCount, ...rest }) => rest)
-                        }
-
-                        const res = await this.$store.dispatch('environment/editNodeTag', {
-                            projectId: this.projectId,
-                            params
-                        })
-                        if (res) {
-                            this.getTagTypeList()
-                            this.$bkMessage({
-                                message: this.$t('environment.编辑成功'),
-                                theme: 'success'
-                            })
-                        }
+                    } finally {
+                        this.getTagTypeList()
+                        this.handleCancel()
                     }
-                    this.handleCancel()
                 }
             },
             handleCancel () {
