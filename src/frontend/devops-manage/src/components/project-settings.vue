@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { BaseInfoContent, PermissionContent, PipelineContent, ArtifactoryContent } from "@/components/project-form-item/";
 const { t } = useI18n();
-const emits = defineEmits(['change', 'clearValidate']);
+const emits = defineEmits(['change', 'clearValidate', 'tabChange']);
 const props = defineProps({
   data: Object,
   type: String,
@@ -59,7 +59,9 @@ const handleClearValidate = () => {
 function setProjectDeptProp (dept) {
   emits('setProjectDeptProp', dept)
 }
-
+function tabChange(active) {
+  emits('tabChange', active)
+}
 </script>
 
 <template>
@@ -67,6 +69,7 @@ function setProjectDeptProp (dept) {
     <bk-tab
       v-model:active="panelActive"
       type="card-tab"
+      @tab-change="tabChange"
     >
       <bk-tab-panel
         v-for="(item, index) in tabPanels"

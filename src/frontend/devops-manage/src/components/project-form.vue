@@ -6,7 +6,7 @@ import { BaseInfoContent, PermissionContent, PipelineContent } from "@/component
 import ProjectSettings from "./project-settings.vue"
 
 const { t } = useI18n();
-const emits = defineEmits(['change', 'approvedChange', 'initProjectForm', 'productIdChange']);
+const emits = defineEmits(['change', 'approvedChange', 'initProjectForm', 'productIdChange', 'tabChange']);
 
 export interface Dept {
   id: string;
@@ -187,6 +187,7 @@ onMounted(async () => {
       @change="handleChangeForm"
       @clearValidate="handleClearValidate"
       @setProjectDeptProp="setProjectDeptProp"
+      @tab-change="$emit('tabChange', $event)"
     />
   </bk-form>
 </template>
