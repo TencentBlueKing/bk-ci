@@ -26,19 +26,6 @@
                     <span class="panel-name">{{ panel.label }}</span>
                 </span>
             </span>
-            <!-- <span class="monitoring">
-                <span
-                    v-if="false"
-                    class="enable-monitoring"
-                >{{ $t('environment.enableBuildAgentMonitoring') }}</span>
-                <p
-                    v-else
-                    class="enable-monitoring"
-                >
-                    <span>{{ $t('environment.buildAgentMonitoring') }}</span>
-                    <span class="enabled">{{ $t('environment.enabled') }}</span>
-                </p>
-            </span> -->
         </div>
 
         <router-view class="manage-main"></router-view>
@@ -117,7 +104,7 @@
         z-index: 1;
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: center;
         width: 100%;
         height: 60px;
         line-height: 60px;
@@ -128,6 +115,8 @@
     }
 
     .environment-tit {
+        position: absolute;
+        left: 24px;
         img {
             vertical-align: middle;
         }
@@ -164,27 +153,6 @@
                     background-color: #3a84ff;
                 }
             }
-        }
-    }
-
-    .monitoring {
-        width: 200px;
-        text-align: right;
-        .enable-monitoring, a {
-            margin-left: auto;
-            font-size: 12px;
-            color: #3A84FF;
-            cursor: pointer;
-        }
-        .enabled {
-            display: inline-block;
-            margin-left: 8px;
-            width: 56px;
-            height: 22px;
-            line-height: 22px;
-            background: #EDF4FF;
-            text-align: center;
-            border-radius: 2px;
         }
     }
 }

@@ -360,7 +360,7 @@
                 await this.requestNodeTagList(this.projectId)
                 this.setDefaultExpandedGroup()
                 const isValidNodeType = this.getTagValues().includes(this.$route.params.nodeType)
-                if (!isValidNodeType) {
+                if (this.$route.name === 'nodeList' && !isValidNodeType) {
                     this.handleNodeClick('allNode')
                 }
             },

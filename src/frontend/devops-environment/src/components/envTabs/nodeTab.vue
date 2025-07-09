@@ -719,7 +719,7 @@
             },
             handleToNodeDetailPage (row) {
                 if (row.nodeType === 'CMDB') return
-                window.open(`${location.origin}/console/environment/${this.projectId}/nodeDetail/${row.nodeHashId}`, '_blank')
+                window.open(`${location.origin}/console/environment/${this.projectId}/node/nodeDetail/${row.nodeHashId}`, '_blank')
             }
         }
     }
