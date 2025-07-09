@@ -32,12 +32,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
+	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/pkg/errors"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
 	"reflect"
+	"strconv"
 	"time"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
@@ -180,9 +183,12 @@ func (r *HttpClient) Execute(ignoreDupLogResp *IgnoreDupLogResp) *HttpResult {
 		if os.IsTimeout(err) || errors.Is(err, context.DeadlineExceeded) {
 			logs.Warn("http request time out, replace client")
 			newClient()
+			checkTimeOutExit(err)
 		}
 		result.Error = err
 		return result
+	} else {
+		checkTimeOutExit(nil)
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
@@ -204,4 +210,18 @@ func (r *HttpClient) Execute(ignoreDupLogResp *IgnoreDupLogResp) *HttpResult {
 	checkHttpStatusErr(resp.StatusCode, body)
 
 	return result
+}
+
+// checkTimeOutExit 检查是否因为超时直接退出
+func checkTimeOutExit(err error) {
+	enableExitTimeStr, ok := config.FetchEnv(constant.DevopsAgentTimeoutExitTime)
+	if !ok {
+		return
+	}
+	enableExitTime, err := strconv.ParseInt(enableExitTimeStr, 10, 32)
+	if err != nil {
+		logs.Warnf("enableExitTimeStr %s convert timeout err to int", enableExitTimeStr)
+		return
+	}
+	exitcode.CheckTimeoutError(err, int32(enableExitTime))
 }
