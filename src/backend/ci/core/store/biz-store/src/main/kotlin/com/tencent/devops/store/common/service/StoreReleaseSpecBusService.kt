@@ -160,7 +160,6 @@ interface StoreReleaseSpecBusService {
 
     /**
      * 执行新增组件请求后置业务
-     * @param storeCreateRequest 新增组件请求报文
      */
     fun doStorePostCreateBus(
         userId: String,
