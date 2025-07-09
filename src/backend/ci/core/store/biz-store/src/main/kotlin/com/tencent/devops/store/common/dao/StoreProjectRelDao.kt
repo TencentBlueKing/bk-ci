@@ -27,7 +27,6 @@
 
 package com.tencent.devops.store.common.dao
 
-import com.tencent.bk.audit.constants.AuditAttributeNames.INSTANCE_NAME
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.TStoreProjectRel
