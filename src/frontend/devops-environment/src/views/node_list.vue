@@ -2,10 +2,7 @@
     <div class="node-list-wrapper">
         <content-header class="env-header">
             <div slot="left">{{ $t('environment.node') }}</div>
-            <div
-                slot="right"
-                v-if="nodeList.length > 0"
-            >
+            <div slot="right" >
                 <bk-button
                     v-perm="{
                         permissionData: {
@@ -381,12 +378,12 @@
 
 <script>
     import thirdConstruct from '@/components/devops/environment/third-construct-dialog'
-    import EmptyTableStatus from '@/components/empty-table-status'
-    import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
-    import { getQueryString } from '@/utils/util'
-    import SearchSelect from '@blueking/search-select'
-    import '@blueking/search-select/dist/styles/index.css'
-    import webSocketMessage from '../utils/webSocketMessage.js'
+import EmptyTableStatus from '@/components/empty-table-status'
+import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
+import { getQueryString } from '@/utils/util'
+import SearchSelect from '@blueking/search-select'
+import '@blueking/search-select/dist/styles/index.css'
+import webSocketMessage from '../utils/webSocketMessage.js'
     const NODE_TABLE_COLUMN_CACHE = 'node_list_columns'
     const ENV_NODE_TABLE_LIMIT_CACHE = 'env_node_table_limit_cache'
     export default {
