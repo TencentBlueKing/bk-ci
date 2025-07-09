@@ -74,7 +74,13 @@ interface ExternalThirdPartyAgentResource {
         eTag: String?,
         @Parameter(description = "本地操作系统架构", required = false)
         @QueryParam("arch")
-        arch: String?
+        arch: String?,
+        @Parameter(description = "登录账户名", required = false)
+        @QueryParam("loginName")
+        loginName: String?,
+        @Parameter(description = "登录账户密码", required = false)
+        @QueryParam("loginPassword")
+        loginPassword: String?
     ): Response
 
     @Deprecated("没用了")

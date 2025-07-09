@@ -122,4 +122,7 @@ if (-not $taskExists) {
     Start-Process "wscript.exe" -ArgumentList "$work_dir\devopsctl.vbs"
 }
 
+# 删除下载安装脚本
+Remove-Item -Path "$work_dir\download_install.ps1" -Force
+
 Pause

@@ -44,6 +44,7 @@ import jakarta.ws.rs.NotFoundException
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.StreamingOutput
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import org.apache.commons.compress.archivers.ArchiveOutputStream
 import org.apache.commons.compress.archivers.ArchiveStreamFactory
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
@@ -137,7 +138,13 @@ class DownloadAgentInstallService @Autowired constructor(
             .build()
     }
 
-    fun downloadGoAgent(agentId: String, record: TEnvironmentThirdpartyAgentRecord, arch: AgentArchType?): Response {
+    fun downloadGoAgent(
+        agentId: String,
+        record: TEnvironmentThirdpartyAgentRecord,
+        arch: AgentArchType?,
+        loginName: String?,
+        loginPassword: String?
+    ): Response {
         logger.info("Trying to download the agent($agentId) arch($arch)")
 
         val jarFiles = getGoAgentJarFiles(record.os, arch)
@@ -146,7 +153,7 @@ class DownloadAgentInstallService @Autowired constructor(
         val goInstallerFile = getGoFile(record.os, "installer", arch)
         val goUpgraderFile = getGoFile(record.os, "upgrader", arch)
         val packageFiles = getAgentPackageFiles(record.os)
-        val scriptFiles = getGoAgentScriptFiles(record)
+        val scriptFiles = getGoAgentScriptFiles(record, loginName, loginPassword)
         val propertyFile = getPropertyFile(record)
 
         logger.info("Get the script files (${scriptFiles.keys})")
@@ -220,9 +227,20 @@ class DownloadAgentInstallService @Autowired constructor(
         zipOut.closeArchiveEntry()
     }
 
-    fun downloadAgent(agentId: String, arch: AgentArchType?): Response {
+    fun downloadAgent(
+        agentId: String,
+        arch: AgentArchType?,
+        loginName: String?,
+        loginPassword: String?
+    ): Response {
         val agentRecord = getAgentRecord(agentId)
-        return downloadGoAgent(agentId, agentRecord, arch)
+        return downloadGoAgent(
+            agentId = agentId,
+            record = agentRecord,
+            arch = arch,
+            loginName = loginName,
+            loginPassword = loginPassword
+        )
     }
 
     private fun getAgentPackageFiles(os: String) =
@@ -258,10 +276,14 @@ class DownloadAgentInstallService @Autowired constructor(
         return daemonFile
     }
 
-    private fun getGoAgentScriptFiles(agentRecord: TEnvironmentThirdpartyAgentRecord): Map<String, String> {
+    private fun getGoAgentScriptFiles(
+        agentRecord: TEnvironmentThirdpartyAgentRecord,
+        loginName: String?,
+        loginPassword: String?
+    ): Map<String, String> {
         val file = File(agentPackage, "script/${agentRecord.os.lowercase()}")
         val scripts = file.listFiles()
-        val map = getAgentReplaceProperties(agentRecord, false, null, null)
+        val map = getAgentReplaceProperties(agentRecord, false, loginName, loginPassword)
         return scripts?.associate {
             var content = it.readText(Charsets.UTF_8)
             map.forEach { (key, value) -> content = content.replace("##$key##", value) }
@@ -311,7 +333,13 @@ class DownloadAgentInstallService @Autowired constructor(
         loginPassword: String?
     ): Map<String, String> {
         val agentId = HashUtil.encodeLongId(agentRecord.id)
-        val agentUrl = agentUrlService.genAgentUrl(agentRecord)
+        var agentUrl = agentUrlService.genAgentUrl(agentRecord)
+        if (!loginName.isNullOrBlank() || !loginPassword.isNullOrBlank()) {
+            agentUrl = agentUrl.toHttpUrlOrNull()?.newBuilder()
+                ?.addQueryParameter("loginName", loginName)
+                ?.addQueryParameter("loginPassword", loginPassword)
+                ?.build()?.toString() ?: agentUrl
+        }
         val gateWay = agentUrlService.genGateway(agentRecord)
         val fileGateway = agentUrlService.genFileGateway(agentRecord)
         return mapOf(
@@ -384,7 +412,7 @@ class DownloadAgentInstallService @Autowired constructor(
                 }
             }
 
-            getGoAgentScriptFiles(record).forEach { (name, content) ->
+            getGoAgentScriptFiles(record, null, null).forEach { (name, content) ->
                 logger.info("zip the script files ($name)")
                 val entry = ZipArchiveEntry(name)
                 val bytes = content.toByteArray()
