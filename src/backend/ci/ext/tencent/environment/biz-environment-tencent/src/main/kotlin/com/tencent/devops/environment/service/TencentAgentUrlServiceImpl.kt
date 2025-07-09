@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.environment.constant.BATCH_TOKEN_HEADER
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
+import java.net.URLEncoder
 
 /**
  * 腾讯内部旧版专用Agent下载链接生成服务
@@ -103,7 +104,7 @@ open class TencentAgentUrlServiceImpl constructor(
                 t = "&"
             }
             if (!loginName.isNullOrBlank()) {
-                sc += "${t}loginName=$loginName"
+                sc += "${t}loginName=${URLEncoder.encode(loginName, "UTF-8")}"
                 t = "&"
             }
             if (!loginPassword.isNullOrBlank()) {
