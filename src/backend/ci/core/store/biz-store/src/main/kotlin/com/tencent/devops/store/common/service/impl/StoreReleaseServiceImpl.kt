@@ -49,8 +49,8 @@ import com.tencent.devops.store.common.dao.StoreVersionLogDao
 import com.tencent.devops.store.common.handler.StoreCreateDataPersistHandler
 import com.tencent.devops.store.common.handler.StoreCreateHandlerChain
 import com.tencent.devops.store.common.handler.StoreCreateParamCheckHandler
+import com.tencent.devops.store.common.handler.StoreCreatePostBusHandler
 import com.tencent.devops.store.common.handler.StoreCreatePreBusHandler
-import com.tencent.devops.store.common.handler.StorePostCreateBusHandler
 import com.tencent.devops.store.common.handler.StoreUpdateDataPersistHandler
 import com.tencent.devops.store.common.handler.StoreUpdateHandlerChain
 import com.tencent.devops.store.common.handler.StoreUpdateParamCheckHandler
@@ -122,7 +122,7 @@ class StoreReleaseServiceImpl @Autowired constructor(
     private val storeUpdateDataPersistHandler: StoreUpdateDataPersistHandler,
     private val storeUpdateRunPipelineHandler: StoreUpdateRunPipelineHandler,
     private val storeInnerPipelineConfig: StoreInnerPipelineConfig,
-    private val storePostCreateBusHandler: StorePostCreateBusHandler
+    private val storeCreatePostBusHandler: StoreCreatePostBusHandler
 ) : StoreReleaseService {
 
     private val logger = LoggerFactory.getLogger(StoreReleaseServiceImpl::class.java)
@@ -136,7 +136,7 @@ class StoreReleaseServiceImpl @Autowired constructor(
             storeCreateParamCheckHandler, // 参数检查处理
             storeCreatePreBusHandler, // 前置业务处理
             storeCreateDataPersistHandler, // 数据持久化处理,
-            storePostCreateBusHandler // 后置业务处理
+            storeCreatePostBusHandler // 后置业务处理
         )
         val bkStoreContext = storeCreateRequest.bkStoreContext
         bkStoreContext[AUTH_HEADER_USER_ID] = userId
