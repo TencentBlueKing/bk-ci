@@ -168,7 +168,9 @@
     }
 
     .monitoring {
-        .enable-monitoring {
+        width: 200px;
+        text-align: right;
+        .enable-monitoring, a {
             margin-left: auto;
             font-size: 12px;
             color: #3A84FF;
@@ -183,6 +185,12 @@
             background: #EDF4FF;
             text-align: center;
             border-radius: 2px;
+        }
+
+        .jump-icon {
+            font-size: 18px;
+            position: relative;
+            top: 2px;
         }
     }
 }

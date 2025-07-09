@@ -138,6 +138,7 @@
             :title="tagTitle"
             ext-cls="tag-change"
             :style="{ '--dialog-top-translateY': `translateY(${dialogTopOffset}px)` }"
+            @cancel="handleCancel"
         >
             <div class="tag-dialog-content">
                 <bk-alert
@@ -149,20 +150,22 @@
                 <bk-form
                     :label-width="100"
                     :model="formData"
-                    :rules="rules"
-                    ref="tagForm"
                 >
                     <bk-form-item
                         :label="$t('environment.tagLabel')"
                         :required="true"
-                        property="label"
+                        property="tagLabel"
                     >
-                        <bk-input
+                        <input
                             v-model="formData.tagKeyName"
                             :clearable="true"
                             :disabled="isNodeLabelInUse"
                             :maxlength="64"
-                        ></bk-input>
+                            :name="`tagLabel_${index}`"
+                            v-validate="'required'"
+                            class="value-input"
+                            :class="{ 'is-danger': errors.has(`tagLabel_${index}`) }"
+                        />
                     </bk-form-item>
 
                     <bk-form-item
@@ -178,12 +181,16 @@
                                 :key="index"
                                 class="value-row"
                             >
-                                <bk-input
+                                <input
                                     v-model="formData.tagValues[index].tagValueName"
                                     :clearable="true"
                                     :disabled="item.nodeCount > 0"
                                     :maxlength="64"
-                                ></bk-input>
+                                    :name="`tagValueName_${index}`"
+                                    v-validate="'required'"
+                                    class="value-input"
+                                    :class="{ 'is-danger': errors.has(`tagValueName_${index}`) }"
+                                />
                                 <i
                                     class="devops-icon icon-plus-circle"
                                     @click="addTagValueRow"
@@ -229,9 +236,6 @@
                 isAdd: false,
                 isShowTagChange: false,
                 dialogTopOffset: null,
-                rules: {
-                    label: [{ required: true, trigger: 'blur', message: this.$t('environment.requiredField') }]
-                },
                 formData: {
                     tagKeyName: '',
                     tagValues: [{
@@ -278,7 +282,7 @@
             },
             isNodeLabelInUse () {
                 const totalNodeCount = this.formData.tagValues.reduce((sum, tagValue) => {
-                    return sum + tagValue.nodeCount
+                    return sum + (tagValue.nodeCount || 0)
                 }, 0)
 
                 return totalNodeCount > 0
@@ -347,9 +351,18 @@
                     })
                 }
             },
+            getTagValues () {
+                return this.nodeTagList?.flatMap(group =>
+                    group.tagValues?.map(v => String(v.tagValueId)) || []
+                ) || []
+            },
             async getTagTypeList () {
                 await this.requestNodeTagList(this.projectId)
                 this.setDefaultExpandedGroup()
+                const isValidNodeType = this.getTagValues().includes(this.$route.params.nodeType)
+                if (!isValidNodeType) {
+                    this.handleNodeClick('allNode')
+                }
             },
             isGroupExpanded (groupId) {
                 return this.expandedGroupIds.includes(groupId)
@@ -459,8 +472,8 @@
                 }
             },
             async handleConfirm () {
-                const valid = await this.$refs.tagForm.validate()
-                if (valid) {
+                const isValid = await this.$validator.validateAll()
+                if (isValid) {
                     try {
                         if (this.isAdd) {
                             await this.createNodeTag()
@@ -697,6 +710,24 @@
             margin-top: 16px;
           }
         }
+    }
+  }
+
+  .value-input {
+    padding: 0 10px 0 8px;
+    border: 1px solid #c4c6cc;
+    border-radius: 2px;
+    color: #63656e;
+    height: 32px;
+    width: 250px;
+    outline: none;
+    font-size: 12px;
+    &:focus {
+        border-color: #3a84ff;
+    }
+    &.is-danger {
+        border-color: #ff5656;
+        background-color: #fff4f4
     }
   }
 

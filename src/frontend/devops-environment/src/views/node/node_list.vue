@@ -195,8 +195,6 @@
                         }
                     ]
                 },
-                selectedTableColumn: [],
-                tableSize: 'small',
                 searchValue: [],
                 pagination: {
                     current: 1,
