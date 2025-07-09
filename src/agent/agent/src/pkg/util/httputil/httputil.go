@@ -218,8 +218,8 @@ func checkTimeOutExit(err error) {
 	if !ok {
 		return
 	}
-	enableExitTime, err := strconv.ParseInt(enableExitTimeStr, 10, 32)
-	if err != nil {
+	enableExitTime, intErr := strconv.ParseInt(enableExitTimeStr, 10, 32)
+	if intErr != nil {
 		logs.Warnf("enableExitTimeStr %s convert timeout err to int", enableExitTimeStr)
 		return
 	}
