@@ -103,13 +103,18 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         ).map { it.fullPath }
     }
 
-    private fun uploadBkRepoCustomize(file: File, destPath: String, buildVariables: BuildVariables) {
+    private fun uploadBkRepoCustomize(
+        file: File,
+        destPath: String,
+        buildVariables: BuildVariables,
+        metadata: Map<String, String>
+    ) {
         val bkRepoPath = destPath.removeSuffix("/") + "/" + file.name
         val url = "/bkrepo/api/build/generic/${buildVariables.projectId}/custom/$bkRepoPath"
         val request = buildPut(
             url,
             file.asRequestBody("application/octet-stream".toMediaTypeOrNull()),
-            bkrepoResourceApi.getUploadHeader(file, buildVariables, true)
+            bkrepoResourceApi.getUploadHeader(file, buildVariables, true, metadata= metadata)
         )
         val message = MessageUtil.getMessageByLocale(
             UPLOAD_CUSTOM_FILE_FAILED,
@@ -146,10 +151,11 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
                 destFullPath = destFullPath,
                 token = token,
                 buildVariables = buildVariables,
-                parseAppMetadata = true
+                parseAppMetadata = true,
+                metadata = metadata
             )
         } else {
-            uploadBkRepoCustomize(file, destPath, buildVariables)
+            uploadBkRepoCustomize(file, destPath, buildVariables, metadata)
         }
     }
 
@@ -172,19 +178,19 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
                 metadata = metadata
             )
         } else {
-            uploadBkRepoPipeline(file, buildVariables)
+            uploadBkRepoPipeline(file, buildVariables, metadata)
         }
         bkrepoResourceApi.setPipelineMetadata("pipeline", buildVariables)
     }
 
-    private fun uploadBkRepoPipeline(file: File, buildVariables: BuildVariables) {
+    private fun uploadBkRepoPipeline(file: File, buildVariables: BuildVariables, metadata: Map<String, String>) {
         logger.info("upload file >>> ${file.name}")
         val url = "/bkrepo/api/build/generic/${buildVariables.projectId}/pipeline/${buildVariables.pipelineId}/" +
             "${buildVariables.buildId}/${file.name}"
         val request = buildPut(
             url,
             file.asRequestBody("application/octet-stream".toMediaTypeOrNull()),
-            bkrepoResourceApi.getUploadHeader(file, buildVariables, true)
+            bkrepoResourceApi.getUploadHeader(file, buildVariables, true, metadata = metadata)
         )
         val message = MessageUtil.getMessageByLocale(
             UPLOAD_PIPELINE_FILE_FAILED,
