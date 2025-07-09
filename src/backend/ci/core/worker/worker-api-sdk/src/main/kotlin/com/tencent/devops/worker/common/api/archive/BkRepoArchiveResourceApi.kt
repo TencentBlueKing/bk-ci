@@ -114,7 +114,7 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         val request = buildPut(
             url,
             file.asRequestBody("application/octet-stream".toMediaTypeOrNull()),
-            bkrepoResourceApi.getUploadHeader(file, buildVariables, true, metadata= metadata)
+            bkrepoResourceApi.getUploadHeader(file, buildVariables, true, customMetadata = metadata)
         )
         val message = MessageUtil.getMessageByLocale(
             UPLOAD_CUSTOM_FILE_FAILED,
@@ -190,7 +190,7 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         val request = buildPut(
             url,
             file.asRequestBody("application/octet-stream".toMediaTypeOrNull()),
-            bkrepoResourceApi.getUploadHeader(file, buildVariables, true, metadata = metadata)
+            bkrepoResourceApi.getUploadHeader(file, buildVariables, true, customMetadata = metadata)
         )
         val message = MessageUtil.getMessageByLocale(
             UPLOAD_PIPELINE_FILE_FAILED,
