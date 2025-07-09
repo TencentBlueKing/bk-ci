@@ -74,7 +74,7 @@ class NodeTagService @Autowired constructor(
         if (nodeTagKeyDao.fetchNodeKey(dslContext, projectId, tagKey) != null) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_EXIST)
         }
-        if (tagValues.isEmpty()) {
+        if (tagValues.isEmpty() || tagValues.any { it.isBlank() }) {
             throw ParamBlankException("tag value is empty")
         }
         val tagValuesSet = tagValues.toSet()
