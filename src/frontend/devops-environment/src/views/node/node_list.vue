@@ -421,7 +421,7 @@
             }
         },
         watch: {
-            projectId: function (val) {
+            projectId: function () {
                 this.$router.push({ name: 'envList' })
             },
             nodeTagList: {
