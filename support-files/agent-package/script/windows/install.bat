@@ -5,8 +5,8 @@ cd /d %~dp0
 set work_dir=%CD%
 set agent_id=##agentId##
 set service_name=devops_agent_%agent_id%
-set service_username = ##serviceUsername##
-set service_password = ##servicePassword##
+set service_username=##serviceUsername##
+set service_password=##servicePassword##
 
 echo work_dir %work_dir%
 
