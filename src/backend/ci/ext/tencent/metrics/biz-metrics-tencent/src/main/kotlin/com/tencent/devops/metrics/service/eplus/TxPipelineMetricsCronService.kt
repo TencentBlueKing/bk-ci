@@ -79,6 +79,9 @@ class TxPipelineMetricsCronService @Autowired constructor(
     @Value("\${eplus.ms.metrics.queryUrl}")
     private val cardQueryUrl: String = ""
 
+    @Value("\${eplus.ms.metrics.filterId}")
+    private val filterId: String = ""
+
     @Value("\${eplus.ms.metrics.namespace.bkciNamespaceId}")
     private var pipelineGeneralNamespaceId: Int = 0
 
@@ -239,7 +242,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
                                 "op" to "day_between",
                                 "value" to "$dateTimeFrom,$dateTimeTo"
                             ),
-                            "name" to "date_64e403"
+                            "name" to filterId
                         )
                     )
                 )
@@ -383,7 +386,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
                                 "op" to "day_between",
                                 "value" to "$dateTimeFrom,$dateTimeTo"
                             ),
-                            "name" to "date_64e403"
+                            "name" to filterId
                         )
                     )
                 )
@@ -468,8 +471,8 @@ class TxPipelineMetricsCronService @Autowired constructor(
             projectIds.forEach { projectId ->
                 try {
                     processProject(projectId)
-                } catch (e: Exception) {
-                    logger.error("Error processing project $projectId", e)
+                } catch (ignored: Throwable) {
+                    logger.warn("Error processing project $projectId message: ${ignored.message}")
                 }
             }
             offset += limit
@@ -551,7 +554,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
             }
             logger.info("report email for the project [$projectId] was successfully sent")
         } catch (ignored: Throwable) {
-            logger.error("Failed to send project [$projectId] report email", ignored.message)
+            logger.warn("Failed to send project [$projectId] report email message: ${ignored.message}")
         }
     }
 
@@ -571,7 +574,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
         return PipelineExpirationInfo(
             receivers = projectManagers,
             projectId = projectId,
-            pipelineIvfoMap = invalidPipelineMap
+            pipelineInfoMap = invalidPipelineMap
         )
     }
 
@@ -587,7 +590,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
                 notifyType = mutableSetOf(NotifyType.EMAIL.name),
                 bodyParams = mapOf(
                     "projectName" to info.projectId,
-                    "pipelineCount" to info.pipelineIvfoMap.size.toString(),
+                    "pipelineCount" to info.pipelineInfoMap.size.toString(),
                     "table" to buildPipelineTableHtml(info),
                     "eplusUrl" to "${HomeHostUtil.innerServerHost()}/console/metrics/${projectId}"
                 ),
@@ -606,7 +609,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
     }
 
     private fun buildPipelineTableHtml(info: PipelineExpirationInfo): String {
-        val rows = info.pipelineIvfoMap.values.joinToString("") { pipelineInfo ->
+        val rows = info.pipelineInfoMap.values.joinToString("") { pipelineInfo ->
             """
             <tr>
                 <td style="border-bottom: 1px solid #ddd; padding: 10px;">${pipelineInfo.first}</td>
@@ -686,8 +689,8 @@ class TxPipelineMetricsCronService @Autowired constructor(
             )
 
             logger.info("end disableConsecutiveFailures6mPipelines")
-        } catch (e: Exception) {
-            logger.error("Error in disableConsecutiveFailures6mPipelines", e)
+        } catch (ignored: Throwable) {
+            logger.warn("Error in disableConsecutiveFailures6mPipelines message: ${ignored.message}")
         } finally {
             redisLock.unlock()
         }

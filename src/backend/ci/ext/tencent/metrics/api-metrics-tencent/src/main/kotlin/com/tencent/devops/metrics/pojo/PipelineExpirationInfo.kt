@@ -36,5 +36,5 @@ data class PipelineExpirationInfo(
     @get:Schema(title = "项目ID", required = true)
     val projectId: String,
     @get:Schema(title = "流水线信息", required = true)
-    val pipelineIvfoMap: Map<String, Pair<String, String>>
+    val pipelineInfoMap: Map<String, Pair<String, String>>
 )

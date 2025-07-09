@@ -171,17 +171,13 @@ class PipelineMetricsInfoDao {
     fun listConsecutiveFailures6mPipelines(
         dslContext: DSLContext,
         statisticsTime: LocalDateTime,
-        projectId: String? = null
+        projectId: String
     ): Result<TEplusPipelineMetricsDataDailyRecord> {
         with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
             val query = dslContext.selectFrom(this)
-                .where(STATISTICS_TIME.eq(statisticsTime))
+                .where(PROJECT_ID.eq(projectId))
+                .and(STATISTICS_TIME.eq(statisticsTime))
                 .and(CONSECUTIVE_FAILURES_6M.eq(true))
-
-            projectId?.let {
-                query.and(PROJECT_ID.eq(it))
-            }
-
             return query.fetch()
         }
     }
