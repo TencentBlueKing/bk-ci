@@ -11,9 +11,9 @@
             >
                 <bk-option
                     v-for="creator in operatorList"
-                    :key="creator"
-                    :id="creator"
-                    :name="creator"
+                    :key="creator.userId"
+                    :id="creator.userId"
+                    :name="creator.userName"
                 >
                 </bk-option>
             </bk-select>
