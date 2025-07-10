@@ -23,7 +23,7 @@ data class NodeTagValue(
     @get:Schema(title = "节点值名")
     val tagValueName: String,
     @get:Schema(title = "标签包含的节点数量")
-    val nodeCount: Int?,
+    var nodeCount: Int?,
     @get:Schema(title = "是否可以修改")
     val canUpdate: Boolean
 )

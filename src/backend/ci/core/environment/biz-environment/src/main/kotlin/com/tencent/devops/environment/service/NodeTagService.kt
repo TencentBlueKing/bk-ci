@@ -98,10 +98,26 @@ class NodeTagService @Autowired constructor(
     fun fetchTagAndNodeCount(
         projectId: String
     ): List<NodeTag> {
-        return mutableListOf<NodeTag>().apply {
-            addAll(nodeTagDao.fetchTagAndNodeCount(dslContext, projectId))
-            addAll(nodeTagDao.fetchInternalTagAndNodeCount(dslContext, projectId))
+        val tags = mutableListOf<NodeTag>().apply {
+            addAll(nodeTagDao.fetchTagAndNode(dslContext, projectId))
+            addAll(nodeTagDao.fetchInternalTag(dslContext).values)
         }
+        val nodeTags = nodeTagDao.fetchNodeTag(dslContext, projectId)
+        val nodeTagsCountMap = mutableMapOf<Long, MutableMap<Long, Int>>()
+        nodeTags.forEach {
+            val m = nodeTagsCountMap.putIfAbsent(it.tagKeyId, mutableMapOf()) ?: return@forEach
+            if (m.contains(it.tagValueId)) {
+                m[it.tagValueId] = m[it.tagValueId]!! + 1
+            } else {
+                m[it.tagValueId] = 1
+            }
+        }
+        tags.forEach { k ->
+            k.tagValues.forEach { v ->
+                v.nodeCount = nodeTagsCountMap[k.tagKeyId]?.get(v.tagValueId)
+            }
+        }
+        return tags
     }
 
     // 更新节点标签，先删后添加

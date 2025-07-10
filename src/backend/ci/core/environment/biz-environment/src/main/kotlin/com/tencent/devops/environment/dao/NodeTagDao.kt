@@ -68,20 +68,17 @@ class NodeTagDao {
     }
 
     // 获取所有标签和所有的节点数量
-    fun fetchTagAndNodeCount(dslContext: DSLContext, projectId: String): List<NodeTag> {
+    fun fetchTagAndNode(dslContext: DSLContext, projectId: String): List<NodeTag> {
         val resM = mutableMapOf<Long, NodeTag>()
         dslContext.select(
             TNodeTagKey.T_NODE_TAG_KEY.ID.`as`("KEY_ID"),
             TNodeTagKey.T_NODE_TAG_KEY.KEY_NAME,
             TNodeTagKey.T_NODE_TAG_KEY.ALLOW_MUL_VALUES,
             TNodeTagValues.T_NODE_TAG_VALUES.ID.`as`("VALUE_ID"),
-            TNodeTagValues.T_NODE_TAG_VALUES.VALUE_NAME,
-            DSL.count(TNodeTags.T_NODE_TAGS.NODE_ID).`as`("COUNT")
+            TNodeTagValues.T_NODE_TAG_VALUES.VALUE_NAME
         ).from(TNodeTagKey.T_NODE_TAG_KEY)
             .leftJoin(TNodeTagValues.T_NODE_TAG_VALUES)
             .on(TNodeTagKey.T_NODE_TAG_KEY.ID.eq(TNodeTagValues.T_NODE_TAG_VALUES.TAG_KEY_ID))
-            .leftJoin(TNodeTags.T_NODE_TAGS)
-            .on(TNodeTagValues.T_NODE_TAG_VALUES.ID.eq(TNodeTags.T_NODE_TAGS.TAG_VALUE_ID))
             .where(TNodeTagKey.T_NODE_TAG_KEY.PROJECT_ID.eq(projectId))
             .groupBy(
                 TNodeTagKey.T_NODE_TAG_KEY.ID,
@@ -98,46 +95,8 @@ class NodeTagDao {
                     allowMulVal = tag[TNodeTagKey.T_NODE_TAG_KEY.ALLOW_MUL_VALUES],
                     valueId = (tag["VALUE_ID"] as Long?) ?: return@forEach,
                     valueName = tag[TNodeTagValues.T_NODE_TAG_VALUES.VALUE_NAME],
-                    nodeCount = tag["COUNT"] as Int?,
+                    nodeCount = null,
                     internal = false
-                )
-            }
-        return resM.values.toList()
-    }
-
-    // 获取所有内部标签和所有的节点数量
-    fun fetchInternalTagAndNodeCount(dslContext: DSLContext, projectId: String): List<NodeTag> {
-        val resM = mutableMapOf<Long, NodeTag>()
-        dslContext.select(
-            TNodeTagInternalKey.T_NODE_TAG_INTERNAL_KEY.ID.`as`("KEY_ID"),
-            TNodeTagInternalKey.T_NODE_TAG_INTERNAL_KEY.KEY_NAME,
-            TNodeTagInternalKey.T_NODE_TAG_INTERNAL_KEY.ALLOW_MUL_VALUES,
-            TNodeTagInternalValues.T_NODE_TAG_INTERNAL_VALUES.ID.`as`("VALUE_ID"),
-            TNodeTagInternalValues.T_NODE_TAG_INTERNAL_VALUES.VALUE_NAME,
-            DSL.count(TNodeTags.T_NODE_TAGS.NODE_ID).`as`("COUNT")
-        ).from(TNodeTagInternalKey.T_NODE_TAG_INTERNAL_KEY)
-            .leftJoin(TNodeTagInternalValues.T_NODE_TAG_INTERNAL_VALUES)
-            .on(TNodeTagInternalKey.T_NODE_TAG_INTERNAL_KEY.ID.eq(TNodeTagInternalValues.T_NODE_TAG_INTERNAL_VALUES.TAG_KEY_ID))
-            .leftJoin(TNodeTags.T_NODE_TAGS)
-            .on(TNodeTagInternalValues.T_NODE_TAG_INTERNAL_VALUES.ID.eq(TNodeTags.T_NODE_TAGS.TAG_VALUE_ID))
-            .where(TNodeTags.T_NODE_TAGS.PROJECT_ID.eq(projectId))
-            .groupBy(
-                TNodeTagInternalKey.T_NODE_TAG_INTERNAL_KEY.ID,
-                TNodeTagInternalKey.T_NODE_TAG_INTERNAL_KEY.KEY_NAME,
-                TNodeTagInternalKey.T_NODE_TAG_INTERNAL_KEY.ALLOW_MUL_VALUES,
-                TNodeTagInternalValues.T_NODE_TAG_INTERNAL_VALUES.ID,
-                TNodeTagInternalValues.T_NODE_TAG_INTERNAL_VALUES.VALUE_NAME
-            )
-            .fetch().forEach { tag ->
-                genNodeTag(
-                    resM = resM,
-                    keyId = (tag["KEY_ID"] as Long?) ?: return@forEach,
-                    keyName = tag[TNodeTagInternalKey.T_NODE_TAG_INTERNAL_KEY.KEY_NAME],
-                    allowMulVal = tag[TNodeTagInternalKey.T_NODE_TAG_INTERNAL_KEY.ALLOW_MUL_VALUES],
-                    valueId = (tag["VALUE_ID"] as Long?) ?: return@forEach,
-                    valueName = tag[TNodeTagInternalValues.T_NODE_TAG_INTERNAL_VALUES.VALUE_NAME],
-                    nodeCount = tag["COUNT"] as Int?,
-                    internal = true
                 )
             }
         return resM.values.toList()
@@ -369,5 +328,11 @@ class NodeTagDao {
                 )
             }
         return resM.values.associateBy { it.tagKeyName }
+    }
+
+    fun fetchNodeTag(dslContext: DSLContext, projectId: String): List<TNodeTagsRecord> {
+        with(TNodeTags.T_NODE_TAGS) {
+            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).fetch()
+        }
     }
 }
