@@ -196,7 +196,7 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         }
     }
 
-    override fun doStorePostCreateBus(
+    override fun doStoreCreatePostBus(
         userId: String,
         storeCode: String,
         storeType: StoreTypeEnum
