@@ -1017,6 +1017,7 @@
     .node-list-wrapper {
         height: 100%;
         overflow: hidden;
+        margin: 24px;
 
         .prompt-operator,
         .edit-operator {

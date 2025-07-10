@@ -9,23 +9,21 @@
                 />
                 <span>{{ $t('environment.environmentManage') }}</span>
             </p>
-            <span class="manage-tabs">
-                <span
+            <bk-tab
+                :active.sync="activePanel"
+                type="unborder-card"
+                @tab-change="handleChangeTab"
+                ext-cls="tabs-manage"
+                :label-height="60"
+            >
+                <bk-tab-panel
+                    
                     v-for="panel in panels"
+                    v-bind="panel"
                     :key="panel.name"
-                    :class="{
-                        'manage-tab': true,
-                        active: activePanel === panel.name
-                    }"
-                    @click="handleChangeTab(panel)"
                 >
-                    <i
-                        :class="panel.icon"
-                        class="panel-icon"
-                    ></i>
-                    <span class="panel-name">{{ panel.label }}</span>
-                </span>
-            </span>
+                </bk-tab-panel>
+            </bk-tab>
             <span class="monitoring">
                 <span
                     v-if="isEnableDashboard && activePanel === 'nodeList'"
@@ -165,9 +163,9 @@
                     console.err(e)
                 }
             },
-            handleChangeTab (panel) {
-                if (this.activePanel === panel.name) return
-                const item = this.panels.find(navItem => navItem.name === panel.name)
+            handleChangeTab (name) {
+                if (this.activePanel === name) return
+                const item = this.panels.find(navItem => navItem.name === name)
 
                 const routeMap = {
                     envList: 'envList',
@@ -175,7 +173,7 @@
                     extPage: 'extPage'
                 }
                 this.$router.push({
-                    name: routeMap[panel.name],
+                    name: routeMap[name],
                     params: item.params
                 })
             }
@@ -207,39 +205,9 @@
             vertical-align: middle;
         }
     }
-    
-    .manage-tabs {
-        display: flex;
-        align-items: center;
-        
-        .manage-tab {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            padding: 0 24px;
-            cursor: pointer;
-            position: relative;
-            
-            .panel-icon {
-                margin-right: 8px;
-            }
-            
-            &.active {
-                color: #3a84ff;
-                background: rgba(225, 236, 255, 0.5);
-                
-                &::after {
-                    content: '';
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    height: 4px;
-                    background-color: #3a84ff;
-                }
-            }
-        }
+
+    .tabs-manage {
+        height: 60px;
     }
     .monitoring {
         width: 200px;
