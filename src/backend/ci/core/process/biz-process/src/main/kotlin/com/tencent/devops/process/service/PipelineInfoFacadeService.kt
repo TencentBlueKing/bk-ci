@@ -73,6 +73,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.constant.PipelineViewType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_MAX_PIPELINE_COUNT_PER_PROJECT
@@ -92,6 +93,7 @@ import com.tencent.devops.process.jmx.pipeline.PipelineBean
 import com.tencent.devops.process.permission.PipelineAuthorizationService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineCopy
+import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
@@ -144,7 +146,8 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val transferService: PipelineTransferYamlService,
     private val yamlFacadeService: PipelineYamlFacadeService,
     private val operationLogService: PipelineOperationLogService,
-    private val pipelineAuthorizationService: PipelineAuthorizationService
+    private val pipelineAuthorizationService: PipelineAuthorizationService,
+    private val auditService: AuditService
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -1575,6 +1578,31 @@ class PipelineInfoFacadeService @Autowired constructor(
             }
         }
         return failUpdateModels
+    }
+
+    fun lockPipeline(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        enable: Boolean
+    ) {
+        val pipelineInfo = locked(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            locked = !enable
+        )
+        auditService.createAudit(
+            Audit(
+                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceId = pipelineId,
+                resourceName = pipelineInfo.pipelineName,
+                userId = userId,
+                action = "edit",
+                actionContent = if (enable) "UnLock Pipeline" else "Locked Pipeline",
+                projectId = projectId
+            )
+        )
     }
 
     fun locked(userId: String, projectId: String, pipelineId: String, locked: Boolean): PipelineInfo {
