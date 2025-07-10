@@ -124,7 +124,8 @@ data class TriggerOn(
         changeContent = changeContent,
         changeSubmit = changeSubmit,
         shelveCommit = shelveCommit,
-        shelveSubmit = shelveSubmit
+        shelveSubmit = shelveSubmit,
+        scmCode = scmCode
     )
 
     private fun simpleManual() = when {
