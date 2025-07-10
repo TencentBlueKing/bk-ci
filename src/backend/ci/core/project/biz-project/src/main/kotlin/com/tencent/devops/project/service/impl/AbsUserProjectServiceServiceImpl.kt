@@ -351,6 +351,14 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
                     params = arrayOf(userId, projectId)
                 )
             }
+            if (!pipelineId.isNullOrBlank()) {
+                validatePipelinePermission(
+                    userId = userId,
+                    projectId = projectId,
+                    permission = AuthPermission.VIEW,
+                    pipelineId = pipelineId
+                )
+            }
         }
         val serviceResult = getService(userId, serviceId)
         var serviceVO = serviceResult.data ?: throw ErrorCodeException(
