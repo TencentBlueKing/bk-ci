@@ -95,6 +95,16 @@ class ServiceBuildResourceImpl @Autowired constructor(
         )
     }
 
+    override fun getPipelineVersionFromBuildId(projectId: String, buildId: String): Result<Int> {
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId, it must not empty.")
+        }
+        return Result(
+            data = pipelineRuntimeService.getBuildInfo(projectId, buildId)?.version
+                ?: throw ParamBlankException("Invalid buildId, please check if projectId & buildId are related")
+        )
+    }
+
     override fun getBuildIdFromBuildNumber(projectId: String, pipelineId: String, buildNumber: Int): Result<String> {
         if (pipelineId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
@@ -818,9 +828,9 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 channelCode = channelCode,
                 buildNo = buildNo,
                 version = version,
-                    checkPermission = ChannelCode.isNeedAuth(channelCode),
-                    frequencyLimit = true
-                )
+                checkPermission = ChannelCode.isNeedAuth(channelCode),
+                frequencyLimit = true
+            )
         )
     }
 
