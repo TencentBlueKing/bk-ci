@@ -389,9 +389,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -401,18 +398,12 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1(webpack-cli@4.10.0))
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-node:
         specifier: ^11.1.0
         version: 11.1.0(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: ^6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -533,9 +524,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -545,15 +533,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1)
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: ^6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -693,9 +675,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -705,15 +684,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1(webpack-cli@4.10.0))
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: 6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -826,9 +799,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -838,15 +808,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1(webpack-cli@4.10.0))
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: 6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -986,9 +950,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -998,18 +959,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1(webpack-cli@4.10.0))
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
-      eslint-plugin-node:
-        specifier: ^11.1.0
-        version: 11.1.0(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: 6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -1367,9 +1319,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -1379,15 +1328,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1(webpack-cli@4.10.0))
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: 6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -1708,9 +1651,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -1720,15 +1660,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1)
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: ^6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -1962,9 +1896,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -1974,18 +1905,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1(webpack-cli@4.10.0))
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
-      eslint-plugin-node:
-        specifier: ^11.1.0
-        version: 11.1.0(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: 6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -2318,9 +2240,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -2330,15 +2249,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1(webpack-cli@4.10.0))
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: 6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -2451,9 +2364,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -2463,15 +2373,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1(webpack-cli@4.10.0))
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: 6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -2602,9 +2506,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -2614,15 +2515,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1)
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: ^6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -17203,7 +17098,6 @@ packages:
   yaeti@0.0.6:
     resolution: {integrity: sha512-MvQa//+KcZCUkBTIC9blM+CU9J2GzuTytsOUwf2lidtvkx/6gnEp1QvJv34t9vdjhFmha/mUiNDbN0D0mJWdug==}
     engines: {node: '>=0.10.32'}
-    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   yallist@2.1.2:
     resolution: {integrity: sha512-ncTzHV7NvsQZkYe1DW7cbDLm0YpzHmZF5r/iyP3ZnQtMiJ+pjzisCiMNI+Sj+xQF5pXhSHxSB3uDbsBTzY/c2A==}
@@ -22694,7 +22588,7 @@ snapshots:
   '@vue/eslint-config-standard@6.1.0(@vue/cli-service@5.0.8(@vue/compiler-sfc@3.5.13)(bufferutil@4.0.8)(ejs@3.1.10)(encoding@0.1.13)(handlebars@4.7.8)(less-loader@12.2.0(less@4.2.0)(webpack@5.98.0(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.96.1))))(lodash@4.17.21)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(vue@3.4.31(typescript@4.9.5))(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.96.1))(webpack-sources@3.2.3))(eslint-plugin-import@2.29.1(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.9.5))(eslint@8.57.0))(eslint-plugin-node@11.1.0(eslint@8.57.0))(eslint-plugin-promise@6.0.1(eslint@8.57.0))(eslint-plugin-vue@8.7.1(eslint@8.57.0))(eslint@8.57.0)(webpack@5.98.0(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.96.1)))':
     dependencies:
       eslint: 8.57.0
-      eslint-config-standard: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.6.4))(eslint@8.57.0))(eslint-plugin-node@11.1.0(eslint@8.57.0))(eslint-plugin-promise@6.0.1(eslint@8.57.0))(eslint@8.57.0)
+      eslint-config-standard: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.9.5))(eslint@8.57.0))(eslint-plugin-node@11.1.0(eslint@8.57.0))(eslint-plugin-promise@6.0.1(eslint@8.57.0))(eslint@8.57.0)
       eslint-import-resolver-node: 0.3.9
       eslint-import-resolver-webpack: 0.13.8(eslint-plugin-import@2.29.1(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.9.5))(eslint@8.57.0))(webpack@5.98.0(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.96.1)))
       eslint-plugin-import: 2.29.1(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.9.5))(eslint@8.57.0)
@@ -26331,7 +26225,7 @@ snapshots:
       eslint-plugin-node: 11.1.0(eslint@7.32.0)
       eslint-plugin-promise: 5.1.1(eslint@7.32.0)
 
-  eslint-config-standard@16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.6.4))(eslint@8.57.0))(eslint-plugin-node@11.1.0(eslint@8.57.0))(eslint-plugin-promise@6.0.1(eslint@8.57.0))(eslint@8.57.0):
+  eslint-config-standard@16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.9.5))(eslint@8.57.0))(eslint-plugin-node@11.1.0(eslint@8.57.0))(eslint-plugin-promise@6.0.1(eslint@8.57.0))(eslint@8.57.0):
     dependencies:
       eslint: 8.57.0
       eslint-plugin-import: 2.29.1(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.9.5))(eslint@8.57.0)
@@ -26501,7 +26395,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.8.1(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.6.4))(eslint-import-resolver-node@0.3.9)(eslint@8.57.0):
+  eslint-module-utils@2.8.1(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.9.5))(eslint-import-resolver-node@0.3.9)(eslint@8.57.0):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
@@ -26623,7 +26517,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 8.57.0
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.8.1(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.6.4))(eslint-import-resolver-node@0.3.9)(eslint@8.57.0)
+      eslint-module-utils: 2.8.1(@typescript-eslint/parser@5.20.0(eslint@8.57.0)(typescript@4.9.5))(eslint-import-resolver-node@0.3.9)(eslint@8.57.0)
       hasown: 2.0.2
       is-core-module: 2.13.1
       is-glob: 4.0.3
@@ -26732,10 +26626,6 @@ snapshots:
       eslint: 8.57.0
 
   eslint-plugin-standard@4.0.2(eslint@7.32.0):
-    dependencies:
-      eslint: 7.32.0
-
-  eslint-plugin-standard@5.0.0(eslint@7.32.0):
     dependencies:
       eslint: 7.32.0
 
