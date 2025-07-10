@@ -1449,7 +1449,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         return Result(versionInfo)
     }
 
-
     private fun generateAtomName(atomCode: String, atomName: String?, category: String): String {
         return if (category == "TRIGGER") {
             I18nUtil.getCodeLanMessage(atomCode)
