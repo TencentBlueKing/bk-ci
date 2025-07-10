@@ -343,7 +343,7 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
                     action = ActionId.PROJECT_VISIT,
                     projectCode = projectId,
                     resourceCode = null
-                ).data!!
+                ).data
             if (verifyUserProjectPermission != true) {
                 logger.warn("User $userId has no permission to view  project $projectId")
                 throw ErrorCodeException(
