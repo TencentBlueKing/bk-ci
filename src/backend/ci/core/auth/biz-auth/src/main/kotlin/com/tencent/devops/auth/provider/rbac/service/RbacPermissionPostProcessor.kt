@@ -120,12 +120,12 @@ class RbacPermissionPostProcessor(
             if (localResult[permission]?.toSet() != resourceCodes.toSet()) {
                 logger.warn(
                     "filter user resources by actions results are inconsistent:$userId|" +
-                        "$projectCode|$resourceType|$actions|$result|$localResult"
+                        "$projectCode|$resourceType|$actions|$resourceCodes|${localResult[permission]}"
                 )
             } else {
                 logger.warn(
                     "filter user resources by actions results are consistency:$userId|" +
-                        "$projectCode|$resourceType|$actions|$result|$localResult"
+                        "$projectCode|$resourceType|$actions|$resourceCodes|${localResult[permission]}"
                 )
             }
         }
