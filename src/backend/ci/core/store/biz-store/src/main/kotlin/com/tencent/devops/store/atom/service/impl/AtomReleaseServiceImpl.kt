@@ -194,7 +194,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     @Autowired
     lateinit var config: CommonConfig
 
-
     @Value("\${store.defaultAtomErrorCodeLength:6}")
     private var defaultAtomErrorCodeLength: Int = 6
 
@@ -203,7 +202,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
 
     @Value("\${store.defaultAtomPublishReviewers:#{null}}")
     private val defaultAtomPublishReviewers: String? = null
-
 
     companion object {
         private val logger = LoggerFactory.getLogger(AtomReleaseServiceImpl::class.java)
