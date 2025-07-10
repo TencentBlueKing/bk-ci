@@ -62,7 +62,7 @@
     "url": "git+https://github.com/Tencent/bk-ci.git"
   },
   "peerDependencies": {
-    "bk-magic-vue": "2.5.9-beta.41",
+    "bk-magic-vue": "2.5.10-beta.12",
     "vue": "~2.7.16"
   },
   "keywords": [
