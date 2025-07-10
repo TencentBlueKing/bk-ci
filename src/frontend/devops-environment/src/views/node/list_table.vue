@@ -321,7 +321,7 @@
             </bk-table-column>
             <bk-table-column
                 :label="$t('environment.operation')"
-                width="300"
+                :min-width="200"
                 fixed="right"
             >
                 <template slot-scope="props">
@@ -794,7 +794,7 @@
             }
         },
         methods: {
-            ...mapActions('environment', ['requestNodeTagList']),
+            ...mapActions('environment', ['requestNodeTagList', 'requestGetCounts']),
             calcOverPosTable () {
                 const tagMargin = 6
                 this.visibleLabelCountList = this.nodeList.reduce((acc, item, index) => {
@@ -962,6 +962,7 @@
                             )
                         } finally {
                             this.isDeleteIng = false
+                            await this.requestGetCounts(this.projectId)
                             this.$emit('changePageCurrent')
                             this.$emit('refresh')
                         }

@@ -241,20 +241,19 @@
                     tagValues: [{
                         tagValueName: ''
                     }]
-                },
-                nodesCounts: {}
+                }
             }
         },
         computed: {
             projectId () {
                 return this.$route.params.projectId
             },
-            ...mapState('environment', ['nodeTagList']),
+            ...mapState('environment', ['nodeTagList', 'nodeCount']),
             ulMaxHeight () {
                 return window.innerHeight * 0.8 - 184
             },
             nodeGroup () {
-                const { CMDB = 0, THIRDPARTY = 0 } = this.nodesCounts || {}
+                const { CMDB = 0, THIRDPARTY = 0 } = this.nodeCount || {}
                 const totalCount = CMDB + THIRDPARTY
                 return [
                     {
@@ -301,15 +300,13 @@
                 immediate: true
             }
         },
-        created () {
+        async mounted () {
+            this.getNodeTypeCount()
+            await this.getTagTypeList()
             this.setDefaultExpandedGroup()
         },
-        mounted () {
-            this.getNodeTypeCount()
-            this.getTagTypeList()
-        },
         methods: {
-            ...mapActions('environment', ['requestNodeTagList']),
+            ...mapActions('environment', ['requestNodeTagList', 'requestGetCounts']),
             findGroupByNodeType () {
                 const nodeType = this.$route.params.nodeType
                 if (!nodeType) return null
@@ -337,18 +334,7 @@
                 }
             },
             async getNodeTypeCount () {
-                try {
-                    const res = await this.$store.dispatch('environment/requestGetCounts', {
-                        projectId: this.projectId
-                    })
-                    this.nodesCounts = res
-                    this.setDefaultExpandedGroup()
-                } catch (err) {
-                    this.$bkMessage({
-                        message: err.message ? err.message : err,
-                        theme: 'error'
-                    })
-                }
+                await this.requestGetCounts(this.projectId)
             },
             getTagValues () {
                 return this.nodeTagList?.flatMap(group =>
@@ -357,7 +343,6 @@
             },
             async getTagTypeList () {
                 await this.requestNodeTagList(this.projectId)
-                this.setDefaultExpandedGroup()
                 const isValidNodeType = this.getTagValues().includes(this.$route.params.nodeType)
                 if (this.$route.name === 'nodeList' && !isValidNodeType) {
                     this.handleNodeClick('allNode')
@@ -547,8 +532,22 @@
   }
 
   .label-list {
+    max-height: calc(100vh - 274px);
+    overflow-y: auto;
     margin-bottom: 4px;
     color: #63656E;
+
+    &::-webkit-scrollbar-thumb {
+        background-color: #dcdee5 !important;
+        border-radius: 20px !important;
+        &:hover {
+            background-color: #979ba5 !important;
+        }
+    }
+    &::-webkit-scrollbar {
+        width: 8px !important;
+        height: 8px !important;
+    }
   }
 
   .node-list {
@@ -568,7 +567,7 @@
   }
   
   .node-item:hover, .sub-node-item:hover {
-    background-color: #E1ECFF;
+    background-color: #F0F1F5;
   }
   
   .node-item.active, .sub-node-item.active {

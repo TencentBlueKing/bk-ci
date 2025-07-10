@@ -52,6 +52,6 @@
 <style lang="scss" scoped>
 .resize {
   width: 100vw;
-  height: calc(100vh - 110px);
+  height: calc(100vh - 98px);
 }
 </style>

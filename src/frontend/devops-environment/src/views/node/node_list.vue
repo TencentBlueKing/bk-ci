@@ -21,10 +21,10 @@
                                     }
                                 }"
                                 theme="primary"
-                                @click="toImportNode('cmdb')"
-                                key="idcTestMachine"
+                                @click="toImportNode('construct')"
+                                key="thirdPartyBuildMachine"
                             >
-                                {{ $t('environment.nodeInfo.idcTestMachine') }}
+                                {{ $t('environment.thirdPartyBuildMachine') }}
                             </bk-button>
                             <bk-button
                                 v-perm="{
@@ -36,10 +36,10 @@
                                     }
                                 }"
                                 theme="primary"
-                                @click="toImportNode('construct')"
-                                key="thirdPartyBuildMachine"
+                                @click="toImportNode('cmdb')"
+                                key="idcTestMachine"
                             >
-                                {{ $t('environment.thirdPartyBuildMachine') }}
+                                {{ $t('environment.nodeInfo.idcTestMachine') }}
                             </bk-button>
                         </template>
                         <bk-button
@@ -174,7 +174,7 @@
     import makeMirrorDialog from '@/components/devops/environment/make-mirror-dialog'
     import thirdConstruct from '@/components/devops/environment/third-construct-dialog'
     import ListTable from './list_table.vue'
-    import { mapState } from 'vuex'
+    import { mapState, mapActions } from 'vuex'
     import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
     import { getQueryString } from '@/utils/util'
     import SearchSelect from '@blueking/search-select'
@@ -478,6 +478,7 @@
             await this.init()
         },
         methods: {
+            ...mapActions('environment', ['requestGetCounts']),
             findTagByValueId (tagValueId) {
                 if (!this.nodeTagList?.length) return []
                 
@@ -819,6 +820,7 @@
                         this.dialogLoading.isShow = false
                         this.constructToolConf.importText = this.$t('environment.import')
                         this.requestList()
+                        await this.requestGetCounts(this.projectId)
                     }
                 }
             },
@@ -889,14 +891,20 @@
                     }
                 }
             },
-            confirmCmdbFn ({ theme, message, agentAbnormalNodesCount, agentNotInstallNodesCount }) {
+            async confirmCmdbFn ({ theme, message, agentAbnormalNodesCount, agentNotInstallNodesCount }) {
                 this.importStatus = theme
                 this.importMessage = message
                 this.agentAbnormalNodesCount = agentAbnormalNodesCount
                 this.agentNotInstallNodesCount = agentNotInstallNodesCount
                 this.$refs.importTipsDialog.isShow = true
                 this.cmdbNodeSelectConf.isShow = false
-                this.requestList()
+                await this.requestGetCounts(this.projectId)
+                this.$router.push({
+                    name: 'nodeList',
+                    params: {
+                        nodeType: 'CMDB'
+                    }
+                })
             },
             cancelCmdbFn () {
                 this.cmdbNodeSelectConf.isShow = false
