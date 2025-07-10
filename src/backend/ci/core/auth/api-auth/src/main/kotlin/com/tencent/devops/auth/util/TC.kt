@@ -20,7 +20,7 @@ class TC : ApplicationContextAware, InitializingBean {
     }
 
     override fun afterPropertiesSet() {
-        client = applicationContext!!.getBean<Client>(Client::class.java)
+        client = applicationContext!!.getBean(Client::class.java)
     }
 
     companion object {
