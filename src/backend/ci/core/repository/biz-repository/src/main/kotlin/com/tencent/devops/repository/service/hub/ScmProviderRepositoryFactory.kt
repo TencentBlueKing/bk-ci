@@ -52,20 +52,24 @@ class ScmProviderRepositoryFactory @Autowired constructor(
         )
         return when (properties.providerType) {
             ScmProviderType.GIT.name -> {
-                GitScmProviderRepository().withUrl(authRepository.url).withAuth(auth)
+                GitScmProviderRepository(
+                    url = authRepository.url,
+                    auth = auth
+                )
             }
 
             ScmProviderType.SVN.name -> {
-                SvnScmProviderRepository()
-                    .withUserName(authRepository.userName)
-                    .withUrl(authRepository.url)
-                    .withAuth(auth)
+                SvnScmProviderRepository(
+                    userName = authRepository.userName,
+                    url = authRepository.url,
+                    auth = auth
+                )
             }
 
             else ->
                 throw ErrorCodeException(
                     errorCode = RepositoryMessageCode.ERROR_NOT_SUPPORT_SCM_PROVIDER_TYPE,
-                    params = arrayOf(properties.providerType)
+                    params = arrayOf(properties.providerType ?: "")
                 )
         }
     }
