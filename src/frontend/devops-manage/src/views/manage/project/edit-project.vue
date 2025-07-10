@@ -34,6 +34,7 @@ const statusDisabledTips = {
 };
 const currentDialect = ref();
 const isDialectDialog = ref(false);
+const currentPanel = ref('projectSettings')
 
 const fetchProjectData = async () => {
   isLoading.value = true;
@@ -189,6 +190,9 @@ const handleNoPermission = () => {
     resourceCode: projectCode,
   })
 };
+function handleTabChange(panel) {
+  currentPanel.value = panel
+}
 
 onMounted(() => {
   fetchProjectData();
@@ -205,42 +209,46 @@ onMounted(() => {
         :is-change="isChange"
         :data="projectData"
         @change="handleFormChange"
-        @initProjectForm="initProjectForm">
+        @initProjectForm="initProjectForm"
+        @tab-change="handleTabChange"
+      >
       </project-form>
-      <div class="btn-group">
-        <Popover
-          :content="statusDisabledTips[projectData?.approvalStatus]"
-          :disabled="![1, 4].includes(projectData?.approvalStatus)"
-          v-perm="{
-            disablePermissionApi: [1, 3, 4].includes(projectData?.approvalStatus),
-            hasPermission: [1, 3, 4].includes(projectData?.approvalStatus),
-            permissionData: {
-              projectId: projectCode,
-              resourceType: RESOURCE_TYPE,
-              resourceCode: projectCode,
-              action: RESOURCE_ACTION.EDIT
-            }
-          }"
-        >
-          <span>
-            <bk-button
-              class="btn mr10"
-              :disabled="[1, 4].includes(projectData?.approvalStatus)"
-              theme="primary"
-              :loading="btnLoading"
-              @click="handleUpdate"
-            >
-              {{ t('提交更新') }}
-            </bk-button>
-          </span>
-        </Popover>
-        <bk-button
-          class="btn"
-          :loading="btnLoading"
-          @click="handleCancel"
-        >
-          {{ t('取消') }}
-        </bk-button>
+      <div class="btn-group" v-if="currentPanel !== 'artifactorySettings'">
+        <div class="buttons">
+          <Popover
+            :content="statusDisabledTips[projectData?.approvalStatus]"
+            :disabled="![1, 4].includes(projectData?.approvalStatus)"
+            v-perm="{
+              disablePermissionApi: [1, 3, 4].includes(projectData?.approvalStatus),
+              hasPermission: [1, 3, 4].includes(projectData?.approvalStatus),
+              permissionData: {
+                projectId: projectCode,
+                resourceType: RESOURCE_TYPE,
+                resourceCode: projectCode,
+                action: RESOURCE_ACTION.EDIT
+              }
+            }"
+          >
+            <span>
+              <bk-button
+                class="btn mr10"
+                :disabled="[1, 4].includes(projectData?.approvalStatus)"
+                theme="primary"
+                :loading="btnLoading"
+                @click="handleUpdate"
+              >
+                {{ t('提交更新') }}
+              </bk-button>
+            </span>
+          </Popover>
+          <bk-button
+            class="btn"
+            :loading="btnLoading"
+            @click="handleCancel"
+          >
+            {{ t('取消') }}
+          </bk-button>
+        </div>
       </div>
     </section>
     <bk-exception
@@ -285,9 +293,11 @@ onMounted(() => {
   .edit-project-content {
     display: flex;
     flex-direction: column;
-    height: 100%;
-    padding: 16px 24px 24px;
+    position: relative;
+    height: calc(100% - 108px);
+    padding: 16px 24px 16px;
     overflow: auto;
+    box-sizing: border-box;
    
     &::-webkit-scrollbar-thumb {
       background-color: #c4c6cc !important;
@@ -301,7 +311,9 @@ onMounted(() => {
       height: 8px !important;
     }
     .edit-project-form {
-      width: 100%;
+      width: 1200px;
+      height: 100%;
+      background-color: #FFF;
       flex: 1;
       margin: 0 auto;
       :deep(.bk-form-label) {
@@ -312,8 +324,18 @@ onMounted(() => {
       }
     }
     .btn-group {
-      display: flex;
-      margin: 24px 0;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 48px;
+      line-height: 48px;
+      background: #FAFBFD;
+      box-shadow: 0 -1px 0 0 #DCDEE5;
+      .buttons {
+        width: 1200px;
+        margin: 0 auto;
+      }
     }
     .mr10 {
       margin-right: 10px;

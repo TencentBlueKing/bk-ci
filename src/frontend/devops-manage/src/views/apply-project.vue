@@ -113,10 +113,8 @@ const handleCancel = () => {
     height: 100%;
   }
   .apply-project-content {
-    display: flex;
-    flex-direction: column;
-    padding: 24px;
-    height: 100%;
+    padding: 24px 24px 16px;
+    height: calc(100% - 108px);
     overflow: auto;
     &::-webkit-scrollbar-thumb {
       background-color: #c4c6cc !important;
@@ -130,13 +128,20 @@ const handleCancel = () => {
       height: 8px !important;
     }
     .create-project-form {
-      width: 1000px;
+      width: 1200px;
       flex: 1;
       margin: 0 auto;
     }
     .btn-group {
-      display: flex;
-      margin: 24px 0;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      padding-left: 24px;
+      width: 100%;
+      height: 48px;
+      line-height: 48px;
+      background: #FAFBFD;
+      box-shadow: 0 -1px 0 0 #DCDEE5;
     }
     .mr10 {
       margin-right: 10px;

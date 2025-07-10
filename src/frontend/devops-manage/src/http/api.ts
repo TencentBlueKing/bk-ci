@@ -6,6 +6,7 @@ import {
   USER_PERFIX,
   OPERATE_CHANNEL,
   PIPELINES_PERFIX,
+  ARTIFACTORY_PERFIX,
 } from './constants';
 import http from './fetch';
 export default {
@@ -407,5 +408,29 @@ export default {
       ...params,
     }).toString();
     return http.get(`${PIPELINES_PERFIX}/${projectId}/listInheritedDialectPipelines?${query}`);
+  },
+  /**
+   * 获取项目制品质量元数据标签列表
+   */
+  getMetadataList (projectId : string) {
+    return http.get(`${ARTIFACTORY_PERFIX}/quality/metadata/${projectId}`);
+  },
+  /**
+   * 创建项目制品质量元数据标签
+   */
+  createdMetadata (projectId : string, params: any) {
+    return http.post(`${ARTIFACTORY_PERFIX}/quality/metadata/${projectId}`, params);
+  },
+  /**
+   * 更新项目制品质量元数据标签
+   */
+  updateMetadata (projectId : string, labelKey: string, params: any) {
+    return http.put(`${ARTIFACTORY_PERFIX}/quality/metadata/${projectId}/${labelKey}`, params);
+  },
+  /**
+   * 删除项目制品质量元数据标签
+   */
+  deleteMetadata (projectId : string, labelKey: string) {
+    return http.delete(`${ARTIFACTORY_PERFIX}/quality/metadata/${projectId}/${labelKey}`);
   },
 };
