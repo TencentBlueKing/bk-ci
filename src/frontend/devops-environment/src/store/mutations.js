@@ -48,7 +48,10 @@ const mutations = {
     },
     setNodeTagList (state, list) {
         state.nodeTagList = list
-    }
+    },
+    setNodeCount (state, res) {
+        state.nodeCount = res
+    },
 }
 
 export default mutations

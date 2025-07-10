@@ -101,10 +101,14 @@ const actions = {
             return []
         }
     },
-    requestGetCounts ({ commit }, { projectId }) {
-        return vue.$ajax.get(`${prefix}/user/envnode/${projectId}/nodesCount`).then(response => {
-            return response
-        })
+    async requestGetCounts ({ commit }, projectId) {
+        try {
+            const res = await vue.$ajax.get(`${prefix}/user/envnode/${projectId}/nodesCount`)
+            commit('setNodeCount', res || {})
+            return res
+        } catch (err) {
+            console.error(err)
+        }
     },
     createdNodeTag ({ commit }, { projectId, params }) {
         return vue.$ajax.post(`${prefix}/user/nodetag/create?projectId=${projectId}`, params).then(response => {

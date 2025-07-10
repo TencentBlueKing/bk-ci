@@ -628,7 +628,7 @@
             }
         },
         methods: {
-            ...mapActions('environment', ['requestNodeTagList']),
+            ...mapActions('environment', ['requestNodeTagList', 'requestGetCounts']),
             calcOverPosTable () {
                 const tagMargin = 6
                 this.visibleLabelCountList = this.nodeList.reduce((acc, item, index) => {
@@ -793,6 +793,7 @@
                             )
                         } finally {
                             this.$emit('refresh')
+                            await this.requestGetCounts(this.projectId)
                         }
                     }
                 })

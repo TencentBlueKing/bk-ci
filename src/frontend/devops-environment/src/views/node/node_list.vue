@@ -108,7 +108,7 @@
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
     import ListTable from './list_table.vue'
-    import { mapState } from 'vuex'
+    import { mapState, mapActions } from 'vuex'
     const ENV_NODE_TABLE_LIMIT_CACHE = 'env_node_table_limit_cache'
 
     export default {
@@ -391,6 +391,7 @@
             await this.init()
         },
         methods: {
+            ...mapActions('environment', ['requestGetCounts']),
             findTagByValueId (tagValueId) {
                 if (!this.nodeTagList?.length) return []
                 
@@ -724,6 +725,7 @@
                         this.dialogLoading.isShow = false
                         this.constructToolConf.importText = this.$t('environment.import')
                         this.requestList()
+                        await this.requestGetCounts(this.projectId)
                     }
                 }
             },

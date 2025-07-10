@@ -276,7 +276,7 @@
         }
 
         .sub-view-port {
-            height: calc(100vh - 194px);
+            height: calc(100vh - 158px);
             overflow: auto;
             padding: 20px;
         }

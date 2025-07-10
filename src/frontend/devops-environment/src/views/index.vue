@@ -14,10 +14,9 @@
                 type="unborder-card"
                 @tab-change="handleChangeTab"
                 ext-cls="tabs-manage"
-                :label-height="60"
+                :label-height="48"
             >
                 <bk-tab-panel
-                    
                     v-for="panel in panels"
                     v-bind="panel"
                     :key="panel.name"
@@ -91,6 +90,15 @@
     }
 </script>
 
+
+<style lang="scss">
+.tabs-manage {
+    .bk-tab-header {
+        background-image: none !important;
+    }
+}
+</style>
+
 <style lang="scss" scoped>
 .biz-container {
     width: 100%;
@@ -104,12 +112,12 @@
         align-items: center;
         justify-content: center;
         width: 100%;
-        height: 60px;
-        line-height: 60px;
+        height: 48px;
+        box-sizing: border-box;
+        line-height: 48px;
         padding: 0 24px;
         background-color: #FFFFFF;
-        box-shadow: 0 2px 5px 0 #333c4808;
-        border-bottom: 1px solid #eeeff3;
+        border-bottom: 1px solid rgb(220, 222, 229);
     }
 
     .environment-tit {
@@ -121,7 +129,7 @@
     }
 
     .tabs-manage {
-        height: 60px;
+        height: 48px;
     }
 }
 </style>
