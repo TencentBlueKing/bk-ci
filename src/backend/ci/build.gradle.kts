@@ -24,6 +24,17 @@ allprojects {
 
     // 新增maven 仓库
     repositories {
+        // 优先为com.tencent.bk.devops.scm配置专属仓库
+        exclusiveContent {
+            forRepository {
+                maven {
+                    url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+                }
+            }
+            filter {
+                includeGroup("com.tencent.bk.devops.scm")
+            }
+        }
         add(maven { url = uri("https://repo.jenkins-ci.org/releases") })
     }
 

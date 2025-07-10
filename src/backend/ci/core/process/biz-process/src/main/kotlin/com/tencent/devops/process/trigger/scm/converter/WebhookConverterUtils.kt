@@ -32,6 +32,8 @@ import com.tencent.devops.process.yaml.pojo.YamlFileActionType
 import com.tencent.devops.scm.api.pojo.Change
 
 object WebhookConverterUtils {
+
+    @SuppressWarnings("NestedBlockDepth")
     fun getChangeFiles(changes: List<Change>): WebhookChangeFiles {
         val allFiles = mutableSetOf<String>()
         val addedFiles = mutableSetOf<String>()
