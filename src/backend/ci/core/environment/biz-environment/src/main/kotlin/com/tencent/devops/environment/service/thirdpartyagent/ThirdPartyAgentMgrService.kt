@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -594,17 +594,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         projectId: String,
         os: OS?
     ): List<ThirdPartyAgentInfo> {
-        val agents = thirdPartyAgentDao.listImportAgent(dslContext = dslContext, projectId = projectId, os = os)
-        if (agents.isEmpty()) {
-            return arrayListOf()
-        }
-
-        val nodeIds = agents.filter { it.nodeId != null }.map { it.nodeId }
-        val nodes = nodeDao.listByIds(dslContext, projectId, nodeIds)
-        if (nodes.isEmpty()) {
-            return emptyList()
-        }
-        val nodeMap = nodes.associateBy { it.nodeId }
 
         val canUseNodeIds = environmentPermissionService.listNodeByPermission(
             userId = userId,
@@ -618,17 +607,26 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
 
         logger.debug("Get the user can use node ids {}", canUseNodeIds)
 
+        val agents = thirdPartyAgentDao.listImportAgent(
+            dslContext = dslContext,
+            projectId = projectId,
+            nodeIds = canUseNodeIds,
+            os = os
+        )
+        if (agents.isEmpty()) {
+            return emptyList()
+        }
+
+        val nodeIds = agents.map { it.nodeId }
+        val nodes = nodeDao.listByIds(dslContext, projectId, nodeIds)
+        if (nodes.isEmpty()) {
+            return emptyList()
+        }
+        val nodeMap = nodes.associateBy { it.nodeId }
+
         val agentInfo = ArrayList<ThirdPartyAgentInfo>()
 
         agents.forEach { agent ->
-            if (agent.nodeId == null) {
-                logger.debug("The agent(${agent.id}) node id is empty")
-                return@forEach
-            }
-
-            if (!canUseNodeIds.contains(agent.nodeId)) {
-                return@forEach
-            }
             val node = nodeMap[agent.nodeId]
             if (node == null || node.nodeStatus.isNullOrBlank()) {
                 logger.warn("Fail to find the node status of agent(${agent.id})")
@@ -1291,7 +1289,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                         jdkVersion = newHeartbeatInfo.props!!.jdkVersion ?: listOf(),
                         userProps = oldUserProps,
                         dockerInitFileInfo = newHeartbeatInfo.props?.dockerInitFileInfo,
-                        exitError = newHeartbeatInfo.errorExitData
+                        exitError = newHeartbeatInfo.errorExitData,
+                        osVersion = newHeartbeatInfo.props?.osVersion
                     ),
                     false
                 )

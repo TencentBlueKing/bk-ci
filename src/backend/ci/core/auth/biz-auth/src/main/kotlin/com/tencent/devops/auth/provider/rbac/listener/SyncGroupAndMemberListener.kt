@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -42,11 +42,13 @@ class SyncGroupAndMemberListener @Autowired constructor(
 
     override fun execute(event: ProjectEnableStatusBroadCastEvent) {
         logger.info("sync group,group member and group permissions when enabled project $event")
-        if (event.enabled) {
-            // 项目启用时，同步用户组/用户组成员/用户组权限
-            resourceGroupSyncService.syncProjectGroup(projectCode = event.projectId)
-            resourceGroupSyncService.syncGroupAndMember(projectCode = event.projectId)
-            resourceGroupPermissionService.syncProjectPermissions(projectCode = event.projectId)
+        with(event) {
+            if (enabled) {
+                // 项目启用时，同步用户组/用户组成员/用户组权限
+                resourceGroupSyncService.syncProjectGroup(projectId)
+                resourceGroupSyncService.syncGroupAndMember(projectId)
+                resourceGroupPermissionService.syncProjectPermissions(projectId)
+            }
         }
     }
 

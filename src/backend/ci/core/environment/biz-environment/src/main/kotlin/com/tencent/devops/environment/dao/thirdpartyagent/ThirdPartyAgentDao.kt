@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -325,19 +325,21 @@ class ThirdPartyAgentDao {
     fun listImportAgent(
         dslContext: DSLContext,
         projectId: String,
+        nodeIds: Set<Long>,
         os: OS?,
-        limit: Int = PageUtil.MAX_PAGE_SIZE
     ): List<TEnvironmentThirdpartyAgentRecord> {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId)).let {
-                    if (null == os) {
-                        it
-                    } else {
+                    if (null != os) {
                         it.and(OS.eq(os.name))
                     }
+                    if (nodeIds.isNotEmpty()) {
+                        it.and(NODE_ID.`in`(nodeIds))
+                    } else {
+                        it
+                    }
                 }
-                .limit(limit)
                 .fetch()
         }
     }

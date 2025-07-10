@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -48,6 +48,11 @@ class RunLockInterceptor @Autowired constructor(
 ) : PipelineInterceptor {
 
     override fun execute(task: InterceptData): Response<BuildStatus> {
+        if (task.retryOnRunningBuild) {
+            // perf：流水线运行中、重试失败的步骤时提示队列满问题跟进和优化 #11807
+            // 运行中重试不进行构建流程判断
+            return Response(BuildStatus.RUNNING)
+        }
         val projectId = task.pipelineInfo.projectId
         val pipelineId = task.pipelineInfo.pipelineId
         val runLockType = task.runLockType

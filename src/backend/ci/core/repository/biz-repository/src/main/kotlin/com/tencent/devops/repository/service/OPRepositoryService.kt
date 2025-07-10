@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -692,7 +692,6 @@ class OPRepositoryService @Autowired constructor(
                     repositoryId = it.map { it.repositoryId }.toSet()
                 )
             }
-            offset += limit
             // 避免限流，增加一秒休眠时间
             Thread.sleep(1 * 1000)
         } while (repoList.size == 100)

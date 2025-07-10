@@ -2,15 +2,16 @@ package third_components
 
 import (
 	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
+	"sync"
+
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 	"github.com/sirupsen/logrus"
-	"regexp"
-	"strconv"
-	"strings"
-	"sync"
 )
 
 var Worker *WorkerType

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -997,7 +997,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     pipelineTaskService.isRetryWhenFail(
                         projectId = buildInfo.projectId,
                         taskId = result.taskId,
-                        buildId = buildId
+                        buildId = buildId,
+                        failedMsg = result.message
                     ) -> {
                         // 将当前重试 task id 做记录
                         pipelineTaskService.taskRetryRecordSet(

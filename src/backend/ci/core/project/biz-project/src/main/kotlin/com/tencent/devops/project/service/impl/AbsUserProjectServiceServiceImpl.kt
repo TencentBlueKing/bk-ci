@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,12 +27,16 @@
 
 package com.tencent.devops.project.service.impl
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthPlatformApi
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -68,7 +72,8 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val authProjectApi: AuthProjectApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
-    private val apiPlatformApi: AuthPlatformApi
+    private val apiPlatformApi: AuthPlatformApi,
+    private val authPermissionApi: AuthPermissionApi
 ) : UserProjectServiceService {
 
     override fun getService(userId: String, serviceId: Long): Result<ServiceVO> {
@@ -317,19 +322,20 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
         }
     }
 
-    override fun getServiceUrl(userId: String, projectId: String?, serviceId: Long): Result<String> {
+    override fun getServiceUrl(
+        userId: String,
+        projectId: String?,
+        pipelineId: String?,
+        serviceId: Long
+    ): Result<String> {
         if (!projectId.isNullOrBlank()) {
-            // 检查用户是否有该项目的权限
-            val hasPermission = authProjectApi.isProjectUser(
-                user = userId,
-                serviceCode = pipelineAuthServiceCode,
-                projectCode = projectId,
-                group = null
-            )
-            if (!hasPermission) {
-                throw ErrorCodeException(
-                    errorCode = ProjectMessageCode.USER_NOT_PROJECT_USER,
-                    params = arrayOf(userId, projectId)
+            validateProjectPermission(userId, projectId)
+            if (!pipelineId.isNullOrBlank()) {
+                validatePipelinePermission(
+                    userId = userId,
+                    projectId = projectId,
+                    permission = AuthPermission.VIEW,
+                    pipelineId = pipelineId
                 )
             }
         }
@@ -341,9 +347,58 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
         if (SpringContextUtil.isBeanExist(beanName)) {
             // 对服务数据进行特殊处理
             val serviceManageService = SpringContextUtil.getBean(ServiceManageService::class.java, beanName)
-            serviceVO = serviceManageService.doSpecBus(userId, serviceVO, projectId)
+            serviceVO = serviceManageService.doSpecBus(
+                userId = userId,
+                serviceVO = serviceVO,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
         }
         return Result(data = serviceVO.iframeUrl)
+    }
+
+    /**
+     * 验证用户项目权限
+     */
+    private fun validateProjectPermission(userId: String, projectId: String) {
+        val hasPermission = authProjectApi.isProjectUser(
+            user = userId,
+            serviceCode = pipelineAuthServiceCode,
+            projectCode = projectId,
+            group = null
+        )
+        if (!hasPermission) {
+            logger.warn("User $userId has no permission to access project $projectId")
+            throw ErrorCodeException(
+                errorCode = ProjectMessageCode.USER_NOT_PROJECT_USER,
+                params = arrayOf(userId, projectId)
+            )
+        }
+    }
+
+    /**
+     * 验证用户流水线权限
+     */
+    private fun validatePipelinePermission(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission,
+        pipelineId: String
+    ) {
+        val hasPermission = authPermissionApi.validateUserResourcePermission(
+            user = userId,
+            serviceCode = pipelineAuthServiceCode,
+            resourceType = AuthResourceType.PIPELINE_DEFAULT,
+            projectCode = projectId,
+            permission = permission
+        )
+        if (!hasPermission) {
+            logger.warn("User $userId has no permission to view pipeline in project $projectId")
+            throw ErrorCodeException(
+                errorCode = USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                params = arrayOf(userId, projectId, permission.getI18n(I18nUtil.getRequestUserLanguage()), pipelineId)
+            )
+        }
     }
 
     companion object {

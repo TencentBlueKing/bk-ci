@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -55,6 +55,8 @@ import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.dao.AuthResourceGroupPermissionDao
 import com.tencent.devops.auth.dao.AuthResourceSyncDao
+import com.tencent.devops.auth.dao.AuthSyncDataTaskDao
+import com.tencent.devops.auth.dao.AuthUserProjectPermissionDao
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
 import com.tencent.devops.auth.provider.rbac.service.ItsmService
@@ -96,6 +98,7 @@ import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.PermissionAuthorizationService
 import com.tencent.devops.auth.service.ResourceService
 import com.tencent.devops.auth.service.SuperManagerService
+import com.tencent.devops.auth.service.UserManageService
 import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
 import com.tencent.devops.auth.service.iam.PermissionHandoverApplicationService
 import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
@@ -221,7 +224,9 @@ class RbacAuthConfiguration {
         authorizationDao: AuthAuthorizationDao,
         authResourceService: AuthResourceService,
         client: Client,
-        config: CommonConfig
+        config: CommonConfig,
+        userManageService: UserManageService,
+        traceEventDispatcher: TraceEventDispatcher
     ) = RbacPermissionManageFacadeServiceImpl(
         permissionResourceGroupService = permissionResourceGroupService,
         groupPermissionService = groupPermissionService,
@@ -240,7 +245,9 @@ class RbacAuthConfiguration {
         authorizationDao = authorizationDao,
         authResourceService = authResourceService,
         client = client,
-        config = config
+        config = config,
+        userManageService = userManageService,
+        traceEventDispatcher = traceEventDispatcher
     )
 
     @Bean
@@ -257,7 +264,12 @@ class RbacAuthConfiguration {
         authAuthorizationScopesService: AuthAuthorizationScopesService,
         authActionDao: AuthActionDao,
         authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-        objectMapper: ObjectMapper
+        objectMapper: ObjectMapper,
+        authResourceDao: AuthResourceDao,
+        authUserProjectPermissionDao: AuthUserProjectPermissionDao,
+        authResourceMemberDao: AuthResourceGroupMemberDao,
+        traceEventDispatcher: TraceEventDispatcher,
+        syncDataTaskDao: AuthSyncDataTaskDao
     ) = RbacPermissionResourceGroupPermissionService(
         v2ManagerService = v2ManagerService,
         rbacCommonService = rbacCommonService,
@@ -271,7 +283,12 @@ class RbacAuthConfiguration {
         authAuthorizationScopesService = authAuthorizationScopesService,
         authActionDao = authActionDao,
         authResourceGroupConfigDao = authResourceGroupConfigDao,
-        objectMapper = objectMapper
+        objectMapper = objectMapper,
+        authResourceDao = authResourceDao,
+        authUserProjectPermissionDao = authUserProjectPermissionDao,
+        authResourceMemberDao = authResourceMemberDao,
+        traceEventDispatcher = traceEventDispatcher,
+        syncDataTaskDao = syncDataTaskDao
     )
 
     @Bean
@@ -282,14 +299,18 @@ class RbacAuthConfiguration {
         authResourceGroupMemberDao: AuthResourceGroupMemberDao,
         dslContext: DSLContext,
         deptService: DeptService,
-        rbacCommonService: RbacCommonService
+        rbacCommonService: RbacCommonService,
+        authResourceSyncDao: AuthResourceSyncDao,
+        traceEventDispatcher: TraceEventDispatcher
     ) = RbacPermissionResourceMemberService(
         authResourceService = authResourceService,
         iamV2ManagerService = iamV2ManagerService,
         authResourceGroupDao = authResourceGroupDao,
         authResourceGroupMemberDao = authResourceGroupMemberDao,
         dslContext = dslContext,
-        deptService = deptService
+        deptService = deptService,
+        traceEventDispatcher = traceEventDispatcher,
+        authResourceSyncDao = authResourceSyncDao
     )
 
     @Bean
@@ -383,7 +404,8 @@ class RbacAuthConfiguration {
         permissionService: PermissionService,
         itsmService: ItsmService,
         deptService: DeptService,
-        authResourceGroupApplyDao: AuthResourceGroupApplyDao
+        authResourceGroupApplyDao: AuthResourceGroupApplyDao,
+        permissionResourceMemberService: PermissionResourceMemberService
     ) = RbacPermissionApplyService(
         dslContext = dslContext,
         v2ManagerService = v2ManagerService,
@@ -397,7 +419,8 @@ class RbacAuthConfiguration {
         permissionService = permissionService,
         itsmService = itsmService,
         deptService = deptService,
-        authResourceGroupApplyDao = authResourceGroupApplyDao
+        authResourceGroupApplyDao = authResourceGroupApplyDao,
+        permissionResourceMemberService = permissionResourceMemberService
     )
 
     @Bean
@@ -692,7 +715,9 @@ class RbacAuthConfiguration {
         authResourceSyncDao: AuthResourceSyncDao,
         authResourceGroupApplyDao: AuthResourceGroupApplyDao,
         resourceGroupPermissionService: PermissionResourceGroupPermissionService,
-        deptService: DeptService
+        deptService: DeptService,
+        traceEventDispatcher: TraceEventDispatcher,
+        syncDataTaskDao: AuthSyncDataTaskDao
     ) = RbacPermissionResourceGroupSyncService(
         client = client,
         dslContext = dslContext,
@@ -705,6 +730,8 @@ class RbacAuthConfiguration {
         authResourceSyncDao = authResourceSyncDao,
         authResourceGroupApplyDao = authResourceGroupApplyDao,
         resourceGroupPermissionService = resourceGroupPermissionService,
-        deptService = deptService
+        deptService = deptService,
+        traceEventDispatcher = traceEventDispatcher,
+        syncDataTaskDao = syncDataTaskDao
     )
 }
