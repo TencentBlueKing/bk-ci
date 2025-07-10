@@ -102,6 +102,7 @@ import com.tencent.devops.auth.service.UserManageService
 import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
 import com.tencent.devops.auth.service.iam.PermissionHandoverApplicationService
 import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
+import com.tencent.devops.auth.service.iam.PermissionPostProcessor
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
@@ -342,7 +343,7 @@ class RbacAuthConfiguration {
         superManagerService: SuperManagerService,
         rbacCommonService: RbacCommonService,
         client: Client,
-        authProjectUserMetricsService: AuthProjectUserMetricsService
+        permissionPostProcessor: PermissionPostProcessor
     ) = RbacPermissionService(
         authHelper = authHelper,
         authResourceService = authResourceService,
@@ -352,7 +353,7 @@ class RbacAuthConfiguration {
         superManagerService = superManagerService,
         rbacCommonService = rbacCommonService,
         client = client,
-        authProjectUserMetricsService = authProjectUserMetricsService
+        permissionPostProcessor = permissionPostProcessor
     )
 
     @Bean

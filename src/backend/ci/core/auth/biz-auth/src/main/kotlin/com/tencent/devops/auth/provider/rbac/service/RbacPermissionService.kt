@@ -39,8 +39,8 @@ import com.tencent.bk.sdk.iam.dto.resource.V2ResourceNode
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.pojo.enum.MemberType
-import com.tencent.devops.auth.service.AuthProjectUserMetricsService
 import com.tencent.devops.auth.service.SuperManagerService
+import com.tencent.devops.auth.service.iam.PermissionPostProcessor
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.Watcher
@@ -66,7 +66,7 @@ class RbacPermissionService(
     private val superManagerService: SuperManagerService,
     private val rbacCommonService: RbacCommonService,
     private val client: Client,
-    private val authProjectUserMetricsService: AuthProjectUserMetricsService
+    private val permissionPostProcessor: PermissionPostProcessor
 ) : PermissionService {
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionService::class.java)
@@ -214,13 +214,14 @@ class RbacPermissionService(
                 .build()
 
             val result = policyService.verifyPermissions(queryPolicyDTO)
-            if (result) {
-                authProjectUserMetricsService.save(
-                    projectId = projectCode,
-                    userId = userId,
-                    operate = useAction
-                )
-            }
+            permissionPostProcessor.validateUserResourcePermission(
+                userId = userId,
+                projectCode = projectCode,
+                resourceType = resource.resourceType,
+                resourceCode = resource.resourceCode,
+                action = useAction,
+                result = result
+            )
             return result
         } finally {
             watcher.stop()
@@ -305,13 +306,14 @@ class RbacPermissionService(
                 actionList,
                 listOf(resourceDTO)
             )
-            result.filter { it.value }.keys.forEach { action ->
-                authProjectUserMetricsService.save(
-                    projectId = projectCode,
-                    userId = userId,
-                    operate = action
-                )
-            }
+            permissionPostProcessor.batchValidateUserResourcePermission(
+                userId = userId,
+                projectCode = projectCode,
+                resourceType = resource.resourceType,
+                resourceCode = resource.resourceCode,
+                actions = actions,
+                result = result
+            )
             return result
         } finally {
             logger.info(
@@ -352,7 +354,7 @@ class RbacPermissionService(
                 action
             }
             val instanceMap = authHelper.groupRbacInstanceByType(userId, useAction)
-            return when {
+            val result = when {
                 resourceType == AuthResourceType.PROJECT.value ->
                     instanceMap[resourceType] ?: emptyList()
                 // 如果有项目下所有该资源权限,返回资源列表
@@ -396,6 +398,14 @@ class RbacPermissionService(
                     )
                 }
             }
+            permissionPostProcessor.getUserResourceByAction(
+                userId = userId,
+                projectCode = projectCode,
+                action = useAction,
+                resourceType = resourceType,
+                result = result
+            )
+            return result
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to get user resources|" +
@@ -481,9 +491,9 @@ class RbacPermissionService(
             "[rbac] filter user resources|$userId|$actions|$projectCode|$resourceType"
         )
         val startEpoch = System.currentTimeMillis()
-        try {
+        val result = try {
             if (rbacCommonService.checkProjectManager(userId = userId, projectCode = projectCode)) {
-                return actions.associate {
+                actions.associate {
                     val authPermission = it.substringAfterLast("_")
                     AuthPermission.get(authPermission) to resources.map { resource -> resource.resourceCode }
                 }
@@ -533,13 +543,22 @@ class RbacPermissionService(
                     )
                 }
             }
-            return permissionMap
+            permissionMap
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to filter user resources |" +
                     "$userId|$actions|$projectCode|$resourceType"
             )
         }
+        permissionPostProcessor.filterUserResourcesByActions(
+            userId = userId,
+            actions = actions,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCodes = resources.map { it.resourceCode },
+            result = result
+        )
+        return result
     }
 
     private fun buildAuthResourceInstance(
