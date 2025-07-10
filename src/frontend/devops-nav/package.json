@@ -68,7 +68,7 @@
     "@blueking/login-modal": "1.0.4",
     "@blueking/platform-config": "^1.0.4",
     "@icon-cool/bk-icon-devops": "^0.1.13",
-    "axios": "0.28.0",
+    "axios": "0.30.0",
     "bk-magic-vue": "2.5.10-beta.12",
     "bk-permission": "workspace:bk-permission",
     "bluebird": "^3.5.1",
