@@ -87,5 +87,7 @@ data class ProjectWorkspace(
     @get:Schema(title = "是否开启了录屏")
     val recordEnabled: Boolean,
     @get:Schema(title = "主机名")
-    val vmName: String? = null
+    val vmName: String? = null,
+    @get:Schema(title = "母机IP")
+    val nodeIp: String? = null
 ) : IWorkspace
