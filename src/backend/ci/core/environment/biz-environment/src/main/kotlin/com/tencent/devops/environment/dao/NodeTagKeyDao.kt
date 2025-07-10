@@ -1,6 +1,8 @@
 package com.tencent.devops.environment.dao
 
+import com.tencent.devops.model.environment.tables.TNodeTagInternalKey
 import com.tencent.devops.model.environment.tables.TNodeTagKey
+import com.tencent.devops.model.environment.tables.records.TNodeTagInternalKeyRecord
 import com.tencent.devops.model.environment.tables.records.TNodeTagKeyRecord
 import org.jooq.DSLContext
 import org.jooq.UpdateSetMoreStep
@@ -39,6 +41,12 @@ class NodeTagKeyDao {
     fun fetchNodeKeyByIds(dslContext: DSLContext, projectId: String, keyIds: Set<Long>): List<TNodeTagKeyRecord> {
         with(TNodeTagKey.T_NODE_TAG_KEY) {
             return dslContext.selectFrom(this).where(ID.`in`(keyIds)).and(PROJECT_ID.eq(projectId)).fetch()
+        }
+    }
+
+    fun fetchAllInternalKeys(dslContext: DSLContext): List<TNodeTagInternalKeyRecord> {
+        with(TNodeTagInternalKey.T_NODE_TAG_INTERNAL_KEY) {
+            return dslContext.selectFrom(this).fetch()
         }
     }
 }

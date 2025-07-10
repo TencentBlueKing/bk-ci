@@ -675,4 +675,11 @@ class NodeDao {
                 .fetch().map { NodeType.get(it[NODE_TYPE] as String) to it["COUNT"] as Int }.toMap()
         }
     }
+
+    fun fetchNodeProject(dslContext: DSLContext): Set<String> {
+        with(TNode.T_NODE) {
+            return dslContext.select(PROJECT_ID).from(this).where(NODE_TYPE.eq(NodeType.THIRDPARTY.name))
+                .groupBy(PROJECT_ID).fetch().map { it[PROJECT_ID] }.toSet()
+        }
+    }
 }

@@ -106,12 +106,13 @@ object EnvironmentMessageCode {
     const val ERROR_INPUT_TOO_MANY_IP = "2105056" // 环境管理: 输入的IP数量不可超过{0}
     const val ERROR_NODE_NOT_BELONG_TO_PROJECT = "2105057" // 环境管理: IP {0} 未被作为节点导入项目 {1}，请到【环境管理-节点】导入测试机后重试
     const val ERROR_AGENT_ALREADY_INSTALL = "2105058" // 环境管理: Agent重复安装报错
-    const val ERROR_NODE_TAG_EXIST = "2105059" // 环境管理: 标签已经存在
+    const val ERROR_NODE_TAG_EXIST = "2105059" // 环境管理: 标签[{0}]已经存在
     const val ERROR_NODE_TAG_HAS_NODE = "2105060" // 环境管理: 当前标签还存在标记的节点
     const val ERROR_NODE_TAG_ONLY_SUP_THIRD = "2105061" // 环境管理: 标签功能仅支持第三方构建机
     const val ERROR_NODE_TAG_NO_ALLOW_VALUES = "2105062" // 环境管理: 标签[{0}]不支持一个节点添加多个值
     const val ERROR_NODE_TAG_NO_EDIT_PERMISSSION = "2105063" // 环境管理：没有标签编辑权限
     const val ERROR_NODE_TAG_NOW_UPDATING = "2105064" // 环境管理：标签正在被修改或添加节点，请重试
+    const val ERROR_NODE_TAG_INTERNAL_NOT_EDIT = "2105065" // 环境管理：系统内置标签不能被删除或修改
 
     const val BK_NORMAL_VERSION = "bkNormalVersion" // 8核16G（普通版）
     const val BK_INTEL_XEON_SKYLAKE_PROCESSOR = "bkIntelXeonSkylakeProcessor" // 2.5GHz 64核 Intel Xeon Skylake 6133处理器

@@ -25,13 +25,17 @@ import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.NodeTagDao
 import com.tencent.devops.environment.dao.NodeTagKeyDao
 import com.tencent.devops.environment.dao.NodeTagValueDao
+import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
+import com.tencent.devops.environment.model.AgentProps
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.NodeTagUpdateReq
 import com.tencent.devops.environment.pojo.UpdateNodeTag
 import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -43,6 +47,7 @@ class NodeTagService @Autowired constructor(
     private val nodeTagKeyDao: NodeTagKeyDao,
     private val nodeTagValueDao: NodeTagValueDao,
     private val nodeDao: NodeDao,
+    private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val environmentPermissionService: EnvironmentPermissionService,
     private val authProjectApi: AuthProjectApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode
@@ -71,8 +76,9 @@ class NodeTagService @Autowired constructor(
                 )
             )
         }
-        if (nodeTagKeyDao.fetchNodeKey(dslContext, projectId, tagKey) != null) {
-            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_EXIST)
+        val allInternalKeys = nodeTagKeyDao.fetchAllInternalKeys(dslContext).map { it.keyName }.toSet()
+        if (nodeTagKeyDao.fetchNodeKey(dslContext, projectId, tagKey) != null || allInternalKeys.contains(tagKey)) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_EXIST, params = arrayOf(tagKey))
         }
         if (tagValues.isEmpty() || tagValues.any { it.isBlank() }) {
             throw ParamBlankException("tag value is empty")
@@ -92,7 +98,10 @@ class NodeTagService @Autowired constructor(
     fun fetchTagAndNodeCount(
         projectId: String
     ): List<NodeTag> {
-        return nodeTagDao.fetchTagAndNodeCount(dslContext, projectId)
+        return mutableListOf<NodeTag>().apply {
+            addAll(nodeTagDao.fetchTagAndNodeCount(dslContext, projectId))
+            addAll(nodeTagDao.fetchInternalTagAndNodeCount(dslContext, projectId))
+        }
     }
 
     // 更新节点标签，先删后添加
@@ -169,6 +178,10 @@ class NodeTagService @Autowired constructor(
                 )
             )
         }
+        // 内部标签不能删除
+        if (tagKey < 0 || ((tagValueId ?: 0) < 0)) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_INTERNAL_NOT_EDIT)
+        }
         val records = nodeTagDao.fetchNodeTagByKeyOrValue(
             dslContext = dslContext,
             projectId = projectId,
@@ -231,6 +244,10 @@ class NodeTagService @Autowired constructor(
                     language = I18nUtil.getLanguage(userId)
                 )
             )
+        }
+        // 内部标签不能修改
+        if (data.tagKeyId < 0 || data.tagValues?.any { (it.tagValueId ?: 0) < 0 } == true) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_INTERNAL_NOT_EDIT)
         }
         val lock = RedisLock(redisOperation, genUpdateNodeTagLockKey(projectId, data.tagKeyId), 5)
 
@@ -316,12 +333,62 @@ class NodeTagService @Autowired constructor(
     }
 
     // 查询这个节点有的标签
-    fun fetchNodeTags(projectId: String, nodeId: Long): List<NodeTag>? {
-        return nodeTagDao.fetchNodesTags(dslContext, projectId, setOf(nodeId)).values.firstOrNull()
+    fun fetchNodeTags(projectId: String, nodeIds: Set<Long>): Map<Long, List<NodeTag>> {
+        return mutableMapOf<Long, List<NodeTag>>().apply {
+            putAll(nodeTagDao.fetchNodesTags(dslContext, projectId, nodeIds))
+            putAll(nodeTagDao.fetchNodesInternalTags(dslContext, projectId, nodeIds))
+        }
+    }
+
+    // OP使用，刷新内置标签数据
+    fun refreshInternalNodeTags(projectId: String?) {
+        val tags = nodeTagDao.fetchInternalTag(dslContext)
+        val projects = if (projectId != null) {
+            setOf(projectId)
+        } else {
+            nodeDao.fetchNodeProject(dslContext)
+        }
+        projects.forEach { projectId ->
+            logger.info("refreshInternalNodeTags|add project $projectId")
+            thirdPartyAgentDao.fetchByProjectId(dslContext, projectId).forEach { tpa ->
+                val osKeyId = tags["os"]?.tagKeyId
+                val osValueId = tags["os"]?.tagValues?.firstOrNull { it.tagValueName == tpa.os.lowercase() }?.tagValueId
+                val archKeyId = tags["arch"]?.tagKeyId
+                val archValueId =
+                    tags["arch"]?.tagValues?.firstOrNull { it.tagValueName == getAgentProperties(tpa)?.arch }?.tagValueId
+                val tagMap = mutableMapOf<Long, Long>()
+                if (osKeyId != null && osValueId != null) {
+                    tagMap[osKeyId] = osValueId
+                }
+                if (archKeyId != null && archValueId != null) {
+                    tagMap[archKeyId] = archValueId
+                }
+                logger.info("refreshInternalNodeTags|batchAddNodeTags $projectId|${tpa.nodeId}|$tagMap")
+                try {
+                    nodeTagDao.batchAddNodeTags(dslContext, projectId, tpa.nodeId, tagMap)
+                } catch (e: Exception) {
+                    logger.warn("refreshInternalNodeTags|batchAddNodeTags $projectId|${tpa.nodeId}|$tagMap error", e)
+                }
+            }
+        }
+    }
+
+    private fun getAgentProperties(agentRecord: TEnvironmentThirdpartyAgentRecord): AgentProps? {
+        if (agentRecord.agentProps.isNullOrBlank()) {
+            return null
+        }
+
+        return try {
+            JsonUtil.to(agentRecord.agentProps, AgentProps::class.java)
+        } catch (e: Exception) {
+            null
+        }
     }
 
     companion object {
         private fun genUpdateNodeTagLockKey(projectId: String, tagKeyId: Long) =
             "environment.nodetag.update:$projectId:$tagKeyId"
+
+        private val logger = LoggerFactory.getLogger(NodeTagService::class.java)
     }
 }
