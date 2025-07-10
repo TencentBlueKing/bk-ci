@@ -106,13 +106,13 @@ import com.tencent.devops.store.pojo.devx.constants.KEY_REPOSITORY_HTTP_URL
 import com.tencent.devops.store.pojo.devx.constants.KEY_REPOSITORY_ID
 import com.tencent.devops.store.pojo.devx.constants.KEY_SOURCE_TYPE
 import com.tencent.devops.store.pojo.devx.enums.SourceCodeEnum
+import java.io.File
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
-import java.io.File
 
 @Primary
 @Service("DEVX_RELEASE_SPEC_BUS_SERVICE")
@@ -196,7 +196,7 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         }
     }
 
-    override fun doStoreCreatePostBus(
+    override fun doStorePostCreateBus(
         userId: String,
         storeCode: String,
         storeType: StoreTypeEnum
