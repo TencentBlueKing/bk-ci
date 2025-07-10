@@ -274,6 +274,7 @@ class MetricsEventService @Autowired constructor(
             }.getOrNull()
         }
 
+    @Suppress("NestedBlockDepth")
     private fun cachePipeline(projectId: String, pipelineId: String, pipelineVersion: Int?): Map<String, String> {
         val model = kotlin.runCatching {
             client.get(ServicePipelineResource::class).get(
@@ -512,6 +513,7 @@ class MetricsEventService @Autowired constructor(
         } ?: ""
     }
 
+    @Suppress("NestedBlockDepth")
     private fun <T> labelGet(
         labels: Map<String, Any?>?,
         property: kotlin.reflect.KProperty1<PipelineBuildStatusBroadCastEvent.Labels, T>
