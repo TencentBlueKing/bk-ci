@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,6 +29,7 @@ package com.tencent.devops.common.pipeline.pojo.element.matrix
 
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线模型-矩阵纯运行状态插件", description = MatrixStatusElement.classType)
@@ -61,7 +62,11 @@ data class MatrixStatusElement(
     @get:Schema(title = "拦截原子", required = false)
     var interceptTask: String? = null,
     @get:Schema(title = "拦截原子名称", required = false)
-    var interceptTaskName: String? = null
+    var interceptTaskName: String? = null,
+    @get:Schema(title = "描述(人工审核插件使用)", required = false)
+    var desc: String? = null,
+    @get:Schema(title = "参数列表(人工审核插件使用)", required = false)
+    var params: MutableList<ManualReviewParam>? = null
 ) : Element(
     name = name,
     status = status,
