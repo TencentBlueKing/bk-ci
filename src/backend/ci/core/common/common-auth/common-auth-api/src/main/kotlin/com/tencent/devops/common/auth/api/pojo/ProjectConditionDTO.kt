@@ -34,5 +34,7 @@ data class ProjectConditionDTO(
     @get:Schema(title = "渠道代码")
     val channelCode: String? = null,
     @get:Schema(title = "remoteDev相关")
-    val queryRemoteDevFlag: Boolean? = null
+    val queryRemoteDevFlag: Boolean? = null,
+    @get:Schema(title = "项目名称")
+    val projectName: String? = null
 )

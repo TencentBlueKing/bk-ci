@@ -274,6 +274,7 @@ class MetricsEventService @Autowired constructor(
             }.getOrNull()
         }
 
+    @Suppress("NestedBlockDepth")
     private fun cachePipeline(projectId: String, pipelineId: String, pipelineVersion: Int?): Map<String, String> {
         val model = kotlin.runCatching {
             client.get(ServicePipelineResource::class).get(
@@ -340,9 +341,9 @@ class MetricsEventService @Autowired constructor(
                             val dispatchMap = JsonUtil.toMap(dispatch)
                             container.containerHashId?.let {
                                 map["${PipelineBuildStatusBroadCastEvent.Labels::dispatchIdentity.name}.$it"] =
-                                    "${dispatchMap["imageCode"].toString()}:${dispatchMap["imageVersion"].toString()}"
+                                    "${dispatchMap["imageCode"]}:${dispatchMap["imageVersion"]}"
                                 map["${PipelineBuildStatusBroadCastEvent.Labels::dispatchName.name}.$it"] =
-                                    "${dispatchMap["imageCode"].toString()}:${dispatchMap["imageVersion"].toString()}"
+                                    "${dispatchMap["imageCode"]}:${dispatchMap["imageVersion"]}"
                             }
                         }
 
@@ -512,6 +513,7 @@ class MetricsEventService @Autowired constructor(
         } ?: ""
     }
 
+    @Suppress("NestedBlockDepth")
     private fun <T> labelGet(
         labels: Map<String, Any?>?,
         property: kotlin.reflect.KProperty1<PipelineBuildStatusBroadCastEvent.Labels, T>
