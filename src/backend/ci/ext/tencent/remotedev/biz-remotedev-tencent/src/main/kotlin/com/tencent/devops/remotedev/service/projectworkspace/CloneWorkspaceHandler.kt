@@ -280,7 +280,7 @@ class CloneWorkspaceHandler @Autowired constructor(
                 logger.warn("create user failed.|${it.message}")
             }
             // 需要生成一个新的 pipelineId 进行操作
-            val orderId = "${appName}_${projectId}_${UUIDUtil.generate().takeLast(16)}"
+            val orderId = "${projectId}_${UUIDUtil.generate().takeLast(16)}"
             val resp = remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.START).cloneWorkspaceVm(
                 userId = userId,
                 workspaceName = workspaceName,
