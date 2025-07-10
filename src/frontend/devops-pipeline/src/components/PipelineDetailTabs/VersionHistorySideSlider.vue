@@ -92,7 +92,6 @@
                     </bk-table-column>
                     <bk-table-column
                         :label="$t('operate')"
-                        :width="320"
                         prop="operate"
                         fixed="right"
                     >
