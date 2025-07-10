@@ -110,7 +110,7 @@ if (-not $taskExists) {
     # 登录服务
     if (![string]::IsNullOrEmpty($service_username) -and (![string]::IsNullOrEmpty($service_password))) {
         Write-Host "both service_username and service_password are defined"
-        sc.exe config $service_name "obj= $service_username" "password= $service_password"
+        sc.exe config $service_name obj= $service_username password= $service_password
         if ($LASTEXITCODE -eq 0) {
             Write-Host "service login credentials updated successfully" -ForegroundColor Green
         } else {
