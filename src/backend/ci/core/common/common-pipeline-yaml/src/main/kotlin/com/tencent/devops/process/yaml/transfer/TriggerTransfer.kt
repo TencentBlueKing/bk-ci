@@ -29,6 +29,7 @@ package com.tencent.devops.process.yaml.transfer
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -252,7 +253,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
             /*由于存在多个相同代码库并且配置了相同触发条件的触发器，所以需要设计存储多个触发器*/
             val index = indexName.getOrPut("$name-${git.eventType}") { 0 }
             val nowExist = res.getOrPut("$name-$index") {
-                TriggerOn(repoName = repoName)
+                TriggerOn(repoName = repoName, scmCode = git.scmCode)
             }
             indexName["$name-${git.eventType}"] = index + 1
             when (git.eventType) {
@@ -885,7 +886,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                                 EventAction.NEW_BRANCH.value
                             ),
                             repositoryType = repositoryType,
-                            repositoryName = triggerOn.repoName
+                            repositoryName = triggerOn.repoName,
+                            scmCode = triggerOn.scmCode ?: ScmType.SCM_GIT.name
                         )
                     )
                 ).checkTriggerElementEnable(push.enable).apply {
@@ -919,7 +921,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             ),
                             eventType = CodeEventType.MERGE_REQUEST,
                             repositoryType = repositoryType,
-                            repositoryName = triggerOn.repoName
+                            repositoryName = triggerOn.repoName,
+                            scmCode = triggerOn.scmCode ?: ScmType.SCM_GIT.name
                         )
                     )
                 ).checkTriggerElementEnable(mr.enable).apply {

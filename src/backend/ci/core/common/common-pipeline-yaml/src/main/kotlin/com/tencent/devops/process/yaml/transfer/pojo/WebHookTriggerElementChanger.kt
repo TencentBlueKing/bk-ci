@@ -105,7 +105,9 @@ data class WebHookTriggerElementChanger(
     @get:Schema(title = "是否启用插件")
     val enable: Boolean,
     @get:Schema(title = "跳过WIP")
-    val skipWip: Boolean? = false
+    val skipWip: Boolean? = false,
+    @get:Schema(title = "代码库标识")
+    val scmCode: String? = null
 ) {
     constructor(data: CodeGitWebHookTriggerElement) : this(
         name = data.name,
@@ -280,7 +282,8 @@ data class WebHookTriggerElementChanger(
         includePushAction = if (data.data.input.eventType == CodeEventType.PUSH) {
             data.data.input.actions
         } else listOf(),
-        enable = data.elementEnabled()
+        enable = data.elementEnabled(),
+        scmCode = data.data.input.scmCode
     )
 
     constructor(data: CodeScmSvnWebHookTriggerElement) : this(

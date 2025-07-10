@@ -120,6 +120,8 @@ data class CodeScmGitWebHookTriggerData(
 )
 
 data class CodeScmGitWebHookTriggerInput(
+    @get:Schema(title = "代码库标识", required = true)
+    val scmCode: String,
     @get:Schema(title = "仓库ID", required = true)
     val repositoryHashId: String? = null,
     @get:Schema(title = "分支名称", required = false)
