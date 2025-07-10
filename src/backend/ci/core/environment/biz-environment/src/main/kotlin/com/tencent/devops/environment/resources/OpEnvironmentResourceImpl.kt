@@ -31,11 +31,13 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.OpEnvironmentResource
 import com.tencent.devops.environment.service.NodeService
+import com.tencent.devops.environment.service.NodeTagService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpEnvironmentResourceImpl @Autowired constructor(
-    private val nodeService: NodeService
+    private val nodeService: NodeService,
+    private val nodeTagService: NodeTagService
 ) : OpEnvironmentResource {
 
     override fun refreshGateway(oldToNewMap: Map<String, String>): Result<Boolean> {
@@ -44,5 +46,9 @@ class OpEnvironmentResourceImpl @Autowired constructor(
 
     override fun addHashId() {
         nodeService.addHashId()
+    }
+
+    override fun refreshNodeTag(projectId: String?) {
+        nodeTagService.refreshInternalNodeTags(projectId)
     }
 }

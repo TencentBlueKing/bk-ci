@@ -114,7 +114,7 @@ class NodeTagService @Autowired constructor(
         }
         tags.forEach { k ->
             k.tagValues.forEach { v ->
-                v.nodeCount = nodeTagsCountMap[k.tagKeyId]?.get(v.tagValueId)
+                v.nodeCount = nodeTagsCountMap[k.tagKeyId]?.get(v.tagValueId) ?: 0
             }
         }
         return tags
