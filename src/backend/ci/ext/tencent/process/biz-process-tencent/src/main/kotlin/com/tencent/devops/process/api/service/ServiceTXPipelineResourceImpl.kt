@@ -29,11 +29,9 @@ package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.pojo.PipelineExportV2YamlData
-import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineListFacadeService
@@ -84,22 +82,11 @@ class ServiceTXPipelineResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         checkParam(userId, projectId)
         pipelineIds.forEach {
-            val pipelineInfo = pipelineInfoFacadeService.locked(
+            pipelineInfoFacadeService.lockPipeline(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = it,
-                locked = !enable
-            )
-            auditService.createAudit(
-                Audit(
-                    resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                    resourceId = it,
-                    resourceName = pipelineInfo.pipelineName,
-                    userId = userId,
-                    action = "edit",
-                    actionContent = if (enable) "UnLock Pipeline" else "Locked Pipeline",
-                    projectId = projectId
-                )
+                enable = enable
             )
         }
         return Result(true)
