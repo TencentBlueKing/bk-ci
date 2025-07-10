@@ -86,8 +86,8 @@ import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import io.micrometer.core.annotation.Timed
-import org.springframework.beans.factory.annotation.Autowired
 import jakarta.ws.rs.core.Response
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 @Suppress("LongParameterList")
@@ -359,22 +359,11 @@ class UserPipelineResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         checkParam(userId, projectId)
 
-        val pipelineInfo = pipelineInfoFacadeService.locked(
+        pipelineInfoFacadeService.lockPipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            locked = !enable
-        )
-        auditService.createAudit(
-            Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                resourceId = pipelineId,
-                resourceName = pipelineInfo.pipelineName,
-                userId = userId,
-                action = "edit",
-                actionContent = if (enable) "UnLock Pipeline" else "Locked Pipeline",
-                projectId = projectId
-            )
+            enable = enable
         )
         return Result(true)
     }

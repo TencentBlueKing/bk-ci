@@ -27,16 +27,21 @@
 
 package com.tencent.devops.project.service.impl
 
+import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
+import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_HAVE_PROJECT_PERMISSIONS
 import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthPlatformApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -73,7 +78,9 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
     private val authProjectApi: AuthProjectApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val apiPlatformApi: AuthPlatformApi,
-    private val authPermissionApi: AuthPermissionApi
+    private val authPermissionApi: AuthPermissionApi,
+    private val tokenService: ClientTokenService,
+    private val client: Client
 ) : UserProjectServiceService {
 
     override fun getService(userId: String, serviceId: Long): Result<ServiceVO> {
@@ -329,7 +336,21 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
         serviceId: Long
     ): Result<String> {
         if (!projectId.isNullOrBlank()) {
-            validateProjectPermission(userId, projectId)
+            val verifyUserProjectPermission =
+                client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+                    token = tokenService.getSystemToken(),
+                    userId = userId,
+                    action = ActionId.PROJECT_VISIT,
+                    projectCode = projectId,
+                    resourceCode = null
+                ).data
+            if (verifyUserProjectPermission != true) {
+                logger.warn("User $userId has no permission to view  project $projectId")
+                throw ErrorCodeException(
+                    errorCode = USER_NOT_HAVE_PROJECT_PERMISSIONS,
+                    params = arrayOf(userId, projectId)
+                )
+            }
             if (!pipelineId.isNullOrBlank()) {
                 validatePipelinePermission(
                     userId = userId,

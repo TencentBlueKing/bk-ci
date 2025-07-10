@@ -35,6 +35,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineSortType
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
@@ -46,7 +47,6 @@ import org.jooq.SortField
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Suppress("TooManyFunctions", "LongParameterList", "LargeClass")
 @Repository
@@ -813,6 +813,23 @@ class PipelineInfoDao {
                 .limit(limit)
                 .offset(offset)
                 .fetch()
+        }
+    }
+
+    /**
+     * 根据项目ID获取已禁用的流水线ID列表
+     */
+    fun listDisabledPipelineIds(
+        dslContext: DSLContext,
+        projectId: String
+    ): List<String> {
+        return with(T_PIPELINE_INFO) {
+            dslContext.select(PIPELINE_ID)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(LOCKED.eq(true))
+                .and(DELETE.eq(false))
+                .fetch(PIPELINE_ID, String::class.java)
         }
     }
 
