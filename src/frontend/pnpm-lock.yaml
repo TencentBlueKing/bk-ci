@@ -1106,7 +1106,7 @@ importers:
     dependencies:
       '@blueking/date-picker':
         specifier: 2.0.0-beta.26
-        version: 2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.45(highlight.js@11.11.1)(vue@3.4.38(typescript@4.9.5)))(dayjs@1.11.13)(vue@3.4.38(typescript@4.9.5))
+        version: 2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))
       '@icon-cool/bk-icon-bk-biz-components':
         specifier: 0.0.4
         version: 0.0.4
@@ -1118,7 +1118,7 @@ importers:
         version: link:../bk-permission
       bkui-vue:
         specifier: 2.0.2-beta.45
-        version: 2.0.2-beta.45(highlight.js@11.11.1)(vue@3.4.38(typescript@4.9.5))
+        version: 2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
       dayjs:
         specifier: ^1.11.2
         version: 1.11.13
@@ -7255,6 +7255,24 @@ packages:
     resolution: {integrity: sha512-zGEyU99T5TmtIX4fBZtS2ppE5Jaf1g1nw+i4cduOxCj8sgWX241RXpZexiN/sLUt5PuRD/rdJzbjTxhCX26Y4g==}
     peerDependencies:
       vue: ^2.5.22
+
+  bkui-vue@0.0.1-beta.416:
+    resolution: {integrity: sha512-DOc3MsQP6ew89rmTe9dLmUVw3dX8qoByLC4zEWtAsHcMQjtEutcIBuaYXRYoJZnFv+LDF7C8cgVrO18uDyDMdQ==}
+    peerDependencies:
+      highlight.js: ~11.5.0
+      vue: ^3.2.0
+
+  bkui-vue@2.0.1-beta.42:
+    resolution: {integrity: sha512-LMhV7imIkSiaOYnHHaFKB1p74itGxuNqjj0hEX8JdwYNJSPYRO/v8VDnJk1QEqTB9ppaIVwrEDEc/TPdrdIapQ==}
+    peerDependencies:
+      highlight.js: ~11.5.0
+      vue: ^3.2.0
+
+  bkui-vue@2.0.1-beta.43:
+    resolution: {integrity: sha512-twVRp/f9lx+Sh+IBtum5PWAfeMuERYx/oIV90xFf541+hbjGoH9X5LgNFqhZgq53leDiVjCyniwtiVvyVQTqJg==}
+    peerDependencies:
+      highlight.js: ~11.5.0
+      vue: ^3.2.0
 
   bkui-vue@2.0.2-beta.45:
     resolution: {integrity: sha512-MfHtVZcZrcgo+KcgcYuPUtZOhHLfoE2eaxByk/mqKVFxedoIEqOgHA7fu3AyWYYMFo6s0h8vFj45ujZrH3H9SA==}
@@ -18580,13 +18598,20 @@ snapshots:
       dayjs: 1.11.13
       vue: 3.4.38(typescript@4.9.5)
 
-  '@blueking/eslint-config-bk@2.1.0(@babel/core@7.28.0)':
+  '@blueking/date-picker@2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))':
     dependencies:
-      '@babel/eslint-parser': 7.28.0(@babel/core@7.28.0)(eslint@8.57.0)
-      '@typescript-eslint/eslint-plugin': 7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.0)(typescript@5.8.3))(eslint@8.57.0)(typescript@5.8.3)
-      '@typescript-eslint/parser': 7.18.0(eslint@8.57.0)(typescript@5.8.3)
-      '@vue/eslint-config-standard': 8.0.1(@typescript-eslint/parser@7.18.0(eslint@8.57.0)(typescript@5.8.3))(eslint-plugin-vue@9.33.0(eslint@7.32.0))(eslint@8.57.0)
-      '@vue/eslint-config-typescript': 13.0.0(eslint-plugin-vue@9.33.0(eslint@7.32.0))(eslint@8.57.0)(typescript@5.8.3)
+      '@blueking/bkui-library': 0.0.0-beta.6
+      bkui-vue: 2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
+      dayjs: 1.11.11
+      vue: 3.4.31(typescript@4.9.5)
+
+  '@blueking/eslint-config-bk@2.1.0(@babel/core@7.24.6)':
+    dependencies:
+      '@babel/eslint-parser': 7.24.6(@babel/core@7.24.6)(eslint@8.57.0)
+      '@typescript-eslint/eslint-plugin': 7.11.0(@typescript-eslint/parser@7.11.0(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0)(typescript@5.4.5)
+      '@typescript-eslint/parser': 7.11.0(eslint@8.57.0)(typescript@5.4.5)
+      '@vue/eslint-config-standard': 8.0.1(@typescript-eslint/parser@7.11.0(eslint@8.57.0)(typescript@5.4.5))(eslint-plugin-vue@9.27.0(eslint@8.57.0))(eslint@8.57.0)
+      '@vue/eslint-config-typescript': 13.0.0(eslint-plugin-vue@9.27.0(eslint@8.57.0))(eslint@8.57.0)(typescript@5.4.5)
       eslint: 8.57.0
       eslint-plugin-import: 2.32.0(@typescript-eslint/parser@7.18.0(eslint@8.57.0)(typescript@5.8.3))(eslint@8.57.0)
       eslint-plugin-node: 11.1.0(eslint@8.57.0)
@@ -23970,8 +23995,34 @@ snapshots:
       json-formatter-js: 2.3.4
       lodash: 4.17.21
       tinycolor2: 1.6.0
-      vue: 3.5.17(typescript@5.4.5)
-      vue-types: 4.1.1(vue@3.5.17(typescript@5.4.5))
+      vue: 3.4.31(typescript@4.9.5)
+      vue-types: 4.1.1(vue@3.4.31(typescript@4.9.5))
+
+  bkui-vue@2.0.1-beta.94(highlight.js@10.7.3)(vue@3.5.13(typescript@5.4.5)):
+    dependencies:
+      '@floating-ui/dom': 1.5.4
+      '@popperjs/core': 2.11.8
+      date-fns: 2.30.0
+      highlight.js: 10.7.3
+      js-calendar: 1.2.3
+      json-formatter-js: 2.3.4
+      lodash: 4.17.21
+      tinycolor2: 1.6.0
+      vue: 3.5.13(typescript@5.4.5)
+      vue-types: 4.1.1(vue@3.5.13(typescript@5.4.5))
+
+  bkui-vue@2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)):
+    dependencies:
+      '@floating-ui/dom': 1.5.4
+      '@popperjs/core': 2.11.8
+      date-fns: 2.30.0
+      highlight.js: 10.7.3
+      js-calendar: 1.2.3
+      json-formatter-js: 2.3.4
+      lodash: 4.17.21
+      tinycolor2: 1.6.0
+      vue: 3.4.31(typescript@4.9.5)
+      vue-types: 4.1.1(vue@3.4.31(typescript@4.9.5))
 
   bl@4.1.0:
     dependencies:

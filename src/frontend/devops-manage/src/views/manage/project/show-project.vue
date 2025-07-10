@@ -43,7 +43,7 @@ const exceptionObj = ref({
 });
 const showFailedEnableDialog = ref(false);
 const showDisableProjectDialog = ref(false);
-const activeTab = ref(['projectSettings']);
+const activeTab = ref('projectSettings');
 const tabPanels = computed(() => [
   {
     name: 'projectSettings',
@@ -780,8 +780,7 @@ onMounted(async () => {
     flex-direction: column;
     padding: 24px;
     height: 100%;
-    width: 1200px;
-    margin: 0 auto;
+    width: 100%;
     overflow: auto;
     &::-webkit-scrollbar-thumb {
       background-color: #c4c6cc !important;
@@ -802,8 +801,9 @@ onMounted(async () => {
   .project-info-content {
     display: flex;
     flex-direction: column;
-    width: 100%;
+    width: 1200px;
     height: 100%;
+    margin: 0 auto;
     &::-webkit-scrollbar-thumb {
       background-color: #c4c6cc !important;
       border-radius: 5px !important;

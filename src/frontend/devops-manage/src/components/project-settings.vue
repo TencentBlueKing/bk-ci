@@ -62,6 +62,39 @@ function setProjectDeptProp (dept) {
 function tabChange(active) {
   emits('tabChange', active)
 }
+function tabBeforeChange(name){
+  console.log("🚀 ~ tabBeforeChange ~ name:", name)
+  // return new Promise(async (resolve) => {
+  //   if (props.type === 'edit') {
+  //     infoBoxRef.value = InfoBox({
+  //       type: 'warning',
+  //       width: 640,
+  //       title: '确认离开当前页？',
+  //       content: '离开将会导致未保存信息丢失',
+  //       footer: () => h('div',{}, [
+  //         h(Button, {
+  //           onClick() {
+  //             resolve(true);
+  //             infoBoxRef.value.hide()
+  //           },
+  //         }, t('确认')),
+  //         h(Button, {
+  //           onClick() {
+  //             resolve(false);
+  //             infoBoxRef.value.hide()
+  //           },
+  //         }, t('取消'))
+  //       ]),
+  //       onCancel() {
+  //         resolve(false);
+  //         infoBoxRef.value.hide()
+  //       },
+  //     });
+  //   } else {
+  //     resolve(true);
+  //   }
+  // });
+}
 </script>
 
 <template>
@@ -70,6 +103,7 @@ function tabChange(active) {
       v-model:active="panelActive"
       type="card-tab"
       @tab-change="tabChange"
+      @beforeChange="tabBeforeChange"
     >
       <bk-tab-panel
         v-for="(item, index) in tabPanels"
@@ -106,21 +140,22 @@ function tabChange(active) {
                 </template>
             </bk-collapse-panel>
           </bk-collapse>
-          <div
-            v-else
-            v-for="(panel, index) in item.panels"
-            :key="panel.name"
-            class="other-setting"
-          >
-              <component
-                :is="panel.component"
-                :type="type"
-                :data="projectData"
-                :initPipelineDialect="initPipelineDialect"
-                @handle-change-form="handleChangeForm"
-                @clearValidate="handleClearValidate"
-              />
-          </div>
+          <template v-else>
+            <div
+              v-for="(panel, index) in item.panels"
+              :key="panel.name"
+              class="other-setting"
+            >
+                <component
+                  :is="panel.component"
+                  :type="type"
+                  :data="projectData"
+                  :initPipelineDialect="initPipelineDialect"
+                  @handle-change-form="handleChangeForm"
+                  @clearValidate="handleClearValidate"
+                />
+            </div>
+          </template>
         </div>
       </bk-tab-panel>
     </bk-tab>
