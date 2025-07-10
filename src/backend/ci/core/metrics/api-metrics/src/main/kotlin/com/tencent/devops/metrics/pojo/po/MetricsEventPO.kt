@@ -140,18 +140,4 @@ data class MetricsEventPO(
         GIT_CI_EVENT_URL("gitEventRrl"),
         GIT_CI_EVENT("gitEvent"),
     }
-
-    enum class ErrorCode(val code: Int) {
-        @Schema(title = "插件执行失败")
-        STEP_FAILED(0),
-
-        @Schema(title = "JOB心跳超时")
-        JOB_HEARTBEAT_TIMEOUT(2199502),
-
-        @Schema(title = "JOB快速失败")
-        JOB_FAST_KILL(2199010),
-
-        @Schema(title = "JOB执行超时")
-        JOB_RUNNING_TIMEOUT(2199005)
-    }
 }

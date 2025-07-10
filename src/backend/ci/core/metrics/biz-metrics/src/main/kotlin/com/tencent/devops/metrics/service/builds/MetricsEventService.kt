@@ -341,9 +341,9 @@ class MetricsEventService @Autowired constructor(
                             val dispatchMap = JsonUtil.toMap(dispatch)
                             container.containerHashId?.let {
                                 map["${PipelineBuildStatusBroadCastEvent.Labels::dispatchIdentity.name}.$it"] =
-                                    "${dispatchMap["imageCode"].toString()}:${dispatchMap["imageVersion"].toString()}"
+                                    "${dispatchMap["imageCode"]}:${dispatchMap["imageVersion"]}"
                                 map["${PipelineBuildStatusBroadCastEvent.Labels::dispatchName.name}.$it"] =
-                                    "${dispatchMap["imageCode"].toString()}:${dispatchMap["imageVersion"].toString()}"
+                                    "${dispatchMap["imageCode"]}:${dispatchMap["imageVersion"]}"
                             }
                         }
 
