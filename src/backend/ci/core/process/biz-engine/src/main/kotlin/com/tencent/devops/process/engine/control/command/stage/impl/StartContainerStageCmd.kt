@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.control.command.stage.impl
 
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
@@ -43,6 +44,7 @@ import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
+import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -122,7 +124,13 @@ class StartContainerStageCmd(
                 stageId = commandContext.stage.stageId,
                 executeCount = commandContext.executeCount,
                 buildStatus = commandContext.buildStatus.name,
-                type = PipelineBuildStatusBroadCastEventType.BUILD_STAGE_START
+                type = PipelineBuildStatusBroadCastEventType.BUILD_STAGE_START,
+                labels = mapOf(
+                    PipelineBuildStatusBroadCastEvent.Labels::startTime.name to
+                        LocalDateTime.now().timestamp(),
+                    PipelineBuildStatusBroadCastEvent.Labels::stageSeq.name to
+                        commandContext.stage.seq
+                )
             )
         )
     }

@@ -46,7 +46,13 @@ interface IEnvService {
     fun listEnvironmentByType(userId: String, projectId: String, envType: EnvType): List<EnvWithNodeCount>
     fun listEnvironmentByLimit(projectId: String, offset: Int?, limit: Int?): Page<EnvWithPermission>
     fun listBuildEnvs(userId: String, projectId: String, os: OS): List<EnvWithNodeCount>
-    fun getEnvironment(userId: String, projectId: String, envHashId: String): EnvWithPermission
+    fun getEnvironment(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        checkPermission: Boolean = true
+    ): EnvWithPermission
+
     fun listRawEnvByHashIds(userId: String, projectId: String, envHashIds: List<String>): List<EnvWithPermission>
     fun listRawEnvByHashIdsAllType(envHashIds: List<String>): List<EnvWithPermission>
     fun listRawEnvByEnvNames(userId: String, projectId: String, envNames: List<String>): List<EnvWithPermission>
@@ -65,6 +71,7 @@ interface IEnvService {
         pageSize: Int?,
         envHashIds: List<String>
     ): Page<NodeBaseInfo>
+
     fun addEnvNodes(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>)
     fun deleteEnvNodes(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>)
     fun searchByName(projectId: String, envName: String, limit: Int, offset: Int): Page<EnvWithPermission>
