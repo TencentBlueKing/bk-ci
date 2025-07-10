@@ -19,13 +19,11 @@
         :max-height="500"
         :data="metadataList"
         empty-cell-text="--"
-        showOverflowTooltip
       >
         <bk-table-column
           :label="t('元数据键')"
           prop="labelKey"
-          :width="240"
-          showOverflowTooltip
+          :showOverflowTooltip="true"
         >
           <template #default="{row}">
             <div class="key-layout">
@@ -39,7 +37,7 @@
         <bk-table-column
           :label="t('元数据值类型')"
           prop="enumType"
-          :min-width="100"
+          :min-width="120"
         >
           <template #default="{row}">
             <span>{{ row.enumType ? t('枚举类型') : t('字符串')}}</span>
@@ -47,16 +45,19 @@
         </bk-table-column>
         <bk-table-column
           :label="t('枚举值')"
-          :min-width="100"
+          :width="180"
           prop="labelColorMap"
+          showOverflowTooltip
         >
           <template #default="{row}">
             <div class="label-color-content" v-if="Object.keys(row.labelColorMap ?? {}).length">
-              <div v-for="(color, key) in row.labelColorMap">
-                <p class="color-map">
-                  <span :style="{backgroundColor: color}" class="enums-icon"></span>
-                  <span>{{ key }}</span>
-                </p>
+              <div v-for="(color, key) in row.labelColorMap" :key="key">
+                <div class="color-map" style="width: 170px;">
+                  <bk-overflow-title type="tips" :popover-options="{ maxWidth: 500 }">
+                    <span :style="{backgroundColor: color}" class="enums-icon"></span>
+                    <span style="word-wrap: break-word" :title="key">{{key}}</span>
+                  </bk-overflow-title>
+                </div>
               </div>
             </div>
             <span v-else>--</span>
@@ -75,7 +76,8 @@
         <bk-table-column
           :label="t('描述')"
           prop="description"
-          :width="200"
+          :showOverflowTooltip="true"
+          :width="180"
         />
         <bk-table-column
           :label="t('是否启用')"
@@ -87,11 +89,13 @@
             <bk-switcher
               v-model="row.display"
               theme="primary"
+              :disabled="type === 'show'"
               @change="(status) => handleChangeEnable(status, row)"
             />
           </template>
         </bk-table-column>
         <bk-table-column
+          v-if="type !== 'show'"
           :width="120"
           :label="t('操作')"
         >
@@ -522,7 +526,7 @@ async function handleDelete (row) {
 <style lang="scss">
 .artifactory {
   .bk-form-content {
-    max-width: 1000px !important;
+    max-width: 1065px !important;
   }
 }
 </style>
@@ -558,6 +562,7 @@ async function handleDelete (row) {
 .label-color-content {
   padding: 10px 0;
   .color-map {
+    width: 180px;
     height: 20px;
     line-height: 20px;
   }
@@ -587,7 +592,6 @@ async function handleDelete (row) {
     right: 0;
     span {
       padding-bottom: 2px;
-      border-bottom: 1px dashed #979BA5;
     }
   }
 }

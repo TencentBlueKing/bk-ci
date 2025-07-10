@@ -1042,7 +1042,7 @@ importers:
     dependencies:
       '@blueking/date-picker':
         specifier: 2.0.0-beta.26
-        version: 2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.12(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))
+        version: 2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))
       '@icon-cool/bk-icon-bk-biz-components':
         specifier: 0.0.4
         version: 0.0.4
@@ -1053,8 +1053,8 @@ importers:
         specifier: workspace:bk-permission
         version: link:../bk-permission
       bkui-vue:
-        specifier: 2.0.2-beta.12
-        version: 2.0.2-beta.12(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
+        specifier: 2.0.2-beta.45
+        version: 2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
       dayjs:
         specifier: ^1.11.2
         version: 1.11.11
@@ -7180,8 +7180,8 @@ packages:
       highlight.js: ~11.5.0
       vue: ^3.2.0
 
-  bkui-vue@2.0.2-beta.12:
-    resolution: {integrity: sha512-NvRyr5Kjgdz/WG32uWnFzv3Qapr01HJX+sNlS5xnreEf0bNsYgDBeUixpp45Y07t/8sat9EMTQ83sFyzfkpNcw==}
+  bkui-vue@2.0.2-beta.45:
+    resolution: {integrity: sha512-MfHtVZcZrcgo+KcgcYuPUtZOhHLfoE2eaxByk/mqKVFxedoIEqOgHA7fu3AyWYYMFo6s0h8vFj45ujZrH3H9SA==}
     peerDependencies:
       highlight.js: ~11.5.0
       vue: ^3.2.0
@@ -10490,7 +10490,7 @@ packages:
     engines: {node: '>=10.17.0'}
 
   human-signals@5.0.0:
-    resolution: {integrity: sha512-AXcZb6vzzrFAUE61HnN4mpLqd/cSIwNQjtNWR0euPm6y0iqx3G4gOXaIDdtdDwZmhwe82LA6+zinmW4UBWVePQ==, tarball: https://mirrors.cloud.tencent.com/npm/human-signals/-/human-signals-5.0.0.tgz}
+    resolution: {integrity: sha512-AXcZb6vzzrFAUE61HnN4mpLqd/cSIwNQjtNWR0euPm6y0iqx3G4gOXaIDdtdDwZmhwe82LA6+zinmW4UBWVePQ==}
     engines: {node: '>=16.17.0'}
 
   human-signals@8.0.1:
@@ -11736,7 +11736,7 @@ packages:
     resolution: {integrity: sha512-ZpJhwvUXHSNL5wYd1RM6CUa2ZuqorG9ngoJ9Ix5Cce+uX7I5O/E06FCJdhSZ33b5dVyeQDnIlWH7B2s5uByZ7g==}
 
   lodash.mapvalues@4.6.0:
-    resolution: {integrity: sha512-JPFqXFeZQ7BfS00H58kClY7SPVeHertPE0lNuCyZ26/XlN8TvakYD7b9bGyNmXbT/D3BbtPAAmq90gPWqLkxlQ==, tarball: https://mirrors.cloud.tencent.com/npm/lodash.mapvalues/-/lodash.mapvalues-4.6.0.tgz}
+    resolution: {integrity: sha512-JPFqXFeZQ7BfS00H58kClY7SPVeHertPE0lNuCyZ26/XlN8TvakYD7b9bGyNmXbT/D3BbtPAAmq90gPWqLkxlQ==}
 
   lodash.memoize@4.1.2:
     resolution: {integrity: sha512-t7j+NzmgnQzTAYXcsHYLgimltOV1MXHtlOWf6GjL9Kj8GK5FInw5JotxvbOs+IvV1/Dzo04/fCGfLVs7aXb4Ag==}
@@ -11799,7 +11799,7 @@ packages:
     engines: {node: '>=10'}
 
   log-update@2.3.0:
-    resolution: {integrity: sha512-vlP11XfFGyeNQlmEn9tJ66rEW1coA/79m5z6BCkudjbAGE83uhAcGYrBFwfs3AdLiLzGRusRPAbSPK9xZteCmg==, tarball: https://mirrors.cloud.tencent.com/npm/log-update/-/log-update-2.3.0.tgz}
+    resolution: {integrity: sha512-vlP11XfFGyeNQlmEn9tJ66rEW1coA/79m5z6BCkudjbAGE83uhAcGYrBFwfs3AdLiLzGRusRPAbSPK9xZteCmg==}
     engines: {node: '>=4'}
 
   log-update@4.0.0:
@@ -13067,7 +13067,7 @@ packages:
     resolution: {integrity: sha512-7T0K+qyY8bnjnEpQTiLbGsUaGlFcemK9gLurVSr6x1/qzr2HkHDNCOz5i+xhuTD1CrXckf/AGeCnLzvmAHMOHw==}
 
   portfinder@1.0.32:
-    resolution: {integrity: sha512-on2ZJVVDXRADWE6jnQaX0ioEylzgBpQk8r55NE4wjXW1ZxO+BgDlY6DXwj20i0V8eB4SenDQ00WEaxfiIQPcxg==, tarball: https://mirrors.cloud.tencent.com/npm/portfinder/-/portfinder-1.0.32.tgz}
+    resolution: {integrity: sha512-on2ZJVVDXRADWE6jnQaX0ioEylzgBpQk8r55NE4wjXW1ZxO+BgDlY6DXwj20i0V8eB4SenDQ00WEaxfiIQPcxg==}
     engines: {node: '>= 0.12.0'}
 
   possible-typed-array-names@1.0.0:
@@ -14798,7 +14798,7 @@ packages:
     resolution: {integrity: sha512-NqVDv9TpANUjFm0N8uM5GxL36UgKi9/atZw+x7YFnQ8ckwFGKrl4xX4yWtrey3UJm5nP1kUbnYgLopqWNSRhWw==}
 
   sax@1.3.0:
-    resolution: {integrity: sha512-0s+oAmw9zLl1V1cS9BtZN7JAd0cW5e0QH4W3LWEK6a4LaLEA2OTpGYWDY+6XasBLtz6wkm3u1xRw95mRuJ59WA==, tarball: https://mirrors.cloud.tencent.com/npm/sax/-/sax-1.3.0.tgz}
+    resolution: {integrity: sha512-0s+oAmw9zLl1V1cS9BtZN7JAd0cW5e0QH4W3LWEK6a4LaLEA2OTpGYWDY+6XasBLtz6wkm3u1xRw95mRuJ59WA==}
 
   sax@1.4.1:
     resolution: {integrity: sha512-+aWOz7yVScEGoKNd4PA10LZ8sk0A/z5+nXQG5giUO5rprX9jgYsTdov9qCchZiPIZezbZH+jRut8nPodFAX4Jg==}
@@ -16968,7 +16968,7 @@ packages:
     engines: {node: '>=18'}
 
   whatwg-fetch@3.6.20:
-    resolution: {integrity: sha512-EqhiFU6daOA8kpjOWTL0olhVOF3i7OrFzSYiGsEMB8GcXS+RrzauAERX65xMeNWVqxA6HXH2m69Z9LaKKdisfg==, tarball: https://mirrors.cloud.tencent.com/npm/whatwg-fetch/-/whatwg-fetch-3.6.20.tgz}
+    resolution: {integrity: sha512-EqhiFU6daOA8kpjOWTL0olhVOF3i7OrFzSYiGsEMB8GcXS+RrzauAERX65xMeNWVqxA6HXH2m69Z9LaKKdisfg==}
 
   whatwg-mimetype@4.0.0:
     resolution: {integrity: sha512-QaKxh0eNIi2mE9p2vEdzfagOKHCcj1pJ56EEHGQOVxp8r9/iszLUUV7v89x9O1p/T+NlTM5W7jW6+cz4Fq1YVg==}
@@ -17209,6 +17209,7 @@ packages:
   yaeti@0.0.6:
     resolution: {integrity: sha512-MvQa//+KcZCUkBTIC9blM+CU9J2GzuTytsOUwf2lidtvkx/6gnEp1QvJv34t9vdjhFmha/mUiNDbN0D0mJWdug==}
     engines: {node: '>=0.10.32'}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   yallist@2.1.2:
     resolution: {integrity: sha512-ncTzHV7NvsQZkYe1DW7cbDLm0YpzHmZF5r/iyP3ZnQtMiJ+pjzisCiMNI+Sj+xQF5pXhSHxSB3uDbsBTzY/c2A==}
@@ -18568,10 +18569,10 @@ snapshots:
       dayjs: 1.11.11
       vue: 3.4.31(typescript@4.9.5)
 
-  '@blueking/date-picker@2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.12(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))':
+  '@blueking/date-picker@2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))':
     dependencies:
       '@blueking/bkui-library': 0.0.0-beta.6
-      bkui-vue: 2.0.2-beta.12(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
+      bkui-vue: 2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
       dayjs: 1.11.11
       vue: 3.4.31(typescript@4.9.5)
 
@@ -24038,7 +24039,7 @@ snapshots:
       vue: 3.5.13(typescript@5.4.5)
       vue-types: 4.1.1(vue@3.5.13(typescript@5.4.5))
 
-  bkui-vue@2.0.2-beta.12(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)):
+  bkui-vue@2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)):
     dependencies:
       '@floating-ui/dom': 1.5.4
       '@popperjs/core': 2.11.8

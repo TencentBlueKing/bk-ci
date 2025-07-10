@@ -8,7 +8,7 @@ import './css/iconcool.js'
 // 全量引入 bkui-vue
 import bkui from 'bkui-vue';
 // 全量引入 bkui-vue 样式
-import 'bkui-vue/dist/style.css';
+import 'bkui-vue/dist/style.variable.css';
 import { bkTooltips } from 'bkui-vue/lib/directives';
 import bkuiZhCn from 'bkui-vue/dist/locale/zh-cn.esm';
 import bkuiEn from 'bkui-vue/dist/locale/en.esm';

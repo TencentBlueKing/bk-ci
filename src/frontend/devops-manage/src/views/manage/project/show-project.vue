@@ -337,7 +337,7 @@ onMounted(async () => {
   await fetchProjectData();
 });
 
-const activeTab = ref(['projectSettings']);
+const activeTab = ref('projectSettings');
 const tabPanels = computed(() => [
   {
     name: 'projectSettings',
@@ -496,67 +496,6 @@ const tabPanels = computed(() => [
                               </bk-tag>
                             </div>
                           </bk-form-item>
-                        </bk-form>
-                      </template>
-                      <template v-if="panel.name === 'pipeline'">
-                        <bk-form label-position="right" :label-width="200">
-                          <bk-form-item
-                            v-if="projectData.properties"
-                            property="pipelineDialect"
-                          >
-                            <template #label>
-                              <dialect-popover-table />
-                            </template>
-                            <div>
-                              <span>{{ t(projectData.properties.pipelineDialect) }}</span>
-                              <div class="diff-content" v-if="projectData.afterPipelineDialect">
-                                <p class="update-title">
-                                  {{ t('本次更新：') }}
-                                </p>
-                                <span>{{ t(projectData.afterPipelineDialect) }}</span>
-                              </div>
-                            </div>
-                          </bk-form-item>
-                          <bk-form-item
-                            :label="t('命名规范提示')"
-                            property="pipelineNameFormat"
-                          >
-                            <span class="item-value">
-                              {{ projectData.properties.enablePipelineNameTips ? (projectData.properties.pipelineNameFormat || '--') : t('未开启') }}
-                            </span>
-                            <div class="diff-content" v-if="projectData.afterPipelineNameFormat">
-                              <p class="update-title">
-                                {{ t('本次更新：') }}
-                              </p>
-                              <span>{{ projectData.afterPipelineNameFormat }}</span>
-                            </div>
-                          </bk-form-item>
-                          <bk-form-item
-                            :label="t('构建日志归档阈值')"
-                            property="loggingLineLimit"
-                            :description="t('单个步骤(Step)日志达到阈值时，将压缩并归档到日志仓库。可下载日志文件到本地查看。')"
-                          >
-                            <span class="item-value">
-                              {{ projectData.properties.loggingLineLimit || '--' }}
-                              <span v-if="projectData.properties.loggingLineLimit">
-                                {{ t('万行') }}
-                              </span>
-                            </span>
-                            <div class="diff-content" v-if="projectData.afterLoggingLineLimit">
-                              <p class="update-title">
-                                {{ t('本次更新：') }}
-                              </p>
-                              <span>{{ `${projectData.afterLoggingLineLimit} ${t('万行')}` }}</span>
-                            </div>
-                          </bk-form-item>
-                        </bk-form>
-                      </template>
-                      <template v-if="panel.name === 'artifactory'">
-                        <bk-form label-position="right" :label-width="200">
-                          <ArtifactoryContent 
-                            :data="projectData"
-                            type="show"
-                          />
                         </bk-form>
                       </template>
                     </div>
@@ -747,8 +686,6 @@ const tabPanels = computed(() => [
     padding: 24px;
     height: 100%;
     width: 100%;
-    width: 1200px;
-    margin: 0 auto;
     overflow: auto;
     &::-webkit-scrollbar-thumb {
       background-color: #c4c6cc !important;
@@ -769,8 +706,9 @@ const tabPanels = computed(() => [
   .project-info-content {
     display: flex;
     flex-direction: column;
-    width: 100%;
+    width: 1200px;
     height: 100%;
+    margin: 0 auto;
     &::-webkit-scrollbar-thumb {
       background-color: #c4c6cc !important;
       border-radius: 5px !important;
