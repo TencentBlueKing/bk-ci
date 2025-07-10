@@ -9,23 +9,21 @@
                 />
                 <span>{{ $t('environment.environmentManage') }}</span>
             </p>
-            <span class="manage-tabs">
-                <span
+            <bk-tab
+                :active.sync="activePanel"
+                type="unborder-card"
+                @tab-change="handleChangeTab"
+                ext-cls="tabs-manage"
+                :label-height="60"
+            >
+                <bk-tab-panel
+                    
                     v-for="panel in panels"
+                    v-bind="panel"
                     :key="panel.name"
-                    :class="{
-                        'manage-tab': true,
-                        active: activePanel === panel.name
-                    }"
-                    @click="handleChangeTab(panel)"
                 >
-                    <i
-                        :class="panel.icon"
-                        class="panel-icon"
-                    ></i>
-                    <span class="panel-name">{{ panel.label }}</span>
-                </span>
-            </span>
+                </bk-tab-panel>
+            </bk-tab>
         </div>
 
         <router-view class="manage-main"></router-view>
@@ -77,8 +75,8 @@
             }
         },
         methods: {
-            handleChangeTab (panel) {
-                if (this.activePanel === panel.name) return
+            handleChangeTab (name) {
+                if (this.activePanel === name) return
 
                 const routeMap = {
                     envList: 'envList',
@@ -86,7 +84,7 @@
                 }
                 
                 this.$router.push({
-                    name: routeMap[panel.name]
+                    name: routeMap[name]
                 })
             }
         }
@@ -121,39 +119,9 @@
             vertical-align: middle;
         }
     }
-    
-    .manage-tabs {
-        display: flex;
-        align-items: center;
-        
-        .manage-tab {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            padding: 0 24px;
-            cursor: pointer;
-            position: relative;
-            
-            .panel-icon {
-                margin-right: 8px;
-            }
-            
-            &.active {
-                color: #3a84ff;
-                background: rgba(225, 236, 255, 0.5);
-                
-                &::after {
-                    content: '';
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    height: 4px;
-                    background-color: #3a84ff;
-                }
-            }
-        }
+
+    .tabs-manage {
+        height: 60px;
     }
 }
 </style>

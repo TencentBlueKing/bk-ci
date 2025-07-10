@@ -11,10 +11,7 @@
         @after-resize="afterResize"
     >
         <GroupAside slot="aside" />
-        <div
-            slot="main"
-            class="main-content"
-        >
+        <div slot="main">
             <router-view></router-view>
         </div>
     </bk-resize-layout>
@@ -56,9 +53,5 @@
 .resize {
   width: 100vw;
   height: calc(100vh - 110px);
-
-  .main-content {
-    padding: 24px;
-  }
 }
 </style>

@@ -459,6 +459,7 @@
 <script>
     import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
     import EmptyTableStatus from '@/components/empty-table-status'
+    import { mapActions } from 'vuex'
     const NODE_TABLE_COLUMN_CACHE = 'node_list_columns'
 
     export default {
@@ -627,6 +628,7 @@
             }
         },
         methods: {
+            ...mapActions('environment', ['requestNodeTagList']),
             calcOverPosTable () {
                 const tagMargin = 6
                 this.visibleLabelCountList = this.nodeList.reduce((acc, item, index) => {
@@ -841,6 +843,7 @@
                                 theme: 'success'
                             })
                             this.$emit('refresh')
+                            await this.requestNodeTagList(this.projectId)
                         }
                     }
                 } catch (err) {

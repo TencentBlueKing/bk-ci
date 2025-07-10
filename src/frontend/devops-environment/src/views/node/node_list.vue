@@ -831,6 +831,7 @@
     .node-list-wrapper {
         height: 100%;
         overflow: hidden;
+        margin: 24px;
 
         .create-node-btn {
             margin-right: 6px;
