@@ -29,7 +29,6 @@ package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.IdValue
