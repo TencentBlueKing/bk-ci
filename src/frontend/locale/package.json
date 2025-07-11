@@ -6,7 +6,7 @@
     "author": "",
     "dependencies": {
         "axios": "0.30.0",
-        "bk-magic-vue": "2.5.9-beta.41",
+        "bk-magic-vue": "2.5.10-beta.12",
         "js-cookie": "^3.0.5",
         "vue-i18n": "~8.18.1"
     },
