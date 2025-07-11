@@ -33,14 +33,13 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.annotation.SkipLogField
 import com.tencent.devops.common.api.constant.ARTIFACT
 import com.tencent.devops.common.api.constant.ARTIFACTORY_TYPE
-import com.tencent.devops.common.api.constant.IS_SENSITIVE
 import com.tencent.devops.common.api.constant.LABEL
 import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.constant.PATH
 import com.tencent.devops.common.api.constant.REPORT
 import com.tencent.devops.common.api.constant.REPORT_TYPE
+import com.tencent.devops.common.api.constant.SENSITIVE
 import com.tencent.devops.common.api.constant.STRING
-import com.tencent.devops.common.api.constant.TRUE
 import com.tencent.devops.common.api.constant.TYPE
 import com.tencent.devops.common.api.constant.URL
 import com.tencent.devops.common.api.constant.VALUE
@@ -766,11 +765,9 @@ open class MarketAtomTask : ITask() {
             val env = mutableMapOf<String, String>()
             LoggerService.addNormalLine("")
             LoggerService.addFoldStartLine("[Output]")
-            val isSensitiveValue: Boolean = outputData?.get(IS_SENSITIVE)?.let { isSensitiveMap ->
-                (isSensitiveMap[VALUE] as? String)?.equals(TRUE, ignoreCase = true) ?: false
-            } ?: false
             outputData?.forEach { (varKey, output) ->
                 val type = output[TYPE]
+                val isSensitive = output[SENSITIVE] as Boolean
                 val key = if (!namespace.isNullOrBlank()) {
                     "${namespace}_$varKey" // 用户前缀_插件输出变量名
                 } else {
@@ -837,13 +834,13 @@ open class MarketAtomTask : ITask() {
                 if (outputTemplate.containsKey(varKey)) {
                     val outPutDefine = outputTemplate[varKey]
                     val sensitiveFlag = outPutDefine!!["isSensitive"] as Boolean? ?: false
-                    if (sensitiveFlag || isSensitiveValue) {
+                    if (sensitiveFlag || isSensitive) {
                         LoggerService.addNormalLine("output(sensitive): $key=******")
                     } else {
                         LoggerService.addNormalLine("output(normal): $key=$value")
                     }
                 } else {
-                    LoggerService.addWarnLine("output(except): $key=$value")
+                    LoggerService.addWarnLine("output(except): $key=${if (isSensitive) "******" else value}")
                 }
             }
 
