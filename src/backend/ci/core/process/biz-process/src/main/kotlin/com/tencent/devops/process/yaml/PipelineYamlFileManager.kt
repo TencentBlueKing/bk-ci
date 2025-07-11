@@ -164,7 +164,7 @@ class PipelineYamlFileManager @Autowired constructor(
                     userId = userId,
                     projectId = projectId,
                     repoHashId = repoHashId,
-                    repoFullName = repository.projectName,
+                    aliasName = repository.aliasName,
                     directoryList = directories
                 )
 
