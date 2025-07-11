@@ -559,7 +559,7 @@ class WorkspaceService @Autowired constructor(
                     imageId = detail?.imageId ?: "",
                     recordEnabled = !allWindows[it.workspaceName]?.enableRecordUser.isNullOrBlank(),
                     vmName = allWindows[it.workspaceName]?.vmName,
-                    nodeIp = detail?.hostIp?.let { ip -> cdsInfo[ip]?.node } ?: ""
+                    nodeIp = cdsInfo[detail?.hostIp]?.node ?: ""
                 )
             )
         }
