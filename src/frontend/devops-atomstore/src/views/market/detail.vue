@@ -182,8 +182,12 @@
                     image: () => this.getImageDetail(),
                     service: () => this.getServiceDetail()
                 }
+                if (!Object.hasOwnProperty.call(funObj, type)) {
+                    this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
+                    return
+                }
                 const getDetailMethod = funObj[type]
-
+                
                 getDetailMethod().catch((err) => {
                     this.$bkMessage({ message: (err.message || err), theme: 'error' })
                 }).finally(() => (this.isLoading = false))

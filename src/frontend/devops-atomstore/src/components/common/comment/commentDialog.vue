@@ -105,6 +105,10 @@
 
             getComment () {
                 if (this.commentId) {
+                    if (Object.hasOwnProperty.call(this.getCommentGenerator, this.type) === false) {
+                        this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
+                        return Promise.reject(new Error(this.$t('store.typeError')))
+                    }
                     this.isLoading = true
                     const method = this.getCommentGenerator[this.type]
                     method().then((res) => {
@@ -161,6 +165,9 @@
                         score: this.rate
                     }
                 }
+                if (Object.hasOwnProperty.call(this.modifyCommentGenerator, this.type) === false) {
+                    return Promise.reject(new Error(this.$t('store.typeError')))
+                }
                 return this.modifyCommentGenerator[this.type](data).then(() => ({
                     commentId: this.commentId,
                     commentContent: this.comment,
@@ -177,6 +184,9 @@
                         commentContent: this.comment,
                         score: this.rate
                     }
+                }
+                if (Object.hasOwnProperty.call(this.addCommentGenerator, this.type) === false) {
+                    return Promise.reject(new Error(this.$t('store.typeError')))
                 }
                 return this.addCommentGenerator[this.type](data)
             }
