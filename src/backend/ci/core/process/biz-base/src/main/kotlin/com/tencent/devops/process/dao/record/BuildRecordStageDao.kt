@@ -122,6 +122,27 @@ class BuildRecordStageDao {
         }
     }
 
+    fun getRecord(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        executeCount: Int
+    ): BuildRecordStage? {
+        with(TPipelineBuildRecordStage.T_PIPELINE_BUILD_RECORD_STAGE) {
+            return dslContext.selectFrom(this)
+                .where(
+                    BUILD_ID.eq(buildId)
+                        .and(PROJECT_ID.eq(projectId))
+                        .and(PIPELINE_ID.eq(pipelineId))
+                        .and(BUILD_ID.eq(buildId))
+                        .and(STAGE_ID.eq(stageId))
+                        .and(EXECUTE_COUNT.eq(executeCount))
+                ).fetchOne(mapper)
+        }
+    }
+
     fun getRecords(
         dslContext: DSLContext,
         projectId: String,
