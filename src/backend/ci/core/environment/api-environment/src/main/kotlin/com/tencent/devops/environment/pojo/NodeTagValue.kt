@@ -11,7 +11,7 @@ data class NodeTag(
     @get:Schema(title = "当前节点标签是否支持一个节点多个标签值")
     val tagAllowMulValue: Boolean,
     @get:Schema(title = "是否可以修改")
-    val canUpdate: Boolean,
+    val canUpdate: NodeTagCanUpdateType,
     @get:Schema(title = "节点标签值")
     val tagValues: MutableList<NodeTagValue>
 )
@@ -25,8 +25,33 @@ data class NodeTagValue(
     @get:Schema(title = "标签包含的节点数量")
     var nodeCount: Int?,
     @get:Schema(title = "是否可以修改")
-    val canUpdate: Boolean
+    val canUpdate: NodeTagCanUpdateType
 )
+
+@Schema(title = "标签是否可以修改区分")
+enum class NodeTagCanUpdateType {
+    // 内部标签不能修改
+    INTERNAL,
+
+    // 可以修改
+    TRUE,
+
+    // 不可以修改
+    FALSE;
+
+    companion object {
+        fun from(internal: Boolean, nodeCount: Int?): NodeTagCanUpdateType =
+            if (internal) {
+                INTERNAL
+            } else {
+                if ((nodeCount ?: 0) == 0) {
+                    TRUE
+                } else {
+                    FALSE
+                }
+            }
+    }
+}
 
 @Schema(title = "标签搜索参数")
 data class NodeTagFetchReq(

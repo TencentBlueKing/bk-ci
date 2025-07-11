@@ -1,6 +1,7 @@
 package com.tencent.devops.environment.dao
 
 import com.tencent.devops.environment.pojo.NodeTag
+import com.tencent.devops.environment.pojo.NodeTagCanUpdateType
 import com.tencent.devops.environment.pojo.NodeTagValue
 import com.tencent.devops.model.environment.tables.TNodeTagInternalKey
 import com.tencent.devops.model.environment.tables.TNodeTagInternalValues
@@ -118,13 +119,13 @@ class NodeTagDao {
                 tagKeyId = id,
                 tagKeyName = keyName,
                 tagAllowMulValue = allowMulVal,
-                canUpdate = !internal && (nodeCount ?: 0) == 0,
+                canUpdate = NodeTagCanUpdateType.from(internal, nodeCount),
                 tagValues = mutableListOf(
                     NodeTagValue(
                         tagValueId = valueId,
                         tagValueName = valueName,
                         nodeCount = nodeCount,
-                        canUpdate = !internal && (nodeCount ?: 0) == 0
+                        canUpdate = NodeTagCanUpdateType.from(internal, nodeCount)
                     )
                 )
             )
@@ -133,7 +134,7 @@ class NodeTagDao {
                 tagValueId = valueId,
                 tagValueName = valueName,
                 nodeCount = nodeCount,
-                canUpdate = !internal && (nodeCount ?: 0) == 0
+                canUpdate = NodeTagCanUpdateType.from(internal, nodeCount)
             )
         )
     }
