@@ -1,7 +1,6 @@
 package com.tencent.devops.misc.task
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -19,7 +18,6 @@ import org.apache.commons.collections4.ListUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
 
 @Suppress("TooManyFunctions", "LongMethod", "LargeClass", "ComplexMethod", "LongParameterList")
 class MigratePipelineDataTask constructor(
@@ -69,8 +67,7 @@ class MigratePipelineDataTask constructor(
                     pipelineId = pipelineId,
                     dslContext = dslContext,
                     migratingShardingDslContext = migratingShardingDslContext,
-                    processDataMigrateDao = processDbMigrateDao,
-                    archiveFlag = archiveFlag
+                    processDataMigrateDao = processDbMigrateDao
                 )
                 // 迁移构建相关表数据
                 var offset = 0
@@ -199,6 +196,14 @@ class MigratePipelineDataTask constructor(
                     migratingShardingDslContext = migratingShardingDslContext,
                     processDataMigrateDao = processDbMigrateDao
                 )
+                // 迁移T_PIPELINE_OPERATION_LOG表数据
+                migratePipelineOperationLogData(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    dslContext = dslContext,
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    processDataMigrateDao = processDbMigrateDao
+                )
                 if (archiveFlag != true) {
                     // 迁移T_PIPELINE_BUILD_CONTAINER表数据
                     migratePipelineBuildContainerData(
@@ -306,14 +311,6 @@ class MigratePipelineDataTask constructor(
                     )
                     // 迁移T_PIPELINE_YAML_VERSION表数据
                     migratePipelineYamlVersionData(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        dslContext = dslContext,
-                        migratingShardingDslContext = migratingShardingDslContext,
-                        processDataMigrateDao = processDbMigrateDao
-                    )
-                    // 迁移T_PIPELINE_OPERATION_LOG表数据
-                    migratePipelineOperationLogData(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         dslContext = dslContext,
@@ -667,19 +664,14 @@ class MigratePipelineDataTask constructor(
         pipelineId: String,
         dslContext: DSLContext,
         migratingShardingDslContext: DSLContext,
-        processDataMigrateDao: ProcessDataMigrateDao,
-        archiveFlag: Boolean? = null
+        processDataMigrateDao: ProcessDataMigrateDao
     ) {
         val pipelineInfoRecord = processDataMigrateDao.getPipelineInfoRecord(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId
         )
-        if (pipelineInfoRecord != null) {
-            if (archiveFlag == true) {
-                val currentTime = DateTimeUtil.toDateTime(LocalDateTime.now(), DateTimeUtil.YYYYMMDDHHMMSS)
-                pipelineInfoRecord.pipelineName = "${pipelineInfoRecord.pipelineName}[$currentTime]"
-            }
+        pipelineInfoRecord?.let {
             processDataMigrateDao.migratePipelineInfoData(
                 migratingShardingDslContext = migratingShardingDslContext,
                 pipelineInfoRecord = pipelineInfoRecord
