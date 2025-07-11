@@ -767,7 +767,7 @@ open class MarketAtomTask : ITask() {
             LoggerService.addFoldStartLine("[Output]")
             outputData?.forEach { (varKey, output) ->
                 val type = output[TYPE]
-                val isSensitive = output[SENSITIVE] as Boolean
+                val isSensitive = output[SENSITIVE] as? Boolean ?: false
                 val key = if (!namespace.isNullOrBlank()) {
                     "${namespace}_$varKey" // 用户前缀_插件输出变量名
                 } else {
