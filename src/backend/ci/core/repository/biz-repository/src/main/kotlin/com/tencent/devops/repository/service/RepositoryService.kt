@@ -508,8 +508,6 @@ class RepositoryService @Autowired constructor(
         content = ActionAuditContent.REPERTORY_CREATE_CONTENT
     )
     fun userCreate(userId: String, projectId: String, repository: Repository): String {
-        // 指定oauth的用户名字只能是登录用户。
-        repository.userName = userId
         validatePermission(
             userId,
             projectId,

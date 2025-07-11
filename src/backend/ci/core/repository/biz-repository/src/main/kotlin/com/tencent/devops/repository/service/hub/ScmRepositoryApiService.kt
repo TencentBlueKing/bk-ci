@@ -92,14 +92,24 @@ class ScmRepositoryApiService @Autowired constructor(
         userId: String,
         projectId: String,
         scmCode: String,
-        search: String?
+        search: String?,
+        username: String?
     ): AuthorizeResult {
-        val oauthTokenInfo = oauth2TokenStoreManager.get(userId = userId, scmCode = scmCode) ?: run {
+        // 若指定指定授权账号，则以目标账号权限拉取仓库列表
+        val oauthTokenInfo = oauth2TokenStoreManager.get(
+            userId = if (username.isNullOrBlank()) {
+                userId
+            } else {
+                username
+            },
+            scmCode = scmCode
+        ) ?: run {
             val redirectUrl = gitConfig.redirectUrl + "/$projectId/?scmCode=$scmCode&popupScm"
             val oauthUrl = repositoryOauthService.oauthUrl(
                 userId = userId,
                 scmCode = scmCode,
-                redirectUrl = redirectUrl
+                redirectUrl = redirectUrl,
+                username = userId
             )
             return AuthorizeResult(status = 403, url = oauthUrl.url)
         }
