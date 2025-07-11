@@ -66,11 +66,12 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
             } else {
                 EnvUtils.parseEnv(includeUsers!!.joinToString(","), variables)
             }
-            if (branchName == null) {
-                return null
-            }
             params.block = isBlock(element)
-            params.branchName = EnvUtils.parseEnv(branchName!!, variables)
+            params.branchName = if (!branchName.isNullOrBlank()) {
+                EnvUtils.parseEnv(branchName!!, variables)
+            } else {
+                ""
+            }
             params.version = element.version
             when {
                 // action上线后【流水线配置层面】兼容存量merge_request_accept和push事件
