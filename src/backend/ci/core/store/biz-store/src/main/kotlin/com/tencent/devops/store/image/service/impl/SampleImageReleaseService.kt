@@ -41,15 +41,20 @@ import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.image.service.ImageReleaseService
 import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
-import com.tencent.devops.store.image.service.ImageReleaseService
+import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
 
 class SampleImageReleaseService : ImageReleaseService() {
 
     override fun getPassTestStatus(isNormalUpgrade: Boolean): Byte {
         // 开源版不审核直接发布
         return ImageStatusEnum.RELEASED.status.toByte()
+    }
+
+    override fun handleImageExtend(userId: String, imageCode: String, marketImageRelRequest: MarketImageRelRequest) {
+        return
     }
 
     override fun handleProcessInfo(isNormalUpgrade: Boolean, status: Int): List<ReleaseProcessItem> {

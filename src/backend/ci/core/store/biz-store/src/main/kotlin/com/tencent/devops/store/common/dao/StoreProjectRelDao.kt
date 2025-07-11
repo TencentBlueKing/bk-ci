@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.common.dao
 
+import com.tencent.bk.audit.constants.AuditAttributeNames.INSTANCE_NAME
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.TStoreProjectRel
@@ -640,6 +641,22 @@ class StoreProjectRelDao {
                 .where(conditions)
                 .limit(1)
                 .fetchOne()
+        }
+    }
+
+    fun listStoreInitProjectCode(
+        dslContext: DSLContext,
+        storeType: Byte,
+        offset: Int,
+        limit: Int
+    ): Result<Record2<String, String>> {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            return dslContext.select(STORE_CODE, PROJECT_CODE).from(this)
+                .where(STORE_TYPE.eq(storeType))
+                .and(TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
+                .orderBy(CREATE_TIME.asc())
+                .limit(limit).offset(offset)
+                .fetch()
         }
     }
 }
