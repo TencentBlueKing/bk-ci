@@ -351,7 +351,7 @@ class MetricsEventService @Autowired constructor(
                             container.containerHashId?.let {
                                 map["${PipelineBuildStatusBroadCastEvent.Labels::dispatchIdentity.name}.$it"] =
                                     dispatch.value
-                                map["${PipelineBuildStatusBroadCastEvent.Labels::dispatchIdentity.name}.$it"] =
+                                map["${PipelineBuildStatusBroadCastEvent.Labels::dispatchName.name}.$it"] =
                                     dispatch.value
                             }
                         }
@@ -360,7 +360,7 @@ class MetricsEventService @Autowired constructor(
                             container.containerHashId?.let {
                                 map["${PipelineBuildStatusBroadCastEvent.Labels::dispatchIdentity.name}.$it"] =
                                     dispatch.value
-                                map["${PipelineBuildStatusBroadCastEvent.Labels::dispatchIdentity.name}.$it"] =
+                                map["${PipelineBuildStatusBroadCastEvent.Labels::dispatchName.name}.$it"] =
                                     dispatch.value
                             }
                         }
