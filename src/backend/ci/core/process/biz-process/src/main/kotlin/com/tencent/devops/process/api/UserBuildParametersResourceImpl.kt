@@ -124,6 +124,7 @@ class UserBuildParametersResourceImpl @Autowired constructor(
                 pageSize = pageSize,
                 aliasName = aliasName
             ).map { BuildFormValue(it.aliasName, it.aliasName) }
+            .distinctBy { it.key }
         )
     }
 
