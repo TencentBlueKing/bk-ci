@@ -76,9 +76,12 @@ class ContainerCmdLoop(
                         buildStatus = BuildStatus.QUEUE.name,
                         type = PipelineBuildStatusBroadCastEventType.BUILD_JOB_QUEUE,
                         labels = mapOf(
-                            "latestSummary" to commandContext.latestSummary,
-                            "mutexGroup" to (controlOption.mutexGroup?.runtimeMutexGroup ?: ""),
-                            "agentReuseMutex" to (controlOption.agentReuseMutex?.runtimeAgentOrEnvId ?: "")
+                            PipelineBuildStatusBroadCastEvent.Labels::jobMutexType.name to
+                                commandContext.latestSummary,
+                            PipelineBuildStatusBroadCastEvent.Labels::mutexGroup.name to
+                                (controlOption.mutexGroup?.runtimeMutexGroup ?: ""),
+                            PipelineBuildStatusBroadCastEvent.Labels::agentReuseMutex.name to
+                                (controlOption.agentReuseMutex?.runtimeAgentOrEnvId ?: "")
                         )
                     )
                 )
