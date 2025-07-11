@@ -2,6 +2,9 @@
 - [v3.0.14](#v3014)
    - [Changelog since v3.0.13](#changelog-since-v3013)
 
+- [v3.0.14](#v3014)
+   - [Changelog since v3.0.13](#changelog-since-v3013)
+
 - [v3.0.13](#v3013)
    - [Changelog since v3.0.12](#changelog-since-v3012)
 
@@ -22,6 +25,14 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v3.0.14
+## 2025-07-11
+### Changelog since v3.0.13
+#### 修复
+
+##### 未分类
+- [修复] bug: 用户态接口增加项目访问权限校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11971)
+
 # v3.0.14
 ## 2025-07-11
 ### Changelog since v3.0.13
