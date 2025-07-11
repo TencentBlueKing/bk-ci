@@ -129,7 +129,7 @@ class SubPipelineTaskService @Autowired constructor(
             else -> return null
         }
         // 分支版本
-        val branch = inputMap["branch"]?.toString().let {
+        val branch = inputMap["subBranch"]?.toString().let {
             EnvUtils.parseEnv(it, contextMap)
         }
         val (finalProjectId, finalPipelineId, finalPipeName) = getSubPipelineParam(
