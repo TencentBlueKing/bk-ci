@@ -374,10 +374,10 @@ class NodeTagService @Autowired constructor(
                     tags["arch"]?.tagValues?.firstOrNull { it.tagValueName == getAgentProperties(tpa)?.arch }?.tagValueId
                 val tagMap = mutableMapOf<Long, Long>()
                 if (osKeyId != null && osValueId != null) {
-                    tagMap[osKeyId] = osValueId
+                    tagMap[osValueId] = osKeyId
                 }
                 if (archKeyId != null && archValueId != null) {
-                    tagMap[archKeyId] = archValueId
+                    tagMap[archValueId] = archKeyId
                 }
                 logger.info("refreshInternalNodeTags|batchAddNodeTags $projectId|${tpa.nodeId}|$tagMap")
                 try {
