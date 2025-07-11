@@ -3,6 +3,9 @@ package com.tencent.devops.auth.provider.rbac.service
 import com.tencent.devops.auth.service.BkInternalPermissionService
 import com.tencent.devops.auth.service.iam.PermissionPostProcessor
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.util.CacheHelper
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
@@ -15,8 +18,12 @@ import java.util.concurrent.TimeUnit
 @Service
 class RbacPermissionPostProcessor(
     val bkInternalPermissionService: BkInternalPermissionService,
-    val meterRegistry: MeterRegistry
+    val meterRegistry: MeterRegistry,
+    val client: Client
 ) : PermissionPostProcessor {
+
+    private val project2StatusCache = CacheHelper.createCache<String, Boolean>(duration = 60)
+
     private fun consistencyCounter(method: String, isConsistent: Boolean): Counter {
         return Counter.builder("rbac.permission.consistency.check")
             .description("Counts the consistency checks between iam and internal permission services")
@@ -52,7 +59,7 @@ class RbacPermissionPostProcessor(
                 action = action
             )
             val isConsistent = (localCheckResult == externalApiResult)
-            consistencyCounter("validateUserResourcePermission", isConsistent).increment()
+            consistencyCounter(::validateUserResourcePermission.name, isConsistent).increment()
             if (!isConsistent) {
                 logger.warn(
                     "Verification results are inconsistent: $userId|$projectCode|$resourceType" +
@@ -97,7 +104,7 @@ class RbacPermissionPostProcessor(
                 action = action
             )
             val isConsistent = (externalApiResult.toSet() == localResult.toSet())
-            consistencyCounter("getUserResourceByAction", isConsistent).increment()
+            consistencyCounter(::getUserResourceByAction.name, isConsistent).increment()
             if (!isConsistent) {
                 logger.warn(
                     "get user resource by action results are inconsistent: $userId|" +
@@ -112,7 +119,29 @@ class RbacPermissionPostProcessor(
         action: String,
         externalApiResult: List<String>
     ) {
-        TODO("Not yet implemented")
+        threadPoolExecutor.execute {
+            val localResult = bkInternalPermissionService.getUserProjectsByAction(
+                userId = userId,
+                action = action
+            )
+            val method = ::getUserProjectsByAction.name
+            val diffProjects = externalApiResult.filterNot { localResult.contains(it) }
+            if (diffProjects.isEmpty()) {
+                consistencyCounter(method, true).increment()
+            } else {
+                // 由于只同步了未禁用的项目权限数据，所以需要对差异项目，进行项目是否禁用检查
+                // 若差异项目中存在未被禁用项目，则说结果有差异
+                val isExistProjectEnabled = diffProjects.any {
+                    CacheHelper.getOrLoad(project2StatusCache, it) {
+                        client.get(ServiceProjectResource::class).get(it).data?.enabled ?: false
+                    }
+                }
+                if (isExistProjectEnabled){
+                    logger.warn("get user projects by action results are inconsistent:$userId|$action|$diffProjects")
+                }
+                consistencyCounter(method, !isExistProjectEnabled).increment()
+            }
+        }
     }
 
     override fun filterUserResourcesByActions(
@@ -139,12 +168,13 @@ class RbacPermissionPostProcessor(
 
                 val isConsistent = localResources == externalApiResources
                 // 可以在标签中加入更详细的维度，比如 permission
-                consistencyCounter("filterUserResourcesByActions", isConsistent).increment()
+                consistencyCounter(::filterUserResourcesByActions.name, isConsistent).increment()
 
                 if (!isConsistent) {
                     logger.warn(
-                        "filter user resources by actions results are inconsistent for permission '$permission': $userId|" +
-                            "$projectCode|$resourceType|external=$externalApiResources|local=$localResources"
+                        "filter user resources by actions results are inconsistent for permission " +
+                            "'$permission': $userId|$projectCode|$resourceType" +
+                            "|external=$externalApiResources|local=$localResources"
                     )
                 }
             }
