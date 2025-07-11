@@ -3,7 +3,6 @@ package com.tencent.devops.common.web.aop
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.consul.ConsulConstants
 import com.tencent.devops.common.redis.RedisOperation
@@ -11,6 +10,7 @@ import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.annotation.IgnoreUserApiPermission
 import com.tencent.devops.common.web.service.ServiceUserApiAuthPermissionResource
 import com.tencent.devops.common.web.utils.I18nUtil
+import jakarta.ws.rs.Path
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
 import org.aspectj.lang.annotation.Aspect
@@ -18,7 +18,6 @@ import org.aspectj.lang.reflect.MethodSignature
 import org.slf4j.LoggerFactory
 import org.springframework.core.annotation.AnnotationUtils
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.Path
 
 /**
  * 项目访问权限拦截器
@@ -55,60 +54,62 @@ class UserApiPermissionAspect constructor(
     }
 
     private fun checkProjectVisitPermission(jp: ProceedingJoinPoint) {
-        val methodSignature = jp.signature as MethodSignature
-        // 忽略的接口不需要校验
-        val ignorePermission = AnnotationUtils.findAnnotation(
-            methodSignature.method, IgnoreUserApiPermission::class.java
-        )
-        if (ignorePermission != null) {
-            return
-        }
-
-        val pathAnnotation = AnnotationUtils.findAnnotation(
-            jp.target::class.java, Path::class.java
-        )
-        // 当不是user态接口,或者需要忽略的接口,则不校验
-        if (pathAnnotation == null ||
-            pathAnnotation.value.isBlank() ||
-            !pathAnnotation.value.removePrefix("/").startsWith("user")
-        ) {
-            return
-        }
-
-        val userId = I18nUtil.getRequestUserId() ?: throw ErrorCodeException(
-            errorCode = CommonMessageCode.PARAMETER_IS_NULL,
-            params = arrayOf("userId")
-        )
-
-        // 参数value
-        val parameterValue = jp.args
-        // 参数key
-        val parameterNames = (jp.signature as MethodSignature).parameterNames
-        var projectId: String? = null
-        for (index in parameterValue.indices) {
-            when (parameterNames[index]) {
-                "projectId" -> projectId = parameterValue[index]?.toString()
-                "projectCode" -> projectId = parameterValue[index]?.toString()
-                else -> Unit
-            }
-        }
-        // 没有项目ID参数,不需要校验
-        if (projectId.isNullOrBlank()) {
-            return
-        }
-        // 校验用户态请求,是否有项目的访问权限
-        val visitPermission = visitPermissionCache.get(Pair(userId, projectId))
-        logger.info(
-            "validate user api project visit permission|${methodSignature.declaringType.name}|" +
-                    "${methodSignature.name}|$userId|$projectId|$visitPermission"
-        )
-        if (visitPermission != true) {
-            throw PermissionForbiddenException(
-                I18nUtil.getCodeLanMessage(
-                    messageCode = CommonMessageCode.USER_NOT_HAVE_PROJECT_PERMISSIONS,
-                    params = arrayOf(userId, projectId)
-                )
+        try {
+            val methodSignature = jp.signature as MethodSignature
+            // 忽略的接口不需要校验
+            val ignorePermission = AnnotationUtils.findAnnotation(
+                methodSignature.method, IgnoreUserApiPermission::class.java
             )
+            if (ignorePermission != null) {
+                return
+            }
+
+            val pathAnnotation = AnnotationUtils.findAnnotation(
+                jp.target::class.java, Path::class.java
+            )
+            // 当不是user态接口,或者需要忽略的接口,则不校验
+            if (pathAnnotation == null ||
+                pathAnnotation.value.isBlank() ||
+                !pathAnnotation.value.removePrefix("/").startsWith("user")
+            ) {
+                return
+            }
+
+            val userId = I18nUtil.getRequestUserId() ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                params = arrayOf("userId")
+            )
+
+            // 参数value
+            val parameterValue = jp.args
+            // 参数key
+            val parameterNames = (jp.signature as MethodSignature).parameterNames
+            var projectId: String? = null
+            for (index in parameterValue.indices) {
+                when (parameterNames[index]) {
+                    "projectId" -> projectId = parameterValue[index]?.toString()
+                    "projectCode" -> projectId = parameterValue[index]?.toString()
+                    else -> Unit
+                }
+            }
+            // 没有项目ID参数,不需要校验
+            if (projectId.isNullOrBlank()) {
+                return
+            }
+            // 校验用户态请求,是否有项目的访问权限
+            val visitPermission = visitPermissionCache.get(Pair(userId, projectId))
+            logger.info(
+                "validate user api project visit permission|${methodSignature.declaringType.name}|" +
+                        "${methodSignature.name}|$userId|$projectId|$visitPermission"
+            )
+            if (visitPermission != true) {
+                logger.warn(
+                    "validate user api| user not project visit permission|${methodSignature.declaringType.name}|" +
+                            "${methodSignature.name}|$userId|$projectId|$visitPermission"
+                )
+            }
+        } catch (ignored: Exception) {
+            logger.warn("Failed to validate user api project visit permission", ignored)
         }
     }
 
