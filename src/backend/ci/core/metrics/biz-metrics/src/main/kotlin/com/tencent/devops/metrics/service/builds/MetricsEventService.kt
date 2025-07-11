@@ -229,8 +229,8 @@ class MetricsEventService @Autowired constructor(
                     )
                 }
             }.onFailure {
-                logger.error("cache pipeline failed", it)
-            }.getOrNull()
+                logger.warn("cache pipeline failed", it)
+            }.getOrNull() ?: emptyMap()
         }
 
     private val envCache = Caffeine.newBuilder()
@@ -248,8 +248,8 @@ class MetricsEventService @Autowired constructor(
                         )
                     }
             }.onFailure {
-                logger.error("cache pipeline failed", it)
-            }.getOrNull()
+                logger.warn("cache pipeline failed", it)
+            }.getOrNull() ?: emptyMap()
         }
 
     private val pipelineVersionCache = Caffeine.newBuilder()
@@ -270,7 +270,7 @@ class MetricsEventService @Autowired constructor(
                 val (projectId, pipelineId, pipelineVersion) = key.split("@@")
                 cachePipeline(projectId, pipelineId, pipelineVersion.toIntOrNull())
             }.onFailure {
-                logger.error("cache pipeline failed", it)
+                logger.warn("cache pipeline failed", it)
             }.getOrNull()
         }
 
@@ -287,7 +287,7 @@ class MetricsEventService @Autowired constructor(
                 includeDraft = true
             ).data
         }.onFailure {
-            logger.error("cache pipeline failed", it)
+            logger.warn("cache pipeline failed", it)
         }.getOrNull() ?: return emptyMap()
         val map = mutableMapOf<String, String>()
         map["${PipelineBuildStatusBroadCastEvent.Labels::pipelineName.name}.$pipelineId"] = model.name
@@ -321,9 +321,11 @@ class MetricsEventService @Autowired constructor(
                             container.containerHashId?.let {
                                 val agentInfo = agentCache.get("$projectId@@${dispatch.value}")
                                 map["${PipelineBuildStatusBroadCastEvent.Labels::dispatchIdentity.name}.$it"] =
-                                    agentInfo[PipelineBuildStatusBroadCastEvent.Labels::nodeHashId.name] ?: ""
+                                    agentInfo[PipelineBuildStatusBroadCastEvent.Labels::nodeHashId.name]
+                                        ?: dispatch.value
                                 map["${PipelineBuildStatusBroadCastEvent.Labels::dispatchName.name}.$it"] =
-                                    agentInfo[PipelineBuildStatusBroadCastEvent.Labels::hostName.name] ?: ""
+                                    agentInfo[PipelineBuildStatusBroadCastEvent.Labels::hostName.name]
+                                        ?: dispatch.value
                             }
                         }
 
@@ -331,9 +333,11 @@ class MetricsEventService @Autowired constructor(
                             container.containerHashId?.let {
                                 val envInfo = envCache.get("$projectId@@${dispatch.value}")
                                 map["${PipelineBuildStatusBroadCastEvent.Labels::dispatchIdentity.name}.$it"] =
-                                    envInfo[PipelineBuildStatusBroadCastEvent.Labels::dispatchIdentity.name] ?: ""
+                                    envInfo[PipelineBuildStatusBroadCastEvent.Labels::dispatchIdentity.name]
+                                        ?: dispatch.value
                                 map["${PipelineBuildStatusBroadCastEvent.Labels::dispatchName.name}.$it"] =
-                                    envInfo[PipelineBuildStatusBroadCastEvent.Labels::dispatchName.name] ?: ""
+                                    envInfo[PipelineBuildStatusBroadCastEvent.Labels::dispatchName.name]
+                                        ?: dispatch.value
                             }
                         }
 
@@ -534,7 +538,7 @@ class MetricsEventService @Autowired constructor(
                     else -> value
                 }
             } catch (e: Exception) {
-                logger.error("Convert label value failed, property: ${property.name}, value: $value", e)
+                logger.warn("Convert label value failed, property: ${property.name}, value: $value", e)
                 null
             } as? T
         }
