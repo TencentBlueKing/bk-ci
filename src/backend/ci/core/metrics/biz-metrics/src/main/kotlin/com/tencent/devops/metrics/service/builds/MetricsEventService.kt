@@ -229,7 +229,7 @@ class MetricsEventService @Autowired constructor(
                     )
                 }
             }.onFailure {
-                logger.warn("cache pipeline failed", it)
+                logger.warn("cache agent failed", it)
             }.getOrNull() ?: emptyMap()
         }
 
@@ -248,7 +248,7 @@ class MetricsEventService @Autowired constructor(
                         )
                     }
             }.onFailure {
-                logger.warn("cache pipeline failed", it)
+                logger.warn("cache env failed", it)
             }.getOrNull() ?: emptyMap()
         }
 
