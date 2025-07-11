@@ -41,6 +41,18 @@ const dictionary = {
             projectEnglishNameUnique: field => 'English Name already exists. ', // 较验项目英文名称是否重复
             projectEnglishNameReg: field => 'English name must consist of lowercase letters + numbers + middle lines, starting with a lowercase letter and limiting the length to 32 characters' // 较验项目英文名称格式
         }
+    },
+    'ja-JP': {
+        messages: {
+            string: field => 'フィールドは数字、文字、アンダースコアのみを含めることができます',
+            regex: (field, regex) => {
+                return `フィールドは(${regex})正規表現ルールに準拠していません`
+            },
+            aliasUnique: field => 'コードライブラリのエイリアスが重複しています。', // 较验代码库别名
+            projectNameUnique: field => 'プロジェクト名が既に存在します。', // 较验项目名称是否重复
+            projectEnglishNameUnique: field => '英語の略称が既に存在します。', // 较验项目英文名称是否重复
+            projectEnglishNameReg: field => '英語の略称は小文字のアルファベット+数字+中線で構成され、小文字のアルファベットで始まり、長さは32文字以内です！' // 较验项目英文名称格式
+        }
     }
 }
 

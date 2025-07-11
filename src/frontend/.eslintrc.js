@@ -36,13 +36,11 @@ module.exports = {
         browser: true
     },
     extends: [
-        'plugin:vue/recommended',
-        'standard'
+        'plugin:vue/recommended'
     ],
     // required to lint *.vue files
     plugins: [
         'vue',
-        'import'
     ],
     settings: {
         'import/resolver': 'node'

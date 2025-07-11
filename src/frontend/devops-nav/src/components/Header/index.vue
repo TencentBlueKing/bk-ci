@@ -211,17 +211,17 @@
 </template>
 
 <script lang="ts">
+    import eventBus from '@/utils/eventBus'
+    import { urlJoin } from '@/utils/util'
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
     import { Action, Getter, State } from 'vuex-class'
-    import eventBus from '../../utils/eventBus'
-    import { urlJoin } from '../../utils/util'
     import ApplyProjectDialog from '../ApplyProjectDialog/index.vue'
     import LocaleSwitcher from '../LocaleSwitcher/index.vue'
     import Logo from '../Logo/index.vue'
     import ProjectDialog from '../ProjectDialog/index.vue'
-    import SystemLog from '../SystemLog/index.vue'
     import DevopsSelect from '../Select/index.vue'
+    import SystemLog from '../SystemLog/index.vue'
     import User from '../User/index.vue'
     import NavMenu from './NavMenu.vue'
 
@@ -263,6 +263,11 @@
                 icon: 'english',
                 name: 'English',
                 id: 'en-US'
+            },
+            {
+                icon: 'japanese',
+                name: '日本語',
+                id: 'ja-JP'
             }
         ]
  
@@ -634,6 +639,10 @@
         align-items: center;
         cursor: pointer;
         font-size: 12px !important;
+        display: inline-block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
         i {
             font-size: 12px !important;
         }
