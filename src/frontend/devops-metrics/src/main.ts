@@ -8,7 +8,7 @@ import './css/index.css';
 // 全量引入 bkui-vue
 import bkui from 'bkui-vue';
 // 全量引入 bkui-vue 样式
-import 'bkui-vue/dist/style.css';
+import 'bkui-vue/dist/cli.css';
 
 // i18n
 import { getCookie } from '@/common/util'
