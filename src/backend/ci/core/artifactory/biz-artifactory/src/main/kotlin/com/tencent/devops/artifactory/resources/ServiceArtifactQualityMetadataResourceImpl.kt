@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 Tencent.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,41 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.pojo
+package com.tencent.devops.artifactory.resources
 
-import com.tencent.bkrepo.generic.pojo.FileInfo
-import com.tencent.bkrepo.repository.pojo.metadata.MetadataModel
+import com.tencent.devops.artifactory.api.service.ServiceArtifactQualityMetadataResource
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.bkrepo.repository.pojo.metadata.label.MetadataLabelDetail
+import com.tencent.devops.common.web.RestResource
 
-data class QueryNodeInfo(
-    var createdBy: String,
-    var createdDate: String,
-    var lastModifiedBy: String,
-    var lastModifiedDate: String,
-    var folder: Boolean,
-    var path: String,
-    var name: String,
-    var fullPath: String,
-    var size: Long,
-    var sha256: String? = null,
-    var md5: String? = null,
-    var projectId: String,
-    var repoName: String,
-    var metadata: Map<String, Any>?,
-    var nodeMetadata: List<MetadataModel>? = emptyList()
-) {
-    fun toFileInfo() = FileInfo(
-        createdBy = createdBy,
-        createdDate = createdDate,
-        lastModifiedBy = lastModifiedBy,
-        lastModifiedDate = lastModifiedDate,
-        folder = folder,
-        path = path,
-        name = name,
-        fullPath = fullPath,
-        size = size,
-        sha256 = sha256,
-        md5 = md5,
-        projectId = projectId,
-        repoName = repoName
-    )
+@RestResource
+class ServiceArtifactQualityMetadataResourceImpl(
+    private val bkRepoClient: BkRepoClient
+) : ServiceArtifactQualityMetadataResource {
+    override fun list(
+        userId: String,
+        projectId: String
+    ): Result<List<MetadataLabelDetail>> {
+        return Result(bkRepoClient.listArtifactQualityMetadataLabels(userId, projectId))
+    }
 }

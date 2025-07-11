@@ -34,5 +34,7 @@ data class SearchProps(
     @get:Schema(title = "匹配文件列表(支持模糊匹配)", required = true)
     val fileNames: List<String>?,
     @get:Schema(title = "元数据列表", required = true)
-    val props: Map<String, String>
+    val props: Map<String, String>,
+    @get:Schema(title = "查询元数据", required = false)
+    val qualityMetadata: List<Property> = emptyList()
 )

@@ -1470,6 +1470,7 @@ class PipelineBuildFacadeService(
     }
 
     fun getBuildRecord(
+        userId: String? = null,
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -1496,6 +1497,7 @@ class PipelineBuildFacadeService(
             )
         }
         return buildRecordService.getBuildRecord(
+            userId = userId,
             buildInfo = buildInfo,
             executeCount = executeCount,
             encryptedFlag = encryptedFlag,
@@ -1541,6 +1543,7 @@ class PipelineBuildFacadeService(
         }
 
         return getBuildRecord(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -2062,6 +2065,7 @@ class PipelineBuildFacadeService(
             )
 
             val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
+                userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 offset = offset,
