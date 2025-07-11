@@ -5,15 +5,17 @@ import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
 import com.tencent.devops.auth.provider.rbac.service.RbacCommonService
 import com.tencent.devops.auth.provider.rbac.service.RbacPermissionPostProcessor
-import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.util.CacheHelper
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Timer
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.util.function.Supplier
 
 /**
  * 蓝盾内部权限类，非第三方接口。
@@ -27,7 +29,8 @@ class BkInternalPermissionService(
     private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService,
     private val rbacCommonService: RbacCommonService,
     private val superManagerService: SuperManagerService,
-    private val authResourceService: AuthResourceService
+    private val authResourceService: AuthResourceService,
+    private val meterRegistry: MeterRegistry
 ) {
     // 1. 单条权限校验结果
     private val permissionCache = CacheHelper.createCache<String, Boolean>()
@@ -40,6 +43,14 @@ class BkInternalPermissionService(
 
     // 4. 用户按操作获取项目的缓存
     private val userProjectsCache = CacheHelper.createCache<String, List<String>>()
+
+    private fun createTimer(methodName: String): Timer {
+        return Timer.builder("rbac.internal.service.duration") // 指标名称
+            .description("Duration of BkInternalPermissionService methods")
+            .tag("class", "BkInternalPermissionService") // 静态标签：类名
+            .tag("method", methodName) // 动态标签：方法名
+            .register(meterRegistry)
+    }
 
     /**
      *   校验项目级权限，如校验是否有项目管理权限或者整个项目流水线权限，参数如下：
@@ -55,8 +66,7 @@ class BkInternalPermissionService(
         resourceCode: String,
         action: String
     ): Boolean {
-        val startEpoch = System.currentTimeMillis()
-        try {
+        return createTimer(::validateUserResourcePermission.name).record(Supplier {
             val (fixResourceType, fixResourceCode) =
                 if (resourceType == ResourceTypeId.PROJECT || resourceCode == "*") {
                     Pair(ResourceTypeId.PROJECT, projectCode)
@@ -64,7 +74,7 @@ class BkInternalPermissionService(
                     Pair(resourceType, resourceCode)
                 }
             // 缓存键直接使用传入的资源信息
-            return CacheHelper.getOrLoad(permissionCache, userId, projectCode, fixResourceType, fixResourceCode, action) {
+            CacheHelper.getOrLoad(permissionCache, userId, projectCode, fixResourceType, fixResourceCode, action) {
                 val isManager = checkManager(
                     userId = userId,
                     projectCode = projectCode,
@@ -84,12 +94,7 @@ class BkInternalPermissionService(
                     )
                 }
             }
-        } finally {
-            logger.info(
-                "It take(${System.currentTimeMillis() - startEpoch})ms to validate user resource permission local" +
-                    "$userId|$action|$projectCode|$resourceType|$resourceCode"
-            )
-        }
+        }) ?: false
     }
 
     private fun checkManager(
@@ -133,8 +138,7 @@ class BkInternalPermissionService(
         resourceType: String,
         action: String
     ): List<String> {
-        val startEpoch = System.currentTimeMillis()
-        return try {
+        return createTimer(::getUserResourceByAction.name).record(Supplier {
             val groupIds = listMemberGroupIdsInProjectWithCache(projectCode, userId)
             CacheHelper.getOrLoad(userResourceCache, userId, projectCode, resourceType, action) {
                 val isManager = checkManager(
@@ -157,12 +161,7 @@ class BkInternalPermissionService(
                     )
                 }
             }
-        } finally {
-            logger.info(
-                "It take(${System.currentTimeMillis() - startEpoch})ms to get user resources local|" +
-                    "$userId|$action|$projectCode|$resourceType"
-            )
-        }
+        }) ?: emptyList()
     }
 
     fun getUserResourcesByActions(
@@ -185,8 +184,7 @@ class BkInternalPermissionService(
         userId: String,
         action: String
     ): List<String> {
-        val startEpoch = System.currentTimeMillis()
-        return try {
+        return createTimer(::getUserProjectsByAction.name).record(Supplier {
             CacheHelper.getOrLoad(userProjectsCache, userId, action) {
                 val memberDeptInfos = userManageService.getUserDepartmentPath(userId)
                 permissionResourceGroupPermissionService.listProjectsWithPermission(
@@ -194,11 +192,7 @@ class BkInternalPermissionService(
                     action = action
                 )
             }
-        } finally {
-            logger.info(
-                "It take(${System.currentTimeMillis() - startEpoch})ms to get user projects local $userId|$action"
-            )
-        }
+        }) ?: emptyList()
     }
 
     fun filterUserResourcesByActions(
@@ -208,10 +202,9 @@ class BkInternalPermissionService(
         resourceType: String,
         resourceCodes: List<String>
     ): Map<AuthPermission, List<String>> {
-        val startEpoch = System.currentTimeMillis()
-        try {
+        return createTimer(::filterUserResourcesByActions.name).record(Supplier {
             if (rbacCommonService.checkProjectManager(userId = userId, projectCode = projectCode)) {
-                return actions.associate {
+                return@Supplier actions.associate {
                     val authPermission = it.substringAfterLast("_")
                     AuthPermission.get(authPermission) to resourceCodes
                 }
@@ -250,13 +243,8 @@ class BkInternalPermissionService(
                 )
                 permissionMap[authPermission] = resourceCodes.filter { userResources.contains(it) }
             }
-            return permissionMap
-        } finally {
-            logger.info(
-                "It take(${System.currentTimeMillis() - startEpoch})ms to filter user resources local" +
-                    "$userId|$projectCode|$resourceType|$resourceCodes|$actions"
-            )
-        }
+            permissionMap
+        }) ?: emptyMap()
     }
 
     private fun listMemberGroupIdsInProjectWithCache(
@@ -272,20 +260,22 @@ class BkInternalPermissionService(
         projectCode: String,
         memberId: String
     ): List<Int> {
-        // 获取用户加入的项目级用户组模板ID
-        val iamTemplateIds = listProjectMemberGroupTemplateIds(
-            projectCode = projectCode,
-            memberId = memberId
-        )
-        // 获取用户的所属组织
-        val memberDeptInfos = userManageService.getUserDepartmentPath(memberId)
-        return authResourceGroupMemberDao.listMemberGroupIdsInProject(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            memberId = memberId,
-            iamTemplateIds = iamTemplateIds,
-            memberDeptInfos = memberDeptInfos
-        )
+        return createTimer(::filterUserResourcesByActions.name).record(Supplier {
+            // 获取用户加入的项目级用户组模板ID
+            val iamTemplateIds = listProjectMemberGroupTemplateIds(
+                projectCode = projectCode,
+                memberId = memberId
+            )
+            // 获取用户的所属组织
+            val memberDeptInfos = userManageService.getUserDepartmentPath(memberId)
+            authResourceGroupMemberDao.listMemberGroupIdsInProject(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                memberId = memberId,
+                iamTemplateIds = iamTemplateIds,
+                memberDeptInfos = memberDeptInfos
+            )
+        }) ?: emptyList()
     }
 
     private fun listProjectMemberGroupTemplateIds(

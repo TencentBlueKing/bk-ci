@@ -39,6 +39,7 @@ import com.tencent.bk.sdk.iam.dto.resource.V2ResourceNode
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.pojo.enum.MemberType
+import com.tencent.devops.auth.service.AuthProjectUserMetricsService
 import com.tencent.devops.auth.service.SuperManagerService
 import com.tencent.devops.auth.service.iam.PermissionPostProcessor
 import com.tencent.devops.auth.service.iam.PermissionService
@@ -66,7 +67,8 @@ class RbacPermissionService(
     private val superManagerService: SuperManagerService,
     private val rbacCommonService: RbacCommonService,
     private val client: Client,
-    private val permissionPostProcessor: PermissionPostProcessor
+    private val permissionPostProcessor: PermissionPostProcessor,
+    private val authProjectUserMetricsService: AuthProjectUserMetricsService
 ) : PermissionService {
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionService::class.java)
@@ -214,13 +216,20 @@ class RbacPermissionService(
                 .build()
 
             val result = policyService.verifyPermissions(queryPolicyDTO)
+            if (result) {
+                authProjectUserMetricsService.save(
+                    projectId = projectCode,
+                    userId = userId,
+                    operate = useAction
+                )
+            }
             permissionPostProcessor.validateUserResourcePermission(
                 userId = userId,
                 projectCode = projectCode,
                 resourceType = resource.resourceType,
                 resourceCode = resource.resourceCode,
                 action = useAction,
-                result = result
+                externalApiResult = result
             )
             return result
         } finally {
@@ -312,7 +321,7 @@ class RbacPermissionService(
                 resourceType = resource.resourceType,
                 resourceCode = resource.resourceCode,
                 actions = actions,
-                result = result
+                externalApiResult = result
             )
             return result
         } finally {
@@ -403,7 +412,7 @@ class RbacPermissionService(
                 projectCode = projectCode,
                 action = useAction,
                 resourceType = resourceType,
-                result = result
+                externalApiResult = result
             )
             return result
         } finally {
@@ -556,7 +565,7 @@ class RbacPermissionService(
             projectCode = projectCode,
             resourceType = resourceType,
             resourceCodes = resources.map { it.resourceCode },
-            result = result
+            externalApiResult = result
         )
         return result
     }

@@ -36,7 +36,7 @@ interface PermissionPostProcessor {
         resourceType: String,
         resourceCode: String,
         action: String,
-        result: Boolean
+        externalApiResult: Boolean
     )
 
     fun batchValidateUserResourcePermission(
@@ -45,7 +45,7 @@ interface PermissionPostProcessor {
         resourceType: String,
         resourceCode: String,
         actions: List<String>,
-        result: Map<String, Boolean>
+        externalApiResult: Map<String, Boolean>
     )
 
     fun getUserResourceByAction(
@@ -53,13 +53,13 @@ interface PermissionPostProcessor {
         action: String,
         projectCode: String,
         resourceType: String,
-        result: List<String>
+        externalApiResult: List<String>
     )
 
     fun getUserProjectsByAction(
         userId: String,
         action: String,
-        result: List<String>
+        externalApiResult: List<String>
     )
 
     fun filterUserResourcesByActions(
@@ -68,6 +68,6 @@ interface PermissionPostProcessor {
         projectCode: String,
         resourceType: String,
         resourceCodes: List<String>,
-        result: Map<AuthPermission, List<String>>
+        externalApiResult: Map<AuthPermission, List<String>>
     )
 }

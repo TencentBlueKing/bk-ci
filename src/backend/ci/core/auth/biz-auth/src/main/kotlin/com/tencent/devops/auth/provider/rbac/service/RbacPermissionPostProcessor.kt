@@ -1,49 +1,64 @@
 package com.tencent.devops.auth.provider.rbac.service
 
-import com.tencent.devops.auth.service.AuthProjectUserMetricsService
 import com.tencent.devops.auth.service.BkInternalPermissionService
 import com.tencent.devops.auth.service.iam.PermissionPostProcessor
 import com.tencent.devops.common.auth.api.AuthPermission
+import io.micrometer.core.instrument.Counter
+import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 @Service
 class RbacPermissionPostProcessor(
     val bkInternalPermissionService: BkInternalPermissionService,
-    val authProjectUserMetricsService: AuthProjectUserMetricsService
+    val meterRegistry: MeterRegistry
 ) : PermissionPostProcessor {
+    private fun consistencyCounter(method: String, isConsistent: Boolean): Counter {
+        return Counter.builder("rbac.permission.consistency.check")
+            .description("Counts the consistency checks between iam and internal permission services")
+            .tag("method", method) // 标签：区分是哪个方法
+            .tag("result", if (isConsistent) "consistent" else "inconsistent") // 标签：区分结果
+            .register(meterRegistry)
+    }
+
+    val threadPoolExecutor = ThreadPoolExecutor(
+        3,
+        5,
+        5,
+        TimeUnit.SECONDS,
+        LinkedBlockingQueue(1000),
+        Executors.defaultThreadFactory(),
+        ThreadPoolExecutor.DiscardPolicy()
+    )
+
     override fun validateUserResourcePermission(
         userId: String,
         projectCode: String,
         resourceType: String,
         resourceCode: String,
         action: String,
-        result: Boolean
+        externalApiResult: Boolean
     ) {
-        if (result) {
-            authProjectUserMetricsService.save(
-                projectId = projectCode,
+        threadPoolExecutor.execute {
+            val localCheckResult = bkInternalPermissionService.validateUserResourcePermission(
                 userId = userId,
-                operate = action
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                action = action
             )
-        }
-        val localCheckResult = bkInternalPermissionService.validateUserResourcePermission(
-            userId = userId,
-            projectCode = projectCode,
-            resourceType = resourceType,
-            resourceCode = resourceCode,
-            action = action
-        )
-        if (localCheckResult != result) {
-            logger.warn(
-                "Verification results are inconsistent:$userId|$projectCode|$resourceType" +
-                    "|$resourceCode|$action|$result|$localCheckResult"
-            )
-        } else {
-            logger.info(
-                "Verification successful！$userId|$projectCode|$resourceType" +
-                    "|$resourceCode|$action|$result|$localCheckResult"
-            )
+            val isConsistent = (localCheckResult == externalApiResult)
+            consistencyCounter("validateUserResourcePermission", isConsistent).increment()
+            if (!isConsistent) {
+                logger.warn(
+                    "Verification results are inconsistent: $userId|$projectCode|$resourceType" +
+                        "|$resourceCode|$action|external=$externalApiResult|local=$localCheckResult"
+                )
+            }
         }
     }
 
@@ -53,16 +68,16 @@ class RbacPermissionPostProcessor(
         resourceType: String,
         resourceCode: String,
         actions: List<String>,
-        result: Map<String, Boolean>
+        externalApiResult: Map<String, Boolean>
     ) {
-        result.forEach { (action, verify) ->
+        externalApiResult.forEach { (action, verify) ->
             validateUserResourcePermission(
                 userId = userId,
                 projectCode = projectCode,
                 resourceType = resourceType,
                 resourceCode = resourceCode,
                 action = action,
-                result = verify
+                externalApiResult = verify
             )
         }
     }
@@ -72,31 +87,30 @@ class RbacPermissionPostProcessor(
         action: String,
         projectCode: String,
         resourceType: String,
-        result: List<String>
+        externalApiResult: List<String>
     ) {
-        val localResult = bkInternalPermissionService.getUserResourceByAction(
-            userId = userId,
-            projectCode = projectCode,
-            resourceType = resourceType,
-            action = action
-        )
-        if (result.toSet() != localResult.toSet()) {
-            logger.warn(
-                "get user resource by action results are inconsistent:$userId|" +
-                    "$projectCode|$resourceType|$action|$result|$localResult"
+        threadPoolExecutor.execute {
+            val localResult = bkInternalPermissionService.getUserResourceByAction(
+                userId = userId,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                action = action
             )
-        } else {
-            logger.warn(
-                "get user resource by action results consistency!:" +
-                    "$userId|$projectCode|$resourceType|$action"
-            )
+            val isConsistent = (externalApiResult.toSet() == localResult.toSet())
+            consistencyCounter("getUserResourceByAction", isConsistent).increment()
+            if (!isConsistent) {
+                logger.warn(
+                    "get user resource by action results are inconsistent: $userId|" +
+                        "$projectCode|$resourceType|$action|external=$externalApiResult|local=$localResult"
+                )
+            }
         }
     }
 
     override fun getUserProjectsByAction(
         userId: String,
         action: String,
-        result: List<String>
+        externalApiResult: List<String>
     ) {
         TODO("Not yet implemented")
     }
@@ -107,26 +121,32 @@ class RbacPermissionPostProcessor(
         projectCode: String,
         resourceType: String,
         resourceCodes: List<String>,
-        result: Map<AuthPermission, List<String>>
+        externalApiResult: Map<AuthPermission, List<String>>
     ) {
-        val localResult = bkInternalPermissionService.filterUserResourcesByActions(
-            userId = userId,
-            projectCode = projectCode,
-            resourceType = resourceType,
-            resourceCodes = resourceCodes,
-            actions = actions
-        )
-        result.forEach { (permission, resourceCodes) ->
-            if (localResult[permission]?.toSet() != resourceCodes.toSet()) {
-                logger.warn(
-                    "filter user resources by actions results are inconsistent:$userId|" +
-                        "$projectCode|$resourceType|$actions|$resourceCodes|${localResult[permission]}"
-                )
-            } else {
-                logger.warn(
-                    "filter user resources by actions results are consistency:$userId|" +
-                        "$projectCode|$resourceType|$actions|$resourceCodes|${localResult[permission]}"
-                )
+        threadPoolExecutor.execute {
+            val localResult = bkInternalPermissionService.filterUserResourcesByActions(
+                userId = userId,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCodes = resourceCodes,
+                actions = actions
+            )
+
+            // 整体比较可能复杂，可以比较每个permission的结果
+            externalApiResult.forEach { (permission, resources) ->
+                val localResources = localResult[permission]?.toSet()
+                val externalApiResources = resources.toSet()
+
+                val isConsistent = localResources == externalApiResources
+                // 可以在标签中加入更详细的维度，比如 permission
+                consistencyCounter("filterUserResourcesByActions", isConsistent).increment()
+
+                if (!isConsistent) {
+                    logger.warn(
+                        "filter user resources by actions results are inconsistent for permission '$permission': $userId|" +
+                            "$projectCode|$resourceType|external=$externalApiResources|local=$localResources"
+                    )
+                }
             }
         }
     }
