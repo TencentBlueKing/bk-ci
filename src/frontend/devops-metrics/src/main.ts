@@ -1,5 +1,6 @@
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
+import { getCookies } from './common/util';
 import router from './router';
 import App from './app.vue';
 import './css/index.css';
@@ -58,7 +59,7 @@ const i18n = createI18n({
     'zh-CN': ZhCN,
     'en-US': EnUS,
     'ja-JP': JaJp,
-  }
+  }c
 })
 
 createApp(App)
@@ -69,3 +70,4 @@ createApp(App)
   })
   .use(i18n)
   .mount('.app');
+  

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -1289,7 +1289,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                         jdkVersion = newHeartbeatInfo.props!!.jdkVersion ?: listOf(),
                         userProps = oldUserProps,
                         dockerInitFileInfo = newHeartbeatInfo.props?.dockerInitFileInfo,
-                        exitError = newHeartbeatInfo.errorExitData
+                        exitError = newHeartbeatInfo.errorExitData,
+                        osVersion = newHeartbeatInfo.props?.osVersion
                     ),
                     false
                 )
