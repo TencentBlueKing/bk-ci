@@ -172,8 +172,8 @@ class RbacPermissionPostProcessor(
 
                 if (!isConsistent) {
                     logger.warn(
-                        "filter user resources by actions results are inconsistent for permission " +
-                            "'$permission': $userId|$projectCode|$resourceType" +
+                        "filter user resources by actions results are inconsistent for permission:" +
+                            "$permission|$userId|$projectCode|$resourceType" +
                             "|external=$externalApiResources|local=$localResources"
                     )
                 }
