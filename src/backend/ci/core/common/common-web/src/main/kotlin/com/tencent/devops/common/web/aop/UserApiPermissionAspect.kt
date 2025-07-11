@@ -88,7 +88,6 @@ class UserApiPermissionAspect constructor(
         for (index in parameterValue.indices) {
             when (parameterNames[index]) {
                 "projectId" -> projectId = parameterValue[index]?.toString()
-                "gitProjectId" -> projectId = "git_" + parameterValue[index]?.toString()
                 "projectCode" -> projectId = parameterValue[index]?.toString()
                 else -> Unit
             }
