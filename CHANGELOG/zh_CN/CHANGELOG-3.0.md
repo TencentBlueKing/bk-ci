@@ -2,9 +2,6 @@
 - [v3.0.14](#v3014)
    - [Changelog since v3.0.13](#changelog-since-v3013)
 
-- [v3.0.14](#v3014)
-   - [Changelog since v3.0.13](#changelog-since-v3013)
-
 - [v3.0.13](#v3013)
    - [Changelog since v3.0.12](#changelog-since-v3012)
 
