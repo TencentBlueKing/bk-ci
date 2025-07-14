@@ -52,6 +52,8 @@
                             :data="tagFilterData"
                             :show-condition="false"
                             clearable
+                            @change="handleTagChange"
+                            @clear="handleClearTagSearch"
                         ></bk-search-select>
                         <bk-date-picker
                             ref="dateTimeRangeRef"
@@ -331,7 +333,6 @@
             },
             '$route.params.nodeType' (newVal) {
                 if (newVal) {
-                    this.tagSearchValue = []
                     this.handleNodeTypeChange()
                 }
             },
@@ -360,21 +361,6 @@
                     this.pagination.current = 1
                 } else {
                     this.requestParams = {}
-                }
-                this.requestList(this.requestParams)
-            },
-            tagSearchValue (val) {
-                if (val.length) {
-                    const tags = val.map(item => {
-                        return {
-                            tagKeyId: item.id,
-                            tagValues: item.values.map(value => value.id)
-                        }
-                    })
-                    this.currentTags = tags
-                    this.pagination.current = 1
-                } else {
-                    this.syncCurrentTags()
                 }
                 this.requestList(this.requestParams)
             }
@@ -428,9 +414,35 @@
                     this.currentNodeType = ''
                 }
             },
+            handleTagChange (val) {
+                if (val.length) {
+                    const tags = val.map(item => {
+                        return {
+                            tagKeyId: item.id,
+                            tagValues: item.values.map(value => value.id)
+                        }
+                    })
+                    this.currentTags = tags
+                    this.pagination.current = 1
+                } else {
+                    this.syncCurrentTags()
+                }
+                this.requestList(this.requestParams)
+            },
             async handleNodeTypeChange () {
+                this.tagSearchValue = []
                 await this.syncCurrentTags()
                 await this.requestList()
+            },
+
+            handleClearTagSearch () {
+                this.tagSearchValue = []
+                this.currentTags = []
+                if (!this.currentNodeType) {
+                    this.$router.push({ name: 'nodeList', params: { nodeType: 'allNode' } })
+                } else {
+                    this.requestList()
+                }
             },
 
             async init () {

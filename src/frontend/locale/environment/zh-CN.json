@@ -290,7 +290,7 @@
     "tag": "标签",
     "setTag": "设置标签",
     "allNodes": "全部节点",
-    "privateBuildNode": "私有构建节点",
+    "selfHostedNodes": "第三方构建节点",
     "deploymentNode": "部署节点",
     "byNodeLabel": "按节点标签",
     "confirmDeleteTag": "确认删除标签【{0}】？",
