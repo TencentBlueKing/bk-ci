@@ -253,7 +253,7 @@
         "runAgentAsUser": "以登录用户运行Agent",
         "yes": "是",
         "no": "否",
-        "enableLoginUserTips": "默认启动用于为system，安装好Agent后请手动切换运行账户，否则Agent读取不到你的环境变量和目录等与用户相关的数据",
+        "enableLoginUserTips": "默认启动用户为system，安装好Agent后请手动切换运行账户，否则Agent读取不到你的环境变量和目录等与用户相关的数据",
         "pleaseEnterRunAccount": "请填写运行账号用户名和登录密码，输入框失焦后获取安装命令",
         "runAccount": "运行账户",
         "accountUsernameTips": "已入域如tencent\\用户名，未入域如.\\本机账户",

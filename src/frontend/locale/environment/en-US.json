@@ -253,7 +253,7 @@
         "runAgentAsUser": "Run Agent as logged-in user",
         "yes": "Yes",
         "no": "No",
-        "enableLoginUserTips": "By default, the startup account is system. After installing Agent, please manually switch the running account. Otherwise, Agent won't be able to access your environment variables, directories, and other user-related data",
+        "enableLoginUserTips": "By default, the startup user is 'system'. After installing the Agent, please manually switch the running account, otherwise the Agent may fail to access user-specific data such as environment variables and directories.",
         "pleaseEnterRunAccount": "Please enter the username and password of the running account. The installation command will be generated after the input fields lose focus",
         "runAccount": "Running account",
         "accountUsernameTips": "Domain-joined accounts: e.g. tencent\\username; Local accounts: e.g. .\\localaccount",
