@@ -661,7 +661,7 @@ class PipelineBuildWebhookService @Autowired constructor(
             variables[param.id] = if (CascadePropertyUtils.supportCascadeParam(param.type) &&
                     param.defaultValue is Map<*, *>
             ) {
-                JsonUtil.toJson(param.defaultValue)
+                JsonUtil.toJson(param.defaultValue, false)
             } else {
                 param.defaultValue.toString()
             }
