@@ -1,6 +1,5 @@
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
-import { getCookies } from './common/util';
 import router from './router';
 import App from './app.vue';
 import './css/index.css';
@@ -11,7 +10,7 @@ import bkui from 'bkui-vue';
 import 'bkui-vue/dist/cli.css';
 
 // i18n
-import { getCookie } from '@/common/util'
+import { getCookie, getCookies } from '@/common/util'
 import { createI18n } from 'vue-i18n'
 import ZhCN from '../../locale/metrics/zh-CN.json'
 import EnUS from '../../locale/metrics/en-US.json'
