@@ -10,6 +10,7 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
@@ -26,6 +27,9 @@ class RbacPermissionPostProcessor(
 
     private val project2StatusCache = CacheHelper.createCache<String, Boolean>(duration = 60)
 
+    @Value("\${permission.post.processor.pool.size:#{null}}")
+    private val corePoolSize: Int? = null
+
     private fun consistencyCounter(method: String, isConsistent: Boolean): Counter {
         return Counter.builder("rbac.permission.consistency.check")
             .description("Counts the consistency checks between iam and internal permission services")
@@ -34,22 +38,27 @@ class RbacPermissionPostProcessor(
             .register(meterRegistry)
     }
 
-    val threadPoolExecutor = ThreadPoolExecutor(
-        3,
-        5,
-        5,
+    private val threadPoolExecutor = ThreadPoolExecutor(
+        corePoolSize ?: 5,
+        corePoolSize ?: 5,
+        0,
         TimeUnit.SECONDS,
-        LinkedBlockingQueue(1000),
-        Executors.defaultThreadFactory(),
-        ThreadPoolExecutor.AbortPolicy()
-    )
+        LinkedBlockingQueue(500),
+        Executors.defaultThreadFactory()
+    ) { _, executor ->
+        logger.warn("Permission post processor task rejected. Pool status: {}", executor.toString())
+    }
 
     private fun postProcess(action: () -> Unit) {
-        val enabled = redisOperation.get(PERMISSION_POST_PROCESSOR_CONTROL)?.toBooleanStrictOrNull() ?: false
-        if (!enabled) {
-            return
+        try {
+            val enabled = redisOperation.get(PERMISSION_POST_PROCESSOR_CONTROL)?.toBooleanStrictOrNull() ?: false
+            if (!enabled) {
+                return
+            }
+            threadPoolExecutor.execute { action() }
+        } catch (ex: Exception) {
+            logger.warn("Permission Post Processor failed", ex)
         }
-        threadPoolExecutor.execute { action() }
     }
 
     override fun validateUserResourcePermission(
