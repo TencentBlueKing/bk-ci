@@ -136,7 +136,7 @@ class RbacPermissionPostProcessor(
                         client.get(ServiceProjectResource::class).get(it).data?.enabled ?: false
                     }
                 }
-                if (isExistProjectEnabled){
+                if (isExistProjectEnabled) {
                     logger.warn("get user projects by action results are inconsistent:$userId|$action|$diffProjects")
                 }
                 consistencyCounter(method, !isExistProjectEnabled).increment()
