@@ -700,10 +700,10 @@
                 this.dialogLoading.isLoading = false
                 this.dialogLoading.isShow = false
                 this.constructToolConf.isShow = false
-                this.constructToolConf.link = ''
-                this.constructToolConf.loginName = ''
-                this.constructToolConf.loginPassword = false
-                this.constructToolConf.enableLoginUser = true
+                this.constructImportForm.link = ''
+                this.constructImportForm.loginName = ''
+                this.constructImportForm.loginPassword = ''
+                this.constructImportForm.enableLoginUser = true
                 this.constructToolConf.importText = this.$t('environment.import')
                 this.requestList()
                 await this.requestGetCounts(this.projectId)
