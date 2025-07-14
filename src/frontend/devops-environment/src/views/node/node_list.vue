@@ -46,7 +46,7 @@
                             key="search"
                         ></SearchSelect>
                         <bk-search-select
-                            class="search-input"
+                            class="tag-search"
                             v-model="tagSearchValue"
                             :placeholder="$t('environment.pleaseEnterTag')"
                             :data="tagFilterData"
@@ -331,6 +331,7 @@
             },
             '$route.params.nodeType' (newVal) {
                 if (newVal) {
+                    this.tagSearchValue = []
                     this.handleNodeTypeChange()
                 }
             },
@@ -399,6 +400,14 @@
                     const foundTag = tagGroup.tagValues?.find(tag => String(tag.tagValueId) === String(tagValueId))
 
                     if (foundTag) {
+                        this.tagSearchValue = [{
+                            id: tagGroup.tagKeyId,
+                            name: tagGroup.tagKeyName,
+                            values: [{
+                                id: foundTag.tagValueId,
+                                name: foundTag.tagValueName
+                            }]
+                        }]
                         return [{
                             tagKeyId: tagGroup.tagKeyId,
                             tagValues: [foundTag.tagValueId]
@@ -917,7 +926,7 @@
             flex: 1;
 
             .bk-date-picker.long {
-                max-width: 160px;
+                max-width: 170px;
             }
         }
         
@@ -937,6 +946,10 @@
             ::placeholder {
                 color: #c4c6cc;
             }
+        }
+        .tag-search {
+            width: 140px;
+            margin-right: 10px;
         }
     }
 </style>

@@ -300,5 +300,7 @@
     "labelInUseRemoveNodesBeforeEditOrDelete": "已被环境使用的标签无法修改/删除，如需操作请先移除标签下所有节点",
     "tagLabel": "标签label",
     "tagValue": "标签value",
-    "pleaseEnterTag": "请输入节点标签"
+    "pleaseEnterTag": "搜索节点标签",
+    "builtInLabelCannotBeDeleted": "内置标签不能删除",
+    "builtInLabelCannotBeModified": "内置标签不能修改"
 }

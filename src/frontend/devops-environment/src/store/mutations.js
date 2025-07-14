@@ -51,7 +51,7 @@ const mutations = {
     },
     setNodeCount (state, res) {
         state.nodeCount = res
-    },
+    }
 }
 
 export default mutations

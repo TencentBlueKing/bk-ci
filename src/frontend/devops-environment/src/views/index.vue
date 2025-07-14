@@ -90,7 +90,6 @@
     }
 </script>
 
-
 <style lang="scss">
 .tabs-manage {
     .bk-tab-header {

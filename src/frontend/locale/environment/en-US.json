@@ -305,5 +305,7 @@
     "labelInUseRemoveNodesBeforeEditOrDelete": "Tags used by environments cannot be modified/deleted. If you need to operate, please remove all nodes under the tag first",
     "tagLabel": "Tag Label",
     "tagValue": "Tag Value",
-    "pleaseEnterTag": "Please enter node tag"
+    "pleaseEnterTag": "Search node tags",
+    "builtInLabelCannotBeDeleted": "Built-in labels cannot be deleted",
+    "builtInLabelCannotBeModified": "Built-in labels cannot be modified"
 }
