@@ -251,9 +251,9 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         queryCacheFlag: Boolean
     ) {
         val storeProjectId = if (TenantWorkerUtils.isMultiTenantMode(projectId)) {
-            "bk-store"
-        } else {
             "${TenantWorkerUtils.DEFAULT_TENANT_ID_FOR_MULTI}.bk-store"
+        } else {
+            "bk-store"
         }
         val filePath = when (realm) {
             REALM_LOCAL -> "$BK_CI_ATOM_DIR/$atomFilePath"
