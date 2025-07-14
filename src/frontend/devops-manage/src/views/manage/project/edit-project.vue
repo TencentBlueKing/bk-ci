@@ -182,10 +182,7 @@ const undateMetadata = async (params) => {
       });
     }
   } catch (err) {
-    Message({
-      theme: 'error',
-      message: err.message || err,
-    })
+   console.log(err);
   } finally {
     btnLoading.value = false;
   }
@@ -200,7 +197,7 @@ const handleUpdate = async (type, params) => {
     return;
   }
   
-  if (type && params.length) {
+  if (type) {
     undateMetadata(params)
   } else {
     if(currentDialect.value === 'CLASSIC' && projectData.value.properties.pipelineDialect === 'CONSTRAINED'){

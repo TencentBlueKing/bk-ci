@@ -302,7 +302,8 @@ async function fetchMetadataList () {
   isLoading.value = true;
   try {
     const res = await http.getMetadataList(projectCode);
-    metadataList.value= res || [];
+    metadataList.value= res;
+    emits('updateMetadata', metadataList.value)
   } catch (error) {
     console.log("error", error);
   } finally {
