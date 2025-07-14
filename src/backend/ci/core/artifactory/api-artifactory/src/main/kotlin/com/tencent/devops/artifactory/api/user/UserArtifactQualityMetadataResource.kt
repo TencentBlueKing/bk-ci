@@ -111,8 +111,8 @@ interface UserArtifactQualityMetadataResource {
         metadataLabelUpdate: UserLabelUpdateRequest
     ): Result<Boolean>
 
-    @Operation(summary = "更新项目制品质量元数据标签")
-    @PUT
+    @Operation(summary = "批量保存项目制品质量元数据标签")
+    @POST
     @Path("/batch")
     fun batchSave(
         @Parameter(description = "userId", required = true)
