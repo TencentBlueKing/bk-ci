@@ -4,6 +4,7 @@ import com.tencent.devops.auth.service.BkInternalPermissionService
 import com.tencent.devops.auth.service.iam.PermissionPostProcessor
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.util.CacheHelper
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import io.micrometer.core.instrument.Counter
@@ -19,7 +20,8 @@ import java.util.concurrent.TimeUnit
 class RbacPermissionPostProcessor(
     val bkInternalPermissionService: BkInternalPermissionService,
     val meterRegistry: MeterRegistry,
-    val client: Client
+    val client: Client,
+    val redisOperation: RedisOperation
 ) : PermissionPostProcessor {
 
     private val project2StatusCache = CacheHelper.createCache<String, Boolean>(duration = 60)
@@ -39,8 +41,16 @@ class RbacPermissionPostProcessor(
         TimeUnit.SECONDS,
         LinkedBlockingQueue(1000),
         Executors.defaultThreadFactory(),
-        ThreadPoolExecutor.DiscardPolicy()
+        ThreadPoolExecutor.AbortPolicy()
     )
+
+    private fun postProcess(action: () -> Unit) {
+        val enabled = redisOperation.get(PERMISSION_POST_PROCESSOR_CONTROL)?.toBooleanStrictOrNull() ?: false
+        if (!enabled) {
+            return
+        }
+        threadPoolExecutor.execute { action() }
+    }
 
     override fun validateUserResourcePermission(
         userId: String,
@@ -50,7 +60,7 @@ class RbacPermissionPostProcessor(
         action: String,
         externalApiResult: Boolean
     ) {
-        threadPoolExecutor.execute {
+        postProcess {
             val localCheckResult = bkInternalPermissionService.validateUserResourcePermission(
                 userId = userId,
                 projectCode = projectCode,
@@ -96,7 +106,7 @@ class RbacPermissionPostProcessor(
         resourceType: String,
         externalApiResult: List<String>
     ) {
-        threadPoolExecutor.execute {
+        postProcess {
             val localResult = bkInternalPermissionService.getUserResourceByAction(
                 userId = userId,
                 projectCode = projectCode,
@@ -119,7 +129,7 @@ class RbacPermissionPostProcessor(
         action: String,
         externalApiResult: List<String>
     ) {
-        threadPoolExecutor.execute {
+        postProcess {
             val localResult = bkInternalPermissionService.getUserProjectsByAction(
                 userId = userId,
                 action = action
@@ -152,7 +162,7 @@ class RbacPermissionPostProcessor(
         resourceCodes: List<String>,
         externalApiResult: Map<AuthPermission, List<String>>
     ) {
-        threadPoolExecutor.execute {
+        postProcess {
             val localResult = bkInternalPermissionService.filterUserResourcesByActions(
                 userId = userId,
                 projectCode = projectCode,
@@ -183,5 +193,6 @@ class RbacPermissionPostProcessor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionPostProcessor::class.java)
+        private const val PERMISSION_POST_PROCESSOR_CONTROL = "permission:post:processor:control"
     }
 }
