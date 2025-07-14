@@ -268,7 +268,7 @@ class BkInternalPermissionService(
         projectCode: String,
         memberId: String
     ): List<Int> {
-        return createTimer(::filterUserResourcesByActions.name).record(Supplier {
+        return createTimer(::listMemberGroupIdsInProject.name).record(Supplier {
             // 获取用户加入的项目级用户组模板ID
             val iamTemplateIds = listProjectMemberGroupTemplateIds(
                 projectCode = projectCode,

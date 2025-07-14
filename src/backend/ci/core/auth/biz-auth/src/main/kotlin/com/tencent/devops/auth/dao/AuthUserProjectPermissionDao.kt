@@ -4,6 +4,7 @@ import com.tencent.devops.auth.pojo.UserProjectPermission
 import com.tencent.devops.model.auth.tables.TAuthMemberProjectPermission
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class AuthUserProjectPermissionDao {
@@ -92,6 +93,8 @@ class AuthUserProjectPermissionDao {
             dslContext.select(PROJECT_CODE).from(this)
                 .where(MEMBER_ID.`in`(memberIds))
                 .and(ACTION.eq(action))
+                .and(EXPIRED_TIME.gt(LocalDateTime.now()))
+                .groupBy(PROJECT_CODE)
                 .fetch().map { it.value1() }
         }
     }
