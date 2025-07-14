@@ -130,7 +130,6 @@ import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.util.TempNotifyTemplateUtils
 import com.tencent.devops.process.utils.BK_EMPTY_PIPELINE
-import com.tencent.devops.process.utils.EMPTY_PIPELINE
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_TEMPLATE_ID
 import com.tencent.devops.process.utils.PipelineVersionUtils.differ
@@ -140,6 +139,8 @@ import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import jakarta.ws.rs.NotFoundException
+import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -152,8 +153,6 @@ import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import java.text.MessageFormat
 import java.time.LocalDateTime
-import jakarta.ws.rs.NotFoundException
-import jakarta.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -201,6 +200,9 @@ class TemplateFacadeService @Autowired constructor(
 
     @Value("\${template.maxErrorReasonLength:200}")
     private val maxErrorReasonLength: Int = 200
+
+    @Value("\${template.emptyPipelineTemplateId:#{null}}")
+    private val emptyPipelineTemplateId: String? = null
 
     @ActionAuditRecord(
         actionId = ActionId.PIPELINE_TEMPLATE_CREATE,
@@ -2641,7 +2643,9 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     private fun generateI18nTemplateName(templateId: String, templateType: String): String? {
-        if (templateType == TemplateType.PUBLIC.name && templateId == "072d516d300b4812a4f652f585eacc36") {
+        if (templateType == TemplateType.PUBLIC.name && !emptyPipelineTemplateId.isNullOrBlank()
+            && templateId == emptyPipelineTemplateId
+        ) {
             return I18nUtil.getCodeLanMessage(messageCode = BK_EMPTY_PIPELINE)
         }
         return null
