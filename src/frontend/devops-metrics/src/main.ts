@@ -58,7 +58,7 @@ const i18n = createI18n({
     'zh-CN': ZhCN,
     'en-US': EnUS,
     'ja-JP': JaJp,
-  }c
+  }
 })
 
 createApp(App)
