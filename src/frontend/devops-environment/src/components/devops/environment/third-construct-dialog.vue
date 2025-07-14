@@ -2,6 +2,7 @@
     <bk-dialog
         v-model="constructToolConf.isShow"
         width="1000"
+        :position="dialogPositionConfig"
         :close-icon="false"
         :title="$t('environment.nodeInfo.importBuildNode')"
         header-position="left"
@@ -16,7 +17,7 @@
                 class="machine-params-form"
                 v-if="hasPermission"
             >
-                <bk-form :label-width="labelWidth">
+                <bk-form :label-width="160">
                     <bk-form-item
                         required
                         label="OS"
@@ -169,6 +170,12 @@
                                 />
                             </span>
                         </div>
+                        <div
+                            class="command-line"
+                            v-if="!constructImportForm.enableLoginUser"
+                        >
+                            {{ $t('environment.nodeInfo.windowsInstallationCommand.tip4') }}
+                        </div>
                     </template>
                 </div>
                 <p class="handler-prompt">{{ $t('environment.nodeInfo.installSuccessfullyTips') }}</p>
@@ -236,9 +243,6 @@
             isWindowOs () {
                 return this.constructImportForm.model === 'WINDOWS'
             },
-            labelWidth () {
-                return this.isWindowOs ? 160 : 80
-            },
             loginAsUserList () {
                 return [
                     {
@@ -250,6 +254,11 @@
                         label: this.$t('environment.nodeInfo.no')
                     }
                 ]
+            },
+            dialogPositionConfig () {
+                return {
+                    top: this.constructImportForm.model === 'WINDOWS' && this.constructImportForm.link ? '120' : '200'
+                }
             }
         },
         methods: {

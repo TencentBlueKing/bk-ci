@@ -247,7 +247,8 @@
         "windowsInstallationCommand": {
             "tip1": "1. Click the 'Start' button at the bottom left of the screen, search for PowerShell in the Start menu, right-click and run as administrator to open PowerShell",
             "tip2": "2. Create a working directory and switch to it, e.g.: mkdir E:\\landun; cd E:\\landun",
-            "tip3": "3. Run the following command to download and install Agent:"
+            "tip3": "3. Run the following command to download and install Agent:",
+            "tip4": "4. Run the command 'services.msc' to open Windows Service Manager, locate the service 'devopos_agent_{agent_id}', right-click -> Properties, and switch to the logged-in user under the Log On tab"
         },
         "runAgentAsUser": "Run Agent as logged-in user",
         "yes": "Yes",
