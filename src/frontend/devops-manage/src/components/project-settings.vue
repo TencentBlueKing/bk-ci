@@ -18,7 +18,7 @@ const projectData = ref(props.data);
 const initData = JSON.stringify(projectData.value)
 const isChange = ref(false);
 const infoBoxRef = ref();
-const metadataList = ref(null);
+const metadataList = ref([]);
 const panelActive = ref('projectSettings')
 const tabPanels = [
   {

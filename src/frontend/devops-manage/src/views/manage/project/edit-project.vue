@@ -157,10 +157,7 @@ const undateMetadata = async (params) => {
       });
     }
   } catch (err) {
-    Message({
-      theme: 'error',
-      message: err.message || err,
-    })
+   console.log(err);
   } finally {
     btnLoading.value = false;
   }
@@ -171,9 +168,7 @@ const undateMetadata = async (params) => {
  */
 const handleUpdate = (type, params) => {
   if (type) {
-    if (params.length) {
-      undateMetadata(params)
-    }
+    undateMetadata(params)
   } else {
     if(currentDialect.value === 'CLASSIC' && projectData.value.properties.pipelineDialect === 'CONSTRAINED'){
       isDialectDialog.value = true;
