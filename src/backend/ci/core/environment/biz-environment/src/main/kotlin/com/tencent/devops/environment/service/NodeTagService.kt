@@ -120,7 +120,7 @@ class NodeTagService @Autowired constructor(
                 if (v.canUpdate != null) {
                     return@value
                 }
-                v.canUpdate = if ((v.nodeCount ?: 0) > 0) {
+                v.canUpdate = if ((v.nodeCount ?: 0) == 0) {
                     countFlag = true
                     NodeTagCanUpdateType.TRUE
                 } else {
