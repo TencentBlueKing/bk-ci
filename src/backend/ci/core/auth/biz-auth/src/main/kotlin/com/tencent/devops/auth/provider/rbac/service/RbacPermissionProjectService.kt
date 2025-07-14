@@ -33,7 +33,6 @@ import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
-import com.tencent.devops.auth.service.iam.PermissionPostProcessor
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -60,7 +59,7 @@ class RbacPermissionProjectService(
     private val client: Client,
     private val resourceMemberService: PermissionResourceMemberService,
     private val permissionManageFacadeService: PermissionManageFacadeService,
-    private val permissionPostProcessor: PermissionPostProcessor
+    private val bkInternalPermissionComparator: BkInternalPermissionComparator
 ) : PermissionProjectService {
 
     companion object {
@@ -123,10 +122,10 @@ class RbacPermissionProjectService(
                 logger.info("get user projects:$projectList")
                 projectList
             }
-            permissionPostProcessor.getUserProjectsByAction(
+            bkInternalPermissionComparator.getUserProjectsByAction(
                 userId = userId,
                 action = useAction,
-                externalApiResult = result
+                expectedResult = result
             )
             return result
         } finally {

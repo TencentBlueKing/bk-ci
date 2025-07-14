@@ -4,7 +4,7 @@ import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
 import com.tencent.devops.auth.provider.rbac.service.RbacCommonService
-import com.tencent.devops.auth.provider.rbac.service.RbacPermissionPostProcessor
+import com.tencent.devops.auth.provider.rbac.service.BkInternalPermissionComparator
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -307,6 +307,6 @@ class BkInternalPermissionService(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(RbacPermissionPostProcessor::class.java)
+        private val logger = LoggerFactory.getLogger(BkInternalPermissionComparator::class.java)
     }
 }

@@ -59,6 +59,7 @@ import com.tencent.devops.auth.dao.AuthSyncDataTaskDao
 import com.tencent.devops.auth.dao.AuthUserProjectPermissionDao
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
+import com.tencent.devops.auth.provider.rbac.service.BkInternalPermissionComparator
 import com.tencent.devops.auth.provider.rbac.service.ItsmService
 import com.tencent.devops.auth.provider.rbac.service.PermissionGradeManagerService
 import com.tencent.devops.auth.provider.rbac.service.PermissionSubsetManagerService
@@ -102,7 +103,6 @@ import com.tencent.devops.auth.service.UserManageService
 import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
 import com.tencent.devops.auth.service.iam.PermissionHandoverApplicationService
 import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
-import com.tencent.devops.auth.service.iam.PermissionPostProcessor
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
@@ -343,7 +343,7 @@ class RbacAuthConfiguration {
         superManagerService: SuperManagerService,
         rbacCommonService: RbacCommonService,
         client: Client,
-        permissionPostProcessor: PermissionPostProcessor,
+        bkInternalPermissionComparator: BkInternalPermissionComparator,
         authProjectUserMetricsService: AuthProjectUserMetricsService
     ) = RbacPermissionService(
         authHelper = authHelper,
@@ -354,7 +354,7 @@ class RbacAuthConfiguration {
         superManagerService = superManagerService,
         rbacCommonService = rbacCommonService,
         client = client,
-        permissionPostProcessor = permissionPostProcessor,
+        bkInternalPermissionComparator = bkInternalPermissionComparator,
         authProjectUserMetricsService = authProjectUserMetricsService
     )
 
@@ -370,7 +370,7 @@ class RbacAuthConfiguration {
         client: Client,
         resourceMemberService: PermissionResourceMemberService,
         permissionManageFacadeService: PermissionManageFacadeService,
-        permissionPostProcessor: PermissionPostProcessor
+        bkInternalPermissionComparator: BkInternalPermissionComparator
     ) = RbacPermissionProjectService(
         authHelper = authHelper,
         authResourceService = authResourceService,
@@ -381,7 +381,7 @@ class RbacAuthConfiguration {
         client = client,
         resourceMemberService = resourceMemberService,
         permissionManageFacadeService = permissionManageFacadeService,
-        permissionPostProcessor = permissionPostProcessor
+        bkInternalPermissionComparator = bkInternalPermissionComparator
     )
 
     @Bean

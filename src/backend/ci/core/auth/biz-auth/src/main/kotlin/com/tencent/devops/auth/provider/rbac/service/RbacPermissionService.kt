@@ -41,7 +41,6 @@ import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.service.AuthProjectUserMetricsService
 import com.tencent.devops.auth.service.SuperManagerService
-import com.tencent.devops.auth.service.iam.PermissionPostProcessor
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.Watcher
@@ -67,7 +66,7 @@ class RbacPermissionService(
     private val superManagerService: SuperManagerService,
     private val rbacCommonService: RbacCommonService,
     private val client: Client,
-    private val permissionPostProcessor: PermissionPostProcessor,
+    private val bkInternalPermissionComparator: BkInternalPermissionComparator,
     private val authProjectUserMetricsService: AuthProjectUserMetricsService
 ) : PermissionService {
     companion object {
@@ -223,13 +222,13 @@ class RbacPermissionService(
                     operate = useAction
                 )
             }
-            permissionPostProcessor.validateUserResourcePermission(
+            bkInternalPermissionComparator.validateUserResourcePermission(
                 userId = userId,
                 projectCode = projectCode,
                 resourceType = resource.resourceType,
                 resourceCode = resource.resourceCode,
                 action = useAction,
-                externalApiResult = result
+                expectedResult = result
             )
             return result
         } finally {
@@ -315,13 +314,20 @@ class RbacPermissionService(
                 actionList,
                 listOf(resourceDTO)
             )
-            permissionPostProcessor.batchValidateUserResourcePermission(
+            result.filter { it.value }.keys.forEach { action ->
+                authProjectUserMetricsService.save(
+                    projectId = projectCode,
+                    userId = userId,
+                    operate = action
+                )
+            }
+            bkInternalPermissionComparator.batchValidateUserResourcePermission(
                 userId = userId,
                 projectCode = projectCode,
                 resourceType = resource.resourceType,
                 resourceCode = resource.resourceCode,
                 actions = actions,
-                externalApiResult = result
+                expectedResult = result
             )
             return result
         } finally {
@@ -407,12 +413,12 @@ class RbacPermissionService(
                     )
                 }
             }
-            permissionPostProcessor.getUserResourceByAction(
+            bkInternalPermissionComparator.getUserResourceByAction(
                 userId = userId,
                 projectCode = projectCode,
                 action = useAction,
                 resourceType = resourceType,
-                externalApiResult = result
+                expectedResult = result
             )
             return result
         } finally {
@@ -559,13 +565,13 @@ class RbacPermissionService(
                     "$userId|$actions|$projectCode|$resourceType"
             )
         }
-        permissionPostProcessor.filterUserResourcesByActions(
+        bkInternalPermissionComparator.filterUserResourcesByActions(
             userId = userId,
             actions = actions,
             projectCode = projectCode,
             resourceType = resourceType,
             resourceCodes = resources.map { it.resourceCode },
-            externalApiResult = result
+            expectedResult = result
         )
         return result
     }

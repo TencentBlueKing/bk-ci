@@ -1,7 +1,6 @@
 package com.tencent.devops.auth.provider.rbac.service
 
 import com.tencent.devops.auth.service.BkInternalPermissionService
-import com.tencent.devops.auth.service.iam.PermissionPostProcessor
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
@@ -18,12 +17,12 @@ import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
 @Service
-class RbacPermissionPostProcessor(
+class BkInternalPermissionComparator(
     val bkInternalPermissionService: BkInternalPermissionService,
     val meterRegistry: MeterRegistry,
     val client: Client,
     val redisOperation: RedisOperation
-) : PermissionPostProcessor {
+) {
 
     private val project2StatusCache = CacheHelper.createCache<String, Boolean>(duration = 60)
 
@@ -61,13 +60,13 @@ class RbacPermissionPostProcessor(
         }
     }
 
-    override fun validateUserResourcePermission(
+    fun validateUserResourcePermission(
         userId: String,
         projectCode: String,
         resourceType: String,
         resourceCode: String,
         action: String,
-        externalApiResult: Boolean
+        expectedResult: Boolean
     ) {
         postProcess {
             val localCheckResult = bkInternalPermissionService.validateUserResourcePermission(
@@ -77,43 +76,43 @@ class RbacPermissionPostProcessor(
                 resourceCode = resourceCode,
                 action = action
             )
-            val isConsistent = (localCheckResult == externalApiResult)
+            val isConsistent = (localCheckResult == expectedResult)
             consistencyCounter(::validateUserResourcePermission.name, isConsistent).increment()
             if (!isConsistent) {
                 logger.warn(
                     "Verification results are inconsistent: $userId|$projectCode|$resourceType" +
-                        "|$resourceCode|$action|external=$externalApiResult|local=$localCheckResult"
+                        "|$resourceCode|$action|external=$expectedResult|local=$localCheckResult"
                 )
             }
         }
     }
 
-    override fun batchValidateUserResourcePermission(
+    fun batchValidateUserResourcePermission(
         userId: String,
         projectCode: String,
         resourceType: String,
         resourceCode: String,
         actions: List<String>,
-        externalApiResult: Map<String, Boolean>
+        expectedResult: Map<String, Boolean>
     ) {
-        externalApiResult.forEach { (action, verify) ->
+        expectedResult.forEach { (action, verify) ->
             validateUserResourcePermission(
                 userId = userId,
                 projectCode = projectCode,
                 resourceType = resourceType,
                 resourceCode = resourceCode,
                 action = action,
-                externalApiResult = verify
+                expectedResult = verify
             )
         }
     }
 
-    override fun getUserResourceByAction(
+    fun getUserResourceByAction(
         userId: String,
         action: String,
         projectCode: String,
         resourceType: String,
-        externalApiResult: List<String>
+        expectedResult: List<String>
     ) {
         postProcess {
             val localResult = bkInternalPermissionService.getUserResourceByAction(
@@ -122,21 +121,21 @@ class RbacPermissionPostProcessor(
                 resourceType = resourceType,
                 action = action
             )
-            val isConsistent = (externalApiResult.toSet() == localResult.toSet())
+            val isConsistent = (expectedResult.toSet() == localResult.toSet())
             consistencyCounter(::getUserResourceByAction.name, isConsistent).increment()
             if (!isConsistent) {
                 logger.warn(
                     "get user resource by action results are inconsistent: $userId|" +
-                        "$projectCode|$resourceType|$action|external=$externalApiResult|local=$localResult"
+                        "$projectCode|$resourceType|$action|external=$expectedResult|local=$localResult"
                 )
             }
         }
     }
 
-    override fun getUserProjectsByAction(
+    fun getUserProjectsByAction(
         userId: String,
         action: String,
-        externalApiResult: List<String>
+        expectedResult: List<String>
     ) {
         postProcess {
             val localResult = bkInternalPermissionService.getUserProjectsByAction(
@@ -144,9 +143,9 @@ class RbacPermissionPostProcessor(
                 action = action
             )
             val method = ::getUserProjectsByAction.name
-            val diffProjects by lazy { externalApiResult.filterNot { localResult.contains(it) } }
+            val diffProjects by lazy { expectedResult.filterNot { localResult.contains(it) } }
 
-            if (externalApiResult.toSet() == localResult.toSet() || diffProjects.isEmpty()) {
+            if (expectedResult.toSet() == localResult.toSet() || diffProjects.isEmpty()) {
                 consistencyCounter(method, true).increment()
             } else {
                 // 由于只同步了未禁用的项目权限数据，所以需要对差异项目，进行项目是否禁用检查
@@ -172,13 +171,13 @@ class RbacPermissionPostProcessor(
         }
     }
 
-    override fun filterUserResourcesByActions(
+    fun filterUserResourcesByActions(
         userId: String,
         actions: List<String>,
         projectCode: String,
         resourceType: String,
         resourceCodes: List<String>,
-        externalApiResult: Map<AuthPermission, List<String>>
+        expectedResult: Map<AuthPermission, List<String>>
     ) {
         postProcess {
             val localResult = bkInternalPermissionService.filterUserResourcesByActions(
@@ -190,7 +189,7 @@ class RbacPermissionPostProcessor(
             )
 
             // 整体比较可能复杂，可以比较每个permission的结果
-            externalApiResult.forEach { (permission, resources) ->
+            expectedResult.forEach { (permission, resources) ->
                 val localResources = localResult[permission]?.toSet()
                 val externalApiResources = resources.toSet()
 
@@ -210,7 +209,7 @@ class RbacPermissionPostProcessor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(RbacPermissionPostProcessor::class.java)
+        private val logger = LoggerFactory.getLogger(BkInternalPermissionComparator::class.java)
         private const val PERMISSION_POST_PROCESSOR_CONTROL = "permission:post:processor:control"
     }
 }
