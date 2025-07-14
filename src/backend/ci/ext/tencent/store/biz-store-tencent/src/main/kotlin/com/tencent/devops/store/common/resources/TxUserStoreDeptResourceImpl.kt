@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 Tencent.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,41 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.service
+package com.tencent.devops.store.common.resources
 
-import com.tencent.devops.store.pojo.common.publication.StoreCreateRequest
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.TxUserStoreDeptResource
+import com.tencent.devops.store.common.service.TxStoreBelongDeptService
+import com.tencent.devops.store.pojo.common.StoreBelongDeptRel
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.springframework.beans.factory.annotation.Autowired
 
-interface StoreBaseCreateService {
+@RestResource
+class TxUserStoreDeptResourceImpl @Autowired constructor(
+    private val txStoreBelongDeptService: TxStoreBelongDeptService
+) : TxUserStoreDeptResource {
 
-    /**
-     * 检查新增组件请求参数合法性
-     * @param storeCreateRequest 新增组件请求报文
-     */
-    fun checkStoreCreateParam(
-        storeCreateRequest: StoreCreateRequest
-    )
+    override fun updateStoreBelongDept(
+        userId: String,
+        storeBelongDeptRel: StoreBelongDeptRel
+    ): Result<Boolean> {
+        return Result(
+            txStoreBelongDeptService.updateStoreBelongDept(userId, storeBelongDeptRel)
+        )
+    }
 
-    /**
-     * 执行新增组件请求前置业务
-     * @param storeCreateRequest 新增组件请求报文
-     */
-    fun doStoreCreatePreBus(
-        storeCreateRequest: StoreCreateRequest
-    )
-
-    /**
-     * 持久化新增组件数据
-     * @param storeCreateRequest 新增组件请求报文
-     */
-    fun doStoreCreateDataPersistent(
-        storeCreateRequest: StoreCreateRequest
-    )
-
-    /**
-     * 执行新增组件请求后置业务
-     * @param storeCreateRequest 新增组件请求报文
-     */
-    fun handlePostCreateBus(
-        storeCreateRequest: StoreCreateRequest
-    )
+    override fun getStoreBelongDept(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): Result<StoreBelongDeptRel?> {
+        return Result(txStoreBelongDeptService.getStoreBelongDept(userId, storeCode, storeType))
+    }
 }

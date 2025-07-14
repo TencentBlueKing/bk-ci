@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 Tencent.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,39 +27,30 @@
 
 package com.tencent.devops.store.common.service
 
-import com.tencent.devops.store.pojo.common.publication.StoreCreateRequest
+import com.tencent.devops.store.pojo.common.StoreBelongDeptRel
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
-interface StoreBaseCreateService {
-
-    /**
-     * 检查新增组件请求参数合法性
-     * @param storeCreateRequest 新增组件请求报文
-     */
-    fun checkStoreCreateParam(
-        storeCreateRequest: StoreCreateRequest
-    )
+interface TxStoreBelongDeptService {
 
     /**
-     * 执行新增组件请求前置业务
-     * @param storeCreateRequest 新增组件请求报文
+     * 更新组件所属组织架构
      */
-    fun doStoreCreatePreBus(
-        storeCreateRequest: StoreCreateRequest
-    )
+    fun updateStoreBelongDept(userId: String, storeBelongDeptRel: StoreBelongDeptRel): Boolean
 
     /**
-     * 持久化新增组件数据
-     * @param storeCreateRequest 新增组件请求报文
+     * 初始化存量组件所属组织架构
      */
-    fun doStoreCreateDataPersistent(
-        storeCreateRequest: StoreCreateRequest
-    )
+    fun initAllStoreBelongDept(): Boolean
+
+    fun getStoreBelongDept(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): StoreBelongDeptRel?
 
     /**
-     * 执行新增组件请求后置业务
-     * @param storeCreateRequest 新增组件请求报文
+     * 初始化组件所属组织架构
+     * @param userId 组件创建人
      */
-    fun handlePostCreateBus(
-        storeCreateRequest: StoreCreateRequest
-    )
+    fun initStoreBelongDept(userId: String, storeType: StoreTypeEnum, storeCode: String)
 }

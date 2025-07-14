@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 Tencent.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,41 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.service
+package com.tencent.devops.store.api.common
 
-import com.tencent.devops.store.pojo.common.publication.StoreCreateRequest
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.PUT
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.core.MediaType
 
-interface StoreBaseCreateService {
+@Tag(name = "OP_STORE_DEPT", description = "OP-商店-组件所属组织")
+@Path("/op/store/dept")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface TxOpStoreDeptResource {
 
-    /**
-     * 检查新增组件请求参数合法性
-     * @param storeCreateRequest 新增组件请求报文
-     */
-    fun checkStoreCreateParam(
-        storeCreateRequest: StoreCreateRequest
-    )
-
-    /**
-     * 执行新增组件请求前置业务
-     * @param storeCreateRequest 新增组件请求报文
-     */
-    fun doStoreCreatePreBus(
-        storeCreateRequest: StoreCreateRequest
-    )
-
-    /**
-     * 持久化新增组件数据
-     * @param storeCreateRequest 新增组件请求报文
-     */
-    fun doStoreCreateDataPersistent(
-        storeCreateRequest: StoreCreateRequest
-    )
-
-    /**
-     * 执行新增组件请求后置业务
-     * @param storeCreateRequest 新增组件请求报文
-     */
-    fun handlePostCreateBus(
-        storeCreateRequest: StoreCreateRequest
-    )
+    @Operation(summary = "初始化存量组件所属组织架构")
+    @PUT
+    @Path("/init")
+    fun initStoreBelongDept(): Result<Boolean>
 }
