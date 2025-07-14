@@ -206,6 +206,14 @@ BEGIN
             ADD COLUMN `FAIL_IF_VARIABLE_INVALID` bit default null comment '是否配置流水线变量值超长时终止执行';
     END IF;
 
+    IF EXISTS(SELECT 1
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_VIEW'
+                    AND COLUMN_NAME = 'NAME') THEN
+    ALTER TABLE T_PIPELINE_VIEW MODIFY COLUMN NAME varchar(255) NOT NULL COMMENT '名称';
+    END IF;
+
 COMMIT;
 
 END <CI_UBF>
