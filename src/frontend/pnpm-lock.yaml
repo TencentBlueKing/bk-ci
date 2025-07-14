@@ -116,7 +116,7 @@ importers:
         version: 19.5.1(@babel/traverse@7.28.0)(@types/node@24.0.12)(nx@19.5.1)(typescript@3.7.5)(vite@6.2.3(@types/node@24.0.12)(jiti@1.21.7)(less@4.1.3)(sass@1.89.2)(stylus@0.59.0)(sugarss@4.0.1(postcss@5.2.18))(terser@5.43.1)(yaml@2.8.0))(vitest@1.6.0(@types/node@24.0.12)(jsdom@24.1.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))(less@4.1.3)(sass@1.89.2)(stylus@0.59.0)(sugarss@4.0.1(postcss@5.2.18))(terser@5.43.1))
       '@nx/webpack':
         specifier: 19.5.1
-        version: 19.5.1(@babel/traverse@7.28.0)(@types/node@24.0.12)(bufferutil@4.0.9)(html-webpack-plugin@5.6.3(webpack@5.100.0))(nx@19.5.1)(typescript@3.7.5)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(webpack-cli@5.1.4)
+        version: 19.5.1(@babel/traverse@7.26.8)(@types/node@22.13.4)(bufferutil@4.0.8)(html-webpack-plugin@5.6.0(webpack@5.96.1(webpack-cli@5.1.4)))(nx@19.5.1)(typescript@3.7.5)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1)(webpack@5.96.1))
       '@typescript-eslint/parser':
         specifier: ^2.7.0
         version: 2.34.0(eslint@7.32.0)(typescript@3.7.5)
@@ -125,13 +125,13 @@ importers:
         version: 1.4.0(@babel/core@7.28.0)(vue@3.5.17(typescript@3.7.5))
       '@webpack-cli/serve':
         specifier: ^1.7.0
-        version: 1.7.0(webpack-cli@5.1.4)(webpack-dev-server@5.2.2)
+        version: 1.7.0(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1)(webpack@5.96.1))(webpack-dev-server@5.2.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.96.1))
       chalk:
         specifier: ^4.0.0
         version: 4.1.2
       copy-webpack-plugin:
         specifier: 9.0.1
-        version: 9.0.1(webpack@5.100.0(webpack-cli@5.1.4))
+        version: 9.0.1(webpack@5.96.1(webpack-cli@5.1.4))
       core-js:
         specifier: 3.26.0
         version: 3.26.0
@@ -493,10 +493,10 @@ importers:
         version: 1.4.0(@babel/core@7.28.0)(vue@3.5.17(typescript@5.8.3))
       '@webpack-cli/serve':
         specifier: ^1.7.0
-        version: 1.7.0(webpack-cli@5.1.4)(webpack-dev-server@5.2.2(bufferutil@4.0.9)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.100.0))
+        version: 1.7.0(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.96.1))(webpack@5.96.1))(webpack-dev-server@5.2.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.96.1))
       add-asset-html-webpack-plugin:
         specifier: ^5.0.2
-        version: 5.0.2(html-webpack-plugin@5.6.3(webpack@5.100.0))(webpack@5.100.0)
+        version: 5.0.2(html-webpack-plugin@5.6.0(webpack@5.96.1(webpack-cli@5.1.4)))(webpack@5.96.1(webpack-cli@5.1.4))
       babel-helper-vue-jsx-merge-props:
         specifier: ^2.0.3
         version: 2.0.3
@@ -508,13 +508,13 @@ importers:
         version: 4.0.1(babel-helper-vue-jsx-merge-props@2.0.3)
       copy-webpack-plugin:
         specifier: 9.0.1
-        version: 9.0.1(webpack@5.100.0(webpack-cli@5.1.4))
+        version: 9.0.1(webpack@5.96.1(webpack-cli@5.1.4))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
       css-loader:
         specifier: ^6.4.0
-        version: 6.11.0(webpack@5.100.0)
+        version: 6.11.0(webpack@5.96.1(webpack-cli@5.1.4))
       css-minimizer-webpack-plugin:
         specifier: ^4.2.1
         version: 4.2.2(webpack@5.100.0)
@@ -538,10 +538,10 @@ importers:
         version: 6.2.2(eslint@7.31.0)
       html-webpack-plugin:
         specifier: ^5.3.2
-        version: 5.6.3(webpack@5.100.0(webpack-cli@5.1.4))
+        version: 5.6.0(webpack@5.96.1(webpack-cli@5.1.4))
       mini-css-extract-plugin:
         specifier: 2.4.2
-        version: 2.4.2(webpack@5.100.0)
+        version: 2.4.2(webpack@5.96.1(webpack-cli@5.1.4))
       nx:
         specifier: 19.5.1
         version: 19.5.1
@@ -550,13 +550,13 @@ importers:
         version: 1.89.2
       sass-loader:
         specifier: ^12.1.0
-        version: 12.6.0(sass@1.89.2)(webpack@5.100.0)
+        version: 12.6.0(sass@1.77.2)(webpack@5.96.1(webpack-cli@5.1.4))
       style-loader:
         specifier: ^3.3.1
-        version: 3.3.4(webpack@5.100.0)
+        version: 3.3.4(webpack@5.96.1(webpack-cli@5.1.4))
       terser-webpack-plugin:
         specifier: ^5.3.6
-        version: 5.3.14(webpack@5.100.0(webpack-cli@5.1.4))
+        version: 5.3.10(webpack@5.96.1(webpack-cli@5.1.4))
       vue-loader:
         specifier: ~15.10.0
         version: 15.10.2(@vue/compiler-sfc@3.5.17)(css-loader@6.11.0(webpack@5.100.0(webpack-cli@5.1.4)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.100.0(webpack-cli@5.1.4))
@@ -1650,7 +1650,7 @@ importers:
         version: 0.51.0
       monaco-editor-webpack-plugin:
         specifier: ^7.1.0
-        version: 7.1.0(monaco-editor@0.51.0)(webpack@5.100.0)
+        version: 7.1.0(monaco-editor@0.51.0)(webpack@5.96.1(webpack-cli@5.1.4))
       monaco-yaml:
         specifier: ^5.1.0
         version: 5.4.0(monaco-editor@0.51.0)
@@ -1762,7 +1762,7 @@ importers:
         version: 1.4.0(@babel/core@7.28.0)(vue@2.7.16)
       '@webpack-cli/serve':
         specifier: ^1.7.0
-        version: 1.7.0(webpack-cli@5.1.4)(webpack-dev-server@5.2.2(bufferutil@4.0.9)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.100.0))
+        version: 1.7.0(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.96.1))(webpack@5.96.1))(webpack-dev-server@5.2.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.96.1))
       babel-helper-vue-jsx-merge-props:
         specifier: ^2.0.3
         version: 2.0.3
@@ -1774,13 +1774,13 @@ importers:
         version: 4.0.1(babel-helper-vue-jsx-merge-props@2.0.3)
       copy-webpack-plugin:
         specifier: 9.0.1
-        version: 9.0.1(webpack@5.100.0(webpack-cli@5.1.4))
+        version: 9.0.1(webpack@5.96.1(webpack-cli@5.1.4))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
       css-loader:
         specifier: ^6.4.0
-        version: 6.11.0(webpack@5.100.0)
+        version: 6.11.0(webpack@5.96.1(webpack-cli@5.1.4))
       css-minimizer-webpack-plugin:
         specifier: ^4.2.1
         version: 4.2.2(webpack@5.100.0)
@@ -1804,10 +1804,10 @@ importers:
         version: 6.2.2(eslint@7.31.0)
       html-webpack-plugin:
         specifier: ^5.3.2
-        version: 5.6.3(webpack@5.100.0(webpack-cli@5.1.4))
+        version: 5.6.0(webpack@5.96.1(webpack-cli@5.1.4))
       mini-css-extract-plugin:
         specifier: 2.4.2
-        version: 2.4.2(webpack@5.100.0)
+        version: 2.4.2(webpack@5.96.1(webpack-cli@5.1.4))
       nx:
         specifier: 19.5.1
         version: 19.5.1
@@ -1816,13 +1816,13 @@ importers:
         version: 1.89.2
       sass-loader:
         specifier: ^12.1.0
-        version: 12.6.0(sass@1.89.2)(webpack@5.100.0)
+        version: 12.6.0(sass@1.77.2)(webpack@5.96.1(webpack-cli@5.1.4))
       style-loader:
         specifier: ^3.3.1
-        version: 3.3.4(webpack@5.100.0)
+        version: 3.3.4(webpack@5.96.1(webpack-cli@5.1.4))
       terser-webpack-plugin:
         specifier: ^5.3.6
-        version: 5.3.14(webpack@5.100.0(webpack-cli@5.1.4))
+        version: 5.3.10(webpack@5.96.1(webpack-cli@5.1.4))
       vue-loader:
         specifier: ~15.10.0
         version: 15.10.2(@vue/compiler-sfc@3.5.17)(css-loader@6.11.0(webpack@5.100.0(webpack-cli@5.1.4)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.100.0(webpack-cli@5.1.4))
@@ -2747,10 +2747,10 @@ importers:
         version: 1.4.0(@babel/core@7.28.0)(vue@2.7.16)
       '@webpack-cli/serve':
         specifier: ^1.7.0
-        version: 1.7.0(webpack-cli@5.1.4)(webpack-dev-server@5.2.2(bufferutil@4.0.9)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.100.0))
+        version: 1.7.0(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.96.1))(webpack@5.96.1))(webpack-dev-server@5.2.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.96.1))
       add-asset-html-webpack-plugin:
         specifier: ^5.0.2
-        version: 5.0.2(html-webpack-plugin@5.6.3(webpack@5.100.0))(webpack@5.100.0)
+        version: 5.0.2(html-webpack-plugin@5.6.0(webpack@5.96.1(webpack-cli@5.1.4)))(webpack@5.96.1(webpack-cli@5.1.4))
       babel-helper-vue-jsx-merge-props:
         specifier: ^2.0.3
         version: 2.0.3
@@ -2762,13 +2762,13 @@ importers:
         version: 4.0.1(babel-helper-vue-jsx-merge-props@2.0.3)
       copy-webpack-plugin:
         specifier: 9.0.1
-        version: 9.0.1(webpack@5.100.0(webpack-cli@5.1.4))
+        version: 9.0.1(webpack@5.96.1(webpack-cli@5.1.4))
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
       css-loader:
         specifier: ^6.4.0
-        version: 6.11.0(webpack@5.100.0)
+        version: 6.11.0(webpack@5.96.1(webpack-cli@5.1.4))
       css-minimizer-webpack-plugin:
         specifier: ^4.2.1
         version: 4.2.2(webpack@5.100.0)
@@ -2792,10 +2792,10 @@ importers:
         version: 6.2.2(eslint@7.31.0)
       html-webpack-plugin:
         specifier: ^5.3.2
-        version: 5.6.3(webpack@5.100.0(webpack-cli@5.1.4))
+        version: 5.6.0(webpack@5.96.1(webpack-cli@5.1.4))
       mini-css-extract-plugin:
         specifier: 2.4.2
-        version: 2.4.2(webpack@5.100.0)
+        version: 2.4.2(webpack@5.96.1(webpack-cli@5.1.4))
       nx:
         specifier: 19.5.1
         version: 19.5.1
@@ -2804,13 +2804,13 @@ importers:
         version: 1.89.2
       sass-loader:
         specifier: ^12.1.0
-        version: 12.6.0(sass@1.89.2)(webpack@5.100.0)
+        version: 12.6.0(sass@1.77.2)(webpack@5.96.1(webpack-cli@5.1.4))
       style-loader:
         specifier: ^3.3.1
-        version: 3.3.4(webpack@5.100.0)
+        version: 3.3.4(webpack@5.96.1(webpack-cli@5.1.4))
       terser-webpack-plugin:
         specifier: ^5.3.6
-        version: 5.3.14(webpack@5.100.0(webpack-cli@5.1.4))
+        version: 5.3.10(webpack@5.96.1(webpack-cli@5.1.4))
       vue-loader:
         specifier: ~15.10.0
         version: 15.10.2(@vue/compiler-sfc@3.5.17)(css-loader@6.11.0(webpack@5.100.0(webpack-cli@5.1.4)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.100.0(webpack-cli@5.1.4))
@@ -18719,7 +18719,7 @@ snapshots:
       vue: 2.7.16
       webpack: 4.47.0(webpack-cli@3.3.12)
       webpack-cli: 3.3.12(webpack@4.47.0)
-      worker-loader: 2.0.0(webpack@4.47.0)
+      worker-loader: 2.0.0(webpack@4.47.0(webpack-cli@3.3.12))
     transitivePeerDependencies:
       - webpack-command
 
@@ -18729,7 +18729,7 @@ snapshots:
       vue: 2.7.16
       webpack: 4.47.0(webpack-cli@3.3.12)
       webpack-cli: 3.3.12(webpack@4.47.0)
-      worker-loader: 2.0.0(webpack@4.47.0)
+      worker-loader: 2.0.0(webpack@4.47.0(webpack-cli@3.3.12))
     transitivePeerDependencies:
       - webpack-command
 
@@ -20259,7 +20259,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@module-federation/enhanced@0.2.7(bufferutil@4.0.9)(typescript@3.7.5)(utf-8-validate@5.0.10)(webpack@5.96.1(webpack-cli@5.1.4))':
+  '@module-federation/enhanced@0.2.7(bufferutil@4.0.8)(typescript@3.7.5)(utf-8-validate@5.0.10)(webpack@5.96.1(webpack-cli@5.1.4))':
     dependencies:
       '@module-federation/bridge-react-webpack-plugin': 0.2.7
       '@module-federation/dts-plugin': 0.2.7(bufferutil@4.0.9)(typescript@3.7.5)(utf-8-validate@5.0.10)
@@ -20446,9 +20446,9 @@ snapshots:
       - vite
       - vitest
 
-  '@nrwl/webpack@19.5.1(@babel/traverse@7.28.0)(@types/node@24.0.12)(bufferutil@4.0.9)(html-webpack-plugin@5.6.3(webpack@5.100.0))(nx@19.5.1)(typescript@3.7.5)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(webpack-cli@5.1.4)':
+  '@nrwl/webpack@19.5.1(@babel/traverse@7.26.8)(@types/node@22.13.4)(bufferutil@4.0.8)(html-webpack-plugin@5.6.0(webpack@5.96.1(webpack-cli@5.1.4)))(nx@19.5.1)(typescript@3.7.5)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1)(webpack@5.96.1))':
     dependencies:
-      '@nx/webpack': 19.5.1(@babel/traverse@7.28.0)(@types/node@24.0.12)(bufferutil@4.0.9)(html-webpack-plugin@5.6.3(webpack@5.100.0))(nx@19.5.1)(typescript@3.7.5)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(webpack-cli@5.1.4)
+      '@nx/webpack': 19.5.1(@babel/traverse@7.26.8)(@types/node@22.13.4)(bufferutil@4.0.8)(html-webpack-plugin@5.6.0(webpack@5.96.1(webpack-cli@5.1.4)))(nx@19.5.1)(typescript@3.7.5)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1)(webpack@5.96.1))
     transitivePeerDependencies:
       - '@babel/traverse'
       - '@parcel/css'
@@ -20674,19 +20674,19 @@ snapshots:
       - typescript
       - verdaccio
 
-  '@nx/webpack@19.5.1(@babel/traverse@7.28.0)(@types/node@24.0.12)(bufferutil@4.0.9)(html-webpack-plugin@5.6.3(webpack@5.100.0))(nx@19.5.1)(typescript@3.7.5)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(webpack-cli@5.1.4)':
+  '@nx/webpack@19.5.1(@babel/traverse@7.26.8)(@types/node@22.13.4)(bufferutil@4.0.8)(html-webpack-plugin@5.6.0(webpack@5.96.1(webpack-cli@5.1.4)))(nx@19.5.1)(typescript@3.7.5)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1)(webpack@5.96.1))':
     dependencies:
-      '@babel/core': 7.28.0
-      '@module-federation/enhanced': 0.2.7(bufferutil@4.0.9)(typescript@3.7.5)(utf-8-validate@5.0.10)(webpack@5.96.1(webpack-cli@5.1.4))
-      '@module-federation/sdk': 0.2.8
-      '@nrwl/webpack': 19.5.1(@babel/traverse@7.28.0)(@types/node@24.0.12)(bufferutil@4.0.9)(html-webpack-plugin@5.6.3(webpack@5.100.0))(nx@19.5.1)(typescript@3.7.5)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(webpack-cli@5.1.4)
+      '@babel/core': 7.24.6
+      '@module-federation/enhanced': 0.2.7(bufferutil@4.0.8)(typescript@3.7.5)(utf-8-validate@5.0.10)(webpack@5.96.1(webpack-cli@5.1.4))
+      '@module-federation/sdk': 0.2.7
+      '@nrwl/webpack': 19.5.1(@babel/traverse@7.26.8)(@types/node@22.13.4)(bufferutil@4.0.8)(html-webpack-plugin@5.6.0(webpack@5.96.1(webpack-cli@5.1.4)))(nx@19.5.1)(typescript@3.7.5)(utf-8-validate@5.0.10)(vue-template-compiler@2.7.16)(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1)(webpack@5.96.1))
       '@nx/devkit': 19.5.1(nx@19.5.1)
       '@nx/js': 19.5.1(@babel/traverse@7.28.0)(@types/node@24.0.12)(nx@19.5.1)(typescript@3.7.5)
       '@phenomnomnominal/tsquery': 5.0.1(typescript@3.7.5)
-      ajv: 8.17.1
-      autoprefixer: 10.4.21(postcss@8.5.6)
-      babel-loader: 9.1.3(@babel/core@7.28.0)(webpack@5.96.1(webpack-cli@5.1.4))
-      browserslist: 4.25.1
+      ajv: 8.14.0
+      autoprefixer: 10.4.19(postcss@8.4.38)
+      babel-loader: 9.1.3(@babel/core@7.24.6)(webpack@5.96.1(webpack-cli@5.1.4))
+      browserslist: 4.23.0
       chalk: 4.1.2
       copy-webpack-plugin: 10.2.4(webpack@5.96.1(webpack-cli@5.1.4))
       css-loader: 6.11.0(webpack@5.96.1(webpack-cli@5.1.4))
@@ -20698,12 +20698,12 @@ snapshots:
       loader-utils: 2.0.4
       mini-css-extract-plugin: 2.4.7(webpack@5.96.1(webpack-cli@5.1.4))
       parse5: 4.0.0
-      postcss: 8.5.6
-      postcss-import: 14.1.0(postcss@8.5.6)
-      postcss-loader: 6.2.1(postcss@8.5.6)(webpack@5.96.1(webpack-cli@5.1.4))
-      rxjs: 7.8.2
-      sass: 1.89.2
-      sass-loader: 12.6.0(sass@1.89.2)(webpack@5.96.1(webpack-cli@5.1.4))
+      postcss: 8.4.38
+      postcss-import: 14.1.0(postcss@8.4.38)
+      postcss-loader: 6.2.1(postcss@8.4.38)(webpack@5.96.1(webpack-cli@5.1.4))
+      rxjs: 7.8.1
+      sass: 1.77.2
+      sass-loader: 12.6.0(sass@1.77.2)(webpack@5.96.1(webpack-cli@5.1.4))
       source-map-loader: 5.0.0(webpack@5.96.1(webpack-cli@5.1.4))
       style-loader: 3.3.4(webpack@5.96.1(webpack-cli@5.1.4))
       stylus: 0.59.0
@@ -20713,9 +20713,9 @@ snapshots:
       tsconfig-paths-webpack-plugin: 4.0.0
       tslib: 2.8.1
       webpack: 5.96.1(webpack-cli@5.1.4)
-      webpack-dev-server: 4.15.2(bufferutil@4.0.9)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.96.1(webpack-cli@5.1.4))
+      webpack-dev-server: 4.15.2(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1)(webpack@5.96.1))(webpack@5.96.1(webpack-cli@5.1.4))
       webpack-node-externals: 3.0.0
-      webpack-subresource-integrity: 5.1.0(html-webpack-plugin@5.6.3(webpack@5.100.0))(webpack@5.96.1(webpack-cli@5.1.4))
+      webpack-subresource-integrity: 5.1.0(html-webpack-plugin@5.6.0(webpack@5.96.1(webpack-cli@5.1.4)))(webpack@5.96.1(webpack-cli@5.1.4))
     transitivePeerDependencies:
       - '@babel/traverse'
       - '@parcel/css'
@@ -23243,36 +23243,46 @@ snapshots:
       '@webassemblyjs/wast-parser': 1.9.0
       '@xtuc/long': 4.2.2
 
-  '@webpack-cli/configtest@2.1.1(webpack-cli@5.1.4)(webpack@5.100.0)':
+  '@webpack-cli/configtest@2.1.1(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.96.1))(webpack@5.96.1))(webpack@5.96.1(webpack-cli@5.1.4))':
+    dependencies:
+      webpack: 5.96.1(webpack-cli@5.1.4)
+      webpack-cli: 5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.96.1))(webpack@5.96.1)
+
+  '@webpack-cli/configtest@2.1.1(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1)(webpack@5.96.1))(webpack@5.96.1(webpack-cli@5.1.4))':
     dependencies:
       webpack: 5.100.0(webpack-cli@5.1.4)
       webpack-cli: 5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.9)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.2)(webpack@5.100.0)
 
-  '@webpack-cli/info@2.0.2(webpack-cli@5.1.4)(webpack@5.100.0)':
+  '@webpack-cli/info@2.0.2(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.96.1))(webpack@5.96.1))(webpack@5.96.1(webpack-cli@5.1.4))':
+    dependencies:
+      webpack: 5.96.1(webpack-cli@5.1.4)
+      webpack-cli: 5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.96.1))(webpack@5.96.1)
+
+  '@webpack-cli/info@2.0.2(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1)(webpack@5.96.1))(webpack@5.96.1(webpack-cli@5.1.4))':
     dependencies:
       webpack: 5.100.0(webpack-cli@5.1.4)
       webpack-cli: 5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.9)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.2)(webpack@5.100.0)
 
-  '@webpack-cli/serve@1.7.0(webpack-cli@5.1.4)(webpack-dev-server@5.2.2(bufferutil@4.0.9)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.100.0))':
+  '@webpack-cli/serve@1.7.0(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.96.1))(webpack@5.96.1))(webpack-dev-server@5.2.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.96.1))':
     dependencies:
       webpack-cli: 5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.9)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.2(bufferutil@4.0.9)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.100.0))(webpack@5.100.0)
     optionalDependencies:
       webpack-dev-server: 5.2.2(bufferutil@4.0.9)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.100.0)
 
-  '@webpack-cli/serve@1.7.0(webpack-cli@5.1.4)(webpack-dev-server@5.2.2)':
+  '@webpack-cli/serve@1.7.0(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1)(webpack@5.96.1))(webpack-dev-server@5.2.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.96.1))':
     dependencies:
       webpack-cli: 5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.9)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.2)(webpack@5.100.0)
     optionalDependencies:
       webpack-dev-server: 5.2.2(bufferutil@4.0.9)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.100.0)
 
-  '@webpack-cli/serve@2.0.5(webpack-cli@5.1.4)(webpack-dev-server@5.2.2(bufferutil@4.0.9)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.100.0))(webpack@5.100.0)':
+  '@webpack-cli/serve@2.0.5(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.96.1))(webpack@5.96.1))(webpack-dev-server@5.2.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.96.1))(webpack@5.96.1(webpack-cli@5.1.4))':
     dependencies:
       webpack: 5.100.0(webpack-cli@5.1.4)
       webpack-cli: 5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.9)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.2(bufferutil@4.0.9)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.100.0))(webpack@5.100.0)
     optionalDependencies:
       webpack-dev-server: 5.2.2(bufferutil@4.0.9)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.100.0)
 
-  '@webpack-cli/serve@2.0.5(webpack-cli@5.1.4)(webpack-dev-server@5.2.2)(webpack@5.100.0)':
+  '@webpack-cli/serve@2.0.5(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1)(webpack@5.96.1))(webpack-dev-server@5.2.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.96.1))(webpack@5.96.1(webpack-cli@5.1.4))':
     dependencies:
       webpack: 5.100.0(webpack-cli@5.1.4)
       webpack-cli: 5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.9)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.2)(webpack@5.100.0)
@@ -23358,12 +23368,10 @@ snapshots:
 
   acorn@8.14.0: {}
 
-  acorn@8.15.0: {}
-
-  add-asset-html-webpack-plugin@5.0.2(html-webpack-plugin@5.6.3(webpack@5.100.0))(webpack@5.100.0):
+  add-asset-html-webpack-plugin@5.0.2(html-webpack-plugin@5.6.0(webpack@5.96.1(webpack-cli@5.1.4)))(webpack@5.96.1(webpack-cli@5.1.4)):
     dependencies:
       globby: 11.1.0
-      html-webpack-plugin: 5.6.3(webpack@5.100.0(webpack-cli@5.1.4))
+      html-webpack-plugin: 5.6.0(webpack@5.96.1(webpack-cli@5.1.4))
       micromatch: 4.0.8
       webpack: 5.100.0(webpack-cli@5.1.4)
 
@@ -30468,7 +30476,7 @@ snapshots:
 
   moment@2.30.1: {}
 
-  monaco-editor-webpack-plugin@7.1.0(monaco-editor@0.51.0)(webpack@5.100.0):
+  monaco-editor-webpack-plugin@7.1.0(monaco-editor@0.51.0)(webpack@5.96.1(webpack-cli@5.1.4)):
     dependencies:
       loader-utils: 2.0.4
       monaco-editor: 0.51.0
@@ -32081,7 +32089,7 @@ snapshots:
       postcss: 8.5.6
       ts-node: 10.9.1(@types/node@20.19.6)(typescript@5.4.5)
 
-  postcss-loader@6.2.1(postcss@8.5.6)(webpack@5.100.0(webpack-cli@5.1.4)):
+  postcss-loader@6.2.1(postcss@8.4.38)(webpack@5.96.1(webpack-cli@5.1.4)):
     dependencies:
       cosmiconfig: 7.1.0
       klona: 2.0.6
@@ -35036,7 +35044,7 @@ snapshots:
       temp-dir: 1.0.0
       uuid: 3.4.0
 
-  terser-webpack-plugin@1.4.6(webpack@4.47.0):
+  terser-webpack-plugin@1.4.5(webpack@4.47.0(webpack-cli@3.3.12)):
     dependencies:
       cacache: 12.0.4
       find-cache-dir: 2.1.0
@@ -36393,7 +36401,7 @@ snapshots:
   vue-loader@15.10.2(@vue/compiler-sfc@3.5.17)(css-loader@2.1.1(webpack@5.100.0(webpack-cli@5.1.4)))(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.100.0(webpack-cli@5.1.4)):
     dependencies:
       '@vue/component-compiler-utils': 3.3.0(ejs@3.1.10)(handlebars@4.7.8)(lodash@4.17.21)
-      css-loader: 2.1.1(webpack@5.100.0(webpack-cli@5.1.4))
+      css-loader: 6.11.0(webpack@5.96.1(webpack-cli@5.1.4))
       hash-sum: 1.0.2
       loader-utils: 1.4.2
       vue-hot-reload-api: 2.3.4
@@ -36869,9 +36877,9 @@ snapshots:
   webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.9)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.2(bufferutil@4.0.9)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.100.0))(webpack@5.100.0):
     dependencies:
       '@discoveryjs/json-ext': 0.5.7
-      '@webpack-cli/configtest': 2.1.1(webpack-cli@5.1.4)(webpack@5.100.0)
-      '@webpack-cli/info': 2.0.2(webpack-cli@5.1.4)(webpack@5.100.0)
-      '@webpack-cli/serve': 2.0.5(webpack-cli@5.1.4)(webpack-dev-server@5.2.2(bufferutil@4.0.9)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.100.0))(webpack@5.100.0)
+      '@webpack-cli/configtest': 2.1.1(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.96.1))(webpack@5.96.1))(webpack@5.96.1(webpack-cli@5.1.4))
+      '@webpack-cli/info': 2.0.2(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.96.1))(webpack@5.96.1))(webpack@5.96.1(webpack-cli@5.1.4))
+      '@webpack-cli/serve': 2.0.5(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.96.1))(webpack@5.96.1))(webpack-dev-server@5.2.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.96.1))(webpack@5.96.1(webpack-cli@5.1.4))
       colorette: 2.0.20
       commander: 10.0.1
       cross-spawn: 7.0.6
@@ -36889,9 +36897,9 @@ snapshots:
   webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.9)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.2)(webpack@5.100.0):
     dependencies:
       '@discoveryjs/json-ext': 0.5.7
-      '@webpack-cli/configtest': 2.1.1(webpack-cli@5.1.4)(webpack@5.100.0)
-      '@webpack-cli/info': 2.0.2(webpack-cli@5.1.4)(webpack@5.100.0)
-      '@webpack-cli/serve': 2.0.5(webpack-cli@5.1.4)(webpack-dev-server@5.2.2)(webpack@5.100.0)
+      '@webpack-cli/configtest': 2.1.1(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1)(webpack@5.96.1))(webpack@5.96.1(webpack-cli@5.1.4))
+      '@webpack-cli/info': 2.0.2(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1)(webpack@5.96.1))(webpack@5.96.1(webpack-cli@5.1.4))
+      '@webpack-cli/serve': 2.0.5(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1)(webpack@5.96.1))(webpack-dev-server@5.2.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.96.1))(webpack@5.96.1(webpack-cli@5.1.4))
       colorette: 2.0.20
       commander: 10.0.1
       cross-spawn: 7.0.6
@@ -37029,10 +37037,51 @@ snapshots:
       sockjs: 0.3.24
       spdy: 4.0.2
       webpack-dev-middleware: 5.3.4(webpack@5.96.1(webpack-cli@5.1.4))
-      ws: 8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+      ws: 8.18.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)
     optionalDependencies:
       webpack: 5.96.1(webpack-cli@5.1.4)
-      webpack-cli: 5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.9)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.2)(webpack@5.100.0)
+      webpack-cli: 5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1)(webpack@5.96.1)
+    transitivePeerDependencies:
+      - bufferutil
+      - debug
+      - supports-color
+      - utf-8-validate
+
+  webpack-dev-server@4.15.2(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1)(webpack@5.96.1))(webpack@5.98.0(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1)(webpack@5.96.1))):
+    dependencies:
+      '@types/bonjour': 3.5.13
+      '@types/connect-history-api-fallback': 1.5.4
+      '@types/express': 4.17.21
+      '@types/serve-index': 1.9.4
+      '@types/serve-static': 1.15.7
+      '@types/sockjs': 0.3.36
+      '@types/ws': 8.5.10
+      ansi-html-community: 0.0.8
+      bonjour-service: 1.2.1
+      chokidar: 3.6.0
+      colorette: 2.0.20
+      compression: 1.7.4
+      connect-history-api-fallback: 2.0.0
+      default-gateway: 6.0.3
+      express: 4.21.1
+      graceful-fs: 4.2.11
+      html-entities: 2.5.2
+      http-proxy-middleware: 2.0.7(@types/express@4.17.21)(debug@4.4.0)
+      ipaddr.js: 2.2.0
+      launch-editor: 2.9.1
+      open: 8.4.2
+      p-retry: 4.6.2
+      rimraf: 3.0.2
+      schema-utils: 4.3.0
+      selfsigned: 2.4.1
+      serve-index: 1.9.1
+      sockjs: 0.3.24
+      spdy: 4.0.2
+      webpack-dev-middleware: 5.3.4(webpack@5.98.0(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1)(webpack@5.96.1)))
+      ws: 8.18.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)
+    optionalDependencies:
+      webpack: 5.98.0(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1)(webpack@5.96.1))
+      webpack-cli: 5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1)(webpack@5.96.1)
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -37070,8 +37119,47 @@ snapshots:
       webpack-dev-middleware: 7.4.2(webpack@5.100.0)
       ws: 8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)
     optionalDependencies:
-      webpack: 5.100.0(webpack-cli@5.1.4)
-      webpack-cli: 5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.9)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.2)(webpack@5.100.0)
+      webpack: 5.98.0(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1)(webpack@5.96.1))
+      webpack-cli: 5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1)(webpack@5.96.1)
+    transitivePeerDependencies:
+      - bufferutil
+      - debug
+      - supports-color
+      - utf-8-validate
+
+  webpack-dev-server@5.2.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack-cli@5.1.4)(webpack@5.96.1):
+    dependencies:
+      '@types/bonjour': 3.5.13
+      '@types/connect-history-api-fallback': 1.5.4
+      '@types/express': 4.17.21
+      '@types/express-serve-static-core': 4.19.6
+      '@types/serve-index': 1.9.4
+      '@types/serve-static': 1.15.7
+      '@types/sockjs': 0.3.36
+      '@types/ws': 8.5.10
+      ansi-html-community: 0.0.8
+      bonjour-service: 1.2.1
+      chokidar: 3.6.0
+      colorette: 2.0.20
+      compression: 1.7.4
+      connect-history-api-fallback: 2.0.0
+      express: 4.21.2
+      graceful-fs: 4.2.11
+      http-proxy-middleware: 2.0.7(@types/express@4.17.21)(debug@4.4.0)
+      ipaddr.js: 2.2.0
+      launch-editor: 2.9.1
+      open: 10.1.0
+      p-retry: 6.2.0
+      schema-utils: 4.3.0
+      selfsigned: 2.4.1
+      serve-index: 1.9.1
+      sockjs: 0.3.24
+      spdy: 4.0.2
+      webpack-dev-middleware: 7.4.2(webpack@5.96.1(webpack-cli@5.1.4))
+      ws: 8.18.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)
+    optionalDependencies:
+      webpack: 5.96.1(webpack-cli@5.1.4)
+      webpack-cli: 5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1)(webpack@5.96.1)
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -37108,12 +37196,12 @@ snapshots:
 
   webpack-sources@3.3.3: {}
 
-  webpack-subresource-integrity@5.1.0(html-webpack-plugin@5.6.3(webpack@5.100.0))(webpack@5.96.1(webpack-cli@5.1.4)):
+  webpack-subresource-integrity@5.1.0(html-webpack-plugin@5.6.0(webpack@5.96.1(webpack-cli@5.1.4)))(webpack@5.96.1(webpack-cli@5.1.4)):
     dependencies:
       typed-assert: 1.0.9
       webpack: 5.96.1(webpack-cli@5.1.4)
     optionalDependencies:
-      html-webpack-plugin: 5.6.3(webpack@5.100.0(webpack-cli@5.1.4))
+      html-webpack-plugin: 5.6.0(webpack@5.96.1(webpack-cli@5.1.4))
 
   webpack-virtual-modules@0.4.6:
     optional: true
@@ -37140,7 +37228,7 @@ snapshots:
       node-libs-browser: 2.2.1
       schema-utils: 1.0.0
       tapable: 1.1.3
-      terser-webpack-plugin: 1.4.6(webpack@4.47.0)
+      terser-webpack-plugin: 1.4.5(webpack@4.47.0(webpack-cli@3.3.12))
       watchpack: 1.7.5
       webpack-sources: 1.4.3
     optionalDependencies:
@@ -37149,7 +37237,39 @@ snapshots:
   webpack@5.96.1(webpack-cli@5.1.4):
     dependencies:
       '@types/eslint-scope': 3.7.7
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.6
+      '@webassemblyjs/ast': 1.12.1
+      '@webassemblyjs/wasm-edit': 1.12.1
+      '@webassemblyjs/wasm-parser': 1.12.1
+      acorn: 8.14.0
+      browserslist: 4.24.2
+      chrome-trace-event: 1.0.4
+      enhanced-resolve: 5.17.1
+      es-module-lexer: 1.5.3
+      eslint-scope: 5.1.1
+      events: 3.3.0
+      glob-to-regexp: 0.4.1
+      graceful-fs: 4.2.11
+      json-parse-even-better-errors: 2.3.1
+      loader-runner: 4.3.0
+      mime-types: 2.1.35
+      neo-async: 2.6.2
+      schema-utils: 3.3.0
+      tapable: 2.2.1
+      terser-webpack-plugin: 5.3.10(webpack@5.96.1(webpack-cli@5.1.4))
+      watchpack: 2.4.1
+      webpack-sources: 3.2.3
+    optionalDependencies:
+      webpack-cli: 5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1)(webpack@5.96.1)
+    transitivePeerDependencies:
+      - '@swc/core'
+      - esbuild
+      - uglify-js
+
+  webpack@5.98.0(webpack-cli@5.1.4(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.1)(webpack@5.96.1)):
+    dependencies:
+      '@types/eslint-scope': 3.7.7
+      '@types/estree': 1.0.6
       '@webassemblyjs/ast': 1.14.1
       '@webassemblyjs/wasm-edit': 1.14.1
       '@webassemblyjs/wasm-parser': 1.14.1
@@ -37330,7 +37450,7 @@ snapshots:
     dependencies:
       errno: 0.1.8
 
-  worker-loader@2.0.0(webpack@4.47.0):
+  worker-loader@2.0.0(webpack@4.47.0(webpack-cli@3.3.12)):
     dependencies:
       loader-utils: 1.4.2
       schema-utils: 0.4.7
