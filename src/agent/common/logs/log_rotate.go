@@ -2,9 +2,10 @@ package logs
 
 import (
 	"fmt"
-	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
 	"time"
+
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 // DoDailySplitLog 执行一个每天分割日志的定时器

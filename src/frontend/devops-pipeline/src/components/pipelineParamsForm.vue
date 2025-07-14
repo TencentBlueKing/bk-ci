@@ -290,7 +290,9 @@
                                 }
                                 : {}
                         ),
-                        show: Object.keys(param.displayCondition ?? {}).every((key) => this.paramValues[key] === param.displayCondition[key])
+                        // eslint-disable-next-line
+                        show: Object.keys(param.displayCondition ?? {}).every((key) => this.isEqual(this.paramValues[key], param.displayCondition[key])),
+                        
                     }
                 })
             },
@@ -306,6 +308,17 @@
             isArtifactoryParam,
             isObject,
             getBranchOption,
+            isEqual (a, b) {
+                try {
+                    // hack: 处理 undefined 和 '' 的情况
+                    if (typeof a === 'undefined' && b === '') {
+                        return true
+                    }
+                    return String(a) === String(b)
+                } catch (error) {
+                    return false
+                }
+            },
             getParamComponentType (param) {
                 if (isRemoteType(param) || isBuildResourceParam(param.type)) {
                     return 'request-selector'

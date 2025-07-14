@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -619,7 +619,9 @@ class EnvService @Autowired constructor(
         val envNodeRecordList = envNodeDao.list(dslContext, projectId, envIds)
         val nodeIdMaps = envNodeRecordList.associate { it.nodeId to it.enableNode }
         val nodeList = nodeDao.listByIds(dslContext, projectId, nodeIdMaps.keys)
-
+        if (nodeList.isEmpty()) {
+            return emptyList()
+        }
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, nodeIdMaps.keys, projectId).associateBy { it.nodeId }
         return nodeList.map {
@@ -680,6 +682,9 @@ class EnvService @Autowired constructor(
             )
         } else {
             nodeDao.listByIds(dslContext, projectId, nodeIdMaps.keys)
+        }
+        if (nodeList.isEmpty()) {
+            return Page(0, 0, 0, emptyList())
         }
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, nodeIdMaps.keys, projectId).associateBy { it.nodeId }

@@ -236,6 +236,8 @@
 </template>
 
 <script lang="ts">
+    import eventBus from '@/utils/eventBus'
+    import { urlJoin } from '@/utils/util'
     import Vue from 'vue'
     import { Component, Watch } from 'vue-property-decorator'
     import { Action, Getter, State } from 'vuex-class'

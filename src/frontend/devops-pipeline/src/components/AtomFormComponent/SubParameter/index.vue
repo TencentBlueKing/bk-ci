@@ -148,7 +148,7 @@
                     this.pipelineRequiredParams.branch = typeof value.branch === 'string' && value.branch.isBkVar()
                         ? this.requiredParams[value.branch.extractBkVar()]
                         : value.branch
-                    if ((value.subPip !== oldValue.subPip) || (value.branch !== oldValue.branch)) {
+                    if (oldValue !== undefined && ((value?.subPip !== oldValue?.subPip) || (value?.branch !== oldValue?.branch))) {
                         this.atomValue[this.name] = []
                         this.getParametersList()
                         this.initData()
@@ -248,7 +248,17 @@
                 this.isLoading = true
                 this.$ajax.get(url).then((res) => {
                     this.subParamsKeyList = res.data?.properties || res.data || []
-                }).catch(e => this.$showTips({ message: e.message, theme: 'error' })).finally(() => (this.isLoading = false))
+                }).catch(e => {
+                    this.$bkMessage({
+                        message: this.$createElement('li', {
+                            class: 'sub-pipeline-check-error-list',
+                            domProps: {
+                                innerHTML: e.message
+                            }
+                        }),
+                        theme: 'error'
+                    })
+                }).finally(() => (this.isLoading = false))
             },
             getInputType (type) {
                 const typeMap = {
@@ -295,9 +305,16 @@
 </style>
 
 <style lang="scss">
-  .param-not-key-input {
+    @import '@/scss/conf';
+    .param-not-key-input {
         .bk-form-input {
             text-decoration: line-through !important;
+        }
+    }
+    .sub-pipeline-check-error-list {
+        a {
+            color: $primaryColor;
+            text-align: right;
         }
     }
 </style>

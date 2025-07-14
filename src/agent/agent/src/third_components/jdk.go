@@ -1,6 +1,11 @@
 package third_components
 
 import (
+	"os"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
@@ -9,10 +14,6 @@ import (
 	commonutil "github.com/TencentBlueKing/bk-ci/agentcommon/utils"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"os"
-	"strings"
-	"sync"
-	"time"
 )
 
 var Jdk *JdkType
