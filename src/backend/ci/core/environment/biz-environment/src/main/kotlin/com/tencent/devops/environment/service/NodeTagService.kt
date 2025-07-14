@@ -114,16 +114,16 @@ class NodeTagService @Autowired constructor(
             }
         }
         tags.forEach { k ->
-            var countFlag = false
+            var countFlag = true
             k.tagValues.forEach value@{ v ->
                 v.nodeCount = nodeTagsCountMap[k.tagKeyId]?.get(v.tagValueId) ?: 0
                 if (v.canUpdate != null) {
                     return@value
                 }
                 v.canUpdate = if ((v.nodeCount ?: 0) == 0) {
-                    countFlag = true
                     NodeTagCanUpdateType.TRUE
                 } else {
+                    countFlag = false
                     NodeTagCanUpdateType.FALSE
                 }
             }
