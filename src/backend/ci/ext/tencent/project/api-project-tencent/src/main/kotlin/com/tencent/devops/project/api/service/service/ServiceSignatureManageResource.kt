@@ -42,7 +42,7 @@ import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.core.MediaType
 
-@Tag(name = "SERVICE_SIGNATURE_MANAGE", description = "用户电子合同签署")
+@Tag(name = "SERVICE_SIGNATURE_MANAGE", description = "用户电子合同签署-服务接口")
 @Path("/service/signature")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -50,21 +50,12 @@ interface ServiceSignatureManageResource {
     @GET
     @Path("/{projectId}/getSignatureStatus")
     @Operation(summary = "获取状态")
-    fun getSignatureStatus(
+    fun fetchLiveSignatureStatus(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
-    ): Result<UserSignatureStatusResponse>
-
-    @GET
-    @Path("/fetchUserLiveESignStatus")
-    @Operation(summary = "获取用户实时电子签状态")
-    fun fetchUserLiveESignStatus(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String
     ): Result<UserSignatureStatusResponse>
 }

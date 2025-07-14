@@ -45,6 +45,8 @@ import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
+import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
+import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmResp
 import com.tencent.devops.remotedev.pojo.remotedev.SyncVmData
 import com.tencent.devops.remotedev.pojo.remotedev.SyncVmResp
 import com.tencent.devops.remotedev.pojo.remotedev.TaskResp
@@ -700,4 +702,10 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         logger.info("syncVm |$userId|$data")
         return client.get(ServiceRemoteDevResource::class).syncVm(userId, data)
     }
+
+    override fun createCvm(userId: String, data: CreateCvmData): Result<CreateCvmResp?> {
+        logger.info("createCvm |$userId|$data")
+        return client.get(ServiceRemoteDevResource::class).createCvm(userId, data)
+    }
+
 }

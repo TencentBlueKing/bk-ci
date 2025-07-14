@@ -157,8 +157,8 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         return Result(clientTipsService.fetchTips(projectId = projectId, userId = userId))
     }
 
-    override fun remoteManagers(userId: String, projectId: String): Result<List<String>> {
-        return Result(permissionService.managers(projectId))
+    override fun remoteAuditManagers(userId: String, projectId: String): Result<List<String>> {
+        return Result(permissionService.auditManagers(projectId))
     }
 
     override fun getTxcToken(userId: String, openId: String, nickName: String, avatar: String): Result<String> {

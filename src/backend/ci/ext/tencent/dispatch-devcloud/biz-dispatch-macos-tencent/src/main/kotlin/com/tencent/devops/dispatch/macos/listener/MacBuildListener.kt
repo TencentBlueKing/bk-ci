@@ -8,6 +8,10 @@ import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.dispatch.sdk.service.DispatchService
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
+import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.type.DispatchType
@@ -37,6 +41,7 @@ import java.util.concurrent.RejectedExecutionException
 @Component
 class MacBuildListener @Autowired constructor(
     private val client: Client,
+    private val pipelineEventDispatcher: SampleEventDispatcher,
     private val buildHistoryService: BuildHistoryService,
     private val buildTaskService: BuildTaskService,
     private val redisOperation: RedisOperation,
@@ -163,6 +168,26 @@ class MacBuildListener @Autowired constructor(
                     executeCount = event.executeCount,
                     jobId = event.jobId
                 )
+                with(event) {
+                    pipelineEventDispatcher.dispatch(
+                        // devcloud macos 启动
+                        PipelineBuildStatusBroadCastEvent(
+                            source = "devcloud-macos-start-${it.ip}", projectId = projectId,
+                            pipelineId = pipelineId, userId = "",
+                            buildId = buildId, taskId = null, actionType = ActionType.START,
+                            containerHashId = containerHashId, jobId = jobId, stageId = null,
+                            stepId = null, atomCode = null, executeCount = executeCount,
+                            buildStatus = BuildStatus.RUNNING.name,
+                            type = PipelineBuildStatusBroadCastEventType.BUILD_AGENT_START,
+                            labels = mapOf(
+                                PipelineBuildStatusBroadCastEvent.Labels::nodeType.name to
+                                    "DEVCLOUD_MACOS",
+                                PipelineBuildStatusBroadCastEvent.Labels::macosIp.name to
+                                    it.ip
+                            )
+                        )
+                    )
+                }
             } ?: run {
                 // 如果没有找到合适的vm机器，则等待10秒后再执行, 总共执行60次（10min）
                 logRed(
@@ -258,6 +283,25 @@ class MacBuildListener @Autowired constructor(
                     MacJobStatus.Done,
                     buildTask.buildHistoryId,
                     buildTask.id
+                )
+
+                pipelineEventDispatcher.dispatch(
+                    // devcloud macos 结束
+                    PipelineBuildStatusBroadCastEvent(
+                        source = "devcloud-macos-end-${buildTask.vmIp}", projectId = projectId,
+                        pipelineId = event.pipelineId, userId = "",
+                        buildId = event.buildId, taskId = null, actionType = ActionType.START,
+                        containerHashId = event.containerHashId, jobId = event.jobId, stageId = null,
+                        stepId = null, atomCode = null, executeCount = event.executeCount,
+                        buildStatus = BuildStatus.SUCCEED.name,
+                        type = PipelineBuildStatusBroadCastEventType.BUILD_AGENT_END,
+                        labels = mapOf(
+                            PipelineBuildStatusBroadCastEvent.Labels::nodeType.name to
+                                "DEVCLOUD_MACOS",
+                            PipelineBuildStatusBroadCastEvent.Labels::macosIp.name to
+                                buildTask.vmIp
+                        )
+                    )
                 )
             } catch (e: Exception) {
                 val vmIp = buildTask.vmIp
