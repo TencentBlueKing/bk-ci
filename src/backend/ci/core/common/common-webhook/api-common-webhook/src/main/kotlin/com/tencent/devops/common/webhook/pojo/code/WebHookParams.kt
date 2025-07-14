@@ -75,5 +75,7 @@ data class WebHookParams(
     // 插件版本
     var version: String? = null,
     // 跳过WIP
-    var skipWip: Boolean? = false
+    var skipWip: Boolean? = false,
+    // 触发代码库的链接地址[SVN触发时需关注{关联代码库地址}和{触发器配置的相对路径}]
+    var sourceRepoUrl: String? = ""
 )

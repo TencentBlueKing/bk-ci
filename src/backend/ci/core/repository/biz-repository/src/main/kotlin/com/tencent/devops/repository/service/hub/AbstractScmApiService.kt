@@ -32,8 +32,11 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.repository.service.RepositoryScmConfigService
 import com.tencent.devops.repository.service.RepositoryService
+import com.tencent.devops.scm.api.enums.ScmProviderType
 import com.tencent.devops.scm.api.pojo.repository.ScmProviderRepository
 import com.tencent.devops.scm.spring.properties.ScmProviderProperties
+import com.tencent.devops.scm.utils.code.git.GitUtils
+import java.net.URI
 
 abstract class AbstractScmApiService(
     private val repositoryService: RepositoryService,
@@ -73,6 +76,8 @@ abstract class AbstractScmApiService(
             properties = properties,
             authRepository = authRepository
         )
+        // 推断真是apiUrl
+        properties.httpClientProperties?.apiUrl = extractApiUrl(authRepository.url, properties)
         return action.invoke(properties, providerRepository)
     }
 
@@ -82,5 +87,25 @@ abstract class AbstractScmApiService(
     ): T {
         val properties = repositoryScmConfigService.getProps(scmCode = scmCode)
         return action.invoke(properties)
+    }
+
+    /**
+     * 根据仓库url和配置apiUrl，推断实际apiUrl
+     */
+    private fun extractApiUrl(repoUrl: String, providerProperties: ScmProviderProperties): String {
+        val apiUrl = providerProperties.httpClientProperties?.apiUrl ?: ""
+        return when (providerProperties.providerType) {
+            ScmProviderType.GIT.name -> {
+                val host = GitUtils.getDomainAndRepoName(repoUrl).first
+                val configHost = URI.create(apiUrl).host
+                if (host == configHost) {
+                    apiUrl
+                } else {
+                    apiUrl.replace(configHost, host)
+                }
+            }
+
+            else -> apiUrl
+        }
     }
 }

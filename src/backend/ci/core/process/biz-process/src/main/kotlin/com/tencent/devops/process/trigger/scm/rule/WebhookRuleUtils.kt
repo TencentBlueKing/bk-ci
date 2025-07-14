@@ -30,15 +30,17 @@ package com.tencent.devops.process.trigger.scm.rule
 import com.tencent.devops.scm.api.pojo.Change
 
 object WebhookRuleUtils {
+
+    @SuppressWarnings("NestedBlockDepth")
     fun getChangeFiles(changes: List<Change>): List<String> {
         val changedFiles = mutableListOf<String>()
         changes.forEach {
             with(it) {
                 when {
-                    deleted -> changedFiles.add(oldPath)
+                    deleted -> oldPath?.let { path -> changedFiles.add(path) }
                     renamed -> {
                         changedFiles.add(path)
-                        changedFiles.add(oldPath)
+                        oldPath?.let { path -> changedFiles.add(path) }
                     }
 
                     else ->
