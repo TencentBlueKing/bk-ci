@@ -253,7 +253,11 @@ class StoreIndexManageServiceImpl @Autowired constructor(
                         language = I18nUtil.getDefaultLocaleLanguage(),
                         defaultMessage = it[tStoreIndexLevelInfo.LEVEL_NAME]
                     ),
-                    hover = handleHover(storeCode, it[tStoreIndexResult.INDEX_CODE])
+                    hover = handleHover(
+                        storeCode = storeCode,
+                        indexCode = it[tStoreIndexResult.INDEX_CODE],
+                        storeType = storeType
+                    )
                 )
             )
             storeIndexInfosMap[storeCode] = storeIndexInfos
@@ -262,8 +266,13 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         return storeIndexInfosMap
     }
 
-    fun handleHover(storeCode: String, indexCode: String): String {
-        val elementDeilResult = storeIndexManageInfoDao.getElementDeilByStoreCode(dslContext, storeCode, indexCode)
+    fun handleHover(storeCode: String, indexCode: String, storeType: StoreTypeEnum): String {
+        val elementDeilResult = storeIndexManageInfoDao.getElementDeilByStoreCode(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            indexCode = indexCode,
+            storeType = storeType
+        )
         if (elementDeilResult.isEmpty()) return ""
         return when (indexCode) {
             BK_ATOM_QUALITY_INDEX -> buildQualityIndexHover(elementDeilResult)
@@ -271,6 +280,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
             BK_STORE_TRUSTWORTHY_INDEX -> {
                 buildTrustworthyIndexHover(elementDeilResult)
             }
+
             else -> ""
         }
     }

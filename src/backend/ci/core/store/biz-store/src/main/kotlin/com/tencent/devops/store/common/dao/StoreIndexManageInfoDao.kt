@@ -281,12 +281,13 @@ class StoreIndexManageInfoDao {
     fun getElementDeilByStoreCode(
         dslContext: DSLContext,
         storeCode: String,
-        indexCode: String
+        indexCode: String,
+        storeType: StoreTypeEnum
     ): Result<TStoreIndexElementDetailRecord> {
         with(TStoreIndexElementDetail.T_STORE_INDEX_ELEMENT_DETAIL) {
             return dslContext.selectFrom(this)
                 .where(STORE_CODE.eq(storeCode))
-                .and(INDEX_CODE.eq(indexCode))
+                .and(INDEX_CODE.eq(indexCode).and(STORE_TYPE.eq(storeType.type.toByte())))
                 .fetch()
         }
     }
