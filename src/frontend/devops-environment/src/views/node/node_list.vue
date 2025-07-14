@@ -11,36 +11,58 @@
                 <section class="filter-bar">
                     <div class="btn-part">
                         <template v-if="isExtendTx">
-                            <bk-button
-                                v-perm="{
-                                    permissionData: {
-                                        projectId: projectId,
-                                        resourceType: NODE_RESOURCE_TYPE,
-                                        resourceCode: projectId,
-                                        action: NODE_RESOURCE_ACTION.CREATE
-                                    }
-                                }"
-                                theme="primary"
-                                @click="toImportNode('construct')"
-                                key="thirdPartyBuildMachine"
+                            <bk-dropdown-menu
+                                trigger="click"
+                                class="mr10"
                             >
-                                {{ $t('environment.thirdPartyBuildMachine') }}
-                            </bk-button>
-                            <bk-button
-                                v-perm="{
-                                    permissionData: {
-                                        projectId: projectId,
-                                        resourceType: NODE_RESOURCE_TYPE,
-                                        resourceCode: projectId,
-                                        action: NODE_RESOURCE_ACTION.CREATE
-                                    }
-                                }"
-                                theme="primary"
-                                @click="toImportNode('cmdb')"
-                                key="idcTestMachine"
-                            >
-                                {{ $t('environment.nodeInfo.idcTestMachine') }}
-                            </bk-button>
+                                <bk-button
+                                    theme="primary"
+                                    key="thirdPartyBuildMachine"
+                                    slot="dropdown-trigger"
+                                >
+                                    {{ $t('environment.nodeInfo.importNode') }}
+                                </bk-button>
+                                <ul
+                                    class="bk-dropdown-list"
+                                    slot="dropdown-content"
+                                >
+                                    <li>
+                                        <a
+                                            href="javascript:;"
+                                            v-perm="{
+                                                permissionData: {
+                                                    projectId: projectId,
+                                                    resourceType: NODE_RESOURCE_TYPE,
+                                                    resourceCode: projectId,
+                                                    action: NODE_RESOURCE_ACTION.CREATE
+                                                }
+                                            }"
+                                            @click="toImportNode('construct')"
+                                            key="thirdPartyBuildMachine"
+                                        >
+                                            {{ $t('environment.thirdPartyBuildMachine') }}
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a
+                                            href="javascript:;"
+                                            v-perm="{
+                                                permissionData: {
+                                                    projectId: projectId,
+                                                    resourceType: NODE_RESOURCE_TYPE,
+                                                    resourceCode: projectId,
+                                                    action: NODE_RESOURCE_ACTION.CREATE
+                                                }
+                                            }"
+                                            theme="primary"
+                                            @click="toImportNode('cmdb')"
+                                            key="idcTestMachine"
+                                        >
+                                            {{ $t('environment.nodeInfo.idcTestMachine') }}
+                                        </a>
+                                    </li>
+                                </ul>
+                            </bk-dropdown-menu>
                         </template>
                         <bk-button
                             v-else
@@ -920,13 +942,17 @@
                 this.agentNotInstallNodesCount = agentNotInstallNodesCount
                 this.$refs.importTipsDialog.isShow = true
                 this.cmdbNodeSelectConf.isShow = false
+                if (this.$route.params.nodeType === 'CMDB') {
+                    this.requestList()
+                } else {
+                    this.$router.push({
+                        name: 'nodeList',
+                        params: {
+                            nodeType: 'CMDB'
+                        }
+                    })
+                }
                 await this.requestGetCounts(this.projectId)
-                this.$router.push({
-                    name: 'nodeList',
-                    params: {
-                        nodeType: 'CMDB'
-                    }
-                })
             },
             cancelCmdbFn () {
                 this.cmdbNodeSelectConf.isShow = false
