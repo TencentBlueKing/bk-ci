@@ -82,6 +82,13 @@ class ManagerService @Autowired constructor(
             logger.info("This project requires a contract to be signed before visit. $userId|$projectId")
             return false
         }
+        // 新老版本兼容，旧版本项目访问权限为project_view，新版本为project_visit,兼容
+        val fixAuthPermission = if (resourceType == AuthResourceType.PROJECT &&
+            authPermission == AuthPermission.VISIT) {
+            AuthPermission.VIEW
+        } else {
+            authPermission
+        }
         // 从缓存内获取用户管理员信息，若缓存击穿，调用auth服务获取源数据，并刷入内存
         val manageInfo = if (userPermissionMap.getIfPresent(userId) == null) {
             val remoteManagerInfo = client.get(ServiceManagerUserResource::class).getManagerInfo(userId)
@@ -155,9 +162,9 @@ class ManagerService @Autowired constructor(
                             return@resourceForEach
                         }
 
-                        if (orgManagerPermissionList.contains(authPermission)) {
+                        if (orgManagerPermissionList.contains(fixAuthPermission)) {
                             logger.info(
-                                "$userId has $projectId ${resourceType.value} ${authPermission.value} " +
+                                "$userId has $projectId ${resourceType.value} ${fixAuthPermission.value} " +
                                     "$projectOrgInfo manager permission"
                             )
                             isManagerPermission = true

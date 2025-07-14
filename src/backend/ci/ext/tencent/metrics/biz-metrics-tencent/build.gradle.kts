@@ -30,4 +30,5 @@ dependencies {
     api(project(":ext:tencent:common:common-pipeline-tencent"))
     api(project(":ext:tencent:metrics:api-metrics-tencent"))
     api(project(":core:notify:api-notify"))
+    api(project(":ext:tencent:process:api-process-tencent"))
 }
