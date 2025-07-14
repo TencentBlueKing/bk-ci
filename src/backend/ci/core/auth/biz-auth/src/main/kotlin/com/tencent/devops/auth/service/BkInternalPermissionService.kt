@@ -138,7 +138,7 @@ class BkInternalPermissionService(
         resourceType: String,
         action: String
     ): List<String> {
-        return createTimer(::getUserResourceByAction.name).record(Supplier {
+        return (createTimer(::getUserResourceByAction.name).record(Supplier {
             val groupIds = listMemberGroupIdsInProjectWithCache(projectCode, userId)
             CacheHelper.getOrLoad(userResourceCache, userId, projectCode, resourceType, action) {
                 val isManager = checkManager(
@@ -161,7 +161,11 @@ class BkInternalPermissionService(
                     )
                 }
             }
-        }) ?: emptyList()
+        }) ?: emptyList()).also {
+            if (logger.isDebugEnabled) {
+                logger.debug("get user resources by action Internal :$userId|$projectCode|$resourceType|$action|$it")
+            }
+        }
     }
 
     fun getUserResourcesByActions(
@@ -184,7 +188,7 @@ class BkInternalPermissionService(
         userId: String,
         action: String
     ): List<String> {
-        return createTimer(::getUserProjectsByAction.name).record(Supplier {
+        return (createTimer(::getUserProjectsByAction.name).record(Supplier {
             CacheHelper.getOrLoad(userProjectsCache, userId, action) {
                 val memberDeptInfos = userManageService.getUserDepartmentPath(userId)
                 permissionResourceGroupPermissionService.listProjectsWithPermission(
@@ -192,7 +196,11 @@ class BkInternalPermissionService(
                     action = action
                 )
             }
-        }) ?: emptyList()
+        }) ?: emptyList()).also {
+            if (logger.isDebugEnabled) {
+                logger.debug("get user projects by action Internal :$userId|$action|$it")
+            }
+        }
     }
 
     fun filterUserResourcesByActions(
