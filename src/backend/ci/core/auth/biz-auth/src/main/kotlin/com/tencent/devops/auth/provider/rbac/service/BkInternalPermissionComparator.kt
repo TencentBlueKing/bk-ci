@@ -26,7 +26,7 @@ class BkInternalPermissionComparator(
 
     private val project2StatusCache = CacheHelper.createCache<String, Boolean>(duration = 60)
 
-    @Value("\${permission.post.processor.pool.size:#{null}}")
+    @Value("\${permission.comparator.pool.size:#{null}}")
     private val corePoolSize: Int? = null
 
     private fun consistencyCounter(method: String, isConsistent: Boolean): Counter {
