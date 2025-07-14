@@ -274,7 +274,10 @@ class ServicePipelineResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        version: Int?,
+        checkPermission: Boolean,
+        includeDraft: Boolean
     ): Result<Model> {
         checkParams(userId, projectId)
         return Result(
@@ -283,7 +286,9 @@ class ServicePipelineResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 channelCode = channelCode,
-                checkPermission = false
+                version = version,
+                checkPermission = checkPermission,
+                includeDraft = includeDraft
             )
         )
     }

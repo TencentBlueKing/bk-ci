@@ -30,7 +30,6 @@ package com.tencent.devops.auth.provider.rbac.service
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.bk.sdk.iam.dto.InstancesDTO
 import com.tencent.bk.sdk.iam.dto.manager.Action
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
@@ -69,11 +68,11 @@ import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.util.CacheHelper
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineViewResource
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -82,7 +81,6 @@ import org.springframework.beans.factory.annotation.Value
 import java.time.LocalDateTime
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList")
 class RbacPermissionResourceGroupPermissionService(
@@ -126,10 +124,7 @@ class RbacPermissionResourceGroupPermissionService(
         )
     }
 
-    private val projectCodeAndPipelineId2ViewIds = Caffeine.newBuilder()
-        .maximumSize(50000) // 最大Key数量
-        .expireAfterWrite(10, TimeUnit.MINUTES)
-        .build<String, List<String>>()
+    private val projectCodeAndPipelineId2ViewIds = CacheHelper.createCache<String, List<String>>(duration = 10)
 
     override fun grantGroupPermission(
         authorizationScopesStr: String,
@@ -316,6 +311,13 @@ class RbacPermissionResourceGroupPermissionService(
     ): Boolean {
         if (filterIamGroupIds.isEmpty())
             return false
+        if (relatedResourceType == ResourceTypeId.PROJECT) {
+            return isGroupsHasProjectLevelPermission(
+                projectCode = projectCode,
+                filterIamGroupIds = filterIamGroupIds,
+                action = action
+            )
+        }
         val resourceType = rbacCommonService.getActionInfo(action).relatedResourceType
         val pipelineGroupIds = listPipelineGroupIds(
             projectCode = projectCode,
@@ -417,8 +419,7 @@ class RbacPermissionResourceGroupPermissionService(
         relatedResourceCode: String?
     ): List<String> {
         return if (relatedResourceCode != null && resourceType == AuthResourceType.PIPELINE_DEFAULT.value) {
-            val cacheKey = DigestUtils.md5Hex(projectCode.plus("_").plus(relatedResourceCode))
-            projectCodeAndPipelineId2ViewIds.get(cacheKey) {
+            CacheHelper.getOrLoad(projectCodeAndPipelineId2ViewIds, projectCode, relatedResourceCode) {
                 client.get(ServicePipelineViewResource::class).listViewIdsByPipelineId(
                     projectId = projectCode,
                     pipelineId = relatedResourceCode
