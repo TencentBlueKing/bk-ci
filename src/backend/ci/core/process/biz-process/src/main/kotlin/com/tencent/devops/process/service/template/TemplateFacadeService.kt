@@ -201,7 +201,7 @@ class TemplateFacadeService @Autowired constructor(
     @Value("\${template.maxErrorReasonLength:200}")
     private val maxErrorReasonLength: Int = 200
 
-    @Value("\${template.emptyPipelineTemplateId:072d516d300b4812a4f652f585eacc36}")
+    @Value("\${template.emptyPipelineTemplateId:#{null}}")
     private val emptyPipelineTemplateId: String? = null
 
     @ActionAuditRecord(
