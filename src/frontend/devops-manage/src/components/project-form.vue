@@ -6,11 +6,21 @@ import { BaseInfoContent, PermissionContent, PipelineContent } from "@/component
 import ProjectSettings from "./project-settings.vue"
 
 const { t } = useI18n();
-const emits = defineEmits(['change', 'approvedChange', 'initProjectForm', 'tabChange']);
+const emits = defineEmits(['change', 'approvedChange', 'initProjectForm', 'productIdChange', 'handleCancel', 'initProjectData', 'handleUpdate']);
+
+export interface Dept {
+  id: string;
+  name: string;
+  type?: string;
+  parentId?: string;
+  children?: Dept[];
+  [key: string]: any;
+}
 const props = defineProps({
   data: Object,
   type: String,
   isChange: Boolean,
+  btnLoading: Boolean
 });
 
 const isRbac = computed(() => {
@@ -85,9 +95,11 @@ const handleClearValidate = () => {
   projectForm.value.clearValidate();
 }
 
-watch(() => [projectData.value.authSecrecy, projectData.value.projectType, projectData.value.subjectScopes], () => {
-  projectForm.value.validate();
-  emits('approvedChange', true);
+watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], (newValues, oldValues) => {
+  if (newValues[0] !== oldValues[0] || JSON.stringify(newValues[1]) !== JSON.stringify(oldValues[1])) {
+    projectForm.value.validate();
+    emits('approvedChange', true);
+  }
 }, {
   deep: true,
 });
@@ -139,9 +151,12 @@ onMounted(async () => {
       :is-rbac="isRbac"
       :data="projectData"
       :initPipelineDialect="initPipelineDialect"
+      :btnLoading="btnLoading"
       @change="handleChangeForm"
       @clearValidate="handleClearValidate"
-      @tab-change="$emit('tabChange', $event)"
+      @handleCancel="$emit('handleCancel')"
+      @handleUpdate="$emit('handleUpdate')"
+      @initProjectData="$emit('initProjectData', $event)"
     />
   </bk-form>
 </template>

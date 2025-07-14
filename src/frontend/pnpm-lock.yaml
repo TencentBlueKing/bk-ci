@@ -1042,7 +1042,7 @@ importers:
     dependencies:
       '@blueking/date-picker':
         specifier: 2.0.0-beta.26
-        version: 2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))
+        version: 2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.49(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))
       '@icon-cool/bk-icon-bk-biz-components':
         specifier: 0.0.4
         version: 0.0.4
@@ -1053,8 +1053,8 @@ importers:
         specifier: workspace:bk-permission
         version: link:../bk-permission
       bkui-vue:
-        specifier: 2.0.2-beta.45
-        version: 2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
+        specifier: 2.0.2-beta.49
+        version: 2.0.2-beta.49(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
       dayjs:
         specifier: ^1.11.2
         version: 1.11.11
@@ -7176,12 +7176,14 @@ packages:
 
   bkui-vue@2.0.1-beta.94:
     resolution: {integrity: sha512-SbJAvGNMNK8tNcUm0JkwVAYxTYYu79i8+kX5HrKuLTLCQP8REg2wRH5IrTbre0prs9GQZ+TqoPUY3xCNnQ+vKA==}
+  bkui-vue@2.0.1-beta.94:
+    resolution: {integrity: sha512-SbJAvGNMNK8tNcUm0JkwVAYxTYYu79i8+kX5HrKuLTLCQP8REg2wRH5IrTbre0prs9GQZ+TqoPUY3xCNnQ+vKA==}
     peerDependencies:
       highlight.js: ~11.5.0
       vue: ^3.2.0
 
-  bkui-vue@2.0.2-beta.45:
-    resolution: {integrity: sha512-MfHtVZcZrcgo+KcgcYuPUtZOhHLfoE2eaxByk/mqKVFxedoIEqOgHA7fu3AyWYYMFo6s0h8vFj45ujZrH3H9SA==}
+  bkui-vue@2.0.2-beta.49:
+    resolution: {integrity: sha512-1JCYz5e6CTAcCIH5j5tChkCFWi9mofv097fxrvPKZl9wf2td4bjXy26BP8gdQII3u9NzGM9na0OsgskEj9z+EQ==}
     peerDependencies:
       highlight.js: ~11.5.0
       vue: ^3.2.0
@@ -15195,6 +15197,7 @@ packages:
 
   stackback@0.0.2:
     resolution: {integrity: sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw==}
+    resolution: {integrity: sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw==}
 
   stackframe@1.3.4:
     resolution: {integrity: sha512-oeVtt7eWQS+Na6F//S4kJ2K2VbRlS9D43mAlMyVpVWovy9o+jfgH8O9agzANzaiLjclA0oYzUXEM4PurhSUChw==}
@@ -18569,10 +18572,10 @@ snapshots:
       dayjs: 1.11.11
       vue: 3.4.31(typescript@4.9.5)
 
-  '@blueking/date-picker@2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))':
+  '@blueking/date-picker@2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.49(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))':
     dependencies:
       '@blueking/bkui-library': 0.0.0-beta.6
-      bkui-vue: 2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
+      bkui-vue: 2.0.2-beta.49(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
       dayjs: 1.11.11
       vue: 3.4.31(typescript@4.9.5)
 
@@ -18581,6 +18584,8 @@ snapshots:
       '@babel/eslint-parser': 7.24.6(@babel/core@7.24.6)(eslint@8.57.0)
       '@typescript-eslint/eslint-plugin': 7.11.0(@typescript-eslint/parser@7.11.0(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0)(typescript@5.4.5)
       '@typescript-eslint/parser': 7.11.0(eslint@8.57.0)(typescript@5.4.5)
+      '@vue/eslint-config-standard': 8.0.1(@typescript-eslint/parser@7.11.0(eslint@8.57.0)(typescript@5.4.5))(eslint-plugin-vue@9.27.0(eslint@7.32.0))(eslint@8.57.0)
+      '@vue/eslint-config-typescript': 13.0.0(eslint-plugin-vue@9.27.0(eslint@7.32.0))(eslint@8.57.0)(typescript@5.4.5)
       '@vue/eslint-config-standard': 8.0.1(@typescript-eslint/parser@7.11.0(eslint@8.57.0)(typescript@5.4.5))(eslint-plugin-vue@9.27.0(eslint@7.32.0))(eslint@8.57.0)
       '@vue/eslint-config-typescript': 13.0.0(eslint-plugin-vue@9.27.0(eslint@7.32.0))(eslint@8.57.0)(typescript@5.4.5)
       eslint: 8.57.0
@@ -20427,6 +20432,7 @@ snapshots:
       '@babel/plugin-transform-runtime': 7.24.6(@babel/core@7.24.6)
       '@babel/preset-env': 7.24.6(@babel/core@7.24.6)
       '@babel/preset-typescript': 7.24.6(@babel/core@7.24.6)
+      '@babel/runtime': 7.26.7
       '@babel/runtime': 7.26.7
       '@nrwl/js': 19.5.1(@babel/traverse@7.26.8)(@types/node@22.13.4)(nx@19.5.1)(typescript@5.4.5)
       '@nx/devkit': 19.5.1(nx@19.5.1)
@@ -22740,6 +22746,7 @@ snapshots:
     dependencies:
       eslint: 8.57.0
       eslint-config-standard: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.11.0(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0))(eslint-plugin-node@11.1.0(eslint@8.57.0))(eslint-plugin-promise@6.0.1(eslint@8.57.0))(eslint@8.57.0)
+      eslint-config-standard: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.11.0(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0))(eslint-plugin-node@11.1.0(eslint@8.57.0))(eslint-plugin-promise@6.0.1(eslint@8.57.0))(eslint@8.57.0)
       eslint-import-resolver-node: 0.3.9
       eslint-import-resolver-webpack: 0.13.8(eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.11.0(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0))(webpack@5.98.0(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.96.1)))
       eslint-plugin-import: 2.29.1(@typescript-eslint/parser@4.33.0(eslint@7.32.0)(typescript@4.9.5))(eslint@7.32.0)
@@ -22753,6 +22760,7 @@ snapshots:
       - webpack
 
   '@vue/eslint-config-standard@8.0.1(@typescript-eslint/parser@7.11.0(eslint@8.57.0)(typescript@5.4.5))(eslint-plugin-vue@9.27.0(eslint@7.32.0))(eslint@8.57.0)':
+  '@vue/eslint-config-standard@8.0.1(@typescript-eslint/parser@7.11.0(eslint@8.57.0)(typescript@5.4.5))(eslint-plugin-vue@9.27.0(eslint@7.32.0))(eslint@8.57.0)':
     dependencies:
       eslint: 8.57.0
       eslint-config-standard: 17.1.0(eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.11.0(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0))(eslint-plugin-n@15.7.0(eslint@8.57.0))(eslint-plugin-promise@6.2.0(eslint@8.57.0))(eslint@8.57.0)
@@ -22761,6 +22769,7 @@ snapshots:
       eslint-plugin-import: 2.29.1(@typescript-eslint/parser@4.33.0(eslint@7.32.0)(typescript@4.9.5))(eslint@7.32.0)
       eslint-plugin-n: 15.7.0(eslint@8.57.0)
       eslint-plugin-promise: 6.2.0(eslint@8.57.0)
+      eslint-plugin-vue: 9.27.0(eslint@7.32.0)
       eslint-plugin-vue: 9.27.0(eslint@7.32.0)
     transitivePeerDependencies:
       - '@typescript-eslint/parser'
@@ -22793,10 +22802,12 @@ snapshots:
       - supports-color
 
   '@vue/eslint-config-typescript@13.0.0(eslint-plugin-vue@9.27.0(eslint@7.32.0))(eslint@8.57.0)(typescript@5.4.5)':
+  '@vue/eslint-config-typescript@13.0.0(eslint-plugin-vue@9.27.0(eslint@7.32.0))(eslint@8.57.0)(typescript@5.4.5)':
     dependencies:
       '@typescript-eslint/eslint-plugin': 7.11.0(@typescript-eslint/parser@7.11.0(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0)(typescript@5.4.5)
       '@typescript-eslint/parser': 7.11.0(eslint@8.57.0)(typescript@5.4.5)
       eslint: 8.57.0
+      eslint-plugin-vue: 9.27.0(eslint@7.32.0)
       eslint-plugin-vue: 9.27.0(eslint@7.32.0)
       vue-eslint-parser: 9.4.3(eslint@8.57.0)
     optionalDependencies:
@@ -23263,7 +23274,9 @@ snapshots:
     dependencies:
       globby: 11.1.0
       html-webpack-plugin: 5.6.0(webpack@5.96.1(webpack-cli@5.1.4))
+      html-webpack-plugin: 5.6.0(webpack@5.96.1(webpack-cli@5.1.4))
       micromatch: 4.0.8
+      webpack: 5.96.1(webpack-cli@5.1.4)
       webpack: 5.96.1(webpack-cli@5.1.4)
 
   address@1.2.2: {}
@@ -23776,6 +23789,7 @@ snapshots:
   babel-plugin-macros@2.8.0:
     dependencies:
       '@babel/runtime': 7.26.7
+      '@babel/runtime': 7.26.7
       cosmiconfig: 6.0.0
       resolve: 1.22.10
 
@@ -23991,7 +24005,7 @@ snapshots:
       vue: 3.5.13(typescript@5.4.5)
       vue-types: 4.1.1(vue@3.5.13(typescript@5.4.5))
 
-  bkui-vue@2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)):
+  bkui-vue@2.0.2-beta.49(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)):
     dependencies:
       '@floating-ui/dom': 1.5.4
       '@popperjs/core': 2.11.8
@@ -25602,6 +25616,7 @@ snapshots:
 
   date-fns@2.30.0:
     dependencies:
+      '@babel/runtime': 7.26.7
       '@babel/runtime': 7.26.7
 
   date-format@4.0.14: {}
@@ -33247,6 +33262,7 @@ snapshots:
 
   regenerator-transform@0.15.2:
     dependencies:
+      '@babel/runtime': 7.26.7
       '@babel/runtime': 7.26.7
 
   regexp.prototype.flags@1.5.2:
