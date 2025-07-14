@@ -79,8 +79,23 @@
                             >
                                 <li
                                     @click="handleChangeTag(false, groupItem)"
+                                    v-bk-tooltips="{
+                                        content: $t('environment.builtInLabelCannotBeModified'),
+                                        disabled: groupItem.canUpdate !== 'INTERNAL'
+                                    }"
                                 >
-                                    <a href="javascript:;">{{ $t('environment.updateTag') }}</a>
+                                    <a
+                                        href="javascript:;"
+                                        v-if="groupItem.canUpdate !== 'INTERNAL'"
+                                    >{{ $t('environment.updateTag') }}</a>
+                                    <bk-button
+                                        v-else
+                                        text
+                                        class="no-can-delete"
+                                        :disabled="groupItem.canUpdate === 'INTERNAL'"
+                                    >
+                                        {{ $t('environment.updateTag') }}
+                                    </bk-button>
                                 </li>
                                 <li
                                     @click="handleDeleteLabel(groupItem)"
