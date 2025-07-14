@@ -83,6 +83,10 @@ interface PermissionResourceGroupPermissionService {
         action: String? = null
     ): List<Int>
 
+    /**
+     *   校验项目级权限，参数 relatedResourceType:project、relatedResourceCode:projectCode
+     *   校验具体资源级权限，如校验是否有某条流水线权限，参数  relatedResourceType:pipeline、relatedResourceCode:p-1
+     * */
     fun isGroupsHasPermission(
         projectCode: String,
         filterIamGroupIds: List<Int>,
