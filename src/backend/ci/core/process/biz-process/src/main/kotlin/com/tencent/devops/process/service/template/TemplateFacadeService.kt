@@ -2643,8 +2643,8 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     private fun generateI18nTemplateName(templateId: String, templateType: String): String? {
-        if (templateType == TemplateType.PUBLIC.name && !emptyPipelineTemplateId.isNullOrBlank()
-            && templateId == emptyPipelineTemplateId
+        if (templateType == TemplateType.PUBLIC.name && !emptyPipelineTemplateId
+                .isNullOrBlank() && templateId == emptyPipelineTemplateId
         ) {
             return I18nUtil.getCodeLanMessage(messageCode = BK_EMPTY_PIPELINE)
         }
