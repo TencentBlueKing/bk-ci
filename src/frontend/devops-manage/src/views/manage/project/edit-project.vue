@@ -146,15 +146,41 @@ const showNeedApprovedTips = () => {
   });
 };
 
+const undateMetadata = async (params) => {
+  try {
+    btnLoading.value = true;
+    const res = await http.batchUpdateMetadata(projectData.value.englishName, params)
+    if (res) {
+      Message({
+        theme: 'success',
+        message: t('保存成功'),
+      });
+    }
+  } catch (err) {
+    Message({
+      theme: 'error',
+      message: err.message || err,
+    })
+  } finally {
+    btnLoading.value = false;
+  }
+}
+
 /**
  * 更新项目
  */
-const handleUpdate = () => {
-  if(currentDialect.value === 'CLASSIC' && projectData.value.properties.pipelineDialect === 'CONSTRAINED'){
-    isDialectDialog.value = true;
-    return
+const handleUpdate = (type, params) => {
+  if (type) {
+    if (params.length) {
+      undateMetadata(params)
+    }
+  } else {
+    if(currentDialect.value === 'CLASSIC' && projectData.value.properties.pipelineDialect === 'CONSTRAINED'){
+      isDialectDialog.value = true;
+      return
+    }
+    updateConfirm()
   }
-  updateConfirm()
 };
 
 const updateConfirm = async () => {

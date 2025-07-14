@@ -90,7 +90,7 @@
               v-model="row.display"
               theme="primary"
               :disabled="type === 'show'"
-              @change="(status) => handleChangeEnable(status, row)"
+              @change="handleChangeEnable"
             />
           </template>
         </bk-table-column>
@@ -236,11 +236,11 @@
 
 <script setup name="MetadataFormItem">
 import http from '@/http/api';
-import { computed, ref, reactive, watch, onMounted, nextTick } from 'vue';
+import { computed, ref, reactive, watch, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Del } from 'bkui-vue/lib/icon';
 import { useRoute } from 'vue-router';
-import { InfoBox, Message } from 'bkui-vue';
+import { InfoBox } from 'bkui-vue';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -254,7 +254,7 @@ const props = defineProps({
   isRbac: Boolean,
   initPipelineDialect: String
 });
-const emits = defineEmits(['handleChangeForm', 'beforeChange']);
+const emits = defineEmits(['handleChangeForm', 'beforeChange', 'updateMetadata']);
 
 const projectData = ref(props.data);
 const enumErrors = reactive({});
@@ -405,39 +405,20 @@ function showMetadataAdd () {
   isShowMetadataForm.value = true;
 }
 
-function convertArrayToObject (arr) {
-  return arr.reduce((obj, item) => {
-    if (item.value) {
-      obj[item.value] = item.color;
-    }
-    return obj;
+function handleChangeEnable() {
+  emits('updateMetadata', metadataList.value)
+}
+
+function colorMapObject(form) {
+  const labelColorMap = form.labelColorMap.reduce((accumulator, item) => {
+    accumulator[item.value] = item.color;
+    return accumulator;
   }, {});
-};
 
-function handleChangeEnable(_, row) {
-  updateMetadata(row)
-}
-
-async function createMetadata(metadataParams) {
-  const res = await http.createdMetadata(projectCode, metadataParams);
-  if (res) {
-    fetchMetadataList();
-    Message({
-      theme: 'success',
-      message: t('创建成功'),
-    });
-  }
-}
-
-async function updateMetadata(metadataParams) {
-  const labelKey = metadataParams.labelKey;
-  const res = await http.updateMetadata(projectCode, labelKey, metadataParams);
-  if (res) {
-    fetchMetadataList();
-    Message({
-      theme: 'success',
-      message: t('更新成功'),
-    });
+  return {
+    ...form,
+    display: true,
+    labelColorMap
   }
 }
 
@@ -447,17 +428,16 @@ async function handleMetadataSubmit () {
     
     const valid = await metadataFormRef.value.validate();
     if (valid) {
-      const { labelColorMap, ...baseForm } = metadataForm.value;
-      const metadataParams = {
-        ...baseForm,
-        ...(metadataForm.value.enumType ? {labelColorMap: convertArrayToObject(metadataForm.value.labelColorMap)}:{})
-      };
-
+      const data = colorMapObject(metadataForm.value)
       if (isAdd.value) {
-        await createMetadata(metadataParams);
+        metadataList.value.push(data)
       } else {
-        await updateMetadata(metadataParams);
+        const index = metadataList.value.findIndex(i => i.labelKey === data.labelKey);
+        if (index !== -1) {
+          metadataList.value.splice(index, 1, data);
+        }
       }
+      emits('updateMetadata', metadataList.value)
       isShowMetadataForm.value = false;
       handleMetadataCancel();
     }
@@ -500,22 +480,11 @@ async function handleDelete (row) {
     contentAlign: 'center',
     headerAlign: 'center',
     footerAlign: 'center',
-    onConfirm: async () => {
-      try {
-        const labelKey = row.labelKey;
-        const res = await http.deleteMetadata(projectCode, labelKey);
-        if (res) {
-          fetchMetadataList();
-          Message({
-            theme: 'success',
-            message: t('删除成功'),
-          });
-        }
-      } catch (err) {
-        Message({
-          theme: 'error',
-          message: err.message || err,
-        });
+    onConfirm: () => {
+      const index = metadataList.value.findIndex(item => item.id === row.id);
+      if (index !== -1) {
+        metadataList.value.splice(index, 1);
+        emits('updateMetadata', metadataList.value);
       }
     },
     onClosed: () => true,

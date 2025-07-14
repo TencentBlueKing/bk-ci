@@ -433,4 +433,10 @@ export default {
   deleteMetadata (projectId : string, labelKey: string) {
     return http.delete(`${ARTIFACTORY_PERFIX}/quality/metadata/${projectId}/${labelKey}`);
   },
+  /**
+   * 批量保存项目制品质量元数据标签
+   */
+  batchUpdateMetadata(projectId : string, params: any) {
+    return http.post(`${ARTIFACTORY_PERFIX}/quality/metadata/${projectId}/batch`, params);
+  },
 };
