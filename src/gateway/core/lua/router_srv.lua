@@ -69,7 +69,7 @@ end
 
 -- 设置 rid
 if ngx.var.http_x_devops_rid == nil then
-    ngx.header["X-DEVOPS-RID"]=ngx.var.uuid
+    ngx.header["X-DEVOPS-RID"] = ngx.var.uuid
 end
 
 -- 负载均衡
@@ -87,6 +87,10 @@ if ngx.var.url_prefix ~= nil then
     if config.artifactory.realm == "local" then
         ngx.var.url_prefix = "http://" .. ngx.var.target .. "/resource/bk-plugin-fe/"
     else
-        ngx.var.url_prefix = "http://" .. config.bkrepo.domain .. "/generic/bk-store/static/"
+        local bkStoreId = "bk-store"
+        if config.tenant.enabled then
+            bkStoreId = "system." .. bkStoreId
+        end
+        ngx.var.url_prefix = "http://" .. config.bkrepo.domain .. "/generic/" .. bkStoreId .. "/static/"
     end
 end
