@@ -126,14 +126,15 @@ object OkhttpUtils {
     private fun getOkHttpClientWithCustomTimeout(
         connectTimeout: Long,
         readTimeout: Long,
-        writeTimeout: Long
+        writeTimeout: Long,
+        followRedirects: Boolean = false
     ): OkHttpClient {
         return OkHttpClient.Builder()
             .connectTimeout(connectTimeout, TimeUnit.SECONDS)
             .readTimeout(readTimeout, TimeUnit.SECONDS)
             .writeTimeout(writeTimeout, TimeUnit.SECONDS)
             .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
-            .followRedirects(false)
+            .followRedirects(followRedirects)
             .hostnameVerifier { _, _ -> true }
             .build()
     }
@@ -285,7 +286,8 @@ object OkhttpUtils {
             getOkHttpClientWithCustomTimeout(
                 connectTimeout = connectTimeoutInSec ?: connectTimeout,
                 readTimeout = readTimeoutInSec ?: readTimeout,
-                writeTimeout = writeTimeoutInSec ?: writeTimeout
+                writeTimeout = writeTimeoutInSec ?: writeTimeout,
+                followRedirects = true
             )
         } else {
             okHttpClient
