@@ -174,7 +174,7 @@
                             class="command-line"
                             v-if="!constructImportForm.enableLoginUser"
                         >
-                            {{ $t('environment.nodeInfo.windowsInstallationCommand.tip4') }}
+                            {{ $t('environment.nodeInfo.windowsInstallationCommand.tip4', ['{agent_id}']) }}
                         </div>
                     </template>
                 </div>
