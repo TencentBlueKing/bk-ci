@@ -51,6 +51,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
@@ -190,6 +191,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     lateinit var storeWebsocketService: StoreWebsocketService
     @Autowired
     lateinit var storeFileService: StoreFileService
+    @Autowired
+    lateinit var config: CommonConfig
 
     @Value("\${store.defaultAtomErrorCodeLength:6}")
     private var defaultAtomErrorCodeLength: Int = 6
@@ -199,7 +202,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
 
     @Value("\${store.defaultAtomPublishReviewers:#{null}}")
     private val defaultAtomPublishReviewers: String? = null
-
 
     companion object {
         private val logger = LoggerFactory.getLogger(AtomReleaseServiceImpl::class.java)
@@ -1147,7 +1149,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 sendPendingReview(
                     userId = userId,
                     atomName = atomName,
-                    version = atomReleaseRequest.version
+                    version = atomReleaseRequest.version,
+                    atomId = atomId
                 )
             }
         }
@@ -1510,11 +1513,13 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         }
     }
 
-    private fun sendPendingReview(userId: String, atomName: String, version: String) {
+    private fun sendPendingReview(userId: String, atomName: String, version: String, atomId: String) {
+        val atomReleaseStatusUrl = "${config.devopsHostGateway}/console/store/releaseProgress/upgrade/%s"
         val bodyParams = mapOf(
             "userId" to userId,
             "atomName" to atomName,
             "version" to version,
+            "url" to String.format(atomReleaseStatusUrl, atomId)
         )
 
         val receivers = defaultAtomPublishReviewers!!
