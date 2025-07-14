@@ -213,7 +213,7 @@
         "buildMachineLocationTips": "请根据构建机的归属地选择最近的接入点，这样可以提高构建机的归档和拉取构建产物的速度，并增加构建机的连接稳定性。PS:北京地区请选择天津。",
         "referenceStep": "请参考以下步骤",
         "fetchInstallCommandTips": "请先选择地点获取安装命令",
-        "executeCommandPrompt": "请在合适的位置为Agent创建工作目录，并在该目录下执行安装命令",
+        "executeCommandPrompt": "请在构建机{0}为Agent创建工作目录，并在该目录下执行安装命令",
         "installBuildMachineTips": "如何在Windows上安装Agent",
         "connectedNodes": "已连接的节点",
         "noConnectedNodes": "暂无连接任何连接节点",
@@ -237,7 +237,27 @@
         "dockerMaxConcurrency": "docker构建最大并发数",
         "lastRunPipeline": "最近执行流水线",
         "lastRunAs": "最近执行时间",
-        "usage": "用途"
+        "usage": "用途",
+        "nonSystemPath": "非系统路径下",
+        "installSuccessfullyTips": "成功安装Agent后，刷新节点列表查看成功导入的节点。",
+        "installFailedDocument": "安装节点失败，查看帮助->",
+        "createDirectory": "# 创建工作空间目录",
+        "downloadAndInstallAgent": "# 下载并安装Agent",
+        "close": "关闭",
+        "windowsInstallationCommand": {
+            "tip1": "1.单击屏幕左下角的\"开始\"按钮，在开始菜单中搜索PowerShell，右键以管理员身份运行，打开PowerShell",
+            "tip2": "2.创建工作目录并切换到工作目录下，如：mkdir E:\\landun;cd E:\\landun",
+            "tip3": "3.运行如下命令下载并安装Agent:"
+        },
+        "runAgentAsUser": "以登录用户运行Agent",
+        "yes": "是",
+        "no": "否",
+        "enableLoginUserTips": "默认启动用于为system，安装好Agent后请手动切换运行账户，否则Agent读取不到你的环境变量和目录等与用户相关的数据",
+        "pleaseEnterRunAccount": "请填写运行账号用户名和登录密码，输入框失焦后获取安装命令",
+        "runAccount": "运行账户",
+        "accountUsernameTips": "已入域如tencent\\用户名，未入域如.\\本机账户",
+        "accountPasswordTips": "请输入登录密码",
+        "importBuildNode": "导入构建节点"
     },
     "nodeTypeMap": {
         "CC": "CC",
