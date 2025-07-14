@@ -131,6 +131,10 @@ const handleClearValidate = () => {
   projectForm.value.clearValidate();
 }
 
+const handleUpdate = (type, params) => {
+  emits('handleUpdate', type, params)
+}
+
 watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], (newValues, oldValues) => {
   if (newValues[0] !== oldValues[0] || JSON.stringify(newValues[1]) !== JSON.stringify(oldValues[1])) {
     projectForm.value.validate();
@@ -193,7 +197,7 @@ onMounted(async () => {
       @clearValidate="handleClearValidate"
       @setProjectDeptProp="setProjectDeptProp"
       @handleCancel="$emit('handleCancel')"
-      @handleUpdate="$emit('handleUpdate')"
+      @handleUpdate="handleUpdate"
       @initProjectData="$emit('initProjectData', $event)"
     />
   </bk-form>
