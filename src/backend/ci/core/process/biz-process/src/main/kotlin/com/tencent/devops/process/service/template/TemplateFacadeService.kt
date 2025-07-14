@@ -1230,7 +1230,8 @@ class TemplateFacadeService @Autowired constructor(
             val logoUrl = record[tTemplate.LOGO_URL]
             val categoryStr = record[tTemplate.CATEGORY]
             OptionalTemplate(
-                name = generateI18nTemplateName(name = setting?.pipelineName ?: model.name, templateType = type),
+                name = generateI18nTemplateName(templateId = templateId, templateType = type) ?: setting?.pipelineName
+                ?: model.name,
                 templateId = templateId,
                 projectId = templateRecord[tTemplate.PROJECT_ID],
                 version = version,
@@ -2639,11 +2640,11 @@ class TemplateFacadeService @Autowired constructor(
         return pipelineTemplatePermissionService.enableTemplatePermissionManage(projectId)
     }
 
-    private fun generateI18nTemplateName(name: String, templateType: String): String {
-        if (templateType == TemplateType.PUBLIC.name && name == EMPTY_PIPELINE) {
+    private fun generateI18nTemplateName(templateId: String, templateType: String): String? {
+        if (templateType == TemplateType.PUBLIC.name && templateId == "072d516d300b4812a4f652f585eacc36") {
             return I18nUtil.getCodeLanMessage(messageCode = BK_EMPTY_PIPELINE)
         }
-        return name
+        return null
     }
 
     companion object {
