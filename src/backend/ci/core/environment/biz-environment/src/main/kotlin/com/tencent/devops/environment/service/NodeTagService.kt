@@ -29,6 +29,7 @@ import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.model.AgentProps
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.NodeTag
+import com.tencent.devops.environment.pojo.NodeTagCanUpdateType
 import com.tencent.devops.environment.pojo.NodeTagUpdateReq
 import com.tencent.devops.environment.pojo.UpdateNodeTag
 import com.tencent.devops.environment.pojo.enums.NodeType
@@ -113,8 +114,26 @@ class NodeTagService @Autowired constructor(
             }
         }
         tags.forEach { k ->
-            k.tagValues.forEach { v ->
+            var countFlag = false
+            k.tagValues.forEach value@{ v ->
                 v.nodeCount = nodeTagsCountMap[k.tagKeyId]?.get(v.tagValueId) ?: 0
+                if (v.canUpdate != null) {
+                    return@value
+                }
+                v.canUpdate = if ((v.nodeCount ?: 0) > 0) {
+                    countFlag = true
+                    NodeTagCanUpdateType.TRUE
+                } else {
+                    NodeTagCanUpdateType.FALSE
+                }
+            }
+            if (k.canUpdate != null) {
+                return@forEach
+            }
+            k.canUpdate = if (countFlag) {
+                NodeTagCanUpdateType.TRUE
+            } else {
+                NodeTagCanUpdateType.FALSE
             }
         }
         return tags

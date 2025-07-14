@@ -96,7 +96,6 @@ class NodeTagDao {
                     allowMulVal = tag[TNodeTagKey.T_NODE_TAG_KEY.ALLOW_MUL_VALUES],
                     valueId = (tag["VALUE_ID"] as Long?) ?: return@forEach,
                     valueName = tag[TNodeTagValues.T_NODE_TAG_VALUES.VALUE_NAME],
-                    nodeCount = null,
                     internal = false
                 )
             }
@@ -110,7 +109,6 @@ class NodeTagDao {
         allowMulVal: Boolean,
         valueId: Long,
         valueName: String,
-        nodeCount: Int?,
         internal: Boolean
     ) {
         val id = keyId
@@ -119,13 +117,21 @@ class NodeTagDao {
                 tagKeyId = id,
                 tagKeyName = keyName,
                 tagAllowMulValue = allowMulVal,
-                canUpdate = NodeTagCanUpdateType.from(internal, nodeCount),
+                canUpdate = if (internal) {
+                    NodeTagCanUpdateType.INTERNAL
+                } else {
+                    null
+                },
                 tagValues = mutableListOf(
                     NodeTagValue(
                         tagValueId = valueId,
                         tagValueName = valueName,
-                        nodeCount = nodeCount,
-                        canUpdate = NodeTagCanUpdateType.from(internal, nodeCount)
+                        nodeCount = null,
+                        canUpdate = if (internal) {
+                            NodeTagCanUpdateType.INTERNAL
+                        } else {
+                            null
+                        }
                     )
                 )
             )
@@ -133,8 +139,12 @@ class NodeTagDao {
             NodeTagValue(
                 tagValueId = valueId,
                 tagValueName = valueName,
-                nodeCount = nodeCount,
-                canUpdate = NodeTagCanUpdateType.from(internal, nodeCount)
+                nodeCount = null,
+                canUpdate = if (internal) {
+                    NodeTagCanUpdateType.INTERNAL
+                } else {
+                    null
+                }
             )
         )
     }
@@ -169,7 +179,6 @@ class NodeTagDao {
                     allowMulVal = nodeTag[TNodeTagKey.T_NODE_TAG_KEY.ALLOW_MUL_VALUES],
                     valueId = nodeTag["VALUE_ID"] as Long,
                     valueName = nodeTag[TNodeTagValues.T_NODE_TAG_VALUES.VALUE_NAME],
-                    nodeCount = null,
                     internal = false
                 )
             }
@@ -210,7 +219,6 @@ class NodeTagDao {
                     allowMulVal = nodeTag[TNodeTagInternalKey.T_NODE_TAG_INTERNAL_KEY.ALLOW_MUL_VALUES],
                     valueId = nodeTag["VALUE_ID"] as Long,
                     valueName = nodeTag[TNodeTagInternalValues.T_NODE_TAG_INTERNAL_VALUES.VALUE_NAME],
-                    nodeCount = null,
                     internal = true
                 )
             }
@@ -324,7 +332,6 @@ class NodeTagDao {
                     allowMulVal = tag[TNodeTagInternalKey.T_NODE_TAG_INTERNAL_KEY.ALLOW_MUL_VALUES],
                     valueId = (tag["VALUE_ID"] as Long?) ?: return@forEach,
                     valueName = tag[TNodeTagInternalValues.T_NODE_TAG_INTERNAL_VALUES.VALUE_NAME],
-                    nodeCount = null,
                     internal = true
                 )
             }
