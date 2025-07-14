@@ -50,7 +50,11 @@ class UserApiPermissionAspect constructor(
 
     @Around("@within(com.tencent.devops.common.web.RestResource)")
     fun aroundMethod(jp: ProceedingJoinPoint): Any? {
-        checkProjectVisitPermission(jp = jp)
+        try {
+            checkProjectVisitPermission(jp = jp)
+        } catch (ignored: Exception) {
+            logger.warn("Failed to validate user api project visit permission", ignored)
+        }
         return jp.proceed()
     }
 
