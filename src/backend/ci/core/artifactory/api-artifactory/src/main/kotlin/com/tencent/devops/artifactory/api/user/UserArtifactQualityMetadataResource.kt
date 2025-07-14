@@ -111,6 +111,20 @@ interface UserArtifactQualityMetadataResource {
         metadataLabelUpdate: UserLabelUpdateRequest
     ): Result<Boolean>
 
+    @Operation(summary = "批量保存项目制品质量元数据标签")
+    @POST
+    @Path("/batch")
+    fun batchSave(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目 ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "请求体", required = true)
+        metadataLabels: List<UserLabelCreateRequest>
+    ): Result<Boolean>
+
     @Operation(summary = "创建项目制品质量元数据标签")
     @POST
     @Path("/")

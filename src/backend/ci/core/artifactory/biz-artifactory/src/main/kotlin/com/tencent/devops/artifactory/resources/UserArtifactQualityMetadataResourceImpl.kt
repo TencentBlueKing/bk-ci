@@ -161,6 +161,19 @@ class UserArtifactQualityMetadataResourceImpl(
         return Result(true)
     }
 
+    override fun batchSave(
+        userId: String,
+        projectId: String,
+        metadataLabels: List<UserLabelCreateRequest>
+    ): Result<Boolean> {
+        bkRepoClient.batchSaveArtifactQualityMetadataLabel(
+            userId = userId,
+            projectId = projectId,
+            metadataLabels = metadataLabels
+        )
+        return Result(true)
+    }
+
     override fun create(
         userId: String,
         projectId: String,
