@@ -144,19 +144,28 @@ class RbacPermissionPostProcessor(
                 action = action
             )
             val method = ::getUserProjectsByAction.name
-            val diffProjects = externalApiResult.filterNot { localResult.contains(it) }
-            if (diffProjects.isEmpty()) {
+            val diffProjects by lazy { externalApiResult.filterNot { localResult.contains(it) } }
+
+            if (externalApiResult.toSet() == localResult.toSet() || diffProjects.isEmpty()) {
                 consistencyCounter(method, true).increment()
             } else {
                 // 由于只同步了未禁用的项目权限数据，所以需要对差异项目，进行项目是否禁用检查
                 // 若差异项目中存在未被禁用项目，则说结果有差异
-                val isExistProjectEnabled = diffProjects.any {
-                    CacheHelper.getOrLoad(project2StatusCache, it) {
-                        client.get(ServiceProjectResource::class).get(it).data?.enabled ?: false
+                val projectsOfEnabled = mutableListOf<String>()
+                diffProjects.forEach { projectCode ->
+                    val enabled = CacheHelper.getOrLoad(project2StatusCache, projectCode) {
+                        client.get(ServiceProjectResource::class).get(projectCode).data?.enabled ?: false
+                    }
+                    if (enabled) {
+                        projectsOfEnabled.add(projectCode)
                     }
                 }
+                val isExistProjectEnabled = projectsOfEnabled.isNotEmpty()
                 if (isExistProjectEnabled) {
-                    logger.warn("get user projects by action results are inconsistent:$userId|$action|$diffProjects")
+                    logger.warn(
+                        "get user projects by action results are inconsistent:" +
+                            "$userId|$action|$diffProjects|$projectsOfEnabled"
+                    )
                 }
                 consistencyCounter(method, !isExistProjectEnabled).increment()
             }
