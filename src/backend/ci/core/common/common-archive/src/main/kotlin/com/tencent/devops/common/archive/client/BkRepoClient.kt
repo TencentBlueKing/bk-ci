@@ -1246,6 +1246,18 @@ class BkRepoClient constructor(
         doRequest(request).resolveResponse<Response<Void>>()
     }
 
+    fun batchSaveArtifactQualityMetadataLabel(
+        userId: String,
+        projectId: String,
+        metadataLabels: List<UserLabelCreateRequest>
+    ) {
+        val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/metadata/label/batch/$projectId/"
+        val request = Request.Builder().url(url).headers(getCommonHeaders(userId, projectId).toHeaders())
+            .post(metadataLabels.toJsonString().toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        doRequest(request).resolveResponse<Response<Void>>()
+    }
+
     fun deleteArtifactQualityMetadataLabel(
         userId: String,
         projectId: String,
