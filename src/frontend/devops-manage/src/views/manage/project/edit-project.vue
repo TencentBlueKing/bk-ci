@@ -3,10 +3,9 @@ import ProjectForm from '@/components/project-form.vue';
 import http from '@/http/api';
 import {
   RESOURCE_ACTION,
-  RESOURCE_TYPE,
   handleProjectManageNoPermission,
 } from '@/utils/permission.js';
-import { InfoBox, Message, Popover } from 'bkui-vue';
+import { InfoBox, Message } from 'bkui-vue';
 import {
   onMounted,
   ref,
@@ -30,14 +29,9 @@ const isToBeApproved = ref(false);
 const btnLoading = ref(false);
 const hasPermission = ref(true);
 const operationalList = ref({});
-const statusDisabledTips = {
-  1: t('新建项目申请审批中，暂不可修改'),
-  4: t('更新项目信息审批中，暂不可修改'),
-};
 const currentDialect = ref();
 const isDialectDialog = ref(false);
-const currentPanel = ref('projectSettings')
-
+let initdata;
 const fetchProjectData = async () => {
   isLoading.value = true;
   await http.requestProjectData({
@@ -54,6 +48,7 @@ const fetchProjectData = async () => {
     currentDialect.value = res.properties?.pipelineDialect || 'CLASSIC';
     if (projectData.value.centerId === '0') projectData.value.centerId = ''
     if (projectData.value.projectType === 0) projectData.value.projectType = ''
+    initdata = JSON.stringify(projectData.value)
   }).catch((err) => {
     if (err.code === 403) {
       hasPermission.value = false
@@ -141,9 +136,6 @@ const updateProject = async () => {
       theme: 'success',
       message: t('保存成功'),
     });
-    router.push({
-      path: 'show',
-    });
   }
   return Promise.resolve(false);
 };
@@ -214,6 +206,10 @@ const initProjectForm = (value) => {
   projectForm.value = value;
 };
 
+const initProjectData = (value) => {
+  Object.assign(projectData.value, value);
+};
+
 const handleNoPermission = () => {
   handleProjectManageNoPermission({
     action: RESOURCE_ACTION.VIEW,
@@ -221,9 +217,6 @@ const handleNoPermission = () => {
     resourceCode: projectCode,
   });
 };
-function handleTabChange(panel) {
-  currentPanel.value = panel
-}
 
 onMounted(async () => {
   await fetchProjectData();
@@ -239,48 +232,15 @@ onMounted(async () => {
         type="edit"
         :is-change="isChange"
         :data="projectData"
+        :btnLoading="btnLoading"
         @change="handleFormChange"
         @initProjectForm="initProjectForm"
-        @tab-change="handleTabChange"
-        @approvedChange="handleApprovedChange">
+        @approvedChange="handleApprovedChange"
+        @handleCancel="handleCancel"
+        @handleUpdate="handleUpdate"
+        @initProjectData="initProjectData"
+      >
       </project-form>
-      <div class="btn-group" v-if="currentPanel !== 'artifactorySettings'">
-        <div class="buttons">
-          <Popover
-            :content="statusDisabledTips[projectData?.approvalStatus]"
-            :disabled="![1, 4].includes(projectData?.approvalStatus)"
-            v-perm="{
-              disablePermissionApi: [1, 3, 4].includes(projectData?.approvalStatus),
-              hasPermission: [1, 3, 4].includes(projectData?.approvalStatus),
-              permissionData: {
-                projectId: projectCode,
-                resourceType: RESOURCE_TYPE,
-                resourceCode: projectCode,
-                action: RESOURCE_ACTION.EDIT
-              }
-            }"
-          >
-            <span>
-              <bk-button
-                class="btn mr10"
-                :disabled="[1, 4].includes(projectData?.approvalStatus)"
-                theme="primary"
-                :loading="btnLoading"
-                @click="handleUpdate"
-              >
-                {{ t('提交更新') }}
-              </bk-button>
-            </span>
-          </Popover>
-          <bk-button
-            class="btn"
-            :loading="btnLoading"
-            @click="handleCancel"
-          >
-            {{ t('取消') }}
-          </bk-button>
-        </div>
-      </div>
     </section>
     <bk-exception
       v-else
@@ -352,20 +312,6 @@ onMounted(async () => {
       }
       :deep(.bk-form-content) {
         max-width: 700px;
-      }
-    }
-    .btn-group {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 48px;
-      line-height: 48px;
-      background: #FAFBFD;
-      box-shadow: 0 -1px 0 0 #DCDEE5;
-      .buttons {
-        width: 1200px;
-        margin: 0 auto;
       }
     }
     .mr10 {

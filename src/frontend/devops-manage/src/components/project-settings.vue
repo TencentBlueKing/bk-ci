@@ -2,15 +2,21 @@
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { BaseInfoContent, PermissionContent, PipelineContent, ArtifactoryContent } from "@/components/project-form-item/";
+import { RESOURCE_ACTION, RESOURCE_TYPE} from '@/utils/permission.js';
+import { InfoBox, Popover } from 'bkui-vue';
 const { t } = useI18n();
-const emits = defineEmits(['change', 'clearValidate', 'tabChange']);
+const emits = defineEmits(['change', 'clearValidate', 'handleCancel', 'initProjectData', 'handleUpdate']);
 const props = defineProps({
   data: Object,
   type: String,
   initPipelineDialect: String,
   curDeptInfo: Array,
+  btnLoading: Boolean
 });
 const projectData = ref(props.data);
+const initData = JSON.stringify(projectData.value)
+const isChange = ref(false);
+const infoBoxRef = ref();
 const panelActive = ref('projectSettings')
 const tabPanels = [
   {
@@ -50,50 +56,52 @@ const tabPanels = [
     }]
   },
 ]
-const handleChangeForm = () => {
+const statusDisabledTips = {
+  1: t('新建项目申请审批中，暂不可修改'),
+  4: t('更新项目信息审批中，暂不可修改'),
+};
+
+function handleChangeForm () {
+  isChange.value = true
   emits('change', true);
 };
-const handleClearValidate = () => {
+function handleClearValidate () {
   emits('clearValidate');
 };
 function setProjectDeptProp (dept) {
   emits('setProjectDeptProp', dept)
 }
-function tabChange(active) {
-  emits('tabChange', active)
-}
 function tabBeforeChange(name){
-  console.log("🚀 ~ tabBeforeChange ~ name:", name)
-  // return new Promise(async (resolve) => {
-  //   if (props.type === 'edit') {
-  //     infoBoxRef.value = InfoBox({
-  //       type: 'warning',
-  //       width: 640,
-  //       title: '确认离开当前页？',
-  //       content: '离开将会导致未保存信息丢失',
-  //       footer: () => h('div',{}, [
-  //         h(Button, {
-  //           onClick() {
-  //             resolve(true);
-  //             infoBoxRef.value.hide()
-  //           },
-  //         }, t('确认')),
-  //         h(Button, {
-  //           onClick() {
-  //             resolve(false);
-  //             infoBoxRef.value.hide()
-  //           },
-  //         }, t('取消'))
-  //       ]),
-  //       onCancel() {
-  //         resolve(false);
-  //         infoBoxRef.value.hide()
-  //       },
-  //     });
-  //   } else {
-  //     resolve(true);
-  //   }
-  // });
+  if (props.type === 'edit' && isChange.value) {
+    infoBoxRef.value = InfoBox({
+      title: t('确认离开当前页?'),
+      subTitle: t('离开将会导致未保存信息丢失'),
+      contentAlign: 'center',
+      headerAlign: 'center',
+      footerAlign: 'center',
+      confirmText: t('离开'),
+      cancelText: t('取消'),
+      onConfirm: () => {
+        isChange.value = false
+        infoBoxRef.value.hide()
+        panelActive.value = name
+        emits('initProjectData', JSON.parse(initData))
+      },
+      onClosed: () => {
+        infoBoxRef.value.hide()
+      }
+    });
+    return false
+  } else {
+    isChange.value = false
+    return true
+  }
+}
+function handleCancel() {
+  emits('handleCancel')
+}
+function handleUpdate() {
+  emits('handleUpdate')
 }
 </script>
 
@@ -102,8 +110,7 @@ function tabBeforeChange(name){
     <bk-tab
       v-model:active="panelActive"
       type="card-tab"
-      @tab-change="tabChange"
-      @beforeChange="tabBeforeChange"
+      :beforeChange="tabBeforeChange"
     >
       <bk-tab-panel
         v-for="(item, index) in tabPanels"
@@ -156,6 +163,42 @@ function tabBeforeChange(name){
                 />
             </div>
           </template>
+          <div class="btn-group">
+            <div class="buttons">
+              <Popover
+                :content="statusDisabledTips[projectData?.approvalStatus]"
+                :disabled="![1, 4].includes(projectData?.approvalStatus)"
+                v-perm="{
+                  disablePermissionApi: [1, 3, 4].includes(projectData?.approvalStatus),
+                  hasPermission: [1, 3, 4].includes(projectData?.approvalStatus),
+                  permissionData: {
+                    projectId: projectCode,
+                    resourceType: RESOURCE_TYPE,
+                    resourceCode: projectCode,
+                    action: RESOURCE_ACTION.EDIT
+                  }
+                }"
+              >
+                <span>
+                  <bk-button
+                    class="btn mr10"
+                    :disabled="[1, 4].includes(projectData?.approvalStatus)"
+                    theme="primary"
+                    :loading="btnLoading"
+                    @click="handleUpdate"
+                  >
+                    {{ t('提交更新') }}
+                  </bk-button>
+                </span>
+              </Popover>
+              <bk-button
+                class="btn"
+                @click="handleCancel"
+              >
+                {{ t('取消') }}
+              </bk-button>
+            </div>
+          </div>
         </div>
       </bk-tab-panel>
     </bk-tab>
@@ -164,6 +207,7 @@ function tabBeforeChange(name){
 
 <style lang="scss" scoped>
 .setting-content {
+  position: relative;
   .edit-form-content {
     background-color: #fff;
     border-radius: 2px;
@@ -172,6 +216,20 @@ function tabBeforeChange(name){
 .other-setting {
   height: 100%;
   padding: 25px 0;
+}
+.btn-group {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 48px;
+  line-height: 48px;
+  background: #FAFBFD;
+  box-shadow: 0 -1px 0 0 #DCDEE5;
+  .buttons {
+    width: 1200px;
+    margin: 0 auto;
+  }
 }
 </style>
 <style lang="scss">
