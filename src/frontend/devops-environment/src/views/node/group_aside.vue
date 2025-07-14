@@ -85,7 +85,7 @@
                                 <li
                                     @click="handleDeleteLabel(groupItem)"
                                     v-bk-tooltips="{
-                                        content: groupItem.canUpdate === 'INTERNAL' ? $t('environment.内置标签不能删除') : $t('environment.removeNodesBeforeDeletingLabel'),
+                                        content: groupItem.canUpdate === 'INTERNAL' ? $t('environment.builtInLabelCannotBeDeleted') : $t('environment.removeNodesBeforeDeletingLabel'),
                                         disabled: groupItem.canUpdate === 'TRUE'
                                     }"
                                 >
@@ -148,7 +148,7 @@
                     type="info"
                     v-if="formData.canUpdate !== 'TRUE'"
                     class="tag-info"
-                    :title="formData.canUpdate === 'INTERNAL' ? $t('environment.内置标签不能修改') : $t('environment.labelInUseRemoveNodesBeforeEditOrDelete')"
+                    :title="formData.canUpdate === 'INTERNAL' ? $t('environment.builtInLabelCannotBeModified') : $t('environment.labelInUseRemoveNodesBeforeEditOrDelete')"
                 ></bk-alert>
                 <bk-form
                     :label-width="100"
