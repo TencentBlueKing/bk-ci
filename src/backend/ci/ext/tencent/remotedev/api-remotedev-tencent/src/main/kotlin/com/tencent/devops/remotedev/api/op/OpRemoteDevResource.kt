@@ -297,4 +297,18 @@ interface OpRemoteDevResource {
         userId: String,
         whiteList: WhiteList
     ): Result<Boolean>
+
+    @Operation(summary = "对某一时间段内实例减免")
+    @POST
+    @Path("/bills/reduce")
+    fun reduceWorkspaceBills(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("startDate")
+        startDate: String,
+        @QueryParam("endDate")
+        endDate: String,
+        workspaceNames: List<String>
+    ): Result<Boolean>
 }

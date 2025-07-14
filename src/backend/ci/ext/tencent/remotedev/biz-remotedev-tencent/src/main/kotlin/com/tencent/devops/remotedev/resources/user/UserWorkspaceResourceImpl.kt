@@ -137,7 +137,8 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         search: WorkspaceSearch
     ): Result<Page<Workspace>> {
         val updatedSearch = search.apply {
-            notStatus = notStatus?.plus(WorkspaceStatus.DISTRIBUTING) ?: listOf(WorkspaceStatus.DISTRIBUTING)
+            notStatus = notStatus?.plus(WorkspaceStatus.DISTRIBUTING)?.plus(WorkspaceStatus.PREPARING)
+                ?: listOf(WorkspaceStatus.DISTRIBUTING, WorkspaceStatus.PREPARING)
         }
         return Result(workspaceService.getWorkspaceList(userId, page, pageSize, updatedSearch))
     }

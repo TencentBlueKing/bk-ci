@@ -134,7 +134,7 @@ class PermissionService @Autowired constructor(
         .build(
             object : CacheLoader<String, List<String>>() {
                 override fun load(projectId: String): List<String> {
-                    return managers(projectId).ifEmpty { managersOld(projectId) }
+                    return managers(projectId)
                 }
             }
         )
@@ -224,7 +224,7 @@ class PermissionService @Autowired constructor(
     }
 
     fun checkUserManager(userId: String, projectId: String) {
-        val managers = managers(projectId).ifEmpty { managersOld(projectId) }
+        val managers = managers(projectId)
         val checkProjectManager = client.get(ServiceProjectAuthResource::class).checkProjectManager(
             token = checkTokenService.getSystemToken(),
             userId = userId,
@@ -239,9 +239,8 @@ class PermissionService @Autowired constructor(
         }
     }
 
-    @Deprecated("use managers instead, 暂时保留")
-    fun managersOld(projectId: String): List<String> {
-        logger.warn("use managersOld instead, 暂时保留|$projectId")
+    // 获取云研发审批管理员
+    fun auditManagers(projectId: String): List<String> {
         val projectInfo = kotlin.runCatching {
             client.get(ServiceProjectResource::class).get(projectId)
         }.onFailure { logger.warn("get project $projectId info error|${it.message}") }

@@ -206,4 +206,13 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     override fun deleteWhiteList(userId: String, whiteList: WhiteList): Result<Boolean> {
         return Result(whiteListService.opDeleteWhiteList(userId, whiteList))
     }
+
+    override fun reduceWorkspaceBills(
+        userId: String,
+        startDate: String,
+        endDate: String,
+        workspaceNames: List<String>
+    ): Result<Boolean> {
+        return Result(makeMoneyService.reduceWorkspaceBills(workspaceNames, startDate, endDate))
+    }
 }

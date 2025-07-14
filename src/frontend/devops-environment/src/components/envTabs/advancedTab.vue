@@ -74,6 +74,8 @@
             hookTypeLabel () {
                 return {
                     CLEAN_CREDENTIALS: this.$t('environment.nodeInfo.cleanCredentialsLabel'),
+                    CLEAN_COOKIE: this.$t('environment.nodeInfo.cleanCookieLabel'),
+                    CLEAN_WEB_HISTORY: this.$t('environment.nodeInfo.cleanWebHistoryLabel'),
                     IOA_LOGIN: this.$t('environment.nodeInfo.ioaLoginLabel'),
                     IOA_LOGOUT: this.$t('environment.nodeInfo.ioaLogoutLabel')
                 }

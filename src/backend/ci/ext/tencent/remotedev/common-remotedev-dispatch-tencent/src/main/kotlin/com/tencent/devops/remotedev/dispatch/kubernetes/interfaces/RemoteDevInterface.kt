@@ -37,6 +37,8 @@ import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
+import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
+import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmResp
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.remotedev.SyncVmInfo
 import com.tencent.devops.remotedev.pojo.remotedev.SyncVmResp
@@ -174,4 +176,8 @@ interface RemoteDevInterface {
     fun syncVm(
         data: SyncVmInfo
     ): SyncVmResp?
+
+    fun createCvm(
+        data: CreateCvmData
+    ): CreateCvmResp?
 }

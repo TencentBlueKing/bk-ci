@@ -47,6 +47,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.detail.StageBuildDetailService
 import com.tencent.devops.process.pojo.BuildStageStatus
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
 import org.jooq.DSLContext
@@ -84,6 +85,24 @@ class StageBuildRecordService(
     pipelineResourceVersionDao = pipelineResourceVersionDao,
     pipelineElementService = pipelineElementService
 ) {
+
+    fun getRecord(
+        transactionContext: DSLContext?,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        executeCount: Int
+    ): BuildRecordStage? {
+        return recordStageDao.getRecord(
+            transactionContext ?: dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId,
+            executeCount = executeCount
+        )
+    }
 
     fun updateStageStatus(
         projectId: String,

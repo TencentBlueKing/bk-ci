@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -57,9 +58,11 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.JobHeartbeatRequest
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.AtomRuntimeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -111,9 +114,10 @@ import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
+import jakarta.ws.rs.NotFoundException
+import java.time.Duration
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
-import jakarta.ws.rs.NotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -509,6 +513,16 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             }
         }
 
+        val labels = mutableMapOf<String, Any?>()
+        labels[PipelineBuildStatusBroadCastEvent.Labels::startTime.name] = startUpVMTask.startTime?.timestamp()
+        labels[PipelineBuildStatusBroadCastEvent.Labels::executeDuration.name] =
+            Duration.between(startUpVMTask.startTime, LocalDateTime.now()).toMillis()
+        labels[PipelineBuildStatusBroadCastEvent.Labels::specialStep.name] = VMUtils.getVmLabel(startUpVMTask.taskId)
+        if (finalBuildStatus.isFailure()) {
+            labels[PipelineBuildStatusBroadCastEvent.Labels::errorCode.name] = errorCode
+            labels[PipelineBuildStatusBroadCastEvent.Labels::errorType.name] = errorType
+            labels[PipelineBuildStatusBroadCastEvent.Labels::errorMessage.name] = errorMsg
+        }
         // #1613 完善日志
         errorType?.let { message = "$message \nerrorType: ${errorType.getI18n(I18nUtil.getDefaultLocaleLanguage())}" }
         errorCode?.let { message = "$message \nerrorCode: $errorCode" }
@@ -528,6 +542,24 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 executeCount = startUpVMTask.executeCount,
                 actionType = actionType,
                 reason = message
+            ),
+            // 开机插件-结束
+            PipelineBuildStatusBroadCastEvent(
+                source = "startVMTask-${startUpVMTask.taskId}",
+                projectId = startUpVMTask.projectId,
+                pipelineId = startUpVMTask.pipelineId,
+                userId = startUpVMTask.starter,
+                taskId = startUpVMTask.taskId,
+                buildId = startUpVMTask.buildId,
+                actionType = actionType,
+                containerHashId = startUpVMTask.containerHashId,
+                jobId = startUpVMTask.jobId,
+                stepId = startUpVMTask.stepId,
+                atomCode = startUpVMTask.atomCode,
+                executeCount = startUpVMTask.executeCount,
+                buildStatus = finalBuildStatus.name,
+                type = PipelineBuildStatusBroadCastEventType.BUILD_TASK_END,
+                labels = labels
             )
         )
         return true
@@ -656,7 +688,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         atomCode = task.atomCode,
                         executeCount = task.executeCount,
                         actionType = ActionType.REFRESH,
-                        buildStatus = task.status.name,
+                        buildStatus = BuildStatus.PAUSE.name,
                         type = PipelineBuildStatusBroadCastEventType.BUILD_TASK_PAUSE
                     )
                 )
@@ -713,7 +745,11 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         containerHashId = task.containerHashId, jobId = task.jobId, stageId = task.stageId,
                         stepId = task.stepId, atomCode = task.atomCode, executeCount = task.executeCount,
                         buildStatus = BuildStatus.RUNNING.name,
-                        type = PipelineBuildStatusBroadCastEventType.BUILD_TASK_START
+                        type = PipelineBuildStatusBroadCastEventType.BUILD_TASK_START,
+                        labels = mapOf(
+                            PipelineBuildStatusBroadCastEvent.Labels::startTime.name to
+                                LocalDateTime.now().timestamp()
+                        )
                     )
                 )
                 val signToken = UUIDUtil.generate()
@@ -861,7 +897,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             errorMsg = result.message,
             atomVersion = result.elementVersion
         )
-        val updateTaskStatusInfos = taskBuildRecordService.taskEnd(endParam)
+        val (updateTaskStatusInfos, recordTask) = taskBuildRecordService.taskEnd(endParam)
         updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
             pipelineTaskService.updateTaskStatusInfo(
                 task = null,
@@ -902,7 +938,19 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 source = "completeClaimBuildTask",
                 sendEventFlag = false
             )
-
+            val timeCost = recordTask?.taskVar?.get(Element::timeCost.name) as BuildRecordTimeCost?
+            val labels = mutableMapOf<String, Any?>()
+            labels[PipelineBuildStatusBroadCastEvent.Labels::startTime.name] = recordTask?.startTime?.timestamp()
+            labels[PipelineBuildStatusBroadCastEvent.Labels::duration.name] = timeCost?.totalCost
+            labels[PipelineBuildStatusBroadCastEvent.Labels::executeDuration.name] = timeCost?.executeCost
+            labels[PipelineBuildStatusBroadCastEvent.Labels::systemDuration.name] = timeCost?.systemCost
+            labels[PipelineBuildStatusBroadCastEvent.Labels::queueDuration.name] = timeCost?.queueCost
+            labels[PipelineBuildStatusBroadCastEvent.Labels::reviewDuration.name] = timeCost?.waitCost
+            if (buildStatus.isFailure()) {
+                labels[PipelineBuildStatusBroadCastEvent.Labels::errorCode.name] = result.errorCode
+                labels[PipelineBuildStatusBroadCastEvent.Labels::errorType.name] = result.errorType
+                labels[PipelineBuildStatusBroadCastEvent.Labels::errorMessage.name] = result.message
+            }
             pipelineEventDispatcher.dispatch(
                 // market task 结束
                 PipelineBuildStatusBroadCastEvent(
@@ -911,7 +959,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     buildId = buildId, taskId = result.taskId, actionType = ActionType.END,
                     containerHashId = task.containerHashId, jobId = task.jobId, stageId = task.stageId,
                     stepId = task.stepId, atomCode = task.atomCode, executeCount = task.executeCount,
-                    buildStatus = buildStatus.name, type = PipelineBuildStatusBroadCastEventType.BUILD_TASK_END
+                    buildStatus = buildStatus.name, type = PipelineBuildStatusBroadCastEventType.BUILD_TASK_END,
+                    labels = labels
                 )
             )
         }
