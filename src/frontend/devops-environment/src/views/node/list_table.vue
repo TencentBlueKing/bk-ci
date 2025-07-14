@@ -121,6 +121,7 @@
                     :ref="`belongsLabelBox_${props.$index}`"
                     slot-scope="props"
                     class="group-label-warpper"
+                    v-if="props.row.tags"
                 >
                     <template v-if="labelGroups[props.$index].visibleLabels">
                         <span
@@ -160,6 +161,7 @@
                         </bk-popover>
                     </template>
                 </div>
+                <span v-else>--</span>
             </bk-table-column>
             <bk-table-column
                 v-if="allRenderColumnMap.os"
@@ -549,6 +551,7 @@
                             :name="`key_${index}`"
                             v-validate="'required'"
                             :class="{ 'is-danger': errors.has(`key_${index}`) }"
+                            @change="handleTagKeyChang(index)"
                         >
                             <bk-option
                                 v-for="option in tagKeyIdList"
@@ -1030,6 +1033,9 @@
                     tagKeyId: '',
                     tagValueId: ''
                 }]
+            },
+            handleTagKeyChang (index) {
+                this.setTagForm[index].tagValueId = ''
             },
             handleApplyPermission (node) {
                 this.handleNoPermission({
