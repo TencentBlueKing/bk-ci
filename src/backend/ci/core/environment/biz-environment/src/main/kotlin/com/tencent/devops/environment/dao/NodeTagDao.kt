@@ -140,7 +140,7 @@ class NodeTagDao {
     }
 
     // 查询节点有哪些标签
-    fun fetchNodesTags(dslContext: DSLContext, projectId: String, nodeIds: Set<Long>): Map<Long, List<NodeTag>> {
+    fun fetchNodesTags(dslContext: DSLContext, projectId: String, nodeIds: Set<Long>): Map<Long, MutableList<NodeTag>> {
         val resM = mutableMapOf<Long, MutableMap<Long, NodeTag>>()
         dslContext.select(
             TNodeTags.T_NODE_TAGS.NODE_ID,
@@ -173,7 +173,7 @@ class NodeTagDao {
                     internal = false
                 )
             }
-        return resM.map { it.key to it.value.values.toList() }.toMap()
+        return resM.map { it.key to it.value.values.toMutableList() }.toMap()
     }
 
     // 查询节点有哪些内部标签
@@ -181,7 +181,7 @@ class NodeTagDao {
         dslContext: DSLContext,
         projectId: String,
         nodeIds: Set<Long>
-    ): Map<Long, List<NodeTag>> {
+    ): Map<Long, MutableList<NodeTag>> {
         val resM = mutableMapOf<Long, MutableMap<Long, NodeTag>>()
         dslContext.select(
             TNodeTags.T_NODE_TAGS.NODE_ID,
@@ -214,7 +214,7 @@ class NodeTagDao {
                     internal = true
                 )
             }
-        return resM.map { it.key to it.value.values.toList() }.toMap()
+        return resM.map { it.key to it.value.values.toMutableList() }.toMap()
     }
 
     fun deleteNodesTags(dslContext: DSLContext, projectId: String, nodeId: Long) {
@@ -334,6 +334,12 @@ class NodeTagDao {
     fun fetchNodeTag(dslContext: DSLContext, projectId: String): List<TNodeTagsRecord> {
         with(TNodeTags.T_NODE_TAGS) {
             return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).fetch()
+        }
+    }
+
+    fun deleteByNodes(dslContext: DSLContext, nodeIds: List<Long>) {
+        with(TNodeTags.T_NODE_TAGS) {
+            dslContext.deleteFrom(this).where(NODE_ID.`in`(nodeIds)).execute()
         }
     }
 }

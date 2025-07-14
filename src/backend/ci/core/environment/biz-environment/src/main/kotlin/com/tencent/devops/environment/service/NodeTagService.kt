@@ -105,7 +105,7 @@ class NodeTagService @Autowired constructor(
         val nodeTags = nodeTagDao.fetchNodeTag(dslContext, projectId)
         val nodeTagsCountMap = mutableMapOf<Long, MutableMap<Long, Int>>()
         nodeTags.forEach {
-            val m = nodeTagsCountMap.putIfAbsent(it.tagKeyId, mutableMapOf()) ?: return@forEach
+            val m = nodeTagsCountMap.putIfAbsent(it.tagKeyId, mutableMapOf(it.tagValueId to 1)) ?: return@forEach
             if (m.contains(it.tagValueId)) {
                 m[it.tagValueId] = m[it.tagValueId]!! + 1
             } else {
@@ -350,10 +350,21 @@ class NodeTagService @Autowired constructor(
 
     // 查询这个节点有的标签
     fun fetchNodeTags(projectId: String, nodeIds: Set<Long>): Map<Long, List<NodeTag>> {
-        return mutableMapOf<Long, List<NodeTag>>().apply {
+        val res = mutableMapOf<Long, MutableList<NodeTag>>().apply {
             putAll(nodeTagDao.fetchNodesTags(dslContext, projectId, nodeIds))
-            putAll(nodeTagDao.fetchNodesInternalTags(dslContext, projectId, nodeIds))
         }
+        nodeTagDao.fetchNodesInternalTags(dslContext, projectId, nodeIds).forEach { (k, v) ->
+            res.putIfAbsent(k, v)?.addAll(v)
+        }
+        return res
+    }
+
+    // 为节点添加内置标签
+    fun editInternalTags(projectId: String, agentId: Long) {
+        logger.info("editInternalTags|add project $projectId|$agentId")
+        val tags = nodeTagDao.fetchInternalTag(dslContext)
+        val tpa = thirdPartyAgentDao.getAgentByProject(dslContext, agentId, projectId) ?: return
+        editNodeInternalTags(tags, tpa, projectId)
     }
 
     // OP使用，刷新内置标签数据
@@ -367,25 +378,33 @@ class NodeTagService @Autowired constructor(
         projects.forEach { projectId ->
             logger.info("refreshInternalNodeTags|add project $projectId")
             thirdPartyAgentDao.fetchByProjectId(dslContext, projectId).forEach { tpa ->
-                val osKeyId = tags["os"]?.tagKeyId
-                val osValueId = tags["os"]?.tagValues?.firstOrNull { it.tagValueName == tpa.os.lowercase() }?.tagValueId
-                val archKeyId = tags["arch"]?.tagKeyId
-                val archValueId =
-                    tags["arch"]?.tagValues?.firstOrNull { it.tagValueName == getAgentProperties(tpa)?.arch }?.tagValueId
-                val tagMap = mutableMapOf<Long, Long>()
-                if (osKeyId != null && osValueId != null) {
-                    tagMap[osValueId] = osKeyId
-                }
-                if (archKeyId != null && archValueId != null) {
-                    tagMap[archValueId] = archKeyId
-                }
-                logger.info("refreshInternalNodeTags|batchAddNodeTags $projectId|${tpa.nodeId}|$tagMap")
-                try {
-                    nodeTagDao.batchAddNodeTags(dslContext, projectId, tpa.nodeId, tagMap)
-                } catch (e: Exception) {
-                    logger.warn("refreshInternalNodeTags|batchAddNodeTags $projectId|${tpa.nodeId}|$tagMap error", e)
-                }
+                editNodeInternalTags(tags, tpa, projectId)
             }
+        }
+    }
+
+    private fun editNodeInternalTags(
+        tags: Map<String, NodeTag>,
+        tpa: TEnvironmentThirdpartyAgentRecord,
+        projectId: String
+    ) {
+        val osKeyId = tags["os"]?.tagKeyId
+        val osValueId = tags["os"]?.tagValues?.firstOrNull { it.tagValueName == tpa.os.lowercase() }?.tagValueId
+        val archKeyId = tags["arch"]?.tagKeyId
+        val archValueId =
+            tags["arch"]?.tagValues?.firstOrNull { it.tagValueName == getAgentProperties(tpa)?.arch }?.tagValueId
+        val tagMap = mutableMapOf<Long, Long>()
+        if (osKeyId != null && osValueId != null) {
+            tagMap[osValueId] = osKeyId
+        }
+        if (archKeyId != null && archValueId != null) {
+            tagMap[archValueId] = archKeyId
+        }
+        logger.info("editNodeInternalTags|batchAddNodeTags $projectId|${tpa.nodeId}|$tagMap")
+        try {
+            nodeTagDao.batchAddNodeTags(dslContext, projectId, tpa.nodeId, tagMap)
+        } catch (e: Exception) {
+            logger.warn("editNodeInternalTags|batchAddNodeTags $projectId|${tpa.nodeId}|$tagMap error", e)
         }
     }
 
