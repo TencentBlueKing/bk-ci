@@ -297,7 +297,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         } ?: I18nUtil.getCodeLanMessage(BK_NO_FAIL_DATA)
 
         val qualityIndexResult = I18nUtil.getCodeLanMessage(
-            if (codeQualityValue == 100.0) BK_UP_TO_PAR else BK_NOT_UP_TO_PAR
+            if (codeQualityValue >= 100) BK_UP_TO_PAR else BK_NOT_UP_TO_PAR
         )
 
         return """
