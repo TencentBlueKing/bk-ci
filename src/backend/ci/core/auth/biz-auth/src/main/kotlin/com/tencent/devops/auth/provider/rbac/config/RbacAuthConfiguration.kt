@@ -369,7 +369,8 @@ class RbacAuthConfiguration {
         resourceGroupMemberService: RbacPermissionResourceMemberService,
         client: Client,
         resourceMemberService: PermissionResourceMemberService,
-        permissionManageFacadeService: PermissionManageFacadeService
+        permissionManageFacadeService: PermissionManageFacadeService,
+        permissionPostProcessor: PermissionPostProcessor
     ) = RbacPermissionProjectService(
         authHelper = authHelper,
         authResourceService = authResourceService,
@@ -379,7 +380,8 @@ class RbacAuthConfiguration {
         resourceGroupMemberService = resourceGroupMemberService,
         client = client,
         resourceMemberService = resourceMemberService,
-        permissionManageFacadeService = permissionManageFacadeService
+        permissionManageFacadeService = permissionManageFacadeService,
+        permissionPostProcessor = permissionPostProcessor
     )
 
     @Bean

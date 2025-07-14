@@ -33,6 +33,7 @@ import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
+import com.tencent.devops.auth.service.iam.PermissionPostProcessor
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -58,7 +59,8 @@ class RbacPermissionProjectService(
     private val resourceGroupMemberService: RbacPermissionResourceMemberService,
     private val client: Client,
     private val resourceMemberService: PermissionResourceMemberService,
-    private val permissionManageFacadeService: PermissionManageFacadeService
+    private val permissionManageFacadeService: PermissionManageFacadeService,
+    private val permissionPostProcessor: PermissionPostProcessor
 ) : PermissionProjectService {
 
     companion object {
@@ -111,7 +113,7 @@ class RbacPermissionProjectService(
                 AuthPermission.get(action), finalResourceType
             )
             val instanceMap = authHelper.groupRbacInstanceByType(userId, useAction)
-            return if (instanceMap.contains("*")) {
+            val result = if (instanceMap.contains("*")) {
                 logger.info("super manager has all project|$userId")
                 authResourceService.getAllResourceCode(
                     resourceType = AuthResourceType.PROJECT.value
@@ -121,6 +123,12 @@ class RbacPermissionProjectService(
                 logger.info("get user projects:$projectList")
                 projectList
             }
+            permissionPostProcessor.getUserProjectsByAction(
+                userId = userId,
+                action = useAction,
+                externalApiResult = result
+            )
+            return result
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to get user projects by permission"
