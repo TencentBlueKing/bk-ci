@@ -11,36 +11,61 @@
                 <section class="filter-bar">
                     <div class="btn-part">
                         <template v-if="isExtendTx">
-                            <bk-button
-                                v-perm="{
-                                    permissionData: {
-                                        projectId: projectId,
-                                        resourceType: NODE_RESOURCE_TYPE,
-                                        resourceCode: projectId,
-                                        action: NODE_RESOURCE_ACTION.CREATE
-                                    }
-                                }"
-                                theme="primary"
-                                @click="toImportNode('construct')"
-                                key="thirdPartyBuildMachine"
+                            <bk-dropdown-menu
+                                trigger="click"
+                                class="mr10"
+                                @show="dropdown"
+                                @hide="dropdown"
                             >
-                                {{ $t('environment.thirdPartyBuildMachine') }}
-                            </bk-button>
-                            <bk-button
-                                v-perm="{
-                                    permissionData: {
-                                        projectId: projectId,
-                                        resourceType: NODE_RESOURCE_TYPE,
-                                        resourceCode: projectId,
-                                        action: NODE_RESOURCE_ACTION.CREATE
-                                    }
-                                }"
-                                theme="primary"
-                                @click="toImportNode('cmdb')"
-                                key="idcTestMachine"
-                            >
-                                {{ $t('environment.nodeInfo.idcTestMachine') }}
-                            </bk-button>
+                                <bk-button
+                                    theme="primary"
+                                    key="thirdPartyBuildMachine"
+                                    slot="dropdown-trigger"
+                                >
+                                    {{ $t('environment.nodeInfo.importNode') }}
+                                    <i :class="['bk-icon icon-angle-down',{ 'icon-flip': isDropdownShow }]"></i>
+                                </bk-button>
+                                <ul
+                                    class="bk-dropdown-list"
+                                    slot="dropdown-content"
+                                >
+                                    <li>
+                                        <a
+                                            href="javascript:;"
+                                            v-perm="{
+                                                permissionData: {
+                                                    projectId: projectId,
+                                                    resourceType: NODE_RESOURCE_TYPE,
+                                                    resourceCode: projectId,
+                                                    action: NODE_RESOURCE_ACTION.CREATE
+                                                }
+                                            }"
+                                            @click="toImportNode('construct')"
+                                            key="thirdPartyBuildMachine"
+                                        >
+                                            {{ $t('environment.thirdPartyBuildMachine') }}
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a
+                                            href="javascript:;"
+                                            v-perm="{
+                                                permissionData: {
+                                                    projectId: projectId,
+                                                    resourceType: NODE_RESOURCE_TYPE,
+                                                    resourceCode: projectId,
+                                                    action: NODE_RESOURCE_ACTION.CREATE
+                                                }
+                                            }"
+                                            theme="primary"
+                                            @click="toImportNode('cmdb')"
+                                            key="idcTestMachine"
+                                        >
+                                            {{ $t('environment.nodeInfo.idcTestMachine') }}
+                                        </a>
+                                    </li>
+                                </ul>
+                            </bk-dropdown-menu>
                         </template>
                         <bk-button
                             v-else
@@ -76,12 +101,14 @@
                             key="search"
                         ></SearchSelect>
                         <bk-search-select
-                            class="search-input"
+                            class="tag-search"
                             v-model="tagSearchValue"
                             :placeholder="$t('environment.pleaseEnterTag')"
                             :data="tagFilterData"
                             :show-condition="false"
                             clearable
+                            @change="handleTagChange"
+                            @clear="handleClearTagSearch"
                         ></bk-search-select>
                         <bk-date-picker
                             ref="dateTimeRangeRef"
@@ -298,7 +325,8 @@
                 taskId: 0, // 查询安装日志 -> 安装Agent任务Id
                 currentNodeType: '',
                 currentTags: [],
-                tagSearchValue: []
+                tagSearchValue: [],
+                isDropdownShow: false
             }
         },
         computed: {
@@ -375,7 +403,6 @@
                         id: 'latestBuildPipelineId',
                         remoteMethod:
                             async (search) => {
-                                console.log(search)
                                 const res = await this.$store.dispatch('environment/getLatestBuildPipelineList', {
                                     projectId: this.projectId
                                 })
@@ -474,21 +501,6 @@
                     this.requestParams = {}
                 }
                 this.requestList(this.requestParams)
-            },
-            tagSearchValue (val) {
-                if (val.length) {
-                    const tags = val.map(item => {
-                        return {
-                            tagKeyId: item.id,
-                            tagValues: item.values.map(value => value.id)
-                        }
-                    })
-                    this.currentTags = tags
-                    this.pagination.current = 1
-                } else {
-                    this.syncCurrentTags()
-                }
-                this.requestList(this.requestParams)
             }
         },
         created () {
@@ -506,12 +518,23 @@
         },
         methods: {
             ...mapActions('environment', ['requestGetCounts']),
+            dropdown () {
+                this.isDropdownShow = !this.isDropdownShow
+            },
             findTagByValueId (tagValueId) {
                 if (!this.nodeTagList?.length) return []
                 
                 for (const tagGroup of this.nodeTagList) {
                     const foundTag = tagGroup.tagValues?.find(tag => String(tag.tagValueId) === String(tagValueId))
                     if (foundTag) {
+                        this.tagSearchValue = [{
+                            id: tagGroup.tagKeyId,
+                            name: tagGroup.tagKeyName,
+                            values: [{
+                                id: foundTag.tagValueId,
+                                name: foundTag.tagValueName
+                            }]
+                        }]
                         return [{
                             tagKeyId: tagGroup.tagKeyId,
                             tagValues: [foundTag.tagValueId]
@@ -532,10 +555,37 @@
                     this.currentNodeType = ''
                 }
             },
+            handleTagChange (val) {
+                if (val.length) {
+                    const tags = val.map(item => {
+                        return {
+                            tagKeyId: item.id,
+                            tagValues: item.values.map(value => value.id)
+                        }
+                    })
+                    this.currentTags = tags
+                    this.pagination.current = 1
+                } else {
+                    this.syncCurrentTags()
+                }
+                this.requestList(this.requestParams)
+            },
             async handleNodeTypeChange () {
+                this.tagSearchValue = []
                 await this.syncCurrentTags()
                 await this.requestList()
             },
+
+            handleClearTagSearch () {
+                this.tagSearchValue = []
+                this.currentTags = []
+                if (!this.currentNodeType) {
+                    this.$router.push({ name: 'nodeList', params: { nodeType: 'allNode' } })
+                } else {
+                    this.requestList()
+                }
+            },
+
             async init () {
                 const {
                     loading
@@ -879,13 +929,17 @@
                 this.agentNotInstallNodesCount = agentNotInstallNodesCount
                 this.$refs.importTipsDialog.isShow = true
                 this.cmdbNodeSelectConf.isShow = false
+                if (this.$route.params.nodeType === 'CMDB') {
+                    this.requestList()
+                } else {
+                    this.$router.push({
+                        name: 'nodeList',
+                        params: {
+                            nodeType: 'CMDB'
+                        }
+                    })
+                }
                 await this.requestGetCounts(this.projectId)
-                this.$router.push({
-                    name: 'nodeList',
-                    params: {
-                        nodeType: 'CMDB'
-                    }
-                })
             },
             cancelCmdbFn () {
                 this.cmdbNodeSelectConf.isShow = false
@@ -987,6 +1041,8 @@
                 this.$refs.dateTimeRangeRef?.handleClear()
                 this.searchValue = []
                 this.tagSearchValue = []
+                this.currentTags = []
+                this.$router.push({ name: 'nodeList', params: { nodeType: 'allNode' } })
             },
             handleInstallEnd () {
                 this.requestList(this.requestParams)
@@ -1004,7 +1060,7 @@
     }
 
     .node-list-wrapper {
-        height: 100%;
+        height: calc(100vh - 146px);
         overflow: hidden;
         margin: 24px;
 
@@ -1096,7 +1152,7 @@
             flex: 1;
 
             .bk-date-picker.long {
-                max-width: 160px;
+                max-width: 170px;
             }
         }
         
@@ -1116,6 +1172,10 @@
             ::placeholder {
                 color: #c4c6cc;
             }
+        }
+        .tag-search {
+            width: 140px;
+            margin-right: 10px;
         }
     }
 </style>

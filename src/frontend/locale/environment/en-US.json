@@ -354,8 +354,8 @@
     "key": "Key",
     "passwordPlaceholder": "Please enter password",
     "uploadTips": "Supported file extensions: .rar .zip .doc .docx .pdf .jpg…",
-    "passwordTips": "Login via SSH, e.g. ssh {0}@10.0.0.1 -p 22 > password",
-    "keyFileTips": "Login via SSH with key file, e.g. ssh {0}@10.0.0.1 -p 22 -i mykeypair.pem",
+    "passwordTips": "Login via SSH, e.g. ssh {0}",
+    "keyFileTips": "Login via SSH with key file, e.g. ssh {0}",
     "installingTips": "Installing GSE Agent, please wait",
     "installSuccessTips": "GSE Agent installed successfully",
     "installFailTips": "Failed to install GSE Agent",
@@ -498,7 +498,7 @@
     "tag": "Tag",
     "setTag": "Set Tags",
     "allNodes": "All Nodes",
-    "privateBuildNode": "Private Build Nodes",
+    "selfHostedNodes": "Self-hosted Nodes",
     "deploymentNode": "Deployment Nodes",
     "byNodeLabel": "By Node Tags",
     "confirmDeleteTag": "Confirm delete tag [{0}]?",
@@ -508,5 +508,7 @@
     "labelInUseRemoveNodesBeforeEditOrDelete": "Tags used by environments cannot be modified/deleted. If you need to operate, please remove all nodes under the tag first",
     "tagLabel": "Tag Label",
     "tagValue": "Tag Value",
-    "pleaseEnterTag": "Please enter node tag"
+    "pleaseEnterTag": "Search node tags",
+    "builtInLabelCannotBeDeleted": "Built-in labels cannot be deleted",
+    "builtInLabelCannotBeModified": "Built-in labels cannot be modified"
 }

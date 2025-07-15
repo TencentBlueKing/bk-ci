@@ -44,7 +44,7 @@
                 <li
                     v-for="groupItem in group.groups"
                     :key="groupItem.tagKeyId"
-                    class="label-group"
+                    :class="['label-group', isGroupExpanded(groupItem.tagKeyId) ? 'active-list' : '']"
                 >
                     <div
                         class="group-header"
@@ -79,22 +79,40 @@
                             >
                                 <li
                                     @click="handleChangeTag(false, groupItem)"
-                                >
-                                    <a href="javascript:;">{{ $t('environment.updateTag') }}</a>
-                                </li>
-                                <li
-                                    @click="handleDeleteLabel(groupItem)"
-                                    v-bk-tooltips="{ content: $t('environment.removeNodesBeforeDeletingLabel'), disabled: !groupItem.canDelete }"
+                                    v-bk-tooltips="{
+                                        content: $t('environment.builtInLabelCannotBeModified'),
+                                        disabled: groupItem.canUpdate !== 'INTERNAL'
+                                    }"
                                 >
                                     <a
                                         href="javascript:;"
-                                        v-if="!groupItem.canDelete"
+                                        v-if="groupItem.canUpdate !== 'INTERNAL'"
+                                    >{{ $t('environment.updateTag') }}</a>
+                                    <bk-button
+                                        v-else
+                                        text
+                                        class="no-can-delete"
+                                        :disabled="groupItem.canUpdate === 'INTERNAL'"
+                                    >
+                                        {{ $t('environment.updateTag') }}
+                                    </bk-button>
+                                </li>
+                                <li
+                                    @click="handleDeleteLabel(groupItem)"
+                                    v-bk-tooltips="{
+                                        content: groupItem.canUpdate === 'INTERNAL' ? $t('environment.builtInLabelCannotBeDeleted') : $t('environment.removeNodesBeforeDeletingLabel'),
+                                        disabled: groupItem.canUpdate === 'TRUE'
+                                    }"
+                                >
+                                    <a
+                                        href="javascript:;"
+                                        v-if="groupItem.canUpdate === 'TRUE'"
                                     >{{ $t('environment.delete') }}</a>
                                     <bk-button
                                         v-else
                                         text
                                         class="no-can-delete"
-                                        :disabled="groupItem.canDelete"
+                                        :disabled="groupItem.canUpdate !== 'TRUE'"
                                     >
                                         {{ $t('environment.delete') }}
                                     </bk-button>
@@ -143,9 +161,9 @@
             <div class="tag-dialog-content">
                 <bk-alert
                     type="info"
-                    v-if="isNodeLabelInUse"
+                    v-if="formData.canUpdate !== 'TRUE'"
                     class="tag-info"
-                    :title="$t('environment.labelInUseRemoveNodesBeforeEditOrDelete')"
+                    :title="formData.canUpdate === 'INTERNAL' ? $t('environment.builtInLabelCannotBeModified') : $t('environment.labelInUseRemoveNodesBeforeEditOrDelete')"
                 ></bk-alert>
                 <bk-form
                     :label-width="100"
@@ -159,7 +177,7 @@
                         <input
                             v-model="formData.tagKeyName"
                             :clearable="true"
-                            :disabled="isNodeLabelInUse"
+                            :disabled="formData.canUpdate !== 'TRUE'"
                             :maxlength="64"
                             :name="`tagLabel_${index}`"
                             v-validate="'required'"
@@ -184,7 +202,7 @@
                                 <input
                                     v-model="formData.tagValues[index].tagValueName"
                                     :clearable="true"
-                                    :disabled="item.nodeCount > 0"
+                                    :disabled="item.canUpdate !== 'TRUE'"
                                     :maxlength="64"
                                     :name="`tagValueName_${index}`"
                                     v-validate="'required'"
@@ -238,7 +256,9 @@
                 dialogTopOffset: null,
                 formData: {
                     tagKeyName: '',
+                    canUpdate: 'TRUE',
                     tagValues: [{
+                        canUpdate: 'TRUE',
                         tagValueName: ''
                     }]
                 }
@@ -260,30 +280,19 @@
                         type: 'node_type',
                         groups: [
                             { id: 'allNode', name: this.$t('environment.allNodes'), nodeCount: totalCount },
-                            { id: 'THIRDPARTY', name: this.$t('environment.privateBuildNode'), nodeCount: THIRDPARTY },
+                            { id: 'THIRDPARTY', name: this.$t('environment.selfHostedNodes'), nodeCount: THIRDPARTY },
                             { id: 'CMDB', name: this.$t('environment.deploymentNode'), nodeCount: CMDB }
                         ]
                     },
                     {
                         type: 'tag_type',
                         tltle: this.$t('environment.byNodeLabel'),
-                        groups: this.nodeTagList.map(i => ({
-                            ...i,
-                            canDelete: i.tagValues.reduce((sum, tagValue) => {
-                                return sum + tagValue.nodeCount
-                            }, 0) > 0
-                        }))
+                        groups: this.nodeTagList
                     }
                 ]
             },
             tagTitle () {
                 return this.isAdd ? this.$t('environment.addTag') : this.$t('environment.updateTag')
-            },
-            isNodeLabelInUse () {
-                const totalNodeCount = this.formData.tagValues.reduce((sum, tagValue) => {
-                    return sum + (tagValue.nodeCount || 0)
-                }, 0)
-                return totalNodeCount > 0
             }
         },
         watch: {
@@ -369,7 +378,7 @@
                 this.$router.push({ name: 'nodeList', params: { nodeType } })
             },
             handleDeleteLabel (groupItem) {
-                if (groupItem.canDelete) {
+                if (groupItem.canUpdate !== 'TRUE') {
                     return
                 }
                 this.$bkInfo({
@@ -409,6 +418,7 @@
             },
             addTagValueRow () {
                 this.formData.tagValues.push({
+                    canUpdate: 'TRUE',
                     tagValueName: ''
                 })
             },
@@ -432,7 +442,7 @@
                 })
                 if (res) {
                     this.$bkMessage({
-                        message: this.$t('environment.新增成功'),
+                        message: this.$t('environment.successfullyAdded'),
                         theme: 'success'
                     })
                 }
@@ -441,7 +451,7 @@
                 const params = {
                     tagKeyId: this.formData.tagKeyId,
                     tagKeyName: this.formData.tagKeyName,
-                    tagValues: this.formData.tagValues.map(({ nodeCount, ...rest }) => rest)
+                    tagValues: this.formData.tagValues.map(({ nodeCount, canUpdate, ...rest }) => rest)
                 }
 
                 const res = await this.$store.dispatch('environment/editNodeTag', {
@@ -450,7 +460,7 @@
                 })
                 if (res) {
                     this.$bkMessage({
-                        message: this.$t('environment.编辑成功'),
+                        message: this.$t('environment.successfullyModified'),
                         theme: 'success'
                     })
                 }
@@ -479,7 +489,9 @@
                 this.isShowTagChange = false
                 this.formData = {
                     tagKeyName: '',
+                    canUpdate: 'TRUE',
                     tagValues: [{
+                        canUpdate: 'TRUE',
                         tagValueName: ''
                     }]
                 }
@@ -532,7 +544,7 @@
   }
 
   .label-list {
-    max-height: calc(100vh - 274px);
+    height: calc(100vh - 274px);
     overflow-y: auto;
     margin-bottom: 4px;
     color: #63656E;
@@ -567,7 +579,11 @@
   }
   
   .node-item:hover, .sub-node-item:hover {
-    background-color: #F0F1F5;
+    background-color: #f5f7fa;
+  }
+
+  .active-list {
+    background-color: #FAFBFD;
   }
   
   .node-item.active, .sub-node-item.active {
