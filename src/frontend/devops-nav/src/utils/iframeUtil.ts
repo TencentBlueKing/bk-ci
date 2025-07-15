@@ -17,6 +17,12 @@ function iframeUtil (router: any) {
     }
 
     function onMessage (e) {
+        if (![
+            location.origin
+        ].includes(e.origin)) {
+            console.warn(`Untrusted origin: ${e.origin}`)
+            return
+        }
         parseMessage(e.data)
     }
 

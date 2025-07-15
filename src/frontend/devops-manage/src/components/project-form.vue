@@ -1,25 +1,25 @@
 <script setup lang="ts">
+import DialectPopoverTable from "@/components/dialectPopoverTable.vue";
+import copyImg from "@/css/svg/copy.svg";
+import http from '@/http/api';
+import { copyToClipboard } from "@/utils/util.js";
+import { Alert, Button, InfoBox, Message, Popover } from 'bkui-vue';
 import {
   EditLine,
 } from 'bkui-vue/lib/icon';
 import {
   computed,
   getCurrentInstance,
+  h,
   nextTick,
   onBeforeUnmount,
   onMounted,
   ref,
   shallowRef,
-  watch,
-  h
+  watch
 } from 'vue';
 import { useI18n } from 'vue-i18n';
 import IAMIframe from './IAM-Iframe';
-import { Message, Popover, InfoBox, Alert, Button } from 'bkui-vue';
-import http from '@/http/api';
-import DialectPopoverTable from "@/components/dialectPopoverTable.vue";
-import copyImg from "@/css/svg/copy.svg";
-import { copyToClipboard } from "@/utils/util.js"
 const {
   t,
 } = useI18n();
@@ -439,7 +439,10 @@ const handleToPipeline = (row) => {
 }
 
 const handleMessage = (event: any) => {
-  const { data } = event;
+  const { data, origin } = event;
+  if (![window.BK_IAM_URL_PREFIX, location.origin].includes(origin)) {
+    return;
+  }
   if (data.type === 'IAM') {
     switch (data.code) {
       case 'success':

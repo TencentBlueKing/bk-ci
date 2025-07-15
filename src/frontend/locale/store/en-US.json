@@ -768,5 +768,6 @@
   "CodeBuddy（内网版）": "CodeBuddy (internal version)",
   "请选择中心": "Please select a center",
   "请选择归属部门": "Please select an affiliated department",
-  "归属信息": "Affiliation Information"
+  "归属信息": "Affiliation Information",
+  "typeError": "Type Error"
 }

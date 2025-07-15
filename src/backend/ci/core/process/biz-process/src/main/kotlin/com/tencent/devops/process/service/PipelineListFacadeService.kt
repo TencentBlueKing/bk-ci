@@ -2314,4 +2314,13 @@ class PipelineListFacadeService @Autowired constructor(
         } ?: emptyList()
         return SQLPage(count = count.toLong(), records = records)
     }
+
+    fun listDisabledPipelines(
+        projectId: String
+    ): List<String> {
+        return pipelineInfoDao.listDisabledPipelineIds(
+            dslContext = dslContext,
+            projectId = projectId
+        )
+    }
 }

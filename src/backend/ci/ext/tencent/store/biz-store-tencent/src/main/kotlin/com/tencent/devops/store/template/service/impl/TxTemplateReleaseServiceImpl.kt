@@ -41,9 +41,11 @@ import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.common.service.StoreVisibleDeptService
+import com.tencent.devops.store.common.service.TxStoreBelongDeptService
 import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
+import com.tencent.devops.store.pojo.template.MarketTemplateRelRequest
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import com.tencent.devops.store.template.service.TemplateVisibleDeptService
 import com.tencent.devops.store.template.service.TxTemplateReleaseService
@@ -61,6 +63,9 @@ class TxTemplateReleaseServiceImpl : TxTemplateReleaseService, TemplateReleaseSe
 
     @Autowired
     private lateinit var templateVisibleDeptService: TemplateVisibleDeptService
+
+    @Autowired
+    private lateinit var txStoreBelongDeptService: TxStoreBelongDeptService
 
     private val logger = LoggerFactory.getLogger(TxTemplateReleaseServiceImpl::class.java)
 
@@ -96,6 +101,18 @@ class TxTemplateReleaseServiceImpl : TxTemplateReleaseService, TemplateReleaseSe
         templateVisibleDeptService.validateTemplateVisibleDept(
             templateCode = templateCode,
             deptInfos = templateDeptInfos
+        )
+    }
+
+    override fun handleTemplateExtend(
+        userId: String,
+        templateCode: String,
+        marketTemplateRelRequest: MarketTemplateRelRequest
+    ) {
+        txStoreBelongDeptService.initStoreBelongDept(
+            userId = userId,
+            storeType = StoreTypeEnum.TEMPLATE,
+            storeCode = templateCode
         )
     }
 
