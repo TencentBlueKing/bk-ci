@@ -133,6 +133,7 @@ const val BATCH_ID = "batchId" // 批次ID
 const val PARAM = "param" // 参数
 const val ERROR = "error" // 错误
 const val OPERATE = "operate" // 操作
+const val SENSITIVE = "isSensitive"
 
 const val KEY_START_TIME = "startTime"
 const val KEY_END_TIME = "endTime"

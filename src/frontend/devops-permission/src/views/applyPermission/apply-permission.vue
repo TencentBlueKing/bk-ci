@@ -52,13 +52,6 @@ const curProject = ref(null);
 const isDisabled = ref(true);
 
 const rules = {
-  projectCode: [
-    {
-      validator: (val: string) => val,
-      message: t('请选择项目'),
-      trigger: 'change',
-    },
-  ],
   groupIds: [
     {
       validator: () => groupList.value.length,

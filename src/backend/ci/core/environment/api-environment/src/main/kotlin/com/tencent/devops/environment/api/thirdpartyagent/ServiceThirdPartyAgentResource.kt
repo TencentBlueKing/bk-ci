@@ -348,6 +348,28 @@ interface ServiceThirdPartyAgentResource {
         nodeName: String?
     ): Result<ThirdPartyAgentDetail?>
 
+    @Operation(summary = "获取构建机详情simple(by node id)")
+    @GET
+    @Path("/projects/{projectId}/agent_detail_simple_by_node_id")
+    fun getNodeDetailSimple(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "节点 Hash ID", required = false)
+        @QueryParam("nodeHashId")
+        nodeHashId: String?,
+        @Parameter(description = "agent Hash ID", required = false)
+        @QueryParam("agentHashId")
+        agentHashId: String?,
+        @Parameter(description = "是否校验权限", required = false)
+        @QueryParam("checkPermission")
+        @DefaultValue("false")
+        checkPermission: Boolean? = false
+    ): Result<ThirdPartyAgentDetail?>
+
     @Operation(summary = "获取第三方构建机任务")
     @GET
     @Path("/projects/{projectId}/listAgentBuilds")

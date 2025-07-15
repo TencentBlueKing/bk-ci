@@ -58,7 +58,8 @@ class RbacPermissionProjectService(
     private val resourceGroupMemberService: RbacPermissionResourceMemberService,
     private val client: Client,
     private val resourceMemberService: PermissionResourceMemberService,
-    private val permissionManageFacadeService: PermissionManageFacadeService
+    private val permissionManageFacadeService: PermissionManageFacadeService,
+    private val bkInternalPermissionComparator: BkInternalPermissionComparator
 ) : PermissionProjectService {
 
     companion object {
@@ -111,7 +112,7 @@ class RbacPermissionProjectService(
                 AuthPermission.get(action), finalResourceType
             )
             val instanceMap = authHelper.groupRbacInstanceByType(userId, useAction)
-            return if (instanceMap.contains("*")) {
+            val result = if (instanceMap.contains("*")) {
                 logger.info("super manager has all project|$userId")
                 authResourceService.getAllResourceCode(
                     resourceType = AuthResourceType.PROJECT.value
@@ -121,6 +122,12 @@ class RbacPermissionProjectService(
                 logger.info("get user projects:$projectList")
                 projectList
             }
+            bkInternalPermissionComparator.getUserProjectsByAction(
+                userId = userId,
+                action = useAction,
+                expectedResult = result
+            )
+            return result
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to get user projects by permission"
