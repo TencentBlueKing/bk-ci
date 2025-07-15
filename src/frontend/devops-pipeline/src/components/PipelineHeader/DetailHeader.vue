@@ -431,6 +431,8 @@
         height: 32px;
         line-height: 32px;
         font-size: 14px;
+        white-space: nowrap;
+        padding: 0 8px;
 
         &:hover {
             background-color: #f0f1f5;
