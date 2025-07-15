@@ -56,7 +56,8 @@ class UpgradeServiceTest {
                 jdkVersion = listOf("", "", "test-jdk-version"),
                 userProps = null,
                 dockerInitFileInfo = DockerInitFileInfo("", false),
-                exitError = null
+                exitError = null,
+                osVersion = null
             ),
             os = os,
             info = ThirdPartyAgentUpgradeByVersionInfo(
@@ -84,7 +85,8 @@ class UpgradeServiceTest {
                 jdkVersion = listOf("", "", "test-jdk-version"),
                 userProps = null,
                 dockerInitFileInfo = DockerInitFileInfo("", false),
-                exitError = null
+                exitError = null,
+                osVersion = null
             ),
             os = os,
             info = ThirdPartyAgentUpgradeByVersionInfo(
@@ -114,7 +116,8 @@ class UpgradeServiceTest {
                 jdkVersion = listOf("", "", "test-jdk-version"),
                 userProps = null,
                 dockerInitFileInfo = DockerInitFileInfo("", false),
-                exitError = null
+                exitError = null,
+                osVersion = null
             ),
             os = os,
             info = ThirdPartyAgentUpgradeByVersionInfo(
@@ -144,7 +147,8 @@ class UpgradeServiceTest {
                 jdkVersion = listOf("", "", "test-jdk-version"),
                 userProps = null,
                 dockerInitFileInfo = DockerInitFileInfo("", false),
-                exitError = null
+                exitError = null,
+                osVersion = null
             ),
             os = os,
             info = ThirdPartyAgentUpgradeByVersionInfo(
@@ -174,7 +178,8 @@ class UpgradeServiceTest {
                 jdkVersion = listOf("", "", "test-jdk-version"),
                 userProps = null,
                 dockerInitFileInfo = DockerInitFileInfo("", false),
-                exitError = null
+                exitError = null,
+                osVersion = null
             ),
             os = os,
             info = ThirdPartyAgentUpgradeByVersionInfo(
@@ -204,7 +209,8 @@ class UpgradeServiceTest {
                 jdkVersion = listOf("", "", "test-jdk-version"),
                 userProps = null,
                 dockerInitFileInfo = DockerInitFileInfo("", false),
-                exitError = null
+                exitError = null,
+                osVersion = null
             ),
             os = os,
             info = ThirdPartyAgentUpgradeByVersionInfo(
@@ -234,7 +240,8 @@ class UpgradeServiceTest {
                 jdkVersion = listOf("", "", "test-jdk-version"),
                 userProps = null,
                 dockerInitFileInfo = DockerInitFileInfo("", false),
-                exitError = null
+                exitError = null,
+                osVersion = null
             ),
             os = os,
             info = ThirdPartyAgentUpgradeByVersionInfo(

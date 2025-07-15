@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -43,6 +43,7 @@ import com.tencent.devops.project.dispatch.ShardingRoutingRuleDispatcher
 import com.tencent.devops.project.service.ShardingRoutingRuleService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
 
@@ -54,6 +55,7 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
 ) : ShardingRoutingRuleService {
     companion object {
         private val DEFAULT_RULE_REDIS_CACHE_TIME = TimeUnit.DAYS.toSeconds(14) // 分片规则在redis默认缓存时间
+        private val logger = LoggerFactory.getLogger(AbsShardingRoutingRuleServiceImpl::class.java)
     }
 
     /**
@@ -65,15 +67,18 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
     override fun addShardingRoutingRule(userId: String, shardingRoutingRule: ShardingRoutingRule): Boolean {
         val routingName = shardingRoutingRule.routingName
         val key = ShardingUtil.getShardingRoutingRuleKey(
-            clusterName = CommonUtils.getDbClusterName(),
+            clusterName = shardingRoutingRule.clusterName,
             moduleCode = shardingRoutingRule.moduleCode.name,
             ruleType = shardingRoutingRule.type.name,
             routingName = routingName,
             tableName = shardingRoutingRule.tableName
         )
+        logger.info("$userId addShardingRoutingRule params: rule:$shardingRoutingRule|" +
+                "clusterName:${CommonUtils.getDbClusterName()}")
         val lock = RedisLock(redisOperation, "$key:add", 30)
         try {
             lock.lock()
+            var isAdded = false
             dslContext.transaction { t ->
                 val context = DSL.using(t)
                 val nameCount = shardingRoutingRuleDao.countByName(
@@ -86,25 +91,31 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
                 )
                 if (nameCount > 0) {
                     // 已添加则无需重复添加
+                    logger.warn("Sharding routing rule($key) already exists")
                     return@transaction
                 }
                 // 规则入库
                 shardingRoutingRuleDao.add(context, userId, shardingRoutingRule)
+                isAdded = true // 事务提交成功后标记
+            }
+            if (isAdded) {
+                // 事务提交后再操作缓存和事件（避免事务回滚导致缓存脏数据）
                 // 规则写入redis缓存
                 redisOperation.set(
-                    key = key,
-                    value = shardingRoutingRule.routingRule,
-                    expiredInSecond = DEFAULT_RULE_REDIS_CACHE_TIME
+                    key = key, value = shardingRoutingRule.routingRule, expiredInSecond = DEFAULT_RULE_REDIS_CACHE_TIME
                 )
                 // 发送规则新增事件消息
                 shardingRoutingRuleDispatcher.dispatch(
                     ShardingRoutingRuleBroadCastEvent(routingName = key, actionType = CrudEnum.CREATAE)
                 )
             }
+            return isAdded
+        } catch (ignored: Throwable) {
+            logger.warn("Add ShardingRoutingRule failed", ignored)
+            return false
         } finally {
             lock.unlock()
         }
-        return true
     }
 
     /**
@@ -150,7 +161,7 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
     ): Boolean {
         val routingName = shardingRoutingRule.routingName
         val key = ShardingUtil.getShardingRoutingRuleKey(
-            clusterName = CommonUtils.getDbClusterName(),
+            clusterName = shardingRoutingRule.clusterName,
             moduleCode = shardingRoutingRule.moduleCode.name,
             ruleType = shardingRoutingRule.type.name,
             routingName = routingName,
@@ -159,6 +170,7 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
         val lock = RedisLock(redisOperation, "$key:update", 30)
         try {
             lock.lock()
+            var isUpdated = false
             dslContext.transaction { t ->
                 val context = DSL.using(t)
                 val nameCount = shardingRoutingRuleDao.countByName(
@@ -181,6 +193,9 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
                 }
                 // 更新db中规则信息
                 shardingRoutingRuleDao.update(context, id, shardingRoutingRule)
+                isUpdated = true
+            }
+            if (isUpdated) {
                 // 更新redis缓存规则信息
                 redisOperation.set(
                     key = key,
@@ -196,6 +211,9 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
                     )
                 )
             }
+        } catch (ignored: Throwable) {
+            logger.warn("Update ShardingRoutingRule failed", ignored)
+            return false
         } finally {
             lock.unlock()
         }

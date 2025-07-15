@@ -81,6 +81,11 @@
                 overflowSpan: []
             }
         },
+        computed: {
+            archiveFlag () {
+                return this.$route.query.archiveFlag
+            }
+        },
         watch: {
             '$route.params.buildNo': function () {
                 this.$nextTick(this.init)
@@ -102,11 +107,13 @@
                 try {
                     this.isLoading = true
                     const { projectId, pipelineId, buildNo: buildId } = this.$route.params
-                    const res = await this.requestBuildParams({
+                    const urlParams = {
                         projectId,
                         pipelineId,
-                        buildId
-                    })
+                        buildId,
+                        ...(this.archiveFlag ? { archiveFlag: this.archiveFlag } : {})
+                    }
+                    const res = await this.requestBuildParams(urlParams)
 
                     this.defaultParamMap = res.reduce((acc, item) => {
                         acc[item.key] = item.defaultValue

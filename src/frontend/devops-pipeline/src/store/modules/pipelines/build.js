@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -56,13 +56,16 @@ const actions = {
     setHistoryPageStatus ({ commit, state }, newStatus) {
         commit('updateHistoryPageStatus', newStatus)
     },
-    resetHistoryFilterCondition ({ commit }) {
+    resetHistoryFilterCondition ({ commit, state }, { retainArchiveFlag = false } = {}) {
+        const archiveFlag = state.historyPageStatus.query.archiveFlag
+        const newQuery = retainArchiveFlag && archiveFlag ? { archiveFlag } : {}
+
         commit('updateHistoryPageStatus', {
             count: 0,
             dateTimeRange: [],
             page: 1,
             pageSize: 20,
-            query: {},
+            query: newQuery,
             searchKey: []
         })
     },
@@ -157,10 +160,11 @@ const actions = {
      *
      * @return {Promise} promise 对象
      */
-    requestPipelinesHistory ({ commit, state, dispatch }, { projectId, pipelineId, isDebug }) {
+    requestPipelinesHistory ({ commit, state, dispatch }, { projectId, pipelineId, isDebug, archiveFlag: isArchive }) {
         const { historyPageStatus: { query, searchKey, page, pageSize } } = state
+        const { archiveFlag, ...otherQuery } = query
         const conditions = {
-            ...query,
+            ...otherQuery,
             ...flatSearchKey(searchKey)
         }
         const queryMap = new URLSearchParams()
@@ -178,6 +182,9 @@ const actions = {
         }
         queryMap.append('page', page)
         queryMap.append('pageSize', pageSize)
+        if (isArchive) {
+            queryMap.append('archiveFlag', isArchive)
+        }
         console.log(conditions, queryMap, `${queryMap}`)
         return ajax.get(`${prefix}${projectId}/${pipelineId}/history/new?${queryMap}`).then(response => {
             return response.data

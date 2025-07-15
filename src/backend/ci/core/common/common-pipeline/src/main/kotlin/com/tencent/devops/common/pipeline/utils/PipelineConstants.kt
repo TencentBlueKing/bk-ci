@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -63,6 +63,7 @@ const val PIPELINE_GIT_AUTHORIZER = "GIT_CI_AUTHORIZER"
 
 const val PIPELINE_GIT_TAG_MESSAGE = "GIT_CI_TAG_MESSAGE"
 const val PIPELINE_GIT_TAG_FROM = "GIT_CI_TAG_FROM"
+const val PIPELINE_GIT_TAG_DESC = "GIT_CI_TAG_DESC"
 
 const val PIPELINE_GIT_MR_ID = "GIT_CI_MR_ID"
 const val PIPELINE_GIT_MR_IID = "GIT_CI_MR_IID"
@@ -71,6 +72,7 @@ const val PIPELINE_GIT_MR_TITLE = "GIT_CI_MR_TITLE"
 const val PIPELINE_GIT_MR_DESC = "GIT_CI_MR_DESC"
 const val PIPELINE_GIT_MR_PROPOSER = "GIT_CI_MR_PROPOSER"
 const val PIPELINE_GIT_MR_ACTION = "GIT_CI_MR_ACTION"
+const val PIPELINE_GIT_MR_TAPD_ISSUES = "GIT_CI_MR_TAPD_ISSUES"
 const val PIPELINE_PAC_REPO_HASH_ID = "BK_CI_PAC_REPO_HASH_ID" // 流水线绑定的pac代码库hashId
 
 // =====代码库构建Value常量=====

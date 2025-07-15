@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -38,6 +38,7 @@ import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.constant.PATH
 import com.tencent.devops.common.api.constant.REPORT
 import com.tencent.devops.common.api.constant.REPORT_TYPE
+import com.tencent.devops.common.api.constant.SENSITIVE
 import com.tencent.devops.common.api.constant.STRING
 import com.tencent.devops.common.api.constant.TYPE
 import com.tencent.devops.common.api.constant.URL
@@ -766,6 +767,7 @@ open class MarketAtomTask : ITask() {
             LoggerService.addFoldStartLine("[Output]")
             outputData?.forEach { (varKey, output) ->
                 val type = output[TYPE]
+                val isSensitive = output[SENSITIVE] as? Boolean ?: false
                 val key = if (!namespace.isNullOrBlank()) {
                     "${namespace}_$varKey" // 用户前缀_插件输出变量名
                 } else {
@@ -832,13 +834,13 @@ open class MarketAtomTask : ITask() {
                 if (outputTemplate.containsKey(varKey)) {
                     val outPutDefine = outputTemplate[varKey]
                     val sensitiveFlag = outPutDefine!!["isSensitive"] as Boolean? ?: false
-                    if (sensitiveFlag) {
+                    if (sensitiveFlag || isSensitive) {
                         LoggerService.addNormalLine("output(sensitive): $key=******")
                     } else {
                         LoggerService.addNormalLine("output(normal): $key=$value")
                     }
                 } else {
-                    LoggerService.addWarnLine("output(except): $key=$value")
+                    LoggerService.addWarnLine("output(except): $key=${if (isSensitive) "******" else value}")
                 }
             }
 

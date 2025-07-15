@@ -23,4 +23,5 @@ dependencies {
     implementation("com.github.jk1:gradle-license-report:2.1")
     implementation("com.mysql:mysql-connector-j:8.3.0")
     implementation("org.apache.commons:commons-compress:1.26.2")// 解决冲突
+    implementation("io.github.gradle-nexus.publish-plugin:io.github.gradle-nexus.publish-plugin.gradle.plugin:2.0.0")
 }
