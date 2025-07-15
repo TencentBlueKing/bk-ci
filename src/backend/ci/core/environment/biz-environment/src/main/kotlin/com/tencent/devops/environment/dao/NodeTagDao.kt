@@ -314,9 +314,15 @@ class NodeTagDao {
             TNodeTagInternalValues.T_NODE_TAG_INTERNAL_VALUES.VALUE_NAME
         ).from(TNodeTagInternalKey.T_NODE_TAG_INTERNAL_KEY)
             .leftJoin(TNodeTagInternalValues.T_NODE_TAG_INTERNAL_VALUES)
-            .on(TNodeTagInternalKey.T_NODE_TAG_INTERNAL_KEY.ID.eq(TNodeTagInternalValues.T_NODE_TAG_INTERNAL_VALUES.TAG_KEY_ID))
+            .on(
+                TNodeTagInternalKey.T_NODE_TAG_INTERNAL_KEY.ID
+                    .eq(TNodeTagInternalValues.T_NODE_TAG_INTERNAL_VALUES.TAG_KEY_ID)
+            )
             .leftJoin(TNodeTags.T_NODE_TAGS)
-            .on(TNodeTagInternalValues.T_NODE_TAG_INTERNAL_VALUES.ID.eq(TNodeTags.T_NODE_TAGS.TAG_VALUE_ID))
+            .on(
+                TNodeTagInternalValues.T_NODE_TAG_INTERNAL_VALUES.ID
+                    .eq(TNodeTags.T_NODE_TAGS.TAG_VALUE_ID)
+            )
             .groupBy(
                 TNodeTagInternalKey.T_NODE_TAG_INTERNAL_KEY.ID,
                 TNodeTagInternalKey.T_NODE_TAG_INTERNAL_KEY.KEY_NAME,
