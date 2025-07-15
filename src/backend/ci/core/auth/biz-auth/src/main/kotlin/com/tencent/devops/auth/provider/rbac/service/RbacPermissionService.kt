@@ -66,6 +66,7 @@ class RbacPermissionService(
     private val superManagerService: SuperManagerService,
     private val rbacCommonService: RbacCommonService,
     private val client: Client,
+    private val bkInternalPermissionComparator: BkInternalPermissionComparator,
     private val authProjectUserMetricsService: AuthProjectUserMetricsService
 ) : PermissionService {
     companion object {
@@ -221,6 +222,14 @@ class RbacPermissionService(
                     operate = useAction
                 )
             }
+            bkInternalPermissionComparator.validateUserResourcePermission(
+                userId = userId,
+                projectCode = projectCode,
+                resourceType = resource.resourceType,
+                resourceCode = resource.resourceCode,
+                action = useAction,
+                expectedResult = result
+            )
             return result
         } finally {
             watcher.stop()
@@ -312,6 +321,14 @@ class RbacPermissionService(
                     operate = action
                 )
             }
+            bkInternalPermissionComparator.batchValidateUserResourcePermission(
+                userId = userId,
+                projectCode = projectCode,
+                resourceType = resource.resourceType,
+                resourceCode = resource.resourceCode,
+                actions = actions,
+                expectedResult = result
+            )
             return result
         } finally {
             logger.info(
@@ -352,7 +369,7 @@ class RbacPermissionService(
                 action
             }
             val instanceMap = authHelper.groupRbacInstanceByType(userId, useAction)
-            return when {
+            val result = when {
                 resourceType == AuthResourceType.PROJECT.value ->
                     instanceMap[resourceType] ?: emptyList()
                 // 如果有项目下所有该资源权限,返回资源列表
@@ -396,6 +413,14 @@ class RbacPermissionService(
                     )
                 }
             }
+            bkInternalPermissionComparator.getUserResourceByAction(
+                userId = userId,
+                projectCode = projectCode,
+                action = useAction,
+                resourceType = resourceType,
+                expectedResult = result
+            )
+            return result
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to get user resources|" +
@@ -481,9 +506,9 @@ class RbacPermissionService(
             "[rbac] filter user resources|$userId|$actions|$projectCode|$resourceType"
         )
         val startEpoch = System.currentTimeMillis()
-        try {
+        val result = try {
             if (rbacCommonService.checkProjectManager(userId = userId, projectCode = projectCode)) {
-                return actions.associate {
+                actions.associate {
                     val authPermission = it.substringAfterLast("_")
                     AuthPermission.get(authPermission) to resources.map { resource -> resource.resourceCode }
                 }
@@ -533,13 +558,22 @@ class RbacPermissionService(
                     )
                 }
             }
-            return permissionMap
+            permissionMap
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to filter user resources |" +
                     "$userId|$actions|$projectCode|$resourceType"
             )
         }
+        bkInternalPermissionComparator.filterUserResourcesByActions(
+            userId = userId,
+            actions = actions,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCodes = resources.map { it.resourceCode },
+            expectedResult = result
+        )
+        return result
     }
 
     private fun buildAuthResourceInstance(

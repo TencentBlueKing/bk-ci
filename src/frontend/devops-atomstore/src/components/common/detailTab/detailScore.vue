@@ -206,7 +206,9 @@
                     page: this.pageIndex,
                     pageSize: this.pageSize
                 }
-
+                if (Object.hasOwnProperty.call(this.methodsGenerator.comment, this.type) === false) {
+                    return Promise.reject(new Error(this.$t('store.typeError')))
+                }
                 const getCommentsMethod = this.methodsGenerator.comment[this.type]
                 return getCommentsMethod(postData).then((res) => {
                     const count = res.count || 0
@@ -223,6 +225,9 @@
             },
 
             getScoreDetail () {
+                if (Object.hasOwnProperty.call(this.methodsGenerator.scoreDetail, this.type) === false) {
+                    return Promise.reject(new Error(this.$t('store.typeError')))
+                }
                 const getScoreDetailMethod = this.methodsGenerator.scoreDetail[this.type]
                 return getScoreDetailMethod().then((res) => {
                     const itemList = [

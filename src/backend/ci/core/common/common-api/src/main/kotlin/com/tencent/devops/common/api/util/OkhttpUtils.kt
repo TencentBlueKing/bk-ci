@@ -30,18 +30,7 @@ package com.tencent.devops.common.api.util
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_HTTP_RESPONSE_BODY_TOO_LARGE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import okhttp3.ConnectionPool
-import okhttp3.Headers.Companion.toHeaders
-import okhttp3.HttpUrl.Companion.toHttpUrl
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.asRequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.Response
-import org.slf4j.LoggerFactory
-import org.springframework.util.FileCopyUtils
+import jakarta.servlet.http.HttpServletResponse
 import java.io.CharArrayWriter
 import java.io.File
 import java.io.FileOutputStream
@@ -54,7 +43,18 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
-import jakarta.servlet.http.HttpServletResponse
+import okhttp3.ConnectionPool
+import okhttp3.Headers.Companion.toHeaders
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
+import org.slf4j.LoggerFactory
+import org.springframework.util.FileCopyUtils
 
 @SuppressWarnings("ALL")
 object OkhttpUtils {
@@ -126,14 +126,15 @@ object OkhttpUtils {
     private fun getOkHttpClientWithCustomTimeout(
         connectTimeout: Long,
         readTimeout: Long,
-        writeTimeout: Long
+        writeTimeout: Long,
+        followRedirects: Boolean = false
     ): OkHttpClient {
         return OkHttpClient.Builder()
             .connectTimeout(connectTimeout, TimeUnit.SECONDS)
             .readTimeout(readTimeout, TimeUnit.SECONDS)
             .writeTimeout(writeTimeout, TimeUnit.SECONDS)
             .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
-            .followRedirects(false)
+            .followRedirects(followRedirects)
             .hostnameVerifier { _, _ -> true }
             .build()
     }
@@ -268,13 +269,30 @@ object OkhttpUtils {
         return doHttp(request)
     }
 
-    fun downloadFile(url: String, destPath: File, headers: Map<String, String>? = null) {
+    fun downloadFile(
+        url: String,
+        destPath: File,
+        headers: Map<String, String>? = null,
+        connectTimeoutInSec: Long? = null,
+        readTimeoutInSec: Long? = null,
+        writeTimeoutInSec: Long? = null
+    ) {
         val request = if (headers == null) {
             Request.Builder().url(url).get().build()
         } else {
             Request.Builder().url(url).headers(headers.toHeaders()).get().build()
         }
-        longHttpClient.newCall(request).execute().use { response ->
+        val httpClient = if (connectTimeoutInSec != null || readTimeoutInSec != null || writeTimeoutInSec != null) {
+            getOkHttpClientWithCustomTimeout(
+                connectTimeout = connectTimeoutInSec ?: connectTimeout,
+                readTimeout = readTimeoutInSec ?: readTimeout,
+                writeTimeout = writeTimeoutInSec ?: writeTimeout,
+                followRedirects = true
+            )
+        } else {
+            okHttpClient
+        }
+        httpClient.newCall(request).execute().use { response ->
             if (response.code == 404) {
                 logger.warn("The file $url is not exist")
                 throw RemoteServiceException("File is not exist!")

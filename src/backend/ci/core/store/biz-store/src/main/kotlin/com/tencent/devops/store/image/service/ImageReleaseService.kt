@@ -178,6 +178,12 @@ abstract class ImageReleaseService {
     @Value("\${store.imageAgentTypes:DOCKER}")
     protected lateinit var imageAgentTypes: String
 
+    abstract fun handleImageExtend(
+        userId: String,
+        imageCode: String,
+        marketImageRelRequest: MarketImageRelRequest
+    )
+
     fun addMarketImage(
         userId: String,
         imageCode: String,
@@ -233,6 +239,7 @@ abstract class ImageReleaseService {
             }
         }
         val imageId = addMarketImageToDB(userId, imageCode, marketImageRelRequest)
+        handleImageExtend(userId, imageCode, marketImageRelRequest)
         return if (null != imageId) {
             Result(imageId)
         } else {

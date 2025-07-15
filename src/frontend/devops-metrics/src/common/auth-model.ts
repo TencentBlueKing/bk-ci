@@ -70,7 +70,8 @@ class AuthModel {
       this.checkWinClose();
     }, 300);
   }
-  messageListener({ data = {} }: MessageEvent) {
+  messageListener({ data = {}, origin }: MessageEvent) {
+    if (origin !== location.origin) return;
     if (data === null || typeof data !== 'object' || data.target !== 'bk-login' || !this.loginWindow) return;
 
     this.hideLoginModal();

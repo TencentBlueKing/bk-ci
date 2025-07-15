@@ -70,6 +70,10 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         return Result(data = null)
     }
 
+    override fun handleAtomExtend(marketAtomCreateRequest: MarketAtomCreateRequest, userId: String, atomCode: String) {
+        return
+    }
+
     override fun getFileStr(
         projectCode: String,
         atomCode: String,
