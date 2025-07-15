@@ -1,5 +1,6 @@
 package com.tencent.devops.auth.provider.rbac.service
 
+import com.tencent.devops.auth.dao.AuthResourceDao
 import com.tencent.devops.auth.service.BkInternalPermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
@@ -8,6 +9,7 @@ import com.tencent.devops.common.util.CacheHelper
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -21,7 +23,9 @@ class BkInternalPermissionComparator(
     val bkInternalPermissionService: BkInternalPermissionService,
     val meterRegistry: MeterRegistry,
     val client: Client,
-    val redisOperation: RedisOperation
+    val redisOperation: RedisOperation,
+    val authResourceService: AuthResourceDao,
+    val dslContext: DSLContext
 ) {
 
     private val project2StatusCache = CacheHelper.createCache<String, Boolean>(duration = 60)
@@ -121,12 +125,31 @@ class BkInternalPermissionComparator(
                 resourceType = resourceType,
                 action = action
             )
-            val isConsistent = (expectedResult.toSet() == localResult.toSet())
+            val expectedSet = authResourceService.listByResourceCodes(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCodes = expectedResult.filterNot { it == "##NONE##" }.distinct(),
+            ).map { it.resourceCode }.toSet()
+            val localSet = localResult.toSet()
+            val isConsistent = (expectedSet == localSet)
             consistencyCounter(::getUserResourceByAction.name, isConsistent).increment()
             if (!isConsistent) {
+                // 计算差异项
+                val externalOnly = expectedSet - localSet  // external有但local无的项
+                val localOnly = localSet - expectedSet     // local有但external无的项
+
                 logger.warn(
-                    "get user resource by action results are inconsistent: $userId|" +
-                        "$projectCode|$resourceType|$action|external=$expectedResult|local=$localResult"
+                    """
+                get user resource by action results are inconsistent: 
+                userId=$userId|projectCode=$projectCode|resourceType=$resourceType|action=$action
+                ===== 差异项详情 =====
+                external独有项: ${externalOnly.joinToString()}
+                local独有项: ${localOnly.joinToString()}
+                ===== 完整数据 =====
+                external=$expectedResult
+                local=$localResult
+                """.trimIndent()
                 )
             }
         }

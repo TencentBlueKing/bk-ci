@@ -122,7 +122,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             // 阶段概览数据上报
             withRedisLock(
                 lockKey = "pipeline:$pipelineId:stage:${stage.stageId}:overview",
-                expiredSeconds = 20
+                expiredSeconds = 30
             ) {
                 pipelineStageOverviewDataReport(
                     stageTagNames = stageTagNames,
@@ -135,7 +135,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             // 遍历阶段内所有任务进行插件数据上报
             stage.containers.flatMap { it.tasks }.forEach { task ->
                 // 插件概览数据上报
-                withRedisLock("pipeline:$pipelineId:atom:${task.atomCode}:overview", 30) {
+                withRedisLock("pipeline:$pipelineId:atom:${task.atomCode}:overview", 50) {
                     atomOverviewDataReport(
                         buildEndPipelineMetricsData = buildEndPipelineMetricsData,
                         taskMetricsData = task,
@@ -154,7 +154,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
 
                 // 当构建失败时进行日常统计指标上报
                 if (!buildEndPipelineMetricsData.successFlag) {
-                    withRedisLock("pipeline:$pipelineId:atom:${task.atomCode}", 10) {
+                    withRedisLock("pipeline:$pipelineId:atom:${task.atomCode}", 30) {
                         atomIndexStatisticsDailyDataReport(
                             statisticsTime = buildEndPipelineMetricsData.statisticsTime.let {
                                 DateTimeUtil.stringToLocalDateTime(it, YYYY_MM_DD)
@@ -169,7 +169,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         }
 
         // 流水线级别概览数据上报
-        withRedisLock("pipeline:$pipelineId:overview", 20) {
+        withRedisLock("pipeline:$pipelineId:overview", 30) {
             pipelineOverviewDataReport(
                 buildEndPipelineMetricsData = buildEndPipelineMetricsData,
                 currentTime = currentTime
@@ -177,7 +177,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         }
 
         // 流水线失败数据上报
-        withRedisLock("pipeline:$pipelineId:fail", 20) {
+        withRedisLock("pipeline:$pipelineId:fail", 30) {
             pipelineFailDataReport(
                 buildEndPipelineMetricsData = buildEndPipelineMetricsData,
                 currentTime = currentTime
