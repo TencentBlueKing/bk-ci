@@ -34,14 +34,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "添加组件荣誉信息请求报文")
 data class AddStoreHonorRequest(
-    @get:Schema(title = "荣誉头衔", required = true)
-    @BkField(maxLength = 4)
-    val honorTitle: String,
-    @get:Schema(title = "荣誉名称", required = true)
-    @BkField(maxLength = 40)
-    val honorName: String,
-    @get:Schema(title = "对应语言", required = true)
-    val language: BkLanguageEnum,
+    @get:Schema(title = "国家化荣誉信息", required = true)
+    val i18nHonorInfoList:List<i18nHonorInfoDTO>,
     @get:Schema(title = "组件范畴", required = true)
     val storeType: StoreTypeEnum,
     @get:Schema(title = "组件代码列表", required = true)

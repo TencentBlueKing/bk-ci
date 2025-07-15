@@ -122,66 +122,69 @@ class StoreHonorServiceImpl @Autowired constructor(
     }
 
     override fun add(userId: String, addStoreHonorRequest: AddStoreHonorRequest): Result<Boolean> {
-        logger.info("create storeHonor userid:$userId||honorTitle:${addStoreHonorRequest.honorTitle}")
+        val i18nHonorInfoList = addStoreHonorRequest.i18nHonorInfoList
         val id = UUIDUtil.generate()
-        if (addStoreHonorRequest.language.locale == commonConfig.devopsDefaultLocaleLanguage) {
-            val honorTitleCount = storeHonorDao.countByhonorTitle(dslContext, addStoreHonorRequest.honorTitle)
-            if (honorTitleCount > 0) {
-                return I18nUtil.generateResponseDataObject(
-                    messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
-                    params = arrayOf(addStoreHonorRequest.honorTitle)
-                )
-            }
-            val storeHonorInfo = TStoreHonorInfoRecord()
-            storeHonorInfo.id = id
-            storeHonorInfo.honorTitle = addStoreHonorRequest.honorTitle
-            storeHonorInfo.honorName = addStoreHonorRequest.honorName
-            storeHonorInfo.storeType = addStoreHonorRequest.storeType.type.toByte()
-            storeHonorInfo.creator = userId
-            storeHonorInfo.modifier = userId
-            storeHonorInfo.createTime = LocalDateTime.now()
-            storeHonorInfo.updateTime = LocalDateTime.now()
-            val tStoreHonorRelList = addStoreHonorRequest.storeCodes.map {
-                val atomName = getStoreCommonDao(addStoreHonorRequest.storeType.name).getStoreNameByCode(dslContext, it)
-                if (atomName.isNullOrBlank()) {
+        i18nHonorInfoList.forEach { i18nHonorInfo ->
+            if (i18nHonorInfo.language.locale == commonConfig.devopsDefaultLocaleLanguage) {
+                val honorTitleCount = storeHonorDao.countByhonorTitle(dslContext, i18nHonorInfo.honorTitle)
+                if (honorTitleCount > 0) {
                     return I18nUtil.generateResponseDataObject(
-                        CommonMessageCode.ERROR_INVALID_PARAM_,
-                        arrayOf("${addStoreHonorRequest.storeType.name}:$it")
+                        messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                        params = arrayOf(i18nHonorInfo.honorTitle)
                     )
                 }
-                val tStoreHonorRelRecord = TStoreHonorRelRecord()
-                tStoreHonorRelRecord.id = UUIDUtil.generate()
-                tStoreHonorRelRecord.storeCode = it
-                tStoreHonorRelRecord.storeName = atomName
-                tStoreHonorRelRecord.storeType = addStoreHonorRequest.storeType.type.toByte()
-                tStoreHonorRelRecord.honorId = id
-                tStoreHonorRelRecord.creator = userId
-                tStoreHonorRelRecord.modifier = userId
-                tStoreHonorRelRecord.createTime = LocalDateTime.now()
-                tStoreHonorRelRecord.updateTime = LocalDateTime.now()
-                tStoreHonorRelRecord
-            }
-            dslContext.transaction { t ->
-                val context = DSL.using(t)
-                storeHonorDao.createStoreHonorInfo(context, userId, storeHonorInfo)
-                storeHonorDao.batchCreateStoreHonorRel(context, tStoreHonorRelList)
+                val storeHonorInfo = TStoreHonorInfoRecord()
+                storeHonorInfo.id = id
+                storeHonorInfo.honorTitle = i18nHonorInfo.honorTitle
+                storeHonorInfo.honorName = i18nHonorInfo.honorName
+                storeHonorInfo.storeType = addStoreHonorRequest.storeType.type.toByte()
+                storeHonorInfo.creator = userId
+                storeHonorInfo.modifier = userId
+                storeHonorInfo.createTime = LocalDateTime.now()
+                storeHonorInfo.updateTime = LocalDateTime.now()
+                val tStoreHonorRelList = addStoreHonorRequest.storeCodes.map {
+                    val atomName =
+                        getStoreCommonDao(addStoreHonorRequest.storeType.name).getStoreNameByCode(dslContext, it)
+                    if (atomName.isNullOrBlank()) {
+                        return I18nUtil.generateResponseDataObject(
+                            CommonMessageCode.ERROR_INVALID_PARAM_,
+                            arrayOf("${addStoreHonorRequest.storeType.name}:$it")
+                        )
+                    }
+                    val tStoreHonorRelRecord = TStoreHonorRelRecord()
+                    tStoreHonorRelRecord.id = UUIDUtil.generate()
+                    tStoreHonorRelRecord.storeCode = it
+                    tStoreHonorRelRecord.storeName = atomName
+                    tStoreHonorRelRecord.storeType = addStoreHonorRequest.storeType.type.toByte()
+                    tStoreHonorRelRecord.honorId = id
+                    tStoreHonorRelRecord.creator = userId
+                    tStoreHonorRelRecord.modifier = userId
+                    tStoreHonorRelRecord.createTime = LocalDateTime.now()
+                    tStoreHonorRelRecord.updateTime = LocalDateTime.now()
+                    tStoreHonorRelRecord
+                }
+                dslContext.transaction { t ->
+                    val context = DSL.using(t)
+                    storeHonorDao.createStoreHonorInfo(context, userId, storeHonorInfo)
+                    storeHonorDao.batchCreateStoreHonorRel(context, tStoreHonorRelList)
+                }
             }
         }
-        val i18nMessages = mutableListOf<I18nMessage>()
-        listOf(
-            "honorTitle" to addStoreHonorRequest.honorTitle,
-            "honorName" to addStoreHonorRequest.honorName
-        ).forEach { (fieldName, value) ->
-            i18nMessages.addAll(
+
+        val i18nMessages = i18nHonorInfoList.flatMap { honorInfo ->
+            listOf(
+                "honorTitle" to honorInfo.honorTitle,
+                "honorName" to honorInfo.honorName
+            ).flatMap { (fieldName, value) ->
                 addStoreHonorRequest.storeCodes.map { storeCode ->
                     I18nMessage(
                         moduleCode = SystemModuleEnum.STORE.name,
-                        language = addStoreHonorRequest.language.locale,
+                        language = honorInfo.language.locale,
                         key = "${addStoreHonorRequest.storeType.name}.${storeCode}.${id}.honorInfo.$fieldName",
                         value = value
                     )
                 }
-            )
+            }
         }
         try {
             client.get(ServiceI18nMessageResource::class).batchAddI18nMessage(userId, i18nMessages)
