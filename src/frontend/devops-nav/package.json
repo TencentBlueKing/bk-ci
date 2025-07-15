@@ -72,7 +72,7 @@
     "@blueking/platform-config": "^1.0.4",
     "@icon-cool/bk-icon-devops": "^0.1.13",
     "@tencent/bk-magic-vue": "2.5.9-beta.6",
-    "axios": "0.28.0",
+    "axios": "0.30.0",
     "bk-permission": "workspace:bk-permission",
     "bluebird": "^3.5.1",
     "js-cookie": "^3.0.5",
@@ -99,7 +99,7 @@
       "public:master": {
         "outputs": [
           "{workspaceRoot}/frontend/console",
-          "{workspaceRoot}/frontend/entry's"
+          "{workspaceRoot}/frontend/entry's/main.json"
         ]
       }
     }

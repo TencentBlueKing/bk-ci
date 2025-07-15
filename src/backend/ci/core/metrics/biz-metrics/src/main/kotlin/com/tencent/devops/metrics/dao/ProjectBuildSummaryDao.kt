@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -142,7 +142,8 @@ class ProjectBuildSummaryDao {
 
     fun saveUserOperateCount(
         dslContext: DSLContext,
-        projectUserOperateMetricsData2OperateCount: Map<String, Int>
+        projectUserOperateMetricsData: ProjectUserOperateMetricsData,
+        operateCount: Int
     ) {
         with(TProjectUserOperateDaily.T_PROJECT_USER_OPERATE_DAILY) {
             dslContext.insertInto(
@@ -153,22 +154,30 @@ class ProjectBuildSummaryDao {
                 THE_DATE,
                 OPERATE_COUNT,
                 CREATE_TIME
-            ).also { insert ->
-                projectUserOperateMetricsData2OperateCount.forEach { (projectUserOperateMetricsDataKey, operateCount) ->
-                    val projectUserOperateMetricsData = ProjectUserOperateMetricsData.build(
-                        projectUserOperateMetricsKey = projectUserOperateMetricsDataKey
-                    )
-                    insert.values(
-                        projectUserOperateMetricsData.projectId,
-                        projectUserOperateMetricsData.userId,
-                        projectUserOperateMetricsData.operate,
-                        projectUserOperateMetricsData.theDate,
-                        operateCount,
-                        LocalDateTime.now()
-                    ).onDuplicateKeyUpdate()
-                        .set(OPERATE_COUNT, OPERATE_COUNT + operateCount)
-                        .execute()
-                }
+            ).values(
+                projectUserOperateMetricsData.projectId,
+                projectUserOperateMetricsData.userId,
+                projectUserOperateMetricsData.operate,
+                projectUserOperateMetricsData.theDate,
+                operateCount,
+                LocalDateTime.now()
+            ).execute()
+        }
+    }
+
+    fun updateUserOperateCount(
+        dslContext: DSLContext,
+        projectUserOperateMetricsData: ProjectUserOperateMetricsData,
+        operateCount: Int
+    ) {
+        with(projectUserOperateMetricsData) {
+            with(TProjectUserOperateDaily.T_PROJECT_USER_OPERATE_DAILY) {
+                dslContext.update(this)
+                    .set(OPERATE_COUNT, OPERATE_COUNT + operateCount)
+                    .where(
+                        PROJECT_ID.eq(projectId).and(USER_ID.eq(userId))
+                            .and(OPERATE.eq(operate)).and(THE_DATE.eq(theDate))
+                    ).execute()
             }
         }
     }

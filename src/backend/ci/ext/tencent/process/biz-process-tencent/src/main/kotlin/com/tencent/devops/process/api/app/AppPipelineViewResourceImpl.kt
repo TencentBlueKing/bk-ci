@@ -35,9 +35,11 @@ import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineSortType
+import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.classify.PipelineViewSettings
 import com.tencent.devops.process.service.PipelineListFacadeService
+import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.service.view.PipelineViewService
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_LIST_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
@@ -49,6 +51,7 @@ import org.springframework.beans.factory.annotation.Value
 class AppPipelineViewResourceImpl @Autowired constructor(
     private val pipelineListFacadeService: PipelineListFacadeService,
     private val pipelineViewService: PipelineViewService,
+    private val pipelineViewGroupService: PipelineViewGroupService,
     private val client: Client,
     private val bkTag: BkTag
 ) : AppPipelineViewResource {
@@ -145,5 +148,14 @@ class AppPipelineViewResourceImpl @Autowired constructor(
 
     override fun getViewSettings(userId: String, projectId: String): Result<PipelineViewSettings> {
         return Result(pipelineViewService.getViewSettings(userId, projectId))
+    }
+
+    override fun listView(
+        userId: String,
+        projectId: String,
+        projected: Boolean?,
+        viewType: Int?
+    ): Result<List<PipelineNewViewSummary>> {
+        return Result(pipelineViewGroupService.listView(userId, projectId, projected, viewType))
     }
 }

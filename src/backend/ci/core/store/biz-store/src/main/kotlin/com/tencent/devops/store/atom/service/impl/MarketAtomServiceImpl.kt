@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -655,7 +655,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     /**
      * 根据插件版本ID获取版本基本信息、发布信息
      */
-    @Suppress("UNCHECKED_CAST")
     override fun getAtomById(atomId: String, userId: String): Result<AtomVersion?> {
         return getAtomVersion(atomId, userId)
     }
@@ -684,7 +683,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         } else {
             null
         }
-        val showVersionInfo = storeCommonService.getStoreShowVersionInfo(cancelFlag, showReleaseType, showVersion)
+        val showVersionInfo = storeCommonService.getStoreShowVersionInfo(
+            storeType = StoreTypeEnum.ATOM,
+            cancelFlag = cancelFlag,
+            releaseType = showReleaseType,
+            version = showVersion
+        )
         return Result(showVersionInfo)
     }
 

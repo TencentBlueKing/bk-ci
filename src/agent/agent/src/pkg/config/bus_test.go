@@ -2,11 +2,12 @@ package config
 
 import (
 	"bytes"
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 	"strconv"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 )
 
 func TestEventBus(t *testing.T) {

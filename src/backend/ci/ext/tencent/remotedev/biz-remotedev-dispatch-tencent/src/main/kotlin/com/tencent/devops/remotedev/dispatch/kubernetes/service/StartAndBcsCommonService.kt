@@ -1,9 +1,11 @@
 package com.tencent.devops.remotedev.dispatch.kubernetes.service
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
+import com.tencent.devops.remotedev.dispatch.kubernetes.event.BcsCallbackEvent
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.DispatchWorkspaceOpHisRecord
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction.CLONE_VM
@@ -44,6 +46,7 @@ class StartAndBcsCommonService @Autowired constructor(
     private val workspaceBcsClient: WorkspaceBcsClient,
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
     private val dispatchWorkspaceOpHisDao: DispatchWorkspaceOpHisDao,
+    private val dispatcher: SampleEventDispatcher,
     private val workspaceRedisUtils: WorkspaceRedisUtils
 ) {
     @Suppress("ComplexMethod")
@@ -54,12 +57,34 @@ class StartAndBcsCommonService @Autowired constructor(
             return false
         }
         workspaceRedisUtils.refreshTaskStatus("bcs", taskStatus.uid, taskStatus)
-        logger.info("StartAndBcsCommonService|workspaceTaskCallback|task info|$task")
-        when {
-            task.status == EnvironmentActionStatus.PENDING -> dealWithPending(taskStatus, task)
-            task.status.needFix() -> dealWithFix(taskStatus, task)
+
+        when (task.action) {
+            // 特殊延迟1分钟执行
+            START, RESTART -> dispatcher.dispatch(
+                BcsCallbackEvent(taskStatus, delayMills = 1000 * 60)
+            )
+
+            else -> {
+                dispatcher.dispatch(
+                    BcsCallbackEvent(taskStatus)
+                )
+            }
         }
         return true
+    }
+
+    fun handleEvent(bcsCallbackEvent: BcsCallbackEvent) {
+        with(bcsCallbackEvent) {
+            val task = dispatchWorkspaceOpHisDao.getTask(dslContext, taskStatus.uid) ?: kotlin.run {
+                logger.warn("handleEvent|fail with wrong task|$taskStatus")
+                return
+            }
+            logger.info("StartAndBcsCommonService|handleEvent|task info|$task")
+            when {
+                task.status == EnvironmentActionStatus.PENDING -> dealWithPending(taskStatus, task)
+                task.status.needFix() -> dealWithFix(taskStatus, task)
+            }
+        }
     }
 
     private fun dealWithFix(
@@ -93,6 +118,7 @@ class StartAndBcsCommonService @Autowired constructor(
             CLONE_VM -> cloneCreateNewVm(task, taskStatus)
             CREATE_DISK -> createDisk(taskStatus, task)
             EnvironmentAction.DELETE_DISK -> deleteDisk(taskStatus, task)
+            EnvironmentAction.SYNC_VM -> syncVm(taskStatus, task)
         }
     }
 
@@ -511,6 +537,31 @@ class StartAndBcsCommonService @Autowired constructor(
             )
         }.onFailure {
             logger.warn("workspaceTaskCallback|workspaceDeleteDiskCallback fail ${it.message}", it)
+        }
+        dispatchWorkspaceOpHisDao.update(
+            dslContext = dslContext,
+            uid = task.uid,
+            status = if (taskStatus.status == TaskStatusEnum.successed) {
+                EnvironmentActionStatus.SUCCEEDED
+            } else {
+                EnvironmentActionStatus.FAILED
+            },
+            actionMsg = taskStatus.logs.ifEmpty { null }?.joinToString(";")
+        )
+    }
+
+    private fun syncVm(
+        taskStatus: TaskStatus,
+        task: DispatchWorkspaceOpHisRecord
+    ) {
+        kotlin.runCatching {
+            SpringContextUtil.getBean(ServiceRemoteDevInterface::class.java).workspaceSyncVmCallback(
+                taskId = taskStatus.uid,
+                workspaceName = task.workspaceName,
+                operator = task.operator
+            )
+        }.onFailure {
+            logger.warn("workspaceTaskCallback|workspaceSyncVmCallback fail ${it.message}", it)
         }
         dispatchWorkspaceOpHisDao.update(
             dslContext = dslContext,

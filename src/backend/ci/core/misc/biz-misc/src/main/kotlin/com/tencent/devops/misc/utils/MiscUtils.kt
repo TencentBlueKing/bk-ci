@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -36,14 +36,5 @@ object MiscUtils {
      */
     fun getMigratingProjectsRedisKey(moduleCode: String): String {
         return "$moduleCode:migrating:projects"
-    }
-
-    /**
-     * 获取正在迁移流水线列表的redis键
-     * @param moduleCode 模块标识
-     * @return 正在迁移流水线列表的redis键
-     */
-    fun getMigratingPipelinesRedisKey(moduleCode: String): String {
-        return "$moduleCode:migrating:pipelines"
     }
 }

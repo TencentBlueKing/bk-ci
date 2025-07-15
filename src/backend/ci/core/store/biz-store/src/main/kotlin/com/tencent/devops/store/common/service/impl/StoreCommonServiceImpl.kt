@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -404,42 +404,59 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
     ): HashMap<String, MutableList<Int>>?
 
     override fun getStoreShowVersionInfo(
+        storeType: StoreTypeEnum,
         cancelFlag: Boolean,
         releaseType: ReleaseTypeEnum?,
         version: String?
     ): StoreShowVersionInfo {
+        // 确定默认显示的发布类型
         val defaultShowReleaseType = when {
-            cancelFlag -> {
-                ReleaseTypeEnum.CANCEL_RE_RELEASE
-            }
-            releaseType?.isDefaultShow() == true -> {
-                releaseType
-            }
-            releaseType == null -> {
-                ReleaseTypeEnum.NEW
-            }
-            else -> {
-                ReleaseTypeEnum.COMPATIBILITY_FIX
-            }
+            // 如果是取消重新发布操作，使用取消类型
+            cancelFlag -> ReleaseTypeEnum.CANCEL_RE_RELEASE
+            // 如果传入的发布类型是默认显示类型，直接使用
+            releaseType?.isDefaultShow() == true -> releaseType
+            // 未指定发布类型时使用新建类型
+            releaseType == null -> ReleaseTypeEnum.NEW
+            // 其他情况使用兼容修复类型
+            else -> ReleaseTypeEnum.COMPATIBILITY_FIX
         }
+
         val dbVersion = version ?: ""
-        val defaultShowVersion = getRequireVersion(dbVersion, defaultShowReleaseType)[0]
-        val showVersionList = mutableListOf<StoreShowVersionItem>()
-        showVersionList.add(StoreShowVersionItem(defaultShowVersion, defaultShowReleaseType.name, true))
-        if (dbVersion.isBlank()) {
-            return StoreShowVersionInfo(showVersionList)
-        }
-        val tmpReleaseTypeList = listOf(
-            ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE,
-            ReleaseTypeEnum.COMPATIBILITY_UPGRADE,
-            ReleaseTypeEnum.COMPATIBILITY_FIX
-        )
-        tmpReleaseTypeList.forEach { tmpReleaseType ->
-            if (tmpReleaseType != defaultShowReleaseType) {
-                val showVersion = getRequireVersion(dbVersion, tmpReleaseType)[0]
-                showVersionList.add(StoreShowVersionItem(showVersion, tmpReleaseType.name))
+        // 获取默认显示版本号（DEVX类型组件不回显版本号）
+        val defaultShowVersion = if (storeType == StoreTypeEnum.DEVX) "" else getRequireVersion(
+            dbVersion = dbVersion,
+            releaseType = defaultShowReleaseType
+        ).firstOrNull().orEmpty()
+
+        // 构建版本展示列表
+        val showVersionList = mutableListOf<StoreShowVersionItem>().apply {
+            // 添加默认版本项
+            add(
+                StoreShowVersionItem(
+                    version = defaultShowVersion,
+                    lastVersion = dbVersion,
+                    releaseType = defaultShowReleaseType.name,
+                    defaultFlag = true
+                )
+            )
+
+            // 空版本或默认版本为空时直接返回空列表
+            if (dbVersion.isBlank() || defaultShowVersion.isBlank()) return StoreShowVersionInfo(this)
+
+            // 遍历其他可能的发布类型（排除已使用的默认类型）
+            listOf(
+                ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE,
+                ReleaseTypeEnum.COMPATIBILITY_UPGRADE,
+                ReleaseTypeEnum.COMPATIBILITY_FIX
+            ).filter { it != defaultShowReleaseType }.forEach { releaseType ->
+                // 获取对应发布类型的推荐版本并添加到列表
+                getRequireVersion(dbVersion, releaseType).firstOrNull()?.let { showVersion ->
+                    add(StoreShowVersionItem(showVersion, dbVersion, releaseType.name))
+                }
             }
         }
+
+        // 返回最终构建的版本信息对象
         return StoreShowVersionInfo(showVersionList)
     }
 
@@ -467,6 +484,34 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
         if (releaseType == ReleaseTypeEnum.NEW && dbStatus !in validStatusList) {
             throw ErrorCodeException(errorCode = StoreMessageCode.STORE_RELEASE_STEPS_ERROR)
         }
+        // 判断最近一个版本的状态，如果不是首次发布，则只有处于终态的组件状态才允许添加新的版本
+        checkAddVersionCondition(dbVersion = dbVersion, releaseType = releaseType, dbStatus = dbStatus, name = name)
+        // 版本存在性校验
+        when {
+            releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE -> {
+                if (version != dbVersion) {
+                    throw ErrorCodeException(
+                        errorCode = StoreMessageCode.STORE_VERSION_IS_INVALID, params = arrayOf(version)
+                    )
+                }
+            }
+            releaseType != ReleaseTypeEnum.NEW -> {
+                val versionExists = storeBaseQueryDao.getComponentId(
+                    dslContext = dslContext,
+                    storeCode = storeCode,
+                    version = version,
+                    storeType = storeType
+                ) != null
+                if (versionExists) {
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                        params = arrayOf(version)
+                    )
+                }
+            }
+        }
+        // 如果是DEVX类型组件，跳过后续校验
+        if (storeType == StoreTypeEnum.DEVX) return
 
         val dbVersionParts = parseVersion(dbVersion)
         val reqVersionParts = parseVersion(version)
@@ -491,10 +536,6 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
                             storeType = storeType,
                             version = version
                         )
-            }
-
-            ReleaseTypeEnum.CANCEL_RE_RELEASE -> {
-                version == dbVersion
             }
 
             ReleaseTypeEnum.HIS_VERSION_UPGRADE -> {
@@ -524,8 +565,6 @@ abstract class StoreCommonServiceImpl : StoreCommonService {
                 errorCode = StoreMessageCode.STORE_VERSION_IS_INVALID, params = arrayOf(version)
             )
         }
-        // 判断最近一个版本的状态，如果不是首次发布，则只有处于终态的组件状态才允许添加新的版本
-        checkAddVersionCondition(dbVersion = dbVersion, releaseType = releaseType, dbStatus = dbStatus, name = name)
     }
 
     private fun validatePatchVersion(

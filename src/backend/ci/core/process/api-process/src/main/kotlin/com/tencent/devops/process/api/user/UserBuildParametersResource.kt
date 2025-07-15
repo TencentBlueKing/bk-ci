@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -224,6 +224,9 @@ interface UserBuildParametersResource {
         includeNotRequired: Boolean? = true,
         @Parameter(description = "当前流水线版本", required = false, example = "")
         @QueryParam("version")
-        version: Int? = null
+        version: Int? = null,
+        @Parameter(description = "是否为模板", required = false, example = "")
+        @QueryParam("isTemplate")
+        isTemplate: Boolean? = false
     ): Result<List<PipelineBuildParamFormProp>>
 }

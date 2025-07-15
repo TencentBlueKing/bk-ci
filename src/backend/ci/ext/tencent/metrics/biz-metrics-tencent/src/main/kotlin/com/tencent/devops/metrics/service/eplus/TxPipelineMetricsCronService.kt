@@ -28,20 +28,29 @@
 package com.tencent.devops.metrics.service.eplus
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.metrics.constants.Constants.BK_TO_HANDLE
 import com.tencent.devops.metrics.dao.PipelineMetricsInfoDao
+import com.tencent.devops.metrics.pojo.PipelineExpirationInfo
 import com.tencent.devops.model.metrics.tables.records.TEplusPipelineMetricsDataDailyRecord
+import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import com.tencent.devops.project.api.service.ServiceUserResource
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.temporal.WeekFields
+import java.util.Locale
 import java.util.concurrent.Executors
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
+import kotlin.math.ceil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -80,10 +89,26 @@ class TxPipelineMetricsCronService @Autowired constructor(
     @Value("\${eplus.ms.metrics.namespace.scheduledTriggerNoCodeChange.card.id}")
     private var scheduledTriggerNoCodeChangeCardId: Int = 0 // 定时触发无代码变更卡片ID
 
+    @Value("\${eplus.ms.metrics.queryCardsPageSize:10000}")
+    private val queryCardsPageSize: Int = 10000
+
+    @Value("\${eplus.ms.metrics.sleepDurationMs:60000}")
+    private val sleepDurationMs: Long = 60000
+
+    @Value("\${eplus.ms.metrics.enableFlag:false}")
+    private val enableFlag: Boolean = false
+
+    @Value("\${eplus.ms.metrics.readTimeoutSeconds:300}")
+    private val readTimeoutSeconds: Long = 300
+
+    @Value("\${eplus.ms.metrics.namespace.invalidBuildPipeline.card.id}")
+    private var invalidBuildPipeline: Int = 0 // 无效流水线卡片ID
+
     companion object {
         private val logger = LoggerFactory.getLogger(TxPipelineMetricsCronService::class.java)
-        private const val LOCK_KEY = "tx_pipeline_metrics_cron_service"
-        private val syncExecutorService = Executors.newFixedThreadPool(5)
+        // HTTP请求超时时间（秒）
+        private const val CONNECT_TIMEOUT_SECONDS = 5L
+        private const val WRITE_TIMEOUT_SECONDS = 15L
     }
 
 
@@ -102,61 +127,83 @@ class TxPipelineMetricsCronService @Autowired constructor(
         metricsData: (List<TEplusPipelineMetricsDataDailyRecord>) -> Unit,
         input: Map<String, Any>? = null
     ) {
-        val tPipelineMetricsInfoRecords = mutableListOf<TEplusPipelineMetricsDataDailyRecord>()
-        var pageNum = 1
-        val pageSize = 1000
-        var failedBatches = 0
+        val lockKey = "CARD_DATA_PROCESS:${cardId}:${namespaceId}"
+        val redisLock = RedisLock(redisOperation, lockKey, 600)
+        if (!redisLock.tryLock()) return
 
-        while (true) {
-            val redisLock = RedisLock(redisOperation, LOCK_KEY, 30)
+        var pageNum = 1
+        var failedPageAttempts = 0
+        var totalPages: Int? = null
+
+        while (totalPages == null || pageNum <= totalPages) {
+            Thread.sleep(sleepDurationMs)
             try {
                 val response = queryInvalidPipelineMonitorCardData(
                     token = token,
                     cardId = cardId,
                     namespaceId = namespaceId,
                     pageNum = pageNum,
-                    pageSize = pageSize,
+                    pageSize = queryCardsPageSize,
                     input = input
                 )
-                val data = response["data"] as Map<String, Any>
-                val result = data["result"] as Map<String, Any>
-                val rows = result["rows"] as List<Map<String, Any>>
+                if (response.isEmpty()) return
+                val (currentTotalPages, records) = processPageData(response, assignData, totalPages)
+                totalPages = currentTotalPages
 
-                if (rows.isEmpty()) break
-
-                rows.forEach { row ->
-                    tPipelineMetricsInfoRecords.add(
-                        TEplusPipelineMetricsDataDailyRecord().apply {
-                            assignData(row)
-                            this.statisticsTime = LocalDate.now().atStartOfDay()
-                        }
-                    )
-                }
-                redisLock.lock()
-                metricsData(tPipelineMetricsInfoRecords)
-
-                if (rows.size < pageSize) break
+                metricsData(records)
                 pageNum++
-            } catch (e: Exception) {
-                failedBatches++
-                logger.warn("Process batch failed (pageNum: $pageNum), will retry next page", e)
-                pageNum++ // 递增页码，跳过当前失败页
-                continue
+                failedPageAttempts = 0
+            } catch (ignored: Throwable) {
+                logger.warn("Process page $pageNum failed: ${ignored.message}")
+                when {
+                    ignored is RemoteServiceException -> throw ignored
+                    ++failedPageAttempts >= 3 -> {
+                        logger.warn("Skipping page $pageNum after 3 attempts")
+                        break
+                    }
+                }
             } finally {
                 redisLock.unlock()
             }
         }
+    }
 
-        if (failedBatches > 0) {
-            logger.warn("Process completed with $failedBatches failed batches")
+    private fun processPageData(
+        response: Map<String, Any>,
+        assignData: TEplusPipelineMetricsDataDailyRecord.(Map<String, Any>) -> Unit,
+        currentTotalPages: Int?
+    ): Pair<Int?, List<TEplusPipelineMetricsDataDailyRecord>> {
+        val data = response["data"] as? Map<String, Any>
+            ?: throw RemoteServiceException("Invalid response data: ${response["message"]}")
+
+        val result = data["result"] as? Map<String, Any>
+            ?: throw RemoteServiceException("Missing result field")
+
+        val rows = result["rows"] as? List<Map<String, Any>>
+            ?: throw RemoteServiceException("Invalid rows format")
+
+        var totalPages = currentTotalPages
+        if (totalPages == null) {
+            val totalItems = result["total"] as? Int ?: 0
+            totalPages = if (totalItems > 0) ceil(totalItems.toDouble() / queryCardsPageSize).toInt() else 0
         }
+
+        val records = rows.map { row ->
+            TEplusPipelineMetricsDataDailyRecord().apply {
+                assignData(row)
+                statisticsTime = LocalDate.now().atStartOfDay()
+            }
+        }
+
+        return Pair(totalPages, records)
     }
 
     /**
      * 处理高失败率30天数据
      */
-    @Scheduled(cron = "0 0 9 * * ?")
+    @Scheduled(cron = "0 0 8 * * ?")
     fun handleHighFailureRate30d() {
+        if (!enableFlag) return
         logger.info("start handleHighFailureRate30d")
         try {
             val dateTimeFrom = LocalDate.now()
@@ -192,9 +239,8 @@ class TxPipelineMetricsCronService @Autowired constructor(
                     )
                 )
             )
-        } catch (e: Exception) {
-            logger.warn("handle pipeline high failure rate30d data fail", e)
-            throw e
+        } catch (ignored: Throwable) {
+            logger.warn("handle pipeline high failure rate30d data fail: ${ignored.message}")
         }
         logger.info("end handleHighFailureRate30d")
     }
@@ -202,8 +248,9 @@ class TxPipelineMetricsCronService @Autowired constructor(
     /**
      * 处理连续失败90天数据
      */
-    @Scheduled(cron = "0 0 9 * * ?")
+    @Scheduled(cron = "0 0 8 * * ?")
     fun handleConsecutiveFailures90d() {
+        if (!enableFlag) return
         logger.info("start handleConsecutiveFailures90d")
         try {
             queryAndProcessCardData(
@@ -218,9 +265,8 @@ class TxPipelineMetricsCronService @Autowired constructor(
                     pipelineMetricsInfoDao.batchSaveConsecutiveFailures90dData(dslContext, records)
                 }
             )
-        } catch (e: Exception) {
-            logger.warn("handle consecutive failures90d data fail", e)
-            throw e
+        } catch (ignored: Throwable) {
+            logger.warn("handle consecutive failures90d data fail: ${ignored.message}")
         }
         logger.info("end handleConsecutiveFailures90d")
     }
@@ -228,8 +274,9 @@ class TxPipelineMetricsCronService @Autowired constructor(
     /**
      * 处理定时触发无代码变更数据
      */
-    @Scheduled(cron = "0 0 9 * * ?")
+    @Scheduled(cron = "0 0 8 * * ?")
     fun handleScheduledTriggerNoCodeChange() {
+        if (!enableFlag) return
         logger.info("start handleScheduledTriggerNoCodeChange")
         try {
             queryAndProcessCardData(
@@ -244,9 +291,8 @@ class TxPipelineMetricsCronService @Autowired constructor(
                     pipelineMetricsInfoDao.batchSaveScheduledTriggerNoCodeChangeData(dslContext, records)
                 }
             )
-        } catch (e: Exception) {
-            logger.warn("handle scheduled trigger no code change data fail", e)
-            throw e
+        } catch (ignored: Throwable) {
+            logger.warn("handle scheduled trigger no code change data fail: ${ignored.message}")
         }
         logger.info("end handleScheduledTriggerNoCodeChange")
     }
@@ -255,35 +301,44 @@ class TxPipelineMetricsCronService @Autowired constructor(
      * 调用所有同步数据方法
      */
     fun runAllSyncDataTasks() {
-        syncExecutorService.submit {
+        val syncExecutorService = Executors.newFixedThreadPool(5)
+        try {
             logger.info("start runAllSyncDataTasks")
-            handleHighFailureRate30d()
-            handleConsecutiveFailures90d()
-            handleScheduledTriggerNoCodeChange()
+            pipelineMetricsInfoDao.cleanTodayData(dslContext)
+            syncExecutorService.submit { handleHighFailureRate30d() }
+            syncExecutorService.submit { handleConsecutiveFailures90d() }
+            syncExecutorService.submit { handleScheduledTriggerNoCodeChange() }
+            syncExecutorService.submit { processInvalidPipelineData() }
             logger.info("end runAllSyncDataTasks")
+        } finally {
+            syncExecutorService.shutdown()
         }
     }
 
-    private fun postWithToken(
-        url: String,
-        token: String,
-        requestBody: Map<String, Any>
-    ): Map<String, Any> {
-        val jsonBody = objectMapper.writeValueAsString(requestBody)
-        val request = Request.Builder()
-            .url(url)
-            .addHeader("token", token)
-            .addHeader("Content-Type", "application/json")
-            .post(jsonBody.toRequestBody("application/json".toMediaTypeOrNull()))
-            .build()
-
-        OkhttpUtils.doHttp(request).use { response ->
-            if (!response.isSuccessful) {
-                throw RemoteServiceException("request failed, status code: ${response.code}")
-            }
-            val responseStr = response.body!!.string()
-            return objectMapper.readValue(responseStr)
+    @Scheduled(cron = "0 0 8 * * ?")
+    fun processInvalidPipelineData() {
+        if (!enableFlag) return
+        logger.info("start processInvalidPipelineData")
+        try {
+            queryAndProcessCardData(
+                cardId = invalidBuildPipeline,
+                namespaceId = pipelineGeneralNamespaceId,
+                assignData = { row ->
+                    this.projectId = row["project_id"] as String
+                    this.pipelineId = row["pipeline_id"] as String
+                    this.invalidPipelineFlag = true
+                    this.url = row["n2"] as String
+                    this.pipelineName = row["n1"] as String
+                },
+                metricsData = { records ->
+                    pipelineMetricsInfoDao.batchSaveInvalidPipelineData(dslContext, records)
+                }
+            )
+        } catch (ignored: Throwable) {
+            logger.warn("handle process invalid pipeline data fail: ${ignored.message}")
+            throw ignored
         }
+        logger.info("end processInvalidPipelineData")
     }
 
     /**
@@ -302,7 +357,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
         namespaceId: Int,
         queryMode: Int = 2,
         pageNum: Int = 1,
-        pageSize: Int = 1000,
+        pageSize: Int = queryCardsPageSize,
         input: Map<String, Any>? = null
     ): Map<String, Any> {
         val requestBody = mutableMapOf(
@@ -319,10 +374,151 @@ class TxPipelineMetricsCronService @Autowired constructor(
             requestBody.putAll(input)
         }
 
-        return postWithToken(
+        val response = OkhttpUtils.doCustomTimeoutPost(
+            connectTimeout = CONNECT_TIMEOUT_SECONDS,
+            readTimeout = readTimeoutSeconds,
+            writeTimeout = WRITE_TIMEOUT_SECONDS,
             url = cardQueryUrl,
-            token = token,
-            requestBody = requestBody
+            jsonParam = JsonUtil.toJson(requestBody),
+            headers = mapOf(
+                "token" to token,
+                "Content-Type" to "application/json"
+            )
         )
+        if (!response.isSuccessful) {
+            throw RemoteServiceException("queryInvalidPipelineMonitorCardData request failed: ${response.message}")
+        }
+        val responseStr = response.body?.string()
+        return responseStr?.let { JsonUtil.toMap(it) } ?: emptyMap()
+    }
+
+    private fun fetchInvalidPipelineProjectIds(limit: Int, offset: Int): List<String> {
+        return pipelineMetricsInfoDao.listInvalidPipelineProjectIds(dslContext, limit, offset)
+    }
+
+    /**
+     * 每隔两周周一10点发送项目无效流水线监控报告
+     */
+    @Scheduled(cron = "0 0 10 ? * MON")
+    fun sendInvalidPipelineMonitorReport() {
+        val today = LocalDate.now()
+        val weekNumber = today.get(WeekFields.of(Locale.getDefault()).weekOfWeekBasedYear())
+        if (weekNumber % 2 != 0) return
+
+        logger.info("starts the task of sending a report email")
+        var offset = 0
+        val limit = 100
+        do {
+            val projectIds = fetchInvalidPipelineProjectIds(limit, offset)
+            projectIds.forEach { projectId ->
+                sendReportForProject(projectId)
+            }
+            offset += limit
+        } while (projectIds.size == limit)
+    }
+
+    private fun sendReportForProject(projectId: String) {
+        // 获取所有无效流水线
+        val allInvalidPipelines = pipelineMetricsInfoDao.listProjectInvalidPipelineInfo(
+            dslContext = dslContext,
+            projectId = projectId,
+            statisticsTime = LocalDate.now().atStartOfDay()
+        ).map { it.value1() to it.value2() }.toMap()
+
+        if (allInvalidPipelines.isEmpty()) return
+
+        // 获取该项目的白名单流水线
+        val whitelistPipelines = pipelineMetricsInfoDao.listAutoDisableWhitelist(
+            dslContext = dslContext,
+            projectId = projectId
+        ).toSet()
+
+        // 过滤掉白名单中的流水线
+        val filteredInvalidPipelines = allInvalidPipelines.filterKeys {
+            !whitelistPipelines.contains(it)
+        }
+
+        if (filteredInvalidPipelines.isEmpty()) return
+
+        val projectPipelineInfo = convertPipelineExpirationInfo(projectId, filteredInvalidPipelines)
+
+        try {
+            if (projectPipelineInfo != null) {
+                sendProjectReport(projectId, projectPipelineInfo)
+            }
+            logger.info("report email for the project [$projectId] was successfully sent")
+        } catch (ignored: Throwable) {
+            logger.error("Failed to send project [$projectId] report email", ignored.message)
+        }
+    }
+
+    /**
+     * 获取所有需要发送报告的项目流水线信息
+     */
+    private fun convertPipelineExpirationInfo(
+        projectId: String,
+        invalidPipelineMap: Map<String, String>
+    ): PipelineExpirationInfo? {
+
+        val projectManagers =
+            client.get(ServiceUserResource::class).getProjectUserRoles(projectId, BkAuthGroup.MANAGER).data
+        if (projectManagers.isNullOrEmpty()) {
+            return null
+        }
+        return PipelineExpirationInfo(
+            receivers = projectManagers,
+            projectId = projectId,
+            pipelineIds = invalidPipelineMap.keys.toList(),
+            linksMap = invalidPipelineMap
+        )
+    }
+
+    /**
+     * 发送单个项目的报告邮件
+     */
+    private fun sendProjectReport(projectId: String, info: PipelineExpirationInfo) {
+        try {
+            // 准备邮件模板请求
+            val request = SendNotifyMessageTemplateRequest(
+                templateCode = "PIPELINE_EXPIRATION_NOTIFICATION",
+                receivers = info.receivers.toMutableSet(),
+                notifyType = mutableSetOf(NotifyType.EMAIL.name),
+                bodyParams = mapOf(
+                    "projectName" to info.projectId,
+                    "pipelineCount" to info.pipelineIds.size.toString(),
+                    "pipelineList" to info.pipelineIds.joinToString("\n") {
+                        "${it}:${info.linksMap[it]}"
+                    },
+                    "table" to buildPipelineTableHtml(info),
+                    "eplusUrl" to "${HomeHostUtil.innerServerHost()}/console/metrics/${projectId}"
+                ),
+                markdownContent = false
+            )
+
+            client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request).let { result ->
+                if (result.isNotOk() || result.data != true) {
+                    throw RemoteServiceException("send email fail: ${result.message}")
+                }
+            }
+        } catch (ignored: Throwable) {
+            logger.warn("send project[${info.projectId}] invalid pipeline email fail", ignored.message)
+            throw ignored
+        }
+    }
+
+    private fun buildPipelineTableHtml(info: PipelineExpirationInfo): String {
+        val rows = info.pipelineIds.joinToString("") { pipelineId ->
+            """
+            <tr>
+                <td style="border-bottom: 1px solid #ddd; padding: 10px;">$pipelineId</td>
+                <td style="border-bottom: 1px solid #ddd; padding: 10px;">
+                    <a href="${info.linksMap[pipelineId]}" style="color: #3A84FF;">${
+                I18nUtil.getCodeLanMessage(messageCode = BK_TO_HANDLE)
+            }</a>
+                </td>
+            </tr>
+            """
+        }
+        return rows.replace("\n", "")
     }
 }

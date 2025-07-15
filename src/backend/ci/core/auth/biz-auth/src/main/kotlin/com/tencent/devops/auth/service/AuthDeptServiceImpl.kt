@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -51,6 +51,7 @@ import com.tencent.devops.auth.entity.UserDeptTreeInfo
 import com.tencent.devops.auth.pojo.BkUserDeptInfo
 import com.tencent.devops.auth.pojo.BkUserInfo
 import com.tencent.devops.auth.pojo.DeptInfo
+import com.tencent.devops.auth.pojo.vo.BkDeptDetailsVo
 import com.tencent.devops.auth.pojo.vo.BkUserInfoVo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
@@ -66,11 +67,10 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import java.util.concurrent.TimeUnit
 
-class AuthDeptServiceImpl @Autowired constructor(
+class AuthDeptServiceImpl(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper
 ) : DeptService {
@@ -107,7 +107,7 @@ class AuthDeptServiceImpl @Autowired constructor(
     // 已离职或不存在成员
     private val departedMembersCache = CacheBuilder.newBuilder()
         .maximumSize(10000)
-        .expireAfterWrite(30, TimeUnit.MINUTES)
+        .expireAfterWrite(10, TimeUnit.MINUTES)
         .build<String/*userId*/, Boolean/*是否不存在/离职*/>()
 
     override fun getDeptByLevel(level: Int, accessToken: String?, userId: String): DeptInfoVo {
@@ -121,7 +121,7 @@ class AuthDeptServiceImpl @Autowired constructor(
             fuzzyLookups = null,
             accessToken = accessToken
         )
-        return getDeptInfo(search)
+        return listDeptInfos(search)
     }
 
     override fun getDeptByParent(parentId: Int, accessToken: String?, userId: String, pageSize: Int?): DeptInfoVo {
@@ -136,7 +136,7 @@ class AuthDeptServiceImpl @Autowired constructor(
             accessToken = accessToken,
             pageSize = pageSize ?: null
         )
-        return getDeptInfo(search)
+        return listDeptInfos(search)
     }
 
     @Suppress("ComplexMethod")
@@ -175,7 +175,7 @@ class AuthDeptServiceImpl @Autowired constructor(
         val userAndDeptInfos = mutableListOf<UserAndDeptInfoVo>()
         when (type) {
             ManagerScopesEnum.USER -> {
-                val userInfos = getUserInfo(userSearch)
+                val userInfos = listUserInfos(userSearch)
                 userInfos.results.forEach {
                     userAndDeptInfos.add(
                         it.toUserAndDeptInfoVo()
@@ -184,20 +184,20 @@ class AuthDeptServiceImpl @Autowired constructor(
             }
 
             ManagerScopesEnum.DEPARTMENT -> {
-                val deptInfos = getDeptInfo(deptSearch)
+                val deptInfos = listDeptInfos(deptSearch)
                 deptInfos.results.forEach {
                     it.toUserAndDeptInfoVo()
                 }
             }
 
             ManagerScopesEnum.ALL -> {
-                val userInfos = getUserInfo(userSearch)
+                val userInfos = listUserInfos(userSearch)
                 userInfos.results.forEach {
                     userAndDeptInfos.add(
                         it.toUserAndDeptInfoVo()
                     )
                 }
-                val deptInfos = getDeptInfo(deptSearch)
+                val deptInfos = listDeptInfos(deptSearch)
                 deptInfos.results.forEach {
                     userAndDeptInfos.add(
                         it.toUserAndDeptInfoVo()
@@ -244,7 +244,7 @@ class AuthDeptServiceImpl @Autowired constructor(
             fuzzyLookups = null,
             accessToken = null
         )
-        return getDeptInfo(search)
+        return listDeptInfos(search)
     }
 
     override fun getUserDeptInfo(userId: String): Set<String> {
@@ -260,17 +260,29 @@ class AuthDeptServiceImpl @Autowired constructor(
     }
 
     override fun getUserInfo(userId: String, name: String): UserAndDeptInfoVo? {
-        return userInfoCache.getIfPresent(name) ?: getUserAndPutInCache(userId, name)
+        return userInfoCache.getIfPresent(name) ?: getUserAndPutInCache(name)
+    }
+
+    override fun getUserInfo(userId: String): UserAndDeptInfoVo? {
+        return userInfoCache.getIfPresent(userId) ?: getUserAndPutInCache(userId)
     }
 
     override fun getMemberInfo(
         memberId: String,
         memberType: ManagerScopesEnum
     ): UserAndDeptInfoVo {
-        return listMemberInfos(
-            memberIds = listOf(memberId),
-            memberType = memberType
-        ).firstOrNull() ?: throw ErrorCodeException(
+        return when (memberType) {
+            ManagerScopesEnum.USER -> {
+                getUserInfo(memberId)
+            }
+
+            else -> {
+                listMemberInfos(
+                    memberIds = listOf(memberId),
+                    memberType = memberType
+                ).firstOrNull()
+            }
+        } ?: throw ErrorCodeException(
             errorCode = AuthMessageCode.USER_NOT_EXIST,
             params = arrayOf(memberId),
             defaultMessage = "member $memberId not exist"
@@ -320,14 +332,55 @@ class AuthDeptServiceImpl @Autowired constructor(
         return if (departedMembersCache.getIfPresent(userId) == true) {
             true
         } else {
-            listMemberInfos(
-                memberIds = listOf(userId),
-                memberType = ManagerScopesEnum.USER
-            ).isEmpty()
+            getUserInfo(userId) == null
         }.also {
             if (it) {
+                departedMembersCache.put(userId, true)
                 logger.info("user departed :$userId")
             }
+        }
+    }
+
+    private fun getUserInfoFromExternal(userId: String): UserAndDeptInfoVo? {
+        return try {
+            val url = getAuthRequestUrl(String.format(USER_INFO, userId))
+            val searchEntity = SearchUserAndDeptEntity(
+                bk_app_code = appCode!!,
+                bk_app_secret = appSecret!!,
+                bk_username = userId,
+                fields = USER_LABEL,
+                lookupField = USERNAME
+            )
+            val request = Request.Builder().url(url)
+                .headers(searchEntity.toMap().toHeaders())
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use {
+                if (!it.isSuccessful) {
+                    logger.warn("get user info fail {}|{}|{}", url, searchEntity, it)
+                    throw OperationException(
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = AuthMessageCode.USER_NOT_EXIST
+                        )
+                    )
+                }
+                val responseStr = it.body!!.string()
+                logger.info("get user info response {}", responseStr)
+                val responseDTO = JsonUtil.to(responseStr, object : TypeReference<ResponseDTO<BkUserInfo>>() {})
+                if (responseDTO.code != 0L || responseDTO.result == false) {
+                    logger.warn("get user info fail {}|{}|{}", url, searchEntity, it)
+                    throw OperationException(
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = AuthMessageCode.USER_NOT_EXIST
+                        )
+                    )
+                }
+                logger.info("get user info：${objectMapper.writeValueAsString(responseDTO.data)}")
+                responseDTO.data.toUserAndDeptInfoVo()
+            }
+        } catch (ex: Exception) {
+            logger.warn("User does not exist $userId |$ex")
+            null
         }
     }
 
@@ -345,7 +398,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                     lookupField = USERNAME,
                     exactLookups = memberIds.joinToString(",")
                 )
-                getUserInfo(userSearch).results.map { it.toUserAndDeptInfoVo() }
+                listUserInfos(userSearch).results.map { it.toUserAndDeptInfoVo() }
             }
 
             ManagerScopesEnum.DEPARTMENT -> {
@@ -357,7 +410,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                     lookupField = ID,
                     exactLookups = memberIds.joinToString(",")
                 )
-                getDeptInfo(deptSearch).results.map { it.toUserAndDeptInfoVo() }
+                listDeptInfos(deptSearch).results.map { it.toUserAndDeptInfoVo() }
             }
 
             else -> emptyList()
@@ -397,17 +450,10 @@ class AuthDeptServiceImpl @Autowired constructor(
         )
     }
 
-    private fun getUserAndPutInCache(
-        userId: String,
-        name: String
-    ): UserAndDeptInfoVo? {
-        return getUserAndDeptByName(
-            name = name,
-            accessToken = null,
-            userId = userId,
-            type = ManagerScopesEnum.USER,
-            exactLookups = true
-        ).firstOrNull().also { if (it != null) userInfoCache.put(name, it) }
+    private fun getUserAndPutInCache(userId: String): UserAndDeptInfoVo? {
+        return getUserInfoFromExternal(
+            userId = userId
+        ).also { if (it != null) userInfoCache.put(userId, it) }
     }
 
     private fun getUserDeptFamily(userId: String): String {
@@ -419,6 +465,18 @@ class AuthDeptServiceImpl @Autowired constructor(
             bk_username = userId
         )
         return callUserCenter(LIST_PROFILE_DEPARTMENTS, deptSearch)
+    }
+
+    override fun getUserDeptDetails(userId: String): BkDeptDetailsVo? {
+        val deptSearch = SearchProfileDeptEntity(
+            id = userId,
+            with_family = true,
+            bk_app_code = appCode!!,
+            bk_app_secret = appSecret!!,
+            bk_username = userId
+        )
+        val deptInfoStr = callUserCenter(LIST_PROFILE_DEPARTMENTS, deptSearch)
+        return objectMapper.readValue<List<BkDeptDetailsVo>>(deptInfoStr).firstOrNull()
     }
 
     private fun getAndRefreshDeptUser(deptId: Int, accessToken: String?): List<String> {
@@ -434,13 +492,13 @@ class AuthDeptServiceImpl @Autowired constructor(
         return findUserName(responseStr)
     }
 
-    private fun getDeptInfo(searchDeptEnity: SearchUserAndDeptEntity): DeptInfoVo {
+    override fun listDeptInfos(searchDeptEnity: SearchUserAndDeptEntity): DeptInfoVo {
         val responseDTO = callUserCenter(LIST_DEPARTMENTS, searchDeptEnity)
         return objectMapper.readValue(responseDTO)
     }
 
-    private fun getUserInfo(searchUserEntity: SearchUserAndDeptEntity): BkUserInfoVo {
-        val responseDTO = callUserCenter(USER_INFO, searchUserEntity)
+    override fun listUserInfos(searchUserEntity: SearchUserAndDeptEntity): BkUserInfoVo {
+        val responseDTO = callUserCenter(USER_INFO_LIST, searchUserEntity)
         return objectMapper.readValue(responseDTO)
     }
 
@@ -541,7 +599,8 @@ class AuthDeptServiceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(AuthDeptServiceImpl::class.java)
         const val LIST_DEPARTMENTS = "api/c/compapi/v2/usermanage/list_departments/"
         const val LIST_DEPARTMENT_PROFILES = "api/c/compapi/v2/usermanage/list_department_profiles/"
-        const val USER_INFO = "api/c/compapi/v2/usermanage/list_users/"
+        const val USER_INFO_LIST = "api/c/compapi/v2/usermanage/list_users/"
+        const val USER_INFO = "api/c/compapi/v2/usermanage/retrieve_user?id=%s"
         const val RETRIEVE_DEPARTMENT = "api/c/compapi/v2/usermanage/retrieve_department/"
         const val LIST_PROFILE_DEPARTMENTS = "api/c/compapi/v2/usermanage/list_profile_departments/"
         const val MAX_USER_OF_DEPARTMENT_RETURNED = 500

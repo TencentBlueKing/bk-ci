@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -358,6 +358,8 @@ class PipelineContextService @Autowired constructor(
                 e.retryCountManual?.takeIf { it > 0 }?.let {
                     contextMap["steps.$stepId.retry-count-manual"] = it.toString()
                 }
+                e.errorMsg?.let { contextMap["steps.$stepId.error_message"] = it }
+                e.errorCode?.let { contextMap["steps.$stepId.error_code"] = it.toString() }
                 e.retryCountAuto?.let { contextMap["steps.$stepId.retry-count-auto"] = it.toString() }
             }
             val jobId = if (c.jobId.isNullOrBlank()) return else c.jobId!!
@@ -368,6 +370,8 @@ class PipelineContextService @Autowired constructor(
             e.retryCountManual?.takeIf { it > 0 }?.let {
                 contextMap["jobs.$jobId.steps.$stepId.retry-count-manual"] = it.toString()
             }
+            e.errorMsg?.let { contextMap["jobs.$jobId.steps.$stepId.error_message"] = it }
+            e.errorCode?.let { contextMap["jobs.$jobId.steps.$stepId.error_code"] = it.toString() }
             e.retryCountAuto?.let { contextMap["jobs.$jobId.steps.$stepId.retry-count-auto"] = it.toString() }
             outputArrayMap?.let { self ->
                 fillStepOutputArray(

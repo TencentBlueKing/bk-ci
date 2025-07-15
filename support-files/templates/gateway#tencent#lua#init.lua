@@ -107,11 +107,7 @@ config = {
             url = "__BK_CI_KUBERNETES_API_URL__",
             token = "__BK_CI_KUBERNETES_API_TOKEN__"
         },
-        special_domain = {},
-        recovery = {
-            switchAll = false,
-            domain = "__BK_CI_K8S_DOMAIN__"
-        }
+        special_domain = {}
     },
     openHttps = "__BKCI_OPEN_HTTPS__",
     mobileSiteToken = "__BK_CI_MOBILE_SITE_TOKEN__",

@@ -58,7 +58,7 @@
                     const headers = pipelineId.value
                         ? { 'X-DEVOPS-PIPELINE-ID': pipelineId.value }
                         : {}
-                    const res = await request.get('/project/api/user/services/61/url/get', { headers })
+                    const res = await request.get('/project/api/user/services/36/url/get', { headers })
                     if (isAbsoluteURL(res.data)) {
                         eplusUrl.value = cardId.value ? `${res.data}&cardId=${cardId.value}` : res.data
                     } else {

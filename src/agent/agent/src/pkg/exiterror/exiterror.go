@@ -2,11 +2,12 @@ package exitcode
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"os"
 	"strings"
 	"sync/atomic"
 	"syscall"
+
+	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"

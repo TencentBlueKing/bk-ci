@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -93,9 +93,12 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
     ) {
         val storeBaseUpdateRequest = storeUpdateRequest.baseInfo
         val storeType = storeBaseUpdateRequest.storeType
+        val versionInfo = storeBaseUpdateRequest.versionInfo
+        val version = versionInfo.version
+        // 判断版本号是否合法
+        VersionUtils.validateVersion(version, storeType)
         val storeCode = storeBaseUpdateRequest.storeCode
         val name = storeBaseUpdateRequest.name
-        val versionInfo = storeBaseUpdateRequest.versionInfo
         val classifyCode = storeBaseUpdateRequest.classifyCode
         // 校验分类信息是否准确
         val classifyRecord =
@@ -146,7 +149,7 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
             newestBaseRecord.id // 新发布或取消重新发布时沿用现有ID
         }
 
-        val majorVersion = VersionUtils.getMajorVersion(version)
+        val majorVersion = VersionUtils.getMajorVersion(version, storeType)
         val normalizedVersion = VersionUtils.convertLatestVersion(version)
         // 获取当前大版本下最大序号
         val maxBusNum = storeBaseQueryDao.getMaxBusNumByCode(dslContext, storeCode, storeType, normalizedVersion)

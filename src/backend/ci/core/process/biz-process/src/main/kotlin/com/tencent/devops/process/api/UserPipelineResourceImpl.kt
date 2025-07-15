@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -458,13 +458,19 @@ class UserPipelineResourceImpl @Autowired constructor(
     }
 
     @AuditEntry(actionId = ActionId.PIPELINE_DELETE)
-    override fun softDelete(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
+    override fun softDelete(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        archiveFlag: Boolean?
+    ): Result<Boolean> {
         checkParam(userId, projectId)
         val deletePipeline = pipelineInfoFacadeService.deletePipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.BS,
+            archiveFlag = archiveFlag
         )
         auditService.createAudit(
             Audit(
@@ -481,7 +487,11 @@ class UserPipelineResourceImpl @Autowired constructor(
     }
 
     @AuditEntry(actionId = ActionId.PIPELINE_DELETE)
-    override fun batchDelete(userId: String, batchDeletePipeline: BatchDeletePipeline): Result<Map<String, Boolean>> {
+    override fun batchDelete(
+        userId: String,
+        batchDeletePipeline: BatchDeletePipeline,
+        archiveFlag: Boolean?
+    ): Result<Map<String, Boolean>> {
         val pipelineIds = batchDeletePipeline.pipelineIds
         if (pipelineIds.isEmpty()) {
             return Result(emptyMap())
@@ -493,7 +503,12 @@ class UserPipelineResourceImpl @Autowired constructor(
         }
         val result = pipelineIds.associateWith {
             try {
-                softDelete(userId, batchDeletePipeline.projectId, it).data ?: false
+                softDelete(
+                    userId = userId,
+                    projectId = batchDeletePipeline.projectId,
+                    pipelineId = it,
+                    archiveFlag = archiveFlag
+                ).data ?: false
             } catch (ignore: Exception) {
                 false
             }
@@ -689,8 +704,18 @@ class UserPipelineResourceImpl @Autowired constructor(
     }
 
     @AuditEntry(actionId = ActionId.PIPELINE_EDIT)
-    override fun exportPipeline(userId: String, projectId: String, pipelineId: String): Response {
-        return pipelineInfoFacadeService.exportPipeline(userId, projectId, pipelineId)
+    override fun exportPipeline(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        archiveFlag: Boolean?
+    ): Response {
+        return pipelineInfoFacadeService.exportPipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            archiveFlag = archiveFlag
+        )
     }
 
     @AuditEntry(

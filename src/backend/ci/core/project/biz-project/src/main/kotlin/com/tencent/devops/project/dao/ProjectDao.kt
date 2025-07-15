@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -198,6 +198,9 @@ class ProjectDao {
                 }
                 if (queryRemoteDevFlag == true) {
                     conditions.add(JooqUtils.jsonExtractAny<Boolean>(PROPERTIES, "\$.remotedev").isTrue)
+                }
+                if (!projectName.isNullOrBlank()) {
+                    conditions.add(PROJECT_NAME.like("%$projectName%"))
                 }
             }
         }
@@ -606,7 +609,8 @@ class ProjectDao {
         authSecrecyStatus: ProjectAuthSecrecyStatus? = null,
         sortType: ProjectSortType? = null,
         collation: ProjectCollation? = ProjectCollation.DEFAULT,
-        productIds: Set<Int> = setOf()
+        productIds: Set<Int> = setOf(),
+        channelCodes: Set<String> = setOf()
     ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this)
@@ -617,6 +621,7 @@ class ProjectDao {
                 .let { if (null == enabled) it else it.and(ENABLED.eq(enabled)) }
                 .let { if (null == authSecrecyStatus) it else it.and(AUTH_SECRECY.eq(authSecrecyStatus.value)) }
                 .let { if (productIds.isEmpty()) it else it.and(PRODUCT_ID.`in`(productIds)) }
+                .let { if (channelCodes.isEmpty()) it else it.and(CHANNEL.`in`(channelCodes)) }
                 .let {
                     if (sortType != null) {
                         when (sortType) {

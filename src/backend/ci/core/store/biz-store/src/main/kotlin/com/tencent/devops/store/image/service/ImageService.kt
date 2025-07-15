@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -247,7 +247,8 @@ abstract class ImageService @Autowired constructor() {
         labelCode: String?,
         score: Int?,
         imageSourceType: ImageType?,
-        interfaceName: String? = "Anon interface"
+        interfaceName: String? = "Anon interface",
+        recommendFlag: Boolean? = null
     ): Int {
         // 获取镜像
         val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode.split(",")
@@ -259,7 +260,8 @@ abstract class ImageService @Autowired constructor() {
             rdType = rdType,
             labelCodeList = labelCodeList,
             score = score,
-            imageSourceType = imageSourceType
+            imageSourceType = imageSourceType,
+            recommendFlag = recommendFlag
         )
     }
 
@@ -278,7 +280,8 @@ abstract class ImageService @Autowired constructor() {
         desc: Boolean?,
         page: Int?,
         pageSize: Int?,
-        interfaceName: String? = "Anon interface"
+        interfaceName: String? = "Anon interface",
+        recommendFlag: Boolean? = null
     ): List<MarketImageItem> {
         val results = mutableListOf<MarketImageItem>()
 
@@ -296,7 +299,8 @@ abstract class ImageService @Autowired constructor() {
             sortType = sortType,
             desc = desc,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            recommendFlag = recommendFlag
         )
             ?: return emptyList()
 
@@ -408,6 +412,7 @@ abstract class ImageService @Autowired constructor() {
         labelCode: String?,
         score: Int?,
         sortType: MarketImageSortTypeEnum?,
+        recommendFlag: Boolean?,
         page: Int?,
         pageSize: Int?,
         interfaceName: String? = "Anon interface"
@@ -424,7 +429,8 @@ abstract class ImageService @Autowired constructor() {
                 rdType = rdType,
                 labelCode = labelCode,
                 score = score,
-                imageSourceType = imageSourceType
+                imageSourceType = imageSourceType,
+                recommendFlag = recommendFlag
             ),
             page = page,
             pageSize = pageSize,
@@ -442,7 +448,8 @@ abstract class ImageService @Autowired constructor() {
                 desc = getDefaultDescTypeBySortType(sortType),
                 page = page,
                 pageSize = pageSize,
-                interfaceName = interfaceName
+                interfaceName = interfaceName,
+                recommendFlag = recommendFlag
             ).map {
                 val categories = imageCategoryRelDao.getCategorysByImageId(dslContext, it.id)?.map { categoryRecord ->
                     categoryRecord.get(KEY_CATEGORY_CODE) as String

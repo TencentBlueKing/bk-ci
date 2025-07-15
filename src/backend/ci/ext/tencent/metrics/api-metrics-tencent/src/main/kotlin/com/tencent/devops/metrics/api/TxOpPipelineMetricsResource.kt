@@ -34,22 +34,42 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
+import com.tencent.devops.common.api.pojo.Result
 
-@Tag(name = "OP_PIPELINE", description = "OP-流水线资源")
-@Path("/op/pipelines")
+@Tag(name = "OP_PIPELINE_EPLUS", description = "OP-流水线度量-EPLUS")
+@Path("/op/pipelines/eplus")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface TxOpPipelineMetricsResource {
 
     @Operation(summary = "同步所有项目流水线问题分析信息")
     @GET
-    @Path("/runAll")
+    @Path("/sync/runAll")
     fun runAllSyncDataTasks(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     )
+
+    @Operation(summary = "批量更新项目下无效流水线白名单状态")
+    @POST
+    @Path("/whitelist/update")
+    fun updatePipelineWhitelist(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID列表", required = true)
+        pipelineIds: List<String>,
+        @Parameter(description = "是否添加到白名单", required = true)
+        @QueryParam("isAdd")
+        isAdd: Boolean
+    ): Result<Boolean>
 }
