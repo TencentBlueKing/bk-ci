@@ -1,10 +1,10 @@
 package com.tencent.devops.auth.service
 
+import com.tencent.devops.auth.dao.AuthResourceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
-import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
-import com.tencent.devops.auth.provider.rbac.service.RbacCommonService
 import com.tencent.devops.auth.provider.rbac.service.BkInternalPermissionComparator
+import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -27,9 +27,9 @@ class BkInternalPermissionService(
     private val authResourceGroupMemberDao: AuthResourceGroupMemberDao,
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService,
-    private val rbacCommonService: RbacCommonService,
+    private val permissionProjectService: PermissionProjectService,
     private val superManagerService: SuperManagerService,
-    private val authResourceService: AuthResourceService,
+    private val authResourceService: AuthResourceDao,
     private val meterRegistry: MeterRegistry
 ) {
     // 1. 单条权限校验结果
@@ -108,7 +108,7 @@ class BkInternalPermissionService(
             projectCode = projectCode,
             resourceType = resourceType,
             action = action
-        ) || rbacCommonService.checkProjectManager(
+        ) || permissionProjectService.checkProjectManager(
             userId = userId,
             projectCode = projectCode
         )
@@ -148,7 +148,8 @@ class BkInternalPermissionService(
                     action = action
                 )
                 if (isManager) {
-                    authResourceService.listByProjectAndType(
+                    authResourceService.getResourceCodeByType(
+                        dslContext = dslContext,
                         projectCode = projectCode,
                         resourceType = resourceType
                     )
@@ -211,7 +212,7 @@ class BkInternalPermissionService(
         resourceCodes: List<String>
     ): Map<AuthPermission, List<String>> {
         return createTimer(::filterUserResourcesByActions.name).record(Supplier {
-            if (rbacCommonService.checkProjectManager(userId = userId, projectCode = projectCode)) {
+            if (permissionProjectService.checkProjectManager(userId = userId, projectCode = projectCode)) {
                 return@Supplier actions.associate {
                     val authPermission = it.substringAfterLast("_")
                     AuthPermission.get(authPermission) to resourceCodes
