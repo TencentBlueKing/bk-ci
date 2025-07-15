@@ -63,7 +63,7 @@
                 <span>{{ deptInfo.deptPath || '' }}</span>
                 <span class="ml6">{{ deptInfo.centerName || '' }}</span>
                 <i
-                    class="devops-icon icon-edit-line"
+                    class="bk-icon icon-edit2"
                     @click="editDeptInfo"
                 />
             </p>
@@ -326,7 +326,7 @@
             align-items: center;
             grid-gap: 6px;
             line-height: 32px;
-            .devops-icon.icon-edit-line {
+            .bk-icon.icon-edit2{
                 cursor: pointer;
                 padding: 0 6px;
                 &:hover {
