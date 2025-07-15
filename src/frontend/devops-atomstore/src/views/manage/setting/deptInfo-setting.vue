@@ -303,6 +303,7 @@
     .publish-dept-row {
         width: 100%;
         height: 32px;
+        line-height: 32px;
         display: flex;
         grid-gap: 8px;
         font-size: 12px;
@@ -330,7 +331,6 @@
                 color: #979ba5;
                 font-size: 24px;
                 cursor: pointer;
-                padding: 0 6px;
                 &:hover {
                     color: #3a84ff;
                 }
