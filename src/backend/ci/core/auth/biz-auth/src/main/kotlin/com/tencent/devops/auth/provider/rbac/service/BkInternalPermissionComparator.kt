@@ -21,7 +21,8 @@ class BkInternalPermissionComparator(
     val bkInternalPermissionService: BkInternalPermissionService,
     val meterRegistry: MeterRegistry,
     val client: Client,
-    val redisOperation: RedisOperation
+    val redisOperation: RedisOperation,
+    val authResourceService: AuthResourceService
 ) {
 
     private val project2StatusCache = CacheHelper.createCache<String, Boolean>(duration = 60)
@@ -121,14 +122,18 @@ class BkInternalPermissionComparator(
                 resourceType = resourceType,
                 action = action
             ).filterNot { it == "##NONE##" }
-            val externalSet = expectedResult.toSet()
+            val expectedSet = authResourceService.listByResourceCodes(
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCodes = expectedResult.distinct(),
+            ).toSet()
             val localSet = localResult.toSet()
-            val isConsistent = (externalSet == localSet)
+            val isConsistent = (expectedSet == localSet)
             consistencyCounter(::getUserResourceByAction.name, isConsistent).increment()
             if (!isConsistent) {
                 // 计算差异项
-                val externalOnly = externalSet - localSet  // external有但local无的项
-                val localOnly = localSet - externalSet     // local有但external无的项
+                val externalOnly = expectedSet - localSet  // external有但local无的项
+                val localOnly = localSet - expectedSet     // local有但external无的项
 
                 logger.warn(
                     """
