@@ -146,8 +146,12 @@ class CloneWorkspaceHandler @Autowired constructor(
 
             val (appName, _) = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
             // 发起克隆的管理员也创建CDS后台用户
-            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
-                .createStartCloudUser(userId, appName)
+            kotlin.runCatching {
+                SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
+                    .createStartCloudUser(userId, appName)
+            }.onFailure {
+                logger.warn("create user failed.|${it.message}")
+            }
 
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
@@ -269,11 +273,14 @@ class CloneWorkspaceHandler @Autowired constructor(
 
             val (appName, _) = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
             // 发起克隆的管理员也创建CDS后台用户
-            SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
-                .createStartCloudUser(userId, appName)
-
+            kotlin.runCatching {
+                SpringContextUtil.getBean(ServiceStartCloudInterface::class.java)
+                    .createStartCloudUser(userId, appName)
+            }.onFailure {
+                logger.warn("create user failed.|${it.message}")
+            }
             // 需要生成一个新的 pipelineId 进行操作
-            val orderId = "${appName}_${projectId}_${UUIDUtil.generate().takeLast(16)}"
+            val orderId = "${projectId}_${UUIDUtil.generate().takeLast(16)}"
             val resp = remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.START).cloneWorkspaceVm(
                 userId = userId,
                 workspaceName = workspaceName,

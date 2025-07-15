@@ -31,12 +31,12 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.user.UserSignatureManageResource
 import com.tencent.devops.project.pojo.UserSignatureStatusResponse
-import com.tencent.devops.project.service.ProjectSignatureManageService
+import com.tencent.devops.project.service.SignatureManageService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserSignatureManageResourceImpl @Autowired constructor(
-    private val signatureManageService: ProjectSignatureManageService
+    private val signatureManageService: SignatureManageService
 ) : UserSignatureManageResource {
     override fun getSignatureStatus(userId: String, projectId: String): Result<UserSignatureStatusResponse> {
         return Result(

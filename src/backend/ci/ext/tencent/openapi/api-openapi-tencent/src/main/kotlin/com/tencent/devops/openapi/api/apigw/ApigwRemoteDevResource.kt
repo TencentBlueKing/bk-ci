@@ -46,6 +46,8 @@ import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
+import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
+import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmResp
 import com.tencent.devops.remotedev.pojo.remotedev.SyncVmData
 import com.tencent.devops.remotedev.pojo.remotedev.SyncVmResp
 import com.tencent.devops.remotedev.pojo.remotedev.TaskResp
@@ -1013,4 +1015,14 @@ interface ApigwRemoteDevResource {
         userId: String,
         data: SyncVmData
     ): Result<SyncVmResp?>
+
+    @Operation(summary = "注册和初始化CVM", tags = ["v4_app_remotedev_create_cvm"])
+    @POST
+    @Path("/cvm/create")
+    fun createCvm(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: CreateCvmData
+    ): Result<CreateCvmResp?>
 }

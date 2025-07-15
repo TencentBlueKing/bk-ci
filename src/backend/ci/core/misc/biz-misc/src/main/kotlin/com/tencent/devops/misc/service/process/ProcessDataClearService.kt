@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -35,6 +35,7 @@ import com.tencent.devops.misc.dao.process.ProcessDataDeleteDao
 import com.tencent.devops.misc.lock.PipelineVersionLock
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
@@ -49,6 +50,8 @@ class ProcessDataClearService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val processRelatedPlatformDataClearService: ProcessRelatedPlatformDataClearService
 ) {
+
+    private val logger = LoggerFactory.getLogger(ProcessDataClearService::class.java)
 
     /**
      * 清除流水线数据
@@ -183,6 +186,7 @@ class ProcessDataClearService @Autowired constructor(
                 val deleteResult = processDataDeleteDao.deletePipelineBuildHistory(context, projectId, buildId)
                 if (deleteResult == 0) {
                     // 如果删除的记录数为0则无需执行后面的逻辑
+                    logger.warn("Pipeline [$pipelineId] build [$buildId] record deletion failed")
                     return@transaction
                 }
                 // 添加删除记录，插入要实现幂等
@@ -193,7 +197,10 @@ class ProcessDataClearService @Autowired constructor(
                     buildId = buildId
                 )
                 // 无版本信息则无需更新计数
-                if (version == null) return@transaction
+                if (version == null) {
+                    logger.warn("Pipeline [$pipelineId] build [$buildId] record no version information")
+                    return@transaction
+                }
                 // 查询流水线版本记录
                 val pipelineVersionInfo = processDao.getPipelineVersionSimple(
                     dslContext = context,
@@ -223,6 +230,7 @@ class ProcessDataClearService @Autowired constructor(
                     referCount = referCount,
                     referFlag = referFlag
                 )
+                logger.info("Update pipeline[$pipelineId] REFER_COUNT for version $version, new count: $referCount")
             } finally {
                 pipelineVersionLock?.unlock()
             }

@@ -58,6 +58,8 @@ import com.tencent.devops.remotedev.pojo.op.OpDiskOperator
 import com.tencent.devops.remotedev.pojo.op.OpDiskOperatorData
 import com.tencent.devops.remotedev.pojo.op.OpDiskOperatorDataResp
 import com.tencent.devops.remotedev.pojo.op.OpDiskOperatorDiskType
+import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
+import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmResp
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.remotedev.SyncVmData
 import com.tencent.devops.remotedev.pojo.remotedev.SyncVmInfo
@@ -1112,6 +1114,12 @@ class ExpertSupportService @Autowired constructor(
                 status = WorkspaceStatus.RUNNING
             )
         }
+    }
+
+    fun createCvm(
+        data: CreateCvmData
+    ): CreateCvmResp? {
+        return remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.BCS).createCvm(data)
     }
 
     companion object {

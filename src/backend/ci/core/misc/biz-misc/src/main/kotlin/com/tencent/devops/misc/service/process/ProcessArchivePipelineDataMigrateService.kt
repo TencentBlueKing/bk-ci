@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,6 +27,7 @@
 
 package com.tencent.devops.misc.service.process
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.FAIL_MSG
 import com.tencent.devops.common.api.constant.KEY_ARCHIVE
 import com.tencent.devops.common.api.constant.KEY_PIPELINE_ID
@@ -61,6 +62,9 @@ import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResourc
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServicePipelineYamlResource
+import com.tencent.devops.process.enums.OperationLogType
+import com.tencent.devops.process.pojo.PipelineOperationLog
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceShardingRoutingRuleResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -284,6 +288,23 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
                     targetDataSourceName = tmpArchiveDbShardingRoutingRule.dataSourceName
                 )
                 processMigrationDataDeleteService.deleteProcessData(deleteMigrationDataParam)
+                // 添加操作日志
+                val id = client.get(ServiceAllocIdResource::class)
+                    .generateSegmentId("T_PIPELINE_OPERATION_LOG").data
+                processDao.addPipelineOperationLog(
+                    dslContext = dslContext,
+                    pipelineOperationLog = PipelineOperationLog(
+                        id = id,
+                        operator = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        version = 1,
+                        operationLogType = OperationLogType.PIPELINE_ARCHIVE,
+                        params = "",
+                        operateTime = System.currentTimeMillis(),
+                        description = null
+                    )
+                )
                 // 保存流水线数据迁移成功记录
                 projectDataMigrateHistoryService.add(
                     userId = userId,
@@ -349,10 +370,10 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
             .takeIf { it == true }
             ?.let {
                 throw ErrorCodeException(
-                    errorCode = MiscMessageCode.ERROR_ARCHIVE_PAC_PIPELINE_YAML_EXIST,
+                    errorCode = CommonMessageCode.ERROR_ARCHIVE_PAC_PIPELINE_YAML_EXIST,
                     params = arrayOf(pipelineId),
                     defaultMessage = I18nUtil.getCodeLanMessage(
-                        messageCode = MiscMessageCode.ERROR_ARCHIVE_PAC_PIPELINE_YAML_EXIST,
+                        messageCode = CommonMessageCode.ERROR_ARCHIVE_PAC_PIPELINE_YAML_EXIST,
                         params = arrayOf(pipelineId)
                     )
                 )

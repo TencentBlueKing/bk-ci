@@ -105,7 +105,8 @@ class WhiteListService @Autowired constructor(
     }
 
     fun checkInCdsMeshWhiteList(
-        projectId: String, workspaceName: String
+        projectId: String,
+        workspaceName: String
     ): Int {
         if (whiteListDao.get(dslContext, workspaceName, WhiteListType.NOT_CDS_MESH_WORKSPACE) != null) {
             return 0
@@ -201,7 +202,7 @@ class WhiteListService @Autowired constructor(
         如果value大于指定key中id规定的数量，则抛出异常
         如果没有白名单，则抛出异常
         如果白名单中没有对应id，则抛出异常
-        */
+     */
     fun windowsNumberLimit(userId: String, value: Long) {
         val limit = cacheService.checkWindowsGpuLimit(userId)
         logger.info("numberLimit|$value|$limit")

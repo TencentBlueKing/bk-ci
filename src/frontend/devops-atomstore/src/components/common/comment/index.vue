@@ -117,6 +117,11 @@
                     service: () => this.requestServiceReplyComment({ id, postData })
                 }
 
+                if (!Object.hasOwnProperty.call(funObj, type)) {
+                    this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
+                    return
+                }
+
                 funObj[type]().then((res) => {
                     this.setCommentReplay({ id, newList: [res], isAdd: true })
                     this.reply = ''

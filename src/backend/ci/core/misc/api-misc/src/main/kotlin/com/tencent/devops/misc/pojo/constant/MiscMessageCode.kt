@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -52,5 +52,4 @@ object MiscMessageCode {
     const val ERROR_MIGRATING_PROJECT_NO_VALID_DB_ASSIGN = "2135004" // 无可用的迁移库，请确认项目数据是否已经成功迁移、迁移库配置等
     const val ERROR_MIGRATING_PIPELINE_DATA_FAIL = "2135005" // 迁移流水线[{0}]数据失败，请稍后再试
     const val ERROR_MIGRATING_PIPELINE_STATUS_INVALID = "2135006" // 存在构建未结束的流水线，请稍后再试
-    const val ERROR_ARCHIVE_PAC_PIPELINE_YAML_EXIST = "2135007" // 已开启PAC模式的流水线[{0}]进行归档需将默认分支上的yaml文件删除
 }
