@@ -28,6 +28,7 @@
 package com.tencent.devops.metrics.service.eplus
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -44,6 +45,7 @@ import com.tencent.devops.metrics.pojo.PipelineExpirationInfo
 import com.tencent.devops.model.metrics.tables.records.TEplusPipelineMetricsDataDailyRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import com.tencent.devops.process.api.service.ServiceTXPipelineResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -77,6 +79,9 @@ class TxPipelineMetricsCronService @Autowired constructor(
     @Value("\${eplus.ms.metrics.queryUrl}")
     private val cardQueryUrl: String = ""
 
+    @Value("\${eplus.ms.metrics.filterId}")
+    private val filterId: String = ""
+
     @Value("\${eplus.ms.metrics.namespace.bkciNamespaceId}")
     private var pipelineGeneralNamespaceId: Int = 0
 
@@ -102,7 +107,10 @@ class TxPipelineMetricsCronService @Autowired constructor(
     private val readTimeoutSeconds: Long = 300
 
     @Value("\${eplus.ms.metrics.namespace.invalidBuildPipeline.card.id}")
-    private var invalidBuildPipeline: Int = 0 // 无效流水线卡片ID
+    private var invalidBuildPipelineCardId: Int = 0 // 无效流水线卡片ID
+
+    @Value("\${eplus.ms.metrics.namespace.consecutiveFailures6m.card.id}")
+    private var consecutiveFailures6mCardId: Int = 0 // 近6个月内持续失败流水线卡片ID
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxPipelineMetricsCronService::class.java)
@@ -234,7 +242,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
                                 "op" to "day_between",
                                 "value" to "$dateTimeFrom,$dateTimeTo"
                             ),
-                            "name" to "date_64e403"
+                            "name" to filterId
                         )
                     )
                 )
@@ -309,6 +317,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
             syncExecutorService.submit { handleConsecutiveFailures90d() }
             syncExecutorService.submit { handleScheduledTriggerNoCodeChange() }
             syncExecutorService.submit { processInvalidPipelineData() }
+            syncExecutorService.submit { handleConsecutiveFailures6m() }
             logger.info("end runAllSyncDataTasks")
         } finally {
             syncExecutorService.shutdown()
@@ -321,7 +330,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
         logger.info("start processInvalidPipelineData")
         try {
             queryAndProcessCardData(
-                cardId = invalidBuildPipeline,
+                cardId = invalidBuildPipelineCardId,
                 namespaceId = pipelineGeneralNamespaceId,
                 assignData = { row ->
                     this.projectId = row["project_id"] as String
@@ -339,6 +348,53 @@ class TxPipelineMetricsCronService @Autowired constructor(
             throw ignored
         }
         logger.info("end processInvalidPipelineData")
+    }
+
+    /**
+     * 处理近6个月内持续失败数据
+     */
+    @Scheduled(cron = "0 0 8 * * ?")
+    fun handleConsecutiveFailures6m() {
+        if (!enableFlag) return
+        logger.info("start handleConsecutiveFailures6m")
+        try {
+            val dateTimeFrom = LocalDate.now()
+                .minusDays(30)
+                .atStartOfDay()
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+            val dateTimeTo = LocalDate.now()
+                .minusDays(1)
+                .atTime(23, 59, 59)
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+
+            queryAndProcessCardData(
+                cardId = consecutiveFailures6mCardId,
+                namespaceId = pipelineGeneralNamespaceId,
+                assignData = { row ->
+                    this.projectId = row["project_id"] as String
+                    this.pipelineId = row["pipeline_id"] as String
+                    this.consecutiveFailures_6m = true
+                },
+                metricsData = { records ->
+                    pipelineMetricsInfoDao.batchSaveConsecutiveFailures6mData(dslContext, records)
+                },
+                input = mapOf(
+                    "input" to listOf(
+                        mapOf(
+                            "type" to 2,
+                            "value" to mapOf(
+                                "op" to "day_between",
+                                "value" to "$dateTimeFrom,$dateTimeTo"
+                            ),
+                            "name" to filterId
+                        )
+                    )
+                )
+            )
+        } catch (ignored: Throwable) {
+            logger.warn("handle pipeline consecutive failures 6m data fail: ${ignored.message}")
+        }
+        logger.info("end handleConsecutiveFailures6m")
     }
 
     /**
@@ -397,24 +453,70 @@ class TxPipelineMetricsCronService @Autowired constructor(
     }
 
     /**
+     * 通用分页处理方法
+     * @param fetchProjectIds 获取项目ID列表的函数
+     * @param processProject 处理单个项目的函数
+     * @param limit 每页大小
+     */
+    private fun processByProjectIdsInPages(
+        fetchProjectIds: (Int, Int) -> List<String>,
+        processProject: (String) -> Unit,
+        limit: Int = 100
+    ) {
+        var offset = 0
+        var projectIds: List<String>
+
+        do {
+            projectIds = fetchProjectIds(limit, offset)
+            projectIds.forEach { projectId ->
+                try {
+                    processProject(projectId)
+                } catch (ignored: Throwable) {
+                    logger.warn("Error processing project $projectId message: ${ignored.message}")
+                }
+            }
+            offset += limit
+        } while (projectIds.size == limit)
+    }
+
+    /**
      * 每隔两周周一10点发送项目无效流水线监控报告
      */
     @Scheduled(cron = "0 0 10 ? * MON")
     fun sendInvalidPipelineMonitorReport() {
+        if (!enableFlag) return
+
+        val lockKey = "SEND_INVALID_PIPELINE_MONITOR_REPORT"
+        val redisLock = RedisLock(redisOperation, lockKey, 600)
+
         val today = LocalDate.now()
         val weekNumber = today.get(WeekFields.of(Locale.getDefault()).weekOfWeekBasedYear())
-        if (weekNumber % 2 != 0) return
 
-        logger.info("starts the task of sending a report email")
-        var offset = 0
-        val limit = 100
-        do {
-            val projectIds = fetchInvalidPipelineProjectIds(limit, offset)
-            projectIds.forEach { projectId ->
-                sendReportForProject(projectId)
+        if (!redisLock.tryLock()) {
+            return
+        }
+
+        try {
+            if (weekNumber % 2 != 0) {
+                logger.info("Not an even week, skip sending report")
+                return
             }
-            offset += limit
-        } while (projectIds.size == limit)
+
+            logger.info("Starting the task of sending report emails")
+
+            processByProjectIdsInPages(
+                fetchProjectIds = { limit, offset ->
+                    fetchInvalidPipelineProjectIds(limit, offset)
+                },
+                processProject = { projectId ->
+                    sendReportForProject(projectId)
+                }
+            )
+        } catch (e: Throwable) {
+            logger.warn("Error in sendInvalidPipelineMonitorReport", e)
+        } finally {
+            redisLock.unlock()
+        }
     }
 
     private fun sendReportForProject(projectId: String) {
@@ -423,9 +525,13 @@ class TxPipelineMetricsCronService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             statisticsTime = LocalDate.now().atStartOfDay()
-        ).map { it.value1() to it.value2() }.toMap()
+        ).map { it.pipelineId to Pair(it.pipelineName, it.url) }.toMap()
 
         if (allInvalidPipelines.isEmpty()) return
+
+        // 获取该项目的已禁用流水线ID列表
+        val disabledPipelines = client.get(ServiceTXPipelineResource::class).listDisabledPipelines(projectId).data
+            ?: emptyList()
 
         // 获取该项目的白名单流水线
         val whitelistPipelines = pipelineMetricsInfoDao.listAutoDisableWhitelist(
@@ -433,9 +539,9 @@ class TxPipelineMetricsCronService @Autowired constructor(
             projectId = projectId
         ).toSet()
 
-        // 过滤掉白名单中的流水线
+        // 过滤掉白名单和已禁用的流水线
         val filteredInvalidPipelines = allInvalidPipelines.filterKeys {
-            !whitelistPipelines.contains(it)
+            !whitelistPipelines.contains(it) && !disabledPipelines.contains(it)
         }
 
         if (filteredInvalidPipelines.isEmpty()) return
@@ -448,7 +554,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
             }
             logger.info("report email for the project [$projectId] was successfully sent")
         } catch (ignored: Throwable) {
-            logger.error("Failed to send project [$projectId] report email", ignored.message)
+            logger.warn("Failed to send project [$projectId] report email message: ${ignored.message}")
         }
     }
 
@@ -457,7 +563,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
      */
     private fun convertPipelineExpirationInfo(
         projectId: String,
-        invalidPipelineMap: Map<String, String>
+        invalidPipelineMap: Map<String, Pair<String, String>>
     ): PipelineExpirationInfo? {
 
         val projectManagers =
@@ -468,8 +574,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
         return PipelineExpirationInfo(
             receivers = projectManagers,
             projectId = projectId,
-            pipelineIds = invalidPipelineMap.keys.toList(),
-            linksMap = invalidPipelineMap
+            pipelineInfoMap = invalidPipelineMap
         )
     }
 
@@ -485,10 +590,7 @@ class TxPipelineMetricsCronService @Autowired constructor(
                 notifyType = mutableSetOf(NotifyType.EMAIL.name),
                 bodyParams = mapOf(
                     "projectName" to info.projectId,
-                    "pipelineCount" to info.pipelineIds.size.toString(),
-                    "pipelineList" to info.pipelineIds.joinToString("\n") {
-                        "${it}:${info.linksMap[it]}"
-                    },
+                    "pipelineCount" to info.pipelineInfoMap.size.toString(),
                     "table" to buildPipelineTableHtml(info),
                     "eplusUrl" to "${HomeHostUtil.innerServerHost()}/console/metrics/${projectId}"
                 ),
@@ -507,12 +609,12 @@ class TxPipelineMetricsCronService @Autowired constructor(
     }
 
     private fun buildPipelineTableHtml(info: PipelineExpirationInfo): String {
-        val rows = info.pipelineIds.joinToString("") { pipelineId ->
+        val rows = info.pipelineInfoMap.values.joinToString("") { pipelineInfo ->
             """
             <tr>
-                <td style="border-bottom: 1px solid #ddd; padding: 10px;">$pipelineId</td>
+                <td style="border-bottom: 1px solid #ddd; padding: 10px;">${pipelineInfo.first}</td>
                 <td style="border-bottom: 1px solid #ddd; padding: 10px;">
-                    <a href="${info.linksMap[pipelineId]}" style="color: #3A84FF;">${
+                    <a href="${pipelineInfo.second}" style="color: #3A84FF;">${
                 I18nUtil.getCodeLanMessage(messageCode = BK_TO_HANDLE)
             }</a>
                 </td>
@@ -520,5 +622,77 @@ class TxPipelineMetricsCronService @Autowired constructor(
             """
         }
         return rows.replace("\n", "")
+    }
+
+    /**
+     * 每周一11点禁用连续失败6个月的流水线
+     */
+    @Scheduled(cron = "0 0 11 ? * MON")
+    fun disableConsecutiveFailures6mPipelines() {
+        if (!enableFlag) return
+        val lockKey = "DISABLE_CONSECUTIVE_FAILURES_6M_PIPELINES"
+        val redisLock = RedisLock(redisOperation, lockKey, 600)
+        if (!redisLock.tryLock()) {
+            return
+        }
+        try {
+            logger.info("start disableConsecutiveFailures6mPipelines")
+            val currentStatisticsTime = LocalDate.now().atStartOfDay()
+
+            processByProjectIdsInPages(
+                fetchProjectIds = { limit, offset ->
+                    pipelineMetricsInfoDao.listConsecutiveFailures6mProjectIds(
+                        dslContext = dslContext,
+                        limit = limit,
+                        offset = offset
+                    )
+                },
+                processProject = processProject@{ projectId ->
+                    // 获取该项目的连续失败流水线
+                    val records = pipelineMetricsInfoDao.listConsecutiveFailures6mPipelines(
+                        dslContext = dslContext,
+                        statisticsTime = currentStatisticsTime,
+                        projectId = projectId
+                    )
+
+                    if (records.isEmpty()) return@processProject
+
+                    // 获取项目白名单
+                    val whitelist = pipelineMetricsInfoDao.listAutoDisableWhitelist(dslContext, projectId).toSet()
+
+                    // 获取已禁用的流水线
+                    val disabledPipelines = client.get(ServiceTXPipelineResource::class).listDisabledPipelines(
+                            projectId
+                        ).data ?: emptyList<String>()
+
+                    // 过滤非白名单且未禁用的流水线
+                    val pipelineIds = records
+                        .filterNot { whitelist.contains(it.pipelineId) }
+                        .filterNot { disabledPipelines.contains(it.pipelineId) }
+                        .map { it.pipelineId }
+
+                    if (pipelineIds.isNotEmpty()) {
+                        val result = client.get(ServiceTXPipelineResource::class).lockPipeline(
+                            userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+                            projectId = projectId,
+                            pipelineIds = pipelineIds,
+                            enable = false
+                        )
+
+                        if (result.isNotOk() || result.data != true) {
+                            logger.warn("Failed to disable pipelines in project $projectId: ${result.message}")
+                        } else {
+                            logger.info("Successfully disabled ${pipelineIds.size} pipelines in project $projectId")
+                        }
+                    }
+                }
+            )
+
+            logger.info("end disableConsecutiveFailures6mPipelines")
+        } catch (ignored: Throwable) {
+            logger.warn("Error in disableConsecutiveFailures6mPipelines message: ${ignored.message}")
+        } finally {
+            redisLock.unlock()
+        }
     }
 }

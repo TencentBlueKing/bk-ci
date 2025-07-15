@@ -1,25 +1,25 @@
 <script setup lang="ts">
+import DialectPopoverTable from "@/components/dialectPopoverTable.vue";
+import copyImg from "@/css/svg/copy.svg";
+import http from '@/http/api';
+import { copyToClipboard } from "@/utils/util.js";
+import { Alert, Button, InfoBox, Message, Popover } from 'bkui-vue';
 import {
   EditLine,
 } from 'bkui-vue/lib/icon';
 import {
   computed,
   getCurrentInstance,
+  h,
   nextTick,
   onBeforeUnmount,
   onMounted,
   ref,
   shallowRef,
-  watch,
-  h
+  watch
 } from 'vue';
 import { useI18n } from 'vue-i18n';
 import IAMIframe from './IAM-Iframe';
-import { Message, Popover, InfoBox, Alert, Button } from 'bkui-vue';
-import http from '@/http/api';
-import DialectPopoverTable from "@/components/dialectPopoverTable.vue";
-import copyImg from "@/css/svg/copy.svg";
-import { copyToClipboard } from "@/utils/util.js"
 const {
   t,
 } = useI18n();
@@ -439,7 +439,10 @@ const handleToPipeline = (row) => {
 }
 
 const handleMessage = (event: any) => {
-  const { data } = event;
+  const { data, origin } = event;
+  if (![window.BK_IAM_URL_PREFIX, location.origin].includes(origin)) {
+    return;
+  }
   if (data.type === 'IAM') {
     switch (data.code) {
       case 'success':
@@ -571,7 +574,6 @@ watch(() => projectData.value.englishName, (val) => {
 });
 
 watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], () => {
-  projectForm.value.validate();
   emits('approvedChange', true);
 }, {
   deep: true,
@@ -808,7 +810,7 @@ onBeforeUnmount(() => {
             class="textarea"
             v-show="projectData.properties.enablePipelineNameTips"
             v-model="projectData.properties.pipelineNameFormat"
-            :placeholder="t('请输入流水线命名规范提示说明。示例: 请遵循流水线命名规范，以\'模块名(一个/多个/场景等)_触发机制(premerge/trunk/daily等)_测试裂隙(UT/引流/DIFF等)\'的命名格式')"
+            :placeholder="t('请输入流水线命名规范提示说明')"
             :rows="3"
             :maxlength="200"
             type="textarea"
