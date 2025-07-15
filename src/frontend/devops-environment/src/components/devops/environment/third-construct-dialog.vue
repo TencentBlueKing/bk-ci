@@ -60,13 +60,30 @@
                             </bk-radio>
                         </bk-radio-group>
                     </bk-form-item>
-
                     <bk-form-item
                         v-if="isWindowOs"
                         required
-                        :label="$t('environment.nodeInfo.runAgentAsUser')"
+                        :label="$t('environment.nodeInfo.agentInstallMode.label')"
                     >
-                        <bk-radio-group v-model="constructImportForm.enableLoginUser">
+                        <bk-radio-group v-model="constructImportForm.installType">
+                            <bk-radio
+                                v-for="(item, index) in installTypeList"
+                                :key="index"
+                                :value="item.id"
+                                class="install-type-item"
+                                v-bk-tooltips="item.tips"
+                            >
+                                {{ item.label }}
+                            </bk-radio>
+                        </bk-radio-group>
+                    </bk-form-item>
+                    <bk-form-item
+                        v-if="isWindowOs && installModeAsService"
+                        required
+                        :label="$t('environment.nodeInfo.switchRunningAccount')"
+                        :desc="$t('environment.nodeInfo.switchAccountTips')"
+                    >
+                        <bk-radio-group v-model="constructImportForm.autoSwitchAccount">
                             <bk-radio
                                 v-for="(item, index) in loginAsUserList"
                                 :key="index"
@@ -75,15 +92,9 @@
                                 {{ item.label }}
                             </bk-radio>
                         </bk-radio-group>
-                        <bk-alert
-                            v-if="!constructImportForm.enableLoginUser"
-                            type="warning"
-                            closable
-                            :title="$t('environment.nodeInfo.enableLoginUserTips')"
-                        />
                     </bk-form-item>
                     <bk-form-item
-                        v-if="isWindowOs && constructImportForm.enableLoginUser"
+                        v-if="isWindowOs && constructImportForm.autoSwitchAccount && installModeAsService"
                         required
                         :label="$t('environment.nodeInfo.runAccount')"
                     >
@@ -172,9 +183,15 @@
                         </div>
                         <div
                             class="command-line"
-                            v-if="!constructImportForm.enableLoginUser"
+                            v-if="!installModeAsService"
                         >
-                            {{ $t('environment.nodeInfo.windowsInstallationCommand.tip4', ['{agent_id}']) }}
+                            {{ $t('environment.nodeInfo.windowsInstallationCommand.tip4') }}
+                        </div>
+                        <div
+                            class="command-line"
+                            v-if="installModeAsService && !constructImportForm.autoSwitchAccount"
+                        >
+                            {{ $t('environment.nodeInfo.windowsInstallationCommand.tip5') }}
                         </div>
                     </template>
                 </div>
@@ -237,11 +254,14 @@
         },
         computed: {
             showRunAccountTips () {
-                const { enableLoginUser, loginName, loginPassword, link } = this.constructImportForm
-                return enableLoginUser & (!loginName || !loginPassword || !link)
+                const { autoSwitchAccount, loginName, loginPassword, link } = this.constructImportForm
+                return this.installModeAsService && autoSwitchAccount & (!loginName || !loginPassword || !link)
             },
             isWindowOs () {
                 return this.constructImportForm.model === 'WINDOWS'
+            },
+            installModeAsService () {
+                return this.constructImportForm.installType === 'SERVICE'
             },
             loginAsUserList () {
                 return [
@@ -252,6 +272,20 @@
                     {
                         id: false,
                         label: this.$t('environment.nodeInfo.no')
+                    }
+                ]
+            },
+            installTypeList () {
+                return [
+                    {
+                        id: 'SERVICE',
+                        label: this.$t('environment.nodeInfo.agentInstallMode.windowsServices'),
+                        tips: this.$t('environment.nodeInfo.agentInstallMode.widowsTips'),
+                    },
+                    {
+                        id: 'TASK',
+                        label: this.$t('environment.nodeInfo.agentInstallMode.scheduledTasks'),
+                        tips: this.$t('environment.nodeInfo.agentInstallMode.scheduledTasksTips'),
                     }
                 ]
             },
@@ -406,5 +440,13 @@
     .run-account-inputs {
         display: flex;
         width: 85%;
+    }
+</style>
+<style lang="scss">
+    .install-type-item {
+        .bk-radio-text {
+            border-bottom: 1px dashed #979ba5;
+            cursor: pointer;
+        }
     }
 </style>

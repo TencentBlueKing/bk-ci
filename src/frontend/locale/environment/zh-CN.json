@@ -245,20 +245,28 @@
         "downloadAndInstallAgent": "# 下载并安装Agent",
         "close": "关闭",
         "windowsInstallationCommand": {
-            "tip1": "1.单击屏幕左下角的\"开始\"按钮，在开始菜单中搜索PowerShell，右键以管理员身份运行，打开PowerShell",
-            "tip2": "2.创建工作目录并切换到工作目录下，如：mkdir E:\\landun;cd E:\\landun",
-            "tip3": "3.运行如下命令下载并安装Agent:",
-            "tip4": "4.运行命令services.msc打开Windows服务管理，找到服务devopos_agent_{0}，右键->属性，在登录页签下切换到登录用户"
+            "tip1": "1. 单击屏幕左下角的\"开始\"按钮，在开始菜单中搜索PowerShell，右键以管理员身份运行，打开PowerShell",
+            "tip2": "2. 创建工作目录并切换到工作目录下，如：mkdir E:\\landun;cd E:\\landun",
+            "tip3": "3. 运行如下命令下载并安装Agent:",
+            "tip4": "4. [可选] 若需使用用户环境变量等和用户相关的数据，请运行命令 services.msc 打开 Windows 服务管理，找到服务 devops_agent_{'{agent_id}'}，右键->属性 在登录页签下切换到登录用户",
+            "tip5": "4. 安装完成会弹出创建计划任务界面，请手动确认"
         },
-        "runAgentAsUser": "以登录用户运行Agent",
         "yes": "是",
         "no": "否",
-        "enableLoginUserTips": "默认启动用户为system，安装好Agent后请手动切换运行账户，否则Agent读取不到你的环境变量和目录等与用户相关的数据",
         "pleaseEnterRunAccount": "请填写运行账号用户名和登录密码，输入框失焦后获取安装命令",
         "runAccount": "运行账户",
         "accountUsernameTips": "已入域如tencent\\用户名，未入域如.\\本机账户",
         "accountPasswordTips": "请输入登录密码",
-        "importBuildNode": "导入构建节点"
+        "importBuildNode": "导入构建节点",
+        "agentInstallMode": {
+            "label": "Agent 安装模式",
+            "windowsServices": "Windows 服务",
+            "widowsTips": "安装为系统服务后台运行，开机自启",
+            "scheduledTasks": "计划任务",
+            "scheduledTasksTips": "计划任务触发，机器重启需登录后才能拉起任务。需在流水线中启动UI程序（比如打开浏览器做自动化测试）时请使用此方式"
+        },
+        "switchRunningAccount": "自动切换运行账户",
+        "switchAccountTips": "默认以系统用户 system 运行，若需使用用户环境变量等和用户相关的数据，需切换运行账户。可指定账号密码自动切换，或者不指定，待安装完成后手动切换"
     },
     "nodeTypeMap": {
         "CC": "CC",

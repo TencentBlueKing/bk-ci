@@ -245,20 +245,28 @@
         "downloadAndInstallAgent": "# Download and install Agent",
         "close": "Close",
         "windowsInstallationCommand": {
-            "tip1": "1. Click the 'Start' button at the bottom left of the screen, search for PowerShell in the Start menu, right-click and run as administrator to open PowerShell",
-            "tip2": "2. Create a working directory and switch to it, e.g.: mkdir E:\\landun; cd E:\\landun",
-            "tip3": "3. Run the following command to download and install Agent:",
-            "tip4": "4. Run the command 'services.msc' to open Windows Service Manager, locate the service 'devopos_agent_{0}', right-click -> Properties, and switch to the logged-in user under the Log On tab"
+            "tip1": "1. Click the 'Start' button at the bottom left of the screen, search for 'PowerShell' in the Start menu, right-click and select 'Run as administrator' to open PowerShell.",
+            "tip2": "2. Create and navigate to a working directory, e.g.: mkdir E:\\landun; cd E:\\landun",
+            "tip3": "3. Run the following commands to download and install the Agent:",
+            "tip4": "4. [Optional] To enable user-specific data (e.g., environment variables), run 'services.msc' to open Windows Services, locate the devops_agent_{'{agent_id}'} service, right-click -> Properties, and switch to the logged-in user under the 'Log On' tab.",
+            "tip5": "4. After installation, the scheduled task creation dialog will appear - please confirm manually."
         },
-        "runAgentAsUser": "Run Agent as logged-in user",
         "yes": "Yes",
         "no": "No",
-        "enableLoginUserTips": "By default, the startup user is 'system'. After installing the Agent, please manually switch the running account, otherwise the Agent may fail to access user-specific data such as environment variables and directories.",
         "pleaseEnterRunAccount": "Please enter the username and password of the running account. The installation command will be generated after the input fields lose focus",
         "runAccount": "Running account",
         "accountUsernameTips": "Domain-joined accounts: e.g. tencent\\username; Local accounts: e.g. .\\localaccount",
         "accountPasswordTips": "Please enter login password",
-        "importBuildNode": "Import build node"
+        "importBuildNode": "Import build node",
+        "agentInstallMode": {
+            "label": "Agent Installation Mode",
+            "windowsServices": "Windows Service",
+            "widowsTips": "Runs as a system service in the background with auto-start on boot",
+            "scheduledTasks": "Scheduled Task",
+            "scheduledTasksTips": "Triggered by scheduled tasks. Requires user login after reboot to execute. Recommended when pipeline needs to launch UI applications (e.g., browser automation tests)."
+        },
+        "switchRunningAccount": "Auto Switch Running Account",
+        "switchAccountTips": "Defaults to running as system user 'system'. To access user-specific data (e.g., environment variables), account switching is required. Supports automatic switching with credentials or manual switching after installation."
     },
     "nodeTypeMap": {
         "CC": "CC",

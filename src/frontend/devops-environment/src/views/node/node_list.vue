@@ -166,7 +166,8 @@
                     link: '',
                     loginName: '',
                     loginPassword: '',
-                    enableLoginUser: true
+                    installType: 'SERVICE',
+                    autoSwitchAccount: true
                 },
                 // 构建机信息
                 connectNodeDetail: {
@@ -319,6 +320,9 @@
             },
             filterPlaceHolder () {
                 return this.filterData.map(item => item.name).join(' / ')
+            },
+            installModeAsService () {
+                return this.constructImportForm.installType === 'SERVICE'
             }
         },
         watch: {
@@ -345,7 +349,12 @@
                     this.requestGateway()
                 }
             },
-            'constructImportForm.enableLoginUser' (val) {
+            'constructImportForm.installType' (val) {
+                if (!this.isAgent) {
+                    this.requestDevCommand()
+                }
+            },
+            'constructImportForm.autoSwitchAccount' (val) {
                 if (!this.isAgent) {
                     this.constructImportForm.link = ''
                     this.requestDevCommand()
@@ -357,12 +366,12 @@
                 }
             },
             'constructImportForm.loginPassword' (val) {
-                if (!val) {
+                if (!val && !this.isAgent) {
                     this.constructImportForm.link = ''
                 }
             },
             'constructImportForm.loginName' (val) {
-                if (!val) {
+                if (!val && !this.isAgent) {
                     this.constructImportForm.link = ''
                 }
             },
@@ -618,9 +627,15 @@
              * 生成链接
              */
             async requestDevCommand () {
-                const { location, model, loginName, loginPassword, enableLoginUser } = this.constructImportForm
+                const { location, model, loginName, loginPassword, autoSwitchAccount, installType } = this.constructImportForm
                 if (!location && this.gatewayList.length) return
-                if (model === 'WINDOWS' && enableLoginUser && (!loginName || !loginPassword)) return
+                // 当OS为Windows时，生成安装命令的条件
+                // 1. 如果 installType 为 SERVICE, autoSwitchAccount 为 true 时，需填写 loginName, loginPassword 才可获取生成安装命令
+                // 2. 如果 installType 为 SERVICE, autoSwitchAccount 为 false 时, 直接获取生成安装命令
+                // 3. 如果 installType 为 TASK 时, 直接获取生成安装命令
+                if (model === 'WINDOWS') {
+                    if (this.installModeAsService && autoSwitchAccount && (!loginName || !loginPassword)) return
+                }
                 this.dialogLoading.isLoading = true
 
                 try {
@@ -630,7 +645,12 @@
                         params: {
                             zoneName: location,
                             ...(
-                                model === 'WINDOWS' && enableLoginUser
+                                model === 'WINDOWS' ? {
+                                    installType,
+                                } : {}
+                            ),
+                            ...(
+                                model === 'WINDOWS' && autoSwitchAccount && this.installModeAsService
                                     ? {
                                         loginName,
                                         loginPassword
@@ -703,7 +723,8 @@
                 this.constructImportForm.link = ''
                 this.constructImportForm.loginName = ''
                 this.constructImportForm.loginPassword = ''
-                this.constructImportForm.enableLoginUser = true
+                this.constructImportForm.autoSwitchAccount = true
+                this.constructImportForm.installType = 'SERVICE'
                 this.constructToolConf.importText = this.$t('environment.import')
                 this.requestList()
                 await this.requestGetCounts(this.projectId)
