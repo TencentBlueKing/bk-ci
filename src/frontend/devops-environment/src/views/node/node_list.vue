@@ -14,6 +14,8 @@
                             <bk-dropdown-menu
                                 trigger="click"
                                 class="mr10"
+                                @show="dropdown"
+                                @hide="dropdown"
                             >
                                 <bk-button
                                     theme="primary"
@@ -21,6 +23,7 @@
                                     slot="dropdown-trigger"
                                 >
                                     {{ $t('environment.nodeInfo.importNode') }}
+                                    <i :class="['bk-icon icon-angle-down',{ 'icon-flip': isDropdownShow }]"></i>
                                 </bk-button>
                                 <ul
                                     class="bk-dropdown-list"
@@ -319,7 +322,8 @@
                 taskId: 0, // 查询安装日志 -> 安装Agent任务Id
                 currentNodeType: '',
                 currentTags: [],
-                tagSearchValue: []
+                tagSearchValue: [],
+                isDropdownShow: false
             }
         },
         computed: {
@@ -488,6 +492,9 @@
         },
         methods: {
             ...mapActions('environment', ['requestGetCounts']),
+            dropdown () {
+                this.isDropdownShow = !this.isDropdownShow
+            },
             findTagByValueId (tagValueId) {
                 if (!this.nodeTagList?.length) return []
                 
@@ -1054,6 +1061,8 @@
                 this.$refs.dateTimeRangeRef?.handleClear()
                 this.searchValue = []
                 this.tagSearchValue = []
+                this.currentTags = []
+                this.$router.push({ name: 'nodeList', params: { nodeType: 'allNode' } })
             },
             handleInstallEnd () {
                 this.requestList(this.requestParams)
