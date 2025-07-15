@@ -288,7 +288,6 @@
                         id: 'latestBuildPipelineId',
                         remoteMethod:
                             async (search) => {
-                                console.log(search)
                                 const res = await this.$store.dispatch('environment/getLatestBuildPipelineList', {
                                     projectId: this.projectId
                                 })
