@@ -221,7 +221,7 @@ class NodeService @Autowired constructor(
         }
         val nodeRecordList =
             if (-1 != page) {
-                val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page ?: 1, pageSize ?: 20)
+                val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(page ?: 1, pageSize ?: 20, 200)
                 nodeDao.listNodesWithPageLimitAndSearchCondition(
                     dslContext = dslContext,
                     projectId = projectId,
