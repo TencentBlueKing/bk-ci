@@ -66,5 +66,11 @@
         .bk-tab-section {
             padding: 0;
         }
+        .bk-tab-label-wrapper {
+            text-align: left;
+        }
+        .bk-tab-content {
+            border-top: none
+        }
     }
 </style>

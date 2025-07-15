@@ -28,6 +28,8 @@ const store = {
         nodeStatus: null,
         devCloudVmQuta: {},
         currentSelectedModel: {},
+        nodeTagList: [],
+        nodeCount: {},
         extensionMap: {},
         extensions: []
     },
