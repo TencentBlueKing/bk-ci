@@ -126,7 +126,7 @@ class BkInternalPermissionComparator(
                 projectCode = projectCode,
                 resourceType = resourceType,
                 resourceCodes = expectedResult.distinct(),
-            ).toSet()
+            ).map { it.resourceCode }.toSet()
             val localSet = localResult.toSet()
             val isConsistent = (expectedSet == localSet)
             consistencyCounter(::getUserResourceByAction.name, isConsistent).increment()
