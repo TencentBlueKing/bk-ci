@@ -54,7 +54,6 @@ import com.tencent.devops.experience.pojo.ExperienceExtendBanner
 import com.tencent.devops.experience.service.ExperienceService
 import jakarta.ws.rs.NotFoundException
 import java.time.LocalDateTime
-import java.util.concurrent.Executors
 import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -183,36 +182,33 @@ class OpExperienceResourceImpl @Autowired constructor(
     override fun syncRepoCreateTime(): Result<Boolean> {
         var minId = 0L
         val pageSize = 1000
-        val threadPool = Executors.newFixedThreadPool(3)
         while (true) {
             val records = experienceDao.listNullRepoCreateTime(dslContext, minId, pageSize)
 
             for (r in records) {
-                threadPool.execute {
-                    try {
-                        val fileDetail = client.get(ServiceArtifactoryResource::class).show(
-                            userId = r.creator,
-                            projectId = r.projectId,
-                            artifactoryType = ArtifactoryType.valueOf(r.artifactoryType),
-                            path = r.artifactoryPath
-                        ).data
-                        if (fileDetail == null) {
-                            logger.warn("file detail is null, experience id: ${r.id}")
-                            return@execute
-                        }
-                        val updateResult = experienceDao.updateRepoCreateTime(
-                            dslContext = dslContext,
-                            id = r.id,
-                            repoCreateTime = DateTimeUtil.convertTimestampToLocalDateTime(fileDetail.createdTime)
-                        )
-                        if (updateResult <= 0) {
-                            logger.warn("update repo create time failed, experience id: ${r.id}")
-                        } else {
-                            logger.info("update repo create time success, experience id: ${r.id}")
-                        }
-                    } catch (e: Exception) {
-                        logger.error("sync repo create time failed, experience id: ${r.id}", e)
+                try {
+                    val fileDetail = client.get(ServiceArtifactoryResource::class).show(
+                        userId = r.creator,
+                        projectId = r.projectId,
+                        artifactoryType = ArtifactoryType.valueOf(r.artifactoryType),
+                        path = r.artifactoryPath
+                    ).data
+                    if (fileDetail == null) {
+                        logger.warn("file detail is null, experience id: ${r.id}")
+                        continue
                     }
+                    val updateResult = experienceDao.updateRepoCreateTime(
+                        dslContext = dslContext,
+                        id = r.id,
+                        repoCreateTime = DateTimeUtil.convertTimestampToLocalDateTime(fileDetail.createdTime)
+                    )
+                    if (updateResult <= 0) {
+                        logger.warn("update repo create time failed, experience id: ${r.id}")
+                    } else {
+                        logger.info("update repo create time success, experience id: ${r.id}")
+                    }
+                } catch (e: Exception) {
+                    logger.error("sync repo create time failed, experience id: ${r.id}", e)
                 }
             }
 
@@ -221,6 +217,7 @@ class OpExperienceResourceImpl @Autowired constructor(
             }
             minId = records.maxOf { it.id }
         }
+
         return Result(true)
     }
 
