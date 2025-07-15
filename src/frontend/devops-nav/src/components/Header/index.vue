@@ -87,7 +87,12 @@
                                 @click.stop.prevent="popProjectDialog"
                             >
                                 <i class="devops-icon icon-plus-circle mr5" />
-                                <span class="text">{{ $t('newProject') }}</span>
+                                <span
+                                    class="text"
+                                    v-bk-overflow-tips
+                                >
+                                    {{ $t('newProject') }}
+                                </span>
                             </span>
                             <span class="extension-line" />
                             <span
@@ -99,7 +104,12 @@
                                     size="14"
                                     class="mr5"
                                 />
-                                <span class="text">{{ $t('joinProject') }}</span>
+                                <span
+                                    class="text"
+                                    v-bk-overflow-tips
+                                >
+                                    {{ $t('joinProject') }}
+                                </span>
                             </span>
                         </div>
                     </template>
@@ -226,6 +236,8 @@
 </template>
 
 <script lang="ts">
+    import eventBus from '@/utils/eventBus'
+    import { urlJoin } from '@/utils/util'
     import Vue from 'vue'
     import { Component, Watch } from 'vue-property-decorator'
     import { Action, Getter, State } from 'vuex-class'
@@ -288,7 +300,12 @@
                 icon: 'english',
                 name: 'English',
                 id: 'en-US'
-            }
+            },
+            {
+                icon: 'japanese',
+                name: '日本語',
+                id: 'ja-JP'
+            },
         ]
  
         get headerLogoName (): string {
@@ -685,6 +702,10 @@
         align-items: center;
         cursor: pointer;
         font-size: 12px !important;
+        display: inline-block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
         i {
             font-size: 12px !important;
         }

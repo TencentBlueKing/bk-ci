@@ -1,7 +1,7 @@
 <template>
     <section class="version-container">
         <div class="operate-version">
-            <section>
+            <section class="checkbox-container">
                 <atom-checkbox
                     :disabled="disabled"
                     :text="$t('newui.enableVersions')"
@@ -9,7 +9,7 @@
                     :handle-change="(name, value) => toggleVersions(name, value)"
                 />
                 <atom-checkbox
-                    style="margin-left: 40px;"
+                    style="margin-top: 15px;"
                     v-if="showVersions"
                     :disabled="disabled"
                     name="required"
@@ -521,8 +521,11 @@
     .operate-version {
         margin-top: 8px;
         display: flex;
-        align-items: center;
         justify-content: space-between;
+        .checkbox-container {
+            display: flex;
+            flex-direction: column;
+        }
     }
     .version-list {
         width: 100%;
@@ -566,7 +569,6 @@
                     justify-content: space-between;
                     .default-value {
                         color: #979BA5;
-                        max-width: 300px;
                         .dafault-value-current {
                             // margin-left: 16px;
                             .dafault-value-reset {

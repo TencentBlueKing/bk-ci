@@ -574,7 +574,6 @@ watch(() => projectData.value.englishName, (val) => {
 });
 
 watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], () => {
-  projectForm.value.validate();
   emits('approvedChange', true);
 }, {
   deep: true,
@@ -811,7 +810,7 @@ onBeforeUnmount(() => {
             class="textarea"
             v-show="projectData.properties.enablePipelineNameTips"
             v-model="projectData.properties.pipelineNameFormat"
-            :placeholder="t('请输入流水线命名规范提示说明。示例: 请遵循流水线命名规范，以\'模块名(一个/多个/场景等)_触发机制(premerge/trunk/daily等)_测试裂隙(UT/引流/DIFF等)\'的命名格式')"
+            :placeholder="t('请输入流水线命名规范提示说明')"
             :rows="3"
             :maxlength="200"
             type="textarea"
