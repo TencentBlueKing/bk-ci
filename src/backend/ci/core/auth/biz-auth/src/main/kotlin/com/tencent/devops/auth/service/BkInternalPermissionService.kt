@@ -1,5 +1,6 @@
 package com.tencent.devops.auth.service
 
+import com.tencent.devops.auth.dao.AuthResourceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
@@ -29,7 +30,7 @@ class BkInternalPermissionService(
     private val permissionResourceGroupPermissionService: PermissionResourceGroupPermissionService,
     private val permissionProjectService: PermissionProjectService,
     private val superManagerService: SuperManagerService,
-    private val authResourceService: AuthResourceService,
+    private val authResourceService: AuthResourceDao,
     private val meterRegistry: MeterRegistry
 ) {
     // 1. 单条权限校验结果
@@ -148,7 +149,8 @@ class BkInternalPermissionService(
                     action = action
                 )
                 if (isManager) {
-                    authResourceService.listByProjectAndType(
+                    authResourceService.getResourceCodeByType(
+                        dslContext =dslContext,
                         projectCode = projectCode,
                         resourceType = resourceType
                     )
