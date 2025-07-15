@@ -1,5 +1,6 @@
 package com.tencent.devops.auth.provider.rbac.service
 
+import com.tencent.devops.auth.dao.AuthResourceDao
 import com.tencent.devops.auth.service.BkInternalPermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
@@ -8,6 +9,7 @@ import com.tencent.devops.common.util.CacheHelper
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -22,7 +24,8 @@ class BkInternalPermissionComparator(
     val meterRegistry: MeterRegistry,
     val client: Client,
     val redisOperation: RedisOperation,
-    val authResourceService: AuthResourceService
+    val authResourceService: AuthResourceDao,
+    val dslContext: DSLContext
 ) {
 
     private val project2StatusCache = CacheHelper.createCache<String, Boolean>(duration = 60)
@@ -121,11 +124,12 @@ class BkInternalPermissionComparator(
                 projectCode = projectCode,
                 resourceType = resourceType,
                 action = action
-            ).filterNot { it == "##NONE##" }
+            )
             val expectedSet = authResourceService.listByResourceCodes(
+                dslContext = dslContext,
                 projectCode = projectCode,
                 resourceType = resourceType,
-                resourceCodes = expectedResult.distinct(),
+                resourceCodes = expectedResult.filterNot { it == "##NONE##" }.distinct(),
             ).map { it.resourceCode }.toSet()
             val localSet = localResult.toSet()
             val isConsistent = (expectedSet == localSet)
