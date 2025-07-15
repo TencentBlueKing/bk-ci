@@ -20,20 +20,18 @@ class NodeTagValueDao {
     }
 
     fun batchCreateTagValue(dslContext: DSLContext, projectId: String, tagKeyId: Long, tagValues: Set<String>) {
+        if (tagValues.isEmpty()) {
+            return
+        }
         with(TNodeTagValues.T_NODE_TAG_VALUES) {
-            val valueInserts = tagValues.map { v ->
-                dslContext.insertInto(
-                    this,
-                    PROJECT_ID,
-                    TAG_KEY_ID,
-                    VALUE_NAME
-                ).values(
-                    projectId,
-                    tagKeyId,
-                    v
-                )
+            val records = tagValues.map { v ->
+                dslContext.newRecord(this).apply {
+                    this.projectId = projectId
+                    this.tagKeyId = tagKeyId
+                    this.valueName = v
+                }
             }
-            dslContext.batch(valueInserts).execute()
+            dslContext.batchInsert(records).execute()
         }
     }
 }
