@@ -19,18 +19,24 @@ class ProjectOperationalProductDao {
                 PRODUCT_NAME,
                 PLAN_PRODUCT_NAME,
                 DEPT_NAME,
-                BG_NAME
+                BG_NAME,
+                ICOS_PRODUCT_CODE,
+                ICOS_PRODUCT_NAME
             ).values(
                 operationalProductVO.productId,
                 operationalProductVO.productName,
                 operationalProductVO.planProductName,
                 operationalProductVO.deptName,
-                operationalProductVO.bgName
+                operationalProductVO.bgName,
+                operationalProductVO.iCosProductCode,
+                operationalProductVO.iCosProductName
             ).onDuplicateKeyUpdate()
                 .set(PRODUCT_NAME, operationalProductVO.productName)
                 .set(PLAN_PRODUCT_NAME, operationalProductVO.planProductName)
                 .set(DEPT_NAME, operationalProductVO.deptName)
                 .set(BG_NAME, operationalProductVO.bgName)
+                .set(ICOS_PRODUCT_CODE, operationalProductVO.iCosProductCode)
+                .set(ICOS_PRODUCT_NAME, operationalProductVO.iCosProductName)
                 .execute()
         }
     }

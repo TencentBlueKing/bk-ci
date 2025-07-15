@@ -28,5 +28,11 @@ data class OperationalProductVO(
     val bgId: String? = null,
     @get:Schema(title = "Bg名称")
     @JsonProperty(value = "BgName", required = false)
-    val bgName: String? = null
+    val bgName: String? = null,
+    @get:Schema(title = "财务Id")
+    @JsonProperty(value = "icos_product_code", required = false)
+    val iCosProductCode: Int? = null,
+    @get:Schema(title = "财务名称")
+    @JsonProperty(value = "icos_product_name", required = false)
+    val iCosProductName: String? = null
 )

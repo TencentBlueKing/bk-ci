@@ -545,13 +545,22 @@ class TxProjectServiceImpl @Autowired constructor(
 
     private fun ProjectProductValidateDTO.validateProductExists() {
         val products = getOperationalProducts()
-        products.firstOrNull { it.productId == productId } ?: throw ErrorCodeException(
+        val productInfo = products.firstOrNull { it.productId == productId } ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.ERROR_PRODUCT_NOT_EXIST,
             defaultMessage = MessageUtil.getMessageByLocale(
                 messageCode = ProjectMessageCode.ERROR_PRODUCT_NOT_EXIST,
                 language = I18nUtil.getLanguage(userId)
             )
         )
+        if (bgId == 956L && productInfo.iCosProductCode == null) {
+            throw ErrorCodeException(
+                errorCode = ProjectMessageCode.ERROR_PRODUCT_INVALID,
+                defaultMessage = MessageUtil.getMessageByLocale(
+                    messageCode = ProjectMessageCode.ERROR_PRODUCT_INVALID,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
+        }
     }
 
     companion object {

@@ -1,26 +1,32 @@
 package com.tencent.devops.project.service
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bkrepo.common.api.util.JsonUtils
+import com.tencent.devops.auth.pojo.ResponseDTO
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.project.dao.ProjectOperationalProductDao
+import com.tencent.devops.project.pojo.ICosProductVO
 import com.tencent.devops.project.pojo.ObsBaseDictDTO
 import com.tencent.devops.project.pojo.ObsOperationalProductResponse
 import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.enums.ProjectProductDictType
+import jakarta.annotation.PostConstruct
+import okhttp3.Request
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
-import jakarta.annotation.PostConstruct
 
 @Service
-class ProjectOperationalProductService constructor(
+class ProjectOperationalProductService(
     val dslContext: DSLContext,
     val projectOperationalProductDao: ProjectOperationalProductDao,
-    val config: CommonConfig
+    val config: CommonConfig,
+    val objectMapper: ObjectMapper
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectOperationalProductService::class.java)
@@ -41,6 +47,15 @@ class ProjectOperationalProductService constructor(
     @Value("\${obs.token:#{null}}")
     private var obsToken: String = ""
 
+    @Value("\${esb.appCode:}")
+    private val appCode = ""
+
+    @Value("\${esb.appSecret:}")
+    private val appSecret = ""
+
+    @Value("\${bk.costs.url:}")
+    private val url = ""
+
     @PostConstruct
     fun syncOperationalProduct(): Boolean {
         executor.submit {
@@ -57,6 +72,8 @@ class ProjectOperationalProductService constructor(
             val bgList = getOperationalProductsByDictType(
                 dictType = ProjectProductDictType.BG
             )
+            val iCosProductVOs = getICosProduct()
+
             // 同步时，清空缓存，防止数据重复
             productInfoList.clear()
             bgName2ProductList.clear()
@@ -70,13 +87,20 @@ class ProjectOperationalProductService constructor(
                 val bgInfo = bgList.firstOrNull {
                     it.bgId == deptInfo?.bgId
                 }
+                val productId = obsProductInfo.productId!!.toInt()
 
                 val operationalProductVO = OperationalProductVO(
                     productId = obsProductInfo.productId!!.toInt(),
                     productName = obsProductInfo.productName ?: "",
                     planProductName = planProductInfo?.planProductName ?: "",
                     deptName = deptInfo?.deptName ?: "",
-                    bgName = bgInfo?.bgName ?: ""
+                    bgName = bgInfo?.bgName ?: "",
+                    iCosProductCode = iCosProductVOs.firstOrNull {
+                        it.productId == productId
+                    }?.iCosProductCode?.toInt(),
+                    iCosProductName = iCosProductVOs.firstOrNull {
+                        it.productId == productId
+                    }?.iCosProductName ?: ""
                 )
 
                 projectOperationalProductDao.createOrUpdate(
@@ -140,6 +164,36 @@ class ProjectOperationalProductService constructor(
         } catch (ignore: Exception) {
             logger.warn("get obs products fail!${ignore.message}")
             emptyList()
+        }
+    }
+
+    private fun getICosProduct(): List<ICosProductVO> {
+        val headerStr = objectMapper.writeValueAsString(
+            mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret)
+        ).replace("\\s".toRegex(), "")
+
+        val request = Request.Builder()
+            .url(url)
+            .addHeader("x-bkapi-authorization", headerStr)
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            if (!it.isSuccessful) {
+                logger.warn("request failed, uri:($url)|response: ($it)")
+                throw RemoteServiceException("request failed, response:($it)")
+            }
+            val responseStr = it.body!!.string()
+            val responseDTO: ResponseDTO<List<ICosProductVO>> =
+                objectMapper.readValue(responseStr, object : TypeReference<ResponseDTO<List<ICosProductVO>>>() {})
+            if (responseDTO.code != 0L || !responseDTO.result) {
+                // 请求错误
+                logger.warn("request failed, url:($url)|response:($it)")
+                throw RemoteServiceException("request failed, response:(${responseDTO.message})")
+            }
+            if (logger.isDebugEnabled) {
+                logger.debug("request response：${objectMapper.writeValueAsString(responseDTO.data)}")
+            }
+            return responseDTO.data ?: emptyList()
         }
     }
 }
