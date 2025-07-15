@@ -120,13 +120,27 @@ class BkInternalPermissionComparator(
                 projectCode = projectCode,
                 resourceType = resourceType,
                 action = action
-            )
-            val isConsistent = (expectedResult.toSet() == localResult.toSet())
+            ).filterNot { it == "##NONE##" }
+            val externalSet = expectedResult.toSet()
+            val localSet = localResult.toSet()
+            val isConsistent = (externalSet == localSet)
             consistencyCounter(::getUserResourceByAction.name, isConsistent).increment()
             if (!isConsistent) {
+                // 计算差异项
+                val externalOnly = externalSet - localSet  // external有但local无的项
+                val localOnly = localSet - externalSet     // local有但external无的项
+
                 logger.warn(
-                    "get user resource by action results are inconsistent: $userId|" +
-                        "$projectCode|$resourceType|$action|external=$expectedResult|local=$localResult"
+                    """
+                get user resource by action results are inconsistent: 
+                userId=$userId|projectCode=$projectCode|resourceType=$resourceType|action=$action
+                ===== 差异项详情 =====
+                external独有项: ${externalOnly.joinToString()}
+                local独有项: ${localOnly.joinToString()}
+                ===== 完整数据 =====
+                external=$expectedResult
+                local=$localResult
+                """.trimIndent()
                 )
             }
         }
