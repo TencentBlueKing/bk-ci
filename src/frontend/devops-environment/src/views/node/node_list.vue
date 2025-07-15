@@ -787,6 +787,8 @@
                 this.$refs.dateTimeRangeRef?.handleClear()
                 this.searchValue = []
                 this.tagSearchValue = []
+                this.currentTags = []
+                this.$router.push({ name: 'nodeList', params: { nodeType: 'allNode' } })
             },
 
             handleToPipelineDetail (param) {
