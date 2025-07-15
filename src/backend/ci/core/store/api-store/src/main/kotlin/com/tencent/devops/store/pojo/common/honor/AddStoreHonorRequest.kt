@@ -28,6 +28,7 @@
 package com.tencent.devops.store.pojo.common.honor
 
 import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.store.pojo.common.enums.BkLanguageEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -39,6 +40,8 @@ data class AddStoreHonorRequest(
     @get:Schema(title = "荣誉名称", required = true)
     @BkField(maxLength = 40)
     val honorName: String,
+    @get:Schema(title = "对应语言", required = true)
+    val language: BkLanguageEnum,
     @get:Schema(title = "组件范畴", required = true)
     val storeType: StoreTypeEnum,
     @get:Schema(title = "组件代码列表", required = true)

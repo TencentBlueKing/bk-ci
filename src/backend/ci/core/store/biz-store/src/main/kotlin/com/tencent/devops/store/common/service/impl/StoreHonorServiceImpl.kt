@@ -28,21 +28,24 @@
 package com.tencent.devops.store.common.service.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.I18nMessage
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.service.ServiceI18nMessageResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TStoreHonorInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreHonorRelRecord
-import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.common.dao.AbstractStoreCommonDao
 import com.tencent.devops.store.common.dao.StoreHonorDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
-import com.tencent.devops.store.pojo.common.honor.AddStoreHonorRequest
+import com.tencent.devops.store.common.service.StoreHonorService
+import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.pojo.common.CREATE_TIME
-import com.tencent.devops.store.pojo.common.honor.HonorInfo
 import com.tencent.devops.store.pojo.common.STORE_CODE
 import com.tencent.devops.store.pojo.common.STORE_CREATE_TIME
 import com.tencent.devops.store.pojo.common.STORE_CREATOR
@@ -54,22 +57,24 @@ import com.tencent.devops.store.pojo.common.STORE_MODIFIER
 import com.tencent.devops.store.pojo.common.STORE_NAME
 import com.tencent.devops.store.pojo.common.STORE_TYPE
 import com.tencent.devops.store.pojo.common.STORE_UPDATE_TIME
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.honor.AddStoreHonorRequest
+import com.tencent.devops.store.pojo.common.honor.HonorInfo
 import com.tencent.devops.store.pojo.common.honor.StoreHonorManageInfo
 import com.tencent.devops.store.pojo.common.honor.StoreHonorRel
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.common.service.StoreHonorService
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class StoreHonorServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val storeHonorDao: StoreHonorDao,
-    private val storeMemberDao: StoreMemberDao
+    private val storeMemberDao: StoreMemberDao,
+    private val client: Client
 ) : StoreHonorService {
 
     override fun list(userId: String, keyWords: String?, page: Int, pageSize: Int): Page<StoreHonorManageInfo> {
@@ -157,6 +162,27 @@ class StoreHonorServiceImpl @Autowired constructor(
             val context = DSL.using(t)
             storeHonorDao.createStoreHonorInfo(context, userId, storeHonorInfo)
             storeHonorDao.batchCreateStoreHonorRel(context, tStoreHonorRelList)
+        }
+        val i18nMessages = mutableListOf<I18nMessage>()
+        listOf(
+            "honorTitle" to addStoreHonorRequest.honorTitle,
+            "honorName" to addStoreHonorRequest.honorName
+        ).forEach { (fieldName, value) ->
+            i18nMessages.addAll(
+                addStoreHonorRequest.storeCodes.map { storeCode ->
+                    I18nMessage(
+                        moduleCode = SystemModuleEnum.STORE.name,
+                        language = addStoreHonorRequest.language.locale,
+                        key = "${addStoreHonorRequest.storeType.name}.${storeCode}.honorInfo.$fieldName",
+                        value = value
+                    )
+                }
+            )
+        }
+        try {
+            client.get(ServiceI18nMessageResource::class).batchAddI18nMessage(userId, i18nMessages)
+        } catch (ignore: Throwable) {
+            logger.warn("add i18n message error:$ignore")
         }
         return Result(true)
     }
