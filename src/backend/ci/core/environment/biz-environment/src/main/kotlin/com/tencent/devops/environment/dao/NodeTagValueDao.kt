@@ -24,14 +24,19 @@ class NodeTagValueDao {
             return
         }
         with(TNodeTagValues.T_NODE_TAG_VALUES) {
-            val records = tagValues.map { v ->
-                dslContext.newRecord(this).apply {
-                    this.projectId = projectId
-                    this.tagKeyId = tagKeyId
-                    this.valueName = v
-                }
+            val valueInserts = tagValues.map { v ->
+                dslContext.insertInto(
+                    this,
+                    PROJECT_ID,
+                    TAG_KEY_ID,
+                    VALUE_NAME
+                ).values(
+                    projectId,
+                    tagKeyId,
+                    v
+                )
             }
-            dslContext.batchInsert(records).execute()
+            dslContext.batch(valueInserts).execute()
         }
     }
 }
