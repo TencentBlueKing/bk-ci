@@ -54,6 +54,7 @@ import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.environment.service.NodeTagService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -71,7 +72,8 @@ class ImportService @Autowired constructor(
     private val nodeDao: NodeDao,
     private val slaveGatewayService: SlaveGatewayService,
     private val environmentPermissionService: EnvironmentPermissionService,
-    private val simpleRateLimiter: SimpleRateLimiter
+    private val simpleRateLimiter: SimpleRateLimiter,
+    private val nodeTagService: NodeTagService
 ) {
 
     companion object {
@@ -158,7 +160,7 @@ class ImportService @Autowired constructor(
     }
 
     private fun import(id: Long, projectId: String, agentId: String, userId: String, masterVersion: String?): Long? {
-        val agentRecord = thirdPartyAgentDao.getAgent(dslContext, id)
+        val agentRecord = thirdPartyAgentDao.getAgentByProject(dslContext, id, projectId)
             ?: throw NotFoundException("The agent($agentId) is not exist")
 
         if (agentRecord.status == AgentStatus.IMPORT_OK.status) { // 忽略重复导入
@@ -219,6 +221,9 @@ class ImportService @Autowired constructor(
                 nodeName = "$nodeStringId(${agentRecord.ip})"
             )
         }
+
+        // 导入后添加标签
+        nodeTagService.editInternalTags(projectId, id)
         return nodeId
     }
 }
