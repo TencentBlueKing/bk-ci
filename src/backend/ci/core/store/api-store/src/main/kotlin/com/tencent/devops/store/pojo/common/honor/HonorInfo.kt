@@ -27,9 +27,6 @@
 
 package com.tencent.devops.store.pojo.common.honor
 
-import com.tencent.devops.common.api.annotation.BkFieldI18n
-import com.tencent.devops.common.api.enums.I18nSourceEnum
-import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
 import com.tencent.devops.common.web.annotation.BkField
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
@@ -40,21 +37,9 @@ data class HonorInfo(
     val honorId: String,
     @get:Schema(title = "荣誉头衔")
     @BkField(maxLength = 4)
-    @BkFieldI18n(
-        source = I18nSourceEnum.DB,
-        reusePrefixFlag = false,
-        keyPrefixName = "ATOM.{data.records[*].atomCode}.honorInfo",
-        translateType = I18nTranslateTypeEnum.VALUE
-    )
     val honorTitle: String,
     @get:Schema(title = "荣誉名称")
     @BkField(maxLength = 40)
-    @BkFieldI18n(
-        source = I18nSourceEnum.DB,
-        reusePrefixFlag = false,
-        keyPrefixName = "ATOM.{data.records[*].atomCode}.honorInfo",
-        translateType = I18nTranslateTypeEnum.VALUE
-    )
     val honorName: String,
     @get:Schema(title = "是否佩戴")
     val mountFlag: Boolean,
