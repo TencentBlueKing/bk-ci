@@ -1080,7 +1080,7 @@
     }
 
     .node-list-wrapper {
-        height: 100%;
+        height: calc(100vh - 146px);
         overflow: hidden;
         margin: 24px;
 
