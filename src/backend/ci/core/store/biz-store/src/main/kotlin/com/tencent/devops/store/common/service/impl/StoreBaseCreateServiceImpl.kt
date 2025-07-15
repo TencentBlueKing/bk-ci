@@ -176,6 +176,19 @@ class StoreBaseCreateServiceImpl @Autowired constructor(
         }
     }
 
+    override fun handlePostCreateBus(storeCreateRequest: StoreCreateRequest) {
+        val storeBaseCreateRequest = storeCreateRequest.baseInfo
+        val storeType = storeBaseCreateRequest.storeType
+        val bkStoreContext = storeCreateRequest.bkStoreContext
+        val userId = bkStoreContext[AUTH_HEADER_USER_ID]?.toString() ?: AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        val storeCode = storeBaseCreateRequest.storeCode
+        getStoreSpecBusService(storeType).doStorePostCreateBus(
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType
+        )
+    }
+
     private fun getStoreSpecBusService(storeType: StoreTypeEnum): StoreReleaseSpecBusService {
         return SpringContextUtil.getBean(
             StoreReleaseSpecBusService::class.java,
