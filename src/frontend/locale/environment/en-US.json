@@ -324,7 +324,7 @@
     "tag": "Tag",
     "setTag": "Set Tags",
     "allNodes": "All Nodes",
-    "privateBuildNode": "Private Build Nodes",
+    "selfHostedNodes": "Self-hosted Nodes",
     "deploymentNode": "Deployment Nodes",
     "byNodeLabel": "By Node Tags",
     "confirmDeleteTag": "Confirm delete tag [{0}]?",

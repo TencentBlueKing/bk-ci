@@ -79,8 +79,23 @@
                             >
                                 <li
                                     @click="handleChangeTag(false, groupItem)"
+                                    v-bk-tooltips="{
+                                        content: $t('environment.builtInLabelCannotBeModified'),
+                                        disabled: groupItem.canUpdate !== 'INTERNAL'
+                                    }"
                                 >
-                                    <a href="javascript:;">{{ $t('environment.updateTag') }}</a>
+                                    <a
+                                        href="javascript:;"
+                                        v-if="groupItem.canUpdate !== 'INTERNAL'"
+                                    >{{ $t('environment.updateTag') }}</a>
+                                    <bk-button
+                                        v-else
+                                        text
+                                        class="no-can-delete"
+                                        :disabled="groupItem.canUpdate === 'INTERNAL'"
+                                    >
+                                        {{ $t('environment.updateTag') }}
+                                    </bk-button>
                                 </li>
                                 <li
                                     @click="handleDeleteLabel(groupItem)"
@@ -265,7 +280,7 @@
                         type: 'node_type',
                         groups: [
                             { id: 'allNode', name: this.$t('environment.allNodes'), nodeCount: totalCount },
-                            { id: 'THIRDPARTY', name: this.$t('environment.privateBuildNode'), nodeCount: THIRDPARTY },
+                            { id: 'THIRDPARTY', name: this.$t('environment.selfHostedNodes'), nodeCount: THIRDPARTY },
                             { id: 'CMDB', name: this.$t('environment.deploymentNode'), nodeCount: CMDB }
                         ]
                     },
@@ -427,7 +442,7 @@
                 })
                 if (res) {
                     this.$bkMessage({
-                        message: this.$t('environment.新增成功'),
+                        message: this.$t('environment.successfullyAdded'),
                         theme: 'success'
                     })
                 }
@@ -445,7 +460,7 @@
                 })
                 if (res) {
                     this.$bkMessage({
-                        message: this.$t('environment.编辑成功'),
+                        message: this.$t('environment.successfullyModified'),
                         theme: 'success'
                     })
                 }
