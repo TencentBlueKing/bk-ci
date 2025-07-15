@@ -444,7 +444,6 @@
         },
         watch: {
             isShow (val) {
-                console.log(val, 2222222222222222)
                 if (val) {
                     this.fetchChannelList()
                     this.formData.innerIp = this.ip
