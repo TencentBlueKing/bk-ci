@@ -327,6 +327,8 @@
             grid-gap: 6px;
             line-height: 32px;
             .bk-icon.icon-edit2{
+                color: #979ba5;
+                font-size: 24px;
                 cursor: pointer;
                 padding: 0 6px;
                 &:hover {
