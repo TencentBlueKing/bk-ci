@@ -37,19 +37,14 @@ class NodeTagDao {
                 allowMulVal
             ).returning().fetchOne()!!.id
             // 新增标签值
-            val valueInserts = tagValue.map { v ->
-                ctx.insertInto(
-                    TNodeTagValues.T_NODE_TAG_VALUES,
-                    TNodeTagValues.T_NODE_TAG_VALUES.PROJECT_ID,
-                    TNodeTagValues.T_NODE_TAG_VALUES.TAG_KEY_ID,
-                    TNodeTagValues.T_NODE_TAG_VALUES.VALUE_NAME
-                ).values(
-                    projectId,
-                    tagKeyId,
-                    v
-                )
+            val records = tagValue.map { v ->
+                ctx.newRecord(TNodeTagValues.T_NODE_TAG_VALUES).apply {
+                    this.projectId = projectId
+                    this.tagKeyId = tagKeyId
+                    this.valueName = v
+                }
             }
-            ctx.batch(valueInserts).execute()
+            ctx.batchInsert(records).execute()
         }
     }
 
@@ -238,21 +233,15 @@ class NodeTagDao {
         valueAndKeyIds: Map<Long, Long>
     ) {
         with(TNodeTags.T_NODE_TAGS) {
-            val dsls = valueAndKeyIds.map { (v, k) ->
-                dslContext.insertInto(
-                    this,
-                    PROJECT_ID,
-                    NODE_ID,
-                    TAG_VALUE_ID,
-                    TAG_KEY_ID
-                ).values(
-                    projectId,
-                    nodeId,
-                    v,
-                    k
-                )
+            val records = valueAndKeyIds.map { (v, k) ->
+                dslContext.newRecord(this).apply {
+                    this.projectId = projectId
+                    this.nodeId = nodeId
+                    this.tagValueId = v
+                    this.tagKeyId = k
+                }
             }
-            dslContext.batch(dsls).execute()
+            dslContext.batchInsert(records).execute()
         }
     }
 
