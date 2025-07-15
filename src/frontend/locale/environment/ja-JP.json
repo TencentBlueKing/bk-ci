@@ -213,7 +213,7 @@
       "buildMachineLocationTips": "構築マシンの所在を基に最寄りのアクセスポイントを選択することで、構築マシンのアーカイブの取得や構築成果物の取得速度を向上させ、構築マシンの接続安定性を向上させます。PS: 北京エリアは天津を選択してください。",
       "referenceStep": "以下の手順を参考にしてください",
       "fetchInstallCommandTips": "まず場所を選択してインストールコマンドを取得してください",
-      "executeCommandPrompt": "Agentの作業ディレクトリを適切な位置に作成し、そのディレクトリでインストールコマンドを実行してください",
+      "executeCommandPrompt": "ビルドマシン{0}上でAgent用の作業ディレクトリを作成し、そのディレクトリ内でインストールコマンドを実行してください",
       "installBuildMachineTips": "WindowsにAgentをインストールする方法",
       "connectedNodes": "接続済みノード",
       "noConnectedNodes": "接続されているノードはありません",
@@ -237,7 +237,36 @@
       "dockerMaxConcurrency": "docker構築の最大並列数",
       "lastRunPipeline": "最近の実行パイプライン",
       "lastRunAs": "最近の実行時間",
-      "usage": "用途"
+      "usage": "用途",
+      "nonSystemPath": "システムパス外",
+      "installSuccessfullyTips": "Agentのインストールに成功したら、ノードリストを更新して正常にインポートされたノードを確認してください。",
+      "installFailedDocument": "ノードのインストールに失敗しました。ヘルプを参照->",
+      "createDirectory": "# 作業スペースディレクトリを作成",
+      "downloadAndInstallAgent": "# Agentをダウンロードしてインストール",
+      "close": "閉じる",
+      "windowsInstallationCommand": {
+        "tip1": "1. 画面左下の「スタート」ボタンをクリックし、スタートメニューでPowerShellを検索、右クリックして「管理者として実行」を選択してPowerShellを開く",
+        "tip2": "2. 作業ディレクトリを作成し、そのディレクトリに移動します。例：mkdir E:\\landun;cd E:\\landun",
+        "tip3": "3. 以下のコマンドを実行してAgentをダウンロードしてインストールします:",
+        "tip4": "4. [オプション] ユーザー環境変数などのユーザー関連データを使用する場合は、services.mscコマンドでWindowsサービス管理を開き、devops_agent_{'{agent_id}'}サービスを見つけ、右クリック→プロパティで「ログオン」タブを選択し、ログインユーザーに切り替えます",
+        "tip5": "4. インストール完了後、スケジュールタスク作成画面が表示されますので、手動で確認してください"
+      },
+      "yes": "はい",
+      "no": "いいえ",
+      "pleaseEnterRunAccount": "実行アカウントのユーザー名とログインパスワードを入力してください。入力ボックスからフォーカスが外れるとインストールコマンドが取得されます",
+      "runAccount": "実行アカウント",
+      "accountUsernameTips": "ドメイン参加済みの場合はtencent\\ユーザー名、未参加の場合は.\\ローカルアカウント",
+      "accountPasswordTips": "ログインパスワードを入力してください",
+      "importBuildNode": "ビルドノードをインポート",
+      "agentInstallMode": {
+        "label": "Agentのインストールモード",
+        "windowsServices": "Windowsサービス",
+        "widowsTips": "システムサービスとしてバックグラウンドで実行し、起動時に自動起動",
+        "scheduledTasks": "スケジュールタスク",
+        "scheduledTasksTips": "スケジュールタスクでトリガーされ、マシン再起動後はログイン後にタスクが開始されます。パイプライン内でUIプログラム（ブラウザを開いて自動テストを実行するなど）を起動する必要がある場合はこの方法を使用してください"
+      },
+      "switchRunningAccount": "実行アカウントを自動切り替え",
+      "switchAccountTips": "デフォルトではシステムユーザー'system'で実行されます。ユーザー環境変数などのユーザー関連データを使用する必要がある場合は、実行アカウントを切り替える必要があります。アカウントとパスワードを指定して自動切り替えするか、指定しないでインストール完了後に手動で切り替えることができます"
     },
     "nodeTypeMap": {
       "CC": "CC",
