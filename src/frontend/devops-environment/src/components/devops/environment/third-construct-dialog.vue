@@ -326,16 +326,6 @@
             text-align: left;
         }
 
-        .handler-prompt-node {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 24px;
-            a {
-                cursor: pointer;
-                color: $primaryColor;
-            }
-        }
-
         .construct-card-item {
             margin-top: 8px;
             padding: 14px;
