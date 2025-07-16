@@ -29,6 +29,7 @@ package com.tencent.devops.store.template.service.impl
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.REFERER
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -255,6 +256,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             referer?.let {
                 ThreadLocalUtil.set(REFERER, referer)
             }
+            ThreadLocalUtil.set(AUTH_HEADER_USER_ID, userId)
             val installedTemplates = mutableListOf<MarketItem>()
             val canInstallTemplates = mutableListOf<MarketItem>()
             val cannotInstallTemplates = mutableListOf<MarketItem>()
@@ -366,6 +368,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 }
             } finally {
                 ThreadLocalUtil.remove(REFERER)
+                ThreadLocalUtil.remove(AUTH_HEADER_USER_ID)
             }
 
             return@Callable MarketTemplateResp(

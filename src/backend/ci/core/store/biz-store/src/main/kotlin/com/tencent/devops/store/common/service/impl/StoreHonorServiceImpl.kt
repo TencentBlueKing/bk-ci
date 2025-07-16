@@ -27,12 +27,14 @@
 
 package com.tencent.devops.store.common.service.impl
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.I18nMessage
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.ThreadLocalUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
@@ -244,7 +246,8 @@ class StoreHonorServiceImpl @Autowired constructor(
             return emptyMap()
         }
         val defaultLanguage = commonConfig.devopsDefaultLocaleLanguage
-        val userLanguage = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+        val userId = I18nUtil.getRequestUserId() ?: ThreadLocalUtil.get(AUTH_HEADER_USER_ID)?.toString()
+        val userLanguage = I18nUtil.getLanguage(userId)
         val isDefaultLanguage = userLanguage == defaultLanguage
         val honorInfoMap = mutableMapOf<String, MutableList<HonorInfo>>()
         val i18nValueMap = if (!isDefaultLanguage) {
