@@ -246,8 +246,10 @@ class StoreHonorServiceImpl @Autowired constructor(
             return emptyMap()
         }
         val defaultLanguage = commonConfig.devopsDefaultLocaleLanguage
-        val userId = I18nUtil.getRequestUserId() ?: ThreadLocalUtil.get(AUTH_HEADER_USER_ID)?.toString()
-        val userLanguage = I18nUtil.getLanguage(userId)
+        val userLanguage = ThreadLocalUtil.get(AUTH_HEADER_USER_ID)
+            ?.toString()
+            ?.takeIf { it.isNotBlank() }
+            ?: I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         val isDefaultLanguage = userLanguage == defaultLanguage
         val honorInfoMap = mutableMapOf<String, MutableList<HonorInfo>>()
         val i18nValueMap = if (!isDefaultLanguage) {

@@ -252,11 +252,12 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         pageSize: Int?
     ): Future<MarketTemplateResp> {
         val referer = BkApiUtil.getHttpServletRequest()?.getHeader(REFERER)
+        val language = I18nUtil.getLanguage(userId)
         return executor.submit(Callable<MarketTemplateResp> {
             referer?.let {
                 ThreadLocalUtil.set(REFERER, referer)
             }
-            ThreadLocalUtil.set(AUTH_HEADER_USER_ID, userId)
+            ThreadLocalUtil.set(AUTH_HEADER_USER_ID, language)
             val installedTemplates = mutableListOf<MarketItem>()
             val canInstallTemplates = mutableListOf<MarketItem>()
             val cannotInstallTemplates = mutableListOf<MarketItem>()
