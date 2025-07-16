@@ -1,5 +1,5 @@
 <template>
-    <div class="biz-container">
+    <div class="environment-container">
         <div class="biz-header">
             <p class="environment-tit">
                 <img
@@ -99,9 +99,10 @@
 </style>
 
 <style lang="scss" scoped>
-.biz-container {
+.environment-container {
     width: 100%;
     box-sizing: border-box;
+    min-height: calc(100vh - 50px);
     overflow: hidden;
 
     .biz-header {
