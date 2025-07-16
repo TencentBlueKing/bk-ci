@@ -229,7 +229,7 @@
             >
                 <bk-button
                     theme="primary"
-                    :disabled="!formData.tagKeyName"
+                    :disabled="!formData.tagKeyName.trim()"
                     @click="handleConfirm"
                 >
                     {{ $t('environment.save') }}
@@ -384,6 +384,7 @@
                 this.$bkInfo({
                     theme: 'warning',
                     type: 'warning',
+                    extCls: 'info-content',
                     title: `${this.$t('environment.confirmDeleteTag', [groupItem.tagKeyName])}`,
                     confirmFn: async () => {
                         try {
@@ -504,6 +505,11 @@
 .tag-change .bk-dialog {
     top: 50% !important;
     transform: var(--dialog-top-translateY) !important;
+}
+.info-content {
+    .bk-dialog-type-header .header {
+        word-break: break-all;
+    }
 }
 </style>
   

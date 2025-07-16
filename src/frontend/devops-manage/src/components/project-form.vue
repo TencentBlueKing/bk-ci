@@ -56,7 +56,7 @@ const rules = {
   ],
   bgId: [
     {
-      validator: () => projectData.value.bgId && projectData.value.deptId,
+      validator: () => !!(projectData.value.bgId && projectData.value.deptId),
       message: t('请选择项目所属组织'),
       trigger: 'blur',
     },
