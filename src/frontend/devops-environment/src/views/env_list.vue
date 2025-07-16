@@ -291,7 +291,7 @@
 
     .environment-list-wrapper {
         width: 100%;
-        height: calc(100vh - 120px);
+        height: calc(100vh - 98px);
         padding: 20px;
         overflow-y: auto;
         .env-header {
