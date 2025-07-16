@@ -229,7 +229,7 @@
             >
                 <bk-button
                     theme="primary"
-                    :disabled="!formData.tagKeyName"
+                    :disabled="!formData.tagKeyName.trim()"
                     @click="handleConfirm"
                 >
                     {{ $t('environment.save') }}
