@@ -31,7 +31,7 @@ data class OperationalProductVO(
     val bgName: String? = null,
     @get:Schema(title = "财务Id")
     @JsonProperty(value = "icos_product_code", required = false)
-    val iCosProductCode: Int? = null,
+    val iCosProductCode: String? = null,
     @get:Schema(title = "财务名称")
     @JsonProperty(value = "icos_product_name", required = false)
     val iCosProductName: String? = null

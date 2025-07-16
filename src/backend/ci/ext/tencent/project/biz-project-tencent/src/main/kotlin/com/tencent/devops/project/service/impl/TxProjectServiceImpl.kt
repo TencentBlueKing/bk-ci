@@ -552,7 +552,7 @@ class TxProjectServiceImpl @Autowired constructor(
                 language = I18nUtil.getLanguage(userId)
             )
         )
-        if (bgId == 956L && productInfo.iCosProductCode == null) {
+        if (bgId == 956L && productInfo.iCosProductCode.isNullOrBlank()) {
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.ERROR_PRODUCT_INVALID,
                 defaultMessage = MessageUtil.getMessageByLocale(

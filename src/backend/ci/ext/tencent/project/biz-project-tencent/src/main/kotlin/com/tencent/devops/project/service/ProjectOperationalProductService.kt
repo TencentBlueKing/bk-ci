@@ -96,10 +96,8 @@ class ProjectOperationalProductService(
                     planProductName = planProductInfo?.planProductName ?: "",
                     deptName = deptInfo?.deptName ?: "",
                     bgName = bgInfo?.bgName ?: "",
-                    iCosProductCode = takeIf { !iCosProductVO?.iCosProductCode.isNullOrBlank() }?.let {
-                        iCosProductVO?.iCosProductCode?.toInt()
-                    },
-                    iCosProductName = iCosProductVO?.iCosProductName ?: ""
+                    iCosProductCode = iCosProductVO?.iCosProductCode,
+                    iCosProductName = iCosProductVO?.iCosProductName
                 )
 
                 projectOperationalProductDao.createOrUpdate(
