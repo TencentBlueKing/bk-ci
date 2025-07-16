@@ -147,14 +147,14 @@ class PermissionService @Autowired constructor(
         if (!workspaceOwnerCache.get(workspaceName).contains(userId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need owner permission to access workspace $workspaceName")
+                params = arrayOf("We're sorry but you don't have owner permission to access workspace $workspaceName")
             )
         }
 
         if (ownerType.projectUse() && !checkUserVisitPermission(userId, projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need permission to access project $projectId")
+                params = arrayOf("We're sorry but you don't have permission to access project $projectId")
             )
         }
     }
@@ -197,14 +197,14 @@ class PermissionService @Autowired constructor(
         if (!workspaceViewerCache.get(workspaceName).contains(userId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need viewer permission to access workspace $workspaceName")
+                params = arrayOf("We're sorry but you don't have viewer permission to access workspace $workspaceName")
             )
         }
 
         if (!checkUserVisitPermission(userId, projectId) && !redisCache.checkExpertSupportUser(userId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need permission to access project $projectId")
+                params = arrayOf("We're sorry but you don't have permission to access project $projectId")
             )
         }
     }
@@ -218,7 +218,7 @@ class PermissionService @Autowired constructor(
         if (!checkProjectManager) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need permission to access project $projectId")
+                params = arrayOf("We're sorry but you don't have permission to access project $projectId")
             )
         }
     }
@@ -234,7 +234,7 @@ class PermissionService @Autowired constructor(
         if (!checkProjectManager && userId !in managers) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need permission to access project $projectId")
+                params = arrayOf("We're sorry but you don't have permission to access project $projectId")
             )
         }
     }
