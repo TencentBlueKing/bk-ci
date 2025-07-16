@@ -179,6 +179,7 @@ class OpExperienceResourceImpl @Autowired constructor(
         )
     }
 
+    @SuppressWarnings("NestedBlockDepth")
     override fun syncRepoCreateTime(): Result<Boolean> {
         var minId = 0L
         val pageSize = 1000
