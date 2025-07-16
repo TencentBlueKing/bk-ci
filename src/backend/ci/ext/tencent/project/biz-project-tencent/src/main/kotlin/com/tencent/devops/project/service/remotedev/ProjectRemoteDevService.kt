@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.net.URLEncoder
 
 /**
  * 将 project 中 remotedev 相关业务逻辑放到这里，避免污染
@@ -56,6 +57,9 @@ class ProjectRemoteDevService @Autowired constructor(
 
     @Value("\${remoteDev.bkrepoDevxUrl:}")
     val bkrepoDevxUrl = ""
+
+    @Value("\${remoteDev.bkrepoDevxProxyUrl:}")
+    val bkrepoDevxProxyUrl = ""
 
     @Value("\${remoteDev.bkrepoCsigDevxUrl:}")
     val bkrepoCsigDevxUrl = ""
@@ -149,7 +153,12 @@ class ProjectRemoteDevService @Autowired constructor(
         data: EnableBkRepoData
     ) {
         val body = objectMapper.writeValueAsString(data)
-        val url = "$bkrepoDevxUrl/repository/api/webhook/receiver/bkci"
+        val uri = "$bkrepoDevxUrl/repository/api/webhook/receiver/bkci"
+        val url = if (bkrepoDevxProxyUrl.isNotBlank()) {
+            "$bkrepoDevxProxyUrl?url=${URLEncoder.encode(uri, "UTF-8")}"
+        } else {
+            uri
+        }
         val requestBody = body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
         val request = Request.Builder()
             .url(url)
