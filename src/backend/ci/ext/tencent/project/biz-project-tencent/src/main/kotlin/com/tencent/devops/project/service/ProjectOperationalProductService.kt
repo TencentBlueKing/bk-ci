@@ -96,7 +96,7 @@ class ProjectOperationalProductService(
                     planProductName = planProductInfo?.planProductName ?: "",
                     deptName = deptInfo?.deptName ?: "",
                     bgName = bgInfo?.bgName ?: "",
-                    iCosProductCode = takeIf { iCosProductVO?.iCosProductCode.isNullOrBlank() }?.let {
+                    iCosProductCode = takeIf { !iCosProductVO?.iCosProductCode.isNullOrBlank() }?.let {
                         iCosProductVO?.iCosProductCode?.toInt()
                     },
                     iCosProductName = iCosProductVO?.iCosProductName ?: ""
