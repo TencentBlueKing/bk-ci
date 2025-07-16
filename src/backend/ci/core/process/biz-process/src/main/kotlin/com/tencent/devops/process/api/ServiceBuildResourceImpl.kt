@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -91,6 +91,16 @@ class ServiceBuildResourceImpl @Autowired constructor(
         }
         return Result(
             pipelineRuntimeService.getBuildInfo(projectId, buildId)?.pipelineId
+                ?: throw ParamBlankException("Invalid buildId, please check if projectId & buildId are related")
+        )
+    }
+
+    override fun getPipelineVersionFromBuildId(projectId: String, buildId: String): Result<Int> {
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId, it must not empty.")
+        }
+        return Result(
+            data = pipelineRuntimeService.getBuildInfo(projectId, buildId)?.version
                 ?: throw ParamBlankException("Invalid buildId, please check if projectId & buildId are related")
         )
     }
@@ -818,9 +828,9 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 channelCode = channelCode,
                 buildNo = buildNo,
                 version = version,
-                    checkPermission = ChannelCode.isNeedAuth(channelCode),
-                    frequencyLimit = true
-                )
+                checkPermission = ChannelCode.isNeedAuth(channelCode),
+                frequencyLimit = true
+            )
         )
     }
 

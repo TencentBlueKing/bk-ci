@@ -439,7 +439,10 @@ const handleToPipeline = (row) => {
 }
 
 const handleMessage = (event: any) => {
-  const { data } = event;
+  const { data, origin } = event;
+  if (![window.BK_IAM_URL_PREFIX, location.origin].includes(origin)) {
+    return;
+  }
   if (data.type === 'IAM') {
     switch (data.code) {
       case 'success':
@@ -570,7 +573,7 @@ watch(() => projectData.value.englishName, (val) => {
   deep: true,
 });
 
-watch(() => [projectData.value.authSecrecy, projectData.value.projectType, projectData.value.subjectScopes], () => {
+watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], () => {
   emits('approvedChange', true);
 }, {
   deep: true,

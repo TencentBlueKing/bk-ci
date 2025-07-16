@@ -10,7 +10,7 @@ import bkui from 'bkui-vue';
 import 'bkui-vue/dist/cli.css';
 
 // i18n
-import { getCookie } from '@/common/util'
+import { getCookie, getCookies } from '@/common/util'
 import { createI18n } from 'vue-i18n'
 import ZhCN from '../../locale/metrics/zh-CN.json'
 import EnUS from '../../locale/metrics/en-US.json'
@@ -69,3 +69,4 @@ createApp(App)
   })
   .use(i18n)
   .mount('.app');
+  

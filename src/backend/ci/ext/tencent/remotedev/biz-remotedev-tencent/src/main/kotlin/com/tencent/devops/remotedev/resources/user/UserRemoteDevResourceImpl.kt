@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.resources.user
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.LocaleInfo
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserRemoteDevResource
@@ -156,8 +157,8 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         return Result(clientTipsService.fetchTips(projectId = projectId, userId = userId))
     }
 
-    override fun remoteManagers(userId: String, projectId: String): Result<List<String>> {
-        return Result(permissionService.managers(projectId))
+    override fun remoteAuditManagers(userId: String, projectId: String): Result<List<String>> {
+        return Result(permissionService.auditManagers(projectId))
     }
 
     override fun getTxcToken(userId: String, openId: String, nickName: String, avatar: String): Result<String> {
@@ -186,5 +187,13 @@ class UserRemoteDevResourceImpl @Autowired constructor(
             )
         }
         return Result(res.randomOrNull())
+    }
+
+    override fun getUserLocale(userId: String): Result<LocaleInfo> {
+        return Result(workspaceService.getUserLocale(userId))
+    }
+
+    override fun updateUserLocale(userId: String, localeInfo: LocaleInfo): Result<Boolean> {
+        return Result(workspaceService.updateUserLocale(userId, localeInfo.language))
     }
 }

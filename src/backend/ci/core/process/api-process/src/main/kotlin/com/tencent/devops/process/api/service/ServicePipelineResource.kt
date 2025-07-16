@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -197,7 +197,18 @@ interface ServicePipelineResource {
         pipelineId: String,
         @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        @Parameter(description = "版本", required = false)
+        @QueryParam("version")
+        version: Int? = null,
+        @Parameter(description = "是否校验权限", required = false)
+        @QueryParam("checkPermission")
+        @DefaultValue("false")
+        checkPermission: Boolean = false,
+        @Parameter(description = "是否查询草稿", required = false)
+        @QueryParam("includeDraft")
+        @DefaultValue("false")
+        includeDraft: Boolean = false
     ): Result<Model>
 
     @Operation(summary = "获取流水线编排(带权限校验)")

@@ -28,6 +28,10 @@
 package com.tencent.devops.dispatch.devcloud.service
 
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
+import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.dispatch.devcloud.client.DispatchDevCloudClient
 import com.tencent.devops.dispatch.devcloud.dao.BuildContainerPoolNoDao
 import com.tencent.devops.dispatch.devcloud.dao.DcPersistenceBuildDao
@@ -95,6 +99,27 @@ class DcContainerShutdownHandler @Autowired constructor(
             if (!persistence) {
                 stopContainer(this, buildContainerPools)
             }
+
+            buildContainerPools.filter { it.containerName != null }.forEach { record ->
+                pipelineEventDispatcher.dispatch(
+                    // 第三方构建机结束
+                    PipelineBuildStatusBroadCastEvent(
+                        source = "devcloud-docker-end-${record.containerName}", projectId = projectId,
+                        pipelineId = pipelineId, userId = "",
+                        buildId = buildId, taskId = null, actionType = ActionType.START,
+                        containerHashId = shutdownEvent.containerHashId, jobId = shutdownEvent.jobId, stageId = null,
+                        stepId = null, atomCode = null, executeCount = executeCount,
+                        buildStatus = BuildStatus.SUCCEED.name,
+                        type = PipelineBuildStatusBroadCastEventType.BUILD_AGENT_END,
+                        labels = mapOf(
+                            PipelineBuildStatusBroadCastEvent.Labels::nodeType.name to
+                                "DEVCLOUD_DOCKER",
+                            PipelineBuildStatusBroadCastEvent.Labels::dockerContainerName.name to
+                                record.containerName
+                        )
+                    )
+                )
+            }
         }
     }
 
@@ -131,7 +156,7 @@ class DcContainerShutdownHandler @Autowired constructor(
                 logger.info("stop dev cloud vm failed, msg: ${opResult.second}")
                 logger.info(
                     "stop dev cloud vm failed, try to delete it, " +
-                            "containerName:$containerName"
+                        "containerName:$containerName"
                 )
                 devCloudBuildDao.delete(dslContext, pipelineId, vmSeqId, poolNo)
                 dispatchDevCloudClient.operateContainer(
