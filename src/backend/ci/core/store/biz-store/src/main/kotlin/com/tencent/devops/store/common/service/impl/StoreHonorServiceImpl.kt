@@ -83,10 +83,10 @@ class StoreHonorServiceImpl @Autowired constructor(
     private val commonConfig: CommonConfig,
 ) : StoreHonorService, InitializingBean {
 
-    private lateinit var defaultLanguage:String
+    private lateinit var defaultLanguage: String
 
     override fun afterPropertiesSet() {
-        defaultLanguage=commonConfig.devopsDefaultLocaleLanguage
+        defaultLanguage = commonConfig.devopsDefaultLocaleLanguage
     }
 
     override fun list(userId: String, keyWords: String?, page: Int, pageSize: Int): Page<StoreHonorManageInfo> {
@@ -348,8 +348,7 @@ class StoreHonorServiceImpl @Autowired constructor(
     }
 
 
-
-        companion object {
+    companion object {
         private val logger = LoggerFactory.getLogger(StoreHonorServiceImpl::class.java)
     }
 
