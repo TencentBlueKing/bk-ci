@@ -40,14 +40,15 @@ object PageUtil {
         return SQLLimit((oneOffsetPage - 1) * defaultPageSize, defaultPageSize)
     }
 
-    fun convertPageSizeToSQLMAXLimit(page: Int, pageSize: Int): SQLLimit {
+    fun convertPageSizeToSQLMAXLimit(page: Int, pageSize: Int, maxPageSize: Int? = null): SQLLimit {
         val oneOffsetPage = if (page <= 0) DEFAULT_PAGE else page
+        val maxSize = maxPageSize ?: MAX_PAGE_SIZE
         val defaultPageSize = when {
             pageSize <= 0 -> {
                 DEFAULT_PAGE_SIZE
             }
-            pageSize > MAX_PAGE_SIZE -> {
-                MAX_PAGE_SIZE
+            pageSize > maxSize -> {
+                maxSize
             }
             else -> {
                 pageSize

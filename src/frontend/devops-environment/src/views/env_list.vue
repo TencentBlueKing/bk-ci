@@ -113,9 +113,9 @@
 </template>
 
 <script>
-    import emptyNode from './empty_node'
-    import { convertTime } from '@/utils/util'
     import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '@/utils/permission'
+    import { convertTime } from '@/utils/util'
+    import emptyNode from './empty_node'
 
     export default {
         components: {
@@ -290,9 +290,9 @@
     @import './../scss/conf';
 
     .environment-list-wrapper {
-        padding: 24px;
         width: 100%;
         height: calc(100vh - 120px);
+        padding: 20px;
         overflow-y: auto;
         .env-header {
             display: flex;
