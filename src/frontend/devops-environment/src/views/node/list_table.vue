@@ -146,7 +146,6 @@
                                     v-for="(item, index) in labelGroups[props.$index].hiddenLabels"
                                     class="group-tag"
                                     :key="index"
-                                    v-bk-overflow-tips
                                 >
                                     <bk-tag class="key">
                                         {{ item.tagKeyName }}: {{ item.tagValues[0].tagValueName }}
@@ -826,7 +825,14 @@
                 })
             },
             deleteRow (index) {
+                const cachedValues = this.setTagForm.map(item => item.tagValueId)
                 this.setTagForm.splice(index, 1)
+
+                this.$nextTick(() => {
+                    this.setTagForm.forEach((item, i) => {
+                        item.tagValueId = cachedValues[i < index ? i : i + 1]
+                    })
+                })
             },
             async handleSetConfirm () {
                 try {
@@ -951,6 +957,15 @@
           width: 100%;
           flex-wrap: wrap;
           margin: 3px 0;
+
+          .group-tag {
+            margin-bottom: 4px;
+          }
+
+          .key {
+            height: 100%;
+            margin-bottom: 2px;
+          }
        }
 
       .node-item-row {

@@ -54,7 +54,7 @@ const isDisabled = ref(true);
 const rules = {
   groupIds: [
     {
-      validator: () => groupList.value.length,
+      validator: () => groupList.value.length > 0,
       message: t('请选择用户组'),
       trigger: 'change',
     },
