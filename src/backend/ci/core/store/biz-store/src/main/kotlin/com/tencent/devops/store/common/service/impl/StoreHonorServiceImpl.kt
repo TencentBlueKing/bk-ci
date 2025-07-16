@@ -66,8 +66,10 @@ import com.tencent.devops.store.pojo.common.honor.HonorInfo
 import com.tencent.devops.store.pojo.common.honor.StoreHonorManageInfo
 import com.tencent.devops.store.pojo.common.honor.StoreHonorRel
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.InitializingBean
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -79,7 +81,13 @@ class StoreHonorServiceImpl @Autowired constructor(
     private val storeMemberDao: StoreMemberDao,
     private val client: Client,
     private val commonConfig: CommonConfig,
-) : StoreHonorService {
+) : StoreHonorService, InitializingBean {
+
+    private lateinit var defaultLanguage:String
+
+    override fun afterPropertiesSet() {
+        defaultLanguage=commonConfig.devopsDefaultLocaleLanguage
+    }
 
     override fun list(userId: String, keyWords: String?, page: Int, pageSize: Int): Page<StoreHonorManageInfo> {
         val records = storeHonorDao.list(
@@ -206,15 +214,16 @@ class StoreHonorServiceImpl @Autowired constructor(
     }
 
     override fun getStoreHonor(userId: String, storeType: StoreTypeEnum, storeCode: String): List<HonorInfo> {
-        return storeHonorDao.getHonorByStoreCode(dslContext, storeType, storeCode).map {
-            HonorInfo(
-                honorTitle = it[STORE_HONOR_TITLE] as String,
-                honorName = it[STORE_HONOR_NAME] as String,
-                honorId = it[STORE_HONOR_ID] as String,
-                mountFlag = it[STORE_HONOR_MOUNT_FLAG] as Boolean,
-                createTime = it[CREATE_TIME] as LocalDateTime
-            )
+        val honorInfos = storeHonorDao.getHonorByStoreCode(dslContext, storeType, storeCode)
+        if (honorInfos.isEmpty()) {
+            return emptyList()
         }
+        val i18nValueMap = getI18nValueMap(
+            records = honorInfos,
+            storeType = storeType,
+            userLanguage = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+        )
+        return i18nValueMap[storeCode]!!
     }
 
     override fun installStoreHonor(
@@ -254,17 +263,33 @@ class StoreHonorServiceImpl @Autowired constructor(
         if (records.isEmpty()) {
             return emptyMap()
         }
-        val defaultLanguage = commonConfig.devopsDefaultLocaleLanguage
         val userLanguage = ThreadLocalUtil.get(AUTH_HEADER_USER_ID)
             ?.toString()
             ?.takeIf { it.isNotBlank() }
             ?: I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+        return getI18nValueMap(
+            records = records,
+            storeType = storeType,
+            userLanguage = userLanguage
+        )
+    }
+
+    private fun getStoreCommonDao(storeType: String): AbstractStoreCommonDao {
+        return SpringContextUtil.getBean(AbstractStoreCommonDao::class.java, "${storeType}_COMMON_DAO")
+    }
+
+
+    private fun getI18nValueMap(
+        records: org.jooq.Result<out Record>,
+        storeType: StoreTypeEnum,
+        userLanguage: String,
+    ): Map<String, List<HonorInfo>> {
         val isDefaultLanguage = userLanguage == defaultLanguage
         val honorInfoMap = mutableMapOf<String, MutableList<HonorInfo>>()
         val i18nValueMap = if (!isDefaultLanguage) {
             val allI18nKeys = records.flatMap { record ->
-                val storeCode = record[STORE_CODE]?.toString() ?: return@flatMap emptyList()
-                val honorId = record[STORE_HONOR_ID]?.toString() ?: return@flatMap emptyList()
+                val storeCode = record[STORE_CODE].toString()
+                val honorId = record[STORE_HONOR_ID].toString()
                 listOf(
                     "${storeType.name}.$storeCode.$honorId.honorInfo.honorTitle",
                     "${storeType.name}.$storeCode.$honorId.honorInfo.honorName"
@@ -290,12 +315,12 @@ class StoreHonorServiceImpl @Autowired constructor(
         }
 
         records.forEach { record ->
-            val storeCode = record[STORE_CODE]?.toString() ?: return@forEach
-            val honorId = record[STORE_HONOR_ID]?.toString() ?: return@forEach
+            val storeCode = record[STORE_CODE].toString()
+            val honorId = record[STORE_HONOR_ID].toString()
             val originalTitle = record[STORE_HONOR_TITLE]?.toString() ?: ""
             val originalName = record[STORE_HONOR_NAME]?.toString() ?: ""
-            val mountFlag = record[STORE_HONOR_MOUNT_FLAG] as? Boolean ?: false
-            val createTime = record[CREATE_TIME] as? LocalDateTime ?: LocalDateTime.MIN
+            val mountFlag = record[STORE_HONOR_MOUNT_FLAG] as Boolean
+            val createTime = record[CREATE_TIME] as LocalDateTime
 
             // 构建国际化后的标题和名称（非默认语言时使用翻译值）
             val (title, name) = if (isDefaultLanguage) {
@@ -322,11 +347,10 @@ class StoreHonorServiceImpl @Autowired constructor(
         return honorInfoMap.mapValues { it.value.toList() }
     }
 
-    private fun getStoreCommonDao(storeType: String): AbstractStoreCommonDao {
-        return SpringContextUtil.getBean(AbstractStoreCommonDao::class.java, "${storeType}_COMMON_DAO")
-    }
 
-    companion object {
+
+        companion object {
         private val logger = LoggerFactory.getLogger(StoreHonorServiceImpl::class.java)
     }
+
 }
