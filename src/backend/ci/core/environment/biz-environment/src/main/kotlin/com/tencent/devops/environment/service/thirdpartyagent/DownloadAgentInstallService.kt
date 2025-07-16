@@ -340,13 +340,19 @@ class DownloadAgentInstallService @Autowired constructor(
         installType: TPAInstallType?
     ): Map<String, String> {
         val agentId = HashUtil.encodeLongId(agentRecord.id)
-        var agentUrl = agentUrlService.genAgentUrl(agentRecord)
-        if (!loginName.isNullOrBlank() || !loginPassword.isNullOrBlank()) {
-            agentUrl = agentUrl.toHttpUrlOrNull()?.newBuilder()
-                ?.addQueryParameter("loginName", loginName)
-                ?.addQueryParameter("loginPassword", loginPassword)
-                ?.build()?.toString() ?: agentUrl
+        val url = agentUrlService.genAgentUrl(agentRecord)
+        val agentUrlBuilder = url.toHttpUrlOrNull()?.newBuilder()
+        if (!loginName.isNullOrBlank()) {
+            agentUrlBuilder?.addQueryParameter("loginName", loginName)
         }
+        if (!loginPassword.isNullOrBlank()) {
+            agentUrlBuilder?.addQueryParameter("loginPassword", loginPassword)
+        }
+        if (installType != null) {
+            agentUrlBuilder?.addQueryParameter("installType", installType.name)
+        }
+        val agentUrl = agentUrlBuilder?.build()?.toString() ?: url
+
         val gateWay = agentUrlService.genGateway(agentRecord)
         val fileGateway = agentUrlService.genFileGateway(agentRecord)
         return mapOf(
