@@ -67,7 +67,7 @@ interface UserSubPipelineInfoResource {
         @QueryParam("includeNotRequired")
         includeNotRequired: Boolean? = true,
         @Parameter(description = "分支版本", required = false)
-        @QueryParam("branch")
-        branch: String?
+        @QueryParam("subBranch")
+        subBranch: String?
     ): Result<List<PipelineBuildParamFormProp>>
 }

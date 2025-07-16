@@ -1,5 +1,6 @@
 import translateCN from './translate-cn'
 import translateEN from './translate-en'
+import translateJP from './translate-jp'
 import {
     optimize,
     parsetext
@@ -20,7 +21,22 @@ const print = (expression, locale) => {
         fieldMap[fieldList[index]] = parsetext(item)
     })
     const ast = optimize(fieldMap)
-    return locale === 'zh-CN' ? translateCN(ast) : translateEN(ast)
+    const localeMap = {
+        'zh-CN': translateCN,
+        'zh-cn': translateCN,
+        'ja-JP': translateJP,
+        ja: translateJP,
+        zh_CN: translateCN,
+        zh_cn: translateCN,
+        cn: translateCN,
+        'en-US': translateEN,
+        'en-us': translateEN,
+        en: translateEN,
+        us: translateEN,
+        en_US: translateEN,
+        en_us: translateEN
+    }
+    return localeMap[locale](ast) || translateCN(ast)
 }
 
 export default print

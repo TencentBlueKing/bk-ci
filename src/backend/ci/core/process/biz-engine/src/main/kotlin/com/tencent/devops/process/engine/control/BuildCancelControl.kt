@@ -401,7 +401,9 @@ class BuildCancelControl @Autowired constructor(
                 vmSeqId = id,
                 routeKeySuffix = dispatchType?.routeKeySuffix?.routeKeySuffix,
                 executeCount = executeCount,
-                dispatchType = dispatchType!!
+                dispatchType = dispatchType!!,
+                jobId = jobId,
+                containerHashId = containerHashId
             )
         )
     }

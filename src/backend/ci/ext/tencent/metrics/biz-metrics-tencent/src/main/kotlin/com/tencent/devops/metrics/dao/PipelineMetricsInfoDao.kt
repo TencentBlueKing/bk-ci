@@ -35,7 +35,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Field
-import org.jooq.Record2
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
@@ -87,6 +86,14 @@ class PipelineMetricsInfoDao {
     ) {
         with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
             batchSaveData(dslContext, records, FAILURE_RATE_30D)
+        }
+    }
+
+    fun batchSaveConsecutiveFailures6mData(
+        dslContext: DSLContext, records: List<TEplusPipelineMetricsDataDailyRecord>
+    ) {
+        with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
+            batchSaveData(dslContext, records, CONSECUTIVE_FAILURES_6M)
         }
     }
 
@@ -158,14 +165,45 @@ class PipelineMetricsInfoDao {
         }
     }
 
+    /**
+     * 查询连续失败6个月的流水线记录
+     */
+    fun listConsecutiveFailures6mPipelines(
+        dslContext: DSLContext,
+        statisticsTime: LocalDateTime,
+        projectId: String
+    ): Result<TEplusPipelineMetricsDataDailyRecord> {
+        with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
+            val query = dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(STATISTICS_TIME.eq(statisticsTime))
+                .and(CONSECUTIVE_FAILURES_6M.eq(true))
+            return query.fetch()
+        }
+    }
+
+    /**
+     * 分页查询有连续失败6个月流水线的项目ID
+     */
+    fun listConsecutiveFailures6mProjectIds(dslContext: DSLContext, limit: Int, offset: Int): List<String> {
+        with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
+            return dslContext.select(PROJECT_ID).from(this)
+                .where(CONSECUTIVE_FAILURES_6M.eq(true))
+                .and(STATISTICS_TIME.eq(currentStatisticsTime))
+                .groupBy(PROJECT_ID)
+                .orderBy(PROJECT_ID.desc())
+                .limit(limit).offset(offset)
+                .fetchInto(String::class.java)
+        }
+    }
+
     fun listProjectInvalidPipelineInfo(
         dslContext: DSLContext,
         projectId: String,
         statisticsTime: LocalDateTime
-    ): Result<Record2<String, String>> {
+    ): Result<TEplusPipelineMetricsDataDailyRecord> {
         with(TEplusPipelineMetricsDataDaily.T_EPLUS_PIPELINE_METRICS_DATA_DAILY) {
-            return dslContext.select(PIPELINE_ID, URL)
-                .from(this)
+            return dslContext.selectFrom(this)
                 .where(STATISTICS_TIME.eq(statisticsTime))
                 .and(PROJECT_ID.eq(projectId))
                 .and(INVALID_PIPELINE_FLAG.eq(true))

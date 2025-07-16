@@ -742,6 +742,9 @@
                     const isError = errors.any()
                     this.handleContainerChange('isError', isError)
                 }
+            },
+            systemVersion () {
+                this.toggleXcode()
             }
         },
         created () {
@@ -995,11 +998,12 @@
                     })
                     .finally(() => (this.isLoadingMac = false))
             },
-            async toggleXcode (show) {
-                if (show) {
-                    const res = await this.getMacXcodeVersion(this.systemVersion)
-                    this.xcodeVersionList = res.data?.versionList || []
-                }
+            async toggleXcode () {
+                const res = await this.getMacXcodeVersion(this.systemVersion)
+                this.xcodeVersionList = res.data?.versionList.map(i => ({
+                    id: i,
+                    name: i
+                })) || []
             },
             chooseMacSystem (item) {
                 if (item !== this.systemVersion) {

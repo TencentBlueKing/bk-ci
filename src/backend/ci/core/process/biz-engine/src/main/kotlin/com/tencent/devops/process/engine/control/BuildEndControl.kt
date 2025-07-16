@@ -262,11 +262,24 @@ class BuildEndControl @Autowired constructor(
                 executeCount = buildInfo.executeCount,
                 type = PipelineBuildStatusBroadCastEventType.BUILD_END,
                 labels = mapOf(
-                    "startTime" to (buildInfo.startTime?.toString() ?: ""),
-                    "trigger" to buildInfo.trigger,
-                    "triggerUser" to buildInfo.triggerUser,
-                    "pipelineName" to model.name,
-                    "duration" to (checkNotNull(buildInfo.endTime) - buildInfo.queueTime).toString()
+                    PipelineBuildStatusBroadCastEvent.Labels::startTime.name to
+                        buildInfo.startTime,
+                    PipelineBuildStatusBroadCastEvent.Labels::duration.name to
+                        timeCost?.totalCost,
+                    PipelineBuildStatusBroadCastEvent.Labels::executeDuration.name to
+                        timeCost?.executeCost,
+                    PipelineBuildStatusBroadCastEvent.Labels::systemDuration.name to
+                        timeCost?.systemCost,
+                    PipelineBuildStatusBroadCastEvent.Labels::queueDuration.name to
+                        timeCost?.queueCost,
+                    PipelineBuildStatusBroadCastEvent.Labels::reviewDuration.name to
+                        timeCost?.waitCost,
+                    PipelineBuildStatusBroadCastEvent.Labels::trigger.name to
+                        buildInfo.trigger,
+                    PipelineBuildStatusBroadCastEvent.Labels::triggerUser.name to
+                        buildInfo.triggerUser,
+                    PipelineBuildStatusBroadCastEvent.Labels::pipelineName.name to
+                        model.name
                 )
             ),
             PipelineBuildWebSocketPushEvent(

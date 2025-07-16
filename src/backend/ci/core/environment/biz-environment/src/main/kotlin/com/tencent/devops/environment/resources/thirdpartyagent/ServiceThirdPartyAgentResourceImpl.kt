@@ -225,6 +225,24 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(thirdPartyAgentService.getAgentDetail(userId, projectId, hashId))
     }
 
+    override fun getNodeDetailSimple(
+        userId: String,
+        projectId: String,
+        nodeHashId: String?,
+        agentHashId: String?,
+        checkPermission: Boolean?
+    ): Result<ThirdPartyAgentDetail?> {
+        return Result(
+            thirdPartyAgentService.getAgentDetailSimple(
+                userId = userId,
+                projectId = projectId,
+                nodeHashId = nodeHashId,
+                agentHashId = agentHashId,
+                checkPermission = checkPermission ?: false
+            )
+        )
+    }
+
     override fun listAgentBuilds(
         userId: String,
         projectId: String,

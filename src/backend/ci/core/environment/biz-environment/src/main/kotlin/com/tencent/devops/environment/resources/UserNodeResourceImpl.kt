@@ -39,6 +39,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.UserNodeResource
 import com.tencent.devops.environment.permission.EnvNodeAuthorizationService
 import com.tencent.devops.environment.pojo.DisplayName
+import com.tencent.devops.environment.pojo.NodeFetchReq
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
@@ -113,9 +114,60 @@ class UserNodeResourceImpl @Autowired constructor(
                 latestBuildTimeStart = latestBuildTimeStart,
                 latestBuildTimeEnd = latestBuildTimeEnd,
                 sortType = sortType,
-                collation = collation
+                collation = collation,
+                data = null
             )
         )
+    }
+
+    override fun fetchNodes(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        nodeIp: String?,
+        displayName: String?,
+        createdUser: String?,
+        lastModifiedUser: String?,
+        keywords: String?,
+        nodeType: NodeType?,
+        nodeStatus: NodeStatus?,
+        agentVersion: String?,
+        osName: String?,
+        latestBuildPipelineId: String?,
+        latestBuildTimeStart: Long?,
+        latestBuildTimeEnd: Long?,
+        sortType: String?,
+        collation: String?,
+        data: NodeFetchReq?
+    ): Result<Page<NodeWithPermission>> {
+        return Result(
+            nodeService.listNew(
+                userId = userId,
+                projectId = projectId,
+                page = page,
+                pageSize = pageSize,
+                nodeIp = nodeIp,
+                displayName = displayName,
+                createdUser = createdUser,
+                lastModifiedUser = lastModifiedUser,
+                keywords = keywords,
+                nodeType = nodeType,
+                nodeStatus = nodeStatus,
+                agentVersion = agentVersion,
+                osName = osName,
+                latestBuildPipelineId = latestBuildPipelineId,
+                latestBuildTimeStart = latestBuildTimeStart,
+                latestBuildTimeEnd = latestBuildTimeEnd,
+                sortType = sortType,
+                collation = collation,
+                data = data
+            )
+        )
+    }
+
+    override fun fetchNodesCount(projectId: String): Result<Map<NodeType, Int>> {
+        return Result(nodeService.fetchNodesCount(projectId))
     }
 
     override fun listNewExport(
@@ -135,6 +187,7 @@ class UserNodeResourceImpl @Autowired constructor(
         latestBuildTimeEnd: Long?,
         sortType: String?,
         collation: String?,
+        data: NodeFetchReq?,
         response: HttpServletResponse
     ) {
         nodeService.listNewExport(
@@ -154,7 +207,8 @@ class UserNodeResourceImpl @Autowired constructor(
             latestBuildTimeEnd = latestBuildTimeEnd,
             sortType = sortType,
             collation = collation,
-            response = response
+            response = response,
+            data = data
         )
     }
 
