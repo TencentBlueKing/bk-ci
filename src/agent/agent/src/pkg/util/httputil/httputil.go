@@ -32,9 +32,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
-	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
-	"github.com/pkg/errors"
 	"io"
 	"net/http"
 	"net/url"
@@ -42,6 +39,9 @@ import (
 	"reflect"
 	"strconv"
 	"time"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
+	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 
 	"github.com/pkg/errors"
 
