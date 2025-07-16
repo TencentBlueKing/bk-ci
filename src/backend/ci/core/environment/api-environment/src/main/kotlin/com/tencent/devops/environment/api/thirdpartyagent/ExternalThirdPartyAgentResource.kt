@@ -30,6 +30,7 @@ package com.tencent.devops.environment.api.thirdpartyagent
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.environment.constant.BATCH_TOKEN_HEADER
+import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -80,7 +81,10 @@ interface ExternalThirdPartyAgentResource {
         loginName: String?,
         @Parameter(description = "登录账户密码", required = false)
         @QueryParam("loginPassword")
-        loginPassword: String?
+        loginPassword: String?,
+        @Parameter(description = "Agent安装模式", required = false)
+        @QueryParam("installType")
+        installType: TPAInstallType?
     ): Response
 
     @Deprecated("没用了")
@@ -131,6 +135,9 @@ interface ExternalThirdPartyAgentResource {
         loginName: String?,
         @Parameter(description = "登录账户密码", required = false)
         @QueryParam("loginPassword")
-        loginPassword: String?
+        loginPassword: String?,
+        @Parameter(description = "Agent安装模式", required = false)
+        @QueryParam("installType")
+        installType: TPAInstallType?
     ): Response
 }

@@ -11,6 +11,7 @@ import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.thirdpartyagent.AgentBatchInstallTokenDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
+import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import org.jooq.DSLContext
@@ -40,7 +41,8 @@ class BatchInstallAgentService @Autowired constructor(
         os: OS,
         zoneName: String?,
         loginName: String?,
-        loginPassword: String?
+        loginPassword: String?,
+        installType: TPAInstallType?
     ): String {
         val now = LocalDateTime.now()
         val gateway = slaveGatewayService.getGateway(zoneName)
@@ -61,7 +63,8 @@ class BatchInstallAgentService @Autowired constructor(
                     null
                 } else {
                     AESUtil.encrypt(ASE_SECRET, loginPassword)
-                }
+                },
+                installType = installType
             )
         }
 
@@ -89,7 +92,8 @@ class BatchInstallAgentService @Autowired constructor(
                 null
             } else {
                 AESUtil.encrypt(ASE_SECRET, loginPassword)
-            }
+            },
+            installType = installType
         )
     }
 
@@ -98,7 +102,8 @@ class BatchInstallAgentService @Autowired constructor(
         os: OS,
         zoneName: String?,
         loginName: String?,
-        loginPassword: String?
+        loginPassword: String?,
+        installType: TPAInstallType?
     ): Response {
         // 先校验是否可以创建
         val (projectId, userId, errorMsg) = verifyToken(token)

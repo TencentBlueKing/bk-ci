@@ -39,6 +39,7 @@ import com.tencent.devops.environment.api.thirdpartyagent.UserThirdPartyAgentRes
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentAction
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentInfo
@@ -81,7 +82,8 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         os: OS,
         zoneName: String?,
         loginName: String?,
-        loginPassword: String?
+        loginPassword: String?,
+        installType: TPAInstallType?
     ): Result<String> {
         checkUserId(userId)
         checkProjectId(projectId)
@@ -92,7 +94,8 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
                 os = os,
                 zoneName = zoneName,
                 loginName = loginName,
-                loginPassword = loginPassword
+                loginPassword = loginPassword,
+                installType = installType
             )
         )
     }

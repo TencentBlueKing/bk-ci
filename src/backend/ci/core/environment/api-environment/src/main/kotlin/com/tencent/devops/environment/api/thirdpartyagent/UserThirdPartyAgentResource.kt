@@ -36,6 +36,7 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentAction
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentInfo
@@ -113,7 +114,10 @@ interface UserThirdPartyAgentResource {
         loginName: String?,
         @Parameter(description = "登录账户密码", required = false)
         @QueryParam("loginPassword")
-        loginPassword: String?
+        loginPassword: String?,
+        @Parameter(description = "Agent安装模式", required = false)
+        @QueryParam("installType")
+        installType: TPAInstallType?
     ): Result<String>
 
     @Operation(summary = "获取网关列表")

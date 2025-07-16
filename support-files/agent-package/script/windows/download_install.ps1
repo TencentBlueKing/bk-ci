@@ -53,12 +53,18 @@ if (-not $?) {
 Write-Host "unzip agent.zip succ" -ForegroundColor Green
 
 # 安装 agent
+Write-Host "start install devops agent"
 $agent_id = "##agentId##"
+Write-Host "agent_id=$agent_id"
 $service_name = "devops_agent_$agent_id"
+Write-Host "service_name=$service_name"
 $service_username = "##serviceUsername##"
+Write-Host "service_username=$service_username"
 $service_password = "##servicePassword##"
+Write-Host "service_password=$service_password"
+$install_type = "##installType##"
+Write-Host "install_type=$install_type"
 
-Write-Host "start install devops agent $service_name $service_username $service_password"
 if ($MyInvocation.MyCommand.Path) {
     $work_dir = Split-Path -Parent $MyInvocation.MyCommand.Path
 } else {
@@ -96,17 +102,15 @@ New-Item -ItemType Directory -Force -Path "$work_dir\logs" | Out-Null
 New-Item -ItemType Directory -Force -Path "$work_dir\workspace" | Out-Null
 
 # 检查计划任务
-$taskExists = schtasks /query | Select-String $service_name
-
-if (-not $taskExists) {
+if ([string]::IsNullOrEmpty($install_type) -or $install_type -eq "SERVICE") {
     # 检查并安装服务服务
     $service = Get-Service -Name $service_name -ErrorAction SilentlyContinue
     if (-not $service) {
-        Write-Host "install agent service" -ForegroundColor Green
         sc.exe create $service_name binPath= "$work_dir\devopsDaemon.exe" start= auto
+        Write-Host "install agent service" -ForegroundColor Green
     }
-    Write-Host "start agent service" -ForegroundColor Green
     sc.exe start $service_name
+    Write-Host "start agent service" -ForegroundColor Green
     # 登录服务
     if (![string]::IsNullOrEmpty($service_username) -and (![string]::IsNullOrEmpty($service_password))) {
         Write-Host "both service_username and service_password are defined"
@@ -117,9 +121,15 @@ if (-not $taskExists) {
             Write-Host "failed to update service login credentials" -ForegroundColor Red
         }
     }
+} elseif ($install_type -eq "TASK") {
+    Write-Host "Creating scheduled task to run $service_name when any user logs on..."
+    # 创建执行计划
+    schtasks /create /tn %service_name% /tr "cscript  %~dp0\devopsctl.vbs" /sc ONLOGON /F
+    # 启动
+    devopsctl.vbs
+    Write-Host "start agent task" -ForegroundColor Green
 } else {
-    Write-Host "start devops daemon by devopsctl.vbs"
-    Start-Process "wscript.exe" -ArgumentList "$work_dir\devopsctl.vbs"
+    Write-Host "Unknown install_type: $install_type" -ForegroundColor Red
 }
 
 # 删除下载安装脚本

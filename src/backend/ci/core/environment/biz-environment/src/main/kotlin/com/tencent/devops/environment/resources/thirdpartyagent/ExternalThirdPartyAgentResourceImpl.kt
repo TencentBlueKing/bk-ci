@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.agent.AgentArchType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdpartyagent.ExternalThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import com.tencent.devops.environment.service.thirdpartyagent.BatchInstallAgentService
 import com.tencent.devops.environment.service.thirdpartyagent.DownloadAgentInstallService
 import com.tencent.devops.environment.service.thirdpartyagent.ImportService
@@ -44,14 +45,15 @@ class ExternalThirdPartyAgentResourceImpl @Autowired constructor(
     private val batchInstallAgentService: BatchInstallAgentService
 ) : ExternalThirdPartyAgentResource {
     override fun downloadAgentInstallScript(agentId: String) =
-        downloadAgentInstallService.downloadInstallScript(agentId, false, null, null)
+        downloadAgentInstallService.downloadInstallScript(agentId, false, null, null, null)
 
     override fun downloadAgent(
         agentId: String,
         eTag: String?,
         arch: String?,
         loginName: String?,
-        loginPassword: String?
+        loginPassword: String?,
+        installType: TPAInstallType?
     ) =
         downloadAgentInstallService.downloadAgent(
             agentId = agentId,
@@ -61,7 +63,8 @@ class ExternalThirdPartyAgentResourceImpl @Autowired constructor(
                 else -> null
             },
             loginName = loginName,
-            loginPassword = loginPassword
+            loginPassword = loginPassword,
+            installType = installType
         )
 
     override fun downloadJRE(agentId: String, eTag: String?, arch: String?) =
@@ -84,14 +87,16 @@ class ExternalThirdPartyAgentResourceImpl @Autowired constructor(
         os: OS,
         zoneName: String?,
         loginName: String?,
-        loginPassword: String?
+        loginPassword: String?,
+        installType: TPAInstallType?
     ): Response {
         return batchInstallAgentService.genAgentInstallScript(
             token = token,
             os = os,
             zoneName = zoneName,
             loginName = loginName,
-            loginPassword = loginPassword
+            loginPassword = loginPassword,
+            installType = installType
         )
     }
 }
