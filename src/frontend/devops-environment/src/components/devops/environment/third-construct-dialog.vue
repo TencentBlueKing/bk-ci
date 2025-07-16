@@ -187,12 +187,6 @@
                         >
                             {{ $t('environment.nodeInfo.windowsInstallationCommand.tip4') }}
                         </div>
-                        <div
-                            class="command-line"
-                            v-if="!installModeAsService"
-                        >
-                            {{ $t('environment.nodeInfo.windowsInstallationCommand.tip5') }}
-                        </div>
                     </template>
                 </div>
                 <p class="handler-prompt">{{ $t('environment.nodeInfo.installSuccessfullyTips') }}</p>
