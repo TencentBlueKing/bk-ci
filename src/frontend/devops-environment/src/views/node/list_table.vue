@@ -107,7 +107,6 @@
             <bk-table-column
                 v-if="allRenderColumnMap.label"
                 :label="$t('environment.tag')"
-                sortable="custom"
                 prop="label"
                 :width="200"
                 show-overflow-tooltip
