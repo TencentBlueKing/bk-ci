@@ -13,7 +13,6 @@ import com.tencent.devops.project.pojo.ObsBaseDictDTO
 import com.tencent.devops.project.pojo.ObsOperationalProductResponse
 import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.enums.ProjectProductDictType
-import jakarta.annotation.PostConstruct
 import okhttp3.Request
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -56,10 +55,10 @@ class ProjectOperationalProductService(
     @Value("\${bk.costs.url:}")
     private val url = ""
 
-    @PostConstruct
     fun syncOperationalProduct(): Boolean {
         executor.submit {
             logger.info("sync operational product start!")
+            executor.execute {
             val obsProductList = getOperationalProductsByDictType(
                 dictType = ProjectProductDictType.OBS_PRODUCT
             )
@@ -89,18 +88,20 @@ class ProjectOperationalProductService(
                 }
                 val productId = obsProductInfo.productId!!.toInt()
 
+                val iCosProductVO = iCosProductVOs.firstOrNull {
+                    it.productId == productId
+                }
+
                 val operationalProductVO = OperationalProductVO(
                     productId = obsProductInfo.productId!!.toInt(),
                     productName = obsProductInfo.productName ?: "",
                     planProductName = planProductInfo?.planProductName ?: "",
                     deptName = deptInfo?.deptName ?: "",
                     bgName = bgInfo?.bgName ?: "",
-                    iCosProductCode = iCosProductVOs.firstOrNull {
-                        it.productId == productId
-                    }?.iCosProductCode?.toInt(),
-                    iCosProductName = iCosProductVOs.firstOrNull {
-                        it.productId == productId
-                    }?.iCosProductName ?: ""
+                    iCosProductCode = takeIf { iCosProductVO?.iCosProductCode.isNullOrBlank() }?.let {
+                        iCosProductVO?.iCosProductCode?.toInt()
+                    },
+                    iCosProductName = iCosProductVO?.iCosProductName ?: ""
                 )
 
                 projectOperationalProductDao.createOrUpdate(
