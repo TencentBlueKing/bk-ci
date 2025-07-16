@@ -123,7 +123,7 @@
                             text
                             @click="handleToggleEnable(props.row)"
                         >
-                            {{ props.row.envEnableNode ? $t('environment.停用') : $t('environment.启用') }}
+                            {{ props.row.envEnableNode ? $t('environment.Disable') : $t('environment.Enable') }}
                         </bk-button>
                         <span
                             v-perm="{
@@ -654,7 +654,7 @@
 
                     this.$bkMessage({
                         theme: 'success',
-                        message: row.envEnableNode ? this.$t('environment.停用成功') : this.$t('environment.启用成功')
+                        message: row.envEnableNode ? this.$t('environment.disableSuccess') : this.$t('environment.enableSuccess')
                     })
                 } catch (e) {
                     this.$bkMessage({

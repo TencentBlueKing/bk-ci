@@ -52,7 +52,7 @@
 
 <script>
     import environmentUrl from '@/scss/logo/environment.svg'
-    import { mapState, mapGetters, mapActions } from 'vuex'
+    import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
         data () {
