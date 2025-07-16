@@ -30,5 +30,5 @@ import com.tencent.devops.common.websocket.pojo.BuildPageInfo
 
 class NodePath : IPath {
     override fun buildPage(buildPageInfo: BuildPageInfo): String =
-        "/console/environment/${buildPageInfo.projectId}/nodeList"
+        "/console/environment/${buildPageInfo.projectId}/node/allNode"
 }
