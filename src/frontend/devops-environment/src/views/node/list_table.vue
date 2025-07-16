@@ -1184,12 +1184,12 @@
         margin: 3px 0;
 
         .group-tag {
-        margin-bottom: 4px;
+            margin-bottom: 4px;
         }
 
         .key {
-        height: 100%;
-        margin-bottom: 2px;
+            height: 100%;
+            margin-bottom: 2px;
         }
     }
 
