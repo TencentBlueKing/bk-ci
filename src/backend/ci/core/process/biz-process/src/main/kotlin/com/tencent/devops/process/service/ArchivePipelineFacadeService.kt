@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -44,6 +44,7 @@ import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.service.pipeline.ArchivePipelineManageService
+import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -58,7 +59,8 @@ class ArchivePipelineFacadeService @Autowired constructor(
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineListFacadeService: PipelineListFacadeService,
-    private val archivePipelineManageService: ArchivePipelineManageService
+    private val archivePipelineManageService: ArchivePipelineManageService,
+    private val pipelineYamlFacadeService: PipelineYamlFacadeService
 ) {
 
     @Value("\${pipeline.archive.maxNum:100}")
@@ -108,6 +110,17 @@ class ArchivePipelineFacadeService @Autowired constructor(
                     messageCode = CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
                     language = language,
                     params = arrayOf(userId, projectId, permission.getI18n(language), pipelineId)
+                )
+            )
+        }
+        // 判断如果处于PAC模式下的yaml文件是否在默认分支已删除
+        if (pipelineYamlFacadeService.yamlExistInDefaultBranch(projectId, pipelineId)) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_ARCHIVE_PAC_PIPELINE_YAML_EXIST,
+                params = arrayOf(pipelineId),
+                defaultMessage = I18nUtil.getCodeLanMessage(
+                    messageCode = CommonMessageCode.ERROR_ARCHIVE_PAC_PIPELINE_YAML_EXIST,
+                    params = arrayOf(pipelineId)
                 )
             )
         }

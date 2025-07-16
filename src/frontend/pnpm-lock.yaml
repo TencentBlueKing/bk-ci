@@ -220,8 +220,8 @@ importers:
   bk-permission:
     dependencies:
       axios:
-        specifier: 0.28.0
-        version: 0.28.0
+        specifier: 0.30.0
+        version: 0.30.0
       vue:
         specifier: ~2.7.16
         version: 2.7.16
@@ -299,8 +299,8 @@ importers:
   bk-pipeline:
     dependencies:
       bk-magic-vue:
-        specifier: 2.5.9-beta.41
-        version: 2.5.9-beta.41(vue@2.7.16)
+        specifier: 2.5.10-beta.12
+        version: 2.5.10-beta.12(vue@2.7.16)
       uuid:
         specifier: ~8.1.0
         version: 8.1.0
@@ -389,9 +389,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -401,24 +398,12 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1(webpack-cli@4.10.0))
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
-      eslint-plugin-node:
-        specifier: ^11.1.0
-        version: 11.1.0(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: ^6.2.2
         version: 6.2.2(eslint@7.32.0)
-      html-webpack-plugin:
-        specifier: ^5.3.2
-        version: 5.6.0(webpack@5.96.1)
       immutable:
         specifier: ^5.0.0-beta.4
         version: 5.0.0-beta.5
@@ -533,9 +518,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -545,15 +527,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1)
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: ^6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -693,9 +669,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -705,15 +678,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1(webpack-cli@4.10.0))
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: 6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -826,9 +793,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -838,15 +802,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1(webpack-cli@4.10.0))
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: 6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -986,9 +944,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -998,18 +953,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1(webpack-cli@4.10.0))
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
-      eslint-plugin-node:
-        specifier: ^11.1.0
-        version: 11.1.0(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: 6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -1042,19 +988,19 @@ importers:
     dependencies:
       '@blueking/date-picker':
         specifier: 2.0.0-beta.26
-        version: 2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.1-beta.42(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))
+        version: 2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))
       '@icon-cool/bk-icon-bk-biz-components':
         specifier: 0.0.4
         version: 0.0.4
       axios:
-        specifier: 0.28.0
-        version: 0.28.0
+        specifier: 0.30.0
+        version: 0.30.0
       bk-permission:
         specifier: workspace:bk-permission
         version: link:../bk-permission
       bkui-vue:
-        specifier: 2.0.1-beta.42
-        version: 2.0.1-beta.42(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
+        specifier: 2.0.2-beta.45
+        version: 2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
       dayjs:
         specifier: ^1.11.2
         version: 1.11.11
@@ -1147,8 +1093,8 @@ importers:
         specifier: 3.7.0-beta.2
         version: 3.7.0-beta.2(@octokit/core@6.1.2)(@types/babel__core@7.20.5)(bufferutil@4.0.8)(chart.js@4.4.3)(encoding@0.1.13)(tslib@2.8.1)(utf-8-validate@5.0.10)(webpack-cli@4.10.0(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@4.15.2)(webpack@5.96.1))
       bkui-vue:
-        specifier: 0.0.1-beta.416
-        version: 0.0.1-beta.416(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
+        specifier: 2.0.2-beta.45
+        version: 2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
       dayjs:
         specifier: ^1.11.2
         version: 1.11.11
@@ -1223,11 +1169,11 @@ importers:
         specifier: ^0.1.13
         version: 0.1.19
       axios:
-        specifier: 0.28.0
-        version: 0.28.0
+        specifier: 0.30.0
+        version: 0.30.0
       bk-magic-vue:
-        specifier: 2.5.9-beta.41
-        version: 2.5.9-beta.41(vue@2.7.16)
+        specifier: 2.5.10-beta.12
+        version: 2.5.10-beta.12(vue@2.7.16)
       bk-permission:
         specifier: workspace:bk-permission
         version: link:../bk-permission
@@ -1367,9 +1313,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -1379,15 +1322,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1(webpack-cli@4.10.0))
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: 6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -1429,13 +1366,13 @@ importers:
     dependencies:
       '@blueking/date-picker':
         specifier: 2.0.0-beta.26
-        version: 2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.1-beta.42(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))
+        version: 2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))
       axios:
-        specifier: 0.28.0
-        version: 0.28.0
+        specifier: 0.30.0
+        version: 0.30.0
       bkui-vue:
-        specifier: 2.0.1-beta.42
-        version: 2.0.1-beta.42(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
+        specifier: 2.0.2-beta.45
+        version: 2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
       dayjs:
         specifier: ^1.11.2
         version: 1.11.11
@@ -1534,11 +1471,11 @@ importers:
         specifier: ^0.2.1
         version: 0.2.1
       axios:
-        specifier: 0.28.0
-        version: 0.28.0
+        specifier: 0.30.0
+        version: 0.30.0
       bk-magic-vue:
-        specifier: 2.5.9-beta.41
-        version: 2.5.9-beta.41(vue@2.7.16)
+        specifier: 2.5.10-beta.12
+        version: 2.5.10-beta.12(vue@2.7.16)
       bk-permission:
         specifier: workspace:bk-permission
         version: link:../bk-permission
@@ -1708,9 +1645,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -1720,15 +1654,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1)
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: ^6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -1766,8 +1694,8 @@ importers:
   devops-platform:
     dependencies:
       bkui-vue:
-        specifier: 2.0.1-beta.94
-        version: 2.0.1-beta.94(highlight.js@10.7.3)(vue@3.5.13(typescript@5.4.5))
+        specifier: 2.0.2-beta.45
+        version: 2.0.2-beta.45(highlight.js@10.7.3)(vue@3.5.13(typescript@5.4.5))
       dayjs:
         specifier: ^1.11.2
         version: 1.11.11
@@ -1962,9 +1890,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -1974,18 +1899,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1(webpack-cli@4.10.0))
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
-      eslint-plugin-node:
-        specifier: ^11.1.0
-        version: 11.1.0(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: 6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -2041,14 +1957,14 @@ importers:
         specifier: ^6.0.5
         version: 6.4.2
       axios:
-        specifier: 0.28.0
-        version: 0.28.0
+        specifier: 0.30.0
+        version: 0.30.0
       babel-loader:
         specifier: ^8.0.2
         version: 8.3.0(@babel/core@7.24.6)(webpack@5.96.1)
       bk-magic-vue:
-        specifier: 2.5.9-beta.9
-        version: 2.5.9-beta.9(vue@2.7.16)
+        specifier: 2.5.10-beta.12
+        version: 2.5.10-beta.12(vue@2.7.16)
       bkui-pipeline:
         specifier: workspace:bk-pipeline
         version: link:../bk-pipeline
@@ -2318,9 +2234,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -2330,15 +2243,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1(webpack-cli@4.10.0))
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: 6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -2451,9 +2358,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -2463,15 +2367,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1(webpack-cli@4.10.0))
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: 6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -2503,11 +2401,11 @@ importers:
   locale:
     dependencies:
       axios:
-        specifier: 0.28.0
-        version: 0.28.0
+        specifier: 0.30.0
+        version: 0.30.0
       bk-magic-vue:
-        specifier: 2.5.9-beta.41
-        version: 2.5.9-beta.41(vue@2.7.16)
+        specifier: 2.5.10-beta.12
+        version: 2.5.10-beta.12(vue@2.7.16)
       js-cookie:
         specifier: ^3.0.5
         version: 3.0.5
@@ -2602,9 +2500,6 @@ importers:
       eslint:
         specifier: ^7.3.1
         version: 7.32.0
-      eslint-config-standard:
-        specifier: ^16.0.3
-        version: 16.0.3(eslint-plugin-import@2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0))(eslint-plugin-node@11.1.0(eslint@7.32.0))(eslint-plugin-promise@5.1.1(eslint@7.32.0))(eslint@7.32.0)
       eslint-friendly-formatter:
         specifier: ~4.0.1
         version: 4.0.1
@@ -2614,15 +2509,9 @@ importers:
       eslint-loader:
         specifier: ^2.1.2
         version: 2.2.1(eslint@7.32.0)(webpack@5.96.1)
-      eslint-plugin-import:
-        specifier: ^2.25.3
-        version: 2.29.1(@typescript-eslint/parser@1.13.0(eslint@7.32.0))(eslint@7.32.0)
       eslint-plugin-promise:
         specifier: ^5.1.1
         version: 5.1.1(eslint@7.32.0)
-      eslint-plugin-standard:
-        specifier: ^5.0.0
-        version: 5.0.0(eslint@7.32.0)
       eslint-plugin-vue:
         specifier: ^6.2.2
         version: 6.2.2(eslint@7.32.0)
@@ -4313,14 +4202,8 @@ packages:
     resolution: {integrity: sha512-EI552lf0aG2nOV8NnZpTxNo2PcXKPmDbF9K8eCBFQdIZwHNGN/mi815fxtmUMa2wTa1yndotICIDt/V0vpEx2w==}
     deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
-  '@floating-ui/core@0.7.3':
-    resolution: {integrity: sha512-buc8BXHmG9l82+OQXOFU3Kr2XQx9ys01U/Q9HMIrZ300iLc8HLMgh7dcCqgYzAzf4BkoQvDcXf5Y+CuEZ5JBYg==}
-
   '@floating-ui/core@1.6.7':
     resolution: {integrity: sha512-yDzVT/Lm101nQ5TCVeK65LtdN7Tj4Qpr9RTXJ2vPFLqtLxwOrpoxAHAJI8J3yYWUc40J0BDBheaitK5SJmno2g==}
-
-  '@floating-ui/dom@0.5.4':
-    resolution: {integrity: sha512-419BMceRLq0RrmTSDxn8hf9R3VCJv2K9PUfugh5JyEFmdjzDo+e8U5EdR8nzKq8Yj1htzLm3b6eQEEam3/rrtg==}
 
   '@floating-ui/dom@1.5.4':
     resolution: {integrity: sha512-jByEsHIY+eEdCjnTVu+E3ephzTOzkQ8hgUfGwos+bg7NlH33Zc5uO+QHz1mrQUOgIKKDD1RtS201P9NvAfq3XQ==}
@@ -7005,8 +6888,8 @@ packages:
   aws4@1.13.2:
     resolution: {integrity: sha512-lHe62zvbTB5eEABUVi/AwVh0ZKY9rMMDhmm+eeyuuUQbQ3+J+fONVQOZyj+DdrvD4BY33uYniyRJ4UJIaSKAfw==}
 
-  axios@0.28.0:
-    resolution: {integrity: sha512-Tu7NYoGY4Yoc7I+Npf9HhUMtEEpV7ZiLH9yndTCoNhcpBH0kwcvFbzYN9/u5QKI5A6uefjsNNWaz5olJVYS62Q==}
+  axios@0.30.0:
+    resolution: {integrity: sha512-Z4F3LjCgfjZz8BMYalWdMgAQUnEtKDmpwNHjh/C8pQZWde32TF64cqnSeyL3xD/aTIASRU30RHTNzRiV/NpGMg==}
 
   axios@1.7.7:
     resolution: {integrity: sha512-S4kL7XrjgBmvdGut0sN3yJxqYzrDOnivkBiN0OFs6hLiUam3UPvswUo0kqGyhqUZGEOytHyumEdXsAkgCOUf3Q==}
@@ -7151,31 +7034,14 @@ packages:
     peerDependencies:
       vue: ^2.5.22
 
-  bk-magic-vue@2.5.9-beta.41:
-    resolution: {integrity: sha512-YqOnTiOLLnakron/2BxDO3he/MTZvZAptLMOggJihf10uADQmRyEu+8od8EcobPr9ER3yIoyFzJV+MTa90QKLg==}
+  bk-magic-vue@2.5.10-beta.12:
+    resolution: {integrity: sha512-EfR3t2syrynao0EaEde05D7D5lrCAzPsQjKdse8jadnOz7EblX3iPWUNTk96GvsZh3HU0arMUEIjh337YRe8iw==}
     engines: {node: <= 16.14}
     peerDependencies:
       vue: ^2.6.0
 
-  bk-magic-vue@2.5.9-beta.9:
-    resolution: {integrity: sha512-Ao/6sBMnvJcw8RnxEdNMq8nFi6Qwjz68a2LMe4x1ovwxiaIwCxynrrCQHqW4PXoDn+fxqd+hIES2dfIJm6ajRw==}
-    peerDependencies:
-      vue: ^2.6.0
-
-  bkui-vue@0.0.1-beta.416:
-    resolution: {integrity: sha512-DOc3MsQP6ew89rmTe9dLmUVw3dX8qoByLC4zEWtAsHcMQjtEutcIBuaYXRYoJZnFv+LDF7C8cgVrO18uDyDMdQ==}
-    peerDependencies:
-      highlight.js: ~11.5.0
-      vue: ^3.2.0
-
-  bkui-vue@2.0.1-beta.42:
-    resolution: {integrity: sha512-LMhV7imIkSiaOYnHHaFKB1p74itGxuNqjj0hEX8JdwYNJSPYRO/v8VDnJk1QEqTB9ppaIVwrEDEc/TPdrdIapQ==}
-    peerDependencies:
-      highlight.js: ~11.5.0
-      vue: ^3.2.0
-
-  bkui-vue@2.0.1-beta.94:
-    resolution: {integrity: sha512-SbJAvGNMNK8tNcUm0JkwVAYxTYYu79i8+kX5HrKuLTLCQP8REg2wRH5IrTbre0prs9GQZ+TqoPUY3xCNnQ+vKA==}
+  bkui-vue@2.0.2-beta.45:
+    resolution: {integrity: sha512-MfHtVZcZrcgo+KcgcYuPUtZOhHLfoE2eaxByk/mqKVFxedoIEqOgHA7fu3AyWYYMFo6s0h8vFj45ujZrH3H9SA==}
     peerDependencies:
       highlight.js: ~11.5.0
       vue: ^3.2.0
@@ -8498,10 +8364,6 @@ packages:
   data-view-byte-offset@1.0.1:
     resolution: {integrity: sha512-BS8PfmtDGnrgYdOonGZQdLZslWIeCGFP9tpan0hi1Co2Zr2NKADsvGYA8XxuG/4UWgJ6Cjtv+YJnB6MM69QGlQ==}
     engines: {node: '>= 0.4'}
-
-  date-fns@2.28.0:
-    resolution: {integrity: sha512-8d35hViGYx/QH0icHYCeLmsLmMUheMmTyV9Fcm6gvNwdw31yXXH+O85sOBJ+OLnLQMKZowvpKb6FgMIQjcpvQw==}
-    engines: {node: '>=0.11'}
 
   date-fns@2.30.0:
     resolution: {integrity: sha512-fnULvOpxnC5/Vg3NCiWelDsLiUc9bRwAPs/+LfTLNvetFCtCTN+yQz15C/fs4AwX1R9K5GLtLfn8QW+dWisaAw==}
@@ -15776,9 +15638,6 @@ packages:
   tinybench@2.8.0:
     resolution: {integrity: sha512-1/eK7zUnIklz4JUUlL+658n58XO2hHLQfSk1Zf2LKieUjxidN16eKFEoDEfjHc3ohofSSqK3X5yO6VGb6iW8Lw==}
 
-  tinycolor2@1.4.2:
-    resolution: {integrity: sha512-vJhccZPs965sV/L2sU4oRQVAos0pQXwsvTLkWYdqJ+a8Q5kPFzJTuOFwy7UniPli44NKQGAglksjvOcpo95aZA==}
-
   tinycolor2@1.6.0:
     resolution: {integrity: sha512-XPaBkWQJdsf3pLKJV9p4qN/S+fm2Oj8AIPo1BTUhg5oxkvm9+SVEGFdhyOz7tTdUTfvxMiAs4sp6/eZO2Ew+pw==}
 
@@ -18556,10 +18415,10 @@ snapshots:
     dependencies:
       chalk: 4.1.2
 
-  '@blueking/date-picker@2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.1-beta.42(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))':
+  '@blueking/date-picker@2.0.0-beta.26(@blueking/bkui-library@0.0.0-beta.6)(bkui-vue@2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)))(dayjs@1.11.11)(vue@3.4.31(typescript@4.9.5))':
     dependencies:
       '@blueking/bkui-library': 0.0.0-beta.6
-      bkui-vue: 2.0.1-beta.42(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
+      bkui-vue: 2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5))
       dayjs: 1.11.11
       vue: 3.4.31(typescript@4.9.5)
 
@@ -19361,15 +19220,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@floating-ui/core@0.7.3': {}
-
   '@floating-ui/core@1.6.7':
     dependencies:
       '@floating-ui/utils': 0.2.7
-
-  '@floating-ui/dom@0.5.4':
-    dependencies:
-      '@floating-ui/core': 0.7.3
 
   '@floating-ui/dom@1.5.4':
     dependencies:
@@ -20087,7 +19940,7 @@ snapshots:
       '@module-federation/third-party-dts-extractor': 0.2.7
       adm-zip: 0.5.14
       ansi-colors: 4.1.3
-      axios: 1.7.7
+      axios: 1.8.4(debug@4.4.0)
       chalk: 3.0.0
       fs-extra: 9.1.0
       isomorphic-ws: 5.0.0(ws@8.17.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))
@@ -23698,7 +23551,7 @@ snapshots:
 
   aws4@1.13.2: {}
 
-  axios@0.28.0:
+  axios@0.30.0:
     dependencies:
       follow-redirects: 1.15.6(debug@4.4.0)
       form-data: 4.0.0
@@ -23952,7 +23805,7 @@ snapshots:
       tinycolor2: 1.6.0
       vue: 2.7.16
 
-  bk-magic-vue@2.5.9-beta.41(vue@2.7.16):
+  bk-magic-vue@2.5.10-beta.12(vue@2.7.16):
     dependencies:
       clipboard: 2.0.11
       highlight.js: 10.7.3
@@ -23962,29 +23815,7 @@ snapshots:
       tinycolor2: 1.6.0
       vue: 2.7.16
 
-  bk-magic-vue@2.5.9-beta.9(vue@2.7.16):
-    dependencies:
-      clipboard: 2.0.11
-      highlight.js: 10.7.3
-      json-formatter-js: 2.5.11
-      marked: 4.2.12
-      spark-md5: 3.0.2
-      tinycolor2: 1.6.0
-      vue: 2.7.16
-
-  bkui-vue@0.0.1-beta.416(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)):
-    dependencies:
-      '@floating-ui/dom': 0.5.4
-      '@popperjs/core': 2.11.8
-      date-fns: 2.28.0
-      highlight.js: 10.7.3
-      js-calendar: 1.2.3
-      lodash: 4.17.21
-      tinycolor2: 1.4.2
-      vue: 3.4.31(typescript@4.9.5)
-      vue-types: 4.1.1(vue@3.4.31(typescript@4.9.5))
-
-  bkui-vue@2.0.1-beta.42(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)):
+  bkui-vue@2.0.2-beta.45(highlight.js@10.7.3)(vue@3.4.31(typescript@4.9.5)):
     dependencies:
       '@floating-ui/dom': 1.5.4
       '@popperjs/core': 2.11.8
@@ -23997,7 +23828,7 @@ snapshots:
       vue: 3.4.31(typescript@4.9.5)
       vue-types: 4.1.1(vue@3.4.31(typescript@4.9.5))
 
-  bkui-vue@2.0.1-beta.94(highlight.js@10.7.3)(vue@3.5.13(typescript@5.4.5)):
+  bkui-vue@2.0.2-beta.45(highlight.js@10.7.3)(vue@3.5.13(typescript@5.4.5)):
     dependencies:
       '@floating-ui/dom': 1.5.4
       '@popperjs/core': 2.11.8
@@ -25593,8 +25424,6 @@ snapshots:
       es-errors: 1.3.0
       is-data-view: 1.0.2
 
-  date-fns@2.28.0: {}
-
   date-fns@2.30.0:
     dependencies:
       '@babel/runtime': 7.26.7
@@ -26780,10 +26609,6 @@ snapshots:
       eslint: 8.57.0
 
   eslint-plugin-standard@4.0.2(eslint@7.32.0):
-    dependencies:
-      eslint: 7.32.0
-
-  eslint-plugin-standard@5.0.0(eslint@7.32.0):
     dependencies:
       eslint: 7.32.0
 
@@ -33232,7 +33057,7 @@ snapshots:
 
   regenerator-transform@0.15.2:
     dependencies:
-      '@babel/runtime': 7.24.7
+      '@babel/runtime': 7.26.7
 
   regexp.prototype.flags@1.5.2:
     dependencies:
@@ -35048,8 +34873,6 @@ snapshots:
   tiny-emitter@2.1.0: {}
 
   tinybench@2.8.0: {}
-
-  tinycolor2@1.4.2: {}
 
   tinycolor2@1.6.0: {}
 

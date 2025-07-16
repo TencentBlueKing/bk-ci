@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -31,6 +31,7 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLLimit
@@ -1541,6 +1542,12 @@ class PipelineListFacadeService @Autowired constructor(
             projectId = projectId, pipelineIds = pipelineIds.toList()
         )
 
+        // 获取归档中的流水线信息
+        val pipelineArchivingFlagMap = redisOperation.isMember(
+            key = BkApiUtil.getMigratingPipelinesRedisKey(SystemModuleEnum.PROCESS.name),
+            items = pipelineIds.toTypedArray()
+        )
+
         // 完善数据
         finalPipelines(
             pipelines = pipelines,
@@ -1554,7 +1561,8 @@ class PipelineListFacadeService @Autowired constructor(
             buildTaskTotalCountMap = buildTaskTotalCountMap,
             buildTaskFinishCountMap = buildTaskFinishCountMap,
             pipelineYamlExistMap = pipelineYamlExistMap,
-            queryByWeb = queryByWeb
+            queryByWeb = queryByWeb,
+            pipelineArchivingFlagMap = pipelineArchivingFlagMap
         )
 
         return pipelines
@@ -1572,7 +1580,8 @@ class PipelineListFacadeService @Autowired constructor(
         buildTaskTotalCountMap: Map<String, Int>,
         buildTaskFinishCountMap: Map<String, Int>,
         pipelineYamlExistMap: Map<String, Boolean>,
-        queryByWeb: Boolean
+        queryByWeb: Boolean,
+        pipelineArchivingFlagMap: Map<String, Boolean>?
     ) {
         pipelines.forEach {
             val pipelineId = it.pipelineId
@@ -1654,6 +1663,7 @@ class PipelineListFacadeService @Autowired constructor(
                 it.buildNumRule = pipelineSettingRecord.get(tSetting.BUILD_NUM_RULE)
             }
             it.yamlExist = pipelineYamlExistMap[pipelineId] ?: false
+            it.archivingFlag = pipelineArchivingFlagMap?.get(pipelineId)
         }
     }
 
@@ -2296,5 +2306,14 @@ class PipelineListFacadeService @Autowired constructor(
             PipelineIdAndName(it.pipelineId, it.pipelineName)
         } ?: emptyList()
         return SQLPage(count = count.toLong(), records = records)
+    }
+
+    fun listDisabledPipelines(
+        projectId: String
+    ): List<String> {
+        return pipelineInfoDao.listDisabledPipelineIds(
+            dslContext = dslContext,
+            projectId = projectId
+        )
     }
 }

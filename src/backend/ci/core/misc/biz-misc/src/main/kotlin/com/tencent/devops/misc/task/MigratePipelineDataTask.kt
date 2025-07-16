@@ -1,7 +1,6 @@
 package com.tencent.devops.misc.task
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -19,7 +18,6 @@ import org.apache.commons.collections4.ListUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
 
 @Suppress("TooManyFunctions", "LongMethod", "LargeClass", "ComplexMethod", "LongParameterList")
 class MigratePipelineDataTask constructor(
@@ -49,19 +47,19 @@ class MigratePipelineDataTask constructor(
             // 1、获取是否允许执行的信号量
             semaphore?.acquire()
             logger.info("migrateProjectData project[$projectId],pipeline[$pipelineId] start..............")
+            if (cancelFlag) {
+                // 2、取消未结束的构建
+                handleUnFinishPipelines(RETRY_NUM)
+                Thread.sleep(DEFAULT_THREAD_SLEEP_TINE)
+            }
+            // 检查构建是否结束
+            isBuildCompleted(
+                dslContext = dslContext,
+                processDao = processDao,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
             try {
-                if (cancelFlag) {
-                    // 2、取消未结束的构建
-                    handleUnFinishPipelines(RETRY_NUM)
-                    Thread.sleep(DEFAULT_THREAD_SLEEP_TINE)
-                }
-                // 检查构建是否结束
-                isBuildCompleted(
-                    dslContext = dslContext,
-                    processDao = processDao,
-                    projectId = projectId,
-                    pipelineId = pipelineId
-                )
                 // 3、开始迁移流水线的数据
                 // 迁移T_PIPELINE_INFO表数据
                 migratePipelineInfoData(
@@ -69,8 +67,7 @@ class MigratePipelineDataTask constructor(
                     pipelineId = pipelineId,
                     dslContext = dslContext,
                     migratingShardingDslContext = migratingShardingDslContext,
-                    processDataMigrateDao = processDbMigrateDao,
-                    archiveFlag = archiveFlag
+                    processDataMigrateDao = processDbMigrateDao
                 )
                 // 迁移构建相关表数据
                 var offset = 0
@@ -199,6 +196,14 @@ class MigratePipelineDataTask constructor(
                     migratingShardingDslContext = migratingShardingDslContext,
                     processDataMigrateDao = processDbMigrateDao
                 )
+                // 迁移T_PIPELINE_OPERATION_LOG表数据
+                migratePipelineOperationLogData(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    dslContext = dslContext,
+                    migratingShardingDslContext = migratingShardingDslContext,
+                    processDataMigrateDao = processDbMigrateDao
+                )
                 if (archiveFlag != true) {
                     // 迁移T_PIPELINE_BUILD_CONTAINER表数据
                     migratePipelineBuildContainerData(
@@ -312,14 +317,6 @@ class MigratePipelineDataTask constructor(
                         migratingShardingDslContext = migratingShardingDslContext,
                         processDataMigrateDao = processDbMigrateDao
                     )
-                    // 迁移T_PIPELINE_OPERATION_LOG表数据
-                    migratePipelineOperationLogData(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        dslContext = dslContext,
-                        migratingShardingDslContext = migratingShardingDslContext,
-                        processDataMigrateDao = processDbMigrateDao
-                    )
                     // 迁移T_PIPELINE_WEBHOOK_VERSION表数据
                     migratePipelineWebhookVersionData(
                         projectId = projectId,
@@ -408,23 +405,6 @@ class MigratePipelineDataTask constructor(
 
             // 存在运行中的构建时禁止迁移
             if (runningCount > 0) {
-                throw ErrorCodeException(
-                    errorCode = MiscMessageCode.ERROR_MIGRATING_PIPELINE_STATUS_INVALID,
-                    defaultMessage = I18nUtil.getCodeLanMessage(
-                        messageCode = MiscMessageCode.ERROR_MIGRATING_PIPELINE_STATUS_INVALID
-                    )
-                )
-            }
-
-            // 统计未成功完成的STAGE_SUCCESS状态数量
-            val unCompletedStageSuccessCount = processDao.countUnCompletedStageSuccess(
-                dslContext = transactionContext,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )
-
-            // 存在未成功完成的STAGE_SUCCESS状态构建时禁止迁移
-            if (unCompletedStageSuccessCount > 0) {
                 throw ErrorCodeException(
                     errorCode = MiscMessageCode.ERROR_MIGRATING_PIPELINE_STATUS_INVALID,
                     defaultMessage = I18nUtil.getCodeLanMessage(
@@ -684,19 +664,14 @@ class MigratePipelineDataTask constructor(
         pipelineId: String,
         dslContext: DSLContext,
         migratingShardingDslContext: DSLContext,
-        processDataMigrateDao: ProcessDataMigrateDao,
-        archiveFlag: Boolean? = null
+        processDataMigrateDao: ProcessDataMigrateDao
     ) {
         val pipelineInfoRecord = processDataMigrateDao.getPipelineInfoRecord(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId
         )
-        if (pipelineInfoRecord != null) {
-            if (archiveFlag == true) {
-                val currentTime = DateTimeUtil.toDateTime(LocalDateTime.now(), DateTimeUtil.YYYYMMDDHHMMSS)
-                pipelineInfoRecord.pipelineName = "${pipelineInfoRecord.pipelineName}[$currentTime]"
-            }
+        pipelineInfoRecord?.let {
             processDataMigrateDao.migratePipelineInfoData(
                 migratingShardingDslContext = migratingShardingDslContext,
                 pipelineInfoRecord = pipelineInfoRecord

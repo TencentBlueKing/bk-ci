@@ -65,6 +65,12 @@ object ActionId {
     const val ENV_NODE_LIST = "env_node_list"
     const val ENV_NODE_USE = "env_node_use"
 
+    // 环境节点标签
+    const val ENV_NODE_TAG_CREATE = "env_node_tag_create"
+    const val ENV_NODE_TAG_EDIT = "env_node_tag_edit"
+    const val ENV_NODE_TAG_DELETE = "env_node_tag_delete"
+    const val ENV_NODE_TAG_UPDATE = "env_node_tag_update"
+
     // 质量红线
     const val RULE_CREATE = "rule_create"
     const val RULE_DELETE = "rule_delete"

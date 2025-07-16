@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -181,9 +181,12 @@ const val BK_ATOM_SLA = "bkAtomSla" // 插件SLA
 const val BK_NO_FAIL_DATA = "bkNoFailData" // 近一月无执行失败数据
 const val BK_COMPLIANCE_RATE = "bkComplianceRate" // 错误码合规率
 const val BK_CODE_QUALITY = "bkCodeQuality" // codecc代码质量
-const val BK_TRUSTWORTHY = "bkTrustworthy" // 可信插件
 const val BK_TRIGGER = "bkTrigger" // 触发器
 const val BK_NORMAL = "bkNormal" // 无编译环境
-const val STORE_BUS_NUM_LEN = 6 // 业务序号长度
+const val STORE_BUS_NUM_LEN = 10 // 业务序号长度
 const val BK_STORE_DIR_PATH = "store.dir.path"
 const val BK_STORE_FIRST_PUBLISHER_FLAG = "firstPublisherFlag"
+const val BK_ATOM_SLA_INDEX = "atomSlaIndex" // 插件SLA指标
+const val BK_ATOM_QUALITY_INDEX = "atomQualityIndex" // 插件质量指标
+const val BK_STORE_TRUSTWORTHY_INDEX = "storeTrustworthyIndex" // 可信组件指标
+const val BK_STORE_TRUSTWORTHY_TIPS = "storeTrustworthyTips" // 可信组件，已纳入工具保障组治理范围

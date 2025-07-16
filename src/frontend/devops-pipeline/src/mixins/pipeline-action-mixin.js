@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -139,6 +139,7 @@ export default {
 
                     if (otherViews) {
                         return Object.assign(archiveObj, {
+                            latestBuildUserId: item.latestBuildUserId,
                             progress: this.calcProgress(item),
                             pipelineActions: this.getPipelineActions(item, index),
                             disabled: this.isDisabledPipeline(item),
@@ -163,10 +164,19 @@ export default {
                     records: pipelineList
                 }
             } catch (e) {
-                this.$showTips({
-                    message: e.message || e,
-                    theme: 'error'
-                })
+                if (e.code === 403) {
+                    handleProjectNoPermission({
+                        projectId: this.$route.params.projectId,
+                        resourceCode: this.$route.params.projectId,
+                        action: PROJECT_RESOURCE_ACTION.MANAGE
+                    })
+                } else {
+                    this.$showTips({
+                        message: e.message || e,
+                        theme: 'error'
+                    })
+                }
+                return false
             }
         },
         getLatestBuildFromNow (latestBuildStartTime) {
@@ -213,8 +223,19 @@ export default {
                 }
                 : {}
             const isDynamicGroup = this.currentGroup?.viewType === 1
-            const isRunning = pipeline.latestBuildStatus === statusAlias.RUNNING
+            const isBuilding = pipeline.runningBuildCount > 0
+            
             const isDraft = pipeline.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING
+            let archiveTooltip
+            if (isBuilding) {
+                archiveTooltip = this.$t('archive.unableToFile')
+            } else if (isDraft) {
+                archiveTooltip = this.$t('archive.onlyDraftVersion')
+            } else if (pipeline.archivingFlag) {
+                archiveTooltip = this.$t('archive.archiving')
+            } else {
+                archiveTooltip = false
+            }
 
             return [
                 {
@@ -288,8 +309,8 @@ export default {
                     : []),
                 {
                     text: this.$t('archive.archive'),
-                    disable: isRunning || isDraft,
-                    tooltips: isRunning ? this.$t('archive.unableToFile') : isDraft ? this.$t('archive.onlyDraftVersion') : false,
+                    disable: isBuilding || isDraft || pipeline.archivingFlag,
+                    tooltips: archiveTooltip,
                     handler: this.archiveHandler,
                     hasPermission: pipeline.permissions.canArchive,
                     disablePermissionApi: true,

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.service
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.BUILD_QUEUE
 import com.tencent.devops.common.api.enums.BuildReviewType
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.DateTimeUtil
@@ -194,6 +195,7 @@ class PipelineRuntimeService @Autowired constructor(
         private const val TRIGGER_STAGE = "stage-1"
         private const val TAG = "startVM-0"
         private const val JOB_ID = "0"
+        private const val BUILD_REMARK_MAX_LENGTH = 4096
     }
 
     fun cancelPendingTask(projectId: String, pipelineId: String, userId: String) {
@@ -433,6 +435,12 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun updateBuildRemark(projectId: String, pipelineId: String, buildId: String, remark: String?) {
+        if (!remark.isNullOrEmpty() && remark.length >= BUILD_REMARK_MAX_LENGTH) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_BUILD_REMARK_MAX_LENGTH,
+                params = arrayOf(BUILD_REMARK_MAX_LENGTH.toString())
+            )
+        }
         pipelineBuildDao.updateBuildRemark(dslContext, projectId, pipelineId, buildId, remark)
     }
 

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,11 +27,14 @@
 
 package com.tencent.devops.misc.service.process
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.FAIL_MSG
 import com.tencent.devops.common.api.constant.KEY_ARCHIVE
 import com.tencent.devops.common.api.constant.KEY_PIPELINE_ID
 import com.tencent.devops.common.api.constant.KEY_PROJECT_ID
+import com.tencent.devops.common.api.constant.OPERATE
 import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ShardingRoutingRule
 import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -55,10 +58,13 @@ import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistory
 import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistoryQueryParam
 import com.tencent.devops.misc.service.project.ProjectDataMigrateHistoryService
 import com.tencent.devops.misc.task.MigratePipelineDataTask
-import com.tencent.devops.misc.utils.MiscUtils
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.api.service.ServicePipelineYamlResource
+import com.tencent.devops.process.enums.OperationLogType
+import com.tencent.devops.process.pojo.PipelineOperationLog
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceShardingRoutingRuleResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -122,16 +128,26 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
             archiveFlag = true
         )
         // 执行迁移前的逻辑
-        if (!doPreMigrationBus(
+        try {
+            doPreMigrationBus(
                 userId = userId,
                 archiveDbShardingRoutingRule = archiveDbShardingRoutingRule,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                migrationLock = migrationLock,
+                migrationLock = migrationLock
+            )
+        } catch (ignored: Throwable) {
+            val errorMsg = ignored.message
+            logger.warn("migrateData project:[$projectId],pipeline[$pipelineId] doPreMigrationBus fail", ignored)
+            cleanupMigrationState(pipelineId)
+            sendMigrateProcessDataFailMsg(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                errorMsg = errorMsg,
                 sendMsgFlag = sendMsgFlag
             )
-        ) {
-            return
+            throw ignored
         }
         try {
             // 迁移流水线数据
@@ -159,14 +175,18 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
             )
             throw ignored
         } finally {
-            // 从正在迁移的流水线集合移除该流水线
-            redisOperation.removeSetMember(
-                key = MiscUtils.getMigratingPipelinesRedisKey(SystemModuleEnum.PROCESS.name),
-                item = pipelineId
-            )
-            // 解锁流水线,允许用户发起新构建等操作
-            redisOperation.removeSetMember(BkApiUtil.getApiAccessLimitPipelinesKey(), pipelineId)
+            cleanupMigrationState(pipelineId)
         }
+    }
+
+    private fun cleanupMigrationState(pipelineId: String) {
+        // 从正在迁移的流水线集合移除该流水线
+        redisOperation.removeSetMember(
+            key = BkApiUtil.getMigratingPipelinesRedisKey(SystemModuleEnum.PROCESS.name),
+            item = pipelineId
+        )
+        // 解锁流水线,允许用户发起新构建等操作
+        redisOperation.removeSetMember(BkApiUtil.getApiAccessLimitPipelinesKey(), pipelineId)
     }
 
     private fun doMigrationErrorBus(
@@ -268,6 +288,23 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
                     targetDataSourceName = tmpArchiveDbShardingRoutingRule.dataSourceName
                 )
                 processMigrationDataDeleteService.deleteProcessData(deleteMigrationDataParam)
+                // 添加操作日志
+                val id = client.get(ServiceAllocIdResource::class)
+                    .generateSegmentId("T_PIPELINE_OPERATION_LOG").data
+                processDao.addPipelineOperationLog(
+                    dslContext = dslContext,
+                    pipelineOperationLog = PipelineOperationLog(
+                        id = id,
+                        operator = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        version = 1,
+                        operationLogType = OperationLogType.PIPELINE_ARCHIVE,
+                        params = "",
+                        operateTime = System.currentTimeMillis(),
+                        description = null
+                    )
+                )
                 // 保存流水线数据迁移成功记录
                 projectDataMigrateHistoryService.add(
                     userId = userId,
@@ -301,45 +338,53 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
         archiveDbShardingRoutingRule: ShardingRoutingRule?,
         projectId: String,
         pipelineId: String,
-        migrationLock: MigrationLock,
-        sendMsgFlag: Boolean
-    ): Boolean {
-        if (archiveDbShardingRoutingRule != null) {
+        migrationLock: MigrationLock
+    ) {
+        archiveDbShardingRoutingRule?.let { rule ->
             val queryParam = ProjectDataMigrateHistoryQueryParam(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 moduleCode = SystemModuleEnum.PROCESS,
-                targetClusterName = archiveDbShardingRoutingRule.clusterName,
-                targetDataSourceName = archiveDbShardingRoutingRule.dataSourceName
+                targetClusterName = rule.clusterName,
+                targetDataSourceName = rule.dataSourceName
             )
-            migrationLock.lock()
-            try {
+            migrationLock.use {
+                migrationLock.lock()
                 // 判断流水线数据是否能迁移
                 if (!projectDataMigrateHistoryService.isDataCanMigrate(queryParam)) {
-                    sendMigrateProcessDataFailMsg(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        userId = userId,
-                        errorMsg = I18nUtil.getCodeLanMessage(
+                    throw ErrorCodeException(
+                        errorCode = MiscMessageCode.ERROR_PROJECT_DATA_REPEAT_MIGRATE,
+                        params = arrayOf(projectId),
+                        defaultMessage = I18nUtil.getCodeLanMessage(
                             messageCode = MiscMessageCode.ERROR_PROJECT_DATA_REPEAT_MIGRATE,
                             params = arrayOf(projectId)
-                        ),
-                        sendMsgFlag = sendMsgFlag
+                        )
                     )
-                    return false
                 }
-            } finally {
-                migrationLock.unlock()
             }
         }
+        // 判断如果处于PAC模式下的yaml文件是否在默认分支已删除
+        client.get(ServicePipelineYamlResource::class)
+            .yamlExistInDefaultBranch(userId, projectId, pipelineId)
+            .data
+            .takeIf { it == true }
+            ?.let {
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.ERROR_ARCHIVE_PAC_PIPELINE_YAML_EXIST,
+                    params = arrayOf(pipelineId),
+                    defaultMessage = I18nUtil.getCodeLanMessage(
+                        messageCode = CommonMessageCode.ERROR_ARCHIVE_PAC_PIPELINE_YAML_EXIST,
+                        params = arrayOf(pipelineId)
+                    )
+                )
+            }
         // 把流水线加入正在迁移流水线集合中
         redisOperation.addSetValue(
-            key = MiscUtils.getMigratingPipelinesRedisKey(SystemModuleEnum.PROCESS.name),
+            key = BkApiUtil.getMigratingPipelinesRedisKey(SystemModuleEnum.PROCESS.name),
             item = pipelineId
         )
         // 锁定流水线,不允许用户发起新构建等操作
         redisOperation.addSetValue(BkApiUtil.getApiAccessLimitPipelinesKey(), pipelineId)
-        return true
     }
 
     private fun sendMigrateProcessDataSuccessMsg(
@@ -352,8 +397,16 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
             // 不发送消息
             return
         }
-        val titleParams = mapOf(KEY_PROJECT_ID to projectId, KEY_PIPELINE_ID to pipelineId)
-        val bodyParams = mapOf(KEY_PROJECT_ID to projectId, KEY_PIPELINE_ID to pipelineId)
+        val titleParams = mapOf(
+            OPERATE to I18nUtil.getCodeLanMessage(KEY_ARCHIVE),
+            KEY_PROJECT_ID to projectId,
+            KEY_PIPELINE_ID to pipelineId
+        )
+        val bodyParams = mapOf(
+            OPERATE to I18nUtil.getCodeLanMessage(KEY_ARCHIVE),
+            KEY_PROJECT_ID to projectId,
+            KEY_PIPELINE_ID to pipelineId
+        )
         val request = SendNotifyMessageTemplateRequest(
             templateCode = MIGRATE_PROCESS_PIPELINE_DATA_SUCCESS_TEMPLATE,
             receivers = mutableSetOf(userId),
@@ -382,8 +435,17 @@ class ProcessArchivePipelineDataMigrateService @Autowired constructor(
             // 不发送消息
             return
         }
-        val titleParams = mapOf(KEY_PROJECT_ID to projectId, KEY_PIPELINE_ID to pipelineId)
-        val bodyParams = mapOf(KEY_PROJECT_ID to projectId, KEY_PIPELINE_ID to pipelineId, FAIL_MSG to (errorMsg ?: ""))
+        val titleParams = mapOf(
+            OPERATE to I18nUtil.getCodeLanMessage(KEY_ARCHIVE),
+            KEY_PROJECT_ID to projectId,
+            KEY_PIPELINE_ID to pipelineId
+        )
+        val bodyParams = mapOf(
+            OPERATE to I18nUtil.getCodeLanMessage(KEY_ARCHIVE),
+            KEY_PROJECT_ID to projectId,
+            KEY_PIPELINE_ID to pipelineId,
+            FAIL_MSG to (errorMsg ?: "")
+        )
         val request = SendNotifyMessageTemplateRequest(
             templateCode = MIGRATE_PROCESS_PIPELINE_DATA_FAIL_TEMPLATE,
             receivers = mutableSetOf(userId),

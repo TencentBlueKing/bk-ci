@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -37,7 +37,9 @@ import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.TPipelineBuildHistoryDebug
 import com.tencent.devops.model.process.tables.TPipelineDataClear
 import com.tencent.devops.model.process.tables.TPipelineInfo
+import com.tencent.devops.model.process.tables.TPipelineOperationLog
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
+import com.tencent.devops.process.pojo.PipelineOperationLog
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -408,35 +410,31 @@ class ProcessDao {
         return queryTableCount(T_PIPELINE_BUILD_HISTORY) + queryTableCount(T_PIPELINE_BUILD_HISTORY_DEBUG)
     }
 
-    fun countUnCompletedStageSuccess(
+    fun addPipelineOperationLog(
         dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String
-    ): Int {
-        val tPipelineBuildHistory = TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY
-        fun queryTableCount(table: Table<*>): Int {
-            val startTimeField = table.field(tPipelineBuildHistory.START_TIME.name, LocalDateTime::class.java)!!
-            val endTimeField = table.field(tPipelineBuildHistory.END_TIME.name, LocalDateTime::class.java)!!
-            val timeConditions = DSL.or(
-                startTimeField.isNull,
-                endTimeField.isNull,
-                startTimeField.gt(endTimeField)
-            )
-            // 构造通用查询条件
-            val conditions = listOf(
-                table.field(tPipelineBuildHistory.PROJECT_ID.name, String::class.java)!!.eq(projectId),
-                table.field(tPipelineBuildHistory.PIPELINE_ID.name, String::class.java)!!.eq(pipelineId),
-                table.field(tPipelineBuildHistory.STATUS.name, Int::class.java)!!.eq(BuildStatus.STAGE_SUCCESS.ordinal),
-                timeConditions
-            )
-
-            return dslContext.selectCount()
-                .from(table)
-                .where(conditions)
-                .fetchOne(0, Int::class.java) ?: 0
+        pipelineOperationLog: PipelineOperationLog
+    ) {
+        with(TPipelineOperationLog.T_PIPELINE_OPERATION_LOG) {
+            dslContext.insertInto(
+                this,
+                ID,
+                PROJECT_ID,
+                PIPELINE_ID,
+                VERSION,
+                OPERATOR,
+                OPERATION_TYPE,
+                PARAMS,
+                DESCRIPTION
+            ).values(
+                pipelineOperationLog.id,
+                pipelineOperationLog.projectId,
+                pipelineOperationLog.pipelineId,
+                pipelineOperationLog.version,
+                pipelineOperationLog.operator,
+                pipelineOperationLog.operationLogType.name,
+                pipelineOperationLog.params,
+                pipelineOperationLog.description
+            ).execute()
         }
-
-        // 分别查询两个表并求和
-        return queryTableCount(T_PIPELINE_BUILD_HISTORY) + queryTableCount(T_PIPELINE_BUILD_HISTORY_DEBUG)
     }
 }

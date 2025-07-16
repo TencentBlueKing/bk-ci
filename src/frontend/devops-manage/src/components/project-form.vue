@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import {
-  ref,
-  watch,
-  onBeforeUnmount,
-  computed,
-  onMounted,
-  getCurrentInstance,
-  h,
-} from 'vue';
+import DialectPopoverTable from "@/components/dialectPopoverTable.vue";
+import copyImg from "@/css/svg/copy.svg";
+import http from '@/http/api';
+import { copyToClipboard } from "@/utils/util.js";
+import { Alert, Button, InfoBox, Message, Popover } from 'bkui-vue';
 import {
   EditLine,
 } from 'bkui-vue/lib/icon';
-import IAMIframe from './IAM-Iframe';
+import {
+  computed,
+  getCurrentInstance,
+  h,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Message, Popover, InfoBox, Alert, Button } from 'bkui-vue';
-import http from '@/http/api';
-import DialectPopoverTable from "@/components/dialectPopoverTable.vue";
-import copyImg from "@/css/svg/copy.svg";
-import { copyToClipboard } from "@/utils/util.js"
+import IAMIframe from './IAM-Iframe';
 const {
   t,
 } = useI18n();
@@ -386,7 +386,10 @@ const handleToPipeline = (row) => {
 }
 
 const handleMessage = (event: any) => {
-  const { data } = event;
+  const { data, origin } = event;
+  if (![window.BK_IAM_URL_PREFIX, location.origin].includes(origin)) {
+    return;
+  }
   if (data.type === 'IAM') {
     switch (data.code) {
       case 'success':
@@ -466,7 +469,6 @@ watch(() => projectData.value.englishName, (val) => {
 });
 
 watch(() => [projectData.value.authSecrecy, projectData.value.projectType, projectData.value.subjectScopes], () => {
-  projectForm.value.validate();
   emits('approvedChange', true);
 }, {
   deep: true,
@@ -592,7 +594,7 @@ onBeforeUnmount(() => {
       <bk-form-item :label="t('项目类型')" property="projectType" :required="true">
         <bk-select
           v-model="projectData.projectType"
-          :placeholder="t('选择项目类型')"
+          :placeholder="t('请选择项目类型')"
           name="center"
           searchable
           @change="handleChangeForm"

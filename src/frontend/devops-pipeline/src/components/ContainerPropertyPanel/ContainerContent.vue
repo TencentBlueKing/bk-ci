@@ -250,24 +250,16 @@
                     :is-error="errors.has('xcodeVersion')"
                     :error-msg="errors.first(`xcodeVersion`)"
                 >
-                    <bk-select
-                        :disabled="!editable"
+                    <select-input
                         :value="xcodeVersion"
-                        searchable
-                        :loading="isLoadingMac"
                         name="xcodeVersion"
+                        :disabled="!editable"
+                        type="text"
+                        :options="xcodeVersionList"
+                        :handle-change="chooseXcode"
                         v-validate.initial="'required'"
-                        @toggle="toggleXcode"
                     >
-                        <bk-option
-                            v-for="item in xcodeVersionList"
-                            :key="item"
-                            :id="item"
-                            :name="item"
-                            @click.native="chooseXcode(item)"
-                        >
-                        </bk-option>
-                    </bk-select>
+                    </select-input>
                 </form-field>
             </template>
 
@@ -737,6 +729,9 @@
                     const isError = errors.any()
                     this.handleContainerChange('isError', isError)
                 }
+            },
+            systemVersion () {
+                this.toggleXcode()
             }
         },
         created () {
@@ -950,14 +945,17 @@
                 this.isLoadingMac = true
                 Promise.all([this.getMacSysVersion(), this.getMacXcodeVersion(this.systemVersion)])
                     .then(([sysVersion, xcodeVersion]) => {
-                        this.xcodeVersionList = xcodeVersion.data?.versionList || []
+                        this.xcodeVersionList = xcodeVersion.data?.versionList.map(i => ({
+                            id: i,
+                            name: i
+                        })) || []
                         this.systemVersionList = sysVersion.data?.versionList || []
                         if (
                         this.container.dispatchType?.systemVersion === undefined
                         && this.container.dispatchType?.xcodeVersion === undefined
                         ) {
                             this.chooseMacSystem(sysVersion.data?.defaultVersion)
-                            this.chooseXcode(xcodeVersion.data?.defaultVersion)
+                            this.chooseXcode('xcodeVersion', xcodeVersion.data?.defaultVersion)
                         }
                     })
                     .catch((err) => {
@@ -965,11 +963,12 @@
                     })
                     .finally(() => (this.isLoadingMac = false))
             },
-            async toggleXcode (show) {
-                if (show) {
-                    const res = await this.getMacXcodeVersion(this.systemVersion)
-                    this.xcodeVersionList = res.data?.versionList || []
-                }
+            async toggleXcode () {
+                const res = await this.getMacXcodeVersion(this.systemVersion)
+                this.xcodeVersionList = res.data?.versionList.map(i => ({
+                    id: i,
+                    name: i
+                })) || []
             },
             chooseMacSystem (item) {
                 if (item !== this.systemVersion) {
@@ -984,13 +983,13 @@
                     )
                 }
             },
-            chooseXcode (item) {
+            chooseXcode (item, value) {
                 this.handleContainerChange(
                     'dispatchType',
                     Object.assign({
                         ...this.container.dispatchType,
-                        xcodeVersion: item,
-                        value: `${this.systemVersion}:${item}`
+                        xcodeVersion: value,
+                        value: `${this.systemVersion}:${value}`
                     })
                 )
             },

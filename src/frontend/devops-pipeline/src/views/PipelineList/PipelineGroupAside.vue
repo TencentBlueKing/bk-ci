@@ -37,7 +37,12 @@
                                 'icon-right-shape': !block.show
                             }]"
                         />
-                        <span class="pipeline-group-header-name">{{ block.title }}</span>
+                        <span
+                            class="pipeline-group-header-name"
+                            v-bk-overflow-tips
+                        >
+                            {{ block.title }}
+                        </span>
                         <span v-bk-tooltips="block.tooltips">
                             <bk-button
                                 v-perm="block.isCheckPermission ?
@@ -271,6 +276,9 @@
             ]),
             projectId () {
                 return this.$route.params.projectId
+            },
+            currentViewId () {
+                return this.$route.params.viewId
             },
             groupNameRules () {
                 return [{
@@ -581,13 +589,15 @@
             switchViewId (viewId) {
                 if (viewId !== this.$route.params.viewId) {
                     this.updateGroupPipelineCount(viewId)
-
+                    
                     cacheViewId(this.projectId, viewId)
+                    const newParams = this.currentViewId === 'archiveLibrary'
+                        ? { ...this.$route.params, viewId, type: undefined }
+                        : { ...this.$route.params, viewId }
+
                     this.$router.push({
-                        params: {
-                            ...this.$route.params,
-                            viewId
-                        }
+                        name: 'PipelineManageList',
+                        params: newParams
                     })
                 }
             },
