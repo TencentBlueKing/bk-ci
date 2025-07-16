@@ -56,9 +56,8 @@ class ProjectOperationalProductService(
     private val url = ""
 
     fun syncOperationalProduct(): Boolean {
-        executor.submit {
-            logger.info("sync operational product start!")
-            executor.execute {
+        logger.info("sync operational product start!")
+        executor.execute {
             val obsProductList = getOperationalProductsByDictType(
                 dictType = ProjectProductDictType.OBS_PRODUCT
             )
@@ -91,7 +90,6 @@ class ProjectOperationalProductService(
                 val iCosProductVO = iCosProductVOs.firstOrNull {
                     it.productId == productId
                 }
-
                 val operationalProductVO = OperationalProductVO(
                     productId = obsProductInfo.productId!!.toInt(),
                     productName = obsProductInfo.productName ?: "",
@@ -186,7 +184,7 @@ class ProjectOperationalProductService(
             val responseStr = it.body!!.string()
             val responseDTO: ResponseDTO<List<ICosProductVO>> =
                 objectMapper.readValue(responseStr, object : TypeReference<ResponseDTO<List<ICosProductVO>>>() {})
-            if (responseDTO.code != 0L || !responseDTO.result) {
+            if (responseDTO.code != 200L || !responseDTO.result) {
                 // 请求错误
                 logger.warn("request failed, url:($url)|response:($it)")
                 throw RemoteServiceException("request failed, response:(${responseDTO.message})")
