@@ -25,7 +25,6 @@ class BkInternalPermissionComparator(
     val client: Client,
     val redisOperation: RedisOperation,
     val authResourceService: AuthResourceDao,
-    val authResourceMemberService: RbacPermissionResourceMemberService,
     val dslContext: DSLContext
 ) {
 
