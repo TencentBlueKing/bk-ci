@@ -144,7 +144,7 @@ class StoreHonorServiceImpl @Autowired constructor(
         val i18nHonorInfoList = addStoreHonorRequest.i18nHonorInfoList
         val id = UUIDUtil.generate()
         i18nHonorInfoList.forEach { i18nHonorInfo ->
-            if (i18nHonorInfo.language.locale == commonConfig.devopsDefaultLocaleLanguage) {
+            if (i18nHonorInfo.language.locale == defaultLanguage) {
                 val honorTitleCount = storeHonorDao.countByhonorTitle(dslContext, i18nHonorInfo.honorTitle)
                 if (honorTitleCount > 0) {
                     return I18nUtil.generateResponseDataObject(
