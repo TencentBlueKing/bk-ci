@@ -137,35 +137,34 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 currentTime = currentTime
             )
         }
-        val saveAtomOverviewDataPOs = mutableListOf<SaveAtomOverviewDataPO>()
-        val saveProjectAtomRelationPOs = mutableListOf<SaveProjectAtomRelationDataPO>()
-        val updateAtomOverviewDataPOs = mutableListOf<UpdateAtomOverviewDataPO>()
-        val saveErrorCodeInfoPOs = mutableSetOf<SaveErrorCodeInfoPO>()
-        val saveAtomFailSummaryDataPOs = mutableListOf<SaveAtomFailSummaryDataPO>()
-        val updateAtomFailSummaryDataPOs = mutableListOf<UpdateAtomFailSummaryDataPO>()
-        val saveAtomFailDetailDataPOs = mutableListOf<SaveAtomFailDetailDataPO>()
-        // 遍历流水线所有阶段进行指标上报
-        buildEndPipelineMetricsData.stages.forEach { stage ->
-            val stageTagNames = stage.stageTagNames?.toMutableList() ?: mutableListOf()
-            watcher.start("pipelineStageOverviewDataReport")
-            // 阶段概览数据上报
-            withRedisLock(
-                lockKey = "pipeline:$pipelineId:stageTag:overview",
-                expiredSeconds = 30
-            ) {
+        withRedisLock(
+            lockKey = "pipeline:$pipelineId:model:data",
+            expiredSeconds = 100
+        ) {
+            val savePipelineStageOverviewDataPOs = mutableListOf<SavePipelineStageOverviewDataPO>()
+            val updatePipelineStageOverviewDataPOs = mutableListOf<UpdatePipelineStageOverviewDataPO>()
+            val saveAtomOverviewDataPOs = mutableListOf<SaveAtomOverviewDataPO>()
+            val saveProjectAtomRelationPOs = mutableListOf<SaveProjectAtomRelationDataPO>()
+            val updateAtomOverviewDataPOs = mutableListOf<UpdateAtomOverviewDataPO>()
+            val saveErrorCodeInfoPOs = mutableSetOf<SaveErrorCodeInfoPO>()
+            val saveAtomFailSummaryDataPOs = mutableListOf<SaveAtomFailSummaryDataPO>()
+            val updateAtomFailSummaryDataPOs = mutableListOf<UpdateAtomFailSummaryDataPO>()
+            val saveAtomFailDetailDataPOs = mutableListOf<SaveAtomFailDetailDataPO>()
+            // 遍历流水线所有阶段进行指标上报
+            buildEndPipelineMetricsData.stages.forEach { stage ->
+                val stageTagNames = stage.stageTagNames?.toMutableList() ?: mutableListOf()
+                watcher.start("pipelineStageOverviewDataReport")
+                // 阶段概览数据上报
                 pipelineStageOverviewDataReport(
                     stageTagNames = stageTagNames,
                     stageCostTime = stage.costTime,
                     buildEndPipelineMetricsData = buildEndPipelineMetricsData,
-                    currentTime = currentTime
+                    currentTime = currentTime,
+                    savePipelineStageOverviewDataPOs = savePipelineStageOverviewDataPOs,
+                    updatePipelineStageOverviewDataPOs = updatePipelineStageOverviewDataPOs
                 )
-            }
-            watcher.start("pipelineAtomDataReport")
-            // 遍历阶段内所有任务进行插件数据上报
-            withRedisLock(
-                lockKey = "pipeline:$pipelineId:job:data",
-                expiredSeconds = 100
-            ) {
+                watcher.start("pipelineAtomDataReport")
+                // 遍历阶段内所有任务进行插件数据上报
                 stage.containers.forEach { container ->
                     val atomOverviewDataRecords = metricsDataQueryDao.getAtomOverviewDatas(
                         dslContext = dslContext,
@@ -212,31 +211,38 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                     }
                 }
             }
-        }
 
-        dslContext.transaction { t ->
-            val context = DSL.using(t)
-            if (saveAtomOverviewDataPOs.isNotEmpty()) {
-                metricsDataReportDao.batchSaveAtomOverviewData(context, saveAtomOverviewDataPOs)
-            }
-            if (updateAtomOverviewDataPOs.isNotEmpty()) {
-                metricsDataReportDao.batchUpdateAtomOverviewData(context, updateAtomOverviewDataPOs)
-            }
-            if (saveProjectAtomRelationPOs.isNotEmpty()) {
-                projectInfoDao.batchSaveProjectAtomInfo(context, saveProjectAtomRelationPOs)
-            }
-            if (saveAtomFailSummaryDataPOs.isNotEmpty()) {
-                metricsDataReportDao.batchSaveAtomFailSummaryData(context, saveAtomFailSummaryDataPOs)
-            }
-            if (updateAtomFailSummaryDataPOs.isNotEmpty()) {
-                metricsDataReportDao.batchUpdateAtomFailSummaryData(context, updateAtomFailSummaryDataPOs)
-            }
-            if (saveAtomFailDetailDataPOs.isNotEmpty()) {
-                metricsDataReportDao.batchSaveAtomFailDetailData(context, saveAtomFailDetailDataPOs)
-            }
-            if (saveErrorCodeInfoPOs.isNotEmpty()) {
-                saveErrorCodeInfoPOs.forEach { saveErrorCodeInfoPO ->
-                    metricsDataReportDao.saveErrorCodeInfo(context, saveErrorCodeInfoPO)
+            dslContext.transaction { t ->
+                val context = DSL.using(t)
+                if (savePipelineStageOverviewDataPOs.isNotEmpty()) {
+                    metricsDataReportDao.batchSavePipelineStageOverviewData(context, savePipelineStageOverviewDataPOs)
+                }
+                if (updatePipelineStageOverviewDataPOs.isNotEmpty()) {
+                    metricsDataReportDao.batchUpdatePipelineStageOverviewData(
+                        dslContext = context,
+                        updatePipelineStageOverviewDataPOs = updatePipelineStageOverviewDataPOs
+                    )
+                }
+                if (saveAtomOverviewDataPOs.isNotEmpty()) {
+                    metricsDataReportDao.batchSaveAtomOverviewData(context, saveAtomOverviewDataPOs)
+                }
+                if (updateAtomOverviewDataPOs.isNotEmpty()) {
+                    metricsDataReportDao.batchUpdateAtomOverviewData(context, updateAtomOverviewDataPOs)
+                }
+                if (saveProjectAtomRelationPOs.isNotEmpty()) {
+                    projectInfoDao.batchSaveProjectAtomInfo(context, saveProjectAtomRelationPOs)
+                }
+                if (saveAtomFailSummaryDataPOs.isNotEmpty()) {
+                    metricsDataReportDao.batchSaveAtomFailSummaryData(context, saveAtomFailSummaryDataPOs)
+                }
+                if (updateAtomFailSummaryDataPOs.isNotEmpty()) {
+                    metricsDataReportDao.batchUpdateAtomFailSummaryData(context, updateAtomFailSummaryDataPOs)
+                }
+                if (saveAtomFailDetailDataPOs.isNotEmpty()) {
+                    metricsDataReportDao.batchSaveAtomFailDetailData(context, saveAtomFailDetailDataPOs)
+                }
+                if (saveErrorCodeInfoPOs.isNotEmpty()) {
+                    metricsDataReportDao.batchSaveErrorCodeInfo(context, saveErrorCodeInfoPOs)
                 }
             }
         }
@@ -676,13 +682,13 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         stageTagNames: MutableList<String>?,
         stageCostTime: Long,
         buildEndPipelineMetricsData: BuildEndPipelineMetricsData,
-        currentTime: LocalDateTime
+        currentTime: LocalDateTime,
+        updatePipelineStageOverviewDataPOs: MutableList<UpdatePipelineStageOverviewDataPO>,
+        savePipelineStageOverviewDataPOs: MutableList<SavePipelineStageOverviewDataPO>
     ) {
         if (stageTagNames.isNullOrEmpty()) {
             return
         }
-        val savePipelineStageOverviewDataPOs = mutableListOf<SavePipelineStageOverviewDataPO>()
-        val updatePipelineStageOverviewDataPOs = mutableListOf<UpdatePipelineStageOverviewDataPO>()
         val projectId = buildEndPipelineMetricsData.projectId
         val pipelineId = buildEndPipelineMetricsData.pipelineId
         val pipelineName = buildEndPipelineMetricsData.pipelineName
@@ -792,18 +798,6 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                     updateTime = currentTime
                 )
             )
-        }
-        dslContext.transaction { t ->
-            val context = DSL.using(t)
-            if (savePipelineStageOverviewDataPOs.isNotEmpty()) {
-                metricsDataReportDao.batchSavePipelineStageOverviewData(context, savePipelineStageOverviewDataPOs)
-            }
-            if (updatePipelineStageOverviewDataPOs.isNotEmpty()) {
-                metricsDataReportDao.batchUpdatePipelineStageOverviewData(
-                    dslContext = context,
-                    updatePipelineStageOverviewDataPOs = updatePipelineStageOverviewDataPOs
-                )
-            }
         }
     }
 
@@ -923,9 +917,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 metricsDataReportDao.updatePipelineFailSummaryData(dslContext, updatePipelineFailSummaryDataPO)
             }
             if (saveErrorCodeInfoPOs.isNotEmpty()) {
-                saveErrorCodeInfoPOs.forEach { saveErrorCodeInfoPO ->
-                    metricsDataReportDao.saveErrorCodeInfo(dslContext, saveErrorCodeInfoPO)
-                }
+                metricsDataReportDao.batchSaveErrorCodeInfo(dslContext, saveErrorCodeInfoPOs)
             }
         }
     }
