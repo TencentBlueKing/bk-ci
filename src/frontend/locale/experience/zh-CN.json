@@ -187,5 +187,15 @@
     "releaseDetail": "发布详情",
     "editRelease": "编辑发布",
     "setting": "设置",
-    "select_file": "请选择ipa或apk或hap文件"
+    "select_file": "请选择ipa或apk或hap文件",
+    "pipeline": "流水线",
+    "build_number": "构建号",
+    "path": "路径",
+    "file_size": "文件大小",
+    "repository_type": "仓库类型",
+    "no_data": "暂无数据",
+    "no_result": "未搜索到任何的结果",
+    "all": "全部",
+    "custom_repo": "自定义仓库",
+    "pipeline_repo": "流水线仓库"
 }

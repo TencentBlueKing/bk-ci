@@ -189,6 +189,7 @@
     "file_size": "ファイルサイズ",
     "repository_type": "リポジトリタイプ",
     "no_data": "データなし",
+    "no_result": "結果が見つかりません",
     "all": "すべて",
     "custom_repo": "カスタムリポジトリ",
     "pipeline_repo": "パイプラインリポジトリ"

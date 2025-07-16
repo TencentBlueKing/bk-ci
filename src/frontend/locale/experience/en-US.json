@@ -189,6 +189,7 @@
     "file_size": "File Size",
     "repository_type": "Repository Type",
     "no_data": "No Data",
+    "no_result": "No Result Found",
     "all": "All",
     "custom_repo": "Custom Repository",
     "pipeline_repo": "Pipeline Repository"
