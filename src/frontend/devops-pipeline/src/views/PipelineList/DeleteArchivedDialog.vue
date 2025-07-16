@@ -46,6 +46,7 @@
                 <li
                     v-for="pipeline in pipelineList"
                     :key="pipeline.pipelineId"
+                    :title="pipeline.pipelineName"
                 >
                     {{ pipeline.pipelineName }}
                 </li>
@@ -217,7 +218,7 @@
     max-height: 320px;
 
     >li {
-        width: 420px;
+        width: 430px;
         height: 40px;
         line-height: 40px;
         padding: 0 16px;
