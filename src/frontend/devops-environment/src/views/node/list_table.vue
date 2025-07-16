@@ -13,10 +13,10 @@
             @sort-change="handleSortChange"
         >
             <!-- <bk-table-column
-          type="selection"
-          fixed="left"
-          width="40"
-      ></bk-table-column> -->
+            type="selection"
+            fixed="left"
+            width="40"
+        ></bk-table-column> -->
             <bk-table-column
                 :label="$t('environment.nodeInfo.displayName')"
                 sortable="custom"
@@ -613,10 +613,10 @@
 </template>
 
 <script>
-    import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
+    import dropdownList from '@/components/devops/environment/dropdown-list'
     import EmptyTableStatus from '@/components/empty-table-status'
     import StatusIcon from '@/components/status-icon.vue'
-    import dropdownList from '@/components/devops/environment/dropdown-list'
+    import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
     import { mapActions } from 'vuex'
     const NODE_TABLE_COLUMN_CACHE = 'node_list_columns'
 

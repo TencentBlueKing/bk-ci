@@ -122,8 +122,8 @@
                             />
                             <version-diff-entry
                                 v-if="props.row.version !== releaseVersion"
-                                :version="props.row.version"
-                                :latest-version="releaseVersion"
+                                :version="props.row.currentDiffVersion"
+                                :latest-version="props.row.latestDiffVersion"
                                 :archive-flag="archiveFlag"
                             />
                             <bk-button
@@ -317,7 +317,9 @@
                         isDraft,
                         canRollback: !isDraft,
                         isBranchVersion: item.status === VERSION_STATUS_ENUM.BRANCH,
-                        versionName: item.versionName || this.$t('editPage.draftVersion', [item.baseVersionName])
+                        versionName: item.versionName || this.$t('editPage.draftVersion', [item.baseVersionName]),
+                        currentDiffVersion: !isDraft ? item.version : this.releaseVersion,
+                        latestDiffVersion: !isDraft ? this.releaseVersion : item.version
                     }
                 })
             },

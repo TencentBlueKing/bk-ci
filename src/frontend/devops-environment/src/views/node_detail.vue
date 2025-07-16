@@ -90,11 +90,11 @@
 </template>
 
 <script>
-    import { mapState } from 'vuex'
-    import { bus } from '@/utils/bus'
-    import { copyText } from '@/utils/util'
     import nodeDetailTab from '@/components/devops/node-detail-tab'
     import nodeOverviewChart from '@/components/devops/node-overview-chart'
+    import { bus } from '@/utils/bus'
+    import { copyText } from '@/utils/util'
+    import { mapState } from 'vuex'
 
     export default {
         components: {

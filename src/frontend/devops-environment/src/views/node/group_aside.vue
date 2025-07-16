@@ -242,7 +242,7 @@
   
 <script>
     import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
-    import { mapState, mapActions } from 'vuex'
+    import { mapActions, mapState } from 'vuex'
 
     export default {
         name: 'NodeGroupTree',

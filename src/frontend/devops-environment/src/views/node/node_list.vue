@@ -200,13 +200,13 @@
     import installAgent from '@/components/devops/environment/install-agent'
     import makeMirrorDialog from '@/components/devops/environment/make-mirror-dialog'
     import thirdConstruct from '@/components/devops/environment/third-construct-dialog'
-    import ListTable from './list_table.vue'
-    import { mapState, mapActions } from 'vuex'
     import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
     import { getQueryString } from '@/utils/util'
+    import webSocketMessage from '@/utils/webSocketMessage.js'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
-    import webSocketMessage from '@/utils/webSocketMessage.js'
+    import { mapActions, mapState } from 'vuex'
+    import ListTable from './list_table.vue'
     const ENV_NODE_TABLE_LIMIT_CACHE = 'env_node_table_limit_cache'
     export default {
         components: {
