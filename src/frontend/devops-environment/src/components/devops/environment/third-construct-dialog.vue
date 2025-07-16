@@ -183,13 +183,13 @@
                         </div>
                         <div
                             class="command-line"
-                            v-if="!installModeAsService"
+                            v-if="installModeAsService && !constructImportForm.autoSwitchAccount"
                         >
                             {{ $t('environment.nodeInfo.windowsInstallationCommand.tip4') }}
                         </div>
                         <div
                             class="command-line"
-                            v-if="installModeAsService && !constructImportForm.autoSwitchAccount"
+                            v-if="!installModeAsService"
                         >
                             {{ $t('environment.nodeInfo.windowsInstallationCommand.tip5') }}
                         </div>
