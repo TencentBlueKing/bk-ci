@@ -63,7 +63,7 @@ interface UserStoreHonorResource {
     @GET
     @Path("/list")
     @BkInterfaceI18n(
-        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].atomCode}","{data.records[*].honorId}","honorInfo"]
+        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}","{data.records[*].honorId}","honorInfo"]
     )
     fun list(
         @Parameter(description = "userId", required = true)
