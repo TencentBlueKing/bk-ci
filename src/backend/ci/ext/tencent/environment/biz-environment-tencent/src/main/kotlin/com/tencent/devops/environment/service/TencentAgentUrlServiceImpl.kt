@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.environment.constant.BATCH_TOKEN_HEADER
+import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import java.net.URLEncoder
 
@@ -88,7 +89,8 @@ open class TencentAgentUrlServiceImpl constructor(
         gateway: String?,
         token: String,
         loginName: String?,
-        loginPassword: String?
+        loginPassword: String?,
+        installType: TPAInstallType?
     ): String {
         var gw = fixGateway(gateway)
         if (!gw.startsWith("http")) {
@@ -109,6 +111,10 @@ open class TencentAgentUrlServiceImpl constructor(
             }
             if (!loginPassword.isNullOrBlank()) {
                 sc += "${t}loginPassword=$loginPassword"
+                t = "&"
+            }
+            if (installType != null) {
+                sc += "${t}installType=$installType"
                 t = "&"
             }
             sc += "\" -Headers \$headers; "
