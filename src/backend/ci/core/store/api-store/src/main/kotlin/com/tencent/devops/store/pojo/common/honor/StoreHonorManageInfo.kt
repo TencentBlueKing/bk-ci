@@ -51,7 +51,7 @@ data class StoreHonorManageInfo(
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val honorName: String,
     @get:Schema(title = "组件范畴", required = true)
-    val storeType: StoreTypeEnum,
+    val storeType: String,
     @get:Schema(title = "创建者", required = true)
     val creator: String,
     @get:Schema(title = "修改者", required = true)
