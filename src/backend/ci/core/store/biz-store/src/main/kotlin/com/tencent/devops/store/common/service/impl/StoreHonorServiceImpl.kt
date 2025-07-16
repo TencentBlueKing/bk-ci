@@ -221,7 +221,8 @@ class StoreHonorServiceImpl @Autowired constructor(
         val i18nValueMap = getI18nValueMap(
             records = honorInfos,
             storeType = storeType,
-            userLanguage = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            userLanguage = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+            storeCodeParam = storeCode
         )
         return i18nValueMap[storeCode]!!
     }
@@ -283,12 +284,13 @@ class StoreHonorServiceImpl @Autowired constructor(
         records: org.jooq.Result<out Record>,
         storeType: StoreTypeEnum,
         userLanguage: String,
+        storeCodeParam: String? = null
     ): Map<String, List<HonorInfo>> {
         val isDefaultLanguage = userLanguage == defaultLanguage
         val honorInfoMap = mutableMapOf<String, MutableList<HonorInfo>>()
         val i18nValueMap = if (!isDefaultLanguage) {
             val allI18nKeys = records.flatMap { record ->
-                val storeCode = record[STORE_CODE].toString()
+                val storeCode = storeCodeParam ?: record[STORE_CODE].toString()
                 val honorId = record[STORE_HONOR_ID].toString()
                 listOf(
                     "${storeType.name}.$storeCode.$honorId.honorInfo.honorTitle",
