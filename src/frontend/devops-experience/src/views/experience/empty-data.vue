@@ -5,7 +5,7 @@
         <div class="create-node-row">
             <span
                 v-perm="{
-                    tooltips: '没有权限',
+                    tooltips: $t('experience.noPermission'),
                     permissionData: emptyInfo.permissionData
                 }"
             >
@@ -14,7 +14,7 @@
                     class="create-node-btn"
                     @click="toCreateFn"
                 >
-                    新增
+                    {{ $t('experience.add') }}
                 </bk-button>
             </span>
         </div>
