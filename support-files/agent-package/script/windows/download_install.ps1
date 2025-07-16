@@ -124,15 +124,15 @@ if ([string]::IsNullOrEmpty($install_type) -or $install_type -eq "SERVICE") {
 } elseif ($install_type -eq "TASK") {
     Write-Host "Creating scheduled task to run $service_name when any user logs on..."
     # 创建执行计划
-    schtasks /create /tn %service_name% /tr "cscript  %~dp0\devopsctl.vbs" /sc ONLOGON /F
+    schtasks /create /tn $service_name /tr "cscript  %~dp0\devopsctl.vbs" /sc ONLOGON /F
     # 启动
-    devopsctl.vbs
+    cscript devopsctl.vbs
     Write-Host "start agent task" -ForegroundColor Green
 } else {
     Write-Host "Unknown install_type: $install_type" -ForegroundColor Red
 }
 
 # 删除下载安装脚本
-Remove-Item -Path "$work_dir\download_install.ps1" -Force
+# Remove-Item -Path "$work_dir\download_install.ps1" -Force
 
 Pause
