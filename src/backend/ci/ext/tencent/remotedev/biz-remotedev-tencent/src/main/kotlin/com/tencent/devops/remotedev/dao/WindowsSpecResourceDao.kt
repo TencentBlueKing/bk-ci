@@ -66,7 +66,7 @@ class WindowsSpecResourceDao {
         projectId: String?,
         machineType: String?,
         dslContext: DSLContext,
-        sqlLimit: SQLLimit
+        sqlLimit: SQLLimit?
     ): Result<TWindowsSpecResourceRecord> {
         val conditions = mutableListOf<Condition>()
         with(TWindowsSpecResource.T_WINDOWS_SPEC_RESOURCE) {
@@ -76,7 +76,9 @@ class WindowsSpecResourceDao {
             machineType?.let {
                 conditions.add(SIZE.eq(machineType))
             }
-            return dslContext.selectFrom(this).where(conditions).limit(sqlLimit.limit).offset(sqlLimit.offset).fetch()
+            return dslContext.selectFrom(this).where(conditions)
+                .let { if (sqlLimit != null) it.limit(sqlLimit.limit).offset(sqlLimit.offset) else it }
+                .fetch()
         }
     }
 
