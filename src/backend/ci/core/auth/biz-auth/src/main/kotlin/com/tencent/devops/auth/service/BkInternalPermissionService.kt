@@ -267,7 +267,7 @@ class BkInternalPermissionService(
         }) ?: emptyMap()
     }
 
-    private fun listMemberGroupIdsInProjectWithCache(
+    fun listMemberGroupIdsInProjectWithCache(
         projectCode: String,
         userId: String
     ): List<Int> {
