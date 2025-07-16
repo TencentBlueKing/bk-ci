@@ -14,6 +14,7 @@ import io.micrometer.core.instrument.Timer
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.util.function.Supplier
 
 /**
@@ -307,7 +308,8 @@ class BkInternalPermissionService(
             dslContext = dslContext,
             projectCode = projectCode,
             resourceType = AuthResourceType.PROJECT.value,
-            memberId = memberId
+            memberId = memberId,
+            minExpiredTime = LocalDateTime.now()
         ).map { it.iamGroupId.toString() }
         // 通过项目组ID获取人员模板ID
         return authResourceGroupDao.listByRelationId(
