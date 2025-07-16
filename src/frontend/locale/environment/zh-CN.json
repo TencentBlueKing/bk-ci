@@ -248,8 +248,7 @@
             "tip1": "1. 单击屏幕左下角的\"开始\"按钮，在开始菜单中搜索PowerShell，右键以管理员身份运行，打开PowerShell",
             "tip2": "2. 创建工作目录并切换到工作目录下，如：mkdir E:\\landun;cd E:\\landun",
             "tip3": "3. 运行如下命令下载并安装Agent:",
-            "tip4": "4. [可选] 若需使用用户环境变量等和用户相关的数据，请运行命令 services.msc 打开 Windows 服务管理，找到服务 devops_agent_{'{agent_id}'}，右键->属性 在登录页签下切换到登录用户",
-            "tip5": "4. 安装完成会弹出创建计划任务界面，请手动确认"
+            "tip4": "4. [可选] 若需使用用户环境变量等和用户相关的数据，请运行命令 services.msc 打开 Windows 服务管理，找到服务 devops_agent_{'{agent_id}'}，右键->属性 在登录页签下切换到登录用户"
         },
         "yes": "是",
         "no": "否",
