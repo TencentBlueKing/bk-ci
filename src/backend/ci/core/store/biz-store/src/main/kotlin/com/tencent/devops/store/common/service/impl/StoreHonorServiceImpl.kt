@@ -255,8 +255,8 @@ class StoreHonorServiceImpl @Autowired constructor(
                 val storeCode = record[STORE_CODE]?.toString() ?: return@flatMap emptyList()
                 val honorId = record[STORE_HONOR_ID]?.toString() ?: return@flatMap emptyList()
                 listOf(
-                    "ATOM.$storeCode.$honorId.honorInfo.honorTitle",
-                    "ATOM.$storeCode.$honorId.honorInfo.honorName"
+                    "${storeType.name}.$storeCode.$honorId.honorInfo.honorTitle",
+                    "${storeType.name}.$storeCode.$honorId.honorInfo.honorName"
                 )
             }.distinct()
 
@@ -290,8 +290,8 @@ class StoreHonorServiceImpl @Autowired constructor(
             val (title, name) = if (isDefaultLanguage) {
                 Pair(originalTitle, originalName)
             } else {
-                val titleKey = "ATOM.$storeCode.$honorId.honorInfo.honorTitle"
-                val nameKey = "ATOM.$storeCode.$honorId.honorInfo.honorName"
+                val titleKey = "${storeType.name}.$storeCode.$honorId.honorInfo.honorTitle"
+                val nameKey = "${storeType.name}.$storeCode.$honorId.honorInfo.honorName"
                 Pair(
                     i18nValueMap[titleKey] ?: originalTitle,
                     i18nValueMap[nameKey] ?: originalName
