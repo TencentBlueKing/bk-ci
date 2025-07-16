@@ -166,31 +166,43 @@ class BkInternalPermissionComparator(
                 action = action
             )
             val method = ::getUserProjectsByAction.name
-            val diffProjects by lazy { expectedResult.filterNot { localResult.contains(it) } }
 
-            if (expectedResult.toSet() == localResult.toSet() || diffProjects.isEmpty()) {
+            val localResultSet = localResult.toSet()
+            val expectedResultSet = expectedResult.toSet()
+
+            if (expectedResultSet == localResultSet) {
                 consistencyCounter(method, true).increment()
-            } else {
-                // 由于只同步了未禁用的项目权限数据，所以需要对差异项目，进行项目是否禁用检查
-                // 若差异项目中存在未被禁用项目，则说结果有差异
-                val projectsOfEnabled = mutableListOf<String>()
-                diffProjects.forEach { projectCode ->
-                    val enabled = CacheHelper.getOrLoad(project2StatusCache, projectCode) {
-                        client.get(ServiceProjectResource::class).get(projectCode).data?.enabled ?: false
-                    }
-                    if (enabled) {
-                        projectsOfEnabled.add(projectCode)
-                    }
-                }
-                val isExistProjectEnabled = projectsOfEnabled.isNotEmpty()
-                if (isExistProjectEnabled) {
-                    logger.warn(
-                        "get user projects by action results are inconsistent:" +
-                            "$userId|$action|$diffProjects|$projectsOfEnabled"
-                    )
-                }
-                consistencyCounter(method, !isExistProjectEnabled).increment()
+                return@postProcess // 提前返回，后续代码无需执行
             }
+
+            val diffProjects = expectedResult.filterNot { localResultSet.contains(it) }
+            if (diffProjects.isEmpty()) {
+                consistencyCounter(method, true).increment()
+                return@postProcess
+            }
+
+            val inconsistentProjectCodes = diffProjects.filterNot { projectCode ->
+                val isEnabled = CacheHelper.getOrLoad(project2StatusCache, projectCode) {
+                    client.get(ServiceProjectResource::class).get(projectCode).data?.enabled ?: false
+                }
+                val hasNoActiveMembership by lazy {
+                    bkInternalPermissionService.listMemberGroupIdsInProjectWithCache(
+                        projectCode = projectCode,
+                        userId = userId
+                    ).isEmpty()
+                }
+                !isEnabled || hasNoActiveMembership
+            }
+
+            val isConsistent = inconsistentProjectCodes.isEmpty()
+            if (!isConsistent) {
+                logger.warn(
+                    "get user projects by action results are inconsistent: " +
+                        "userId=$userId, action=$action, initialDiff=$diffProjects, " +
+                        "finalInconsistent=$inconsistentProjectCodes"
+                )
+            }
+            consistencyCounter(method, isConsistent).increment()
         }
     }
 
