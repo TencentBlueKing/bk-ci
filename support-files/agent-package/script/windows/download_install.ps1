@@ -133,6 +133,6 @@ if ([string]::IsNullOrEmpty($install_type) -or $install_type -eq "SERVICE") {
 }
 
 # 删除下载安装脚本
-Remove-Item -Path "$work_dir\download_install.ps1" -Force
+# Remove-Item -Path "$work_dir\download_install.ps1" -Force
 
 Pause
