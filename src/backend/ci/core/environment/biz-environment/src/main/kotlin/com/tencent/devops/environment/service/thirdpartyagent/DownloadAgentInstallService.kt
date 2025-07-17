@@ -51,7 +51,6 @@ import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.nio.charset.Charset
 import java.util.Locale
-import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import org.apache.commons.compress.archivers.ArchiveOutputStream
 import org.apache.commons.compress.archivers.ArchiveStreamFactory
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
