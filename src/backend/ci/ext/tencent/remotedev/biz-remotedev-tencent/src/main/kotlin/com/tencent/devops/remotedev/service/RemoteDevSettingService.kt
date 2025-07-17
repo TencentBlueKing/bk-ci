@@ -40,6 +40,7 @@ import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.service.client.TaiClient
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -51,11 +52,13 @@ class RemoteDevSettingService @Autowired constructor(
     private val dslContext: DSLContext,
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val whiteListService: WhiteListService,
-    private val taiClient: TaiClient
+    private val taiClient: TaiClient,
+    private val configCacheService: ConfigCacheService
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(RemoteDevSettingService::class.java)
+        private const val BKREPO_HOST_KEY = "remotedev:bkrepoHost"
     }
 
     fun getRemoteDevSettings(userId: String): RemoteDevSettings {
@@ -73,6 +76,11 @@ class RemoteDevSettingService @Autowired constructor(
                 setting.projectId = it?.data?.englishName ?: ""
             }
         }
+        // 配置示例  zone1=https://zone1.bkrepo.com,zone2=https://zone2.bkrepo.com
+        setting.bkrepoHost = configCacheService.get(BKREPO_HOST_KEY)?.split(",")?.associate {
+            val (left, right) = it.split("=")
+            left to right
+        } ?: emptyMap()
         return setting
     }
 
