@@ -839,7 +839,7 @@
   templateCode: "MANUAL_REVIEW_ATOM_REMINDER_NOTIFY_TEMPLATE"
   templateName: "Manual review plug-in review reminder template code"
   notifyTypeScope:
-    - "WEWORK"
+    - "RTX"
   priority: 0
   source: 0
   weworkTemplate:
