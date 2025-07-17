@@ -110,7 +110,7 @@ class RestartWorkspaceHandler @Autowired constructor(
         ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to restart $workspaceName")
+                params = arrayOf("We're sorry but you don't have permission to restart $workspaceName")
             )
         }
 
