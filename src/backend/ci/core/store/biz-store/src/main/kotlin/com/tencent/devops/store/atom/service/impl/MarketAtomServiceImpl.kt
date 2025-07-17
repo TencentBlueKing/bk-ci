@@ -403,7 +403,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 }
             } finally {
                 ThreadLocalUtil.remove(REFERER)
-                ThreadLocalUtil.remove(AUTH_HEADER_USER_ID)
+                ThreadLocalUtil.remove(USER_LANGUAGE)
             }
 
             return@Callable MarketAtomResp(count, page, pageSize, results)

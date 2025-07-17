@@ -370,7 +370,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 }
             } finally {
                 ThreadLocalUtil.remove(REFERER)
-                ThreadLocalUtil.remove(AUTH_HEADER_USER_ID)
+                ThreadLocalUtil.remove(USER_LANGUAGE)
             }
 
             return@Callable MarketTemplateResp(
