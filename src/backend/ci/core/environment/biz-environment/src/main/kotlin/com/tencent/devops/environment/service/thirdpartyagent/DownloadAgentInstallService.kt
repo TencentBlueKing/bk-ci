@@ -45,7 +45,6 @@ import jakarta.ws.rs.NotFoundException
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.StreamingOutput
-import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import org.apache.commons.compress.archivers.ArchiveOutputStream
 import org.apache.commons.compress.archivers.ArchiveStreamFactory
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
@@ -143,10 +142,7 @@ class DownloadAgentInstallService @Autowired constructor(
     fun downloadGoAgent(
         agentId: String,
         record: TEnvironmentThirdpartyAgentRecord,
-        arch: AgentArchType?,
-        loginName: String?,
-        loginPassword: String?,
-        installType: TPAInstallType?
+        arch: AgentArchType?
     ): Response {
         logger.info("Trying to download the agent($agentId) arch($arch)")
 
@@ -156,7 +152,7 @@ class DownloadAgentInstallService @Autowired constructor(
         val goInstallerFile = getGoFile(record.os, "installer", arch)
         val goUpgraderFile = getGoFile(record.os, "upgrader", arch)
         val packageFiles = getAgentPackageFiles(record.os)
-        val scriptFiles = getGoAgentScriptFiles(record, loginName, loginPassword, installType)
+        val scriptFiles = getGoAgentScriptFiles(record, null, null, null)
         val propertyFile = getPropertyFile(record)
 
         logger.info("Get the script files (${scriptFiles.keys})")
@@ -232,19 +228,13 @@ class DownloadAgentInstallService @Autowired constructor(
 
     fun downloadAgent(
         agentId: String,
-        arch: AgentArchType?,
-        loginName: String?,
-        loginPassword: String?,
-        installType: TPAInstallType?
+        arch: AgentArchType?
     ): Response {
         val agentRecord = getAgentRecord(agentId)
         return downloadGoAgent(
             agentId = agentId,
             record = agentRecord,
-            arch = arch,
-            loginName = loginName,
-            loginPassword = loginPassword,
-            installType = installType
+            arch = arch
         )
     }
 
@@ -340,18 +330,7 @@ class DownloadAgentInstallService @Autowired constructor(
         installType: TPAInstallType?
     ): Map<String, String> {
         val agentId = HashUtil.encodeLongId(agentRecord.id)
-        val url = agentUrlService.genAgentUrl(agentRecord)
-        val agentUrlBuilder = url.toHttpUrlOrNull()?.newBuilder()
-        if (!loginName.isNullOrBlank()) {
-            agentUrlBuilder?.addQueryParameter("loginName", loginName)
-        }
-        if (!loginPassword.isNullOrBlank()) {
-            agentUrlBuilder?.addQueryParameter("loginPassword", loginPassword)
-        }
-        if (installType != null) {
-            agentUrlBuilder?.addQueryParameter("installType", installType.name)
-        }
-        val agentUrl = agentUrlBuilder?.build()?.toString() ?: url
+        val agentUrl = agentUrlService.genAgentUrl(agentRecord)
 
         val gateWay = agentUrlService.genGateway(agentRecord)
         val fileGateway = agentUrlService.genFileGateway(agentRecord)

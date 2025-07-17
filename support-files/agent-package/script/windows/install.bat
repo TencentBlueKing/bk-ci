@@ -52,18 +52,6 @@ GOTO :service_start
 echo start agent service
 sc start %service_name%
 
-if not "##serviceUsername##" == "" (
-    if not "##servicePassword##" == "" (
-        echo "both service_username and service_password are defined"
-        sc config %service_name% obj= ##serviceUsername## password= ##servicePassword##
-        if %errorlevel% equ 0 (
-            echo "service login credentials updated successfully"
-        ) else (
-            echo "failed to update service login credentials"
-        )
-    )
-)
-
 GOTO :finally_label
 
 :start_schtasks
