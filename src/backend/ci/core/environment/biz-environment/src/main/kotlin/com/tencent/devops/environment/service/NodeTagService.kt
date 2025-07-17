@@ -233,8 +233,8 @@ class NodeTagService @Autowired constructor(
             projectId = projectId,
             keyIds = tagKeyIds
         ).associate { it.id to Pair((it.allowMulValues ?: false), it.keyName) }
-        val tagsMap = mutableMapOf<Long, MutableSet<Long>>()
         data.forEach { nodeTag ->
+            val tagsMap = mutableMapOf<Long, MutableSet<Long>>()
             nodeTag.tags.forEach { tag ->
                 tagsMap.putIfAbsent(tag.tagKeyId, mutableSetOf(tag.tagValueId))?.add(tag.tagValueId)
             }
