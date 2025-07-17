@@ -9,7 +9,7 @@ defineProps<{
 
 const goToManage = () => {
   window.parent.location.href = `${location.origin}/console/pm`;
-  localStorage.removeItem('currentTab');
+  sessionStorage.removeItem('currentTab');
 };
 </script>
 

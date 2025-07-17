@@ -98,7 +98,7 @@ function tabBeforeChange(name){
 }
 function changeTab (name) {
   panelActive.value = name
-  localStorage.setItem('currentTab', name)
+  sessionStorage.setItem('currentTab', name)
 }
 function handleCancel() {
   emits('handleCancel')
@@ -113,7 +113,7 @@ function handleUpdate() {
 }
 
 onMounted(() => {
-  const currentTab = localStorage.getItem('currentTab')
+  const currentTab = sessionStorage.getItem('currentTab')
   if (currentTab) {
     panelActive.value = currentTab
   }
