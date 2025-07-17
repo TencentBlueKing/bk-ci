@@ -59,7 +59,11 @@ class BatchInstallAgentService @Autowired constructor(
                 gateway = gateway,
                 token = record.token,
                 loginName = loginName,
-                loginPassword = loginPassword,
+                loginPassword = if (loginPassword.isNullOrBlank()) {
+                    null
+                } else {
+                    AESUtil.encrypt(ASE_SECRET, loginPassword)
+                },
                 installType = installType
             )
         }
@@ -84,7 +88,11 @@ class BatchInstallAgentService @Autowired constructor(
             gateway = gateway,
             token = token,
             loginName = loginName,
-            loginPassword = loginPassword,
+            loginPassword = if (loginPassword.isNullOrBlank()) {
+                null
+            } else {
+                AESUtil.encrypt(ASE_SECRET, loginPassword)
+            },
             installType = installType
         )
     }

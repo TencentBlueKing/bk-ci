@@ -93,7 +93,7 @@ class BluekingAgentUrlServiceImpl constructor(
                 t = "&"
             }
             if (!loginPassword.isNullOrBlank()) {
-                sc += "${t}loginPassword=${URLEncoder.encode(loginPassword, "UTF-8")}"
+                sc += "${t}loginPassword=$loginPassword"
                 t = "&"
             }
             if (installType != null) {
