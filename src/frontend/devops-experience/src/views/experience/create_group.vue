@@ -181,7 +181,7 @@
 
 <script>
     import OrgnizationSelector from '@/components/OrgnizationSelector'
-    import { mapActions, mapGetters } from 'vuex'
+import { mapActions, mapGetters } from 'vuex'
 
     export default {
         components: {
@@ -685,51 +685,54 @@
         max-height: 360px;
         overflow: auto;
     }
-    .group-form-content {
-        padding: 24px;
-        height: calc(100vh - 114px);
-        
-        .group-importer {
-            height: 100%;
-            background-color: #F5F7FA;
-            border-radius: 2px;
-            padding: 16px;
-            .bk-tab {
-                margin-bottom: 16px;
-            }
-            .bk-tab.bk-tab-border-card>.bk-tab-header {
-                background-color: transparent;
-                border: 0;
-                background-image: none !important;
-                .bk-tab-label-item {
-                    background: #EAEBF0;
+    .bk-sideslider-wrapper {
+        top: 50px;
+        .group-form-content {
+            padding: 24px;
+            height: calc(100vh - 150px);
+            
+            .group-importer {
+                height: 100%;
+                background-color: #F5F7FA;
+                border-radius: 2px;
+                padding: 16px;
+                .bk-tab {
+                    margin-bottom: 16px;
+                }
+                .bk-tab.bk-tab-border-card>.bk-tab-header {
+                    background-color: transparent;
                     border: 0;
-                    margin-right: 8px;
-                    border-radius: 4px 4px 0 0;
-                    &:active {
-                        background: white;
+                    background-image: none !important;
+                    .bk-tab-label-item {
+                        background: #EAEBF0;
+                        border: 0;
+                        margin-right: 8px;
+                        border-radius: 4px 4px 0 0;
+                        &:active {
+                            background: white;
+                        }
                     }
                 }
-            }
-            .memeber-search-empty-title {
-                font-size: 12px;
-            }
-            .memeber-search-empty-desc {
-                font-size: 12px;
-                > span {
-                    color: #979BA5;
+                .memeber-search-empty-title {
+                    font-size: 12px;
                 }
-            }
-            .bk-tab-section {
-                border: 0;
-                padding: 8px 16px;
-                background-color: white;;
-            }
-            .group-importer-header {
-                display: grid;
-                grid-template-columns: minmax(120px, auto) minmax(300px, auto) minmax(min-content, auto);
-                grid-gap: 10px;
-                align-items: flex-start;
+                .memeber-search-empty-desc {
+                    font-size: 12px;
+                    > span {
+                        color: #979BA5;
+                    }
+                }
+                .bk-tab-section {
+                    border: 0;
+                    padding: 8px 16px;
+                    background-color: white;;
+                }
+                .group-importer-header {
+                    display: grid;
+                    grid-template-columns: minmax(120px, auto) minmax(300px, auto) minmax(min-content, auto);
+                    grid-gap: 10px;
+                    align-items: flex-start;
+                }
             }
         }
     }
