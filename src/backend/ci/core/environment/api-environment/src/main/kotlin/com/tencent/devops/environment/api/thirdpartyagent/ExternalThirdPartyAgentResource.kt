@@ -70,9 +70,6 @@ interface ExternalThirdPartyAgentResource {
         @PathParam("agentId")
         @BkField(minLength = 3, maxLength = 32)
         agentId: String,
-        @Parameter(description = "本地eTag标签", required = false)
-        @QueryParam("eTag")
-        eTag: String?,
         @Parameter(description = "本地操作系统架构", required = false)
         @QueryParam("arch")
         arch: String?,
