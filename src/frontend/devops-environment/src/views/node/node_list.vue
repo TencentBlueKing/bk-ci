@@ -463,6 +463,7 @@
             },
             'constructImportForm.installType' (val) {
                 if (!this.isAgent) {
+                    this.constructImportForm.link = ''
                     this.requestDevCommand()
                 }
             },
