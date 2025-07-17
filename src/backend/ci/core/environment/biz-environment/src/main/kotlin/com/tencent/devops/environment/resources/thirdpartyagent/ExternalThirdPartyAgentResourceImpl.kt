@@ -49,7 +49,6 @@ class ExternalThirdPartyAgentResourceImpl @Autowired constructor(
 
     override fun downloadAgent(
         agentId: String,
-        eTag: String?,
         arch: String?,
         loginName: String?,
         loginPassword: String?,
