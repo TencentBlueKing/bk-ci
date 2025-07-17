@@ -278,9 +278,13 @@
 
     .environment-list-wrapper {
         width: 100%;
-        height: calc(100vh - 120px);
+        height: calc(100vh - 98px);
         padding: 20px;
         overflow-y: auto;
+        .sub-view-port {
+            height: calc(100% - 70px);
+            overflow: auto
+        }
         .env-header {
             display: flex;
             justify-content: space-between;
