@@ -62,15 +62,19 @@ const fetchProjectData = async () => {
   isLoading.value = false;
 };
 
+const goShow = () => {
+  router.push({
+    path: 'show',
+  });
+}
+
 /**
  * 取消编辑项目
  */
 const handleCancel = () => {
   const onConfirm = () => {
     isChange.value = false;
-    router.push({
-      path: 'show',
-    });
+    goShow()
   };
   if (isChange.value) {
     InfoBox({
@@ -136,6 +140,7 @@ const updateProject = async () => {
       theme: 'success',
       message: t('保存成功'),
     });
+    goShow()
   }
   return Promise.resolve(false);
 };
@@ -180,9 +185,10 @@ const undateMetadata = async (params) => {
         theme: 'success',
         message: t('保存成功'),
       });
+      goShow()
     }
   } catch (err) {
-   console.log(err);
+    console.log(err);
   } finally {
     btnLoading.value = false;
   }
@@ -191,13 +197,13 @@ const undateMetadata = async (params) => {
 /**
  * 更新项目
  */
-const handleUpdate = async (type, params) => {
+const handleUpdate = (panel, params) => {
   if (isToBeApproved.value) {
     showNeedApprovedTips();
     return;
   }
   
-  if (type) {
+  if (panel) {
     undateMetadata(params)
   } else {
     if(currentDialect.value === 'CLASSIC' && projectData.value.properties.pipelineDialect === 'CONSTRAINED'){

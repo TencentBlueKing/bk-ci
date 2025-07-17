@@ -98,6 +98,10 @@ function tabBeforeChange(name){
     return true
   }
 }
+function changeTab (name) {
+  panelActive.value = name
+  localStorage.setItem('currentTab', name)
+}
 function handleCancel() {
   emits('handleCancel')
 }
@@ -107,7 +111,15 @@ function updateMetadata(params) {
 function handleUpdate() {
   const updateEventName = panelActive.value === 'artifactorySettings' ? 'artifactorySettings' : undefined;
   emits('handleUpdate', updateEventName, metadataList.value);
+  isChange.value = false
 }
+
+onMounted(() => {
+  const currentTab = localStorage.getItem('currentTab')
+  if (currentTab) {
+    panelActive.value = currentTab
+  }
+})
 </script>
 
 <template>
@@ -116,6 +128,7 @@ function handleUpdate() {
       v-model:active="panelActive"
       type="card-tab"
       :beforeChange="tabBeforeChange"
+      @change="changeTab"
     >
       <bk-tab-panel
         v-for="(item, index) in tabPanels"

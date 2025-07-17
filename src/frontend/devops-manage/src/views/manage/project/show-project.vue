@@ -19,10 +19,7 @@ import {
   watch
 } from 'vue';
 import { useI18n } from 'vue-i18n';
-import {
-  useRoute,
-  useRouter,
-} from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -229,6 +226,10 @@ const getUserInfo = () => {
     userName.value = res.username;
   });
 };
+const changeTab = (name) => {
+  activeTab.value = name
+  localStorage.setItem('currentTab', name)
+}
 const handleEdit = () => {
   router.push({
     path: 'edit',
@@ -415,6 +416,10 @@ watch(() => projectData.value.approvalStatus, (status) => {
   deep: true,
 });
 onMounted(async () => {
+  const currentTab = localStorage.getItem('currentTab')
+  if (currentTab) {
+    activeTab.value = currentTab
+  }
   await getUserInfo();
   await fetchProjectData();
   await fetchOperationalList(projectData.value.bgName);
@@ -440,6 +445,7 @@ onMounted(async () => {
         class="content-wrapper"
         v-model:active="activeTab"
         type="card-tab"
+        @change="changeTab"
       >
         <bk-tab-panel
           v-for="(item, index) in tabPanels"
