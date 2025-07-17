@@ -317,7 +317,7 @@ class StoreHonorServiceImpl @Autowired constructor(
         }
 
         records.forEach { record ->
-            val storeCode = record[STORE_CODE].toString()
+            val storeCode = storeCodeParam ?: record[STORE_CODE].toString()
             val honorId = record[STORE_HONOR_ID].toString()
             val originalTitle = record[STORE_HONOR_TITLE]?.toString() ?: ""
             val originalName = record[STORE_HONOR_NAME]?.toString() ?: ""
