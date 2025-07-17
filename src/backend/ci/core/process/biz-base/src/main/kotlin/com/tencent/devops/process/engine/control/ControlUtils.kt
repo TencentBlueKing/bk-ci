@@ -127,7 +127,7 @@ object ControlUtils {
                 val value = EnvUtils.parseEnv(names.value, variables)
                 val existValue = variables[key]
                 if (value != existValue) {
-                    message.append("key=$key, expect=$existValue, actual=$value, (expect != actual)=true, skip=false")
+                    message.append("key=$key, expect=$value, actual=$existValue, (expect != actual)=true, skip=false")
                     logger.info("[$buildId]|NOT_MATCH|key=$key|exists=$existValue|exp=$value|o=${names.value}")
                     skip = false
                     break
@@ -147,7 +147,7 @@ object ControlUtils {
                 val value = EnvUtils.parseEnv(names.value, variables)
                 val existValue = variables[key]
                 if (value != existValue) {
-                    message.append("key=$key, expect=$existValue, actual=$value, (expect != actual)=true, skip=true")
+                    message.append("key=$key, expect=$value, actual=$existValue, (expect != actual)=true, skip=true")
                     logger.info("[$buildId]|MATCH|key=$key|exists=$existValue|exp=$value|o=${names.value}")
                     skip = true
                     break
