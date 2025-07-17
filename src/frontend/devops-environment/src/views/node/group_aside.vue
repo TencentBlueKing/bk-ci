@@ -375,7 +375,11 @@
                 }
             },
             handleNodeClick (nodeType) {
-                this.$router.push({ name: 'nodeList', params: { nodeType } })
+                this.$router.push({
+                    name: 'nodeList',
+                    params: { nodeType },
+                    query: { ...this.$route.query }
+                })
             },
             handleDeleteLabel (groupItem) {
                 if (groupItem.canUpdate !== 'TRUE') {
