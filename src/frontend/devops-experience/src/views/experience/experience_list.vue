@@ -96,6 +96,10 @@
                         prop="creator"
                     ></bk-table-column>
                     <bk-table-column
+                        :label="$t('experience.create_time')"
+                        prop="formatRepoCreateTime"
+                    ></bk-table-column>
+                    <bk-table-column
                         :label="$t('experience.expire_time')"
                         prop="formatExpireDate"
                     ></bk-table-column>
@@ -419,7 +423,8 @@
                         ...item,
                         platformLabel: platformLabelMap[item.platform],
                         sourceLabel: sourceLabelMap[item.source],
-                        formatExpireDate: this.localConvertTime(item.expireDate).split(' ')[0]
+                        formatExpireDate: this.localConvertTime(item.expireDate).split(' ')[0],
+                        formatRepoCreateTime: this.localConvertTime(item.repoCreateTime).split(' ')[0],
                     }))
                     this.pagination.count = this.totalList.length
                     const start = reset ? 0 : (this.pagination.current - 1) * this.pagination.limit
@@ -500,6 +505,7 @@
                     this.$bkInfo({
                         title: this.$t('experience.confirm'),
                         subTitle: this.$t('experience.confirm_offline'),
+                        okText: this.$t('experience.offline'),
                         confirmFn: async () => {
                             let message, theme
 
@@ -531,6 +537,7 @@
                     this.$bkInfo({
                         title: this.$t('experience.confirm'),
                         subTitle: this.$t('experience.confirm_delete'),
+                        okText: this.$t('experience.delete'),
                         confirmFn: async () => {
                             let message, theme
 
