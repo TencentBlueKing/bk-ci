@@ -101,6 +101,7 @@
                     ></bk-table-column>
                     <bk-table-column
                         :label="$t('experience.operation')"
+                        min-width="200"
                     >
                         <template slot-scope="props">
                             <div class="operate-cell">
@@ -497,8 +498,8 @@
             async toDropOff (row) {
                 if (row.permissions.canEdit) {
                     this.$bkInfo({
-                        title: '确认',
-                        subTitle: '确认下架该体验',
+                        title: this.$t('experience.confirm'),
+                        subTitle: this.$t('experience.confirm_offline'),
                         confirmFn: async () => {
                             let message, theme
 
@@ -508,7 +509,7 @@
                                     experienceHashId: row.experienceHashId
                                 })
 
-                                message = '下架成功'
+                                message = this.$t('experience.offline_success')
                                 theme = 'success'
                             } catch (err) {
                                 message = err.data ? err.data.message : err
@@ -528,8 +529,8 @@
             async toDeleteRow (row) {
                 if (row.permissions.canDelete) {
                     this.$bkInfo({
-                        title: '确认',
-                        subTitle: '确认删除该体验',
+                        title: this.$t('experience.confirm'),
+                        subTitle: this.$t('experience.confirm_delete'),
                         confirmFn: async () => {
                             let message, theme
 
@@ -539,7 +540,7 @@
                                     experienceHashId: row.experienceHashId
                                 })
 
-                                message = '删除成功'
+                                message = this.$t('experience.delete_success')
                                 theme = 'success'
                             } catch (err) {
                                 message = err.data ? err.data.message : err
