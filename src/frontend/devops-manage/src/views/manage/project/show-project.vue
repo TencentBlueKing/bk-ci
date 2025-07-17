@@ -1,26 +1,23 @@
 <script setup lang="ts">
 import http from '@/http/api';
 import {
-handleProjectManageNoPermission,
-RESOURCE_ACTION,
-RESOURCE_TYPE,
+  handleProjectManageNoPermission,
+  RESOURCE_ACTION,
+  RESOURCE_TYPE,
 } from '@/utils/permission.js';
 import {
-InfoBox,
-Message,
-Popover
+  InfoBox,
+  Message,
+  Popover
 } from 'bkui-vue';
 import {
-computed,
-onMounted,
-ref,
-watch
+  computed,
+  onMounted,
+  ref,
+  watch
 } from 'vue';
 import { useI18n } from 'vue-i18n';
-import {
-useRoute,
-useRouter,
-} from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import DialectPopoverTable from "@/components/dialectPopoverTable.vue";
 import { ArtifactoryContent } from "@/components/project-form-item/";
 
@@ -40,6 +37,42 @@ const exceptionObj = ref({
   description: '',
   showBtn: false
 })
+const activeTab = ref('projectSettings');
+const tabPanels = computed(() => [
+  {
+    name: 'projectSettings',
+    label: '项目信息',
+    activeCollapse: ['baseInfo', 'permission'],
+    panels: [{
+      name: 'baseInfo',
+      title: '基础信息',
+    },
+    ...isRbac.value ? [{
+      name: 'permission',
+      title: '权限',
+    }] : []]
+  },
+  {
+    name: 'pipelineSettings',
+    label: '流水线设置',
+    activeCollapse: ['pipeline'],
+    panels: [
+      ...projectData.value.properties ? [{
+        name: 'pipeline',
+        title: '流水线',
+      }] : [],
+    ]
+  },
+  {
+    name: 'artifactorySettings',
+    label: '制品库设置',
+    activeCollapse: ['artifactory'],
+    panels: [{
+      name: 'artifactory',
+      title: '制品库',
+    }]
+  },
+])
 const isRbac = computed(() => {
   return authProvider.value === 'rbac'
 })
@@ -177,6 +210,10 @@ const getUserInfo = () => {
     userName.value = res.username;
   });
 };
+const changeTab = (name) => {
+  activeTab.value = name
+  localStorage.setItem('currentTab', name)
+}
 const handleEdit = () => {
   router.push({
     path: 'edit',
@@ -333,46 +370,13 @@ watch(() => projectData.value.approvalStatus, (status) => {
   deep: true,
 });
 onMounted(async () => {
+  const currentTab = localStorage.getItem('currentTab')
+  if (currentTab) {
+    activeTab.value = currentTab
+  }
   await getUserInfo();
   await fetchProjectData();
 });
-
-const activeTab = ref('projectSettings');
-const tabPanels = computed(() => [
-  {
-    name: 'projectSettings',
-    label: '项目信息',
-    activeCollapse: ['baseInfo', 'permission'],
-    panels: [{
-      name: 'baseInfo',
-      title: '基础信息',
-    },
-    ...isRbac.value ? [{
-      name: 'permission',
-      title: '权限',
-    }] : []]
-  },
-  {
-    name: 'pipelineSettings',
-    label: '流水线设置',
-    activeCollapse: ['pipeline'],
-    panels: [
-      ...projectData.value.properties ? [{
-        name: 'pipeline',
-        title: '流水线',
-      }] : [],
-    ]
-  },
-  {
-    name: 'artifactorySettings',
-    label: '制品库设置',
-    activeCollapse: ['artifactory'],
-    panels: [{
-      name: 'artifactory',
-      title: '制品库',
-    }]
-  },
-])
 </script>
 
 <template>
@@ -395,6 +399,7 @@ const tabPanels = computed(() => [
         class="content-wrapper"
         v-model:active="activeTab"
         type="card-tab"
+        @change="changeTab"
       >
         <bk-tab-panel
           v-for="(item, index) in tabPanels"

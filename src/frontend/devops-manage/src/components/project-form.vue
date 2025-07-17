@@ -95,8 +95,8 @@ const handleClearValidate = () => {
   projectForm.value.clearValidate();
 }
 
-const handleUpdate = (type, params) => {
-  emits('handleUpdate', type, params)
+const handleUpdate = (panel, params) => {
+  emits('handleUpdate', panel, params)
 }
 
 watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], (newValues, oldValues) => {
