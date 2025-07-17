@@ -65,7 +65,7 @@ jobs:
           echo "GITHUB_REF=${GITHUB_REF}"
           ci_version=${GITHUB_REF##*/v}
           echo "ci_version=${ci_version}"
-          ./gradlew publish closeSonatypeStagingRepository -Dci_version=${ci_version} \
+          ./gradlew publishToSonatype closeSonatypeStagingRepository -Dci_version=${ci_version} \
           -Psigning.keyId=${{ secrets.SIGNING_KEY_ID }} \
           -Psigning.password='${{ secrets.SIGNING_PASSWORD }}' \
           -Psigning.secretKeyRingFile=${{ github.workspace }}/secretKeyRingFile.gpg \

@@ -45,6 +45,12 @@ const mutations = {
         Object.assign(state, {
             nodeDetails: res
         })
+    },
+    setNodeTagList (state, list) {
+        state.nodeTagList = list
+    },
+    setNodeCount (state, res) {
+        state.nodeCount = res
     }
 }
 

@@ -231,6 +231,7 @@
                 color: $iconPrimaryColor;
                 font-size: 16px;
                 font-weight: 600;
+                vertical-align: middle;
             }
             .display-name-input {
                 width: 300px;
@@ -273,6 +274,12 @@
                     text-overflow: ellipsis;
                 }
             }
+        }
+
+        .sub-view-port {
+            height: calc(100vh - 158px);
+            overflow: auto;
+            padding: 20px;
         }
     }
 </style>
