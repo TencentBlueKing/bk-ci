@@ -1081,7 +1081,10 @@
     .node-list-wrapper {
         height: calc(100vh - 146px);
         overflow: hidden;
-        margin: 24px;
+
+        .sub-view-port {
+            margin: 24px;
+        }
 
         .prompt-operator,
         .edit-operator {
