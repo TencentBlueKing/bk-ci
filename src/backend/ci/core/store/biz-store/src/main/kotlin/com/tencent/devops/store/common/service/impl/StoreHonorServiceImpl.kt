@@ -27,7 +27,7 @@
 
 package com.tencent.devops.store.common.service.impl
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.USER_LANGUAGE
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -264,7 +264,7 @@ class StoreHonorServiceImpl @Autowired constructor(
         if (records.isEmpty()) {
             return emptyMap()
         }
-        val userLanguage = ThreadLocalUtil.get(AUTH_HEADER_USER_ID)
+        val userLanguage = ThreadLocalUtil.get(USER_LANGUAGE)
             ?.toString()
             ?.takeIf { it.isNotBlank() }
             ?: I18nUtil.getLanguage(I18nUtil.getRequestUserId())

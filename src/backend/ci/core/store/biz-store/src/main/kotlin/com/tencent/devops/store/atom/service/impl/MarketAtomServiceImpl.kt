@@ -32,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.REFERER
+import com.tencent.devops.common.api.auth.USER_LANGUAGE
 import com.tencent.devops.common.api.constant.AND
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DANG
@@ -279,7 +280,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             referer?.let {
                 ThreadLocalUtil.set(REFERER, referer)
             }
-            ThreadLocalUtil.set(AUTH_HEADER_USER_ID, language)
+            ThreadLocalUtil.set(USER_LANGUAGE, language)
             val results = mutableListOf<MarketItem>()
             // 获取插件
             val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode.split(",")
