@@ -1781,6 +1781,12 @@
         "views": "クリックして表示",
         "dataUpdateT1": "（データはT+1で更新）"
     },
+    "attributeValue": "属性値",
+    "attributeName": "属性名",
+    "metadataAttributeName": "メタデータ属性名",
+    "metadataAttributeValue": "メタデータ属性値",
+    "artifactQuality": "アーティファクトの品質",
+    "totalArtifactCount": "合計 {0} 個",
     "noArchivedPipelines": "アーカイブ済みパイプラインがありません。操作不要です",
     "notParamsTip": "このパ拉メータはもはや入力パラメータではないか削除されました。実行時に渡すことはできません。手動で削除するか、保存後にこのパ拉メータリストから自動的に削除されます。"
 }
