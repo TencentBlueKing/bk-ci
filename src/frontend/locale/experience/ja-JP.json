@@ -195,5 +195,9 @@
     "no_result": "結果が見つかりません",
     "all": "すべて",
     "custom_repo": "カスタムリポジトリ",
-    "pipeline_repo": "パイプラインリポジトリ"
+    "pipeline_repo": "パイプラインリポジトリ",
+    "source_labels": {
+        "PIPELINE": "パイプライン",
+        "WEB": "手動作成"
+    }
 }

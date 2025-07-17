@@ -195,5 +195,9 @@
     "no_result": "No Result Found",
     "all": "All",
     "custom_repo": "Custom Repository",
-    "pipeline_repo": "Pipeline Repository"
+    "pipeline_repo": "Pipeline Repository",
+    "source_labels": {
+        "PIPELINE": "Pipeline",
+        "WEB": "Manual Creation"
+    }
 }

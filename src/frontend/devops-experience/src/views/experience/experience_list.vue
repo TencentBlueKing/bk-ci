@@ -370,7 +370,7 @@
                 } = this
 
                 loading.isLoading = true
-                loading.title = '数据加载中，请稍候'
+                loading.title = this.$t('experience.loading_title')
 
                 try {
                     await this.requestList()
@@ -415,8 +415,8 @@
                         HAP: this.$t('experience.platform_labels.HAP')
                     }
                     const sourceLabelMap = {
-                        PIPELINE: '流水线',
-                        WEB: '手动创建'
+                        PIPELINE: this.$t('experience.source_labels.PIPELINE'),
+                        WEB: this.$t('experience.source_labels.WEB')
                     }
                     
                     this.totalList = res.map(item => ({

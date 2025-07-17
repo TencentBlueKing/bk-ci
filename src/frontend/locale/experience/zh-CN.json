@@ -200,5 +200,9 @@
     "no_result": "未搜索到任何的结果",
     "all": "全部",
     "custom_repo": "自定义仓库",
-    "pipeline_repo": "流水线仓库"
+    "pipeline_repo": "流水线仓库",
+    "source_labels": {
+        "PIPELINE": "流水线",
+        "WEB": "手动创建"
+    }
 }
