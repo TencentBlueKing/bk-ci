@@ -34,7 +34,7 @@ class PipelineYamlViewService(
         userId: String,
         projectId: String,
         repoHashId: String,
-        repoFullName: String,
+        aliasName: String,
         directoryList: Set<String>
     ) {
         PipelineYamlViewLock(
@@ -61,7 +61,7 @@ class PipelineYamlViewService(
                     userId = userId,
                     projectId = projectId,
                     repoHashId = repoHashId,
-                    repoFullName = repoFullName,
+                    aliasName = aliasName,
                     directory = directory
                 )
             }
@@ -72,15 +72,14 @@ class PipelineYamlViewService(
         userId: String,
         projectId: String,
         repoHashId: String,
-        repoFullName: String,
+        aliasName: String,
         directory: String
     ) {
-        val path = repoFullName.substringAfterLast("/")
         val name = if (directory == Constansts.ciFileDirectoryName) {
-            path
+            aliasName
         } else {
-            "$path-${directory.removePrefix(".ci/")}"
-        }.coerceAtMaxLength(PipelineViewService.PIPELINE_VIEW_NAME_LENGTH_MAX)
+            "$aliasName-${directory.removePrefix(".ci/")}"
+        }.coerceAtMaxLength(PipelineViewService.YAML_PIPELINE_VIEW_NAME_LENGTH_MAX)
         val pipelineView = PipelineViewForm(
             name = name,
             projected = true,

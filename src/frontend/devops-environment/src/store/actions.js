@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -82,8 +82,51 @@ const actions = {
     /**
      * 节点列表
      */
-    requestNodeList ({ commit }, { projectId, params }) {
-        return vue.$ajax.get(`${prefix}/user/envnode/${projectId}/listNew`, { params }).then(response => {
+    requestNodeList ({ commit }, { projectId, params, tags }) {
+        const query = new URLSearchParams(params).toString()
+        return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/fetchNodes?${query}`, { tags }).then(response => {
+            return response
+        })
+    },
+    /**
+     * 节点标签列表
+     */
+    async requestNodeTagList ({ commit }, projectId) {
+        try {
+            const res = await vue.$ajax.get(`${prefix}/user/nodetag/fetchTag?projectId=${projectId}`)
+            commit('setNodeTagList', res || [])
+            return res
+        } catch (err) {
+            console.error(err)
+            return []
+        }
+    },
+    async requestGetCounts ({ commit }, projectId) {
+        try {
+            const res = await vue.$ajax.get(`${prefix}/user/envnode/${projectId}/nodesCount`)
+            commit('setNodeCount', res || {})
+            return res
+        } catch (err) {
+            console.error(err)
+        }
+    },
+    createdNodeTag ({ commit }, { projectId, params }) {
+        return vue.$ajax.post(`${prefix}/user/nodetag/create?projectId=${projectId}`, params).then(response => {
+            return response
+        })
+    },
+    deleteNodeTag ({ commit }, { projectId, tagKeyId }) {
+        return vue.$ajax.delete(`${prefix}/user/nodetag/deleteTag?projectId=${projectId}&tagKeyId=${tagKeyId}`).then(response => {
+            return response
+        })
+    },
+    editNodeTag ({ commit }, { projectId, params }) {
+        return vue.$ajax.put(`${prefix}/user/nodetag/updateTag?projectId=${projectId}`, params).then(response => {
+            return response
+        })
+    },
+    setNodeTag ({ commit }, { projectId, params }) {
+        return vue.$ajax.post(`${prefix}/user/nodetag/editTag?projectId=${projectId}`, params).then(response => {
             return response
         })
     },

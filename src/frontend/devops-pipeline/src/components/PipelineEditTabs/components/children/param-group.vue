@@ -42,7 +42,7 @@
                             class="bk-param-drag-list"
                             ghost-class="ghost-item"
                             handle=".drag-area"
-                            :list="list"
+                            :list="listMap[key]"
                             :group="{ name: 'bk-param-list', pull: false, put: false }"
                             @change="(event) => triggerSort(event, key, index)"
                         >

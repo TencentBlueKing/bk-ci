@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -91,6 +91,18 @@ interface ServiceBuildResource {
         @QueryParam("buildId")
         buildId: String
     ): Result<String>
+
+    @Operation(summary = "通过buildId获取流水线版本")
+    @GET
+    @Path("/{projectId}/get_pipeline_version_from_build_id")
+    fun getPipelineVersionFromBuildId(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "构建ID", required = true)
+        @QueryParam("buildId")
+        buildId: String
+    ): Result<Int>
 
     @Operation(summary = "通过buildNumber 和 pipelineId 获取流水线buildId")
     @GET

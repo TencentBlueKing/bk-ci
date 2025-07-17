@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,6 +32,7 @@ import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.ProjectMembersQueryConditionDTO
 import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.auth.tables.TAuthResourceAuthorization
 import com.tencent.devops.model.auth.tables.TAuthResourceGroupMember
@@ -670,6 +671,25 @@ class AuthResourceGroupMemberDao {
             }
         }
         return conditions
+    }
+
+    fun checkResourceManager(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        memberId: String
+    ): Boolean {
+        return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
+            dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(RESOURCE_CODE.eq(resourceCode))
+                .and(MEMBER_ID.eq(memberId))
+                .and(GROUP_CODE.eq(DefaultGroupType.MANAGER.value))
+                .fetchOne(0, Int::class.java) != 0
+        }
     }
 
     fun listMemberGroupIdsInProject(

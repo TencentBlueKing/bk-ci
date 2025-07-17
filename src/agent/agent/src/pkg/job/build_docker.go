@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,14 +30,15 @@ package job
 import (
 	"context"
 	"fmt"
-	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
-	"github.com/pkg/errors"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
+	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
@@ -560,6 +561,12 @@ func parseContainerEnv(dockerBuildInfo *api.ThirdPartyDockerBuildInfo) []string 
 	if third_components.Jdk.Jdk17.GetJavaOrNull() != "" {
 		envs = append(envs, "DEVOPS_AGENT_JDK_8_PATH="+(targetJre8Dir+"/bin/java"))
 		envs = append(envs, "DEVOPS_AGENT_JDK_17_PATH="+(targetJreDir+"/bin/java"))
+	}
+
+	// 用户指定的节点环境变量
+	userEnvs := config.GApiEnvVars.GetAll()
+	for k, v := range userEnvs {
+		envs = append(envs, fmt.Sprintf("%s=%s", k, v))
 	}
 
 	return envs

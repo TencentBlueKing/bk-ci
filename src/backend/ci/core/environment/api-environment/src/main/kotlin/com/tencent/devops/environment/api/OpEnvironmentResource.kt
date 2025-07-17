@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,10 +32,12 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "OP_ENVIRONMENT", description = "OP-环境服务数据刷新")
@@ -55,4 +57,11 @@ interface OpEnvironmentResource {
     @POST
     @Path("/addhashid")
     fun addHashId()
+
+    @Operation(summary = "刷新节点标签数据")
+    @GET
+    @Path("/refreshNodeTag")
+    fun refreshNodeTag(
+        @QueryParam("projectId") projectId: String?
+    )
 }
