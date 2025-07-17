@@ -77,7 +77,6 @@
       >
       </bk-input>
     </bk-form-item>
-
     <bk-sideslider
       v-model:isShow="pipelineSideslider"
       :title="`${t('切换变量语法风格影响的流水线列表')}(${t('共X个', [pipelinePagination.count])})`"

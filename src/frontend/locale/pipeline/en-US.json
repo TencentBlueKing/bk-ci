@@ -1786,12 +1786,12 @@
     "views": "Views",
     "dataUpdateT1": "(Data updated T+1)"
   },
-  "noArchivedPipelines": "No archived pipelines for now, no action needed",
-  "notParamsTip": "This parameter is no longer an input parameter or has been deleted and cannot be passed during execution. You can manually delete it, or it will be automatically removed from the parameter list after saving.",
   "attributeValue": "Attribute Value",
   "attributeName": "Attribute Name",
   "metadataAttributeName": "Metadata Attribute Name",
   "metadataAttributeValue": "Metadata Attribute Value",
   "artifactQuality": "Artifact Quality",
-  "totalArtifactCount": "Total of {0}"
+  "totalArtifactCount": "Total of {0}",
+  "noArchivedPipelines": "No archived pipelines for now, no action needed",
+  "notParamsTip": "This parameter is no longer an input parameter or has been deleted and cannot be passed during execution. You can manually delete it, or it will be automatically removed from the parameter list after saving."
 }
