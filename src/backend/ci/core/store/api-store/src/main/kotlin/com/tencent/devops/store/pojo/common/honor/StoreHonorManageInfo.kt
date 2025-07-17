@@ -30,7 +30,6 @@ package com.tencent.devops.store.pojo.common.honor
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nSourceEnum
 import com.tencent.devops.common.web.annotation.BkField
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 

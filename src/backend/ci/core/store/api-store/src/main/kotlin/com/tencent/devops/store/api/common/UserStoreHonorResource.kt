@@ -33,14 +33,14 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.honor.AddStoreHonorRequest
 import com.tencent.devops.store.pojo.common.honor.HonorInfo
 import com.tencent.devops.store.pojo.common.honor.StoreHonorManageInfo
 import com.tencent.devops.store.pojo.common.honor.StoreHonorRel
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
@@ -63,7 +63,8 @@ interface UserStoreHonorResource {
     @GET
     @Path("/list")
     @BkInterfaceI18n(
-        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}","{data.records[*].honorId}","honorInfo"]
+        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}",
+            "{data.records[*].honorId}", "honorInfo"]
     )
     fun list(
         @Parameter(description = "userId", required = true)
