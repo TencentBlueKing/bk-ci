@@ -72,16 +72,7 @@ interface ExternalThirdPartyAgentResource {
         agentId: String,
         @Parameter(description = "本地操作系统架构", required = false)
         @QueryParam("arch")
-        arch: String?,
-        @Parameter(description = "登录账户名", required = false)
-        @QueryParam("loginName")
-        loginName: String?,
-        @Parameter(description = "登录账户密码", required = false)
-        @QueryParam("loginPassword")
-        loginPassword: String?,
-        @Parameter(description = "Agent安装模式", required = false)
-        @QueryParam("installType")
-        installType: TPAInstallType?
+        arch: String?
     ): Response
 
     @Deprecated("没用了")

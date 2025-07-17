@@ -49,10 +49,7 @@ class ExternalThirdPartyAgentResourceImpl @Autowired constructor(
 
     override fun downloadAgent(
         agentId: String,
-        arch: String?,
-        loginName: String?,
-        loginPassword: String?,
-        installType: TPAInstallType?
+        arch: String?
     ) =
         downloadAgentInstallService.downloadAgent(
             agentId = agentId,
@@ -60,10 +57,7 @@ class ExternalThirdPartyAgentResourceImpl @Autowired constructor(
                 "arm64" -> AgentArchType.ARM64
                 "mips64" -> AgentArchType.MIPS64
                 else -> null
-            },
-            loginName = loginName,
-            loginPassword = loginPassword,
-            installType = installType
+            }
         )
 
     override fun downloadJRE(agentId: String, eTag: String?, arch: String?) =
