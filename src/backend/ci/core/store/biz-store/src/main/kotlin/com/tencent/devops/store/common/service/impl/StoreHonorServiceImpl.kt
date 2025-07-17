@@ -133,7 +133,7 @@ class StoreHonorServiceImpl @Autowired constructor(
         // 同时清理掉相关联的国际化数据
         val storeHonorRels = storeHonorRelList.filter { it.honorId in hasDelHonorIds }
         storeHonorRels.forEach { storeHonorRel ->
-            val key = "${storeHonorRel.storeType.name}.${storeHonorRel.storeCode}.${storeHonorRel.honorId}"
+            val key = "${storeHonorRel.storeType.name}.${storeHonorRel.storeCode}.${storeHonorRel.honorId}."
             client.get(ServiceI18nMessageResource::class)
                 .deleteI18nMessage(userId = userId, key = key, moduleCode = "STORE", language = null)
         }
