@@ -14,6 +14,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.remotedev.config.BkRepoRegion
+import com.tencent.devops.remotedev.config.BkRepoRegionConfig
 import com.tencent.devops.remotedev.config.RemoteDevBkRepoConfig
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateProjectData
 import okhttp3.Headers.Companion.toHeaders
@@ -39,7 +40,7 @@ class RemotedevBkRepoClient @Autowired constructor(
     ): String? {
         val config = bkRepoConfig.getRegionConfig(region)
         val request = Request.Builder()
-            .url(config.genUrl("/media/api/user/stream/create/$projectId/$repoName?display=false"))
+            .url("${config.url}/media/api/user/stream/create/$projectId/$repoName?display=false")
             .headers(getCommonHeaders(region, userId).toHeaders())
             .post(
                 objectMapper.writeValueAsString(JsonUtil.toJson(mapOf<String, String>()))
@@ -51,7 +52,7 @@ class RemotedevBkRepoClient @Autowired constructor(
 
     fun existProject(region: BkRepoRegion, projectId: String): Boolean? {
         val config = bkRepoConfig.getRegionConfig(region)
-        val url = config.genUrl("/repository/api/project/exist/$projectId")
+        val url = "${config.url}/repository/api/project/exist/$projectId"
         val request = Request.Builder()
             .url(url)
             .headers(getCommonHeaders(region, BKREPO_ROOT_USERID).toHeaders())
@@ -68,7 +69,7 @@ class RemotedevBkRepoClient @Autowired constructor(
             description = ""
         )
         val request = Request.Builder()
-            .url(config.genUrl("/repository/api/project/create"))
+            .url("${config.url}/repository/api/project/create")
             .headers(getCommonHeaders(region, userId).toHeaders())
             .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE))
             .build()
@@ -84,9 +85,9 @@ class RemotedevBkRepoClient @Autowired constructor(
         pageSize: Int
     ): Page<BkRepoNodeDetail>? {
         val config = bkRepoConfig.getRegionConfig(region)
-        val url = config.genUrl("/repository/api/node/page/$projectId/$workspaceName/streams?" +
+        val url = "${config.url}/repository/api/node/page/$projectId/$workspaceName/streams?" +
                 "pageNumber=$page&pageSize=$pageSize" +
-                "&includeFolder=false&includeMetadata=true&sort=true&sortProperty=createdDate&direction=DESC")
+                "&includeFolder=false&includeMetadata=true&sort=true&sortProperty=createdDate&direction=DESC"
         val request = Request.Builder()
             .url(url)
             .headers(getCommonHeaders(region, userId).toHeaders())
@@ -101,7 +102,7 @@ class RemotedevBkRepoClient @Autowired constructor(
         body: NodeSearchBody
     ): Page<BkRepoNodeDetail>? {
         val config = bkRepoConfig.getRegionConfig(region)
-        val url = config.genUrl("/repository/api/node/search")
+        val url = "${config.url}/repository/api/node/search"
         val request = Request.Builder()
             .url(url)
             .headers(getCommonHeaders(region, userId).toHeaders())
@@ -118,9 +119,15 @@ class RemotedevBkRepoClient @Autowired constructor(
         return headers
     }
 
-    private fun doRequest(request: Request): okhttp3.Response {
+    private fun doRequest(config: BkRepoRegionConfig, request: Request): okhttp3.Response {
         try {
-            return OkhttpUtils.doHttp(request)
+            return if (!config.dnsIp.isNullOrBlank()) {
+                val ips = config.dnsIp.split(";").filter { it.isNotBlank() }.map { it.trim() }.toSet()
+                val client = OkhttpUtils.genOkHttpClientSupDns(config.url, ips)
+                client.newCall(request).execute()
+            } else {
+                OkhttpUtils.doHttp(request)
+            }
         } catch (e: IOException) {
             throw RemoteServiceException("request api[${request.url.toUrl()}] error: ${e.localizedMessage}")
         }

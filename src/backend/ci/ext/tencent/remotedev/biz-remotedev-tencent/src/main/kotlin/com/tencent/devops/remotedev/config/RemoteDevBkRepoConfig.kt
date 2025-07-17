@@ -2,7 +2,6 @@ package com.tencent.devops.remotedev.config
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import java.net.URLEncoder
 
 @Component
 class RemoteDevBkRepoConfig {
@@ -12,8 +11,8 @@ class RemoteDevBkRepoConfig {
     @Value("\${bkrepo.devx.headerUserAuth:}")
     val bkrepoDevxHeaderUserAuth: String = ""
 
-    @Value("\${bkrepo.devx.proxy:}")
-    val bkrepoDevxProxyUrl: String = ""
+    @Value("\${bkrepo.devx.dnsIp:}")
+    val bkrepoDevxDnsIp: String = ""
 
     @Value("\${bkrepo.csig.url:}")
     val bkrepoCsigUrl: String = ""
@@ -26,7 +25,13 @@ class RemoteDevBkRepoConfig {
 
     fun getRegionConfig(region: BkRepoRegion): BkRepoRegionConfig {
         return when (region) {
-            BkRepoRegion.DEVX -> BkRepoRegionConfig(bkrepoDevxUrl, bkrepoDevxHeaderUserAuth, bkrepoDevxUrl, bkrepoDevxProxyUrl)
+            BkRepoRegion.DEVX -> BkRepoRegionConfig(
+                url = bkrepoDevxUrl,
+                headerUserAuth = bkrepoDevxHeaderUserAuth,
+                webUrl = bkrepoDevxUrl,
+                dnsIp = bkrepoDevxDnsIp
+            )
+
             BkRepoRegion.CSIG -> BkRepoRegionConfig(bkrepoCsigUrl, bkrepoCsigHeaderUserAuth, bkrepoCsigWebUrl, null)
         }
     }
@@ -38,17 +43,8 @@ enum class BkRepoRegion {
 }
 
 data class BkRepoRegionConfig(
-    private val url: String,
+    val url: String,
     val headerUserAuth: String,
     val webUrl: String,
-    val proxy: String?
-) {
-    fun genUrl(uri: String): String {
-        val url = "$url$uri"
-        return if (proxy == null) {
-            url
-        } else {
-            "$proxy?url=${URLEncoder.encode(url, "UTF-8")}"
-        }
-    }
-}
+    val dnsIp: String?
+)
