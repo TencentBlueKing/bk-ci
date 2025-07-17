@@ -228,7 +228,7 @@ const getUserInfo = () => {
 };
 const changeTab = (name) => {
   activeTab.value = name
-  localStorage.setItem('currentTab', name)
+  sessionStorage.setItem('currentTab', name)
 }
 const handleEdit = () => {
   router.push({
@@ -416,7 +416,7 @@ watch(() => projectData.value.approvalStatus, (status) => {
   deep: true,
 });
 onMounted(async () => {
-  const currentTab = localStorage.getItem('currentTab')
+  const currentTab = sessionStorage.getItem('currentTab')
   if (currentTab) {
     activeTab.value = currentTab
   }

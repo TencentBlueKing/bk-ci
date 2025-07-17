@@ -82,7 +82,7 @@ router.afterEach((to) => {
   }
   const keepCacheRoutes = ['edit', 'show'];
   if (!keepCacheRoutes.includes(to.name)) {
-    localStorage.removeItem('currentTab');
+    sessionStorage.removeItem('currentTab');
   }
 });
 
