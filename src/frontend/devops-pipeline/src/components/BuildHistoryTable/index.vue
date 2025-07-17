@@ -1404,7 +1404,8 @@
         font-size: 10px;
       }
       .more-btn {
-        width: 80px;
+        min-width: 80px;
+        max-width: 90px;
         margin-top: 3px;
         background: #FAFBFD;
         text-align: center;

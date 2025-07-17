@@ -25,6 +25,7 @@
                             class="select-search"
                             :show-condition="false"
                             :data="artifactFilterData"
+                            :placeholder="$t('settings.itemPlaceholder')"
                             v-model="artifactValue"
                             @change="updateSearchKey"
                         />
@@ -923,7 +924,7 @@
                 flex: 0 0 60%;
 
                 p {
-                    min-width: 50px;
+                    min-width: 62px;
                     text-align: center;
                     height: 32px;
                     line-height: 32px;
