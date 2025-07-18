@@ -237,11 +237,10 @@
 
 <script lang="ts">
     import eventBus from '@/utils/eventBus'
-    import { urlJoin } from '@/utils/util'
+    import { isAbsoluteUrl, urlJoin } from '@/utils/util'
     import Vue from 'vue'
     import { Component, Watch } from 'vue-property-decorator'
     import { Action, Getter, State } from 'vuex-class'
-    import { isAbsoluteUrl } from '../../utils/util'
     import ApplyProjectDialog from '../ApplyProjectDialog/index.vue'
     import LocaleSwitcher from '../LocaleSwitcher/index.vue'
     import Logo from '../Logo/index.vue'
