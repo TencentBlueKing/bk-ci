@@ -72,9 +72,8 @@ class BkInternalPermissionService(
                 } else {
                     Pair(resourceType, resourceCode)
                 }
-            val keyParts = listOf(userId, projectCode, fixResourceType, fixResourceCode, action)
             // 缓存键直接使用传入的资源信息
-            CacheHelper.getOrLoad(permissionCache, keyParts) {
+            CacheHelper.getOrLoad(permissionCache, userId, projectCode, fixResourceType, fixResourceCode, action) {
                 val isManager = checkManager(
                     userId = userId,
                     projectCode = projectCode,
@@ -147,10 +146,6 @@ class BkInternalPermissionService(
 
     /**
      * 获取用户在指定项目下对某资源类型的有特定操作权限的资源ID列表。
-     *
-     * 最终结果由两部分合并去重而来：
-     * 1. 基于权限体系（用户组/管理员）计算出的资源列表（这部分会走缓存）。
-     * 2. 用户自己创建的资源列表（这部分实时获取）。
      */
     fun getUserResourceByAction(
         userId: String,
@@ -159,23 +154,35 @@ class BkInternalPermissionService(
         action: String
     ): List<String> {
         val resources = createTimer(::getUserResourceByAction.name).record(Supplier {
-            val keyParts = listOf(userId, projectCode, resourceType, action)
-            // 1. 首先获取基于权限的资源列表（会走缓存）。
-            val permissionBasedResources = CacheHelper.getOrLoad(userResourceCache, keyParts) {
-                // 检查用户是否为管理员
-                val isManager = checkManager(
+            val isManager = checkManager(
+                userId = userId,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                action = action
+            )
+            val hasProjectLevelPermission by lazy {
+                validateUserResourcePermission(
                     userId = userId,
                     projectCode = projectCode,
-                    resourceType = resourceType,
+                    resourceType = AuthResourceType.PROJECT.value,
+                    resourceCode = projectCode,
                     action = action
                 )
-                if (isManager) {
-                    authResourceService.getResourceCodeByType(
-                        dslContext = dslContext,
-                        projectCode = projectCode,
-                        resourceType = resourceType
-                    )
-                } else {
+            }
+            // 如果是项目管理员或者有项目级权限，直接返回结果
+            if (isManager || hasProjectLevelPermission) {
+                authResourceService.getResourceCodeByType(
+                    dslContext = dslContext,
+                    projectCode = projectCode,
+                    resourceType = resourceType
+                )
+            } else {
+                // 1. 首先获取基于权限的资源列表（会走缓存）。
+                val permissionBasedResources = CacheHelper.getOrLoad(
+                    userResourceCache,
+                    userId, projectCode,
+                    resourceType, action
+                ) {
                     val groupIds = listMemberGroupIdsInProjectWithCache(projectCode, userId)
                     permissionResourceGroupPermissionService.listResourcesWithPermission(
                         projectCode = projectCode,
@@ -184,17 +191,16 @@ class BkInternalPermissionService(
                         action = action
                     )
                 }
+
+                // 2. 然后获取用户自己创建的资源列表（实时获取，不缓存）。
+                val userCreatedResources = authResourceService.list(
+                    dslContext = dslContext,
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    createUser = userId
+                )
+                (permissionBasedResources + userCreatedResources).distinct()
             }
-
-            // 2. 然后获取用户自己创建的资源列表（实时获取，不缓存）。
-            val userCreatedResources = authResourceService.list(
-                dslContext = dslContext,
-                projectCode = projectCode,
-                resourceType = resourceType,
-                createUser = userId
-            )
-
-            (permissionBasedResources + userCreatedResources).distinct()
         }) ?: emptyList()
         return resources
     }
