@@ -10,6 +10,7 @@
             :disabled="disabled || loading"
             ref="inputArea"
             :title="value"
+            :placeholder="placeholder"
             autocomplete="off"
             @input="handleInput"
             @focus="handleFocus"
@@ -95,6 +96,7 @@
         mixins: [mixins, scrollMixins, selectorMixins],
         props: {
             isLoading: Boolean,
+            placeholder: String,
             preFilter: {
                 type: Object,
                 default: () => ({})
@@ -233,8 +235,10 @@
             handleFocus (e) {
                 this.isFocused = true
                 if (!this.optionListVisible) {
-                    this.optionListVisible = true
-                    this.$emit('focus', e)
+                    setTimeout(() => {
+                        this.optionListVisible = true
+                        this.$emit('focus', e)
+                    }, 300)
                 }
             },
 

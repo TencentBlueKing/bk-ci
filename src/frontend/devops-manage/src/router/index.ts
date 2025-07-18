@@ -80,6 +80,10 @@ router.afterEach((to) => {
   if (!location.search.includes('disableSyncUrl=true')) {
     window.$syncUrl?.(to.fullPath);
   }
+  const keepCacheRoutes = ['edit', 'show'];
+  if (!keepCacheRoutes.includes(to.name)) {
+    sessionStorage.removeItem('currentTab');
+  }
 });
 
 // 导出默认数据

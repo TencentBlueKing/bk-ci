@@ -8,10 +8,10 @@ import './css/iconcool.js'
 // 全量引入 bkui-vue
 import bkui from 'bkui-vue';
 // 全量引入 bkui-vue 样式
+import 'bkui-vue/dist/style.variable.css';
 import bkuiEn from 'bkui-vue/dist/locale/en.esm';
 import bkuiZhCn from 'bkui-vue/dist/locale/zh-cn.esm';
 import bkuiJp from 'bkui-vue/dist/locale/ja-jp.esm'
-import 'bkui-vue/dist/cli.css';
 import { bkTooltips } from 'bkui-vue/lib/directives';
 
 // 引入权限指令相关资源
