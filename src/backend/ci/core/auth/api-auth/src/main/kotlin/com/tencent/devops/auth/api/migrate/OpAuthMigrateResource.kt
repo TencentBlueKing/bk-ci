@@ -87,17 +87,9 @@ interface OpAuthMigrateResource {
     ): Result<Boolean>
 
     @POST
-    @Path("/migrateSpecificResource")
-    @Operation(summary = "迁移特定资源类型资源")
-    fun migrateSpecificResource(
-        @Parameter(description = "迁移资源实体类", required = true)
-        migrateResourceDTO: MigrateResourceDTO
-    ): Result<Boolean>
-
-    @POST
-    @Path("/migrateSpecificResourceOfAllProject")
-    @Operation(summary = "迁移所有项目的特定资源类型资源")
-    fun migrateSpecificResourceOfAllProject(
+    @Path("/resetProjectPermissions")
+    @Operation(summary = "重置项目权限")
+    fun resetProjectPermissions(
         @Parameter(description = "迁移资源实体类", required = true)
         migrateResourceDTO: MigrateResourceDTO
     ): Result<Boolean>

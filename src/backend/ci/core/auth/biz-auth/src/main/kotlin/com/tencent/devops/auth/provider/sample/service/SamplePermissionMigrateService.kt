@@ -57,11 +57,11 @@ class SamplePermissionMigrateService(
         return true
     }
 
-    override fun migrateSpecificResource(migrateResourceDTO: MigrateResourceDTO): Boolean {
+    override fun resetProjectPermissions(migrateResourceDTO: MigrateResourceDTO): Boolean {
         return true
     }
 
-    override fun migrateSpecificResourceOfAllProject(migrateResourceDTO: MigrateResourceDTO): Boolean {
+    override fun resetPermissionsWhenEnabledProject(projectCode: String): Boolean {
         return true
     }
 

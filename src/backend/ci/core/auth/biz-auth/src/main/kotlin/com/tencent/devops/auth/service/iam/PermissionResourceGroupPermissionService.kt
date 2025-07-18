@@ -37,12 +37,17 @@ interface PermissionResourceGroupPermissionService {
         authorizationScopesStr: String,
         projectCode: String,
         projectName: String,
+        /*用户组所属的资源类型*/
         resourceType: String,
         groupCode: String,
         iamResourceCode: String,
         resourceName: String,
         iamGroupId: Int,
-        registerMonitorPermission: Boolean = true
+        registerMonitorPermission: Boolean = true,
+        // 若filterResourceTypes不为空，则本次新增的组权限，只和该资源类型有关
+        filterResourceTypes: List<String> = emptyList(),
+        // 若filterActions不为空，则本次新增的组权限，只和该操作有关
+        filterActions: List<String> = emptyList()
     ): Boolean
 
     /**

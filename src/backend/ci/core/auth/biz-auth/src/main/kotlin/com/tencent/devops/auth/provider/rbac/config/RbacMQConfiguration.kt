@@ -40,6 +40,7 @@ import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupCreateE
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupModifyEvent
 import com.tencent.devops.auth.provider.rbac.service.PermissionGradeManagerService
 import com.tencent.devops.auth.provider.rbac.service.PermissionSubsetManagerService
+import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.common.client.Client
@@ -65,16 +66,20 @@ class RbacMQConfiguration {
     @Bean
     fun syncGroupAndMemberListener(
         resourceGroupSyncService: PermissionResourceGroupSyncService,
-        resourceGroupPermissionService: PermissionResourceGroupPermissionService
+        resourceGroupPermissionService: PermissionResourceGroupPermissionService,
+        permissionMigrateService: PermissionMigrateService
     ) = SyncGroupAndMemberListener(
         resourceGroupSyncService = resourceGroupSyncService,
-        resourceGroupPermissionService = resourceGroupPermissionService
+        resourceGroupPermissionService = resourceGroupPermissionService,
+        permissionMigrateService = permissionMigrateService
     )
 
     @EventConsumer
     fun syncGroupAndMemberConsumer(
         @Autowired syncGroupAndMemberListener: SyncGroupAndMemberListener
-    ) = ScsConsumerBuilder.build<ProjectEnableStatusBroadCastEvent> { syncGroupAndMemberListener.execute(it) }
+    ) = ScsConsumerBuilder.build<ProjectEnableStatusBroadCastEvent> {
+        syncGroupAndMemberListener.execute(it)
+    }
 
     @Bean
     fun authItsmCallbackListener(

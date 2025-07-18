@@ -66,15 +66,9 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
         return Result(permissionMigrateService.compareResult(projectCode = projectCode))
     }
 
-    override fun migrateSpecificResource(migrateResourceDTO: MigrateResourceDTO): Result<Boolean> {
+    override fun resetProjectPermissions(migrateResourceDTO: MigrateResourceDTO): Result<Boolean> {
         return Result(
-            permissionMigrateService.migrateSpecificResource(migrateResourceDTO = migrateResourceDTO)
-        )
-    }
-
-    override fun migrateSpecificResourceOfAllProject(migrateResourceDTO: MigrateResourceDTO): Result<Boolean> {
-        return Result(
-            permissionMigrateService.migrateSpecificResourceOfAllProject(migrateResourceDTO = migrateResourceDTO)
+            permissionMigrateService.resetProjectPermissions(migrateResourceDTO)
         )
     }
 
