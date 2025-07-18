@@ -29,6 +29,7 @@ package com.tencent.devops.openapi.filter.manager.impl
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.BCProviderUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.ERROR_OPENAPI_JWT_PARSE_FAIL
@@ -38,15 +39,13 @@ import com.tencent.devops.openapi.filter.manager.FilterContext
 import com.tencent.devops.openapi.utils.ApiGatewayPubFile
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import io.jsonwebtoken.Jwts
-import java.io.ByteArrayInputStream
-import java.io.InputStreamReader
-import java.security.Security
 import jakarta.ws.rs.core.Response
-import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.jce.provider.JCERSAPublicKey
-import org.bouncycastle.openssl.PEMReader
+import org.bouncycastle.openssl.PEMParser
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.io.ByteArrayInputStream
+import java.io.InputStreamReader
 
 @Service
 class TencentApigwApiFilter(
@@ -58,6 +57,10 @@ class TencentApigwApiFilter(
         private const val appCodeHeader = "app_code"
         private const val jwtHeader = "X-Bkapi-JWT"
         private const val apigwSourceHeader = "X-DEVOPS-APIGW-TYPE"
+    }
+
+    init {
+        BCProviderUtil
     }
 
     /*返回true时执行check逻辑*/
@@ -142,16 +145,15 @@ class TencentApigwApiFilter(
     }
 
     private fun parseJwt(bkApiJwt: String, apigwtType: String?): Map<String, Any> {
-        var reader: PEMReader? = null
+        var reader: PEMParser? = null
         try {
             val key = if (!apigwtType.isNullOrEmpty() && apigwtType == "outer") {
                 SpringContextUtil.getBean(ApiGatewayPubFile::class.java).getPubOuter().toByteArray()
             } else {
                 SpringContextUtil.getBean(ApiGatewayPubFile::class.java).getPubInner().toByteArray()
             }
-            Security.addProvider(BouncyCastleProvider())
             val bais = ByteArrayInputStream(key)
-            reader = PEMReader(InputStreamReader(bais)) { "".toCharArray() }
+            reader = PEMParser(InputStreamReader(bais))
             val keyPair = reader.readObject() as JCERSAPublicKey
             val jwtParser = Jwts.parser().setSigningKey(keyPair)
             val parse = jwtParser.build().parse(bkApiJwt)
