@@ -72,7 +72,7 @@ class GithubTokenService @Autowired constructor(
         operator: String
     ) {
         val encryptedAccessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, accessToken)
-        val githubTokenRecord = githubTokenDao.getOrNull(dslContext, operator, githubTokenType)
+        val githubTokenRecord = githubTokenDao.getOrNull(dslContext, userId, githubTokenType)
         if (githubTokenRecord == null) {
             githubTokenDao.create(
                 dslContext = dslContext,
@@ -127,26 +127,43 @@ class GithubTokenService @Autowired constructor(
         if (buildBasicInfoResult.isNotOk()) {
             throw RemoteServiceException("Failed to get the basic information based on the buildId: $buildId")
         }
+        val accessToken = getAccessToken(userId) ?: return null
+        val operator = (accessToken.operator ?: "").ifBlank { userId }
         val buildBasicInfo = buildBasicInfoResult.data
             ?: throw RemoteServiceException("Failed to get the basic information based on the buildId: $buildId")
         val projectUserCheck = authProjectApi.checkProjectUser(
-            user = userId,
+            user = operator,
             serviceCode = repoAuthServiceCode,
             projectCode = buildBasicInfo.projectId
         )
         if (!projectUserCheck) {
             throw ErrorCodeException(
                 errorCode = RepositoryMessageCode.USER_NEED_PROJECT_X_PERMISSION,
-                params = arrayOf(userId, buildBasicInfo.projectId)
+                params = arrayOf(operator, buildBasicInfo.projectId)
             )
         }
-        return getAccessToken(userId)
+        return accessToken
     }
 
     @Throws(CustomException::class)
     fun getAccessTokenMustExist(userId: String): GithubToken {
         return getAccessToken(userId)
             ?: throw CustomException(status = Response.Status.NOT_FOUND, message = "$userId githubToken not exist")
+    }
+
+    fun getAccessTokenByOperator(
+        operator: String,
+        tokenType: GithubTokenType = GithubTokenType.GITHUB_APP
+    ): GithubToken? {
+        val githubTokenRecord = githubTokenDao.getByOperator(dslContext, operator, tokenType) ?: return null
+        return GithubToken(
+            BkCryptoUtil.decryptSm4OrAes(aesKey, githubTokenRecord.accessToken),
+            githubTokenRecord.tokenType,
+            githubTokenRecord.scope,
+            githubTokenRecord.createTime.timestampmilli(),
+            githubTokenRecord.userId,
+            githubTokenRecord.operator
+        )
     }
 
     companion object {
