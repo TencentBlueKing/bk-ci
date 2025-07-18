@@ -29,6 +29,7 @@ package com.tencent.devops.common.stream.config.processor
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.stream.rabbit.RabbitQueueType
 import com.tencent.devops.common.stream.utils.DefaultBindingUtils
 import java.util.Properties
 import java.util.function.Consumer
@@ -89,7 +90,10 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
                 )
                 val rabbitPropPrefix = "spring.cloud.stream.rabbit.bindings.$bindingName"
                 setProperty("$rabbitPropPrefix.producer.delayedExchange", "true")
-                setProperty("$rabbitPropPrefix.producer.exchangeType", "topic")
+                setProperty("$rabbitPropPrefix.producer.exchangeType", ExchangeTypes.TOPIC)
+                if (event.type == RabbitQueueType.QUORUM) {
+                    setProperty("$rabbitPropPrefix.producer.quorum.enabled", "true")
+                }
                 val prefix = "spring.cloud.stream.bindings.$bindingName"
                 setProperty("$prefix.destination", event.destination)
                 setProperty("$prefix.binder", event.binder)
@@ -153,6 +157,9 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
         setProperty("$rabbitPropPrefix.consumer.maxConcurrency", concurrencyExpression)
         setProperty("$rabbitPropPrefix.consumer.delayedExchange", "true")
         setProperty("$rabbitPropPrefix.consumer.exchangeType", ExchangeTypes.TOPIC)
+        if (event.type == RabbitQueueType.QUORUM) {
+            setProperty("$rabbitPropPrefix.consumer.quorum.enabled", "true")
+        }
     }
 
     override fun getOrder(): Int {
