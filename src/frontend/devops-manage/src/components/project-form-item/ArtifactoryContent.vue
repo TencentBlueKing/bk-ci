@@ -287,6 +287,7 @@ watch(()=> metadataForm.value.category, (newValue)=>{
   }
 }, { immediate: true });
 
+const initialData = ref([]);
 const metadataList = ref([]);
 const isLoading= ref(false);
 
@@ -298,11 +299,16 @@ watch(() => projectData.value.properties, (newValue, oldValue) => {
   }
 }, { immediate: true });
 
+defineExpose({
+  resetData,
+});
+
 async function fetchMetadataList () {
   isLoading.value = true;
   try {
     const res = await http.getMetadataList(projectCode);
     metadataList.value= res;
+    initialData.value = JSON.parse(JSON.stringify(res));
     emits('updateMetadata', metadataList.value)
   } catch (error) {
     console.log("error", error);
@@ -310,6 +316,9 @@ async function fetchMetadataList () {
     isLoading.value = false;
   }
 }
+function resetData () {
+  metadataList.value = JSON.parse(JSON.stringify(initialData.value));
+};
 
 function getFormData () {
   return {
@@ -438,6 +447,7 @@ async function handleMetadataSubmit () {
         }
       }
       emits('updateMetadata', metadataList.value)
+      emits('handleChangeForm')
       isShowMetadataForm.value = false;
       handleMetadataCancel();
     }
@@ -485,6 +495,7 @@ async function handleDelete (row) {
       if (index !== -1) {
         metadataList.value.splice(index, 1);
         emits('updateMetadata', metadataList.value);
+        emits('handleChangeForm')
       }
     },
     onClosed: () => true,
