@@ -1155,6 +1155,25 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         )
     }
 
+    fun getBuildContainer(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String
+    ): VMBuildContainer? {
+        val startTask = pipelineTaskService.getBuildTask(
+            projectId = projectId,
+            buildId = buildId,
+            taskId = VMUtils.genStartVMTaskId(vmSeqId)
+        ) ?: return null
+        return try {
+            JsonUtil.mapTo(startTask.taskParams, VMBuildContainer::class.java)
+        } catch (ignore: Throwable) {
+            LOG.warn("ENGINE|$buildId|GET_CONTAINER|${startTask.taskId} is not VMBuildContainer", ignore)
+            null
+        }
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun sendElementData(projectId: String, buildId: String, result: BuildTaskResult) {
         try {
