@@ -14,6 +14,7 @@ const props = defineProps({
   btnLoading: Boolean
 });
 
+const componentsRef = ref();
 const projectData = ref(props.data);
 const initData = JSON.stringify(projectData.value)
 const isChange = ref(false);
@@ -85,6 +86,7 @@ function tabBeforeChange(name){
         infoBoxRef.value.hide()
         panelActive.value = name
         emits('initProjectData', JSON.parse(initData))
+        componentsRef.value?.resetData?.();
       },
       onClosed: () => {
         infoBoxRef.value.hide()
@@ -169,6 +171,7 @@ onMounted(() => {
               class="other-setting"
             >
                 <component
+                  :ref="el => { if (panel.name === 'artifactory') componentsRef = el }"  
                   :is="panel.component"
                   :type="type"
                   :is-rbac="isRbac"

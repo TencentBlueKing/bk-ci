@@ -48,6 +48,7 @@
         v-model="projectData.properties.enablePipelineNameTips"
         size="small"
         theme="primary"
+        @change="handleChangeForm"
       />
       <bk-input
         class="textarea"
@@ -57,6 +58,7 @@
         :rows="3"
         :maxlength="200"
         type="textarea"
+        @change="handleChangeForm"
       >
       </bk-input>
     </bk-form-item>
@@ -74,6 +76,7 @@
         :max="100"
         :suffix="t('万行')"
         :placeholder="t('缺省时默认为10')"
+        @change="handleChangeForm"
       >
       </bk-input>
     </bk-form-item>
