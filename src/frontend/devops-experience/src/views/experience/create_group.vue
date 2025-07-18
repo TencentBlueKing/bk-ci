@@ -181,7 +181,7 @@
 
 <script>
     import OrgnizationSelector from '@/components/OrgnizationSelector'
-import { mapActions, mapGetters } from 'vuex'
+    import { mapActions, mapGetters } from 'vuex'
 
     export default {
         components: {
@@ -594,7 +594,7 @@ import { mapActions, mapGetters } from 'vuex'
                         params: createGroupForm
                     })
 
-                    message = '保存成功'
+                    message = this.$t('experience.save_success')
                     theme = 'success'
                     this.$emit('after-submit')
                 } catch (e) {

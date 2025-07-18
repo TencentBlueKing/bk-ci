@@ -204,5 +204,6 @@
     "source_labels": {
         "PIPELINE": "流水线",
         "WEB": "手动创建"
-    }
+    },
+    "save_success": "保存成功"
 }

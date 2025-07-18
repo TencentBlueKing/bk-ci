@@ -199,5 +199,6 @@
     "source_labels": {
         "PIPELINE": "Pipeline",
         "WEB": "Manual Creation"
-    }
+    },
+    "save_success": "Save successful"
 }
