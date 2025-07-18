@@ -30,6 +30,7 @@ package com.tencent.devops.store.template.service.impl
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.auth.REFERER
+import com.tencent.devops.common.api.auth.USER_LANGUAGE
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
@@ -251,10 +252,12 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         pageSize: Int?
     ): Future<MarketTemplateResp> {
         val referer = BkApiUtil.getHttpServletRequest()?.getHeader(REFERER)
+        val language = I18nUtil.getLanguage(userId)
         return executor.submit(Callable<MarketTemplateResp> {
             referer?.let {
                 ThreadLocalUtil.set(REFERER, referer)
             }
+            ThreadLocalUtil.set(USER_LANGUAGE, language)
             val installedTemplates = mutableListOf<MarketItem>()
             val canInstallTemplates = mutableListOf<MarketItem>()
             val cannotInstallTemplates = mutableListOf<MarketItem>()
@@ -366,6 +369,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 }
             } finally {
                 ThreadLocalUtil.remove(REFERER)
+                ThreadLocalUtil.remove(USER_LANGUAGE)
             }
 
             return@Callable MarketTemplateResp(

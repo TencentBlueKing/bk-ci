@@ -31,6 +31,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
 import com.tencent.devops.common.api.auth.REFERER
+import com.tencent.devops.common.api.auth.USER_LANGUAGE
 import com.tencent.devops.common.api.constant.AND
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DANG
@@ -273,10 +274,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         urlProtocolTrim: Boolean = false
     ): Future<MarketAtomResp> {
         val referer = BkApiUtil.getHttpServletRequest()?.getHeader(REFERER)
+        val language = I18nUtil.getLanguage(userId)
         return executor.submit(Callable<MarketAtomResp> {
             referer?.let {
                 ThreadLocalUtil.set(REFERER, referer)
             }
+            ThreadLocalUtil.set(USER_LANGUAGE, language)
             val results = mutableListOf<MarketItem>()
             // 获取插件
             val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode.split(",")
@@ -399,6 +402,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 }
             } finally {
                 ThreadLocalUtil.remove(REFERER)
+                ThreadLocalUtil.remove(USER_LANGUAGE)
             }
 
             return@Callable MarketAtomResp(count, page, pageSize, results)

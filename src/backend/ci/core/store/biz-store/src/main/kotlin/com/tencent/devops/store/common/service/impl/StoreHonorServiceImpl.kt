@@ -27,22 +27,28 @@
 
 package com.tencent.devops.store.common.service.impl
 
+import com.tencent.devops.common.api.auth.USER_LANGUAGE
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.I18nMessage
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.ThreadLocalUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.service.ServiceI18nMessageResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TStoreHonorInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreHonorRelRecord
-import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.common.dao.AbstractStoreCommonDao
 import com.tencent.devops.store.common.dao.StoreHonorDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
-import com.tencent.devops.store.pojo.common.honor.AddStoreHonorRequest
+import com.tencent.devops.store.common.service.StoreHonorService
+import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.pojo.common.CREATE_TIME
-import com.tencent.devops.store.pojo.common.honor.HonorInfo
 import com.tencent.devops.store.pojo.common.STORE_CODE
 import com.tencent.devops.store.pojo.common.STORE_CREATE_TIME
 import com.tencent.devops.store.pojo.common.STORE_CREATOR
@@ -54,23 +60,34 @@ import com.tencent.devops.store.pojo.common.STORE_MODIFIER
 import com.tencent.devops.store.pojo.common.STORE_NAME
 import com.tencent.devops.store.pojo.common.STORE_TYPE
 import com.tencent.devops.store.pojo.common.STORE_UPDATE_TIME
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.honor.AddStoreHonorRequest
+import com.tencent.devops.store.pojo.common.honor.HonorInfo
 import com.tencent.devops.store.pojo.common.honor.StoreHonorManageInfo
 import com.tencent.devops.store.pojo.common.honor.StoreHonorRel
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.common.service.StoreHonorService
-import java.time.LocalDateTime
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.InitializingBean
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class StoreHonorServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val storeHonorDao: StoreHonorDao,
-    private val storeMemberDao: StoreMemberDao
-) : StoreHonorService {
+    private val storeMemberDao: StoreMemberDao,
+    private val client: Client,
+    private val commonConfig: CommonConfig,
+) : StoreHonorService, InitializingBean {
+
+    private lateinit var defaultLanguage: String
+
+    override fun afterPropertiesSet() {
+        defaultLanguage = commonConfig.devopsDefaultLocaleLanguage
+    }
 
     override fun list(userId: String, keyWords: String?, page: Int, pageSize: Int): Page<StoreHonorManageInfo> {
         val records = storeHonorDao.list(
@@ -87,7 +104,7 @@ class StoreHonorServiceImpl @Autowired constructor(
                 StoreHonorManageInfo(
                     storeCode = it[STORE_CODE] as String,
                     storeName = it[STORE_NAME] as String,
-                    storeType = StoreTypeEnum.getStoreTypeObj((it[STORE_TYPE] as Byte).toInt())!!,
+                    storeType = StoreTypeEnum.getStoreType((it[STORE_TYPE] as Byte).toInt()),
                     honorId = it[STORE_HONOR_ID] as String,
                     honorTitle = it[STORE_HONOR_TITLE] as String,
                     honorName = it[STORE_HONOR_NAME] as String,
@@ -105,72 +122,109 @@ class StoreHonorServiceImpl @Autowired constructor(
             return false
         }
         val delHonorIds = storeHonorRelList.map { it.honorId }.toMutableList()
+        var hasDelHonorIds = mutableListOf<String>()
         dslContext.transaction { t ->
             val context = DSL.using(t)
             storeHonorDao.batchDeleteStoreHonorRel(context, storeHonorRelList)
             val honorIds = storeHonorDao.getByIds(context, delHonorIds)
             storeHonorDao.batchDeleteStoreHonorInfo(context, delHonorIds.subtract(honorIds).toList())
+            hasDelHonorIds.addAll(delHonorIds.subtract(honorIds).toList())
+        }
+        // 同时清理掉相关联的国际化数据
+        val storeHonorRels = storeHonorRelList.filter { it.honorId in hasDelHonorIds }
+        storeHonorRels.forEach { storeHonorRel ->
+            val key = "${storeHonorRel.storeType.name}.${storeHonorRel.storeCode}.${storeHonorRel.honorId}."
+            client.get(ServiceI18nMessageResource::class)
+                .deleteI18nMessage(userId = userId, key = key, moduleCode = "STORE", language = null)
         }
         return true
     }
 
     override fun add(userId: String, addStoreHonorRequest: AddStoreHonorRequest): Result<Boolean> {
-        logger.info("create storeHonor userid:$userId||honorTitle:${addStoreHonorRequest.honorTitle}")
-        val honorTitleCount = storeHonorDao.countByhonorTitle(dslContext, addStoreHonorRequest.honorTitle)
-        if (honorTitleCount > 0) {
-            return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
-                params = arrayOf(addStoreHonorRequest.honorTitle)
-            )
-        }
+        val i18nHonorInfoList = addStoreHonorRequest.i18nHonorInfoList
         val id = UUIDUtil.generate()
-        val storeHonorInfo = TStoreHonorInfoRecord()
-        storeHonorInfo.id = id
-        storeHonorInfo.honorTitle = addStoreHonorRequest.honorTitle
-        storeHonorInfo.honorName = addStoreHonorRequest.honorName
-        storeHonorInfo.storeType = addStoreHonorRequest.storeType.type.toByte()
-        storeHonorInfo.creator = userId
-        storeHonorInfo.modifier = userId
-        storeHonorInfo.createTime = LocalDateTime.now()
-        storeHonorInfo.updateTime = LocalDateTime.now()
-        val tStoreHonorRelList = addStoreHonorRequest.storeCodes.map {
-            val atomName = getStoreCommonDao(addStoreHonorRequest.storeType.name).getStoreNameByCode(dslContext, it)
-            if (atomName.isNullOrBlank()) {
-                return I18nUtil.generateResponseDataObject(
-                    CommonMessageCode.ERROR_INVALID_PARAM_,
-                    arrayOf("${addStoreHonorRequest.storeType.name}:$it")
-                )
+        i18nHonorInfoList.forEach { i18nHonorInfo ->
+            if (i18nHonorInfo.language.locale == defaultLanguage) {
+                val honorTitleCount = storeHonorDao.countByhonorTitle(dslContext, i18nHonorInfo.honorTitle)
+                if (honorTitleCount > 0) {
+                    return I18nUtil.generateResponseDataObject(
+                        messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                        params = arrayOf(i18nHonorInfo.honorTitle)
+                    )
+                }
+                val storeHonorInfo = TStoreHonorInfoRecord()
+                storeHonorInfo.id = id
+                storeHonorInfo.honorTitle = i18nHonorInfo.honorTitle
+                storeHonorInfo.honorName = i18nHonorInfo.honorName
+                storeHonorInfo.storeType = addStoreHonorRequest.storeType.type.toByte()
+                storeHonorInfo.creator = userId
+                storeHonorInfo.modifier = userId
+                storeHonorInfo.createTime = LocalDateTime.now()
+                storeHonorInfo.updateTime = LocalDateTime.now()
+                val tStoreHonorRelList = addStoreHonorRequest.storeCodes.map {
+                    val atomName =
+                        getStoreCommonDao(addStoreHonorRequest.storeType.name).getStoreNameByCode(dslContext, it)
+                    if (atomName.isNullOrBlank()) {
+                        return I18nUtil.generateResponseDataObject(
+                            CommonMessageCode.ERROR_INVALID_PARAM_,
+                            arrayOf("${addStoreHonorRequest.storeType.name}:$it")
+                        )
+                    }
+                    val tStoreHonorRelRecord = TStoreHonorRelRecord()
+                    tStoreHonorRelRecord.id = UUIDUtil.generate()
+                    tStoreHonorRelRecord.storeCode = it
+                    tStoreHonorRelRecord.storeName = atomName
+                    tStoreHonorRelRecord.storeType = addStoreHonorRequest.storeType.type.toByte()
+                    tStoreHonorRelRecord.honorId = id
+                    tStoreHonorRelRecord.creator = userId
+                    tStoreHonorRelRecord.modifier = userId
+                    tStoreHonorRelRecord.createTime = LocalDateTime.now()
+                    tStoreHonorRelRecord.updateTime = LocalDateTime.now()
+                    tStoreHonorRelRecord
+                }
+                dslContext.transaction { t ->
+                    val context = DSL.using(t)
+                    storeHonorDao.createStoreHonorInfo(context, userId, storeHonorInfo)
+                    storeHonorDao.batchCreateStoreHonorRel(context, tStoreHonorRelList)
+                }
             }
-            val tStoreHonorRelRecord = TStoreHonorRelRecord()
-            tStoreHonorRelRecord.id = UUIDUtil.generate()
-            tStoreHonorRelRecord.storeCode = it
-            tStoreHonorRelRecord.storeName = atomName
-            tStoreHonorRelRecord.storeType = addStoreHonorRequest.storeType.type.toByte()
-            tStoreHonorRelRecord.honorId = id
-            tStoreHonorRelRecord.creator = userId
-            tStoreHonorRelRecord.modifier = userId
-            tStoreHonorRelRecord.createTime = LocalDateTime.now()
-            tStoreHonorRelRecord.updateTime = LocalDateTime.now()
-            tStoreHonorRelRecord
         }
-        dslContext.transaction { t ->
-            val context = DSL.using(t)
-            storeHonorDao.createStoreHonorInfo(context, userId, storeHonorInfo)
-            storeHonorDao.batchCreateStoreHonorRel(context, tStoreHonorRelList)
+
+        val i18nMessages = i18nHonorInfoList.flatMap { honorInfo ->
+            listOf(
+                "honorTitle" to honorInfo.honorTitle,
+                "honorName" to honorInfo.honorName
+            ).flatMap { (fieldName, value) ->
+                addStoreHonorRequest.storeCodes.map { storeCode ->
+                    I18nMessage(
+                        moduleCode = SystemModuleEnum.STORE.name,
+                        language = honorInfo.language.locale,
+                        key = "${addStoreHonorRequest.storeType.name}.${storeCode}.${id}.honorInfo.$fieldName",
+                        value = value
+                    )
+                }
+            }
+        }
+        try {
+            client.get(ServiceI18nMessageResource::class).batchAddI18nMessage(userId, i18nMessages)
+        } catch (ignore: Throwable) {
+            logger.warn("add i18n message error:$ignore")
         }
         return Result(true)
     }
 
     override fun getStoreHonor(userId: String, storeType: StoreTypeEnum, storeCode: String): List<HonorInfo> {
-        return storeHonorDao.getHonorByStoreCode(dslContext, storeType, storeCode).map {
-            HonorInfo(
-                honorTitle = it[STORE_HONOR_TITLE] as String,
-                honorName = it[STORE_HONOR_NAME] as String,
-                honorId = it[STORE_HONOR_ID] as String,
-                mountFlag = it[STORE_HONOR_MOUNT_FLAG] as Boolean,
-                createTime = it[CREATE_TIME] as LocalDateTime
-            )
+        val honorInfos = storeHonorDao.getHonorByStoreCode(dslContext, storeType, storeCode)
+        if (honorInfos.isEmpty()) {
+            return emptyList()
         }
+        val i18nValueMap = getI18nValueMap(
+            records = honorInfos,
+            storeType = storeType,
+            userLanguage = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+            storeCodeParam = storeCode
+        )
+        return i18nValueMap[storeCode]!!
     }
 
     override fun installStoreHonor(
@@ -205,34 +259,99 @@ class StoreHonorServiceImpl @Autowired constructor(
         storeType: StoreTypeEnum,
         storeCodes: List<String>
     ): Map<String, List<HonorInfo>> {
-        logger.info("getHonorInfosByStoreCodes storeCodes is {$storeCodes}")
+        logger.info("getHonorInfosByStoreCodes storeCodes: $storeCodes")
         val records = storeHonorDao.getHonorInfosByStoreCodes(dslContext, storeType, storeCodes)
-        val storeHonorInfoMap = mutableMapOf<String, List<HonorInfo>>()
-        records.forEach {
-            val storeCode = it[STORE_CODE] as String
-            val honorInfo = HonorInfo(
-                honorId = it[STORE_HONOR_ID] as String,
-                honorTitle = it[STORE_HONOR_TITLE] as String,
-                honorName = it[STORE_HONOR_NAME] as String,
-                mountFlag = it[STORE_HONOR_MOUNT_FLAG] as Boolean,
-                createTime = it[CREATE_TIME] as LocalDateTime
-            )
-            if (storeHonorInfoMap[storeCode].isNullOrEmpty()) {
-                storeHonorInfoMap[storeCode] = listOf(honorInfo)
-            } else {
-                val honorInfos = storeHonorInfoMap[storeCode]!!.toMutableList()
-                honorInfos.add(honorInfo)
-                storeHonorInfoMap[storeCode] = honorInfos
-            }
+        if (records.isEmpty()) {
+            return emptyMap()
         }
-        return storeHonorInfoMap
+        val userLanguage = ThreadLocalUtil.get(USER_LANGUAGE)
+            ?.toString()
+            ?.takeIf { it.isNotBlank() }
+            ?: I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+        return getI18nValueMap(
+            records = records,
+            storeType = storeType,
+            userLanguage = userLanguage
+        )
     }
 
     private fun getStoreCommonDao(storeType: String): AbstractStoreCommonDao {
         return SpringContextUtil.getBean(AbstractStoreCommonDao::class.java, "${storeType}_COMMON_DAO")
     }
 
+
+    private fun getI18nValueMap(
+        records: org.jooq.Result<out Record>,
+        storeType: StoreTypeEnum,
+        userLanguage: String,
+        storeCodeParam: String? = null
+    ): Map<String, List<HonorInfo>> {
+        val isDefaultLanguage = userLanguage == defaultLanguage
+        val honorInfoMap = mutableMapOf<String, MutableList<HonorInfo>>()
+        val i18nValueMap = if (!isDefaultLanguage) {
+            val allI18nKeys = records.flatMap { record ->
+                val storeCode = storeCodeParam ?: record[STORE_CODE].toString()
+                val honorId = record[STORE_HONOR_ID].toString()
+                listOf(
+                    "${storeType.name}.$storeCode.$honorId.honorInfo.honorTitle",
+                    "${storeType.name}.$storeCode.$honorId.honorInfo.honorName"
+                )
+            }.distinct()
+
+            try {
+                client.get(ServiceI18nMessageResource::class)
+                    .getI18nMessages(
+                        keys = allI18nKeys,
+                        moduleCode = "STORE",
+                        language = userLanguage
+                    )
+                    .data
+                    ?.associate { it.key to it.value }
+                    ?: emptyMap()
+            } catch (e: Throwable) {
+                logger.warn("Failed to get i18n messages for keys: $allI18nKeys", e)
+                emptyMap()
+            }
+        } else {
+            emptyMap()
+        }
+
+        records.forEach { record ->
+            val storeCode = storeCodeParam ?: record[STORE_CODE].toString()
+            val honorId = record[STORE_HONOR_ID].toString()
+            val originalTitle = record[STORE_HONOR_TITLE]?.toString() ?: ""
+            val originalName = record[STORE_HONOR_NAME]?.toString() ?: ""
+            val mountFlag = record[STORE_HONOR_MOUNT_FLAG] as Boolean
+            val createTime = record[CREATE_TIME] as LocalDateTime
+
+            // 构建国际化后的标题和名称（非默认语言时使用翻译值）
+            val (title, name) = if (isDefaultLanguage) {
+                Pair(originalTitle, originalName)
+            } else {
+                val titleKey = "${storeType.name}.$storeCode.$honorId.honorInfo.honorTitle"
+                val nameKey = "${storeType.name}.$storeCode.$honorId.honorInfo.honorName"
+                Pair(
+                    i18nValueMap[titleKey] ?: originalTitle,
+                    i18nValueMap[nameKey] ?: originalName
+                )
+            }
+
+            val honorInfo = HonorInfo(
+                honorId = honorId,
+                honorTitle = title,
+                honorName = name,
+                mountFlag = mountFlag,
+                createTime = createTime
+            )
+            honorInfoMap.getOrPut(storeCode) { mutableListOf() }.add(honorInfo)
+        }
+
+        return honorInfoMap.mapValues { it.value.toList() }
+    }
+
+
     companion object {
         private val logger = LoggerFactory.getLogger(StoreHonorServiceImpl::class.java)
     }
+
 }
