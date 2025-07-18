@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v4.0.0-rc.5](#v400-rc5)
+   - [Changelog since v4.0.0-rc.4](#changelog-since-v400-rc4)
+
 - [v4.0.0-rc.4](#v400-rc4)
    - [Changelog since v4.0.0-rc.3](#changelog-since-v400-rc3)
 
@@ -16,6 +19,76 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v4.0.0-rc.5
+## 2025-07-18
+### Changelog since v4.0.0-rc.4
+#### 新增
+
+##### 流水线
+- [新增] feat: 新增流水线监控事件 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11874)
+- [新增] 插件输出时，支持 isSensitive 属性 [链接](http://github.com/TencentBlueKing/bk-ci/issues/5534)
+- [新增] 插件配置支持字段间联动 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11251)
+- [新增] feat: 调整子流水线接口参数名 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11979)
+- [新增] feat: TGIT 事件触发需要支持review事件监听 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11827)
+- [新增] feat: 人工审核插件获取参数支持矩阵 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11933)
+- [新增] feat：代码库开启PAC时对应的流水线组名称取值策略修改 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11741)
+
+##### 研发商店
+- [新增] feat:研发商城插件通知管理员审核文案增加审核按钮链接 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11938)
+- [新增] feat:增加组件创建后扩展处理 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11823)
+
+##### 环境管理
+- [新增] feat：第三方构建机节点支持标签管理 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11881)
+- [新增] feat：导入第三方构建机时支持自动切换启动用户 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11945)
+
+##### 权限中心
+- [新增] feat：权限系统熔断设计 数据准确性校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11964)
+
+##### 调度
+- [新增] feat：无编译构建机认领任务新增容器状态二重校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11904)
+
+##### Agent
+- [新增] 私有构建机用 Docker 运行构建任务也能获取到自定义环境变量 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11955)
+- [新增] 修复mac下的agent掉线重连长时间失效 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11918)
+
+##### 未分类
+- [新增] feat: 蓝盾国际化支持日语版 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11877)
+- [新增] Tencent开源License更新 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11919)
+
+#### 优化
+
+##### 流水线
+- [优化] perf：归档流水线时记录操作日志 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11922)
+- [优化] perf：流水线治理优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11968)
+- [优化] perf：流水线发布时描述是否必填优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11843)
+- [优化] perf：和草稿版本对比时的展示优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11969)
+
+##### 研发商店
+- [优化] pref：插件运行时包文件下载超时时间优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11954)
+
+##### 未分类
+- [优化] pref:metrics服务数据上报接口优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12014)
+- [优化] pref:调整metrics服务数据上报接口分布式锁超时时间 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12005)
+- [优化] pref:获取制品库文件下载链接接口优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11999)
+- [优化] pref:metrics构建数据上报接口在同一条流水线构建并发量大时可能出现线程阻塞情况 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11921)
+- [优化] docs: 更新JDK制作文档 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11937)
+
+#### 修复
+
+##### 流水线
+- [修复] fix：条件判断过程日志描述有误 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12008)
+- [修复] mac公共构建机无法选择xcode16版本配置 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11980)
+- [修复] bug: 流水线拥有者,无法导出流水线 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11959)
+
+##### 研发商店
+- [修复] bug: 内置插件的target参数需要支持可空 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11936)
+
+##### 环境管理
+- [修复] 环境管理节点功能右上角没有导入按钮,导致无法下载agent [链接](http://github.com/TencentBlueKing/bk-ci/issues/11950)
+
+##### 未分类
+- [修复] bug: publish-plugin插件不支持Nexus Pro 3 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11944)
+
 # v4.0.0-rc.4
 ## 2025-07-04
 ### Changelog since v4.0.0-rc.3
