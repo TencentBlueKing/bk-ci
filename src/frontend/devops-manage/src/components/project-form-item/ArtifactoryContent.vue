@@ -90,7 +90,7 @@
               v-model="row.display"
               theme="primary"
               :disabled="type === 'show'"
-              @change="handleChangeEnable"
+              @change="updateMetadata"
             />
           </template>
         </bk-table-column>
@@ -303,6 +303,11 @@ defineExpose({
   resetData,
 });
 
+function updateMetadata() {
+  emits('updateMetadata', metadataList.value)
+  emits('handleChangeForm')
+}
+
 async function fetchMetadataList () {
   isLoading.value = true;
   try {
@@ -414,10 +419,6 @@ function showMetadataAdd () {
   isShowMetadataForm.value = true;
 }
 
-function handleChangeEnable() {
-  emits('updateMetadata', metadataList.value)
-}
-
 function colorMapObject(form) {
   const labelColorMap = form.labelColorMap.reduce((accumulator, item) => {
     accumulator[item.value] = item.color;
@@ -446,8 +447,7 @@ async function handleMetadataSubmit () {
           metadataList.value.splice(index, 1, data);
         }
       }
-      emits('updateMetadata', metadataList.value)
-      emits('handleChangeForm')
+      updateMetadata();
       isShowMetadataForm.value = false;
       handleMetadataCancel();
     }
@@ -494,8 +494,7 @@ async function handleDelete (row) {
       const index = metadataList.value.findIndex(item => item.id === row.id);
       if (index !== -1) {
         metadataList.value.splice(index, 1);
-        emits('updateMetadata', metadataList.value);
-        emits('handleChangeForm')
+        updateMetadata();
       }
     },
     onClosed: () => true,
