@@ -80,9 +80,8 @@ class BluekingAgentUrlServiceImpl constructor(
     ): String {
         val gw = fixGateway(gateway)
         if (os == OS.WINDOWS) {
-            var sc = "\$headers = @{ \"$BATCH_TOKEN_HEADER\" = \"$token\" }; " +
-                    "\$response = Invoke-WebRequest " +
-                    "-Uri \"$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall"
+            var sc = "\$ProgressPreference = 'SilentlyContinue'\$headers = @{ \"$BATCH_TOKEN_HEADER\" = \"$token\" };" +
+                    "\$uri = \"$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall"
             var t = "?"
             if (!zoneName.isNullOrBlank()) {
                 sc += "${t}zoneName=$zoneName"
@@ -100,8 +99,9 @@ class BluekingAgentUrlServiceImpl constructor(
                 sc += "${t}installType=$installType"
                 t = "&"
             }
-            sc += "\" -Headers \$headers; "
-            sc += "\$ps = [System.Text.Encoding]::UTF8.GetString(\$response.Content);Invoke-Expression -Command \$ps"
+            sc += "\";\$webClient = New-Object System.Net.WebClient;" +
+                    "foreach (\$key in \$headers.Keys) {\$webClient.Headers.Add(\$key, \$headers[\$key])};"
+            sc += "\$ps = \$webClient.DownloadString(\$uri);Invoke-Expression -Command \$ps"
             return sc
         }
         var url = "curl -H \"$BATCH_TOKEN_HEADER: $token\" " +
