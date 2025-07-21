@@ -59,6 +59,7 @@ import com.tencent.devops.auth.dao.AuthSyncDataTaskDao
 import com.tencent.devops.auth.dao.AuthUserProjectPermissionDao
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
+import com.tencent.devops.auth.provider.rbac.service.BkInternalPermissionComparator
 import com.tencent.devops.auth.provider.rbac.service.ItsmService
 import com.tencent.devops.auth.provider.rbac.service.PermissionGradeManagerService
 import com.tencent.devops.auth.provider.rbac.service.PermissionSubsetManagerService
@@ -342,6 +343,7 @@ class RbacAuthConfiguration {
         superManagerService: SuperManagerService,
         rbacCommonService: RbacCommonService,
         client: Client,
+        bkInternalPermissionComparator: BkInternalPermissionComparator,
         authProjectUserMetricsService: AuthProjectUserMetricsService
     ) = RbacPermissionService(
         authHelper = authHelper,
@@ -352,6 +354,7 @@ class RbacAuthConfiguration {
         superManagerService = superManagerService,
         rbacCommonService = rbacCommonService,
         client = client,
+        bkInternalPermissionComparator = bkInternalPermissionComparator,
         authProjectUserMetricsService = authProjectUserMetricsService
     )
 
@@ -366,7 +369,8 @@ class RbacAuthConfiguration {
         resourceGroupMemberService: RbacPermissionResourceMemberService,
         client: Client,
         resourceMemberService: PermissionResourceMemberService,
-        permissionManageFacadeService: PermissionManageFacadeService
+        permissionManageFacadeService: PermissionManageFacadeService,
+        bkInternalPermissionComparator: BkInternalPermissionComparator
     ) = RbacPermissionProjectService(
         authHelper = authHelper,
         authResourceService = authResourceService,
@@ -376,7 +380,8 @@ class RbacAuthConfiguration {
         resourceGroupMemberService = resourceGroupMemberService,
         client = client,
         resourceMemberService = resourceMemberService,
-        permissionManageFacadeService = permissionManageFacadeService
+        permissionManageFacadeService = permissionManageFacadeService,
+        bkInternalPermissionComparator = bkInternalPermissionComparator
     )
 
     @Bean

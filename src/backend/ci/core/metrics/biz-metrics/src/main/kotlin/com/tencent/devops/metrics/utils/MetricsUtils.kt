@@ -30,6 +30,7 @@ package com.tencent.devops.metrics.utils
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.metrics.config.MetricsConfig
+import io.micrometer.core.instrument.Tag
 
 object MetricsUtils {
 
@@ -51,5 +52,13 @@ object MetricsUtils {
         } else {
             url
         }
+    }
+
+    fun deserializeTag(labels: String?): List<Tag> {
+        return labels?.split(";")
+            ?.mapNotNull {
+                val parts = it.split("=")
+                if (parts.size == 2) Tag.of(parts[0], parts[1]) else null
+            } ?: emptyList()
     }
 }

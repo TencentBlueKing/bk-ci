@@ -164,7 +164,7 @@
                             handler: this.exportPipeline,
                             vPerm: {
                                 hasPermission: this.archiveFlag
-                                    ? pipeline.permissions?.canEdit && this.hasProjectPermission
+                                    ? this.hasProjectPermission
                                     : pipeline.permissions?.canEdit,
                                 disablePermissionApi: true,
                                 permissionData: {
@@ -267,7 +267,7 @@
                             },
                             vPerm: {
                                 hasPermission: this.archiveFlag
-                                    ? pipeline.permissions?.canDelete && this.hasProjectPermission
+                                    ? this.hasProjectPermission
                                     : pipeline.permissions?.canDelete,
                                 disablePermissionApi: true,
                                 permissionData: {
@@ -393,7 +393,6 @@
   }
 }
 .more-operation-dropmenu {
-  width: 120px;
   > ul {
     &:first-child {
       border-bottom: 1px solid #dcdee5;

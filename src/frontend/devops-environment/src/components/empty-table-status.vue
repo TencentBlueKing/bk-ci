@@ -6,12 +6,12 @@
         <div style="font-size: 14px;">{{ typeMap[type] }}</div>
         <template v-if="type === 'search-empty'">
             <div class="empty-tips">
-                {{ $t('environment.可以尝试 调整关键词 或') }}
+                {{ $t('environment.tryAdjustingKeywordsOr') }}
                 <button
                     class="bk-text-button"
                     @click="handleClear"
                 >
-                    {{ $t('environment.清空筛选条件') }}
+                    {{ $t('environment.clearFilterCriteria') }}
                 </button>
             </div>
         </template>
@@ -30,8 +30,8 @@
         data () {
             return {
                 typeMap: {
-                    empty: this.$t('environment.暂无数据'),
-                    'search-empty': this.$t('environment.搜索结果为空')
+                    empty: this.$t('environment.noData'),
+                    'search-empty': this.$t('environment.searchResultsEmpty')
                 }
             }
         },

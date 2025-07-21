@@ -137,6 +137,11 @@
                 const type = this.$route.params.type
                 const id = this.commentData.commentId
 
+                if (Object.hasOwnProperty.call(this.funObj.expandReplys, type) === false) {
+                    this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
+                    return Promise.reject(new Error(this.$t('store.typeError')))
+                }
+
                 return this.funObj.expandReplys[type](id).then((res) => {
                     this.setCommentReplay({ id, newList: res, isAdd: false })
                     this.hadShowMore = true
@@ -146,6 +151,11 @@
             priase () {
                 const type = this.$route.params.type
                 const id = this.commentData.commentId
+
+                if (Object.hasOwnProperty.call(this.funObj.priase, type) === false) {
+                    this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
+                    return
+                }
 
                 this.funObj.priase[type](id).then((count) => {
                     this.setCommentPraise({ id, count })

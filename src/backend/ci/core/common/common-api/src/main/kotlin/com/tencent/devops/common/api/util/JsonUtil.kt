@@ -325,6 +325,12 @@ object JsonUtil {
         getObjectMapper().writeValueAsString(any), typeReference
     )
 
+    fun <T> anyToOrNull(any: Any?, typeReference: TypeReference<T>): T? = try {
+        anyTo(any, typeReference)
+    } catch (e: Exception) {
+        null
+    }
+
     @Suppress("UNCHECKED_CAST")
     fun <T> Any.deepCopy(): T {
         return getObjectMapper().readValue(getObjectMapper().writeValueAsString(this), this.javaClass) as T

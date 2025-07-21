@@ -199,6 +199,9 @@ class ProjectDao {
                 if (queryRemoteDevFlag == true) {
                     conditions.add(JooqUtils.jsonExtractAny<Boolean>(PROPERTIES, "\$.remotedev").isTrue)
                 }
+                if (!projectName.isNullOrBlank()) {
+                    conditions.add(PROJECT_NAME.like("%$projectName%"))
+                }
             }
         }
         return conditions

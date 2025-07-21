@@ -320,6 +320,19 @@ class AuthResourceService @Autowired constructor(
         ).map { authResourceDao.convert(it) }
     }
 
+    fun listByResourceCodes(
+        projectCode: String,
+        resourceType: String,
+        resourceCodes: List<String>
+    ): List<AuthResourceInfo> {
+        return authResourceDao.listByResourceCodes(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCodes = resourceCodes
+        )
+    }
+
     fun updateCreator(
         projectCode: String,
         resourceType: String,
