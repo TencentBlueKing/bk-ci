@@ -36,7 +36,7 @@ data class PublicVarGroupDO(
     val groupName: String,
     @get:Schema(title = "关联流水线/模板总数")
     val referCount: Int,
-    @get:Schema(title = "关联流水线/模板总数")
+    @get:Schema(title = "变量总数")
     val varCount: Int,
     @get:Schema(title = "变量组描述")
     val desc: String? = null,
