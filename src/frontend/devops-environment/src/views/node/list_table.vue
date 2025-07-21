@@ -393,7 +393,7 @@
                             searchable
                             :name="`key_${index}`"
                             v-validate="'required'"
-                            :class="{ 'is-danger': errors.has(`key_${index}`) }"
+                            :class="{ 'is-danger': errors.has(`key_${index}`) || getDuplicateTagKeyFlags()[index] }"
                             @change="handleTagKeyChang(index)"
                         >
                             <bk-option
@@ -411,7 +411,7 @@
                             searchable
                             :name="`value_${index}`"
                             v-validate="'required'"
-                            :class="{ 'is-danger': errors.has(`value_${index}`) }"
+                            :class="{ 'is-danger': errors.has(`value_${index}`) || getDuplicateTagKeyFlags()[index] }"
                         >
                             <bk-option
                                 v-for="option in getTagValueIdList(item.tagKeyId)"
@@ -831,8 +831,28 @@
                     })
                 })
             },
+            hasDuplicateTagKeys () {
+                const tagKeys = this.setTagForm.map(item => item.tagKeyId)
+                    .filter(key => key !== "")
+
+                return new Set(tagKeys).size !== tagKeys.length
+            },
+            getDuplicateTagKeyFlags () {
+                const tagKeys = this.setTagForm.map(item => item.tagKeyId)
+                return tagKeys.map((key, index) => {
+                    if (key === "") return false
+                    return tagKeys.indexOf(key) !== index
+                })
+            },
             async handleSetConfirm () {
                 try {
+                    if (this.hasDuplicateTagKeys()) {
+                        this.$bkMessage({
+                            message: this.$t('environment.noMultipleValuesPerNode'),
+                            theme: 'error'
+                        })
+                        return
+                    }
                     const isValid = await this.$validator.validateAll()
                     if (isValid) {
                         const params = {

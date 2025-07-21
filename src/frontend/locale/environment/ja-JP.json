@@ -302,5 +302,7 @@
     "tagValue": "タグ値",
     "pleaseEnterTag": "ノードラベルを検索",
     "builtInLabelCannotBeDeleted": "内蔵ラベルは削除できません",
-    "builtInLabelCannotBeModified": "内蔵ラベルは修正できません"
+    "builtInLabelCannotBeModified": "内蔵ラベルは修正できません",
+    "tagValueDuplicate": "タグ値は重複できません",
+    "noMultipleValuesPerNode": "1つのノードに複数の値を追加することはできません"
 }

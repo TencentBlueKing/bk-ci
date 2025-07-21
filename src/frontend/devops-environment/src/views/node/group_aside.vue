@@ -207,7 +207,7 @@
                                     :name="`tagValueName_${index}`"
                                     v-validate="'required'"
                                     class="value-input"
-                                    :class="{ 'is-danger': errors.has(`tagValueName_${index}`) }"
+                                    :class="{ 'is-danger': errors.has(`tagValueName_${index}`) || getDuplicateFlags()[index] }"
                                 />
                                 <i
                                     class="devops-icon icon-plus-circle"
@@ -470,7 +470,35 @@
                     })
                 }
             },
+            getDuplicateFlags () {
+                const values = this.formData.tagValues.map(item => item.tagValueName.trim())
+                const flags = []
+
+                for (let i = 0; i < values.length; i++) {
+                    if (values[i] === "") {
+                        flags.push(false)
+                    } else {
+                        flags.push(values.indexOf(values[i]) !== i)
+                    }
+                }
+
+                return flags
+            },
+            hasDuplicateValues () {
+                const nonEmptyValues = this.formData.tagValues
+                    .map(item => item.tagValueName.trim())
+                    .filter(value => value !== "")
+
+                return new Set(nonEmptyValues).size !== nonEmptyValues.length
+            },
             async handleConfirm () {
+                if (this.hasDuplicateValues()) {
+                    this.$bkMessage({
+                        message: this.$t('environment.tagValueDuplicate'),
+                        theme: 'error'
+                    })
+                    return
+                }
                 const isValid = await this.$validator.validateAll()
                 if (isValid) {
                     try {

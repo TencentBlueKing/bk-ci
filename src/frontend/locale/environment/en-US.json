@@ -307,5 +307,7 @@
     "tagValue": "Tag Value",
     "pleaseEnterTag": "Search node tags",
     "builtInLabelCannotBeDeleted": "Built-in labels cannot be deleted",
-    "builtInLabelCannotBeModified": "Built-in labels cannot be modified"
+    "builtInLabelCannotBeModified": "Built-in labels cannot be modified",
+    "tagValueDuplicate": "Tag values cannot be duplicated",
+    "noMultipleValuesPerNode": "Multiple values per node are not supported"
 }
