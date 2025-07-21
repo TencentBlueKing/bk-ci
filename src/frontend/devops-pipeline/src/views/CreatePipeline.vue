@@ -368,20 +368,22 @@
                 return this.isDisabled || !this.activeTemp?.installed || this.isActiveTempEmpty
             },
             projectedTemplateList () {
-                if (!this.pipelineTemplateMap) return []
-                return Object.values(this.pipelineTemplateMap).map(item => ({
-                    ...item,
-                    installed: true,
-                    hasPermission: true,
-                    btnText: 'pipelinesPreview'
-                }))
+                if (this.pipelineTemplateMap.size) {
+                    return this.pipelineTemplateMap.values().map(item => ({
+                        ...item,
+                        installed: true,
+                        hasPermission: true,
+                        btnText: 'pipelinesPreview'
+                    }))
+                }
+                return []
             },
             tempList () {
                 if (this.activePanel === 'projected') {
                     return this.projectedTemplateList.filter(item => item.name.toLowerCase().indexOf(this.searchName.toLowerCase()) > -1)
                 } else {
                     return this.storeTemplate?.map(item => {
-                        const temp = this.pipelineTemplateMap?.[item.code]
+                        const temp = this.pipelineTemplateMap.get(item.code) || {}
                         return {
                             ...item,
                             hasPermission: item.flag,
