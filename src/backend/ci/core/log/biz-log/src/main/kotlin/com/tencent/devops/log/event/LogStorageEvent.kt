@@ -35,8 +35,7 @@ import com.tencent.devops.common.stream.rabbit.RabbitQueueType
 
 @Event(
     destination = StreamBinding.LOG_STORAGE_EVENT_DESTINATION,
-    binder = StreamBinder.EXTEND_RABBIT,
-    type = RabbitQueueType.CLASSIC
+    binder = StreamBinder.EXTEND_RABBIT
 )
 data class LogStorageEvent(
     override val buildId: String,

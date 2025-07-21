@@ -91,9 +91,6 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
                 val rabbitPropPrefix = "spring.cloud.stream.rabbit.bindings.$bindingName"
                 setProperty("$rabbitPropPrefix.producer.delayedExchange", "true")
                 setProperty("$rabbitPropPrefix.producer.exchangeType", ExchangeTypes.TOPIC)
-                if (event.type == RabbitQueueType.QUORUM) {
-                    setProperty("$rabbitPropPrefix.producer.quorum.enabled", "true")
-                }
                 val prefix = "spring.cloud.stream.bindings.$bindingName"
                 setProperty("$prefix.destination", event.destination)
                 setProperty("$prefix.binder", event.binder)
@@ -157,7 +154,7 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
         setProperty("$rabbitPropPrefix.consumer.maxConcurrency", concurrencyExpression)
         setProperty("$rabbitPropPrefix.consumer.delayedExchange", "true")
         setProperty("$rabbitPropPrefix.consumer.exchangeType", ExchangeTypes.TOPIC)
-        if (event.type == RabbitQueueType.QUORUM && !consumer.anonymous) {
+        if (consumer.type == RabbitQueueType.QUORUM && !consumer.anonymous) {
             setProperty("$rabbitPropPrefix.consumer.quorum.enabled", "true")
         }
     }
