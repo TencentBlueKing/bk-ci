@@ -1,11 +1,11 @@
 <template>
     <div class="release-setting-wrapper">
         <content-header>
-            <div slot="left">{{ $route.meta.title }}</div>
+            <div slot="left">{{ $t(`experience.${$route.meta.title}`) }}</div>
         </content-header>
         <section
             class="sub-view-port"
-            v-bkloading="{ isLoading: loading.isLoading, title: loading.title }"
+            v-bkloading="{ isLoading: loading.isLoading, title: $t('experience.loading_title') }"
         >
             <bk-tab
                 :active.sync="curTab"
@@ -23,7 +23,7 @@
                         >
                             <span
                                 v-perm="{
-                                    tooltips: '没有权限',
+                                    tooltips: $t('experience.no_permission'),
                                     permissionData: {
                                         projectId: projectId,
                                         resourceType: EXPERIENCE_GROUP_RESOURCE_TYPE,
@@ -35,7 +35,7 @@
                                 <bk-button
                                     theme="primary"
                                     @click="toCreateGroup"
-                                >新增</bk-button>
+                                >{{ $t('experience.add') }}</bk-button>
                             </span>
                         </div>
                         <bk-table
@@ -46,12 +46,12 @@
                             @page-limit-change="handlePageLimitChange"
                         >
                             <bk-table-column
-                                label="名称"
+                                :label="$t('experience.name')"
                                 show-overflow-tooltip
                                 prop="name"
                             ></bk-table-column>
                             <bk-table-column
-                                label="内部人员"
+                                :label="$t('experience.inner_users')"
                                 prop="innerUsersCount"
                             >
                                 <template slot-scope="props">
@@ -69,7 +69,7 @@
                                 </template>
                             </bk-table-column>
                             <bk-table-column
-                                label="内部组织"
+                                :label="$t('experience.inner_orgs')"
                                 prop="deptsCount"
                             >
                                 <template slot-scope="props">
@@ -87,7 +87,7 @@
                                 </template>
                             </bk-table-column>
                             <bk-table-column
-                                label="外部人员"
+                                :label="$t('experience.outer_users')"
                                 prop="outerUsersCount"
                             >
                                 <template slot-scope="props">
@@ -105,16 +105,16 @@
                                 </template>
                             </bk-table-column>
                             <bk-table-column
-                                label="创建人"
+                                :label="$t('experience.groupCreator')"
                                 prop="creator"
                             ></bk-table-column>
                             <bk-table-column
-                                label="描述"
+                                :label="$t('experience.description')"
                                 show-overflow-tooltip
                                 prop="remark"
                             ></bk-table-column>
                             <bk-table-column
-                                label="操作"
+                                :label="$t('experience.actions')"
                                 prop="creator"
                             >
                                 <template slot-scope="props">
@@ -124,7 +124,7 @@
                                             v-perm="{
                                                 hasPermission: props.row.permissions.canEdit,
                                                 disablePermissionApi: true,
-                                                tooltips: '没有权限',
+                                                tooltips: $t('experience.no_permission'),
                                                 permissionData: {
                                                     projectId: projectId,
                                                     resourceType: EXPERIENCE_GROUP_RESOURCE_TYPE,
@@ -135,14 +135,14 @@
                                             text
                                             @click="toEditGroup(props.row)"
                                         >
-                                            编辑
+                                            {{ $t('experience.edit') }}
                                         </bk-button>
                                         <bk-button
                                             text
                                             v-perm="{
                                                 hasPermission: props.row.permissions.canDelete,
                                                 disablePermissionApi: true,
-                                                tooltips: '没有权限',
+                                                tooltips: $t('experience.no_permission'),
                                                 permissionData: {
                                                     projectId: projectId,
                                                     resourceType: EXPERIENCE_GROUP_RESOURCE_TYPE,
@@ -152,7 +152,7 @@
                                             }"
                                             @click="toDeleteGruop(props.row)"
                                         >
-                                            删除
+                                            {{ $t('experience.delete') }}
                                         </bk-button>
                                     </div>
                                 </template>
@@ -202,7 +202,7 @@
                 showContent: false,
                 loading: {
                     isLoading: false,
-                    title: ''
+                    title: this.$t('experience.loading_title')
                 },
                 groupSideslider: {
                     title: '',
@@ -219,8 +219,8 @@
                     nameError: false
                 },
                 emptyInfo: {
-                    title: '暂无体验组',
-                    desc: '您可以新增一个体验组',
+                    title: this.$t('experience.no_experience_group'),
+                    desc: this.$t('experience.add_experience_group_tips'),
                     permissionData: {
                         projectId: projectId,
                         resourceType: EXPERIENCE_GROUP_RESOURCE_TYPE,
@@ -244,7 +244,7 @@
                 return [
                     {
                         name: 'experienceGroup',
-                        label: '体验组'
+                        label: this.$t('experience.experience_group')
                     }
                 ]
             }
@@ -267,16 +267,13 @@
                 this.pagination.limit = limit
                 this.requestList()
             },
-            /**
-             * 获取列表
-             */
             async requestList (page = 1) {
                 const {
                     loading
                 } = this
 
                 loading.isLoading = true
-                loading.title = '数据加载中，请稍候'
+                loading.title = this.$t('experience.loading_title')
                 try {
                     const res = await this.$store.dispatch('experience/requestGroupList', {
                         projectId: this.projectId,
@@ -316,7 +313,7 @@
                     members: [],
                     remark: ''
                 }
-                this.groupSideslider.title = '新增体验组'
+                this.groupSideslider.title = this.$t('experience.add_experience_group')
                 this.groupSideslider.visible = true
             },
             handleGroupFieldChange (name, value) {
@@ -373,8 +370,8 @@
             toDeleteGruop (row) {
                 if (row.permissions.canDelete) {
                     this.$bkInfo({
-                        title: '确认',
-                        subTitle: '确认删除该体验组',
+                        title: this.$t('experience.confirm'),
+                        subTitle: this.$t('experience.confirm_delete_group'),
                         confirmFn: async () => {
                             let message, theme
 
@@ -384,7 +381,7 @@
                                     groupHashId: row.groupHashId
                                 })
 
-                                message = '删除成功'
+                                message = this.$t('experience.delete_success')
                                 theme = 'success'
                             } catch (err) {
                                 message = err.data ? err.data.message : err
