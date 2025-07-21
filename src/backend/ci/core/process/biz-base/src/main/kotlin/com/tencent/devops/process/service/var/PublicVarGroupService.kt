@@ -39,7 +39,6 @@ class PublicVarGroupService @Autowired constructor(
     private val publicVarGroupDao: PublicVarGroupDao
 ) {
 
-
     fun addGroup(publicVarGroupDTO: PublicVarGroupDTO): Boolean {
         val projectId = publicVarGroupDTO.projectId
         val userId = publicVarGroupDTO.userId
