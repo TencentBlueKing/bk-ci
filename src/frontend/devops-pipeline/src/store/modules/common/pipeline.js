@@ -161,6 +161,9 @@ export const actions = {
             for (const key in (response?.data?.templates ?? {})) {
                 const item = response.data.templates[key]
                 item.isStore = item.templateType === 'CONSTRAINT'
+                if (key === 0) {
+                    item.isEmptyTemplate = true // 0号模板是空模板
+                }
             }
             commit(PIPELINE_TEMPLATE_MUTATION, {
                 pipelineTemplateMap: (response.data || {}).templates
