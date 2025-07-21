@@ -177,12 +177,20 @@ export const actions = {
     requestPipelineTemplate: async ({ commit }, { projectId }) => {
         try {
             const response = await request.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/allTemplates`)
+            const pipelineTemplateMap = new Map()
             for (const key in (response?.data?.templates ?? {})) {
-                const item = response.data.templates[key]
-                item.isStore = item.templateType === 'CONSTRAINT'
+                pipelineTemplateMap.set(key, {
+                    ...response.data.templates[key],
+                    isStore: item.templateType === 'CONSTRAINT'
+                })
             }
+            if (pipelineTemplateMap.size) { // 设置第一个模板为空模板
+                const firstKey = pipelineTemplateMap.keys().next().value
+                pipelineTemplateMap.get(firstKey).isEmptyTemplate = true
+            }
+            
             commit(PIPELINE_TEMPLATE_MUTATION, {
-                pipelineTemplateMap: (response.data || {}).templates
+                pipelineTemplateMap
             })
         } catch (e) {
             rootCommit(commit, FETCH_ERROR, e)
