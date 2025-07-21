@@ -303,7 +303,10 @@ interface UserPipelineVersionResource {
         page: Int?,
         @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @Parameter(description = "是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<Page<PipelineOperationDetail>>
 
     @Operation(summary = "获取流水线操作人列表（分页）")
